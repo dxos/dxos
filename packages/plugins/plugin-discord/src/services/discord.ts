@@ -46,7 +46,7 @@ export const makeDiscordLayer = (
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);
-      const accessToken = yield* Database.load(integration.accessToken);
+      const accessToken = yield* Database.load(integration.accessTokens[0]);
       return makeDiscordLayerFromToken(accessToken.token);
     }),
   );
@@ -74,7 +74,7 @@ export const makeDiscordUserLayer = (
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);
-      const accessToken = yield* Database.load(integration.accessToken);
+      const accessToken = yield* Database.load(integration.accessTokens[0]);
       return makeDiscordUserLayerFromToken(accessToken.token);
     }),
   );

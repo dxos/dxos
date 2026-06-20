@@ -51,7 +51,7 @@ export const IntegrationV1 = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.integration', '0.1.0')),
 );
 
-export interface IntegrationV1 extends Schema.Schema.Type<typeof IntegrationV1> {}
+export type IntegrationV1 = Schema.Schema.Type<typeof IntegrationV1>;
 
 /**
  * External-service integration: one or more {@link AccessToken}s plus synced local roots (`targets`).

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { defineObjectMigration } from '@dxos/client/echo';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { Migration } from '@dxos/echo';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Integration } from '#types';
 
@@ -16,7 +16,7 @@ import { Integration } from '#types';
  * (e.g. IMAP + SMTP). Existing rows are wrapped in a one-element array.
  */
 const migrations = [
-  defineObjectMigration({
+  Migration.define({
     from: Integration.IntegrationV1,
     to: Integration.Integration,
     transform: async (from) => ({

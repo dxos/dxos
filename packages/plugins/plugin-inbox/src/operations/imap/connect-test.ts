@@ -11,7 +11,7 @@ import { Imap } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { resolveImapAuth } from '../../services/imap-credentials';
-import { ImapTestConnection } from '../definitions';
+import { InboxOperation } from '../../types';
 
 /**
  * Connect → SELECT INBOX → logout. Surfaces auth/TLS/protocol errors before
@@ -22,7 +22,7 @@ import { ImapTestConnection } from '../definitions';
  * service on the operation definition so the OperationInvoker resolves it
  * from the per-space runtime context.
  */
-export default ImapTestConnection.pipe(
+export default InboxOperation.ImapTestConnection.pipe(
   Operation.withHandler(({ integration: integrationRef, folder = 'INBOX' }) =>
     Effect.gen(function* () {
       const auth = yield* resolveImapAuth(integrationRef);

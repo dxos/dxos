@@ -11,13 +11,13 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Imap } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 import { Message } from '@dxos/types';
 
 import { InboxResolver } from '../../services';
 import { resolveImapAuth } from '../../services/imap-credentials';
 import { Mailbox, type ImapAccountOptions } from '../../types';
-import { ImapSync } from '../definitions';
+import { InboxOperation } from '../../types';
 import { mapMessage } from './mapper';
 
 const DEFAULT_FOLDER = 'INBOX';
@@ -48,7 +48,7 @@ const readTargetOptions = (
   mailbox: Mailbox.Mailbox,
 ): { options: Partial<ImapAccountOptions>; targetIndex: number } => {
   const targetIndex = (integration.targets ?? []).findIndex(
-    (target) => target.object?.dxn?.asEchoDXN()?.echoId === mailbox.id,
+    (target) => target.object != null && Ref.hasEntityId(mailbox.id)(target.object),
   );
   if (targetIndex < 0) {
     return { options: {}, targetIndex: -1 };
@@ -57,7 +57,7 @@ const readTargetOptions = (
   return { options: (raw ?? {}) as Partial<ImapAccountOptions>, targetIndex };
 };
 
-export default ImapSync.pipe(
+export default InboxOperation.ImapSync.pipe(
   Operation.withHandler(({ integration: integrationRef, mailbox: mailboxRefOptional }) =>
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);
@@ -110,7 +110,7 @@ const syncOneMailbox = (
     const filter = options.filter;
     const syncBackDays = options.syncBackDays ?? DEFAULT_SYNC_BACK_DAYS;
 
-    log('imap sync starting', { mailbox: mailboxRef.dxn.toString(), folder, syncBackDays });
+    log('imap sync starting', { mailbox: mailboxRef.uri.toString(), folder, syncBackDays });
 
     const conn = yield* Imap.connect(auth);
     const box = yield* conn.select(folder, 'read');

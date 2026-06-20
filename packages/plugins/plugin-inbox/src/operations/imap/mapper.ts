@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Message, Person } from '@dxos/types';
 
 import { type ImapBody, type ImapEnvelope } from '../../services';
-import { resolve, type Resolver } from '../../services/resolver';
+import { resolve, type Resolver } from '@dxos/extractor';
 
 const formatAddress = (addr: { name?: string; address: string }): string =>
   addr.name ? `"${addr.name}" <${addr.address}>` : addr.address;

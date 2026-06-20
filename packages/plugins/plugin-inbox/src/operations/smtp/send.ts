@@ -12,7 +12,7 @@ import { Smtp } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { resolveSmtpAuth } from '../../services/smtp-credentials';
-import { SmtpSend } from '../definitions';
+import { InboxOperation } from '../../types';
 
 const splitAddresses = (raw: string | undefined): string[] => {
   if (!raw) {
@@ -44,7 +44,7 @@ const generateMessageId = (account: string | undefined): string => {
  * Workers via `compute-intrinsics`. Local invocation falls back to
  * `SmtpUnavailable` and surfaces a clear error.
  */
-export default SmtpSend.pipe(
+export default InboxOperation.SmtpSend.pipe(
   Operation.withHandler(
     ({ message, integration: integrationRef }) =>
       Effect.gen(function* () {

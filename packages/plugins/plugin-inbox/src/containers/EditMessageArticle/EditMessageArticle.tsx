@@ -10,12 +10,11 @@ import React, { useCallback, useMemo } from 'react';
 import { AiService } from '@dxos/ai';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { ServiceResolver } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Operation, ServiceResolver } from '@dxos/compute';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
@@ -24,7 +23,7 @@ import { EditMessage } from '#components';
 
 import { type EditMessageProps } from '../../components';
 import { email } from '../../extensions';
-import { InboxOperation } from '../../operations';
+import { InboxOperation } from '../../types';
 import { stripQuotedMessage } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
@@ -41,7 +40,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
       return undefined;
     }
     return integrations.find((candidate) =>
-      candidate.targets.some((entry) => entry.object?.dxn.toString() === mailboxDxn),
+      candidate.targets.some((entry) => entry.object?.uri.toString() === mailboxDxn),
     );
   }, [integrations, subject]);
   const extensions = useMemo(() => {

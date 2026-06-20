@@ -101,10 +101,10 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
       const integration = Obj.make(Integration.Integration, {
         name: provider.label ?? DISCORD_BOT_LABEL,
         providerId: provider.id,
-        accessToken: Ref.make(accessToken),
+        accessTokens: [Ref.make(accessToken)],
         targets: [],
       });
-      return { kind: 'complete' as const, accessToken, integration };
+      return { kind: 'complete' as const, accessTokens: [accessToken], integration };
     }).pipe(Effect.orDie),
 };
 
@@ -118,9 +118,10 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  */
 const makeOnTokenCreated =
   (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
-  ({ accessToken }) =>
+  ({ accessTokens }) =>
     Effect.gen(function* () {
-      if (accessToken.account) {
+      const accessToken = accessTokens[0];
+      if (!accessToken || accessToken.account) {
         return;
       }
       const self = yield* Effect.gen(function* () {

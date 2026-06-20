@@ -65,10 +65,10 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenFor
       const integration = Obj.make(Integration.Integration, {
         name: provider.label ?? 'Anthropic',
         providerId: provider.id,
-        accessToken: Ref.make(accessToken),
+        accessTokens: [Ref.make(accessToken)],
         targets: [],
       });
-      return { kind: 'complete' as const, accessToken, integration };
+      return { kind: 'complete' as const, accessTokens: [accessToken], integration };
     }),
 };
 

@@ -134,7 +134,7 @@ export const GmailSend = Operation.make({
 
 export const ImapSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.imap-sync`,
+    key: makeKey('imapSync'),
     name: 'Sync IMAP Mailbox',
     description: 'Sync messages from an IMAP server into the mailbox feed.',
   },
@@ -154,7 +154,7 @@ export const ImapSync = Operation.make({
 
 export const ImapTestConnection = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.imap-test-connection`,
+    key: makeKey('imapTestConnection'),
     name: 'Test IMAP Connection',
     description: 'Connect to an IMAP server and select a folder; surfaces auth/TLS errors.',
   },
@@ -229,12 +229,12 @@ export const GoogleMailSync = Operation.make({
  */
 export const SmtpSend = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.smtp-send`,
+    key: makeKey('smtpSend'),
     name: 'Send SMTP',
     description: 'Send an email via SMTP submission.',
   },
   input: Schema.Struct({
-    message: Message.Message,
+    message: Type.getSchema(Message.Message),
     integration: Ref.Ref(Integration.Integration).annotations({
       description: 'Integration that owns SMTP credentials.',
     }),
@@ -254,7 +254,7 @@ export const SmtpSend = Operation.make({
  */
 export const SendMessage = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.send-message`,
+    key: makeKey('sendMessage'),
     name: 'Send Message',
     description: 'Send an email through whichever transport the Integration provider declares.',
   },
@@ -263,7 +263,7 @@ export const SendMessage = Operation.make({
     integration: Ref.Ref(Integration.Integration).annotations({
       description: 'Integration that supplies send credentials and the providerId for dispatch.',
     }),
-    message: Message.Message,
+    message: Type.getSchema(Message.Message),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -435,6 +435,26 @@ export const SyncContacts = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
+  }),
+  output: Schema.Void,
+});
+
+export const SyncMailbox = Operation.make({
+  meta: {
+    key: makeKey('syncMailbox'),
+    name: 'Sync Mailbox',
+    description:
+      'Sync a mailbox (or all mailboxes for an integration). Routes to IMAP or Gmail based on providerId.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  services: [Capability.Service, Database.Service],
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration whose mailboxes to sync.',
+    }),
+    mailbox: Ref.Ref(Mailbox.Mailbox)
+      .annotations({ description: 'When omitted, syncs all mailboxes for the integration.' })
+      .pipe(Schema.optional),
   }),
   output: Schema.Void,
 });

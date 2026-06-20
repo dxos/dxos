@@ -8,7 +8,7 @@ import * as Redacted from 'effect/Redacted';
 import { Database, type Ref } from '@dxos/echo';
 import { ImapAuth, ImapError, type ImapAuthValues } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 
 const DEFAULT_PORT_TLS = 993;
 const DEFAULT_PORT_STARTTLS = 143;
