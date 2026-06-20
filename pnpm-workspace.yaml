@@ -45,7 +45,10 @@ catalog:
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
   '@cloudflare/ai-chat': ^0.0.6
-  '@cloudflare/vitest-pool-workers': ^0.16.8
+  # Pinned exactly: newer 0.16.x bumps pull a workerd binary (>= 1.20260616) that
+  # segfaults on import under @cloudflare/vitest-pool-workers. 0.16.10 resolves
+  # workerd 1.20260526.1, the last version verified to load the DXOS stack.
+  '@cloudflare/vitest-pool-workers': 0.16.10
   '@cloudflare/workers-types': ^4.20260302.0
   '@codemirror/autocomplete': ^6.20.2
   '@codemirror/commands': ^6.10.3

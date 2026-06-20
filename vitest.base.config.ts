@@ -42,11 +42,19 @@ const VITEST_LOG_SETUP = new URL('./tools/vite-plugin-log/src/vitest/setup.ts', 
 const TIKTOKEN_STUB = new URL('./vitest/tiktoken-stub.mjs', import.meta.url).pathname;
 const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 
+// `chalk` (used by `@dxos/log` for terminal coloring) probes `tty`/`process`
+// color support at import time, which crashes the `workerd` runtime with a
+// native segfault under `@cloudflare/vitest-pool-workers`. Coloring is a no-op
+// in the worker test runtime, so the workerd project aliases it to an identity
+// stub. See `vitest/chalk-stub.mjs`.
+const CHALK_STUB = new URL('./vitest/chalk-stub.mjs', import.meta.url).pathname;
+
 export type ConfigOptions = {
   dirname: string;
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
   storybook?: boolean | StorybookOptions;
+  workerd?: boolean | WorkerdOptions;
 };
 
 export type StorybookOptions = {
@@ -60,19 +68,27 @@ export type StorybookOptions = {
 };
 
 export const createConfig = (options: ConfigOptions): ViteUserConfig => {
-  const { dirname, node, browser, storybook } = options;
+  const { dirname, node, browser, storybook, workerd } = options;
 
   const nodeProject = node ? createNodeProject(typeof node === 'boolean' ? undefined : node) : undefined;
   const storybookProject = storybook
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
+  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      projects: [nodeProject, storybookProject, ...browserProjects].filter(
+      // The workers pool needs vitest itself to run serially so its single
+      // miniflare instance survives the whole run — otherwise each spawned
+      // worker builds its own instance and the pool's `unsafeEvalBinding`
+      // (used to compile wasm) doesn't reach the worker that loads it, so
+      // workerd rejects `new WebAssembly.Module()` ("code generation disallowed
+      // by embedder"). Only applied when the workerd project is present.
+      ...(workerdProject ? { fileParallelism: false, maxWorkers: 1 } : {}),
+      projects: [nodeProject, storybookProject, workerdProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
     },
@@ -119,6 +135,78 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         },
       }),
     ],
+  });
+
+type WorkerdOptions = {
+  /** Worker runtime compatibility date. @default '2024-09-23' (enables nodejs_compat v2). */
+  compatibilityDate?: string;
+  /** Worker runtime compatibility flags. @default ['nodejs_compat']. */
+  compatibilityFlags?: string[];
+  plugins?: Plugin[];
+};
+
+/**
+ * Runs `*.workerd.test.{ts,tsx}` files inside the Cloudflare Workers (`workerd`)
+ * runtime via `@cloudflare/vitest-pool-workers` + Miniflare. The `workerd`
+ * export condition is resolved first so `@dxos/*` packages load their
+ * `*.workerd.ts` variant — the same module the edge/agent runtime loads.
+ */
+const createWorkerdProject = ({
+  compatibilityDate = '2024-09-23',
+  compatibilityFlags = ['nodejs_compat'],
+  plugins = [],
+}: WorkerdOptions = {}) =>
+  defineProject({
+    resolve: {
+      // List `workerd` ahead of `browser` so packages that ship a dedicated
+      // `workerd` export (e.g. `@automerge/automerge-subduction`) load it rather
+      // than their bundler/browser build. cloudflareTest also force-includes
+      // these (and excludes `node`); declaring the order here makes it explicit.
+      conditions: ['workerd', 'worker', 'module', 'browser'],
+      alias: { chalk: CHALK_STUB },
+    },
+    esbuild: {
+      target: 'esnext',
+    },
+    plugins: [
+      // With `workerd`-first conditions, deps load their wasm-bindgen `workerd`
+      // build (no `_bg.js` glue): `import wasm from "*.wasm"` + initSync. This
+      // plugin resolves those imports to a concrete path so the pool's runner
+      // serves them as `WebAssembly.Module` instances via the `CompiledWasm`
+      // module rule below — see workerdWasmModulePlugin.
+      workerdWasmModulePlugin(),
+      // Prefer the `source` condition for `@dxos/*` so the `workerd` export
+      // variant (added by cloudflareTest's required conditions) loads from TS
+      // source rather than the prebuilt `dist`.
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      // Log-meta injection only — no dev file sink.
+      DxosLogPlugin({ logToFile: false }),
+      ...plugins,
+      // `@cloudflare/vitest-pool-workers` is ESM-only. The shared base config is
+      // also loaded by packages without `"type": "module"` (their config bundles
+      // to CJS, where a static top-level import becomes a `require` and throws
+      // "This package is ESM only"). Importing it dynamically — only here, in the
+      // workerd project those packages never construct — keeps it out of the CJS
+      // require graph; Vite awaits Promise-valued plugins. This is the workaround
+      // the Vite "ESM only" error links to.
+      import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
+        cloudflareTest({
+          miniflare: {
+            compatibilityDate,
+            compatibilityFlags,
+            // Serve `*.wasm` imports as `WebAssembly.Module` instances so deps
+            // like `@automerge/automerge`'s `workerd` build can `initSync` them.
+            modulesRules: [{ type: 'CompiledWasm', include: ['**/*.wasm'] }],
+          },
+        }),
+      ),
+    ],
+    test: {
+      name: 'workerd',
+      include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
+      setupFiles: [new URL('./vitest/workerd-setup.mjs', import.meta.url).pathname],
+      testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 30_000,
+    },
   });
 
 type BrowserOptions = {
@@ -186,6 +274,8 @@ const createBrowserProject = ({
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.node.test.{ts,tsx}',
         '!**/test/**/*.node.test.{ts,tsx}',
+        '!**/src/**/*.workerd.test.{ts,tsx}',
+        '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
 
       testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
@@ -235,6 +325,8 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
+        '!**/src/**/*.workerd.test.{ts,tsx}',
+        '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
       setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
@@ -273,6 +365,8 @@ const resolveProjectType = (): string | undefined => {
     return 'node';
   } else if (projectArg === 'storybook') {
     return 'storybook';
+  } else if (projectArg === 'workerd') {
+    return 'workerd';
   }
   return undefined;
 };
@@ -335,7 +429,10 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
   const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
   const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
-  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
+  // `@vitest/coverage-v8` imports `node:inspector/promises`, which the workerd
+  // runtime doesn't provide ("No such module"), so coverage is force-disabled
+  // for the workerd project.
+  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
 
   if (xmlReport) {
     return {
@@ -399,6 +496,34 @@ function nodeStdPlugin(): Plugin {
         if (MODULES.includes(source)) {
           return this.resolve('@dxos/node-std/' + source, importer, options);
         }
+      },
+    },
+  };
+}
+
+/**
+ * Resolves `*.wasm` imports to a concrete file path (stripping any query the
+ * pool re-adds, e.g. `?mf_vitest_force=CompiledWasm`) so the
+ * `@cloudflare/vitest-pool-workers` runner serves them as `WebAssembly.Module`
+ * instances — the form wasm-bindgen's `initSync({ module })` expects — via the
+ * project's `CompiledWasm` module rule. The id is returned *without*
+ * `external: true`: Vite serves it as `/@fs/…` and the runner externalizes it
+ * at fetch time. Marking it external instead yields a bare absolute path the
+ * pool mis-joins against the project root ("no such file").
+ */
+function workerdWasmModulePlugin(): Plugin {
+  return {
+    name: 'workerd-wasm-module',
+    enforce: 'pre',
+    resolveId: {
+      order: 'pre',
+      async handler(source, importer, options) {
+        if (!source.endsWith('.wasm') && !source.includes('.wasm?')) {
+          return null;
+        }
+        const bare = source.split('?')[0];
+        const resolved = await this.resolve(bare, importer, { ...options, skipSelf: true });
+        return resolved ? { id: resolved.id.split('?')[0] } : null;
       },
     },
   };

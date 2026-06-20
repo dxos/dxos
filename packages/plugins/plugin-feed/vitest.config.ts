@@ -13,4 +13,5 @@ export default createConfig({
   // linkedom. Plain-Node tests (feed-fetcher) work fine under happy-dom too.
   node: { environment: 'happy-dom' },
   storybook: true,
+  workerd: true,
 });

@@ -11,4 +11,5 @@ export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
   node: true,
   storybook: true,
+  workerd: true,
 });

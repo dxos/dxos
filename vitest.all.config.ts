@@ -24,6 +24,9 @@ export default defineConfig(async () => ({
       '**/test/**/*.test.{ts,tsx}',
       '!**/src/**/*.browser.test.{ts,tsx}',
       '!**/test/**/*.browser.test.{ts,tsx}',
+      // Workerd tests require the `@cloudflare/vitest-pool-workers` pool.
+      '!**/src/**/*.workerd.test.{ts,tsx}',
+      '!**/test/**/*.workerd.test.{ts,tsx}',
     ],
     exclude: [
       '.moon/*',
