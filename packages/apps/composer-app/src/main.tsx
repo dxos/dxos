@@ -400,6 +400,7 @@ const main = async () => {
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  const isMail = url.pathname === '/mail' || url.pathname.startsWith('/mail/') || url.pathname.endsWith('/mail.html');
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -413,6 +414,7 @@ const main = async () => {
     isTauri,
     isPopover,
     isMobile,
+    isMail,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };

@@ -715,6 +715,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-mail-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-map/package.json",
           "jsonpath": "$.version"
         },

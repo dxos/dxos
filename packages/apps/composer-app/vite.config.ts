@@ -140,6 +140,7 @@ export default defineConfig((env) => ({
       input: {
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
+        mail: path.resolve(dirname, './mail.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
         recovery: path.resolve(dirname, './recovery.html'),
@@ -277,6 +278,7 @@ export default defineConfig((env) => ({
     entries: [
       './index.html',
       './internal.html',
+      './mail.html',
       './devtools.html',
       './reset.html',
       './recovery.html',
@@ -304,6 +306,10 @@ export default defineConfig((env) => ({
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
       { find: '@dxos/solid-ui-geo', replacement: path.resolve(rootDir, 'packages/ui/solid-ui-geo/src') },
+      {
+        find: '@dxos/plugin-mail-layout',
+        replacement: path.resolve(rootDir, 'packages/plugins/plugin-mail-layout/src'),
+      },
       { find: '@dxos/plugin-map-solid', replacement: path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src') },
       { find: '@dxos/web-context-solid', replacement: path.resolve(rootDir, 'packages/common/web-context-solid/src') },
       { find: '@dxos/effect-atom-solid', replacement: path.resolve(rootDir, 'packages/common/effect-atom-solid/src') },
