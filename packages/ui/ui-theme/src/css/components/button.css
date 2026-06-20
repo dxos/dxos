@@ -20,7 +20,9 @@
     }
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply text-accent-text bg-attention-surface;
+      /* selected-surface tracks the enclosing --surface-bg with a fixed lightness offset, so the active
+       * state stays visible on any surface (attention-surface shares card-surface's elevation and vanishes). */
+      @apply text-accent-text bg-selected-surface;
     }
 
     /* Disabled styles */

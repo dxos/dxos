@@ -5,7 +5,7 @@
 import { type ComponentType, lazy } from 'react';
 
 export * from './CreateAutomationPanel';
-export * from './CronBuilder';
+export * from './Schedule';
 export * from './TemplateEditor';
 export * from './TriggerEditor';
 

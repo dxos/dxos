@@ -6,23 +6,45 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { type Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Icon, IconBlock, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
 
-import { type CronSpecType, CronBuilder, FrequencyDefaults, describeCron, fromCron, toCron } from '../CronBuilder';
+import {
+  FrequencyDefaults,
+  Schedule,
+  type ScheduleKind,
+  type ScheduleValue,
+  cronToSchedule,
+  scheduleToCron,
+  toCron,
+} from '../Schedule';
+import { TriggerKindPicker, type TriggerKind, getTriggerKindIcon } from './TriggerKindPicker';
 
-// Scoped trigger form: timer (cron) or feed, modeled as a top-level discriminated union so the Form renders
-// the kind select and the chosen kind's field as one flat field set (no nested, bordered sub-fieldset). The
-// feed field carries ParentLabelAnnotation so the built-in RefField labels feed options by their parent
-// object (e.g. the mailbox) — configured per field via the annotation rather than a hard-coded option mapper.
+// A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
+const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
+
+// Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
+// Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
+// itself is chosen by `TriggerKindPicker` (a radio-card list) rather than a select. The feed field carries
+// ParentLabelAnnotation so the built-in RefField labels feed options by their parent object (e.g. the mailbox).
 const TimerSpecForm = Schema.Struct({
   kind: Schema.Literal('timer'),
   cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
+});
+
+const SubscriptionSpecForm = Schema.Struct({
+  kind: Schema.Literal('subscription'),
+});
+
+const WebhookSpecForm = Schema.Struct({
+  kind: Schema.Literal('webhook'),
+  method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
+  port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
 });
 
 const FeedSpecForm = Schema.Struct({
@@ -34,32 +56,66 @@ const FeedSpecForm = Schema.Struct({
   ),
 });
 
-const TriggerForm = Schema.Union(TimerSpecForm, FeedSpecForm);
+const EmailSpecForm = Schema.Struct({
+  kind: Schema.Literal('email'),
+});
+
+const TriggerForm = Schema.Union(TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm);
 type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 
 // Flat view of the form values: `Partial<TriggerFormValues>` collapses a discriminated union to its common
 // key alone (`kind`), so reach the variant fields through this all-optional shape instead. `Partial<T>` is
-// assignable to it, so handlers/helpers can accept the Form's value verbatim and still read `cron`/`feed`.
+// assignable to it, so handlers/helpers can accept the Form's value verbatim and still read the variant fields.
 type TriggerFormInput = {
-  readonly kind?: 'timer' | 'feed';
+  readonly kind?: TriggerKind;
   readonly cron?: string;
+  readonly method?: string;
+  readonly port?: number;
   readonly feed?: Ref.Ref<Feed.Feed>;
 };
 
 /** Project a trigger spec onto the form's discriminated-union members. */
-const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput =>
-  spec?.kind === 'feed'
-    ? { kind: 'feed', feed: spec.feed }
-    : { kind: 'timer', cron: spec?.kind === 'timer' ? spec.cron : '' };
+const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput => {
+  switch (spec?.kind) {
+    case 'subscription':
+      return { kind: 'subscription' };
+    case 'feed':
+      return { kind: 'feed', feed: spec.feed };
+    case 'webhook':
+      return { kind: 'webhook', method: spec.method, port: spec.port };
+    case 'email':
+      return { kind: 'email' };
+    case 'timer':
+      return { kind: 'timer', cron: spec.cron };
+    default:
+      // No spec yet: leave the kind unset so the editor shows the variant picker (nothing selected).
+      return {};
+  }
+};
 
 // Fallback cron used when no schedule has been set yet.
 const DEFAULT_TIMER_CRON = toCron(FrequencyDefaults.daily);
 
-// Build a trigger spec from the form's values. Returned as just the two specs we construct (not the full
-// `Trigger.Spec` union) so the subscription spec's deep readonly query AST never enters the type and the
-// result stays assignable to the mutable `trigger.spec`.
-const triggerFormSpec = (values: TriggerFormInput): Trigger.TimerSpec | Trigger.FeedSpec =>
-  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron || DEFAULT_TIMER_CRON);
+// The Query variant is a stub: it has no editor yet, so selecting it seeds a match-everything subscription
+// (a valid spec that never dispatches usefully until a real query editor lands).
+const DEFAULT_SUBSCRIPTION_QUERY = Query.select(Filter.everything());
+
+/** Build a trigger spec from the form's values. */
+const triggerFormSpec = (values: TriggerFormInput): Trigger.Spec => {
+  switch (values.kind) {
+    case 'subscription':
+      return Trigger.specSubscription(DEFAULT_SUBSCRIPTION_QUERY);
+    case 'feed':
+      return { kind: 'feed', feed: values.feed };
+    case 'webhook':
+      return Trigger.specWebhook({ method: values.method, port: values.port });
+    case 'email':
+      return Trigger.specEmail();
+    case 'timer':
+    default:
+      return Trigger.specTimer(values.cron || DEFAULT_TIMER_CRON);
+  }
+};
 
 export type TriggerEditorProps = {
   db: Database.Database;
@@ -68,75 +124,137 @@ export type TriggerEditorProps = {
 };
 
 export const TriggerEditor = ({ db, automation, trigger }: TriggerEditorProps) => {
-  const { defaultValues, fieldMap, handleValuesChanged } = useTriggerForm(db, automation, trigger);
+  const { t } = useTranslation(meta.profile.key);
+  const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
+    db,
+    automation,
+    trigger,
+  );
 
   return (
     <Form.Root
-      // Remount when the bound trigger changes so the uncontrolled form picks up its spec.
-      key={trigger?.id ?? 'new'}
+      // Remount when the bound trigger changes (picks up its spec) or on reset (reverts to the picker).
+      key={`${trigger?.id ?? 'new'}:${resetNonce}`}
       schema={TriggerForm}
-      defaultValues={defaultValues}
       db={db}
+      defaultValues={defaultValues}
       fieldMap={fieldMap}
       onValuesChanged={handleValuesChanged}
     >
       <Form.Content>
+        {kind && (
+          <div className='flex items-center'>
+            <IconBlock>
+              <Icon icon={getTriggerKindIcon(kind)} classNames='text-description' />
+            </IconBlock>
+            <div className='w-full truncate'>{t(`trigger-kind.${kind}.label`)}</div>
+            <IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--x--regular'
+              label={t('trigger-kind.clear.label')}
+              onClick={handleClose}
+            />
+          </div>
+        )}
         <Form.FieldSet />
+        {/* {kind === 'subscription' && (
+          <p className='text-sm text-description pli-1 mbs-2'>{t('trigger-kind.query-stub.message')}</p>
+        )}
+        {kind === 'email' && (
+          <p className='text-sm text-description pli-1 mbs-2'>{t('trigger-kind.email-note.message')}</p>
+        )} */}
       </Form.Content>
     </Form.Root>
   );
 };
 
-/** Renders the CronBuilder with a live cronstrue description below it. */
+/** Edits the cron via the Schedule picker (recurring kinds only) with a live cronstrue description below it. */
 const CronField = (props: FormFieldRendererProps) => {
-  const existingCron = props.getValue() as string | undefined;
-  const initialSpec = useMemo(() => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily), []);
-  const [description, setDescription] = useState(() => describeCron(existingCron ?? toCron(initialSpec)));
+  const cron = (props.getValue() as string | undefined) || DEFAULT_TIMER_CRON;
+  // Read once per mount; the Schedule owns its state and emits cron changes via `handleChange`.
+  const initial = useMemo(() => cronToSchedule(cron), []);
 
   const handleChange = useCallback(
-    (spec: CronSpecType, cron: string) => {
-      setDescription(describeCron(cron));
-      props.onValueChange(props.type, cron);
+    (value: ScheduleValue) => {
+      const next = scheduleToCron(value);
+      if (next) {
+        props.onValueChange(props.type, next);
+      }
     },
     [props.type, props.onValueChange],
   );
 
   return (
-    <div className='flex flex-col gap-1 mbs-2'>
-      <CronBuilder value={initialSpec} onChange={handleChange} />
-      <p className='text-sm text-description pli-1 text-right'>{description}</p>
-    </div>
+    <Schedule.Root kinds={RECURRING_KINDS} defaultValue={initial} onValueChange={handleChange}>
+      {/* <Schedule.Header /> */}
+      <Schedule.Kind />
+      <Schedule.Body />
+      {/* <Schedule.Description /> */}
+    </Schedule.Root>
   );
 };
 
 CronField.displayName = 'TriggerEditor.CronField';
 
-/** Form state for the Trigger section: the timer|feed spec, plus create-on-first-edit and remove handlers. */
+/** Form state for the Trigger section: the chosen variant spec, plus create-on-first-edit handler. */
 const useTriggerForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.profile.key);
-  const kindOptions = useMemo(
+  const methodOptions = useMemo(
     () => [
-      { value: 'timer', label: t('trigger-kind.timer.label') },
-      { value: 'feed', label: t('trigger-kind.feed.label') },
+      { value: 'GET', label: 'GET' },
+      { value: 'POST', label: 'POST' },
     ],
-    [t],
+    [],
   );
+
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      kind: (props) => <SelectField {...props} options={kindOptions} />,
+      // Show the variant picker only until a kind is chosen; once selected the row is replaced by that
+      // variant's editor (the kind field renders nothing).
+      kind: (props) =>
+        props.getValue() ? null : <TriggerKindPicker onChange={(next) => props.onValueChange(props.type, next)} />,
       cron: (props) => <CronField {...props} />,
+      method: (props) => <SelectField {...props} options={methodOptions} />,
     }),
-    [kindOptions],
+    [methodOptions],
   );
-  // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
-  const defaultValues = useMemo<Partial<TriggerFormValues>>(() => triggerFormValues(trigger?.spec), [trigger]);
+
+  // Bumping this remounts the uncontrolled Form so it re-reads `defaultValues` (used to revert to the picker).
+  const [resetNonce, setResetNonce] = useState(0);
+  // Read per trigger identity / reset; a trigger with no spec yet starts with no kind (shows the picker).
+  const defaultValues = useMemo<Partial<TriggerFormValues>>(
+    () => triggerFormValues(trigger?.spec),
+    [trigger, resetNonce],
+  );
+  // Mirror the active kind: gates the variant picker (shown only while unset) and the variant-specific notes.
+  const [kind, setKind] = useState<TriggerKind | undefined>(() => triggerFormValues(trigger?.spec).kind);
+
+  // Revert the kind selection: clear the trigger's spec and remount the Form so the picker reappears.
+  const handleClose = useCallback(() => {
+    setKind(undefined);
+    setResetNonce((nonce) => nonce + 1);
+    if (trigger) {
+      Obj.update(trigger, (trigger) => {
+        trigger.spec = undefined;
+      });
+    }
+  }, [trigger]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<TriggerFormValues>) => {
+      // Ignore changes until a kind is picked, so the unselected picker never seeds a default trigger.
+      if (!values.kind) {
+        return;
+      }
+
       const spec = triggerFormSpec(values);
+      setKind(spec.kind);
       if (trigger) {
         Obj.update(trigger, (trigger) => {
-          trigger.spec = spec;
+          // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
+          // the structures are identical at runtime, so a readonly->mutable boundary coercion is required here
+          // (mirrors commands/trigger/update/subscription.ts).
+          trigger.spec = spec as typeof trigger.spec;
         });
       } else {
         // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
@@ -152,5 +270,5 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
     [db, automation, trigger],
   );
 
-  return { defaultValues, fieldMap, handleValuesChanged };
+  return { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged };
 };
