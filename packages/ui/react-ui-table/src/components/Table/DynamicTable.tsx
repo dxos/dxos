@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type JsonSchema, type Type } from '@dxos/echo';
-import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import { Button, type ThemedClassName, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { useTableModel } from '../../hooks';
-import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
+import { type TableFeatures, type TableModel, TablePresentation, type TableRowAction } from '../../model';
+import { translationKey } from '../../translations';
 import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
 import { Table, type TableController } from './Table';
@@ -25,8 +26,11 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
+  /** Actions applied to the current multi-selection; renders a toolbar above the table when rows are selected. */
+  bulkActions?: TableRowAction[];
   onRowClick?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
+  onBulkAction?: (actionId: string, rows: any[]) => void;
 }>;
 
 /**
@@ -42,8 +46,10 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   properties,
   jsonSchema: jsonSchemaProp,
   rowActions,
+  bulkActions,
   onRowClick,
   onRowAction,
+  onBulkAction,
   ...props
 }: DynamicTableProps<T>) => {
   const registry = useContext(RegistryContext);
@@ -72,7 +78,8 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
     props.features,
     () =>
       ({
-        selection: { enabled: false },
+        // Enable multi-selection automatically when bulk actions are provided.
+        selection: { enabled: !!bulkActions, mode: 'multiple' },
         dataEditable: false,
       }) as const,
   );
@@ -95,12 +102,46 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   }, [registry, model]);
 
   return (
-    <div className={mx('dx-expander grid', classNames)}>
+    <div className={mx('dx-expander grid', bulkActions && 'grid-rows-[auto_minmax(0,1fr)]', classNames)}>
+      {bulkActions && model && (
+        <BulkActionsToolbar
+          model={model}
+          actions={bulkActions}
+          onAction={(actionId, selectedRows) => onBulkAction?.(actionId, selectedRows)}
+        />
+      )}
       <div className='grid min-h-0 overflow-hidden'>
         <Table.Root ref={tableRef}>
           <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
         </Table.Root>
       </div>
+    </div>
+  );
+};
+
+/** Toolbar rendered above the table when rows are selected; applies bulk actions to the selection. */
+const BulkActionsToolbar = ({
+  model,
+  actions,
+  onAction,
+}: {
+  model: TableModel;
+  actions: TableRowAction[];
+  onAction: (actionId: string, rows: any[]) => void;
+}) => {
+  const { t } = useTranslation(translationKey);
+  const selection = useAtomValue(model.selection.selectionAtom);
+  if (selection.size === 0) {
+    return null;
+  }
+  return (
+    <div className='flex items-center gap-2 p-1 bg-toolbar-surface border-be border-separator'>
+      <span className='text-sm text-description px-1'>{selection.size} selected</span>
+      {actions.map((action) => (
+        <Button key={action.id} onClick={() => onAction(action.id, model.selection.getSelectedRows())}>
+          {toLocalizedString(action.label, t)}
+        </Button>
+      ))}
     </div>
   );
 };

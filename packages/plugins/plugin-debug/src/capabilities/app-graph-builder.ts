@@ -6,14 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
+import { Filter } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { Integration } from '@dxos/plugin-integration';
 import { SPACE_TYPE } from '@dxos/plugin-space';
 import { getParentId } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Devtools } from '#types';
+import { DebugCapabilities, Devtools } from '#types';
 
 const DEVTOOLS_TYPE = `${meta.profile.key}.devtools`;
 
@@ -50,6 +52,12 @@ export default Capability.makeModule(
             const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
             const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
+
+            const settingsAtom = yield* Capability.get(DebugCapabilities.Settings);
+            const settings = get(settingsAtom);
+            const edgeIntegration = space
+              ? get(space.db.query(Filter.type(Integration.Integration)).atom).find((i) => i.providerId === 'edge')
+              : undefined;
 
             return [
               Node.make({
@@ -383,6 +391,159 @@ export default Capability.makeModule(
                       }),
                     ],
                   }),
+                  ...(settings.enableEdgeAdmin && edgeIntegration
+                    ? [
+                        Node.make({
+                          id: Devtools.HubAdmin.id,
+                          data: null,
+                          type: DEVTOOLS_TYPE,
+                          properties: {
+                            label: ['hub-admin.label', { ns: meta.profile.key }],
+                            icon: 'ph--shield-check--regular',
+                          },
+                          nodes: [
+                            Node.make({
+                              id: Devtools.HubAdmin.Accounts,
+                              data: Devtools.HubAdmin.Accounts,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.accounts.label', { ns: meta.profile.key }],
+                                icon: 'ph--users--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Codes,
+                              data: Devtools.HubAdmin.Codes,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.codes.label', { ns: meta.profile.key }],
+                                icon: 'ph--ticket--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Waitlist,
+                              data: Devtools.HubAdmin.Waitlist,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.waitlist.label', { ns: meta.profile.key }],
+                                icon: 'ph--clock--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.MagicLinks,
+                              data: Devtools.HubAdmin.MagicLinks,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.magic-links.label', { ns: meta.profile.key }],
+                                icon: 'ph--magic-wand--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Messages,
+                              data: Devtools.HubAdmin.Messages,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.messages.label', { ns: meta.profile.key }],
+                                icon: 'ph--envelope--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Email,
+                              data: Devtools.HubAdmin.Email,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.email.label', { ns: meta.profile.key }],
+                                icon: 'ph--paper-plane-tilt--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Services,
+                              data: Devtools.HubAdmin.Services,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.services.label', { ns: meta.profile.key }],
+                                icon: 'ph--cloud--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Templates,
+                              data: Devtools.HubAdmin.Templates,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.templates.label', { ns: meta.profile.key }],
+                                icon: 'ph--file-text--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Diagnostics,
+                              data: Devtools.HubAdmin.Diagnostics,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.diagnostics.label', { ns: meta.profile.key }],
+                                icon: 'ph--heartbeat--regular',
+                              },
+                            }),
+                            Node.make({
+                              id: Devtools.HubAdmin.Routes,
+                              data: Devtools.HubAdmin.Routes,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.routes.label', { ns: meta.profile.key }],
+                                icon: 'ph--path--regular',
+                              },
+                            }),
+                            // Edge-native admin panels (edge worker), grouped to distinguish from hub-service panels.
+                            Node.make({
+                              id: Devtools.HubAdmin.Edge,
+                              data: null,
+                              type: DEVTOOLS_TYPE,
+                              properties: {
+                                label: ['hub-admin.edge.label', { ns: meta.profile.key }],
+                                icon: 'ph--cloud--regular',
+                              },
+                              nodes: [
+                                Node.make({
+                                  id: Devtools.HubAdmin.Spaces,
+                                  data: Devtools.HubAdmin.Spaces,
+                                  type: DEVTOOLS_TYPE,
+                                  properties: {
+                                    label: ['hub-admin.spaces.label', { ns: meta.profile.key }],
+                                    icon: 'ph--planet--regular',
+                                  },
+                                }),
+                                Node.make({
+                                  id: Devtools.HubAdmin.Identities,
+                                  data: Devtools.HubAdmin.Identities,
+                                  type: DEVTOOLS_TYPE,
+                                  properties: {
+                                    label: ['hub-admin.identities.label', { ns: meta.profile.key }],
+                                    icon: 'ph--identification-badge--regular',
+                                  },
+                                }),
+                                Node.make({
+                                  id: Devtools.HubAdmin.EdgeBindings,
+                                  data: Devtools.HubAdmin.EdgeBindings,
+                                  type: DEVTOOLS_TYPE,
+                                  properties: {
+                                    label: ['hub-admin.edge-bindings.label', { ns: meta.profile.key }],
+                                    icon: 'ph--plugs-connected--regular',
+                                  },
+                                }),
+                                Node.make({
+                                  id: Devtools.HubAdmin.DangerZone,
+                                  data: Devtools.HubAdmin.DangerZone,
+                                  type: DEVTOOLS_TYPE,
+                                  properties: {
+                                    label: ['hub-admin.danger-zone.label', { ns: meta.profile.key }],
+                                    icon: 'ph--warning--regular',
+                                  },
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ]
+                    : []),
                 ],
               }),
             ];

@@ -49,13 +49,27 @@ import { Position } from '@dxos/util';
 
 import { DebugSettings } from '#components';
 import {
+  AccountsPanel,
+  AdminSpacesPanel,
+  CodesPanel,
+  DangerZonePanel,
   DebugGraph,
   DebugObjectPanel,
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
+  DiagnosticsAdminPanel,
+  EdgeBindingsPanel,
+  EmailPanel,
+  IdentitiesPanel,
+  MagicLinksPanel,
+  MessagesPanel,
   RegistryPanel,
+  RoutesPanel,
+  ServicesPanel,
   SpaceGenerator,
+  TemplatesPanel,
+  WaitlistPanel,
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
@@ -449,6 +463,81 @@ export default Capability.makeModule(
           );
           return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
         },
+      }),
+
+      //
+      // Hub Admin panels (gated: enableEdgeAdmin + edge Integration in space)
+      //
+
+      Surface.create({
+        id: 'hub-admin.accounts',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Accounts),
+        component: () => <AccountsPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.codes',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Codes),
+        component: () => <CodesPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.waitlist',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Waitlist),
+        component: () => <WaitlistPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.magicLinks',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.MagicLinks),
+        component: () => <MagicLinksPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.spaces',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Spaces),
+        component: () => <AdminSpacesPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.identities',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Identities),
+        component: () => <IdentitiesPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.messages',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Messages),
+        component: () => <MessagesPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.email',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Email),
+        component: () => <EmailPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.services',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Services),
+        component: () => <ServicesPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.templates',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Templates),
+        component: () => <TemplatesPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.diagnostics',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Diagnostics),
+        component: () => <DiagnosticsAdminPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.edgeBindings',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.EdgeBindings),
+        component: () => <EdgeBindingsPanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.dangerZone',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.DangerZone),
+        component: () => <DangerZonePanel />,
+      }),
+      Surface.create({
+        id: 'hub-admin.routes',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.HubAdmin.Routes),
+        component: () => <RoutesPanel />,
       }),
     ]);
   }),

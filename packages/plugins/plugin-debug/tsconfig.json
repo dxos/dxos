@@ -22,6 +22,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -68,6 +71,9 @@
     },
     {
       "path": "../../core/echo/echo-host"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
@@ -131,6 +137,9 @@
     },
     {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-markdown"

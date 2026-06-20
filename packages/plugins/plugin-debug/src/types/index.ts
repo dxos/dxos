@@ -93,4 +93,23 @@ export namespace Devtools {
     export const Traces = `${Devtools.Edge.id}.traces`;
     export const Testing = `${Devtools.Edge.id}.testing`;
   }
+
+  export namespace HubAdmin {
+    export const id = `${Devtools.id}.hub-admin`;
+    export const Accounts = `${HubAdmin.id}.accounts`;
+    export const Codes = `${HubAdmin.id}.codes`;
+    export const Waitlist = `${HubAdmin.id}.waitlist`;
+    export const MagicLinks = `${HubAdmin.id}.magicLinks`;
+    export const Edge = `${HubAdmin.id}.edge`;
+    export const Spaces = `${HubAdmin.id}.spaces`;
+    export const Identities = `${HubAdmin.id}.identities`;
+    export const Messages = `${HubAdmin.id}.messages`;
+    export const Email = `${HubAdmin.id}.email`;
+    export const Services = `${HubAdmin.id}.services`;
+    export const Templates = `${HubAdmin.id}.templates`;
+    export const Diagnostics = `${HubAdmin.id}.diagnostics`;
+    export const EdgeBindings = `${HubAdmin.id}.edgeBindings`;
+    export const DangerZone = `${HubAdmin.id}.dangerZone`;
+    export const Routes = `${HubAdmin.id}.routes`;
+  }
 }

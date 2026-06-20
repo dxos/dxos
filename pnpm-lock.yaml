@@ -9665,6 +9665,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -9674,6 +9677,9 @@ importers:
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../../core/echo/echo-host
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -9701,6 +9707,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
+      '@dxos/plugin-integration':
+        specifier: workspace:*
+        version: link:../plugin-integration
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown

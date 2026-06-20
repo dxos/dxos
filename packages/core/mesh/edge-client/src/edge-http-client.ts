@@ -504,6 +504,105 @@ export class EdgeHttpClient extends BaseHttpClient {
       EffectEx.runAndForwardErrors,
     ) as T;
   }
+
+  //
+  // Admin (admin-key) endpoints. Require an `ApiKeyAuth` instance — the
+  // verifiable-presentation flow does not satisfy `adminKey` auth.
+  //
+
+  public async adminListSpaces(ctx: Context, opts?: { limit?: number; cursor?: string }): Promise<any> {
+    return this._call(ctx, createUrl(new URL('/admin/spaces', this.baseUrl), { ...opts }), { method: 'GET' });
+  }
+
+  public async adminGetSpace(ctx: Context, spaceId: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/spaces/${spaceId}`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminDeleteSpace(ctx: Context, spaceId: string): Promise<void> {
+    return this._call(ctx, new URL(`/admin/spaces/${spaceId}`, this.baseUrl), { method: 'DELETE' });
+  }
+
+  public async adminExportSpace(ctx: Context, spaceId: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/spaces/${spaceId}/export`, this.baseUrl), { method: 'POST' });
+  }
+
+  public async adminListIdentities(ctx: Context, opts?: { limit?: number; cursor?: string }): Promise<any> {
+    return this._call(ctx, createUrl(new URL('/admin/identities', this.baseUrl), { ...opts }), { method: 'GET' });
+  }
+
+  public async adminGetIdentity(ctx: Context, identityKey: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/identities/${identityKey}`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminDeleteIdentity(ctx: Context, identityKey: string): Promise<void> {
+    return this._call(ctx, new URL(`/admin/identities/${identityKey}`, this.baseUrl), { method: 'DELETE' });
+  }
+
+  public async adminGetDurableObjectTypes(ctx: Context): Promise<any> {
+    return this._call(ctx, new URL('/admin/edge/do-types', this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminGetDurableObjectCounts(ctx: Context): Promise<any> {
+    return this._call(ctx, new URL('/admin/edge/do-counts', this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminListDurableObjects(
+    ctx: Context,
+    type: string,
+    opts?: { limit?: number; cursor?: string },
+  ): Promise<any> {
+    return this._call(ctx, createUrl(new URL(`/admin/edge/do/${type}`, this.baseUrl), { ...opts }), { method: 'GET' });
+  }
+
+  public async adminGetDurableObjectStorageKeys(ctx: Context, type: string, id: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/edge/do/${type}/${id}/storage-keys`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminGetDurableObjectStoredValue(ctx: Context, type: string, id: string, key: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/edge/do/${type}/${id}/storage/${key}`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminGetD1Tables(ctx: Context): Promise<any> {
+    return this._call(ctx, new URL('/admin/edge/d1-tables', this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminGetD1Rows(ctx: Context, table: string, opts?: { limit?: number; cursor?: string }): Promise<any> {
+    return this._call(ctx, createUrl(new URL(`/admin/edge/d1/${table}/rows`, this.baseUrl), { ...opts }), {
+      method: 'GET',
+    });
+  }
+
+  public async adminRunSelectivePurge(
+    ctx: Context,
+    body: { dryRun?: boolean; confirm?: boolean; expectedKeepDids?: string[] },
+  ): Promise<any> {
+    return this._call(ctx, new URL('/admin/selective-purge', this.baseUrl), { method: 'POST', body });
+  }
+
+  public async adminGetExposedRpcMethods(ctx: Context, type: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/edge/do/${type}/rpc-methods`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminInvokeRpcMethod(ctx: Context, type: string, id: string, method: string, args?: any): Promise<any> {
+    return this._call(ctx, new URL(`/admin/edge/do/${type}/${id}/rpc/${method}`, this.baseUrl), {
+      method: 'POST',
+      body: args,
+    });
+  }
+
+  public async adminFindD1Row(ctx: Context, table: string, column: string, value: string): Promise<any> {
+    return this._call(ctx, createUrl(new URL(`/admin/edge/d1/${table}/find`, this.baseUrl), { column, value }), {
+      method: 'GET',
+    });
+  }
+
+  public async adminGetSpaceDiagnostics(ctx: Context, spaceId: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/edge/diagnostics/space/${spaceId}`, this.baseUrl), { method: 'GET' });
+  }
+
+  public async adminGetFunctionsDiagnostics(ctx: Context, spaceId: string): Promise<any> {
+    return this._call(ctx, new URL(`/admin/edge/diagnostics/functions/${spaceId}`, this.baseUrl), { method: 'GET' });
+  }
 }
 
 const getFileMimeType = (filename: string) =>
