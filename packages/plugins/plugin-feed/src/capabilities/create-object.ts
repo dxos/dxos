@@ -13,8 +13,6 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
-import { getMagazinesPath } from '../paths';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
@@ -27,7 +25,6 @@ export default Capability.makeModule(
             const result = yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
             // Auto-sync after creation if URL is provided.
@@ -54,7 +51,7 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object: magazine,
               target: options.target,
-              targetNodeId: options.targetNodeId ?? getMagazinesPath(options.db.spaceId),
+              targetNodeId: options.targetNodeId,
             });
           }),
       }),

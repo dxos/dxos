@@ -8,21 +8,16 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
-
-import { getMagazinesPath } from '../paths';
-
-const magazineTypename = Type.getTypename(Magazine.Magazine);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -35,33 +30,6 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      // Add-magazine action on the Magazines section header.
-      GraphBuilder.createExtension({
-        id: 'magazinesSectionActions',
-        match: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === magazineTypename && space ? Option.some(space) : Option.none();
-        },
-        actions: (space) =>
-          Effect.succeed([
-            Node.makeAction({
-              id: 'create-magazine',
-              data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
-                  target: space.db,
-                  typename: magazineTypename,
-                  initialFormValues: { feeds: [undefined] },
-                  targetNodeId: getMagazinesPath(space.db.spaceId),
-                }),
-              properties: {
-                label: ['add-object.label', { ns: magazineTypename }],
-                icon: 'ph--plus--regular',
-                disposition: 'list-item-primary',
-              },
-            }),
-          ]),
-      }),
-
       // Companion panel: resolve the selected Post under a Magazine node.
       GraphBuilder.createExtension({
         id: 'magazinePost',

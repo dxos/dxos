@@ -37,7 +37,6 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: opts.target,
-            hidden: true,
             targetNodeId: opts.targetNodeId ?? getChannelsPath(opts.db.spaceId),
           });
         }),

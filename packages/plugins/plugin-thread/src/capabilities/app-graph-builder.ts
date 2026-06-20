@@ -27,7 +27,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      TypeSection.createTypeSectionExtension(Channel.Channel),
+      TypeSection.createTypeSectionExtension(Channel.Channel, { position: 300 }),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
