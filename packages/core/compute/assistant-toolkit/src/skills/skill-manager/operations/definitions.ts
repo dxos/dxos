@@ -14,7 +14,7 @@ export const QuerySkills = Operation.make({
     key: DXN.make('org.dxos.function.skillManager.querySkills'),
     name: 'Query skills',
     description: 'Queries available skills.',
-    icon: 'ph--skill--regular',
+    icon: 'ph--blueprint--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Array(Type.getSchema(Skill.Skill)),

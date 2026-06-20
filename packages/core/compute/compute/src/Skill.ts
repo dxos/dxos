@@ -67,7 +67,7 @@ export const Skill = Schema.Struct({
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--skill--regular', hue: 'sky' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.skill', '0.2.0')),
 );
 

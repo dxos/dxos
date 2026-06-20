@@ -80,7 +80,7 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab value='skills' icon='ph--skill--regular' label={t('options.skills.title')} />
+                    <Tabs.IconTab value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
