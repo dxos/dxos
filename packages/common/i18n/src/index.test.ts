@@ -24,10 +24,7 @@ describe('i18n', () => {
   });
 
   test('changeLanguage switches the active bundle and fires onLanguageChanged', async ({ expect }) => {
-    addResources([
-      { 'en-US': { farewells: { bye: 'Bye' } } },
-      { 'fr-FR': { farewells: { bye: 'Au revoir' } } },
-    ]);
+    addResources([{ 'en-US': { farewells: { bye: 'Bye' } } }, { 'fr-FR': { farewells: { bye: 'Au revoir' } } }]);
 
     let changedTo: string | undefined;
     const unsubscribe = onLanguageChanged((language) => {
