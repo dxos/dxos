@@ -99,5 +99,9 @@ export const makeProperty = <V>(
   key: string,
 ): Atom.Atom<V | undefined> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  return annotationPropertyFamily(Data.tuple(target, annotation as Annotation.Annotation<Record<string, any>>, key)) as Atom.Atom<V | undefined>;
+  // The flattened family key is a single concrete tuple type, so the generic `V` is erased at the
+  // family boundary and recovered here; no typed alternative exists for a per-call-generic family.
+  return annotationPropertyFamily(
+    Data.tuple(target, annotation as Annotation.Annotation<Record<string, any>>, key),
+  ) as Atom.Atom<V | undefined>;
 };
