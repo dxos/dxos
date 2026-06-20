@@ -21,7 +21,7 @@ import { meta } from '#meta';
 // Virtual Node Types
 //
 
-export const TYPES_SECTION_TYPE = `${meta.profile.key}.types`;
+export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
 export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
 export const TYPE_COLLECTION_TYPE = `${meta.profile.key}.type-collection`;
 export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;

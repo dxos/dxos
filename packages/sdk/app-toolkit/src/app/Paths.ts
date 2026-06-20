@@ -28,7 +28,7 @@ export const getPinnedWorkspacePath = (name: string): string => `${Node.RootId}/
  * Well-known local segment names for the canonical graph tree structure.
  */
 export const Segments = {
-  types: 'types',
+  database: 'database',
   collections: 'collections',
 } as const;
 
@@ -59,11 +59,11 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
 };
 
 /**
- * Canonical qualified path to the types section of a space.
+ * Canonical qualified path to the database section of a space.
  * Optional additional segments are appended.
  */
-export const getTypesPath = (spaceId: string, ...segments: string[]): string => {
-  const base = getSpacePath(spaceId, Segments.types);
+export const getDatabasePath = (spaceId: string, ...segments: string[]): string => {
+  const base = getSpacePath(spaceId, Segments.database);
   return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
 };
 
@@ -94,14 +94,14 @@ export const getTypeSlugFromUri = (uri: URI.URI): string => {
  * Optional additional segments are appended (e.g. an object id for a view under that type).
  */
 export const getTypePath = (spaceId: string, typename: string, ...segments: string[]): string =>
-  getTypesPath(spaceId, typename, ...segments);
+  getDatabasePath(spaceId, typename, ...segments);
 
 /**
  * Canonical qualified path to a specific object node within a type's subtree.
  * Uses the ECHO-local object ID, not the full DXN.
  */
 export const getObjectPath = (spaceId: string, typename: string, objectId: string): string =>
-  getTypesPath(spaceId, typename, 'all', objectId);
+  getDatabasePath(spaceId, typename, 'all', objectId);
 
 /**
  * Derive the canonical graph path for a reactive ECHO object.
