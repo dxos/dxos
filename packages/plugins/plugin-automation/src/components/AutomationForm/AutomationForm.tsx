@@ -132,7 +132,7 @@ const ActionEditor = ({ db, automation }: { db: Database.Database; automation: A
           onChange={handleOperationChange}
         />
       ) : ownedRoutine ? (
-        <RoutineInstructionsEditor db={db} routine={ownedRoutine} />
+        <RoutineEditor db={db} routine={ownedRoutine} />
       ) : null}
     </div>
   );
@@ -190,12 +190,14 @@ const OperationEditor = ({
 
 const ROUTINE_SCHEMA = Type.getSchema(Routine.Routine);
 
-/** Sub-form: edits just the `instructions` field of an owned Routine (a Markdown Text ref, edited in place). */
-const RoutineInstructionsEditor = ({ db, routine }: { db: Database.Database; routine: Routine.Routine }) => {
+/** Sub-form: edits the owned Routine's `instructions` (Markdown) and `blueprints`, edited in place. */
+const RoutineEditor = ({ db, routine }: { db: Database.Database; routine: Routine.Routine }) => {
   const defaultValues = useMemo(() => Obj.getSnapshot(routine), [routine]);
   return (
     <Form.Root key={routine.id} schema={ROUTINE_SCHEMA} db={db} defaultValues={defaultValues}>
-      <Form.FieldSet exclude={(props) => props.filter((prop) => prop.name === 'instructions')} />
+      <Form.FieldSet
+        exclude={(props) => props.filter((prop) => prop.name === 'instructions' || prop.name === 'blueprints')}
+      />
     </Form.Root>
   );
 };
