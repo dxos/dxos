@@ -42,6 +42,7 @@ import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
+import { MailLayoutPlugin } from '@dxos/plugin-mail-layout';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
@@ -110,6 +111,7 @@ export type PluginConfig = State & {
   isStrict?: boolean;
   isPopover?: boolean;
   isMobile?: boolean;
+  isMail?: boolean;
 };
 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
@@ -173,8 +175,15 @@ export const getPlugins = ({
   isTauri,
   isPopover,
   isMobile,
+  isMail,
 }: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
+  const layoutPlugin = isMail
+    ? MailLayoutPlugin()
+    : isPopover
+      ? SpotlightPlugin()
+      : isMobile
+        ? SimpleLayoutPlugin({})
+        : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AssistantPlugin(),

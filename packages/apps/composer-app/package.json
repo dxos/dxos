@@ -85,6 +85,7 @@
     "@dxos/plugin-iroh-beacon": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-linear": "workspace:*",
+    "@dxos/plugin-mail-layout": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-map-solid": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

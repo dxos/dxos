@@ -412,6 +412,9 @@
       "path": "packages/plugins/plugin-linear/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-mail-layout/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-map/tsconfig.json"
     },
     {
