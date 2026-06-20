@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type ScheduleValue } from './Schedule';
-
 import { cronToSchedule, fromCron, scheduleToCron, toCron } from './cron';
+import { type ScheduleValue } from './Schedule';
 
 describe('toCron', () => {
   test('minutely: every 15 minutes', ({ expect }) => {
