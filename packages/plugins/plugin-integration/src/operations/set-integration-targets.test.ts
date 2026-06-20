@@ -47,7 +47,7 @@ describe('SetIntegrationTargets', () => {
 
   test('appends remote-id selections not previously in targets', async ({ expect }) => {
     const { db, token } = await setup();
-    const integration = db.add(Integration.make({ accessToken: Ref.make(token), targets: [] }));
+    const integration = db.add(Integration.make({ accessTokens: [Ref.make(token)], targets: [] }));
 
     const result = await invokeSet(db, integration, [{ remoteId: 'foo', name: 'Foo' }]);
     expect(result.added).toBe(1);
@@ -62,7 +62,7 @@ describe('SetIntegrationTargets', () => {
     const { db, token } = await setup();
     const integration = db.add(
       Integration.make({
-        accessToken: Ref.make(token),
+        accessTokens: [Ref.make(token)],
         targets: [
           { remoteId: 'a', name: 'A' },
           { remoteId: 'b', name: 'B' },
@@ -83,7 +83,7 @@ describe('SetIntegrationTargets', () => {
     const lastSyncAt = '2026-04-01T00:00:00.000Z';
     const integration = db.add(
       Integration.make({
-        accessToken: Ref.make(token),
+        accessTokens: [Ref.make(token)],
         targets: [
           {
             remoteId: 'kept',
@@ -115,7 +115,7 @@ describe('SetIntegrationTargets', () => {
     const auto = db.add(Obj.make(Expando.Expando, { name: 'auto' }));
     const integration = db.add(
       Integration.make({
-        accessToken: Ref.make(token),
+        accessTokens: [Ref.make(token)],
         targets: [{ object: Ref.make(auto) }],
       }),
     );

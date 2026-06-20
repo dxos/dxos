@@ -96,6 +96,16 @@
       "types": "./dist/types/src/testing.d.ts",
       "default": "./dist/lib/neutral/testing.mjs"
     },
+    "./services": {
+      "source": "./src/services/index.ts",
+      "types": "./dist/types/src/services/index.d.ts",
+      "default": "./dist/lib/neutral/services/index.mjs"
+    },
+    "./mail-live": {
+      "source": "./src/services/mail-live/index.ts",
+      "types": "./dist/types/src/services/mail-live/index.d.ts",
+      "default": "./dist/lib/neutral/services/mail-live/index.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -176,6 +186,7 @@
     "js-yaml": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",

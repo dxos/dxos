@@ -59,6 +59,8 @@ export type IntegrationCoordinator = {
     spaceId: Key.SpaceId;
     providerId: string;
     values: unknown;
+    /** Existing local object to wire as the new Integration's first target (e.g. the empty Mailbox the user is connecting from). */
+    existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<CreateIntegrationResult, Error>;
   /**
    * Finalize a redirect-flow OAuth callback received via `/redirect/oauth`.

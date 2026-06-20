@@ -29,7 +29,13 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService } from '../services';
+import {
+  configuredCredentialsLayer,
+  credentialsLayerFromDatabase,
+  FunctionInvocationService,
+  ImapUnavailable,
+  SmtpUnavailable,
+} from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
@@ -230,10 +236,10 @@ class FunctionContext extends Resource {
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
       registryLayer,
-
-      // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
-      // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)
-      // type union — handlers that yield it will die at invocation time.
+      // Mail transports default to unavailable in the protocol-level mock layer.
+      // Workers function bundles wire MailServicesLive from @dxos/plugin-inbox/mail-live.
+      ImapUnavailable,
+      SmtpUnavailable,
       FunctionInvocationService.layerNotAvailable,
     );
   }

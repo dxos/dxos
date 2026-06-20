@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Filter, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { FunctionInvocationService, type FunctionServices } from '@dxos/functions';
+import { FunctionInvocationService, type FunctionServices, Imap, Smtp } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
@@ -30,6 +30,8 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const credentials = yield* Credential.CredentialsService;
       const database = yield* Database.Service;
       const functionInvocationService = yield* FunctionInvocationService;
+      const imap = yield* Imap;
+      const smtp = yield* Smtp;
       return {
         invokeFunction: <I, O>(functionDef: Operation.Definition<I, O>, input: I): Effect.Effect<O> =>
           Effect.flatMap(Effect.context<never>(), (callerContext) =>
@@ -41,6 +43,8 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               Effect.provideService(AiService.AiService, ai),
               Effect.provideService(Credential.CredentialsService, credentials),
               Effect.provideService(Database.Service, database),
+              Effect.provideService(Imap, imap),
+              Effect.provideService(Smtp, smtp),
               Effect.provideService(FunctionInvocationService, functionInvocationService),
               Effect.provideService(Operation.Service, {
                 invoke: (op: any, ...args: any[]) => functionInvocationService.invokeFunction(op, args[0]),

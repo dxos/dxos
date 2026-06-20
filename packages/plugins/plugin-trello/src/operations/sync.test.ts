@@ -41,7 +41,7 @@ describe('reconcileBoardCards (pull)', () => {
         token: 'apikey:usertoken',
       }),
     );
-    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
+    const integration = db.add(Obj.make(Integration.Integration, { accessTokens: [Ref.make(token)], targets: [] }));
     return { db, integration };
   };
 
@@ -330,7 +330,7 @@ describe('pushBoardCards (push)', () => {
         token: 'apikey:usertoken',
       }),
     );
-    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
+    const integration = db.add(Obj.make(Integration.Integration, { accessTokens: [Ref.make(token)], targets: [] }));
     return { db, integration };
   };
 

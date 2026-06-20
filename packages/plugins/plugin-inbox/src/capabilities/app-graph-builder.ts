@@ -26,6 +26,7 @@ import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
 import {
+  IMAP_PROVIDER_ID,
   MAILBOXES_SECTION_TYPE,
   MAILBOX_ALL_MAIL_TYPE,
   MAILBOX_DRAFTS_NODE_DATA,
@@ -531,12 +532,15 @@ export default Capability.makeModule(
           if (!integration) {
             return Effect.succeed([]);
           }
+          // Route by provider so an IMAP mailbox syncs over IMAP rather than Gmail.
+          const operation =
+            integration.providerId === IMAP_PROVIDER_ID ? InboxOperation.ImapSync : InboxOperation.GoogleMailSync;
           return Effect.succeed([
             {
               id: 'sync',
               data: () =>
                 Operation.invoke(
-                  InboxOperation.GoogleMailSync,
+                  operation,
                   {
                     integration: Ref.make(integration),
                     mailbox: Ref.make(mailbox),

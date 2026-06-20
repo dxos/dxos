@@ -51,6 +51,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/migrations": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",

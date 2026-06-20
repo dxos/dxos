@@ -163,6 +163,18 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
+
+        'settings.title': 'Inbox settings',
+
+        'imap-provider.label': 'IMAP',
+        'imap-form.host.label': 'Host',
+        'imap-form.host.placeholder': 'imap.example.com',
+        'imap-form.username.label': 'Username',
+        'imap-form.password.label': 'Password',
+        'imap-form.app-password.message': 'Use an app password if your provider requires it (Gmail, iCloud, Yahoo).',
+        'imap-form.test-connection.label': 'Test connection',
+        'imap-form.unavailable.message':
+          'IMAP requires the desktop app or remote functions. Add a Cloudflare functions endpoint to enable it in the browser.',
       },
     },
   },

@@ -78,7 +78,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
         Integration.make({
           name: result.email ?? result.identifier,
           providerId: ATMOSPHERE_PROVIDER_ID,
-          accessToken: Ref.make(tokenObject),
+          accessTokens: [Ref.make(tokenObject)],
           targets: [],
         }),
       );

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Event, Message } from '@dxos/types';
 
-import { CreateObject, OperationHandler } from '#capabilities';
+import { CreateObject, MailServices, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
 
@@ -15,6 +15,11 @@ import { Calendar, Mailbox } from '#types';
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Plugin.addModule({
+    id: 'MailServices',
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: MailServices,
+  }),
   AppPlugin.addSchemaModule({
     schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),

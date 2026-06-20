@@ -6,7 +6,7 @@ import { type AiService } from '@dxos/ai';
 import { type Credential, type Operation, type Trace } from '@dxos/compute';
 import { type Database } from '@dxos/echo';
 
-import { type FunctionInvocationService } from './services';
+import { type FunctionInvocationService, type Imap, type Smtp } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -21,6 +21,8 @@ export type FunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  | Imap
+  | Smtp
   | Trace.TraceService
   // TODO(dmaretskyi): `FunctionInvocationService` is being phased out in favour of `Operation.Service`;
   // it's kept in the union until `functions-runtime/local-function-execution.ts` migrates.

@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof IntegrationOperation.CreateIntegrati
         return yield* Effect.gen(function* () {
           const integration = Integration.make({
             name,
-            accessToken,
+            accessTokens: [accessToken],
             targets: [],
           });
           return yield* Database.add(integration);

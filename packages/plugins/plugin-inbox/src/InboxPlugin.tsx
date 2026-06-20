@@ -17,6 +17,7 @@ import {
   CreateObject,
   InboxSettings,
   IntegrationProvider,
+  MailServices,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
@@ -35,6 +36,11 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Plugin.addModule({
+    id: 'MailServices',
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: MailServices,
+  }),
   AppPlugin.addSchemaModule({
     schema: [
       Event.Event,

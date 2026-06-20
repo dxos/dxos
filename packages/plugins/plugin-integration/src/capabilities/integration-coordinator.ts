@@ -29,9 +29,14 @@ import {
 import { IntegrationProviderNotFoundError, SpaceUnavailableError } from '../errors';
 import { Integration } from '../types';
 
-/** Pending integration awaiting an OAuth callback. */
+/** Pending integration awaiting an OAuth callback or credential-form submit. */
 type Pending = {
-  token: AccessToken.AccessToken;
+  /**
+   * AccessTokens to persist with the integration. Index 0 is the primary —
+   * OAuth flows mutate this entry's `.token` field when the postMessage
+   * callback arrives.
+   */
+  tokens: ReadonlyArray<AccessToken.AccessToken>;
   integration: Integration.Integration;
   db: Database.Database;
   provider: IntegrationProviderEntry;
@@ -80,7 +85,12 @@ const resolveProvider = (
 
 const openProviderFormDialog = (
   invoker: Operation.OperationService,
-  input: { db: Database.Database; spaceId: Key.SpaceId; provider: IntegrationProviderEntry },
+  input: {
+    db: Database.Database;
+    spaceId: Key.SpaceId;
+    provider: IntegrationProviderEntry;
+    existingTarget?: Ref.Ref<Obj.Any>;
+  },
 ) =>
   invoker.invoke(LayoutOperation.UpdateDialog, {
     subject: PROVIDER_FORM_DIALOG,
@@ -91,13 +101,14 @@ const openProviderFormDialog = (
       spaceId: input.spaceId,
       providerId: input.provider.id,
       providerLabel: input.provider.label ?? input.provider.id,
+      existingTarget: input.existingTarget,
     },
   });
 
 const runOnTokenCreated = (
   provider: IntegrationProviderEntry,
   input: {
-    accessToken: AccessToken.AccessToken;
+    accessTokens: ReadonlyArray<AccessToken.AccessToken>;
     integration: Integration.Integration;
     existingTarget?: Ref.Ref<Obj.Any>;
   },
@@ -108,10 +119,10 @@ const runOnTokenCreated = (
   return provider.onTokenCreated(input).pipe(
     Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((error) =>
-      Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
+      Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessTokens[0]?.source, error })),
     ),
     Effect.catchAllDefect((defect) =>
-      Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessToken.source, defect })),
+      Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessTokens[0]?.source, defect })),
     ),
   );
 };
@@ -153,13 +164,15 @@ const openSyncTargetsDialogAfterIntegrationCreated = (
 
 const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { token, integration, db, provider, existingTarget } = entry;
-    const persistedToken = db.add(token);
+    const { tokens, integration, db, provider, existingTarget } = entry;
+    const persistedTokens = tokens.map((token) => db.add(token));
     const persistedIntegration = db.add(integration);
-    Obj.setParent(persistedToken, persistedIntegration);
+    for (const persistedToken of persistedTokens) {
+      Obj.setParent(persistedToken, persistedIntegration);
+    }
 
     yield* runOnTokenCreated(provider, {
-      accessToken: persistedToken,
+      accessTokens: persistedTokens,
       integration: persistedIntegration,
       existingTarget,
     });
@@ -305,9 +318,12 @@ export default Capability.makeModule(
           return;
         }
         deletePendingSnapshot(decoded.accessTokenId);
-        Obj.update(entry.token, (token) => {
-          token.token = decoded.accessToken;
-        });
+        const primaryToken = entry.tokens[0];
+        if (primaryToken) {
+          Obj.update(primaryToken, (primaryToken) => {
+            primaryToken.token = decoded.accessToken;
+          });
+        }
         yield* finalizePendingEntry(invoker, entry);
       });
 
@@ -334,7 +350,7 @@ export default Capability.makeModule(
         // `submitCredentialForm`. OAuth providers re-enter here with
         // `loginHint`; non-OAuth providers complete directly in the form.
         if (provider.credentialForm && loginHint === undefined) {
-          yield* openProviderFormDialog(invoker, { db, spaceId, provider });
+          yield* openProviderFormDialog(invoker, { db, spaceId, provider, existingTarget });
           return { kind: 'dialog-opened' } as const;
         }
 
@@ -342,7 +358,7 @@ export default Capability.makeModule(
         // generic provider-form dialog (renders the default custom-token
         // schema for backwards compatibility).
         if (!provider.oauth) {
-          yield* openProviderFormDialog(invoker, { db, spaceId, provider });
+          yield* openProviderFormDialog(invoker, { db, spaceId, provider, existingTarget });
           return { kind: 'dialog-opened' } as const;
         }
 
@@ -363,11 +379,11 @@ export default Capability.makeModule(
         const integration = Obj.make(Integration.Integration, {
           name: label,
           providerId: provider.id,
-          accessToken: Ref.make(token),
+          accessTokens: [Ref.make(token)],
           targets: [],
         });
 
-        pending.set(token.id, { token, integration, db, provider, existingTarget });
+        pending.set(token.id, { tokens: [token], integration, db, provider, existingTarget });
 
         // Written for all providers: if window.opener is lost during auth, Edge
         // redirects the popup to /redirect/oauth and this snapshot is the only
@@ -410,9 +426,12 @@ export default Capability.makeModule(
         const inMemory = takePendingEntry(accessTokenId);
         if (inMemory) {
           deletePendingSnapshot(accessTokenId);
-          Obj.update(inMemory.token, (token) => {
-            token.token = accessTokenValue;
-          });
+          const primary = inMemory.tokens[0];
+          if (primary) {
+            Obj.update(primary, (primary) => {
+              primary.token = accessTokenValue;
+            });
+          }
           yield* finalizePendingEntry(invoker, inMemory);
           return;
         }
@@ -451,7 +470,7 @@ export default Capability.makeModule(
         const integration = Obj.make(Integration.Integration, {
           name: snapshot.integrationSnapshot.name,
           providerId: snapshot.integrationSnapshot.providerId,
-          accessToken: Ref.make(token),
+          accessTokens: [Ref.make(token)],
           targets: [],
         });
 
@@ -459,7 +478,7 @@ export default Capability.makeModule(
           ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
-        yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });
+        yield* finalizePendingEntry(invoker, { tokens: [token], integration, db: space.db, provider, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = ({
@@ -481,12 +500,12 @@ export default Capability.makeModule(
         const integration = Obj.make(Integration.Integration, {
           name: name ?? account ?? source,
           providerId: provider.id,
-          accessToken: Ref.make(accessToken),
+          accessTokens: [Ref.make(accessToken)],
           targets: [],
         });
 
         yield* finalizePendingEntry(invoker, {
-          token: accessToken,
+          tokens: [accessToken],
           integration,
           db,
           provider,
@@ -500,6 +519,7 @@ export default Capability.makeModule(
       spaceId,
       providerId,
       values,
+      existingTarget,
     }) =>
       Effect.gen(function* () {
         const provider = yield* resolveProvider(getProviderEntries, providerId);
@@ -507,14 +527,15 @@ export default Capability.makeModule(
           return yield* Effect.fail(new Error(`Provider ${providerId} has no credentialForm.`));
         }
 
-        const result = yield* provider.credentialForm.onSubmit({ values, provider, db });
+        const result = yield* provider.credentialForm.onSubmit({ values, provider, db, existingTarget });
 
         if (result.kind === 'complete') {
           yield* finalizePendingEntry(invoker, {
-            token: result.accessToken,
+            tokens: result.accessTokens,
             integration: result.integration,
             db,
             provider,
+            existingTarget,
           });
           return { kind: 'integration-created', integrationId: result.integration.id } as const;
         }
@@ -526,7 +547,7 @@ export default Capability.makeModule(
         if (!loginHint) {
           return yield* Effect.fail(new Error(`Provider ${providerId} credentialForm produced an empty loginHint.`));
         }
-        return yield* createIntegration({ db, spaceId, providerId, loginHint });
+        return yield* createIntegration({ db, spaceId, providerId, loginHint, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(

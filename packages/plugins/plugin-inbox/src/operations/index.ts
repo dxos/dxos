@@ -25,7 +25,11 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./google/contacts/sync'),
   () => import('./google/gmail/send'),
   () => import('./google/gmail/sync'),
+  () => import('./imap/connect-test'),
+  () => import('./imap/sync'),
   () => import('./read-email'),
+  () => import('./send-message'),
+  () => import('./smtp/send'),
   () => import('./sync-contacts'),
   () => import('./sync-draft-events'),
 );

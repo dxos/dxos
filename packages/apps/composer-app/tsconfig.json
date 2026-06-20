@@ -97,6 +97,9 @@
       "path": "../../common/merkle-search-tree"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
       "path": "../../common/random"
     },
     {

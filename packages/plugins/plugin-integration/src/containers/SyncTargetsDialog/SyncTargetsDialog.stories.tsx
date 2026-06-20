@@ -36,7 +36,7 @@ const DefaultStory = ({ availableTargets, selectedIds = [] }: StoryProps) => {
       Integration.make({
         name: 'Work Trello',
         providerId: 'trello.com',
-        accessToken: Ref.make(AccessToken.make({ source: 'trello.com', token: 'mock-token' })),
+        accessTokens: [Ref.make(AccessToken.make({ source: 'trello.com', token: 'mock-token' }))],
         targets: selectedIds.map((remoteId) => ({ remoteId })),
       }),
     [selectedIds],

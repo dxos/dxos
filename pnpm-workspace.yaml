@@ -284,7 +284,7 @@ catalog:
   '@types/react-syntax-highlighter': ^15.5.13
   '@types/react-test-renderer': ^17.0.2
   '@types/react-virtualized': ^9.22.3
-  '@types/readable-stream': ^2.3.9
+  '@types/readable-stream': ^2.3.14
   '@types/reveal.js': ^5.0.3
   '@types/seedrandom': ^3.0.5
   '@types/semver': ^7.7.1
@@ -311,15 +311,15 @@ catalog:
   '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/plugin-react': ^6.0.2
   '@vitejs/plugin-react-swc': ^4.3.1
-  '@vitest/browser': ^4.1.8
-  '@vitest/browser-playwright': ^4.1.8
-  '@vitest/coverage-v8': ^4.1.8
-  '@vitest/expect': ^4.1.8
-  '@vitest/runner': ^4.1.8
-  '@vitest/snapshot': ^4.1.8
-  '@vitest/spy': ^4.1.8
-  '@vitest/ui': ^4.1.8
-  '@vitest/utils': ^4.1.8
+  '@vitest/browser': ^4.1.5
+  '@vitest/browser-playwright': ^4.1.5
+  '@vitest/coverage-v8': ^4.1.5
+  '@vitest/expect': ^4.1.5
+  '@vitest/runner': ^4.1.5
+  '@vitest/snapshot': ^4.1.5
+  '@vitest/spy': ^4.1.5
+  '@vitest/ui': ^4.1.5
+  '@vitest/utils': ^4.1.5
   '@vscode/vsce': ^3.7.1
   '@xenova/transformers': ^2.17.2
   '@xstate/react': ^3.2.1
@@ -534,6 +534,7 @@ catalog:
   platform: ^1.3.6
   playwright: 1.57.0
   plotly.js-dist-min: ^2.25.1
+  postal-mime: ^2.4.3
   postcss: ^8.5.12
   postcss-import: ^16.1.0
   postcss-nesting: ^13.0.1
@@ -577,7 +578,7 @@ catalog:
   react-virtualized: ^9.22.6
   react-window: ^2.2.3
   read-pkg: ^5.2.0
-  readable-stream: ^3.6.0
+  readable-stream: ^3.6.2
   redis: ^4.6.6
   rehype-add-classes: ^1.0.0
   rehype-highlight: ^6.0.0
@@ -658,7 +659,7 @@ catalog:
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
-  vitest: 4.1.8
+  vitest: 4.1.5
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-tree-sitter: ^0.25.10
@@ -768,11 +769,11 @@ patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.23': patches/@automerge__automerge-repo@2.6.0-subduction.23.patch
   '@automerge/automerge-subduction@0.13.0': patches/@automerge__automerge-subduction@0.13.0.patch
   '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
-  '@vitest/browser@4.1.8': patches/@vitest__browser@4.1.8.patch
+  '@vitest/browser@4.1.5': patches/@vitest__browser@4.1.5.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
-  vitest@4.1.8: patches/vitest@4.1.8.patch
+  vitest@4.1.5: patches/vitest@4.1.5.patch
 
 peerDependencyRules:
   allowedVersions:

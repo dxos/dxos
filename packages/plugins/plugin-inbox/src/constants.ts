@@ -21,6 +21,12 @@ export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
 /** `IntegrationProvider.id` for Google Contacts OAuth / sync; use as `providerId` on `IntegrationAuth` surfaces. */
 export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
 
+/** `AccessToken.source` prefix for IMAP credentials (full value: `imap:<host>`). */
+export const IMAP_INTEGRATION_SOURCE_PREFIX = 'imap';
+
+/** `IntegrationProvider.id` for IMAP mailbox sync. */
+export const IMAP_PROVIDER_ID = 'imap';
+
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
 
 export const MAILBOXES_SECTION_TYPE = `${meta.profile.key}.mailboxes-section`;

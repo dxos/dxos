@@ -165,7 +165,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         account: 'me@example.com',
       }),
     );
-    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
+    const integration = db.add(Obj.make(Integration.Integration, { accessTokens: [Ref.make(token)], targets: [] }));
     return { db, integration };
   };
 

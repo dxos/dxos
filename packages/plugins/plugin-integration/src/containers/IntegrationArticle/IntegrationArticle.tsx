@@ -21,7 +21,7 @@ export type IntegrationArticleProps = AppSurface.ObjectArticleProps<Integration.
 export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [integration] = useObject(subject);
-  const accessToken = integration.accessToken.target;
+  const accessToken = integration.accessTokens[0]?.target;
   const provider = useIntegrationProvider(integration.providerId);
   const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
   const { available: syncAvailable, syncing, sync } = useSyncIntegration(subject);

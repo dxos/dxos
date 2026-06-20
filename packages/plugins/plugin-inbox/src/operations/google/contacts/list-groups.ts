@@ -54,7 +54,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleContactGroup
 
         return yield* Effect.gen(function* () {
           const integrationObj = yield* Database.load(integration);
-          const accessToken = yield* Database.load(integrationObj.accessToken);
+          const accessToken = yield* Database.load(integrationObj.accessTokens[0]);
           if (!accessToken.token) {
             return yield* Effect.fail(new AccessTokenNotPopulatedError());
           }

@@ -55,7 +55,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       Task.Task,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: GITHUB_SOURCE, token: 'tok' }));
-    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
+    const integration = db.add(Obj.make(Integration.Integration, { accessTokens: [Ref.make(token)], targets: [] }));
     return { db, integration };
   };
 

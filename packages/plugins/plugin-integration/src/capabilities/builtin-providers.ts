@@ -26,7 +26,7 @@ const CustomTokenForm = Schema.Struct({
     title: 'Account',
     description: 'Optional account label associated with the token.',
   }).pipe(Schema.optional),
-  token: Schema.String.annotations({
+  token: Format.Password.annotations({
     title: 'Token',
     description: 'The access token value.',
   }),
@@ -73,10 +73,10 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
               const integration = Obj.make(Integration.Integration, {
                 name: provider.label ?? values.account ?? values.source,
                 providerId: provider.id,
-                accessToken: Ref.make(accessToken),
+                accessTokens: [Ref.make(accessToken)],
                 targets: [],
               });
-              return { kind: 'complete', accessToken, integration };
+              return { kind: 'complete', accessTokens: [accessToken], integration };
             }),
         },
       },

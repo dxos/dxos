@@ -12,7 +12,7 @@ import { InboxOperation } from '#types';
 import { type Mailbox } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
-import { GMAIL_PROVIDER_ID } from '../../constants';
+import { GMAIL_PROVIDER_ID, IMAP_PROVIDER_ID } from '../../constants';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
@@ -38,16 +38,29 @@ InitializeMailbox.displayName = 'InitializeMailbox';
 export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <InitializeAction
-      target={mailbox}
-      targetKey='mailbox'
-      providerId={GMAIL_PROVIDER_ID}
-      operation={InboxOperation.GoogleMailSync}
-      syncLabel={t('sync-mailbox.label')}
-      notify={{
-        success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
-        error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
-      }}
-    />
+    <>
+      <InitializeAction
+        target={mailbox}
+        targetKey='mailbox'
+        providerId={GMAIL_PROVIDER_ID}
+        operation={InboxOperation.GoogleMailSync}
+        syncLabel={t('sync-mailbox.label')}
+        notify={{
+          success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
+          error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
+        }}
+      />
+      <InitializeAction
+        target={mailbox}
+        targetKey='mailbox'
+        providerId={IMAP_PROVIDER_ID}
+        operation={InboxOperation.ImapSync}
+        syncLabel={t('sync-mailbox.label')}
+        notify={{
+          success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
+          error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
+        }}
+      />
+    </>
   );
 };

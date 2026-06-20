@@ -49,9 +49,13 @@ export type IntegrationSyncInput = {
  */
 export type IntegrationSyncOutput = any;
 
-/** Hook fired after OAuth creates an AccessToken for this integration. */
+/** Hook fired after OAuth (or credential form submission) creates AccessToken(s) for this integration. */
 export type OnTokenCreated = (input: {
-  accessToken: AccessToken.AccessToken;
+  /**
+   * Persisted AccessTokens for this integration. Index 0 is the primary; multi-credential
+   * providers (IMAP+SMTP) receive multiple tokens disambiguated by `source` prefix.
+   */
+  accessTokens: ReadonlyArray<AccessToken.AccessToken>;
   integration: Integration.Integration;
   /**
    * Pre-existing local object the caller wants to wire up as the
@@ -87,7 +91,12 @@ export type IntegrationOAuthSpec = {
  * `loginHint` to Edge.
  */
 export type CredentialFormResult =
-  | { kind: 'complete'; accessToken: AccessToken.AccessToken; integration: Integration.Integration }
+  | {
+      kind: 'complete';
+      /** AccessTokens to persist alongside the integration. Index 0 is the primary. */
+      accessTokens: ReadonlyArray<AccessToken.AccessToken>;
+      integration: Integration.Integration;
+    }
   | { kind: 'oauth'; loginHint?: string };
 
 /**
@@ -118,6 +127,8 @@ export type CredentialForm<Values = any> = {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
+    /** Existing target object the user is connecting from (e.g. an empty Mailbox). When set, providers should wire it as the new Integration's first target instead of creating a fresh placeholder. */
+    existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<CredentialFormResult, Error>;
 };
 
@@ -134,6 +145,12 @@ export type IntegrationProviderEntry = {
   oauth?: IntegrationOAuthSpec;
   getSyncTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
   sync?: Operation.Definition<IntegrationSyncInput, IntegrationSyncOutput>;
+  /**
+   * Optional send operation. Used by transports that support outbound messaging
+   * (e.g. Gmail, SMTP). Mirrors `sync` — the dispatcher in `plugin-inbox`
+   * (`SendMessage`) routes by `providerId` to the right entry.
+   */
+  send?: Operation.Definition<{ integration: any; message: any }, { id: string; threadId: string }>;
   /** Schema describing per-target rows in `Integration.targets` `.options`. */
   optionsSchema?: Schema.Schema<any, any>;
   /**

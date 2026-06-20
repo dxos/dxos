@@ -70,7 +70,7 @@ export const IntegrationSettingsArticle = (_props: IntegrationSettingsArticlePro
             <Listbox.Viewport>
               <Listbox.Content aria-label={t('integrations.label', { defaultValue: 'Integrations' })}>
                 {integrations.map((integration) => {
-                  const accessToken = integration.accessToken?.target;
+                  const accessToken = integration.accessTokens[0]?.target;
                   const label =
                     integration.name ??
                     (accessToken

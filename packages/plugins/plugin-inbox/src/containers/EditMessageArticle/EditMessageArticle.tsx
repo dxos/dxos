@@ -10,9 +10,12 @@ import React, { useCallback, useMemo } from 'react';
 import { AiService } from '@dxos/ai';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { ServiceResolver } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Operation, ServiceResolver } from '@dxos/compute';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { Integration } from '@dxos/plugin-integration';
+import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
@@ -21,7 +24,7 @@ import { EditMessage } from '#components';
 
 import { type EditMessageProps } from '../../components';
 import { email } from '../../extensions';
-import { GmailFunctions } from '../../operations/google/gmail';
+import { InboxOperation } from '../../types';
 import { stripQuotedMessage } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
@@ -30,7 +33,20 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
   const db = Obj.getDatabase(subject);
   const runtime = useProcessManagerRuntime();
   const spaceId = db?.spaceId;
-
+  // Resolve the Integration that owns this draft's mailbox so SendMessage can dispatch by providerId.
+  const integrations = useQuery(db, Filter.type(Integration.Integration));
+  const ownerIntegration = useMemo(() => {
+    const mailboxUri = (subject.properties as Record<string, unknown> | undefined)?.mailbox;
+    if (typeof mailboxUri !== 'string') {
+      return undefined;
+    }
+    // Match by entity id so bare (`echo:<id>`) and space-qualified URI forms for the same
+    // mailbox compare equal — the draft stores `Obj.getURI(mailbox)`, targets store a Ref uri.
+    const mailboxId = EID.getEntityId(EID.tryParse(mailboxUri)!);
+    return integrations.find((candidate) =>
+      candidate.targets.some((entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === mailboxId),
+    );
+  }, [integrations, subject]);
   const extensions = useMemo(() => {
     if (!spaceId) {
       return [];
@@ -60,14 +76,20 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
       if (!spaceId) {
         throw new TypeError('Space not available.');
       }
-
+      if (!ownerIntegration) {
+        log.warn('EditMessageArticle: no Integration found for this draft; cannot send', {
+          mailbox: (message.properties as Record<string, unknown> | undefined)?.mailbox,
+        });
+        return;
+      }
       await runtime.runPromise(
-        Operation.invoke(GmailFunctions.Send, { message }, { spaceId }).pipe(
-          Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
-        ),
+        Operation.invoke(InboxOperation.SendMessage, {
+          integration: Ref.make(ownerIntegration),
+          message,
+        }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
       );
     },
-    [runtime, spaceId],
+    [runtime, spaceId, ownerIntegration],
   );
 
   return (

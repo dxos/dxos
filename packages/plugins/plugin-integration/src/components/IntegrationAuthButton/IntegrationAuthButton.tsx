@@ -47,7 +47,9 @@ export const IntegrationAuthButton = ({ providerId, db, existingTarget }: Integr
     ).catch(() => {});
   }, [manager, db, providerId, existingTarget]);
 
-  if (!provider?.oauth) {
+  // Render for any provider that can complete creation via the coordinator —
+  // OAuth flows or pre-flight credential forms (e.g. IMAP host/password).
+  if (!provider?.oauth && !provider?.credentialForm) {
     return null;
   }
 

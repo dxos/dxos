@@ -132,7 +132,7 @@ export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCr
       GitHubCredentials,
       Effect.gen(function* () {
         const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const accessToken = yield* Database.load(integration.accessTokens[0]);
         return { token: accessToken.token };
       }),
     );

@@ -136,7 +136,7 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
       TrelloCredentials,
       Effect.gen(function* () {
         const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const accessToken = yield* Database.load(integration.accessTokens[0]);
         return yield* credentialsFromAccessToken(accessToken);
       }),
     );

@@ -4,4 +4,5 @@
 
 export * from './credentials';
 export * from './function-invocation-service';
+export * from './mail';
 export { MESSAGE_PROPERTY_TOOL_CALL_ID } from './tracing';

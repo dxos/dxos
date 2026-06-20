@@ -10,6 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { Imap, Smtp } from '@dxos/functions';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Event, Message } from '@dxos/types';
 
@@ -131,6 +132,55 @@ export const GmailSend = Operation.make({
   services: [Credential.CredentialsService],
 });
 
+export const ImapSync = Operation.make({
+  meta: {
+    key: makeKey('imapSync'),
+    name: 'Sync IMAP Mailbox',
+    description: 'Sync messages from an IMAP server into the mailbox feed.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that owns IMAP credentials and per-target sync metadata.',
+    }),
+    mailbox: Ref.Ref(Mailbox.Mailbox)
+      .annotations({ description: 'When omitted, syncs every mailbox listed on the Integration.' })
+      .pipe(Schema.optional),
+  }),
+  output: Schema.Struct({
+    newMessages: Schema.Number,
+  }),
+  services: [Database.Service, Credential.CredentialsService, Trace.TraceService, Imap],
+});
+
+export const ImapTestConnection = Operation.make({
+  meta: {
+    key: makeKey('imapTestConnection'),
+    name: 'Test IMAP Connection',
+    description: 'Connect to an IMAP server and select a folder; surfaces auth/TLS errors.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+    folder: Schema.optional(Schema.String),
+  }),
+  output: Schema.Union(
+    Schema.Struct({
+      ok: Schema.Literal(true),
+      folder: Schema.String,
+      uidValidity: Schema.Number,
+      exists: Schema.Number,
+    }),
+    Schema.Struct({
+      ok: Schema.Literal(false),
+      reason: Schema.String,
+      message: Schema.String,
+      folder: Schema.optional(Schema.Undefined),
+      uidValidity: Schema.optional(Schema.Undefined),
+      exists: Schema.optional(Schema.Undefined),
+    }),
+  ),
+  services: [Database.Service, Credential.CredentialsService, Imap],
+});
+
 export const GoogleMailSync = Operation.make({
   meta: {
     key: makeKey('googleMailSync'),
@@ -169,6 +219,56 @@ export const GoogleMailSync = Operation.make({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
+});
+
+/**
+ * Send a message via SMTP submission. Mirrors {@link GmailSend} but runs on
+ * the Cloudflare Workers runtime (via the `cloudflare:sockets`-backed
+ * `SmtpLive` layer in `plugin-inbox/mail-live`). The handler builds RFC 5322
+ * from the Message object's properties and blocks.
+ */
+export const SmtpSend = Operation.make({
+  meta: {
+    key: makeKey('smtpSend'),
+    name: 'Send SMTP',
+    description: 'Send an email via SMTP submission.',
+  },
+  input: Schema.Struct({
+    message: Type.getSchema(Message.Message),
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that owns SMTP credentials.',
+    }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+    threadId: Schema.String,
+  }),
+  services: [Database.Service, Credential.CredentialsService, Smtp],
+});
+
+/**
+ * Provider-agnostic send dispatcher. Resolves the Integration's `providerId`
+ * and invokes {@link GmailSend} or {@link SmtpSend} accordingly. The compose
+ * UI calls this rather than a provider-specific op so Gmail and IMAP+SMTP
+ * mailboxes share one Send code path.
+ */
+export const SendMessage = Operation.make({
+  meta: {
+    key: makeKey('sendMessage'),
+    name: 'Send Message',
+    description: 'Send an email through whichever transport the Integration provider declares.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that supplies send credentials and the providerId for dispatch.',
+    }),
+    message: Type.getSchema(Message.Message),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+    threadId: Schema.String,
+  }),
 });
 
 export const GoogleCalendarSync = Operation.make({
