@@ -12,6 +12,7 @@ import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { useQuery } from '@dxos/react-client/echo';
@@ -35,12 +36,15 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
   // Resolve the Integration that owns this draft's mailbox so SendMessage can dispatch by providerId.
   const integrations = useQuery(db, Filter.type(Integration.Integration));
   const ownerIntegration = useMemo(() => {
-    const mailboxDxn = (subject.properties as Record<string, unknown> | undefined)?.mailbox;
-    if (typeof mailboxDxn !== 'string') {
+    const mailboxUri = (subject.properties as Record<string, unknown> | undefined)?.mailbox;
+    if (typeof mailboxUri !== 'string') {
       return undefined;
     }
+    // Match by entity id so bare (`echo:<id>`) and space-qualified URI forms for the same
+    // mailbox compare equal — the draft stores `Obj.getURI(mailbox)`, targets store a Ref uri.
+    const mailboxId = EID.getEntityId(EID.tryParse(mailboxUri)!);
     return integrations.find((candidate) =>
-      candidate.targets.some((entry) => entry.object?.uri.toString() === mailboxDxn),
+      candidate.targets.some((entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === mailboxId),
     );
   }, [integrations, subject]);
   const extensions = useMemo(() => {

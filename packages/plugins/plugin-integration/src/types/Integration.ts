@@ -47,15 +47,13 @@ export const IntegrationV1 = Schema.Struct({
     FormInputAnnotation.set(false),
     Schema.optional,
   ),
-}).pipe(
-  Type.makeObject(DXN.make('org.dxos.type.integration', '0.1.0')),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.integration', '0.1.0')));
 
 export type IntegrationV1 = Schema.Schema.Type<typeof IntegrationV1>;
 
 /**
  * External-service integration: one or more {@link AccessToken}s plus synced local roots (`targets`).
- * Routed by `providerId` (not `accessToken.source` alone—multiple providers may share a source).
+ * Routed by `providerId` (not `accessTokens[0].source` alone—multiple providers may share a source).
  * Recurrence lives in Triggers, not on this type.
  *
  * v0.2.0: `accessTokens` is an array to support providers needing multiple credentials

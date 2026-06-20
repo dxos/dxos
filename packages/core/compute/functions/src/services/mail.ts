@@ -96,9 +96,9 @@ export class Imap extends Context.Tag('@dxos/functions/Imap')<Imap, ImapServiceS
 
 /**
  * Sentinel layer for runtimes that can't reach IMAP transport (composer, browser). Every
- * `connect()` fails with `ImapError({ reason: 'unavailable' })`. The composer-side
- * compute runtime provides this so operations declaring `services: [Imap]` resolve
- * cleanly but fail fast at call time when executed locally.
+ * `connect()` fails with `ImapError({ reason: 'unavailable' })`. A composer-side LayerSpec
+ * (contributed by `@dxos/plugin-inbox`) provides this so operations declaring
+ * `services: [Imap]` resolve cleanly but fail fast at call time when executed locally.
  */
 export const ImapUnavailable: Layer.Layer<Imap> = Layer.succeed(Imap, {
   connect: () =>

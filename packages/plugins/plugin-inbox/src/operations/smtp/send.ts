@@ -39,10 +39,10 @@ const generateMessageId = (account: string | undefined): string => {
  * generated Message-ID as the `id`; reuses `properties.threadId` or generates
  * a fresh one mirroring Gmail's `{ id, threadId }` shape.
  *
- * Runs remotely on the edge runtime — `Smtp` is provided by `SmtpLive` from
- * `@dxos/plugin-inbox/mail-live` when this handler executes on Cloudflare
- * Workers via `compute-intrinsics`. Local invocation falls back to
- * `SmtpUnavailable` and surfaces a clear error.
+ * `Smtp` is provided by the surrounding runtime via the plugin-inbox MailServices
+ * LayerSpec. Today that is `SmtpUnavailable` on every platform, so local invocation
+ * surfaces a clear `reason:'unavailable'` error; once the live transport is complete
+ * it will be bound to `SmtpLive` (from `@dxos/plugin-inbox/mail-live`) on Workers.
  */
 export default InboxOperation.SmtpSend.pipe(
   Operation.withHandler(
@@ -97,7 +97,7 @@ export default InboxOperation.SmtpSend.pipe(
           threadId: message.properties?.threadId ?? messageId,
         };
       }),
-    // `Smtp` is provided by the surrounding runtime: composer-side wires SmtpUnavailable
-    // (fails-fast), Workers-side function bundles wire SmtpLive.
+    // `Smtp` is provided by the surrounding runtime via the plugin-inbox MailServices
+    // LayerSpec (currently SmtpUnavailable on every platform — fails fast).
   ),
 );

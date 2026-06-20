@@ -17,10 +17,11 @@ import { InboxOperation } from '../../types';
  * Connect → SELECT INBOX → logout. Surfaces auth/TLS/protocol errors before
  * a full sync, used by the credential form's "Test connection" button.
  *
- * `Imap` is provided by the surrounding managed runtime (composer wires
- * `ImapUnavailable`, Workers bundles wire `ImapLive`). Declared as a required
- * service on the operation definition so the OperationInvoker resolves it
- * from the per-space runtime context.
+ * `Imap` is provided by the surrounding managed runtime via the plugin-inbox
+ * MailServices LayerSpec (currently `ImapUnavailable` on every platform — fails
+ * fast with reason:'unavailable'; bound to `ImapLive` on Workers once the live
+ * transport is complete). Declared as a required service on the operation
+ * definition so the OperationInvoker resolves it from the per-space runtime context.
  */
 export default InboxOperation.ImapTestConnection.pipe(
   Operation.withHandler(({ integration: integrationRef, folder = 'INBOX' }) =>

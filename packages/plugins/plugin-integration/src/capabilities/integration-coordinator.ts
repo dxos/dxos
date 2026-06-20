@@ -320,8 +320,8 @@ export default Capability.makeModule(
         deletePendingSnapshot(decoded.accessTokenId);
         const primaryToken = entry.tokens[0];
         if (primaryToken) {
-          Obj.update(primaryToken, (token) => {
-            token.token = decoded.accessToken;
+          Obj.update(primaryToken, (primaryToken) => {
+            primaryToken.token = decoded.accessToken;
           });
         }
         yield* finalizePendingEntry(invoker, entry);

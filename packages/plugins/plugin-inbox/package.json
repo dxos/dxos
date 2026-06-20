@@ -99,14 +99,12 @@
     "./services": {
       "source": "./src/services/index.ts",
       "types": "./dist/types/src/services/index.d.ts",
-      "browser": "./dist/lib/browser/services/index.mjs",
-      "node": "./dist/lib/node-esm/services/index.mjs"
+      "default": "./dist/lib/neutral/services/index.mjs"
     },
     "./mail-live": {
       "source": "./src/services/mail-live/index.ts",
       "types": "./dist/types/src/services/mail-live/index.d.ts",
-      "node": "./dist/lib/node-esm/services/mail-live/index.mjs",
-      "default": "./dist/lib/node-esm/services/mail-live/index.mjs"
+      "default": "./dist/lib/neutral/services/mail-live/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

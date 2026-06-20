@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
 import { Imap, Smtp } from '@dxos/functions';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Event, Message } from '@dxos/types';
@@ -149,7 +149,7 @@ export const ImapSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService, Imap],
+  services: [Database.Service, Credential.CredentialsService, Trace.TraceService, Imap],
 });
 
 export const ImapTestConnection = Operation.make({
@@ -435,26 +435,6 @@ export const SyncContacts = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Void,
-});
-
-export const SyncMailbox = Operation.make({
-  meta: {
-    key: makeKey('syncMailbox'),
-    name: 'Sync Mailbox',
-    description:
-      'Sync a mailbox (or all mailboxes for an integration). Routes to IMAP or Gmail based on providerId.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration whose mailboxes to sync.',
-    }),
-    mailbox: Ref.Ref(Mailbox.Mailbox)
-      .annotations({ description: 'When omitted, syncs all mailboxes for the integration.' })
-      .pipe(Schema.optional),
   }),
   output: Schema.Void,
 });

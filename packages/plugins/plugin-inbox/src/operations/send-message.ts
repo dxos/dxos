@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { IMAP_PROVIDER_ID } from '../constants';
@@ -23,9 +22,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.SendMessage> = InboxO
       const integration = yield* Database.load(input.integration).pipe(
         Effect.provide(Database.layer(Obj.getDatabase(input.integration.target!)!)),
       );
-
-      const db = Obj.getDatabase(integration);
-      invariant(db);
 
       log('send-message dispatch', { providerId: integration.providerId });
 

@@ -62,6 +62,5 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
         }}
       />
     </>
-
   );
 };

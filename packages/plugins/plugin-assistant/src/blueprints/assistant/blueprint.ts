@@ -16,8 +16,8 @@ const make = () =>
     name: 'Assistant',
     tools: Blueprint.toolDefinitions({
       // TODO(wittjosiah): LayoutOperation.Open requires Capability.Service which is only available
-      //   via the compute-runtime layer (plugin-automation). Once Capability.Service is propagated
-      //   through LocalFunctionExecutionService, this will work without the compute-runtime dependency.
+      //   via the process-manager layer specs (plugin-automation). Once Capability.Service is
+      //   propagated through the process runtime, this will work without that dependency.
       operations: [LayoutOperation.Open, AssistantOperation.ResolveNavigationTargets],
     }),
     instructions: templates.system,

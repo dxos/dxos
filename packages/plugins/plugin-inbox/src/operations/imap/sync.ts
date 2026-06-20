@@ -10,6 +10,7 @@ import type { Credential, Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Imap } from '@dxos/functions';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { Message } from '@dxos/types';
@@ -48,7 +49,7 @@ const readTargetOptions = (
   mailbox: Mailbox.Mailbox,
 ): { options: Partial<ImapAccountOptions>; targetIndex: number } => {
   const targetIndex = (integration.targets ?? []).findIndex(
-    (target) => target.object != null && Ref.hasEntityId(mailbox.id)(target.object),
+    (target) => target.object != null && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
   );
   if (targetIndex < 0) {
     return { options: {}, targetIndex: -1 };
@@ -90,9 +91,10 @@ export default InboxOperation.ImapSync.pipe(
       return { newMessages: total };
     }).pipe(
       Effect.scoped,
-      // `Imap` is provided by the surrounding runtime: composer-side wires
-      // ImapUnavailable (fails-fast), Workers-side function bundles wire ImapLive.
-      // The handler just needs InboxResolver here.
+      // `Imap` is provided by the surrounding runtime via the plugin-inbox MailServices
+      // LayerSpec (currently `ImapUnavailable` on every platform — fails fast with
+      // reason:'unavailable'). Once the live transport is complete it will be bound to
+      // `ImapLive` on the Workers side. The handler just needs InboxResolver here.
       Effect.provide(InboxResolver.Live),
     ),
   ),

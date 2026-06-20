@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
+import { resolve, type Resolver } from '@dxos/extractor';
 import { Message, Person } from '@dxos/types';
 
 import { type ImapBody, type ImapEnvelope } from '../../services';
-import { resolve, type Resolver } from '@dxos/extractor';
 
 const formatAddress = (addr: { name?: string; address: string }): string =>
   addr.name ? `"${addr.name}" <${addr.address}>` : addr.address;

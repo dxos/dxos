@@ -15,7 +15,7 @@ import { Integration } from '#types';
  * `accessTokens: Ref<AccessToken>[]` array to support multi-credential integrations
  * (e.g. IMAP + SMTP). Existing rows are wrapped in a one-element array.
  */
-const migrations = [
+export const migrations = [
   Migration.define({
     from: Integration.IntegrationV1,
     to: Integration.Integration,
