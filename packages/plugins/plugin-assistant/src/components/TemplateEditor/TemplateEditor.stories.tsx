@@ -55,9 +55,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
     );
   });
 
-  return (
-    <TemplateEditor classNames='dx-document bg-base-surface' id={skill.id} source={skill.instructions.source} />
-  );
+  return <TemplateEditor classNames='dx-document bg-base-surface' id={skill.id} source={skill.instructions.source} />;
 };
 
 const meta = {

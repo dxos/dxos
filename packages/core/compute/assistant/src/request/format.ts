@@ -47,9 +47,7 @@ export const formatSystemPrompt = ({
           }),
         ),
       ),
-      Effect.map((skills) =>
-        skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined,
-      ),
+      Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
     );
 
     const objectDefs = yield* Function.pipe(

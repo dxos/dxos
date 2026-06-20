@@ -24,8 +24,8 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, type Key } from '@dxos/echo';
 import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
-import { operationHandlers as skillOperationHandlers, toolkits } from './skills';
 import { type AiChatServices, chatLayer } from './runtime';
+import { operationHandlers as skillOperationHandlers, toolkits } from './skills';
 
 export type TriggerRuntimeServices =
   | TriggerDispatcher

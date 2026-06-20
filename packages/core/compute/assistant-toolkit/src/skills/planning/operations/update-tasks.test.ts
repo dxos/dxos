@@ -31,10 +31,7 @@ describe('UpdateTasks', () => {
     'adds tasks to the plan',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
-          { name: 'Planner', instructions: 'Test.' },
-          PlanningSkill.make(),
-        );
+        const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
         yield* Database.flush();
 
         const chatFeed = agent.chat?.target?.feed?.target;

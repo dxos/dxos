@@ -590,10 +590,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { TicTacToeSkill } from '#skills';
 
-const skillDefinition = Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TicTacToeSkill)]));
+const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
+  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TicTacToeSkill)]),
+);
 
 export default skillDefinition;
 ```

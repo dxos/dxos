@@ -16,8 +16,8 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DelegationSkill } from '../skills';
 import { AgentPrompt } from '../functions';
+import { DelegationSkill } from '../skills';
 import { Agent } from '../types';
 
 /**

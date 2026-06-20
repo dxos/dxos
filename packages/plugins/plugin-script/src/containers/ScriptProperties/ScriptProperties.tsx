@@ -8,9 +8,9 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Script } from '@dxos/compute';
 import { Form } from '@dxos/react-ui-form';
 
-import { SkillEditor } from './SkillEditor';
 import { FunctionBinding } from './FunctionBinding';
 import { FunctionPublishing } from './FunctionPublishing';
+import { SkillEditor } from './SkillEditor';
 
 export type ScriptPropertiesProps = AppSurface.ObjectPropertiesProps<Script.Script>;
 

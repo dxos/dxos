@@ -527,10 +527,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { SidekickSkill } from '#skills';
 
-const skillDefinition = Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, SidekickSkill)]));
+const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
+  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, SidekickSkill)]),
+);
 
 export default skillDefinition;
 ```

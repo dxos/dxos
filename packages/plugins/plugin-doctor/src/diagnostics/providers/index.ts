@@ -3,10 +3,10 @@
 //
 
 import { type DiagnosticProvider } from '../types';
-import { skillToolsDiagnostic } from './skills';
 import { danglingRefsDiagnostic } from './dangling-refs';
 import { operationsServicesDiagnostic } from './operations';
 import { schemaDiagnostic } from './schema';
+import { skillToolsDiagnostic } from './skills';
 
 export { skillToolsDiagnostic } from './skills';
 export { danglingRefsDiagnostic } from './dangling-refs';

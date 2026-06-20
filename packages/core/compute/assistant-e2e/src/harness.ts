@@ -31,10 +31,7 @@ import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;
 
-export const getDefaultSkills = () => [
-  Ref.make(SkillManagerSkill.make()),
-  Ref.make(DatabaseSkill.make()),
-];
+export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
 
 const INSTRUCTIONS = trim`
   You are running within a test environment.

@@ -143,12 +143,12 @@ Memoized conversations are stored in `*.conversations.json` next to each test fi
 
 ## Common Mistakes
 
-| Mistake                                                      | Fix                                                                                  |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| Adding setup code or assertions                              | Remove them — the prompt is the entire test.                                         |
-| Missing `Obj.ID.dangerouslyDisableRandomness()`              | Add it at module scope before `describe`.                                            |
-| Vague prompts without completion criteria                    | Add explicit "Completion criteria:" section.                                         |
-| Assuming data exists in the DB                               | Instruct the agent to create required data.                                          |
-| Not committing `*.conversations.json`                        | Always commit updated conversation fixtures.                                         |
-| Pasting entire test files in chat when structure is standard | Use the short report format under **Reports**: heading + `@path (lines)`.            |
+| Mistake                                                      | Fix                                                                              |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Adding setup code or assertions                              | Remove them — the prompt is the entire test.                                     |
+| Missing `Obj.ID.dangerouslyDisableRandomness()`              | Add it at module scope before `describe`.                                        |
+| Vague prompts without completion criteria                    | Add explicit "Completion criteria:" section.                                     |
+| Assuming data exists in the DB                               | Instruct the agent to create required data.                                      |
+| Not committing `*.conversations.json`                        | Always commit updated conversation fixtures.                                     |
+| Pasting entire test files in chat when structure is standard | Use the short report format under **Reports**: heading + `@path (lines)`.        |
 | Assuming pre-seeded data without saying so in the prompt     | State empty DB; seed via database skill instructions at the start of the prompt. |

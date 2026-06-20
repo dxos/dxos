@@ -12,12 +12,7 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import {
-  AgentPrompt,
-  AgentWizardSkill,
-  SkillManagerSkill,
-  DatabaseSkill,
-} from '@dxos/assistant-toolkit';
+import { AgentPrompt, AgentWizardSkill, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { AgentService, Skill, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -32,8 +27,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
 
-import { AssistantSkill } from './skills/assistant';
 import { meta } from './meta';
+import { AssistantSkill } from './skills/assistant';
 
 EntityId.dangerouslyDisableRandomness();
 

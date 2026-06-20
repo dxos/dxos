@@ -352,21 +352,21 @@ See: `plugin-chess/src/operations/`
 
 The main plugin file wires everything together using `Plugin.define(meta).pipe()` with `AppPlugin` helper methods:
 
-| Method                         | Purpose                        | Activation Event          |
-| ------------------------------ | ------------------------------ | ------------------------- |
-| `addSurfaceModule`             | React surface components       | `SetupReactSurface`       |
-| `addMetadataModule`            | Type metadata (icon, creation) | `SetupMetadata`           |
-| `addSchemaModule`              | ECHO type registration         | `SetupSchema`             |
-| `addCommentConfigModule`       | Comment config (per typename)  | `SetupSchema`             |
-| `addOperationHandlerModule`    | Operation handlers             | `SetupOperationHandler`   |
-| `addTranslationsModule`        | i18n resources                 | `SetupTranslations`       |
-| `addSkillDefinitionModule` | AI skills                  | `SetupArtifactDefinition` |
-| `addSettingsModule`            | Plugin settings                | `SetupSettings`           |
-| `addAppGraphModule`            | Graph builder extensions       | `SetupAppGraph`           |
-| `addCommandModule`             | CLI commands                   | `Startup`                 |
-| `addReactContextModule`        | React context provider         | `Startup`                 |
-| `addNavigationResolverModule`  | Navigation resolvers           | `OperationInvokerReady`   |
-| `addNavigationHandlerModule`   | Navigation handlers            | `OperationInvokerReady`   |
+| Method                        | Purpose                        | Activation Event          |
+| ----------------------------- | ------------------------------ | ------------------------- |
+| `addSurfaceModule`            | React surface components       | `SetupReactSurface`       |
+| `addMetadataModule`           | Type metadata (icon, creation) | `SetupMetadata`           |
+| `addSchemaModule`             | ECHO type registration         | `SetupSchema`             |
+| `addCommentConfigModule`      | Comment config (per typename)  | `SetupSchema`             |
+| `addOperationHandlerModule`   | Operation handlers             | `SetupOperationHandler`   |
+| `addTranslationsModule`       | i18n resources                 | `SetupTranslations`       |
+| `addSkillDefinitionModule`    | AI skills                      | `SetupArtifactDefinition` |
+| `addSettingsModule`           | Plugin settings                | `SetupSettings`           |
+| `addAppGraphModule`           | Graph builder extensions       | `SetupAppGraph`           |
+| `addCommandModule`            | CLI commands                   | `Startup`                 |
+| `addReactContextModule`       | React context provider         | `Startup`                 |
+| `addNavigationResolverModule` | Navigation resolvers           | `OperationInvokerReady`   |
+| `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
 
 See: `plugin-chess/src/ChessPlugin.tsx`
 

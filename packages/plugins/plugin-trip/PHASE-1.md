@@ -1747,7 +1747,7 @@ At the end of Task 11 `plugin-trip` is a buildable, lint-clean package with:
 | `src/types/InboxOperation.ts`                    | Modify | Add `ExtractMessage` operation definition.                                           |
 | `src/operations/extract-message.ts`              | Create | Operation handler — picks extractor, runs `extract`, persists output + ExtractedFrom |
 | `src/operations/index.ts`                        | Modify | Register `extract-message` in the lazy handler set.                                  |
-| `src/skills/inbox.ts`                        | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
+| `src/skills/inbox.ts`                            | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
 | `src/operations/google/gmail/sync.ts`            | Modify | After each appended message, dispatch auto-on-arrival per `Mailbox.extractors`.      |
 | `src/components/Message/useExtractorActions.tsx` | Create | Hook that resolves registered extractors, matches the message, returns menu items.   |
 | `src/components/Message/useToolbar.tsx`          | Modify | Compose extractor menu items into the existing message toolbar.                      |

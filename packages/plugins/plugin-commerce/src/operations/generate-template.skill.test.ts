@@ -15,8 +15,8 @@ import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
-import { ProviderSkill } from '../skills';
 import { SearchOperationHandlerSet } from '../operations';
+import { ProviderSkill } from '../skills';
 import { Provider } from '../types';
 import { extractResults } from '../util';
 

@@ -28,9 +28,9 @@ import { trim } from '@dxos/util';
 import { Chat, Plan, Agent } from '../../types';
 import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
 import { PlanningSkill, PlanningHandlers } from '../planning';
-import AgentSkillDef from './skill';
 import { AgentSkillHandlers } from './operations';
 import { AgentWorker } from './operations/definitions';
+import AgentSkillDef from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 

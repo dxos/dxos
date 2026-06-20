@@ -11,8 +11,8 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { ProviderSkill } from '../skills';
 import { meta } from '../meta';
+import { ProviderSkill } from '../skills';
 import { Provider, SearchOperation } from '../types';
 
 const TOAST_ID = `${meta.profile.key}/regenerate`;

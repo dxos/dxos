@@ -29,12 +29,12 @@ This spec restores a **minimal, real** slice of that pipeline as a self-containe
 
 ## Decisions (resolved with the user)
 
-| Decision                   | Choice                                                                                                                     |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Decision                   | Choice                                                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | DB search mode             | **Full-text** — `Filter.text(noun, { type: 'full-text' })` (production default; the assistant DB-query skill uses it). |
-| LLM execution in Storybook | **Live Haiku** — `AiServiceTestingPreset('edge-remote')`.                                                                  |
-| Code placement             | **Reusable operation/functions** in `@dxos/assistant/extraction`.                                                          |
-| Seed/fixture               | **Reuse `seedTestData`** from `@dxos/types/testing`.                                                                       |
+| LLM execution in Storybook | **Live Haiku** — `AiServiceTestingPreset('edge-remote')`.                                                              |
+| Code placement             | **Reusable operation/functions** in `@dxos/assistant/extraction`.                                                      |
+| Seed/fixture               | **Reuse `seedTestData`** from `@dxos/types/testing`.                                                                   |
 
 ## Architecture
 

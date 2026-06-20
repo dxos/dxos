@@ -28,14 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
-  types: [
-    SpaceProperties,
-    Collection.Collection,
-    Skill.Skill,
-    Markdown.Document,
-    HasSubject.HasSubject,
-    Feed.Feed,
-  ],
+  types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
   skills: [MarkdownSkill.make()],
   tracing: 'pretty',
 });

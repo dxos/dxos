@@ -72,9 +72,7 @@ describe('Skill Manager', () => {
 
         const { binder } = yield* AiContext.Service;
         const bound = binder.getSkills();
-        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.database')).toBe(
-          true,
-        );
+        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.database')).toBe(true);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -98,9 +96,7 @@ describe('Skill Manager', () => {
 
         const { binder } = yield* AiContext.Service;
         const bound = binder.getSkills();
-        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.discord')).toBe(
-          false,
-        );
+        expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.discord')).toBe(false);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

@@ -14,11 +14,11 @@ Skills define AI toolkits for a domain (e.g. markdown, kanban). They combine **o
 
 A skill has three parts:
 
-| Field        | Type                                      | Purpose                                                 |
-| ------------ | ----------------------------------------- | ------------------------------------------------------- |
-| `key`        | `string`                                  | Globally unique key (reverse-domain style).             |
-| `operations` | `OperationHandlerSet.OperationHandlerSet` | Handler set for runtime invocation.                     |
-| `make`       | `() => Skill.Skill`               | Factory that creates the Skill instance with tools. |
+| Field        | Type                                      | Purpose                                             |
+| ------------ | ----------------------------------------- | --------------------------------------------------- |
+| `key`        | `string`                                  | Globally unique key (reverse-domain style).         |
+| `operations` | `OperationHandlerSet.OperationHandlerSet` | Handler set for runtime invocation.                 |
+| `make`       | `() => Skill.Skill`                       | Factory that creates the Skill instance with tools. |
 
 Example (see `packages/plugins/plugin-markdown/src/skills/markdown-skill.ts`):
 
@@ -90,10 +90,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { MarkdownSkill } from '../../skills';
 
-const skillDefinition = Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill)]));
+const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
+  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill)]),
+);
 
 export default skillDefinition;
 ```

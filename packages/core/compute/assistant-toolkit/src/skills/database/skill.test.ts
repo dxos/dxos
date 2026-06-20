@@ -14,9 +14,9 @@ import { EID, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import DatabaseSkill from './skill';
 import { DatabaseHandlers } from './operations';
 import { Query as DatabaseQueryOperation } from './operations/definitions';
+import DatabaseSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 

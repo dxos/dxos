@@ -30,11 +30,7 @@ import { type Notebook } from '#types';
 
 import { ComputeGraph } from '../../notebook';
 
-const INCLUDE_SKILLS = [
-  'org.dxos.skill.assistant',
-  'org.dxos.skill.database',
-  'org.dxos.skill.markdown',
-];
+const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 

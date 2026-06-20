@@ -16,8 +16,8 @@ import { EntityId } from '@dxos/keys';
 
 import { Memory } from '../../types/Memory';
 import { WebSearchToolkit } from '../websearch';
-import MemorySkill from './skill';
 import { MemoryHandlers } from './operations';
+import MemorySkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 

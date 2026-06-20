@@ -132,9 +132,7 @@ export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capabil
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.make<Skill.Definition>(
-  'org.dxos.app-framework.capability.skillDefinition',
-);
+export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
 
 /**
  * A static asset bundled with a plugin's published package, exposed for

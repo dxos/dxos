@@ -303,12 +303,12 @@ The corollary: there is no need for a transactional edit log between EDGE servic
 
 ## Phasing
 
-| Phase | Scope                                                                | Deliverable                                                                           |
-| ----- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Phase | Scope                                                            | Deliverable                                                                           |
+| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **1** | Sandbox service + `code.*` operations + `plugin-developer` skill | Author-from-chat works; `code.deploy` returns a signed zip download (no live serving) |
-| **2** | Plugin Registry + Plugin Dispatcher                                  | Live preview URLs; one-click publish                                                  |
-| **3** | Source Sync (GitHub App)                                             | Two-way GitHub sync; PR workflow                                                      |
-| **4** | Multi-author collab, marketplace, billing                            | Public plugin distribution                                                            |
+| **2** | Plugin Registry + Plugin Dispatcher                              | Live preview URLs; one-click publish                                                  |
+| **3** | Source Sync (GitHub App)                                         | Two-way GitHub sync; PR workflow                                                      |
+| **4** | Multi-author collab, marketplace, billing                        | Public plugin distribution                                                            |
 
 ## Open questions
 

@@ -40,8 +40,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       yield* Effect.promise(() =>
         binder.use((b: AiContext.Binder) =>
           b.bind({
-            skills: [AssistantSkill, DatabaseSkill, AgentWizardSkill, SkillManagerSkill].map(
-              ({ key }) => Ref.fromURI(Skill.registryURI(key)),
+            skills: [AssistantSkill, DatabaseSkill, AgentWizardSkill, SkillManagerSkill].map(({ key }) =>
+              Ref.fromURI(Skill.registryURI(key)),
             ),
           }),
         ),

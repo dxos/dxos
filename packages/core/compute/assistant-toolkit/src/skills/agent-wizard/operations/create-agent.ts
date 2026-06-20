@@ -18,9 +18,7 @@ export default CreateAgent.pipe(
         {
           name,
           instructions,
-          skills: yield* Effect.forEach(skills, (key) =>
-            Skill.upsert(key).pipe(Effect.map(Ref.make), Effect.orDie),
-          ),
+          skills: yield* Effect.forEach(skills, (key) => Skill.upsert(key).pipe(Effect.map(Ref.make), Effect.orDie)),
           subscriptions,
         },
         Obj.clone(AgentSkill.make()),

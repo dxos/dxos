@@ -76,7 +76,7 @@ with tests on the real runtime.
 | Layer               | Unit                                                                                                                             | New work                                                                                       |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `compute-runtime`   | **Supervisor process pattern**                                                                                                   | Spawn children, interleave input, wake on child exit, emit derived output. No AI. **Slice 1.** |
-| `assistant-toolkit` | **Delegation skill** (`DelegateTask` tool) + Plan-Task linkage + supervisor wiring over `AiSession`                          | **Slice 2.**                                                                                   |
+| `assistant-toolkit` | **Delegation skill** (`DelegateTask` tool) + Plan-Task linkage + supervisor wiring over `AiSession`                              | **Slice 2.**                                                                                   |
 | `plugin-assistant`  | Conversational agent runs as the supervisor; children surface in `ProcessTree`/`TracePanel` (mostly automatic via pid hierarchy) | **Slice 3.**                                                                                   |
 
 ## Data flow

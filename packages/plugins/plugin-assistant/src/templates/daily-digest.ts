@@ -7,11 +7,7 @@ import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { makeScheduledRoutineAutomation } from './scaffold';
 
 /** Inbox supplies new messages; database queries recent objects; markdown writes the digest document. */
-const SKILL_KEYS = [
-  'org.dxos.skill.inbox',
-  'org.dxos.skill.database',
-  'org.dxos.skill.markdown',
-] as const;
+const SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.database', 'org.dxos.skill.markdown'] as const;
 
 /** Runs daily by default; the user edits the schedule and the scope by opening the trigger and routine. */
 const DEFAULT_CRON = '0 9 * * *';

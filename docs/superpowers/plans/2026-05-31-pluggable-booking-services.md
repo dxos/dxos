@@ -559,10 +559,9 @@ import type { Skill } from '@dxos/compute';
 
 import { BookingSkill } from '../skills';
 
-const skillDefinition = Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, BookingSkill)]));
+const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
+  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, BookingSkill)]),
+);
 
 export default skillDefinition;
 ```

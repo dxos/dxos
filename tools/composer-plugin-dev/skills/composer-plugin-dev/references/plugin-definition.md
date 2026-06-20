@@ -31,20 +31,20 @@ export const FooPlugin = Plugin.define(meta).pipe(
 
 ## Module → activation event reference
 
-| Method                         | Purpose                        | Activation event          |
-| ------------------------------ | ------------------------------ | ------------------------- |
-| `addSurfaceModule`             | React surface components       | `SetupReactSurface`       |
-| `addMetadataModule`            | Type metadata (icon, creation) | `SetupMetadata`           |
-| `addSchemaModule`              | ECHO type registration         | `SetupSchema`             |
-| `addOperationHandlerModule`    | Operation handlers             | `SetupOperationHandler`   |
-| `addTranslationsModule`        | i18n resources                 | `SetupTranslations`       |
-| `addSkillDefinitionModule` | AI skills                  | `SetupArtifactDefinition` |
-| `addSettingsModule`            | Plugin settings                | `SetupSettings`           |
-| `addAppGraphModule`            | Graph builder extensions       | `SetupAppGraph`           |
-| `addCommandModule`             | CLI commands                   | `Startup`                 |
-| `addReactContextModule`        | React context provider         | `Startup`                 |
-| `addNavigationResolverModule`  | Navigation resolvers           | `OperationInvokerReady`   |
-| `addNavigationHandlerModule`   | Navigation handlers            | `OperationInvokerReady`   |
+| Method                        | Purpose                        | Activation event          |
+| ----------------------------- | ------------------------------ | ------------------------- |
+| `addSurfaceModule`            | React surface components       | `SetupReactSurface`       |
+| `addMetadataModule`           | Type metadata (icon, creation) | `SetupMetadata`           |
+| `addSchemaModule`             | ECHO type registration         | `SetupSchema`             |
+| `addOperationHandlerModule`   | Operation handlers             | `SetupOperationHandler`   |
+| `addTranslationsModule`       | i18n resources                 | `SetupTranslations`       |
+| `addSkillDefinitionModule`    | AI skills                      | `SetupArtifactDefinition` |
+| `addSettingsModule`           | Plugin settings                | `SetupSettings`           |
+| `addAppGraphModule`           | Graph builder extensions       | `SetupAppGraph`           |
+| `addCommandModule`            | CLI commands                   | `Startup`                 |
+| `addReactContextModule`       | React context provider         | `Startup`                 |
+| `addNavigationResolverModule` | Navigation resolvers           | `OperationInvokerReady`   |
+| `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
 
 ## Activation timing
 
