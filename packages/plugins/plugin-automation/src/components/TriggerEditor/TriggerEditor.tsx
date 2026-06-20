@@ -8,9 +8,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Trigger } from '@dxos/compute';
 import { DXN, type Database, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Icon, IconBlock, IconButton, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
@@ -24,7 +25,7 @@ import {
   scheduleToCron,
   toCron,
 } from '../Schedule';
-import { TriggerKindSelector, type TriggerKind, getTriggerKindIcon } from './TriggerKindSelector';
+import { TriggerKindSelector, type TriggerKind } from './TriggerKindSelector';
 
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
@@ -140,7 +141,10 @@ const triggerFormSpec = (values: TriggerFormInput): Trigger.Spec => {
       };
     }
     case 'feed':
-      return { kind: 'feed', feed: values.feed };
+      return {
+        kind: 'feed',
+        feed: values.feed,
+      };
     case 'webhook':
       return Trigger.specWebhook({ method: values.method, port: values.port });
     case 'email':
@@ -175,13 +179,10 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
       defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.Content classNames={classNames}>
+      <Form.Content classNames={mx(kind && 'bg-card-surface px-3 pb-2 border border-separator rounded-xs', classNames)}>
         {kind && (
           <div className='flex items-center'>
-            <IconBlock>
-              <Icon icon={getTriggerKindIcon(kind)} classNames='text-description' />
-            </IconBlock>
-            <div className='w-full truncate'>{t(`trigger-kind.${kind}.label`)}</div>
+            <div className='grow truncate'>{t(`trigger-kind.${kind}.label`)}</div>
             <IconButton
               iconOnly
               variant='ghost'

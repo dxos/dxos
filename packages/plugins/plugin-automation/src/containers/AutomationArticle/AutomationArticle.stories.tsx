@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Trigger } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Routine, Trigger } from '@dxos/compute';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -34,7 +34,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Automation.Automation, Trigger.Trigger],
+      types: [Automation.Automation, Trigger.Trigger, Routine.Routine, Feed.Feed],
       onCreateSpace: async ({ space }) => {
         space.db.add(Automation.make({ name: 'Morning Report', triggers: [] }));
       },
@@ -59,7 +59,7 @@ export const WithTimerTrigger: Story = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Automation.Automation, Trigger.Trigger],
+      types: [Automation.Automation, Trigger.Trigger, Routine.Routine, Feed.Feed],
       onCreateSpace: async ({ space }) => {
         const trigger = space.db.add(Trigger.make({ enabled: false, spec: { kind: 'timer', cron: '0 9 * * *' } }));
         const automation = space.db.add(Automation.make({ name: 'Daily Digest', triggers: [] }));

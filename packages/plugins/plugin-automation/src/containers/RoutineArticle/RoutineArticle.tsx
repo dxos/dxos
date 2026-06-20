@@ -8,7 +8,7 @@ import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation, type Routine } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -70,13 +70,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='dx-document flex flex-col gap-2'>
-          <ObjectProperties
-            object={subject}
-            // Owned triggers fire this routine: bind the new trigger's function back to it on create.
-            getCreateDefaults={({ jsonPath }) =>
-              jsonPath === 'triggers' ? { function: Ref.make(subject) } : undefined
-            }
-          />
+          <ObjectProperties object={subject} />
           <RoutineResult state={state} />
         </Panel.Content>
       </Panel.Root>

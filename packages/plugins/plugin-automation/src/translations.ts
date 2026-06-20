@@ -50,7 +50,7 @@ export const translations: Resource[] = [
 
         'automation-name.label': 'Name',
         'general.title': 'General',
-        'general.description': 'Name and status.',
+        'general.description': 'Name and description.',
 
         'actions.title': 'Actions',
         'actions.description': 'What this automation runs.',

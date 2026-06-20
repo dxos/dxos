@@ -4,6 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
+export * from './AutomationForm';
 export * from './CreateAutomationPanel';
 export * from './Schedule';
 export * from './TemplateEditor';

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Routine, Trigger } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Routine } from '@dxos/compute';
+import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -40,32 +40,19 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Routine.Routine, Trigger.Trigger],
+          types: [Routine.Routine],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
 
-              const routine = space.db.add(
+              space.db.add(
                 Routine.make({
                   name: 'Summarize',
                   instructions: 'Create a new markdown document that is a summary of the selected object.',
                 }),
               );
-
-              // Seed an inline trigger so the owned-ref array form renders on mount.
-              const trigger = space.db.add(
-                Trigger.make({
-                  enabled: false,
-                  spec: Trigger.specTimer('0 0 * * *'),
-                  function: Ref.make(routine),
-                }),
-              );
-              Obj.setParent(trigger, routine);
-              Obj.update(routine, (routine) => {
-                routine.triggers = [Ref.make(trigger)];
-              });
             }),
         }),
         AutomationPlugin(),

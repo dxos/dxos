@@ -10,10 +10,10 @@ import { useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, Panel, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
 
+import { AutomationForm } from '#components';
 import { meta } from '#meta';
 import { Automation, AutomationCapabilities, AutomationOperation } from '#types';
 
-import { AutomationInlineForm } from '../../containers';
 import { connectedAutomationsQuery } from '../../util';
 
 /** Association state of a row relative to the companion's object. */
@@ -77,7 +77,7 @@ export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) =>
                         )}
                       </Accordion.ItemHeader>
                       <Accordion.ItemBody>
-                        <AutomationInlineForm automation={automation} db={db} />
+                        <AutomationForm automation={automation} db={db} />
                       </Accordion.ItemBody>
                     </Accordion.Item>
                   );

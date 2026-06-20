@@ -18,11 +18,15 @@
       color: var(--dx-valence-text, inherit);
       background: var(--dx-valence-bg, var(--color-input-bg));
     }
+    /* Toggle / tab group: the selected item reads as standard text on a surface-relative fill (selected-surface
+     * tracks the enclosing --surface-bg, so it stays visible on any surface); unselected items recede to subdued. */
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      /* selected-surface tracks the enclosing --surface-bg with a fixed lightness offset, so the active
-       * state stays visible on any surface (attention-surface shares card-surface's elevation and vanishes). */
-      @apply text-accent-text bg-selected-surface;
+      @apply text-base-fg bg-selected-surface;
+    }
+    &[aria-pressed='false'],
+    &[aria-checked='false'] {
+      @apply text-description;
     }
 
     /* Disabled styles */

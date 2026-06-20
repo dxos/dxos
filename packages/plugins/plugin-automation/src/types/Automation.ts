@@ -25,7 +25,7 @@ export const Automation = Schema.Struct({
    * The action to run. A trigger's `function` Ref points directly at this (so EDGE/the dispatcher can run
    * it). `Runnable` is the type seam — currently just Operation; see Runnable.ts.
    */
-  // TODO(burdon): Array.
+  // TODO(burdon): Change to Array?
   runnable: Ref.Ref(Runnable.Runnable).pipe(Schema.optional),
 
   /**

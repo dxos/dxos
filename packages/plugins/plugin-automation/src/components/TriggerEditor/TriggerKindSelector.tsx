@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Column, Icon, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -25,7 +26,7 @@ const OPTIONS: readonly TriggerKindOption[] = [
   { kind: 'email', icon: 'ph--envelope--regular' },
 ];
 
-/** Icon for a trigger kind, shared by the picker cards and the selected-variant editor header. */
+/** Icon for a trigger kind, shared by the picker rows and the selected-variant editor header. */
 export const getTriggerKindIcon = (kind: TriggerKind): string =>
   OPTIONS.find((option) => option.kind === kind)?.icon ?? 'ph--lightning--regular';
 
@@ -34,47 +35,37 @@ export type TriggerKindSelectorProps = {
 };
 
 /**
- * Radio-card list of pluggable trigger variants (Schedule / Query / Webhook / Feed / Email): each row is laid
- * out on the shared {@link Column} grid — icon in the leading gutter, title and description in the center
- * column — so the cards align with the selected-variant editor. Selecting a card sets the kind.
+ * Single-select list of pluggable trigger variants (Schedule / Feed / Query / Webhook / Email): each row
+ * shows an icon, title and description. Built on {@link Listbox} (role=listbox/option, arrow-key navigation);
+ * selecting a row emits its kind. Selection is transient — the parent swaps in the variant editor on change.
  */
 export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
   const { t } = useTranslation(meta.profile.key);
-  return (
-    <Column.Root role='radiogroup' classNames='gap-y-1'>
-      {OPTIONS.map(({ kind, icon }) => (
-        <TriggerKindCard
-          key={kind}
-          icon={icon}
-          label={t(`trigger-kind.${kind}.label`)}
-          description={t(`trigger-kind.${kind}.description`)}
-          onSelect={() => onChange(kind)}
-        />
-      ))}
-    </Column.Root>
+  const handleValueChange = useCallback(
+    (id: string) => {
+      const option = OPTIONS.find((option) => option.kind === id);
+      if (option) {
+        onChange(option.kind);
+      }
+    },
+    [onChange],
   );
-};
 
-type TriggerKindCardProps = {
-  icon: string;
-  label: string;
-  description: string;
-  onSelect: () => void;
-};
-
-const TriggerKindCard = ({ icon, label, description, onSelect }: TriggerKindCardProps) => {
-  const handleClick = useCallback(() => onSelect(), [onSelect]);
   return (
-    <Column.Row asChild role='radio'>
-      <button type='button' onClick={handleClick} className='text-start rounded-sm dx-hover'>
-        <Column.Block>
-          <Icon icon={icon} classNames='text-description' />
-        </Column.Block>
-        <div className='flex flex-col'>
-          <div className='flex h-8 items-center'>{label}</div>
-          <div className='-mt-1 pb-1 text-sm text-description'>{description}</div>
-        </div>
-      </button>
-    </Column.Row>
+    <Listbox.Root onValueChange={handleValueChange}>
+      <Listbox.Content aria-label={t('trigger-kind.placeholder')} classNames='gap-1'>
+        {OPTIONS.map(({ kind, icon }) => (
+          <Listbox.Item key={kind} id={kind} classNames='items-start gap-1 rounded-sm bg-input-surface'>
+            <IconBlock classNames='h-6 pt-0.5'>
+              <Icon icon={icon} size={5} classNames='text-description' />
+            </IconBlock>
+            <div className='flex flex-col min-is-0'>
+              <span className='font-medium'>{t(`trigger-kind.${kind}.label`)}</span>
+              <span className='text-sm text-description'>{t(`trigger-kind.${kind}.description`)}</span>
+            </div>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };

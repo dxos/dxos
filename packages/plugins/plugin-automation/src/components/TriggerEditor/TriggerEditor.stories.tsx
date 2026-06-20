@@ -96,7 +96,7 @@ const createKindStory = (kind: Trigger.Spec['kind'], name: RegExp): Story => ({
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const card = await canvas.findByRole('radio', { name }, { timeout: 10_000 });
+    const card = await canvas.findByRole('option', { name }, { timeout: 10_000 });
     await userEvent.click(card);
     await waitForKind(kind);
     await expect(primaryTriggerKind()).toBe(kind);

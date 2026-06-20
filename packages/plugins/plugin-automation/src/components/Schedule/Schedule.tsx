@@ -182,7 +182,7 @@ const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
       <ScheduleContext.Provider
         value={{ value: valueProp ?? value, onValueChange: handleValueChange, kinds, timezone }}
       >
-        <div {...composableProps(props, { classNames: 'flex flex-col gap-y-2' })} ref={forwardedRef}>
+        <div {...composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
           {children}
         </div>
       </ScheduleContext.Provider>

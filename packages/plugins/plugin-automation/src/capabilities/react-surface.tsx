@@ -12,8 +12,9 @@ import { Blueprint, Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Prompts } from '@dxos/plugin-space';
 
-import { AutomationSettings, BlueprintArticle, RoutineArticle, RoutineList } from '#containers';
+import { AutomationArticle, AutomationSettings, BlueprintArticle, RoutineArticle, RoutineList } from '#containers';
 import { meta } from '#meta';
+import { Automation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -30,13 +31,13 @@ export default Capability.makeModule(() =>
           return <AutomationSettings space={space} />;
         },
       }),
-      // Surface.create({
-      //   id: 'automation.article',
-      //   filter: AppSurface.object(AppSurface.Article, Automation.Automation),
-      //   component: ({ data, role }) => (
-      //     <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-      //   ),
-      // }),
+      Surface.create({
+        id: 'automation.article',
+        filter: AppSurface.object(AppSurface.Article, Automation.Automation),
+        component: ({ data, role }) => (
+          <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
       // Surface.create({
       //   id: 'companion.automation',
       //   filter: AppSurface.allOf(
@@ -45,9 +46,6 @@ export default Capability.makeModule(() =>
       //   ),
       //   component: ({ data }) => {
       //     const db = Obj.getDatabase(data.companionTo);
-      //     if (!db) {
-      //       return null;
-      //     }
       //     return <AutomationCompanion db={db} object={data.companionTo} />;
       //   },
       // }),
