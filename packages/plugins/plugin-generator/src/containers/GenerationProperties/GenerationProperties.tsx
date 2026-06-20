@@ -40,7 +40,7 @@ export type GenerationPropertiesProps = {
 };
 
 export const GenerationProperties = ({ subject }: GenerationPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [generation] = useObject(subject);
   const settings = useAtomCapability(GeneratorCapabilities.Settings);
   const apiKey = settings?.apiKey;

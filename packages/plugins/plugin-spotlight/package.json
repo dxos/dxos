@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-spotlight",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Spotlight search plugin for the Tauri popover window.",
   "homepage": "https://dxos.org",
@@ -56,6 +56,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -70,16 +71,19 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@tauri-apps/api": "catalog:"
   },

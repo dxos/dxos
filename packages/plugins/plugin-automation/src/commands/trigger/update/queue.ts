@@ -13,36 +13,37 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { DXN, Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed as Feed$, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { EID, type EntityId } from '@dxos/keys';
 
-import { Enabled, Input, Queue, TriggerId } from '../options';
+import { Enabled, Feed, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectFeed, selectTrigger } from '../util';
 
 export const queue = Command.make(
-  'queue',
+  'feed',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
     id: TriggerId.pipe(Options.optional),
     enabled: Enabled,
     functionId: Common.functionId.pipe(Options.optional),
-    queue: Queue.pipe(Options.optional),
+    feed: Feed.pipe(Options.optional),
     input: Input.pipe(Options.optional),
   },
   (options) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
       const triggerId = yield* Option.match(options.id, {
-        onNone: () => selectTrigger('queue'),
+        onNone: () => selectTrigger('feed'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
+      const dxn = EID.make({ entityId: triggerId as EntityId });
       const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
-      if (trigger.spec?.kind !== 'queue') {
+      if (trigger.spec?.kind !== 'feed') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
 
       const currentFn = yield* updateFunction(trigger, options.functionId);
-      yield* updateQueue(trigger, options.queue);
+      yield* updateFeed(trigger, options.feed);
       yield* updateInput(trigger, currentFn, options.input);
       yield* updateEnabled(trigger, options.id, options.enabled);
 
@@ -55,7 +56,7 @@ export const queue = Command.make(
       yield* flushAndSync({ indexes: true });
     }),
 ).pipe(
-  Command.withDescription('Update a queue trigger.'),
+  Command.withDescription('Update a feed trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
   Command.provideEffectDiscard(() => withTypes(Operation.PersistentOperation, Trigger.Trigger)),
 );
@@ -86,7 +87,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+    const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -98,7 +99,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const functionId = trigger.function?.dxn.asEchoDXN()?.echoId ?? 'unknown';
+    const functionId = (trigger.function ? trigger.function.uri.toString() : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 
@@ -106,32 +107,28 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
 });
 
 /**
- * Handles updating the queue DXN for a queue trigger.
- * Prompts for confirmation if queue is not provided, then updates the queue if confirmed.
+ * Handles updating the feed reference for a feed trigger.
+ * Prompts for confirmation if feed is not provided, then updates the feed if confirmed.
  */
-const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: Option.Option<DXN>) {
-  const currentQueue = trigger.spec?.kind === 'queue' ? trigger.spec.queue : undefined;
-  const currentQueueStr = currentQueue
-    ? typeof currentQueue === 'string'
-      ? currentQueue
-      : String(currentQueue)
-    : undefined;
-  const shouldChangeQueue = yield* Option.match(queueOption, {
+const updateFeed = Effect.fn(function* (trigger: Trigger.Trigger, feedOption: Option.Option<string>) {
+  const currentFeed = trigger.spec?.kind === 'feed' ? trigger.spec.feed : undefined;
+  const currentFeedStr = currentFeed ? currentFeed.uri.toString() : undefined;
+  const shouldChangeFeed = yield* Option.match(feedOption, {
     onNone: () =>
       Prompt.confirm({
-        message: `Change the queue${currentQueueStr ? ` (current: ${currentQueueStr})` : ''}?`,
+        message: `Change the feed${currentFeedStr ? ` (current: ${currentFeedStr})` : ''}?`,
         initial: false,
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(true),
   });
-  if (shouldChangeQueue) {
-    const queueDXN = yield* Option.match(queueOption, {
+  if (shouldChangeFeed) {
+    const feed = yield* Option.match(feedOption, {
       onNone: () => selectFeed(),
-      onSome: (dxn) => Effect.succeed(dxn.toString()),
+      onSome: (uri) => Database.resolve(EID.parse(uri), Feed$.Feed),
     });
     Obj.update(trigger, (trigger) => {
-      if (trigger.spec?.kind === 'queue') {
-        trigger.spec.queue = queueDXN;
+      if (trigger.spec?.kind === 'feed') {
+        trigger.spec.feed = Ref.make(feed);
       }
     });
   }

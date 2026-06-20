@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tracing",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,7 +29,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",

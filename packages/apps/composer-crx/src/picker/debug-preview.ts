@@ -2,18 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Clip } from '../clip/types';
-
 /**
- * Show the serialized Clip payload to the user before delivery, with
+ * Show an arbitrary serialized payload to the user before delivery, with
  * [Send to Composer] and [Cancel] buttons. Resolves `true` when the user
  * confirms, `false` when they cancel.
  *
  * Mounted directly in the page (not the popup) so the user can inspect the
  * JSON without the flow being blocked by popup-close behavior. Activated
- * only when the `clip-debug` option is on.
+ * only when developer mode is on.
  */
-export const showDebugPreview = (clip: Clip): Promise<boolean> => {
+export const showDebugPreview = (title: string, payload: unknown): Promise<boolean> => {
   return new Promise((resolve) => {
     const host = document.createElement('div');
     host.setAttribute('data-dxos-crx-picker', '');
@@ -51,16 +49,16 @@ export const showDebugPreview = (clip: Clip): Promise<boolean> => {
       justifyContent: 'space-between',
       gap: '12px',
     } as CSSStyleDeclaration);
-    const title = document.createElement('span');
-    title.textContent = `Debug: Clip preview (${clip.kind})`;
-    header.appendChild(title);
+    const heading = document.createElement('span');
+    heading.textContent = `Debug: ${title}`;
+    header.appendChild(heading);
     const size = document.createElement('span');
     Object.assign(size.style, {
       fontSize: '12px',
       color: '#6b7280',
       fontWeight: '400',
     } as CSSStyleDeclaration);
-    const json = JSON.stringify(clip, null, 2);
+    const json = JSON.stringify(payload, null, 2);
     size.textContent = `${json.length.toLocaleString()} chars`;
     header.appendChild(size);
     panel.appendChild(header);

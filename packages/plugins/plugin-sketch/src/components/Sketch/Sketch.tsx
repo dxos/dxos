@@ -15,7 +15,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';
 import { type Sketch, type Settings } from '#types';
@@ -224,7 +224,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         ref={containerRef}
       >
         <Tldraw
-          key={Obj.getDXN(sketch).toString()}
+          key={Obj.getURI(sketch)}
           store={adapter.store}
           hideUi={hideUi}
           inferDarkMode

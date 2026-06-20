@@ -5,15 +5,15 @@
 import { type ViewUpdate } from '@codemirror/view';
 import { useMemo } from 'react';
 
-import { fromUrlPath } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext } from '@dxos/react-ui';
-import { type SelectionManager } from '@dxos/react-ui-attention';
+import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -51,7 +51,7 @@ export type ExtensionsOptions = {
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
-  selectionManager?: SelectionManager;
+  viewState?: ViewStateManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
   platform?: 'mobile' | 'desktop';
@@ -66,7 +66,7 @@ export const useExtensions = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   editorStateStore,
   previewOptions,
   onSelectObject,
@@ -95,7 +95,7 @@ export const useExtensions = ({
         settings,
         compact,
         viewMode,
-        selectionManager,
+        viewState,
         previewOptions,
         platform,
         onSelectObject,
@@ -105,7 +105,7 @@ export const useExtensions = ({
       object,
       compact,
       viewMode,
-      selectionManager,
+      viewState,
       previewOptions,
       settings,
       settings?.debug,
@@ -155,12 +155,12 @@ const createBaseExtensions = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   previewOptions,
   platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
-    selectionManager && selectionChange(selectionManager),
+    viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings?.folding && !compact && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
@@ -195,19 +195,25 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-const selectionChange = (selectionManager: SelectionManager) => {
+const selectionChange = (viewState: ViewStateManager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
     const selection = update.state.selection;
+    // NOTE: Filter on numeric offsets BEFORE converting to cursor strings.
+    // Cursors are opaque (Automerge-encoded), so a lexicographic `to > from`
+    // comparison is nondeterministic — it would let some cursor-placements
+    // (where from === to numerically) through and reject genuine selections
+    // depending on encoding, which made the comment button's enabled state
+    // appear random across different lines.
     const ranges = selection.ranges
+      .filter((range) => range.to > range.from)
       .map((range) => ({
         from: cursorConverter.toCursor(range.from),
         to: cursorConverter.toCursor(range.to),
-      }))
-      .filter(({ from, to }) => to > from);
+      }));
 
-    selectionManager.updateMultiRange(id, ranges);
+    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {
@@ -222,7 +228,7 @@ const createRenderLink =
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
+    const qualifiedId = isInternal ? Paths.fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
     const icon = Domino.of('span')
       .classNames('dx-link ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));

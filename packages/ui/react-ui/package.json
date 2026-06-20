@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,6 +44,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -55,6 +56,7 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
+    "@internationalized/date": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-alert-dialog": "catalog:",
     "@radix-ui/react-avatar": "catalog:",
@@ -91,6 +93,7 @@
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"

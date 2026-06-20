@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ import { Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
 import { ObjectProperties } from './ObjectProperties';
 
 //
@@ -30,27 +30,21 @@ import { ObjectProperties } from './ObjectProperties';
 const Author = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.author',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'blue' }),
+  Type.makeObject(DXN.make('org.dxos.test.author', '0.1.0')),
 );
-type Author = Schema.Schema.Type<typeof Author>;
+type Author = Type.InstanceType<typeof Author>;
 
 const Article = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
   authors: Schema.Array(Ref.Ref(Author)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.article',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'green' }),
+  Type.makeObject(DXN.make('org.dxos.test.article', '0.1.0')),
 );
-type Article = Schema.Schema.Type<typeof Article>;
+type Article = Type.InstanceType<typeof Article>;
 
 //
 // `Note` mirrors the `Subscription.Feed` shape: a required `Ref` field
@@ -60,37 +54,31 @@ type Article = Schema.Schema.Type<typeof Article>;
 // backing object and links it at create time. `cursor` is an optional hidden
 // field included to exercise the same path for non-required hidden fields.
 //
-const NoteBacking = Schema.Struct({}).pipe(Type.object({ typename: 'org.dxos.test.note-backing', version: '0.1.0' }));
-type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
+const NoteBacking = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.test.noteBacking', '0.1.0')));
+type NoteBacking = Type.InstanceType<typeof NoteBacking>;
 
 const Note = Schema.Struct({
   title: Schema.String,
   cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   backing: Ref.Ref(NoteBacking).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.note',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'amber' }),
   FactoryAnnotation.set(((values: any) =>
     Obj.make(Note, { ...values, backing: Ref.make(Obj.make(NoteBacking, {})) })) as FactoryFn),
+  Type.makeObject(DXN.make('org.dxos.test.note', '0.1.0')),
 );
-type Note = Schema.Schema.Type<typeof Note>;
+type Note = Type.InstanceType<typeof Note>;
 
 const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   notes: Schema.Array(Ref.Ref(Note)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.notebook',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'amber' }),
+  Type.makeObject(DXN.make('org.dxos.test.notebook', '0.1.0')),
 );
-type Notebook = Schema.Schema.Type<typeof Notebook>;
+type Notebook = Type.InstanceType<typeof Notebook>;
 
 //
 // Stories.
@@ -288,9 +276,9 @@ export const CreateRefArrayPlay: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    // ObjectProperties extends Article with the BaseSchema's `tags` array, so
-    // the form has two "Add item" buttons (Tags + Authors). Pick the last one
-    // — Authors comes after Tags in the rendered order.
+    // ObjectProperties extends Article with the synthetic `_tags` meta-tags
+    // array (labelled "Tags"), so the form has two "Add item" buttons (Tags +
+    // Authors). Pick the last one — Authors comes after Tags in rendered order.
     const addButtons = await canvas.findAllByRole('button', { name: /add/i }, { timeout: 10_000 });
     await userEvent.click(addButtons[addButtons.length - 1]);
     await new Promise((resolve) => setTimeout(resolve, 250));

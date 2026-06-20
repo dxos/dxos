@@ -4,6 +4,8 @@
 
 import { describe, expectTypeOf, test, expect } from 'vitest';
 
+import { EID } from '@dxos/keys';
+
 import * as Entity from './Entity';
 import { SnapshotKindId } from './internal';
 import * as Obj from './Obj';
@@ -12,6 +14,26 @@ import * as Relation from './Relation';
 import { TestSchema } from './testing';
 
 describe('Obj', () => {
+  describe('make', () => {
+    test('generates a random id when none is provided', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      expect(obj.id).toBeDefined();
+      expect(obj.id.length).toBeGreaterThan(0);
+    });
+
+    test('uses the provided id at creation time', ({ expect }) => {
+      const a = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const b = Obj.make(TestSchema.Person, { name: 'Bob', id: a.id });
+      expect(b.id).toBe(a.id);
+    });
+
+    test('rejects an invalid id format', ({ expect }) => {
+      expect(() => Obj.make(TestSchema.Person, { name: 'Alice', id: 'not-a-ulid' })).toThrow(
+        /Invalid object id format/,
+      );
+    });
+  });
+
   describe('getSnapshot', () => {
     test('getSnapshot returns an immutable snapshot with SnapshotKindId', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
@@ -42,8 +64,8 @@ describe('Obj', () => {
       const snapshot = Obj.getSnapshot(obj);
 
       // getDXN - works with both.
-      expect(Obj.getDXN(obj)).toBeDefined();
-      expect(Obj.getDXN(snapshot)).toBeDefined();
+      expect(Obj.getURI(obj)).toBeDefined();
+      expect(Obj.getURI(snapshot)).toBeDefined();
 
       // getTypename - works with both.
       expect(Obj.getTypename(obj)).toBe('com.example.type.person');
@@ -79,6 +101,86 @@ describe('Obj', () => {
       expect(SnapshotKindId in obj).toBe(false);
       expect(SnapshotKindId in snapshot).toBe(true);
       expect(Entity.KindId in snapshot).toBe(false);
+    });
+
+    test('getSnapshot preserves parent', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'child' });
+      Obj.setParent(child, parent);
+
+      const snapshot = Obj.getSnapshot(child);
+
+      expect(Obj.getParent(child)).toBe(parent);
+      expect(Obj.getParent(snapshot)).toBe(parent);
+    });
+  });
+
+  describe('getURI', () => {
+    test('default returns EID', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const uri = Obj.getURI(obj);
+      expect(EID.isEID(uri)).toBe(true);
+    });
+
+    test("prefer: 'relative' returns local EID echo:/<id>", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const uri = Obj.getURI(obj, { prefer: 'relative' });
+      expect(uri).toMatch(/^echo:\/[^/]/);
+      expect(EID.isLocal(EID.parse(uri))).toBe(true);
+    });
+
+    test("prefer: 'relative' works with snapshot", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const snapshot = Obj.getSnapshot(obj);
+      expect(Obj.getURI(snapshot, { prefer: 'relative' })).toBe(Obj.getURI(obj, { prefer: 'relative' }));
+    });
+
+    test("prefer: 'named' returns dxn: URI when meta.key is set", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, {
+        [Obj.Meta]: { key: 'org.dxos.blueprint.webSearch' },
+        name: 'Alice',
+      });
+      const uri = Obj.getURI(obj, { prefer: 'named' });
+      expect(uri).toBe('dxn:org.dxos.blueprint.webSearch');
+    });
+
+    test("prefer: 'named' falls back to EID when meta.key is absent", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const uri = Obj.getURI(obj, { prefer: 'named' });
+      expect(EID.isEID(uri)).toBe(true);
+    });
+
+    test("prefer: 'named' handles key with hyphens (falls back to raw key URI)", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, {
+        [Obj.Meta]: { key: 'org.dxos.blueprint.web-search' },
+        name: 'Alice',
+      });
+      // Hyphens in the final DXN segment are invalid; falls back to the raw key as URI.
+      const uri = Obj.getURI(obj, { prefer: 'named' });
+      expect(uri).toBe('org.dxos.blueprint.web-search');
+    });
+
+    test("prefer: 'absolute' falls back to current EID when object has no database", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      // Without a database the space id is unknown; result is at least a valid EID.
+      const uri = Obj.getURI(obj, { prefer: 'absolute' });
+      expect(EID.isEID(uri)).toBe(true);
+    });
+
+    test("prefer: 'relative' returns the same local EID for reactive and snapshot", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const snapshot = Obj.getSnapshot(obj);
+      expect(Obj.getURI(snapshot, { prefer: 'relative' })).toBe(Obj.getURI(obj, { prefer: 'relative' }));
+    });
+
+    test("prefer: 'named' works the same on snapshot as on reactive (meta.key is preserved)", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, {
+        [Obj.Meta]: { key: 'com.example.foo' },
+        name: 'Alice',
+      });
+      const snapshot = Obj.getSnapshot(obj);
+      expect(Obj.getURI(snapshot, { prefer: 'named' })).toBe(Obj.getURI(obj, { prefer: 'named' }));
+      expect(Obj.getURI(snapshot, { prefer: 'named' })).toBe('dxn:com.example.foo');
     });
   });
 
@@ -134,7 +236,7 @@ describe('Obj', () => {
 
     test('throws for plain object without metadata', ({ expect }) => {
       const plain = { id: 'plain-1', name: 'Plain' };
-      expect(() => Obj.getKeys(plain as any, SOURCE)).toThrow(/ObjectMeta not found/);
+      expect(() => Obj.getKeys(plain as any, SOURCE)).toThrow(/EntityMeta not found/);
     });
   });
 
@@ -329,8 +431,8 @@ describe('Obj', () => {
       expect(cloned.address?.city).toBe('San Francisco');
       expect(cloned.address?.state).toBe('CA');
       expect(cloned.address?.zip).toBe('94102');
-      expect(cloned.address?.coordinates.lat).toBe(37.7749);
-      expect(cloned.address?.coordinates.lng).toBe(-122.4194);
+      expect(cloned.address?.coordinates?.lat).toBe(37.7749);
+      expect(cloned.address?.coordinates?.lng).toBe(-122.4194);
 
       // Modifying nested properties should be independent
       Obj.update(person, (person) => {
@@ -405,7 +507,7 @@ describe('Obj', () => {
       const cloned = Obj.clone(person);
 
       expect(Obj.instanceOf(TestSchema.Person, cloned)).toBe(true);
-      expect(Obj.getSchema(cloned)).toBe(Obj.getSchema(person));
+      expect(Obj.getType(cloned)).toBe(Obj.getType(person));
     });
   });
 
@@ -490,7 +592,7 @@ describe('Obj', () => {
       Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
-      expect(target.employer?.dxn.toString()).toBe(Ref.make(orgB).dxn.toString());
+      expect(target.employer?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
       expect(target.address?.city).toBe('Portland');
     });
 
@@ -513,7 +615,7 @@ describe('Obj', () => {
       Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
-      expect(target.tasks?.map((r) => r.dxn.toString())).toEqual(source.tasks?.map((r) => r.dxn.toString()));
+      expect(target.tasks?.map((r) => r.uri)).toEqual(source.tasks?.map((r) => r.uri));
     });
 
     test('respects include option', () => {

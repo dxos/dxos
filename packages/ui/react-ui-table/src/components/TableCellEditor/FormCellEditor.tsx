@@ -5,8 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Entity, type Type } from '@dxos/echo';
-import { Ref, getValue } from '@dxos/echo/internal';
+import { Entity, Ref, Type } from '@dxos/echo';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
@@ -63,7 +63,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
       return undefined;
     }
 
-    return narrowSchema(schema, [fieldProjection.field.path]);
+    return narrowSchema(Type.getSchema(schema), [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
   const originalRow = useMemo<TableRow | undefined>(() => {
@@ -151,8 +151,8 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
       results
         .map((obj) => {
           return {
-            id: Entity.getDXN(obj).toString(),
-            label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
+            id: Entity.getURI(obj),
+            label: SchemaEx.getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
           };
         })
         .filter(isTruthy),
@@ -167,7 +167,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={anchorRef} />
       <Popover.Portal>
-        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-fine'>
+        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
           <Popover.Arrow />
           <Popover.Viewport>
             <Form.Root

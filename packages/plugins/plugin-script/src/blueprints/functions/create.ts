@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CollectionModel } from '@dxos/app-toolkit';
 import { Script, Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { CollectionModel } from '@dxos/schema';
 
 import { Create } from './definitions';
 
@@ -34,7 +34,7 @@ export default Create.pipe(
       yield* CollectionModel.add({ object: fn });
 
       return {
-        function: Obj.getDXN(fn).toString(),
+        function: Obj.getURI(fn),
       };
     }),
   ),

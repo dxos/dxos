@@ -7,13 +7,12 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'r
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, useMediaQuery } from '@dxos/react-ui';
 
-import { useBreakpoints, useHoistStatusbar } from '#hooks';
+import { useBreakpoints } from '#hooks';
 
 import { layoutAppliesTopbar } from '../../util';
 import { ComplementarySidebar, Sidebar } from '../Sidebar';
 import { Banner } from './Banner';
 import { useDeckContext } from './DeckRoot';
-import { StatusBar } from './StatusBar';
 
 const DECK_CONTENT_NAME = 'DeckContent';
 
@@ -31,7 +30,6 @@ export const DeckContent = ({ children }: DeckContentProps) => {
   } = useDeckContext(DECK_CONTENT_NAME);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
@@ -97,7 +95,6 @@ export const DeckContent = ({ children }: DeckContentProps) => {
       <Main.Overlay />
       {children}
       {topbar && <Banner variant='topbar' />}
-      {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
     </Main.Root>
   );
 };

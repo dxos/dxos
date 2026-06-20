@@ -17,13 +17,13 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
+import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { Builder, LABELS, MessagesOptions, initializeMailbox } from '#testing';
+import { Builder, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
@@ -48,7 +48,7 @@ const CompanionStory = () => {
   const feed = mailbox?.feed?.target;
 
   // Selected message.
-  const selected = useSelected(feed ? Obj.getDXN(feed).toString() : undefined, 'single');
+  const selected = useSelection(feed ? Obj.getURI(feed) : undefined, 'single');
   const message = useQuery(
     db,
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
@@ -61,7 +61,7 @@ const CompanionStory = () => {
   );
 
   // NOTE: Attention required for scrolling.
-  const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);
+  const attentionAttrs = useAttentionAttributes(feed ? Obj.getURI(feed) : undefined);
 
   if (!db || !feed) {
     return <Loading data={{ db: !!db, feed: !!feed }} />;
@@ -98,16 +98,14 @@ export const Default: Story = {
 export const WithMessages: Story = {
   args: {
     id: 'story',
-    labels: LABELS,
     count: 100,
   },
 };
 
-export const WithThreads: Story = {
+export const WithConversations: Story = {
   args: {
     id: 'story',
-    labels: LABELS,
-    threads: true,
+    conversations: true,
     count: 100,
     options: {
       threads: 10,

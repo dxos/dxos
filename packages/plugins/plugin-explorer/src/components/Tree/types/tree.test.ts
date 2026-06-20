@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Task } from '@dxos/types';
 
-import { createTree } from '../testing';
+import { createTree } from '../../../testing';
 import { type Tree } from './tree';
 
 random.seed(0);

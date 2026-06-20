@@ -7,10 +7,10 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
-import { useObject, useSchema } from '@dxos/react-client/echo';
+import { Format } from '@dxos/echo/Format';
+import { useObject, useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';
 import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema, UNCATEGORIZED_VALUE } from '#types';
@@ -30,8 +30,8 @@ export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
   const isView = object.spec.kind === 'view';
   const [view, updateView] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
   const [, updateKanban] = useObject(object);
-  const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(db, currentTypename);
+  const currentTypeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const schema = useType(db, currentTypeUri);
   const projection = useProjectionModel(schema, object, registry);
 
   const fieldProjections = projection?.getFieldProjections() ?? [];
@@ -87,8 +87,15 @@ export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
   const settingsSchema = (isView ? KanbanViewSettingsSchema : KanbanSettingsSchema) as any;
 
   return (
-    <Form.Root schema={settingsSchema} values={initialValues} fieldMap={fieldMap} onValuesChanged={handleValuesChanged}>
-      <Form.FieldSet />
-    </Form.Root>
+    <Form.Section>
+      <Form.Root
+        schema={settingsSchema}
+        values={initialValues}
+        fieldMap={fieldMap}
+        onValuesChanged={handleValuesChanged}
+      >
+        <Form.FieldSet />
+      </Form.Root>
+    </Form.Section>
   );
 };

@@ -8,15 +8,15 @@ import * as Layer from 'effect/Layer';
 
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 import * as AiService from './AiService';
 import * as AiSummarizer from './AiSummarizer';
 import { TestAiService, TestData } from './testing';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
-const TestLanguageModel = AiService.model('@anthropic/claude-sonnet-4-5').pipe(Layer.provide(TestAiService()));
+const TestLanguageModel = AiService.model('ai.claude.model.claude-sonnet-4-5').pipe(Layer.provide(TestAiService()));
 
 describe('AiSummarizer', () => {
   it.effect(

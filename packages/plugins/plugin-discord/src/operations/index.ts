@@ -5,7 +5,6 @@
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const DiscordOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-bot'),
-  () => import('./set-token'),
-  () => import('./disconnect-guild'),
+  () => import('./get-discord-channels'),
+  () => import('./sync'),
 );

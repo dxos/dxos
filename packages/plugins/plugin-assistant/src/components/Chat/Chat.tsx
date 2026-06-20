@@ -9,16 +9,19 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { getSpace } from '@dxos/client/echo';
+import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
+import { meta } from '#meta';
 
+import { AiUsageQuotaError } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -29,26 +32,36 @@ import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 
-export { useChatContext };
-
 //
 // Root
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'chat' | 'processor'> & {
     feed?: Feed.Feed;
+    /** Fallback database when the chat is transient (not yet persisted). */
+    db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
+    /**
+     * Runs (and is awaited) before the request fires on submit. Lets a transient chat
+     * persist and flush its conversation feed so the agent can resolve it.
+     */
+    onSubmit?: (text: string) => Promise<void> | void;
   }
 >;
 
-const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
-  const db = props.db ?? (chat && Obj.getDatabase(chat));
+  // Transient chats have no database of their own; fall back to the supplied space db so
+  // the message query and context controls operate before the chat is persisted.
+  const db = (chat && Obj.getDatabase(chat)) || dbFallback;
+
+  // Event sink.
+  const event = useMemo(() => new Event<ChatEvent>(), []);
 
   const feedMessages = useQuery(
     db,
@@ -62,7 +75,14 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
 
   const dump = useDebug({ processor });
 
-  const event = useMemo(() => new Event<ChatEvent>(), []);
+  // Surface processor failures (e.g., AI service unavailable) to subscribers via the event bus.
+  const error = useAtomValue(processor.error);
+  useEffect(() => {
+    if (Option.isSome(error)) {
+      event.emit({ type: 'error', error: error.value });
+    }
+  }, [event, error]);
+
   useEffect(() => {
     return event.on((ev) => {
       switch (ev.type) {
@@ -82,7 +102,9 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
           const text = ev.text.trim();
           if (!streaming && text.length) {
             lastPrompt.current = ev.text;
-            void processor.request({ message: text });
+            // Await persistence (transient chat) before requesting so the agent resolves the
+            // now-durable conversation feed; resolves immediately when there is no hook.
+            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text }));
           }
           break;
         }
@@ -95,8 +117,8 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
         }
 
         case 'cancel': {
+          void processor.cancel();
           if (streaming) {
-            void processor.cancel();
             if (lastPrompt.current) {
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
             }
@@ -107,7 +129,7 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
 
       onEvent?.(ev);
     });
-  }, [event, dump, processor, streaming, onEvent]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit]);
 
   return (
     <ChatContextProvider
@@ -146,18 +168,21 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
-  companionTo?: Obj.Unknown;
-};
+type ChatToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> &
+  PropsWithChildren<{
+    companionTo?: Obj.Unknown;
+  }>;
 
 const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ attendableId, companionTo, ...props }, forwardedRef) => {
+  ({ children, attendableId, alwaysActive, companionTo, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+          {children}
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },
@@ -189,14 +214,21 @@ ChatContent.displayName = CHAT_CONTENT_NAME;
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'> & {
+  /** Invoked from the over-quota error toast to open the usage dashboard. */
+  onViewUsage?: () => void;
+};
 
-const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
+const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatThreadProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
-  const debugView = viewType === 'debug';
+  const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-  const extensions = useChatKeymapExtensions({ event });
+  const [toastError, setToastError] = useState<Error | undefined>(undefined);
+  // The toast renders whatever action the error declares (data-driven) rather than branching on type.
+  const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
+  const debugView = viewType === 'debug';
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
   useEffect(() => {
@@ -211,6 +243,9 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
           break;
         case 'nav-next':
           controllerRef.current?.navigateNext();
+          break;
+        case 'error':
+          setToastError(event.error);
           break;
       }
     });
@@ -228,17 +263,45 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
   }
 
   return (
-    <NaturalChatThread
-      {...props}
-      identity={identity}
-      messages={messages}
-      error={error}
-      debug={debugProp ?? (debug || debugView)}
-      viewType={viewType}
-      extensions={extensions}
-      onEvent={handleEvent}
-      ref={controllerRef}
-    />
+    <>
+      <NaturalChatThread
+        {...props}
+        identity={identity}
+        messages={messages}
+        error={error}
+        debug={debugProp ?? (debug || debugView)}
+        viewType={viewType}
+        extensions={extensions}
+        onEvent={handleEvent}
+        ref={controllerRef}
+      />
+
+      <Toast.Root
+        type='foreground'
+        open={!!toastError}
+        duration={20_000}
+        onOpenChange={(open) => !open && setToastError(undefined)}
+      >
+        <Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
+          {t('ai-service-error.label')}
+        </Toast.Title>
+        <Toast.Description>{toastError?.message}</Toast.Description>
+        {toastAction && onViewUsage && (
+          <Toast.Actions>
+            <Toast.Action altText={t(toastAction.labelKey)} asChild>
+              <Button
+                onClick={() => {
+                  setToastError(undefined);
+                  onViewUsage();
+                }}
+              >
+                {t(toastAction.labelKey)}
+              </Button>
+            </Toast.Action>
+          </Toast.Actions>
+        )}
+      </Toast.Root>
+    </>
   );
 };
 
@@ -274,11 +337,23 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: plan
   const parent = chat ? Obj.getParent(chat) : undefined;
   const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
   const plan = planProp ?? agent?.plan.target;
+  const space = chat ? getSpace(chat) : undefined;
+  const traceMessages = useTraceMessages(space);
+  const conversationId = chat?.feed?.target?.id;
   if (!plan) {
     return null;
   }
 
-  return <TaskList {...props} plan={plan} ref={forwardedRef} />;
+  return (
+    <TaskList
+      {...props}
+      plan={plan}
+      space={space}
+      traceMessages={traceMessages}
+      conversationId={conversationId}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;

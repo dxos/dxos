@@ -45,6 +45,14 @@ export type GraphLayoutNode<NodeData = any> = {
   type?: string;
   order?: number;
   data?: NodeData;
+  /** Human-readable label. Synthetic nodes (e.g. cluster root / group) carry this so
+   * consumer renderNode callbacks can label them without parsing internal id formats. */
+  label?: string;
+  /** When true the node remains in the layout but is rendered with opacity 0 and no
+   * pointer events — used by the cluster's collapse animation so hidden leaves can
+   * tween to their parent's position rather than popping out, and tween back when the
+   * parent is re-expanded. */
+  hidden?: boolean;
   x?: number;
   y?: number;
   r?: number;
@@ -65,6 +73,12 @@ export type GraphLayoutEdge<NodeData = any, EdgeData = any> = {
   target: GraphLayoutNode<NodeData>;
   data?: EdgeData;
   linkForce?: boolean;
+  /**
+   * Precomputed SVG `d` attribute. When set, the renderer uses this instead of
+   * deriving a straight-line path from `source/target` positions. Lets projectors
+   * own edge geometry (e.g. radial elbows, bundled curves) without renderer changes.
+   */
+  path?: string;
   classes?: {
     path?: string;
   };

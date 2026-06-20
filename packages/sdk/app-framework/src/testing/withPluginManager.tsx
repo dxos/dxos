@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
@@ -21,13 +22,17 @@ import { type UseAppOptions, useApp } from '../ui';
 export const setupPluginManager = ({
   capabilities,
   plugins = [],
-  core = plugins.map(({ meta }) => meta.id),
   ...options
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
+  // Auto-enable every non-system plugin so stories don't have to spell out
+  // enablement. System-tagged plugins are force-enabled by the manager.
+  const enabled = plugins
+    .filter(({ meta }) => !meta.profile.tags?.includes('system'))
+    .map(({ meta }) => meta.profile.key);
   const pluginManager = PluginManager.make({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin, ...plugins],
-    core: [StoryPlugin.meta.id, ...core],
+    enabled,
     ...options,
   });
 
@@ -94,7 +99,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
-        void runAndForwardErrors(pluginManager.shutdown());
+        void EffectEx.runAndForwardErrors(pluginManager.shutdown());
       };
     }, [storyId, init]);
 
@@ -117,10 +122,11 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
   return <App />;
 };
 
-const storyMeta = {
-  id: 'org.dxos.app-framework.story',
+const storyMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.appFramework.story'),
   name: 'Story',
-};
+  tags: ['system'],
+});
 
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.

@@ -38,6 +38,8 @@ describe('stdio integration', () => {
     await client?.close();
   });
 
+  // First `listTools` call waits on the subprocess to finish its index build,
+  // which can exceed the default 5s test timeout under CI load.
   test('subprocess starts and lists every registered tool', async ({ expect }) => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
@@ -54,7 +56,7 @@ describe('stdio integration', () => {
       'list_surfaces',
       'list_symbols',
     ]);
-  });
+  }, 30_000);
 
   test('list_packages round-trips real JSON-RPC over stdio', async ({ expect }) => {
     const result = (await client.callTool({ name: 'list_packages', arguments: {} })) as {

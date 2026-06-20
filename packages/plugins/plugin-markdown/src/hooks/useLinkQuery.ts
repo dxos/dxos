@@ -6,7 +6,8 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
@@ -19,10 +20,10 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
-          .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-          .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
-          .map((schema) => Filter.typename(Type.getTypename(schema))),
+        ...(db ? db.graph.registry.list().filter(Type.isType) : [])
+          .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+          .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+          .map((schema) => Filter.type(Type.getURI(schema))),
       ),
     [db],
   );
@@ -42,15 +43,17 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         results
           ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           .map((object: Obj.Unknown): EditorMenuItem => {
-            const schema = Obj.getSchema(object);
-            const icon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))?.icon : undefined;
+            const type = Obj.getType(object);
+            const icon = type
+              ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)))?.icon
+              : undefined;
             const label = toLocalizedString(getLabel(object), t);
             return {
               id: object.id,
               label,
               icon,
               onSelect: ({ view, head }) => {
-                const link = `[${label}](${Obj.getDXN(object)})`;
+                const link = `[${label}](${Obj.getURI(object)})`;
                 // "@@" inserts a block embed on its own line instead of an inline link.
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
@@ -64,13 +67,13 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       // Add "Create new document" option at the end.
       const createItem: EditorMenuItem = {
         id: 'create-document',
-        label: ['add-object.label', { ns: Markdown.Document.typename }],
+        label: ['add-object.label', { ns: Type.getTypename(Markdown.Document) }],
         icon: 'ph--plus--regular',
         onSelect: ({ view, head }) => {
           const doc = Markdown.make({ name: name || undefined });
           db?.add(doc);
-          const label = name || t('object-name.placeholder', { ns: Markdown.Document.typename });
-          const link = `[${label}](${Obj.getDXN(doc)})`;
+          const label = name || t('object-name.placeholder', { ns: Type.getTypename(Markdown.Document) });
+          const link = `[${label}](${Obj.getURI(doc)})`;
           if (query?.startsWith('@')) {
             insertAtLineStart(view, head, `!${link}\n`);
           } else {

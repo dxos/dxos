@@ -13,7 +13,8 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { DXN, Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
 import { Cron, Enabled, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -36,8 +37,8 @@ export const timer = Command.make(
         onNone: () => selectTrigger('timer'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
+      const dxn = EID.make({ entityId: triggerId });
+      const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (!trigger.spec || trigger.spec?.kind !== 'timer') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
@@ -87,7 +88,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+    const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -99,7 +100,8 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const functionId = trigger.function?.dxn.asEchoDXN()?.echoId ?? 'unknown';
+    const functionId =
+      (trigger.function ? EID.getEntityId(EID.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 

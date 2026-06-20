@@ -9,10 +9,9 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Calls',
 
-        'channel-companion.label': 'Channel',
         'call-panel.label': 'Active Call',
 
         'display-name.label': 'Display name',
@@ -41,9 +40,6 @@ export const translations = [
         'lower-hand.button': 'Lower hand',
         'screenshare-on.button': 'Share screen',
         'screenshare-off.button': 'Stop streaming',
-
-        'channel-toolbar.title': 'Channel actions',
-        'start-video-call.menu': 'Start video call',
       },
     },
   },

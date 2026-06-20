@@ -13,8 +13,6 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
-    inputs:
-      - script-frame/index.html
   compile:
     deps:
       - prebuild
@@ -35,6 +33,11 @@ tasks:
   # default playwright config and runs the production preview harness).
   e2e-dev:
     command: pnpm exec playwright test --config=src/playwright/playwright-dev.config.ts
+    deps:
+      - prebuild
+      - ^:build
+  e2e-welcome-focus:
+    command: pnpm exec playwright test --config=src/playwright/playwright-welcome-focus.config.ts
     deps:
       - prebuild
       - ^:build

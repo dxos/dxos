@@ -7,9 +7,10 @@ export { SpaceOperation } from './definitions';
 export const SpaceOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-object'),
   () => import('./add-relation'),
-  () => import('./add-schema'),
+  () => import('./add-type'),
   () => import('./close'),
   () => import('./create'),
+  () => import('./delete'),
   () => import('./delete-field'),
   () => import('./duplicate-object'),
   () => import('./export-space'),

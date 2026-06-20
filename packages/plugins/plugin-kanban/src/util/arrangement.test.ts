@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
 import { Kanban, UNCATEGORIZED_VALUE } from '#types';
@@ -25,7 +25,7 @@ const selectOptions = [
 ];
 
 const MinimalSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object({ typename: 'test/Minimal', version: '0.1.0' }),
+  Type.makeObject(DXN.make('com.example.type.minimal', '0.1.0')),
 );
 
 describe('arrangement utils', () => {
@@ -79,9 +79,9 @@ describe('arrangement utils', () => {
     });
 
     test('returns per-column ids and preserves hidden from kanban arrangement', ({ expect }) => {
-      const id1 = ObjectId.random();
-      const id2 = ObjectId.random();
-      const id3 = ObjectId.random();
+      const id1 = EntityId.random();
+      const id2 = EntityId.random();
+      const id3 = EntityId.random();
       const kanban = Kanban.make({
         view,
         arrangement: {
@@ -109,13 +109,13 @@ describe('arrangement utils', () => {
     });
 
     test('returns mutable copies', ({ expect }) => {
-      const idX = ObjectId.random();
+      const idX = EntityId.random();
       const kanban = Kanban.make({
         view,
         arrangement: { order: [], columns: { a: { ids: [idX] } } },
       });
       const byColumn = getOrderByColumnFromArrangement(kanban.arrangement);
-      byColumn.a.ids.push(ObjectId.random());
+      byColumn.a.ids.push(EntityId.random());
       expect(getOrderByColumnFromArrangement(kanban.arrangement).a.ids).toEqual([idX]);
     });
 
@@ -151,10 +151,10 @@ describe('arrangement utils', () => {
 
   describe('computeItemArrangement', () => {
     test('distributes items by pivotPath and preserves saved order within column', ({ expect }) => {
-      const idUc1 = ObjectId.random();
-      const idA1 = ObjectId.random();
-      const idA2 = ObjectId.random();
-      const idA3 = ObjectId.random();
+      const idUc1 = EntityId.random();
+      const idA1 = EntityId.random();
+      const idA2 = EntityId.random();
+      const idA3 = EntityId.random();
       const kanban = Kanban.make({
         view,
         arrangement: {

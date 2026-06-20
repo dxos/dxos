@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Routine } from '@dxos/compute';
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Graph } from '@dxos/plugin-explorer';
 import { Text } from '@dxos/schema';
 
@@ -23,23 +23,17 @@ export const Cell = Schema.Struct({
   graph: Schema.optional(Ref.Ref(Graph.Graph)),
 });
 
-export interface Cell extends Schema.Schema.Type<typeof Cell> {}
+export type Cell = Schema.Schema.Type<typeof Cell>;
 
 export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.notebook',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--notebook--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.notebook', '0.1.0')),
 );
 
-export type Notebook = Schema.Schema.Type<typeof Notebook>;
+export type Notebook = Type.InstanceType<typeof Notebook>;
 
 export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }): Notebook => Obj.make(Notebook, props);

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
-import { supportsNativePasskeys, createNativePasskey, extractPublicKeyFromAttestation } from '@dxos/app-toolkit';
+import { NativePasskey } from '@dxos/app-toolkit';
 import { PublicKey } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
@@ -23,16 +23,18 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
 
       const lookupKey = PublicKey.random();
 
-      const { recoveryKey, algorithm } = yield* Match.value(supportsNativePasskeys()).pipe(
+      const { recoveryKey, algorithm } = yield* Match.value(NativePasskey.supportsNativePasskeys()).pipe(
         Match.when(true, () =>
           Effect.gen(function* () {
             const result = yield* Effect.promise(() =>
-              createNativePasskey({
+              NativePasskey.createNativePasskey({
                 username: identity.did,
                 userId: lookupKey.asUint8Array(),
               }),
             );
-            const { publicKey, algorithm: alg } = extractPublicKeyFromAttestation(result.attestation_object);
+            const { publicKey, algorithm: alg } = NativePasskey.extractPublicKeyFromAttestation(
+              result.attestation_object,
+            );
             return {
               recoveryKey: PublicKey.from(publicKey),
               algorithm: alg === -7 ? 'ES256' : 'ED25519',

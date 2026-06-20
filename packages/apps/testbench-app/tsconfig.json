@@ -33,12 +33,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -60,10 +54,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-generator"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"

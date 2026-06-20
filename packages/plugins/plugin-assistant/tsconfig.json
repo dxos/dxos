@@ -13,6 +13,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src",
     "src/**/*.json"
   ],
@@ -21,16 +22,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -69,34 +61,16 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
       "path": "../../core/compute/functions-runtime"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-query"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../devtools/devtools"
@@ -114,13 +88,7 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -136,12 +104,6 @@
     },
     {
       "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-compute"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-editor"
     },
     {
       "path": "../../ui/react-ui-chat"
@@ -177,12 +139,6 @@
       "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-sfx"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -201,9 +157,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
       "path": "../plugin-automation"
     },
     {
@@ -217,6 +170,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-map"

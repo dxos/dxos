@@ -13,13 +13,13 @@ import { createSignal } from 'solid-js';
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';
@@ -102,13 +102,13 @@ export const chat = Command.make(
       const [conversation, setConversation] = createSignal<AiSession.Session | undefined>(undefined);
 
       if (!client.halo.identity) {
-        yield* Console.error('No HALO identity configured. Run `dx halo create --displayName "<name>"` first.');
+        yield* Console.error('No HALO identity configured. Run `dx account login` first.');
         return;
       }
-      const space = getPersonalSpace(client) ?? client.spaces.get()[0];
+      const space = AppSpace.getPersonalSpace(client) ?? client.spaces.get()[0];
       if (!space) {
         yield* Console.error(
-          'No space available for chat. Run `dx halo create` (creates one automatically) or `dx space create --name "<name>"`.',
+          'No space available for chat. Run `dx account login` or `dx space create --name "<name>"`.',
         );
         return;
       }

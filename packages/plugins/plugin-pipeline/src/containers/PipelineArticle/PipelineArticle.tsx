@@ -73,7 +73,7 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
 
   return (
     <Surface.Surface
-      type={AppSurface.Card}
+      type={AppSurface.CardContent}
       data={{
         subject: item,
         projection: projectionModel,

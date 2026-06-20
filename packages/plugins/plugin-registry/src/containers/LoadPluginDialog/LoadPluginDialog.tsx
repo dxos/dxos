@@ -6,16 +6,17 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const LOAD_PLUGIN_DIALOG = `${meta.id}.LoadPluginDialog`;
+export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
 
 export const LoadPluginDialog = () => {
   const manager = usePluginManager();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export const LoadPluginDialog = () => {
 
     void Effect.gen(function* () {
       const plugin = yield* manager.add(trimmed);
-      yield* manager.enable(plugin.meta.id);
+      yield* manager.enable(plugin.meta.profile.key);
       closeRef.current?.click();
     }).pipe(
       Effect.catchAll((err) =>
@@ -41,7 +42,7 @@ export const LoadPluginDialog = () => {
         }),
       ),
       Effect.tap(() => Effect.sync(() => setLoading(false))),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }, [url, manager]);
 
@@ -50,7 +51,7 @@ export const LoadPluginDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('load-by-url-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton ref={closeRef} />
+          <Dialog.ActionIconButton action='close' ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

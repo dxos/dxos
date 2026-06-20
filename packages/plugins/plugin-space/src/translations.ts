@@ -12,7 +12,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Type.PersistentType)]: {
+      [Type.getTypename(Type.Type)]: {
         'typename.label': 'Type',
         'typename.label_zero': 'Types',
         'typename.label_one': 'Type',
@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete type',
         'object-deleted.label': 'Type deleted',
       },
-      [Collection.Collection.typename]: {
+      [Type.getTypename(Collection.Collection)]: {
         'typename.label': 'Collection',
         'typename.label_zero': 'Collections',
         'typename.label_one': 'Collection',
@@ -34,7 +34,7 @@ export const translations = [
         'delete-object.label': 'Delete collection',
         'object-deleted.label': 'Collection deleted',
       },
-      [Event.Event.typename]: {
+      [Type.getTypename(Event.Event)]: {
         'typename.label': 'Event',
         'typename.label_zero': 'Events',
         'typename.label_one': 'Event',
@@ -45,7 +45,7 @@ export const translations = [
         'delete-object.label': 'Delete event',
         'object-deleted.label': 'Event deleted',
       },
-      [Message.Message.typename]: {
+      [Type.getTypename(Message.Message)]: {
         'typename.label': 'Message',
         'typename.label_zero': 'Messages',
         'typename.label_one': 'Message',
@@ -56,7 +56,7 @@ export const translations = [
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
       },
-      [Organization.Organization.typename]: {
+      [Type.getTypename(Organization.Organization)]: {
         'typename.label': 'Organization',
         'typename.label_zero': 'Organizations',
         'typename.label_one': 'Organization',
@@ -67,7 +67,7 @@ export const translations = [
         'delete-object.label': 'Delete organization',
         'object-deleted.label': 'Organization deleted',
       },
-      [Person.Person.typename]: {
+      [Type.getTypename(Person.Person)]: {
         'typename.label': 'Person',
         'typename.label_zero': 'People',
         'typename.label_one': 'Person',
@@ -78,7 +78,7 @@ export const translations = [
         'delete-object.label': 'Delete person',
         'object-deleted.label': 'Person deleted',
       },
-      [Pipeline.Pipeline.typename]: {
+      [Type.getTypename(Pipeline.Pipeline)]: {
         'typename.label': 'Pipeline',
         'typename.label_zero': 'Pipelines',
         'typename.label_one': 'Pipeline',
@@ -89,7 +89,7 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [Project.Project.typename]: {
+      [Type.getTypename(Project.Project)]: {
         'typename.label': 'Project',
         'typename.label_zero': 'Projects',
         'typename.label_one': 'Project',
@@ -100,7 +100,7 @@ export const translations = [
         'delete-object.label': 'Delete project',
         'object-deleted.label': 'Project deleted',
       },
-      [Task.Task.typename]: {
+      [Type.getTypename(Task.Task)]: {
         'typename.label': 'Task',
         'typename.label_zero': 'Tasks',
         'typename.label_one': 'Task',
@@ -111,8 +111,9 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spaces',
+        'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
         'join-space.label': 'Join space',
@@ -150,9 +151,6 @@ export const translations = [
         'space-settings.label': 'Spaces',
         'space-settings.description':
           'Per-space settings for properties, membership, integrations, and other space-specific objects.',
-        'show-hidden-spaces.label': 'Show archived spaces',
-        'show-hidden-spaces.description':
-          'Display archived spaces in the sidebar so they can be accessed or unarchived.',
         'save-files-to-directory.label': 'Save files to disk',
         'select-path.label': 'Select path',
         'snapshot-by-schema.label': 'Snapshot of objects',
@@ -221,6 +219,7 @@ export const translations = [
         'create-object-dialog.title': 'Create {{object}}',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
+        'plugin-subtitle.label': '{{plugin}} Plugin',
         'creating-object-type.label': 'Type',
         'creating-in-space.label': 'Location',
         'creating-in-collection.label': 'In Collection',
@@ -265,11 +264,6 @@ export const translations = [
         'hue.description': 'Color used to represent the space in the app.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
-        'archive-space.description':
-          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. Unarchive by enabling archived spaces in the app settings.',
-        'archive-space.label': 'Archive',
-        'unarchive-space.label': 'Unarchive',
-
         'space-key.title': 'Space Key',
         'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
         'copy-space-key.label': 'Copy space key',
@@ -286,6 +280,18 @@ export const translations = [
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
 
+        'danger-zone.title': 'Danger Zone',
+        'danger-zone.description': 'Destructive actions that cannot be undone.',
+
+        'delete-space.title': 'Delete Space',
+        'delete-space.description':
+          'Remove this space from all of your devices. The space stops replicating and is hidden everywhere. This action cannot be undone.',
+        'delete-space.label': 'Delete space',
+        'delete-space-confirm.title': 'Delete this space?',
+        'delete-space-confirm.description':
+          'This space will be removed from all of your devices and will stop replicating. This action cannot be undone.',
+        'delete-space-failed.message': 'Failed to delete space.',
+
         'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
         'sync-no-connection.label': 'No connection to edge service',
@@ -293,7 +299,7 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
-        'types-section.label': 'Database',
+        'database-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-all.label': 'All',
 
@@ -312,6 +318,8 @@ export const translations = [
         'qr.label': 'QR Code',
         'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
+        'space-home-node.label': 'Home',
+        'space-home.recent.heading': 'Recent',
       },
     },
   },

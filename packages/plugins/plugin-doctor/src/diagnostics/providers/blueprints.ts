@@ -21,8 +21,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const blueprintToolsDiagnostic: DiagnosticProvider = {
   id: 'blueprint-tools',
-  label: ['diagnostic.blueprint-tools.label', { ns: meta.id }],
-  description: ['diagnostic.blueprint-tools.description', { ns: meta.id }],
+  label: ['diagnostic.blueprint-tools.label', { ns: meta.profile.key }],
+  description: ['diagnostic.blueprint-tools.description', { ns: meta.profile.key }],
   run: async ({ client, capabilities, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const knownTools = new Set<string>();

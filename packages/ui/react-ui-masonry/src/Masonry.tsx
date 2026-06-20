@@ -10,7 +10,8 @@ import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, 
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
+import { composable, composableProps, scrollbar } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 //
 // Context
@@ -117,7 +118,7 @@ const MasonryContent = MasonryContentInner as (
 
 type MasonryViewportProps<Item> = ThemedClassName<{
   /** Items to render in the masonry grid. */
-  items: Item[];
+  items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
 }>;
@@ -127,7 +128,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
     const { width } = useMasonryContentContext('Masonry.Viewport');
     const columnCount = useColumnCount(
-      width - (scrollbar.thin.size + scrollbar.thin.padding),
+      width - (scrollbar.md.size + scrollbar.md.padding),
       columns,
       maxColumns,
       minColumnWidth,
@@ -170,7 +171,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
           {...composableProps(props)}
           ref={forwardedRef}
           style={{ gap: `${gutter}rem` }}
-          data={items}
+          data={items as any[]}
           columnCount={columnCount}
           ItemContent={TileAdapter}
         />

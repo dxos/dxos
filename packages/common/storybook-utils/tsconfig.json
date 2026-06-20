@@ -12,13 +12,7 @@
   ],
   "references": [
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-dnd"
     },
     {
       "path": "../../ui/ui-theme"

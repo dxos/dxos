@@ -3,9 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 
-import { type Entity, Obj, type Type } from '@dxos/echo';
+import { Entity, Obj, type Type } from '@dxos/echo';
 
 import * as Node from './node';
 
@@ -30,7 +29,7 @@ export type NodeMatcher<TData = Node.Node> = (node: Node.Node) => Option.Option<
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'my-extension',
+ *   id: 'myExtension',
  *   match: NodeMatcher.whenRoot,
  *   connector: (node) => Effect.succeed([...]),
  * });
@@ -48,7 +47,7 @@ export const whenRoot = (node: Node.Node): Option.Option<Node.Node> =>
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'spaces-extension',
+ *   id: 'spacesExtension',
  *   match: NodeMatcher.whenId('spaces'),
  *   connector: (node) => Effect.succeed([...]),
  * });
@@ -68,7 +67,7 @@ export const whenId =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'space-settings-extension',
+ *   id: 'spaceSettingsExtension',
  *   match: NodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   connector: (node) => Effect.succeed([...]),
  * });
@@ -97,7 +96,7 @@ export const whenNodeType =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'collection-extension',
+ *   id: 'collectionExtension',
  *   match: NodeMatcher.whenEchoType(Collection.Collection),
  *   connector: (collection) => {
  *     // `collection` is typed as Collection.Collection
@@ -112,9 +111,9 @@ export const whenNodeType =
  * @see {@link whenEchoTypeMatches} - Returns the node instead of data for legacy composition.
  */
 export const whenEchoType =
-  <T extends Type.AnyEntity>(type: T): NodeMatcher<Entity.Entity<Schema.Schema.Type<T>>> =>
-  (node: Node.Node): Option.Option<Entity.Entity<Schema.Schema.Type<T>>> =>
-    Obj.instanceOf(type, node.data) ? Option.some(node.data) : Option.none();
+  <T extends Type.AnyEntity>(type: T): NodeMatcher<Type.InstanceType<T>> =>
+  (node: Node.Node): Option.Option<Type.InstanceType<T>> =>
+    Entity.instanceOf(type, node.data) ? Option.some(node.data) : Option.none();
 
 /**
  * Matches a node whose data is any ECHO object.
@@ -127,11 +126,11 @@ export const whenEchoType =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'object-properties',
+ *   id: 'objectProperties',
  *   match: NodeMatcher.whenEchoObject,
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
- *     const id = Obj.getDXN(object).toString();
+ *     const id = Obj.getURI(object);
  *     return Effect.succeed([{ id: `${id}.settings`, ... }]);
  *   },
  * });
@@ -255,9 +254,9 @@ export const whenAny: {
  * @see {@link whenEchoType} - Use instead when you need the typed entity directly.
  */
 export const whenEchoTypeMatches =
-  <T extends Type.AnyEntity>(type: T): NodeMatcher =>
+  <T extends Type.AnyObj | Type.AnyRelation>(type: T): NodeMatcher =>
   (node: Node.Node): Option.Option<Node.Node> =>
-    Obj.instanceOf(type, node.data) ? Option.some(node) : Option.none();
+    Entity.instanceOf(type, node.data) ? Option.some(node) : Option.none();
 
 /**
  * Matches a node whose data is any ECHO object.

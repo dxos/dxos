@@ -46,7 +46,12 @@ export class CallManager extends Resource {
   private readonly _selfAtom = Atom.make((get) => get(this._stateAtom).call.self ?? {});
   private readonly _tracksAtom = Atom.make((get) => get(this._stateAtom).call.tracks ?? {});
   private readonly _usersAtom = Atom.make((get) => get(this._stateAtom).call.users ?? []);
-  private readonly _mediaAtom = Atom.make((get) => get(this._stateAtom).media);
+  private readonly _audioEnabledAtom = Atom.make((get) => get(this._stateAtom).media.audioEnabled ?? false);
+  private readonly _videoEnabledAtom = Atom.make((get) => get(this._stateAtom).media.videoEnabled ?? false);
+  private readonly _screensharingAtom = Atom.make((get) => get(this._stateAtom).media.screenshareTrack !== undefined);
+  private readonly _localVideoStreamAtom = Atom.make((get) => get(this._stateAtom).media.videoStream);
+  private readonly _screenshareVideoStreamAtom = Atom.make((get) => get(this._stateAtom).media.screenshareVideoStream);
+  private readonly _noStreamAtom = Atom.make<MediaStream | undefined>(() => undefined);
   private readonly _audioTracksToPlayAtom = Atom.make((get) => {
     const state = get(this._stateAtom);
     return (state.call.users ?? [])
@@ -89,6 +94,11 @@ export class CallManager extends Resource {
     return this._joinedAtom;
   }
 
+  /** Current joined state (synchronous read for imperative callers, e.g. join-after-leave). */
+  get joined(): boolean {
+    return this._registry.get(this._joinedAtom);
+  }
+
   /** Derived atom for self. */
   get selfAtom(): Atom.Atom<UserState> {
     return this._selfAtom;
@@ -104,9 +114,29 @@ export class CallManager extends Resource {
     return this._usersAtom;
   }
 
-  /** Derived atom for media. */
-  get mediaAtom(): Atom.Atom<MediaState> {
-    return this._mediaAtom;
+  /** Derived atom for whether the microphone is enabled. */
+  get audioEnabledAtom(): Atom.Atom<boolean> {
+    return this._audioEnabledAtom;
+  }
+
+  /** Derived atom for whether the camera is enabled. */
+  get videoEnabledAtom(): Atom.Atom<boolean> {
+    return this._videoEnabledAtom;
+  }
+
+  /** Derived atom for whether screen sharing is active. */
+  get screensharingAtom(): Atom.Atom<boolean> {
+    return this._screensharingAtom;
+  }
+
+  /** Derived atom for the local camera video stream. */
+  get localVideoStreamAtom(): Atom.Atom<MediaStream | undefined> {
+    return this._localVideoStreamAtom;
+  }
+
+  /** Derived atom for the local screenshare video stream. */
+  get screenshareVideoStreamAtom(): Atom.Atom<MediaStream | undefined> {
+    return this._screenshareVideoStreamAtom;
   }
 
   /** Derived atom for audioTracksToPlay. */
@@ -119,9 +149,9 @@ export class CallManager extends Resource {
     return this._stateAtom;
   }
 
-  /** Returns a derived atom for a video stream by name. */
-  videoStreamAtom(name: EncodedTrackName): Atom.Atom<MediaStream | undefined> {
-    return this._videoStreamAtomFamily(name);
+  /** Returns a derived atom for a pulled video stream by name; returns a no-op atom when name is undefined. */
+  videoStreamAtom(name: EncodedTrackName | undefined): Atom.Atom<MediaStream | undefined> {
+    return name !== undefined ? this._videoStreamAtomFamily(name) : this._noStreamAtom;
   }
 
   /** Returns a derived atom for an activity by key. */
@@ -262,9 +292,26 @@ export class CallManager extends Resource {
    * Only this method is allowed to change state.
    */
   private _updateState(): void {
+    // Seeded state is authoritative; live swarm/media events must not clobber it.
+    if (this.#seeded) {
+      return;
+    }
     this._registry.set(this._stateAtom, {
       call: this._swarmSynchronizer._getState(),
       media: this._mediaManager._getState(),
     });
+  }
+
+  /** Set once a harness seeds state; freezes `_updateState` so deterministic story state survives. */
+  #seeded = false;
+
+  /**
+   * Seeds runtime call/media state directly, bypassing the swarm and media managers.
+   * The participant list and pulled tracks normally originate from live network peers, which have no
+   * source in stories and tests; this seam lets a harness present a deterministic call without a swarm.
+   */
+  _setState(state: GlobalState): void {
+    this.#seeded = true;
+    this._registry.set(this._stateAtom, state);
   }
 }

@@ -31,7 +31,7 @@ export type TemplateFormProps = {
 };
 
 export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   usePromptInputs(template, onChange);
 
   const handleInputKindChange = useCallback(
@@ -60,7 +60,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
 
   return (
     <div className='flex flex-col w-full overflow-hidden gap-4'>
-      <TemplateEditor id={id} template={template} classNames='bg-base-surface min-h-[120px]' />
+      <TemplateEditor id={id} source={template.source} classNames='bg-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>

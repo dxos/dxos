@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { inRange } from '@dxos/compute-hyperformula';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -66,7 +66,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   //     const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
   //     return thread && range ? inRange(range, address) : false;
   //   })
-  //   .map((thread) => Obj.getDXN(thread!).toString())
+  //   .map((thread) => Obj.getURI(thread!))
   //   .join(' ');
 
   const description = model.getValueDescription(address);
@@ -97,13 +97,13 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: '!bg-toolbar-surface text-subdued text-end pe-1',
+  className: 'bg-axis-surface! text-axis-text text-end pe-1',
   resizeHandle: 'row',
 });
 
 export const colLabelCell = (col: number) => ({
   value: colToA1Notation(col),
-  className: '!bg-toolbar-surface text-subdued',
+  className: 'bg-axis-surface! text-axis-text',
   resizeHandle: 'col',
 });
 
@@ -115,7 +115,7 @@ const cellGetter = (model: SheetModel) => {
         return getGridCells(nextBounds);
       case 'fixedStartStart': {
         return {
-          '0,0': { className: '!bg-toolbar-surface' },
+          '0,0': { className: 'bg-axis-surface!' },
         };
       }
       case 'frozenColsStart':

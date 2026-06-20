@@ -2,6 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(rename): These internal entity-wide symbols/types still use the `Object*` prefix but apply
+// to all entities (objects AND relations). Rename to `Entity*` in a follow-up pass (deferred from the
+// EchoURI→EID / ObjectId→EntityId / ObjectMeta→EntityMeta rename, which covered only public SDK API):
+//   ObjectCore, ObjectInternals, ObjectVersion, ObjectVersionId, ObjectDeletedId, ObjectDatabaseId,
+//   ObjectLoader, ObjectDocumentLoaded, ObjectUnavailable.
+// (ObjectMigration / ObjectMigrationContext intentionally excluded — object-only, not entity-wide.)
+
 /**
  * Internal symbol/string constants for the echo object model.
  * Defined in common/ so proxy/ can use them without importing from Entity/.
@@ -9,14 +16,19 @@
  */
 
 /**
- * Property name for self DXN when object is serialized to JSON.
+ * Property name for the object's own URI when serialized to JSON.
  */
-export const ATTR_SELF_DXN = '@dxn';
+export const ATTR_SELF_URI = '@uri';
 
 /**
- * DXN to the object itself.
+ * @deprecated Legacy JSON property name accepted on read for backward compat.
  */
-export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
+export const ATTR_SELF_URI_LEGACY = '@dxn';
+
+/**
+ * Symbol carrying the object's own URI on live entities.
+ */
+export const SelfURIId = Symbol.for('@dxos/echo/URI');
 
 /**
  * Property name for deleted when object is serialized to JSON.
@@ -67,3 +79,11 @@ export const RelationTargetId: unique symbol = Symbol.for('@dxos/echo/RelationTa
  * Used to access relation target DXN on live ECHO objects.
  */
 export const RelationTargetDXNId: unique symbol = Symbol.for('@dxos/echo/RelationTargetDXN');
+
+/**
+ * Symbol carrying the entity metadata (EntityMeta) on live ECHO entities.
+ * Must be importable by both meta.ts (which depends on the Ref schema) and
+ * Entity/api.ts (which is transitively imported by the Ref schema), so it
+ * cannot live in either of those files without creating an import cycle.
+ */
+export const MetaId = Symbol.for('@dxos/echo/Meta');

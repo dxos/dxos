@@ -1,16 +1,25 @@
 # @dxos/plugin-crx
 
 Coordinates with the [`@dxos/composer-crx`](../../apps/composer-crx) browser
-extension. This plugin owns:
+extension. This plugin owns the Composer side of the page-actions bridge:
 
-- The user-facing settings surface (master toggle, post-clip behavior).
-- The receiver bridge that materializes incoming clippings as `Person`,
-  `Organization`, or `Note` objects in the active space.
+- Plugins contribute page actions under `CrxCapabilities.PageAction` — a
+  serializable descriptor (label, icon, URL patterns, contexts, extractor)
+  paired with a target operation. This plugin contributes three picker
+  actions (Person, Organization, Note); plugin-bookmarks contributes
+  "Add bookmark".
+- The extension lists contributed actions via
+  `CustomEvent('composer:page-actions:list')`, caches the descriptors in its
+  registry, and invokes an action via
+  `CustomEvent('composer:page-action:invoke')`. Every request is acked with
+  stable error codes (`invalidPayload`, `unsupportedVersion`,
+  `unknownAction`, `noSpace`, `operationFailed`).
+- Picked/extracted content travels as a `PageAction.Snapshot` (source,
+  selection, hints, optional image data). The target operation receives
+  `{ snapshot, target }` — where `target` is the active space's database —
+  and creates the object there; outcomes surface as toasts.
 
-The extension discovers an open Composer tab via `chrome.tabs.query`, injects a
-tiny bridge content script, and dispatches a same-origin `window`
-`CustomEvent('composer:clip', { detail: clip })`. This plugin listens for that
-event, validates the payload, maps it to an ECHO object, and acks the
-extension via `CustomEvent('composer:clip:ack')`.
+It also owns the user-facing settings surface, including the render-proxy
+settings and an extension connection test.
 
 See [PLUGIN.mdl](./PLUGIN.mdl) for the specification.

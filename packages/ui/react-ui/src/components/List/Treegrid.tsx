@@ -15,14 +15,13 @@ import React, {
   useCallback,
 } from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
-
 import { useThemeContext } from '../../hooks';
+import { composable, composableProps } from '../../util';
 import { type ThemedClassName } from '../../util';
 
 // TODO(thure): https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
 
-const TREEGRID_ROW_NAME = 'TreegridRow';
+const TREEGRID_ROW_NAME = 'Treegrid.Row';
 
 type TreegridRowScopedProps<P> = P & { __treegridRowScope?: Scope };
 
@@ -41,7 +40,7 @@ export const TREEGRID_PATH_SEPARATOR = '~';
 export const TREEGRID_PARENT_OF_SEPARATOR = ' ';
 
 type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  gridTemplateColumns: CSSProperties['gridTemplateColumns'];
+  gridTemplateColumns?: CSSProperties['gridTemplateColumns'];
   asChild?: boolean;
 };
 

@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Obj } from '@dxos/echo';
+import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
+import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
@@ -17,7 +19,8 @@ import { CrmOperation } from '../types';
  * `DX_CRM_IMAGE_SERVICE_URL` environment variable. A per-space
  * `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
  */
-const DEFAULT_IMAGE_SERVICE_URL = 'https://images.dxos.org';
+// TODO(dmaretskyi): images.dxos.org does not resolve.
+const DEFAULT_IMAGE_SERVICE_URL = 'https://image-service-main.dxos.workers.dev';
 
 // SVG is intentionally excluded: inline <script>/event handlers make it a
 // stored-XSS risk for any downstream surface that renders the image via
@@ -166,7 +169,7 @@ const isAbsoluteHttpUrl = (raw: string): boolean => {
   }
 };
 
-const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOperation.AttachImage.pipe(
+export default CrmOperation.AttachImage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, url, imageServiceUrl }) {
       const serviceUrl = getImageServiceUrl(imageServiceUrl);
@@ -177,7 +180,7 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
       });
 
       const downloaded = yield* Effect.tryPromise({
-        try: () => fetch(validatedSource.toString(), { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
+        try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
         catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
       });
       if (!downloaded.ok) {
@@ -250,26 +253,11 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
 
       const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
 
-      const formData = new FormData();
-      formData.append('file', blob, filenameFromUrl(validatedSource.toString()));
-
-      const uploadRes = yield* Effect.tryPromise({
-        try: () =>
-          fetch(new URL('/thumbnail', serviceUrl).toString(), {
-            method: 'POST',
-            body: formData,
-            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-          }),
-        catch: (cause) => new Error(`Image service upload failed: ${String(cause)}`),
-      });
-      if (!uploadRes.ok) {
-        return yield* Effect.fail(
-          new Error(`Image service rejected the upload: ${uploadRes.status} ${uploadRes.statusText}`),
-        );
-      }
-
-      const { url: uploadedUrl } = (yield* Effect.promise(() => uploadRes.json())) as { url?: string };
-      if (!uploadedUrl || uploadedUrl.length === 0 || !isAbsoluteHttpUrl(uploadedUrl)) {
+      const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
+      const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {
+        filename: filenameFromUrl(validatedSource.toString()),
+      }).pipe(Effect.mapError((cause) => new Error(`Image service upload failed: ${cause.message}`)));
+      if (!isAbsoluteHttpUrl(uploadedUrl)) {
         return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
       }
 
@@ -284,10 +272,8 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
       });
 
       log.info('attach-image', { uploadedUrl });
-
       return { imageUrl: uploadedUrl };
     }),
   ),
+  Operation.opaqueHandler,
 );
-
-export default handler;

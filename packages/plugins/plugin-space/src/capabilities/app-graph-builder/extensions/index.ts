@@ -3,7 +3,7 @@
 //
 
 export { createSpaceExtensions } from './spaces';
-export { createTypeExtensions } from './types';
+export { createDatabaseExtensions } from './database';
 export { createCollectionExtensions } from './collections';
 export { createCompanionExtensions } from './companions';
 export { createSettingsExtensions } from './settings';

@@ -6,27 +6,24 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
+import { INTEGRATIONS_SECTION_ID, INTEGRATIONS_SECTION_TYPE } from '../constants';
 import { Integration } from '../types';
-
-/** Type for the per-space "Integrations" container node. */
-const INTEGRATIONS_SECTION_TYPE = `${meta.id}.space-settings`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'integration-actions',
+        id: 'integrationActions',
         match: (node) =>
           Integration.instanceOf(node.data) ? Option.some(node.data as Integration.Integration) : Option.none(),
         actions: (integration) =>
@@ -38,15 +35,20 @@ export default Capability.makeModule(
             const actions = [];
             if (provider?.sync) {
               const sync = provider.sync;
+              const spaceId = Obj.getDatabase(integration)?.spaceId;
               actions.push(
                 Node.makeAction({
-                  id: `${meta.id}.sync-integration.${integration.id}`,
+                  id: `${meta.profile.key}.sync-integration.${integration.id}`,
                   data: () =>
-                    Operation.invoke(sync, {
-                      integration: Ref.make(integration),
-                    }),
+                    Operation.invoke(
+                      sync,
+                      {
+                        integration: Ref.make(integration),
+                      },
+                      { spaceId },
+                    ),
                   properties: {
-                    label: ['sync-integration.label', { ns: meta.id }],
+                    label: ['sync-integration.label', { ns: meta.profile.key }],
                     icon: 'ph--arrows-clockwise--regular',
                     disposition: 'list-item',
                   },
@@ -55,13 +57,13 @@ export default Capability.makeModule(
             }
             actions.push(
               Node.makeAction({
-                id: `${meta.id}.delete-integration.${integration.id}`,
+                id: `${meta.profile.key}.delete-integration.${integration.id}`,
                 data: () =>
                   Operation.invoke(SpaceOperation.RemoveObjects, {
                     objects: [integration as unknown as Obj.Unknown],
                   }),
                 properties: {
-                  label: ['delete-integration.label', { ns: meta.id }],
+                  label: ['delete-integration.label', { ns: meta.profile.key }],
                   icon: 'ph--trash--regular',
                   disposition: 'list-item',
                   testId: 'integrationPlugin.deleteIntegration',
@@ -72,48 +74,44 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Per-space integrations folder; kept empty until an Integration exists.
-      // Separate listing extension so graph reacts when targets are deleted.
+      // Per-space integrations section under the space Settings node.
+      // Always visible so the user can discover and add integrations even when none exist yet.
+      // Separate listing extension so the graph reacts when integrations are added or removed.
       GraphBuilder.createExtension({
-        id: 'integrations-section',
-        match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
-          if (integrations.length === 0) {
-            return Effect.succeed([]);
-          }
-          return Effect.succeed([
+        id: 'integrationsSection',
+        match: AppNodeMatcher.whenSpaceSettings,
+        connector: (space) =>
+          Effect.succeed([
             Node.make({
-              id: 'integrations',
+              id: INTEGRATIONS_SECTION_ID,
               type: INTEGRATIONS_SECTION_TYPE,
-              data: null,
+              data: INTEGRATIONS_SECTION_TYPE,
               properties: {
-                label: ['space-panel.name', { ns: meta.id }],
+                label: ['space-panel.name', { ns: meta.profile.key }],
                 icon: 'ph--plugs--regular',
-                iconHue: 'cyan',
-                role: 'branch',
+                iconHue: 'indigo',
                 draggable: false,
                 droppable: false,
                 space,
               },
             }),
-          ]);
-        },
+          ]),
       }),
 
-      // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
+      // Integration objects listed under the integrations section node.
       GraphBuilder.createExtension({
-        id: 'integration-listing',
+        id: 'integrationListing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
+          const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
           return Effect.succeed(
             integrations
               .map((integration) =>
-                createObjectNode({
+                AppNode.makeObject({
+                  get,
                   db: space.db,
                   object: integration,
                 }),

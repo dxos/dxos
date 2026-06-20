@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 /**
@@ -67,8 +67,7 @@ export const Event = Schema.Struct({
   type: Schema.String,
   data: Schema.Unknown, // Type-specific payload;
 });
-export interface Event extends Schema.Schema.Type<typeof Event> {}
-
+export type Event = Schema.Schema.Type<typeof Event>;
 /**
  * Checks if an event is of a given type.
  */
@@ -130,8 +129,7 @@ export const Meta = Schema.Struct({
    */
   runtimeName: Schema.optional(RuntimeName),
 });
-export interface Meta extends Schema.Schema.Type<typeof Meta> {}
-
+export type Meta = Schema.Schema.Type<typeof Meta>;
 /**
  * Checks if a runtime is an edge runtime.
  */
@@ -149,20 +147,13 @@ export const MessageData = Schema.Struct({
   isEphemeral: Schema.Boolean,
   events: Schema.Array(Event),
 });
-export interface MessageData extends Schema.Schema.Type<typeof MessageData> {}
-
+export type MessageData = Schema.Schema.Type<typeof MessageData>;
 export const Message = MessageData.pipe(
-  Type.object({
-    typename: 'org.dxos.type.traceMessage',
-    version: '0.1.0',
-  }),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--note--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+  Annotation.HiddenAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.traceMessage', '0.1.0')),
 );
-export interface Message extends Schema.Schema.Type<typeof Message> {}
-
+export type Message = Type.InstanceType<typeof Message>;
 /**
  * Flattened representation of a signle event in a trace message.
  * Events are stored in batched messages for efficiency, but flat representation is more convenient for consumption.
@@ -243,18 +234,32 @@ export const mergeSinks = (sinks: readonly Sink[]): Sink => {
   };
 };
 
-export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceService, never, TraceSink> =>
+/**
+ * Builds a {@link TraceService} layer that wraps each `write` into a fresh {@link Message}
+ * and forwards it to the provided {@link TraceSink}. Intended for tests and lightweight
+ * fixtures.
+ *
+ * Options:
+ *   - `meta`: stamped on every emitted message (defaults to `{}`).
+ *   - `clock`: timestamp source (defaults to {@link Date.now}). Pass a monotonic counter
+ *     in tests to make event ordering deterministic when many writes happen in the same
+ *     millisecond.
+ */
+export const testTraceService = (
+  opts: { meta?: Meta; clock?: () => number } = {},
+): Layer.Layer<TraceService, never, TraceSink> =>
   Layer.effect(
     TraceService,
     Effect.gen(function* () {
       const sink = yield* TraceSink;
+      const clock = opts.clock ?? Date.now;
       return {
         write: (event, data) => {
           sink.write(
             Obj.make(Message, {
               meta: opts.meta ?? {},
               isEphemeral: event.isEphemeral,
-              events: [{ type: event.key, timestamp: Date.now(), data }],
+              events: [{ type: event.key, timestamp: clock(), data }],
             }),
           );
         },
@@ -280,6 +285,8 @@ export const OperationStart = EventType('operation.start', {
     key: Schema.String,
     /** Human-readable operation name. */
     name: Schema.optional(Schema.String),
+    /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
+    icon: Schema.optional(Schema.String),
   }),
   isEphemeral: false,
 });
@@ -293,6 +300,8 @@ export const OperationEnd = EventType('operation.end', {
     key: Schema.String,
     /** Human-readable operation name. */
     name: Schema.optional(Schema.String),
+    /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
+    icon: Schema.optional(Schema.String),
     /** Outcome of the operation. */
     outcome: Schema.Literal('success', 'failure'),
     /** Error message if the operation failed. */

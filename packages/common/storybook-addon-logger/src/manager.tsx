@@ -4,7 +4,7 @@
 
 import { DownloadIcon } from '@storybook/icons';
 import React, { useCallback } from 'react';
-import { IconButton } from 'storybook/internal/components';
+import { Button } from 'storybook/internal/components';
 import { addons, types } from 'storybook/manager-api';
 
 import { ADDON_ID, DOWNLOAD_EVENT, LOGS_DATA_EVENT, TOOL_ID } from './constants';
@@ -30,9 +30,9 @@ const DownloadLogsButton = () => {
   }, [channel]);
 
   return (
-    <IconButton title='Download logs' onClick={handleClick}>
+    <Button variant='ghost' padding='small' ariaLabel='Download logs' onClick={handleClick}>
       <DownloadIcon />
-    </IconButton>
+    </Button>
   );
 };
 

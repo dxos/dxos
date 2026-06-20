@@ -1,0 +1,54 @@
+{
+  "name": "@dxos/assistant-evals",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Evalite-based evaluations for the DXOS assistant.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/default/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "autoevals": "^0.0.132",
+    "effect": "catalog:",
+    "evalite": "^0.19.0",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

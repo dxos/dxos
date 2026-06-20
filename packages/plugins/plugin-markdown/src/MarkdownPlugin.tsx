@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AttentionEvents } from '@dxos/plugin-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  AppGraphSerializer,
   BlueprintDefinition,
   CommentConfig,
   CreateObject,
@@ -39,15 +39,10 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: AppActivationEvents.SetupSettings,
+    // Wait for AttentionEvents.AttentionReady so ViewStateManager is available when the module
+    // resolves AttentionCapabilities.ViewState to build the editor state store.
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
     activate: MarkdownState,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?

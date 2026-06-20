@@ -3,24 +3,23 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { createContext } from '@radix-ui/react-context';
 import React, {
-  createContext,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
+import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
-import { useTranslation } from '../ThemeProvider';
+import { MediaPlayer, type MediaKind } from '../MediaPlayer';
 
 // TODO(burdon): Move per-element class strings to `@dxos/ui-theme` (theme tokens)
 // so callers can re-theme via the same mechanism the rest of `react-ui` uses.
@@ -37,35 +36,28 @@ type CarouselContextValue = {
   prev: () => void;
 };
 
-const CarouselContext = createContext<CarouselContextValue | null>(null);
+const CAROUSEL_NAME = 'Carousel';
+
+const [CarouselProvider, useCarouselContext] = createContext<CarouselContextValue>(CAROUSEL_NAME);
 
 /** Returns the current carousel state. Must be used within {@link Carousel.Root}. */
-export const useCarousel = (): CarouselContextValue => {
-  const context = useContext(CarouselContext);
-  if (!context) {
-    throw new Error('useCarousel must be used within Carousel.Root');
-  }
-  return context;
-};
+export const useCarousel = (): CarouselContextValue => useCarouselContext('useCarousel');
 
 //
 // Root
 //
 
-export type CarouselRootProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Total number of slides; drives auto-advance and indicator counts. */
-    count: number;
-    /** Whether to auto-advance slides on mount. Defaults to `false`. */
-    autorun?: boolean;
-    /** Auto-advance interval in milliseconds. Set 0 to disable. */
-    intervalMs?: number;
-    defaultIndex?: number;
-  }>
->;
+export type CarouselRootProps = PropsWithChildren<{
+  /** Total number of slides; drives auto-advance and indicator counts. */
+  count: number;
+  /** Whether to auto-advance slides on mount. Defaults to `false`. */
+  autorun?: boolean;
+  /** Auto-advance interval in milliseconds. Set 0 to disable. */
+  intervalMs?: number;
+  defaultIndex?: number;
+}>;
 
 const CarouselRoot = ({
-  classNames,
   children,
   count,
   autorun = false,
@@ -104,34 +96,44 @@ const CarouselRoot = ({
     setIndexState((i) => (i - 1 + count) % count);
   }, [count]);
 
-  const value = useMemo(() => ({ index, count, setIndex, next, prev }), [index, count, setIndex, next, prev]);
-
   if (count === 0) {
     return null;
   }
 
   return (
-    <CarouselContext.Provider value={value}>
-      {/*
-       * Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
-       * gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
-       * its content height. With no parent height constraint, the `1fr` row simply tracks
-       * row-1 content — preserving the existing aspect-video behaviour for unbounded use.
-       */}
-      {/* TODO(burdon): Move to ui-theme. */}
-      <div
-        className={mx(
-          'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
-          classNames,
-        )}
-      >
-        {children}
-      </div>
-    </CarouselContext.Provider>
+    <CarouselProvider index={index} count={count} setIndex={setIndex} next={next} prev={prev}>
+      {children}
+    </CarouselProvider>
   );
 };
 
 CarouselRoot.displayName = 'Carousel.Root';
+
+//
+// Content
+//
+
+export type CarouselContentProps = ThemedClassName<PropsWithChildren<{}>>;
+
+// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref land on the grid.
+const CarouselContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
+  // Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
+  // gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
+  // its content height. With no parent height constraint, the `1fr` row simply tracks
+  // row-1 content — preserving the existing aspect-video behaviour for unbounded use.
+  // TODO(burdon): Move to Carousel.theme.ts
+  <div
+    {...composableProps(props, {
+      classNames:
+        'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
+    })}
+    ref={forwardedRef}
+  >
+    {children}
+  </div>
+));
+
+CarouselContent.displayName = 'Carousel.Content';
 
 //
 // Viewport
@@ -183,20 +185,53 @@ CarouselViewport.displayName = 'Carousel.Viewport';
 // Slide
 //
 
-export type CarouselSlideProps = ThemedClassName<
-  PropsWithChildren<{
-    index: number;
-  }>
->;
+export type CarouselSlideProps = ThemedClassName<{
+  index: number;
+  /** Media source URL — rendered via the embedded {@link MediaPlayer}. */
+  src: string;
+  /** Override media auto-detection (`'video' | 'audio'`). */
+  kind?: MediaKind;
+  /** Accessible label / `<img alt>` fallback. */
+  alt?: string;
+  controls?: boolean;
+  autoPlay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  crossOrigin?: 'anonymous' | 'use-credentials' | '';
+}>;
 
-const CarouselSlide = ({ children, index, classNames }: CarouselSlideProps) => {
+const CarouselSlide = ({
+  index,
+  classNames,
+  src,
+  kind,
+  alt,
+  controls,
+  autoPlay,
+  loop,
+  muted,
+  crossOrigin,
+}: CarouselSlideProps) => {
   const { index: active } = useCarousel();
   if (active !== index) {
     return null;
   }
 
-  // TODO(burdon): Move to ui-theme.
-  return <div className={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}>{children}</div>;
+  return (
+    <div className={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}>
+      <MediaPlayer
+        src={src}
+        kind={kind}
+        alt={alt}
+        classNames='w-full h-full'
+        controls={controls}
+        autoPlay={autoPlay}
+        loop={loop}
+        muted={muted}
+        crossOrigin={crossOrigin}
+      />
+    </div>
+  );
 };
 
 CarouselSlide.displayName = 'Carousel.Slide';
@@ -216,7 +251,7 @@ const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
 
   return (
     <IconButton
-      classNames={classNames}
+      classNames={mx('self-center', classNames)}
       square
       variant='ghost'
       icon='ph--caret-left--regular'
@@ -238,7 +273,7 @@ const CarouselNext = ({ classNames }: CarouselButtonProps) => {
 
   return (
     <IconButton
-      classNames={classNames}
+      classNames={mx('self-center', classNames)}
       square
       variant='ghost'
       icon='ph--caret-right--regular'
@@ -328,6 +363,7 @@ CarouselCaption.displayName = 'Carousel.Caption';
 
 export const Carousel = {
   Root: CarouselRoot,
+  Content: CarouselContent,
   Viewport: CarouselViewport,
   Slide: CarouselSlide,
   Previous: CarouselPrevious,

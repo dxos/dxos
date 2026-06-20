@@ -8,6 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Position } from '@dxos/util';
 
 import { GenerationArticle, GenerationProperties, GeneratorSettings } from '#containers';
 import { meta } from '#meta';
@@ -27,14 +28,14 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'object-properties',
-        position: 'hoist',
+        id: 'objectProperties',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Generation.Generation),
         component: ({ data }) => <GenerationProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <GeneratorSettings settings={settings} onSettingsChange={updateSettings} />;

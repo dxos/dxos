@@ -7,16 +7,14 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 
 import * as AppSurface from './app-surface';
 
-const TypeA = Schema.Struct({ name: Schema.String }).pipe(
-  Type.object({ typename: 'com.example.test.TypeA', version: '0.1.0' }),
-);
+const TypeA = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0')));
 
 const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
-  Type.object({ typename: 'com.example.test.TypeB', version: '0.1.0' }),
+  Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0')),
 );
 
 describe('AppSurface', () => {
@@ -26,13 +24,13 @@ describe('AppSurface', () => {
 
   describe('role tokens', () => {
     test('expose their role string', ({ expect }) => {
-      expect(AppSurface.Article.role).toBe('article');
-      expect(AppSurface.Section.role).toBe('section');
-      expect(AppSurface.Card.role).toBe('card--content');
-      expect(AppSurface.Slide.role).toBe('slide');
-      expect(AppSurface.Dialog.role).toBe('dialog');
-      expect(AppSurface.Popover.role).toBe('popover');
-      expect(AppSurface.Navigation.role).toBe('navigation');
+      expect(AppSurface.Article.role).toBe('org.dxos.role.article');
+      expect(AppSurface.Section.role).toBe('org.dxos.role.section');
+      expect(AppSurface.CardContent.role).toBe('org.dxos.role.cardContent');
+      expect(AppSurface.Slide.role).toBe('org.dxos.role.slide');
+      expect(AppSurface.Dialog.role).toBe('org.dxos.role.dialog');
+      expect(AppSurface.Popover.role).toBe('org.dxos.role.popover');
+      expect(AppSurface.Navigation.role).toBe('org.dxos.role.navigation');
     });
   });
 
@@ -40,7 +38,7 @@ describe('AppSurface', () => {
     test('produces a single binding at the token role', ({ expect }) => {
       const filter = AppSurface.object(AppSurface.Article, TypeA);
       expect(filter.bindings).toHaveLength(1);
-      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.article');
     });
 
     test('article token preserves attendableId requirement', ({ expect }) => {
@@ -58,13 +56,13 @@ describe('AppSurface', () => {
     });
 
     test('card token does not require attendableId', ({ expect }) => {
-      const filter = AppSurface.object(AppSurface.Card, TypeA);
+      const filter = AppSurface.object(AppSurface.CardContent, TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
     });
 
     test('accepts an array of schemas (union)', ({ expect }) => {
-      const filter = AppSurface.object(AppSurface.Card, [TypeA, TypeB]);
+      const filter = AppSurface.object(AppSurface.CardContent, [TypeA, TypeB]);
       const objectA = Obj.make(TypeA, { name: 'hi' });
       const objectB = Obj.make(TypeB, { value: 1 });
       expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
@@ -72,7 +70,7 @@ describe('AppSurface', () => {
     });
 
     test('rejects mismatched subjects', ({ expect }) => {
-      const filter = AppSurface.object(AppSurface.Card, TypeA);
+      const filter = AppSurface.object(AppSurface.CardContent, TypeA);
       const objectB = Obj.make(TypeB, { value: 1 });
       expect(filter.bindings[0].guard({ subject: objectB })).toBe(false);
     });
@@ -81,7 +79,7 @@ describe('AppSurface', () => {
   describe('component(token, id)', () => {
     test('matches on data.component equality', ({ expect }) => {
       const filter = AppSurface.component(AppSurface.Dialog, 'my-dialog');
-      expect(filter.bindings[0].role).toBe('dialog');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.dialog');
       expect(filter.bindings[0].guard({ component: 'my-dialog' })).toBe(true);
       expect(filter.bindings[0].guard({ component: 'other' })).toBe(false);
       expect(filter.bindings[0].guard({})).toBe(false);
@@ -89,7 +87,7 @@ describe('AppSurface', () => {
 
     test('works for popover token too', ({ expect }) => {
       const filter = AppSurface.component(AppSurface.Popover, 'anchor-menu');
-      expect(filter.bindings[0].role).toBe('popover');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.popover');
       expect(filter.bindings[0].guard({ component: 'anchor-menu' })).toBe(true);
     });
   });
@@ -98,7 +96,7 @@ describe('AppSurface', () => {
     test('matches article-role settings with prefix', ({ expect }) => {
       const filter = AppSurface.settings(AppSurface.Article, 'dxos.org/plugin/test');
       const settingsAtom = Atom.make({});
-      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.article');
       expect(
         filter.bindings[0].guard({
           subject: {
@@ -120,19 +118,26 @@ describe('AppSurface', () => {
     });
   });
 
-  describe('predicate(token, fn)', () => {
+  describe('Surface.makeFilter(token, guard?)', () => {
     test('lifts an ad-hoc predicate into a SurfaceFilter', ({ expect }) => {
-      const filter = AppSurface.predicate(AppSurface.Article, (data: any) => data.custom === true);
-      expect(filter.bindings[0].role).toBe('article');
+      const filter = SurfaceInternals.makeFilter(AppSurface.Article, (data: any) => data.custom === true);
+      expect(filter.bindings[0].role).toBe('org.dxos.role.article');
       expect(filter.bindings[0].guard({ custom: true })).toBe(true);
       expect(filter.bindings[0].guard({ custom: false })).toBe(false);
     });
 
     test('traps thrown errors and returns false', ({ expect }) => {
-      const filter = AppSurface.predicate(AppSurface.Article, () => {
+      const filter = SurfaceInternals.makeFilter(AppSurface.Article, () => {
         throw new Error('boom');
       });
       expect(filter.bindings[0].guard({})).toBe(false);
+    });
+
+    test('matches any data when guard is omitted', ({ expect }) => {
+      const filter = SurfaceInternals.makeFilter(AppSurface.Article);
+      expect(filter.bindings[0].role).toBe('org.dxos.role.article');
+      expect(filter.bindings[0].guard({})).toBe(true);
+      expect(filter.bindings[0].guard(null)).toBe(true);
     });
   });
 
@@ -144,13 +149,17 @@ describe('AppSurface', () => {
         AppSurface.object(AppSurface.Slide, TypeA),
       );
       expect(filter.bindings).toHaveLength(3);
-      expect(filter.bindings.map((binding) => binding.role)).toEqual(['article', 'section', 'slide']);
+      expect(filter.bindings.map((binding) => binding.role)).toEqual([
+        'org.dxos.role.article',
+        'org.dxos.role.section',
+        'org.dxos.role.slide',
+      ]);
     });
 
     test('preserves per-binding guard behavior', ({ expect }) => {
       const filter = AppSurface.oneOf(
         AppSurface.object(AppSurface.Article, TypeA),
-        AppSurface.object(AppSurface.Card, TypeB),
+        AppSurface.object(AppSurface.CardContent, TypeB),
       );
       const objectA = Obj.make(TypeA, { name: 'hi' });
       const objectB = Obj.make(TypeB, { value: 1 });
@@ -166,10 +175,10 @@ describe('AppSurface', () => {
     test('combines same-role filters with AND semantics', ({ expect }) => {
       const filter = AppSurface.allOf(
         AppSurface.object(AppSurface.Article, TypeA),
-        AppSurface.predicate(AppSurface.Article, (data: any) => data.extra === true),
+        SurfaceInternals.makeFilter(AppSurface.Article, (data: any) => data.extra === true),
       );
       expect(filter.bindings).toHaveLength(1);
-      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.article');
       const objectA = Obj.make(TypeA, { name: 'hi' });
       expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id', extra: true })).toBe(true);
       expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id', extra: false })).toBe(false);
@@ -188,7 +197,7 @@ describe('AppSurface', () => {
       );
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter.bindings).toHaveLength(1);
-      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.article');
       expect(filter.bindings[0].guard({ subject: 'chat', companionTo: objectA, attendableId: 'id' })).toBe(true);
       expect(filter.bindings[0].guard({ subject: 'other', companionTo: objectA, attendableId: 'id' })).toBe(false);
     });
@@ -271,7 +280,7 @@ describe('AppSurface', () => {
     test('matches ECHO object subject (no attendableId requirement)', ({ expect }) => {
       const filter = AppSurface.object(AppSurface.ObjectProperties, TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter.bindings[0].role).toBe('object-properties');
+      expect(filter.bindings[0].role).toBe('org.dxos.role.objectProperties');
       expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
     });
   });
@@ -279,31 +288,31 @@ describe('AppSurface', () => {
   describe('Surface.create + SurfaceFilter integration', () => {
     test('derives role and runs guard on matching role', ({ expect }) => {
       const definition = SurfaceInternals.create({
-        id: 'test/article',
+        id: 'testArticle',
         filter: AppSurface.object(AppSurface.Article, TypeA),
         component: () => null,
       });
       const objectA = Obj.make(TypeA, { name: 'hi' });
-      expect(definition.role).toBe('article');
-      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'article')).toBe(true);
+      expect(definition.role).toBe('org.dxos.role.article');
+      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'org.dxos.role.article')).toBe(true);
     });
 
     test('registers multi-role with role-scoped guards via oneOf', ({ expect }) => {
       const definition = SurfaceInternals.create({
-        id: 'test/multi',
+        id: 'testMulti',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, TypeA),
           AppSurface.object(AppSurface.Section, TypeA),
         ),
         component: () => null,
       });
-      expect(definition.role).toEqual(['article', 'section']);
+      expect(definition.role).toEqual(['org.dxos.role.article', 'org.dxos.role.section']);
       const objectA = Obj.make(TypeA, { name: 'hi' });
       // Article and Section both require attendableId.
-      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'article')).toBe(true);
-      expect(definition.filter!({ subject: objectA }, 'article')).toBe(false);
-      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'section')).toBe(true);
-      expect(definition.filter!({ subject: objectA }, 'section')).toBe(false);
+      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'org.dxos.role.article')).toBe(true);
+      expect(definition.filter!({ subject: objectA }, 'org.dxos.role.article')).toBe(false);
+      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'org.dxos.role.section')).toBe(true);
+      expect(definition.filter!({ subject: objectA }, 'org.dxos.role.section')).toBe(false);
     });
   });
 });

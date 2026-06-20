@@ -5,15 +5,20 @@
 import { type Resource } from 'i18next';
 
 import { Script } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 
 export const translations = [
   {
     'en-US': {
-      [Script.Script.typename]: {
+      [Type.getTypename(Script.Script)]: {
         'typename.label': 'Script',
         'typename.label_zero': 'Scripts',
         'typename.label_one': 'Script',
         'typename.label_other': 'Scripts',
+        'object-name.placeholder': 'New script',
+        'add-object.label': 'Add script',
+        'rename-object.label': 'Rename script',
+        'delete-object.label': 'Delete script',
       },
     },
   },

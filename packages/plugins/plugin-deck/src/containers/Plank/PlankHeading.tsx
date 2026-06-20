@@ -7,10 +7,9 @@ import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
-import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
-import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '#hooks';
@@ -57,14 +56,14 @@ export const PlankHeading = memo(
     actions = [],
     debug = false,
   }: PlankHeadingProps) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { graph, onAdjust, onUpdateCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
     const breakpoint = useBreakpoints();
-    const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
+    const icon = node?.properties?.icon ?? 'ph--circle-dashed--regular';
     const label = pending
       ? t('pending.heading')
-      : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.id }], t);
+      : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.profile.key }], t);
 
     const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
 
@@ -111,7 +110,7 @@ export const PlankHeading = memo(
     const handleAction = useCallback(
       (action: StackItemSigilAction) => {
         if (typeof action.data === 'function') {
-          void runAction(action as Node.Action, { parent: node, caller: meta.id });
+          void runAction(action as Node.Action, { parent: node, caller: meta.profile.key });
         }
       },
       [node, runAction],
@@ -124,7 +123,7 @@ export const PlankHeading = memo(
       [onAdjust, id],
     );
 
-    const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = node && popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {
@@ -143,7 +142,7 @@ export const PlankHeading = memo(
         data-plank-heading
         style={iconSize(5)}
         classNames={[
-          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
+          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-lg',
           part === 'solo'
             ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
             : 'px-1',

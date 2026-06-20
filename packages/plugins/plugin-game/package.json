@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-game",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Game plugin for DXOS Composer (unifies game variants like chess, tic-tac-toe).",
   "homepage": "https://dxos.org",
@@ -63,6 +63,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -72,12 +73,19 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -86,13 +94,12 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

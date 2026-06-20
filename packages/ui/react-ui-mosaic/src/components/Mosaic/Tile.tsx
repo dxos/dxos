@@ -24,7 +24,7 @@ import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { composableProps, slottable } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/react-ui';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';

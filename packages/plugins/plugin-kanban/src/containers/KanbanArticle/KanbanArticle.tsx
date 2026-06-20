@@ -7,12 +7,11 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { useObject, useSchema } from '@dxos/react-client/echo';
+import { useObject, useType } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
@@ -38,23 +37,23 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const db = Obj.getDatabase(object);
   const { invokePromise } = useOperationInvoker();
   const [view] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
-  const schemaFromDb = useSchema(db, typename);
+  const schemaFromDb = useType(db, typeUri);
   const cardSchema = useMemo(
-    () => schemaFromDb ?? schemas.flat().find((schema) => Type.getTypename(schema) === typename),
-    [schemaFromDb, schemas, typename],
+    () => schemaFromDb ?? schemas.flat().find((schema) => Type.getURI(schema) === typeUri),
+    [schemaFromDb, schemas, typeUri],
   );
 
+  const baseFilter = useSchemaFilter(cardSchema);
   const items = useMemo(() => {
     if (!db) {
       return null;
     }
-    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
     const query = tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
-    return AtomQuery.make(db, query);
-  }, [db, cardSchema, tag]);
+    return db.query(query).atom;
+  }, [db, baseFilter, tag]);
 
   const projection = useProjectionModel(cardSchema, object, registry);
   const change = useEchoChangeCallback(object);
@@ -66,7 +65,9 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
       if (db && cardSchema && columnFieldPath) {
-        const card = Obj.make(cardSchema, { [columnFieldPath]: columnValue });
+        const card = Obj.make(Type.assertObject(cardSchema), {
+          [columnFieldPath]: columnValue,
+        });
         db.add(card);
         return card.id;
       }
@@ -122,7 +123,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //     - `KanbanCard` to accept `Ref<Obj.Unknown>` as `data` and call
   //       `useObject(ref)` internally.
   //     - The model to handle a ref-bearing item shape (id from
-  //       `ref.dxn.asEchoDXN()?.echoId`) and use arrangement-only ordering
+  //       `ref.dxn.asEchoDXN()?.echoUri`) and use arrangement-only ordering
   //       for items-variant (no pivot-value fallback, since refs don't expose
   //       the pivot field without loading).
   //     - `Mosaic.isItem` to accept the ref wrapper alongside `Obj.isObject`.
@@ -131,7 +132,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
       Atom.make((get) => {
         const out: Obj.Unknown[] = [];
         for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
-          const target = get(AtomObj.make(ref));
+          const target = get(Obj.atom(ref));
           if (target == null) {
             continue;
           }

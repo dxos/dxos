@@ -1,0 +1,1007 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Order, Query } from '@dxos/echo';
+import { QueryAST } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
+
+import { QueryError } from './errors';
+import { QueryPlan } from './plan';
+
+/**
+ * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
+ */
+const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
+  if (query === null) {
+    return new QueryError({
+      message: 'Query too complex',
+      context: { query: null },
+    });
+  }
+  const prettyQuery = Query.pretty(Query.fromAst(query));
+  return new QueryError({
+    message: `Query too complex: ${prettyQuery}`,
+    context: { query, prettyQuery },
+  });
+};
+
+export type QueryPlannerOptions = {
+  defaultTextSearchKind: QueryPlan.TextSearchKind;
+  /**
+   * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
+   * Use when executing against an in-memory working set without SQL index access.
+   * TextSelector and TimestampSelector remain as-is so the caller can detect them and bail.
+   */
+  noIndexes?: boolean;
+};
+
+const DEFAULT_OPTIONS: QueryPlannerOptions = {
+  defaultTextSearchKind: 'full-text',
+};
+
+/**
+ * Constructs an optimized query plan.
+ */
+// TODO(dmaretskyi): Implement inefficient versions of complex queries.
+export class QueryPlanner {
+  private readonly _options: QueryPlannerOptions;
+
+  constructor(options?: Partial<QueryPlannerOptions>) {
+    this._options = {
+      ...DEFAULT_OPTIONS,
+      ...options,
+    };
+  }
+
+  createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    this._validateQueryScoped(query);
+    let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
+    plan = this._optimizeEmptyFilters(plan);
+    plan = this._optimizeSoloUnions(plan);
+    plan = this._ensureOrderStep(plan);
+    plan = this._optimizeLimits(plan);
+    return plan;
+  }
+
+  private _generate(query: QueryAST.Query, context: GenerationContext): QueryPlan.Plan {
+    switch (query.type) {
+      case 'options':
+        return this._generateOptionsClause(query, context);
+      case 'select':
+        return this._generateSelectClause(query, context);
+      case 'filter':
+        return this._generateFilterClause(query, context);
+      case 'incoming-references':
+        return this._generateIncomingReferencesClause(query, context);
+      case 'relation':
+        return this._generateRelationClause(query, context);
+      case 'relation-traversal':
+        return this._generateRelationTraversalClause(query, context);
+      case 'reference-traversal':
+        return this._generateReferenceTraversalClause(query, context);
+      case 'hierarchy-traversal':
+        return this._generateHierarchyTraversalClause(query, context);
+      case 'union':
+        return this._generateUnionClause(query, context);
+      case 'set-difference':
+        return this._generateSetDifferenceClause(query, context);
+      case 'order':
+        return this._generateOrderClause(query, context);
+      case 'limit':
+        return this._generateLimitClause(query, context);
+      case 'from':
+        return this._generateFromClause(query, context);
+      default:
+        throw new QueryError({
+          message: `Unsupported query type: ${(query as any).type}`,
+          context: { query: context.originalQuery },
+        });
+    }
+  }
+
+  private _generateOptionsClause(query: QueryAST.QueryOptionsClause, context: GenerationContext): QueryPlan.Plan {
+    const newContext = {
+      ...context,
+    };
+    if (query.options.deleted) {
+      newContext.deletedHandling = query.options.deleted;
+    }
+    return this._generate(query.query, newContext);
+  }
+
+  private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
+    if (query.from._tag === 'scope') {
+      return this._generate(query.query, { ...context, scope: query.from.scopes });
+    }
+
+    // Subquery from: flatten by rewriting the outer query's leaf select into a filter on the subquery.
+    const subquery = query.from.query;
+    const rewritten = QueryAST.map(query.query, (node) =>
+      node.type === 'select' ? { type: 'filter', selection: subquery, filter: node.filter } : node,
+    );
+    return this._generate(rewritten, context);
+  }
+
+  private _generateSelectClause(query: QueryAST.QuerySelectClause, context: GenerationContext): QueryPlan.Plan {
+    return this._generateSelectionFromFilter(query.filter, context);
+  }
+
+  // TODO(dmaretskyi): This can be rewritten as a function of (filter[]) -> (selection ? undefined, rest: filter[]) that recurses onto itself.
+  // TODO(dmaretskyi): If the tip of the query ast is a [select, ...filter] shape we can reorder the filters so the query is most efficient.
+  private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
+    switch (filter.type) {
+      // Props
+      case 'object': {
+        if (
+          context.selectionInverted &&
+          filter.id === undefined &&
+          filter.typename === null &&
+          Object.keys(filter.props).length === 0
+        ) {
+          // filter of nothing -> clear working set.
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'ClearWorkingSetStep',
+            },
+            ...this._generateDeletedHandlingSteps(context),
+          ]);
+        }
+        if (context.selectionInverted) {
+          throw queryTooComplexError(context.originalQuery);
+        }
+
+        // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
+        // After selection, filter out using the remaining predicates.
+        if (filter.id && filter.id?.length > 0) {
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector: {
+                _tag: 'IdSelector',
+                objectIds: filter.id,
+              },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter, id: undefined },
+            },
+          ]);
+        } else if (filter.typename) {
+          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned;
+          // the type predicate is enforced by the FilterStep that already follows.
+          const selector: QueryPlan.Selector = this._options.noIndexes
+            ? { _tag: 'WildcardSelector' }
+            : { _tag: 'TypeSelector', typename: [filter.typename], inverted: false };
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector,
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            // TODO(dmaretskyi): Normally we could skip filtering by typename here, but since the index does not separate schema versions, we need to do additional filter to only select the correct version.
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter },
+            },
+          ]);
+        } else {
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector: {
+                _tag: 'WildcardSelector',
+              },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter },
+            },
+          ]);
+        }
+      }
+
+      // Tag
+      case 'tag': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
+      // Text
+      case 'text-search': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'TextSelector',
+              text: filter.text,
+              searchKind: filter.searchKind ?? this._options.defaultTextSearchKind,
+              typename: null,
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+
+      // Timestamp
+      case 'timestamp': {
+        if (context.selectionInverted) {
+          throw new QueryError({
+            message:
+              'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            context: { query: context.originalQuery },
+          });
+        }
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: _timestampFilterToSelector(filter),
+          },
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+
+      // ChildOf
+      case 'child-of': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
+      // Compare
+      case 'compare':
+        throw queryTooComplexError(context.originalQuery);
+      case 'in':
+        throw queryTooComplexError(context.originalQuery);
+      case 'range':
+        throw queryTooComplexError(context.originalQuery);
+
+      // Boolean
+      case 'not':
+        return this._generateSelectionFromFilter(filter.filter, {
+          ...context,
+          selectionInverted: !context.selectionInverted,
+        });
+      case 'and': {
+        const flatFilters = _flattenAnd(filter.filters);
+        const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
+        const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
+        const otherFilters = flatFilters.filter((f) => f.type !== 'timestamp' && f.type !== 'child-of');
+
+        if (timestampFilters.length > 0 && context.selectionInverted) {
+          throw new QueryError({
+            message:
+              'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            context: { query: context.originalQuery },
+          });
+        }
+
+        if (timestampFilters.length > 0 && otherFilters.length <= 1 && childOfFilters.length === 0) {
+          const innerFilter = otherFilters[0];
+          const innerPlan = innerFilter
+            ? this._generateSelectionFromFilter(innerFilter, context)
+            : QueryPlan.Plan.make([
+                {
+                  _tag: 'SelectStep',
+                  scope: context.scope,
+                  selector: { _tag: 'WildcardSelector' },
+                },
+                ...this._generateDeletedHandlingSteps(context),
+              ]);
+
+          const selectIdx = innerPlan.steps.findIndex((s) => s._tag === 'SelectStep');
+          if (selectIdx !== -1) {
+            const newSteps = [...innerPlan.steps];
+            newSteps.splice(selectIdx + 1, 0, {
+              _tag: 'FilterStep',
+              filter: { type: 'and', filters: timestampFilters },
+            });
+            return QueryPlan.Plan.make(newSteps);
+          }
+
+          const selector = _mergeTimestampSelectors(timestampFilters.map(_timestampFilterToSelector));
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector,
+            },
+            ...this._generateDeletedHandlingSteps(context),
+          ]);
+        }
+
+        if (timestampFilters.length > 0 && childOfFilters.length === 0) {
+          throw new QueryError({
+            message:
+              'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
+            context: { query: context.originalQuery },
+          });
+        }
+
+        if (childOfFilters.length > 0) {
+          const remainingFilters = flatFilters.filter((f) => f.type !== 'child-of');
+          const innerPlan =
+            remainingFilters.length === 1
+              ? this._generateSelectionFromFilter(remainingFilters[0], context)
+              : remainingFilters.length > 1
+                ? this._generateSelectionFromFilter({ type: 'and', filters: remainingFilters }, context)
+                : QueryPlan.Plan.make([
+                    {
+                      _tag: 'SelectStep',
+                      scope: context.scope,
+                      selector: { _tag: 'WildcardSelector' },
+                    },
+                    ...this._generateDeletedHandlingSteps(context),
+                  ]);
+
+          const childOfSteps: QueryPlan.Step[] = childOfFilters.map((f) => ({
+            _tag: 'FilterStep' as const,
+            filter: f,
+          }));
+
+          return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
+        }
+
+        // Simple AND: all filters are root-executable against in-memory objects after a wildcard select.
+        // Supports combining true root selectors (`object`, `tag`) plus negations / unions of those.
+        // Property-level filters (`compare`, `in`, `range`, `contains`) are intentionally excluded because
+        // `filterMatchDoc` only handles them as nested predicates inside an `object` filter, not at the root.
+        const isRootExecutable = (filter: QueryAST.Filter): boolean => {
+          switch (filter.type) {
+            case 'object':
+            case 'tag':
+              return true;
+            case 'not':
+              return isRootExecutable(filter.filter);
+            case 'or':
+              return filter.filters.every(isRootExecutable);
+            default:
+              return false;
+          }
+        };
+        if (flatFilters.every(isRootExecutable)) {
+          const innerFilter: QueryAST.Filter = { type: 'and', filters: flatFilters };
+          const plannedFilter: QueryAST.Filter = context.selectionInverted
+            ? { type: 'not', filter: innerFilter }
+            : innerFilter;
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector: { _tag: 'WildcardSelector' },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: plannedFilter,
+            },
+          ]);
+        }
+
+        throw queryTooComplexError(context.originalQuery);
+      }
+      case 'or':
+        // Optimized case
+        if (filter.filters.every(isTrivialTypenameFilter)) {
+          const typenames = filter.filters.map((filter) => {
+            invariant(filter.type === 'object' && filter.typename !== null);
+            return filter.typename;
+          });
+
+          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned;
+          // the type predicate is enforced by the FilterStep that already follows.
+          const orSelector: QueryPlan.Selector = this._options.noIndexes
+            ? { _tag: 'WildcardSelector' }
+            : { _tag: 'TypeSelector', typename: typenames, inverted: context.selectionInverted };
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector: orSelector,
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { ...filter },
+            },
+          ]);
+        } else {
+          throw queryTooComplexError(context.originalQuery);
+        }
+
+      default:
+        throw new QueryError({
+          message: `Unsupported filter type: ${(filter as any).type}`,
+          context: { query: context.originalQuery },
+        });
+    }
+  }
+
+  private _generateDeletedHandlingSteps(context: GenerationContext): QueryPlan.Step[] {
+    switch (context.deletedHandling) {
+      case 'include':
+        return [];
+      case 'exclude':
+        return [
+          {
+            _tag: 'FilterDeletedStep',
+            mode: 'only-non-deleted',
+          },
+        ];
+      case 'only':
+        return [
+          {
+            _tag: 'FilterDeletedStep',
+            mode: 'only-deleted',
+          },
+        ];
+    }
+  }
+
+  private _generateUnionClause(query: QueryAST.QueryUnionClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      {
+        _tag: 'UnionStep',
+        plans: query.queries.map((query) => this._generate(query, context)),
+      },
+    ]);
+  }
+
+  private _generateSetDifferenceClause(
+    query: QueryAST.QuerySetDifferenceClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      {
+        _tag: 'SetDifferenceStep',
+        source: this._generate(query.source, context),
+        exclude: this._generate(query.exclude, context),
+      },
+    ]);
+  }
+
+  private _generateReferenceTraversalClause(
+    query: QueryAST.QueryReferenceTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'ReferenceTraversal',
+          direction: 'outgoing',
+          property: query.property,
+        },
+      },
+      ...this._generateDeletedHandlingSteps(context),
+    ]);
+  }
+
+  private _generateIncomingReferencesClause(
+    query: QueryAST.QueryIncomingReferencesClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'ReferenceTraversal',
+          direction: 'incoming',
+          property: query.property ?? null,
+        },
+      },
+      ...this._generateDeletedHandlingSteps(context),
+      {
+        _tag: 'FilterStep',
+        filter: {
+          type: 'object',
+          typename: query.typename,
+          props: {},
+        },
+      },
+    ]);
+  }
+
+  private _generateRelationTraversalClause(
+    query: QueryAST.QueryRelationTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    switch (query.direction) {
+      case 'source': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('relation-to-source'),
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+      case 'target': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('relation-to-target'),
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+      case 'both': {
+        const anchorPlan = this._generate(query.anchor, context);
+        return QueryPlan.Plan.make([
+          ...anchorPlan.steps,
+          {
+            _tag: 'UnionStep',
+            plans: [
+              QueryPlan.Plan.make([createRelationTraversalStep('relation-to-source')]),
+              QueryPlan.Plan.make([createRelationTraversalStep('relation-to-target')]),
+            ],
+          },
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+    }
+  }
+
+  private _generateRelationClause(query: QueryAST.QueryRelationClause, context: GenerationContext): QueryPlan.Plan {
+    switch (query.direction) {
+      case 'outgoing': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('source-to-relation'),
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: query.filter ?? NOOP_FILTER,
+          },
+        ]);
+      }
+      case 'incoming': {
+        return QueryPlan.Plan.make([
+          ...this._generate(query.anchor, context).steps,
+          createRelationTraversalStep('target-to-relation'),
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: query.filter ?? NOOP_FILTER,
+          },
+        ]);
+      }
+      case 'both': {
+        const anchorPlan = this._generate(query.anchor, context);
+        return QueryPlan.Plan.make([
+          ...anchorPlan.steps,
+          {
+            _tag: 'UnionStep',
+            plans: [
+              QueryPlan.Plan.make([createRelationTraversalStep('source-to-relation')]),
+              QueryPlan.Plan.make([createRelationTraversalStep('target-to-relation')]),
+            ],
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: query.filter ?? NOOP_FILTER,
+          },
+        ]);
+      }
+    }
+  }
+
+  private _generateFilterClause(query: QueryAST.QueryFilterClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.selection, context).steps,
+      {
+        _tag: 'FilterStep',
+        filter: query.filter,
+      },
+    ]);
+  }
+
+  private _generateHierarchyTraversalClause(
+    query: QueryAST.QueryHierarchyTraversalClause,
+    context: GenerationContext,
+  ): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.anchor, context).steps,
+      {
+        _tag: 'TraverseStep',
+        traversal: {
+          _tag: 'HierarchyTraversal',
+          direction: query.direction,
+        },
+      },
+      ...this._generateDeletedHandlingSteps(context),
+    ]);
+  }
+
+  private _validateQueryScoped(query: QueryAST.Query): void {
+    let hasScope = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'from') {
+        hasScope = true;
+      }
+    });
+    if (!hasScope) {
+      throw new QueryError({
+        message: 'Query must be scoped with a from() clause',
+        context: { query },
+      });
+    }
+  }
+
+  /**
+   * Removes filter steps that have no predicates.
+   */
+  private _optimizeEmptyFilters(plan: QueryPlan.Plan): QueryPlan.Plan {
+    return QueryPlan.Plan.make(
+      plan.steps
+        .filter((step) => {
+          if (step._tag === 'FilterStep') {
+            return !QueryPlan.FilterStep.isNoop(step);
+          } else {
+            return true;
+          }
+        })
+        .map((step) => {
+          if (step._tag === 'UnionStep') {
+            return {
+              _tag: 'UnionStep',
+              plans: step.plans.map((plan) => this._optimizeEmptyFilters(plan)),
+            };
+          } else {
+            return step;
+          }
+        }),
+    );
+  }
+
+  /**
+   * Removes union steps that have only one child.
+   */
+  private _optimizeSoloUnions(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // TODO(dmaretskyi): Implement this.
+    return plan;
+  }
+
+  private _generateOrderClause(query: QueryAST.QueryOrderClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'OrderStep',
+        order: query.order,
+      },
+    ]);
+  }
+
+  private _generateLimitClause(query: QueryAST.QueryLimitClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'LimitStep',
+        limit: query.limit,
+      },
+    ]);
+  }
+
+  // After complete plan is built, inspect it from the end:
+  //   - Walk backwards until hitting an object set changer.
+  //   - If an order step is found, skip.
+  //   - Otherwise insert natural order before any limit steps (since limit should be applied after ordering).
+  // This method is recursive and also processes sub-plans in unions and set differences.
+  private _ensureOrderStep(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // First, recursively process any sub-plans.
+    const processedSteps = plan.steps.map((step): QueryPlan.Step => {
+      if (step._tag === 'UnionStep') {
+        return {
+          _tag: 'UnionStep',
+          plans: step.plans.map((subPlan) => this._ensureOrderStep(subPlan)),
+        };
+      } else if (step._tag === 'SetDifferenceStep') {
+        return {
+          _tag: 'SetDifferenceStep',
+          source: this._ensureOrderStep(step.source),
+          exclude: this._ensureOrderStep(step.exclude),
+        };
+      }
+      return step;
+    });
+
+    const processedPlan = QueryPlan.Plan.make(processedSteps);
+
+    const OBJECT_SET_CHANGERS = new Set(['SelectStep', 'TraverseStep', 'UnionStep', 'SetDifferenceStep']);
+    for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
+      const step = processedPlan.steps[i];
+      if (step._tag === 'OrderStep') {
+        return processedPlan;
+      }
+      if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        break;
+      }
+    }
+
+    // Find the position to insert the order step (before any limit steps).
+    let insertIndex = processedPlan.steps.length;
+    for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
+      if (processedPlan.steps[i]._tag === 'LimitStep') {
+        insertIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    const newSteps = [...processedPlan.steps];
+    newSteps.splice(insertIndex, 0, {
+      _tag: 'OrderStep',
+      order: [Order.natural.ast],
+    });
+
+    return QueryPlan.Plan.make(newSteps);
+  }
+
+  /**
+   * Propagates limits from LimitStep to SelectStep and OrderStep when possible.
+   * Limits can only be propagated if there are no unions or traversals between the LimitStep and SelectStep/OrderStep.
+   */
+  private _optimizeLimits(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // First, recursively process any sub-plans.
+    const processedSteps = plan.steps.map((step): QueryPlan.Step => {
+      if (step._tag === 'UnionStep') {
+        return {
+          _tag: 'UnionStep',
+          plans: step.plans.map((subPlan) => this._optimizeLimits(subPlan)),
+        };
+      } else if (step._tag === 'SetDifferenceStep') {
+        return {
+          _tag: 'SetDifferenceStep',
+          source: this._optimizeLimits(step.source),
+          exclude: this._optimizeLimits(step.exclude),
+        };
+      }
+      return step;
+    });
+
+    // Find if there's a LimitStep at the end (possibly after OrderStep).
+    let limitStepIndex = -1;
+    let limitValue: number | undefined;
+
+    for (let i = processedSteps.length - 1; i >= 0; i--) {
+      const step = processedSteps[i];
+      if (step._tag === 'LimitStep') {
+        limitStepIndex = i;
+        limitValue = step.limit;
+        break;
+      }
+      // Only allow OrderStep after LimitStep when looking backwards.
+      if (step._tag !== 'OrderStep') {
+        break;
+      }
+    }
+
+    if (limitStepIndex === -1 || limitValue === undefined) {
+      return QueryPlan.Plan.make(processedSteps);
+    }
+
+    // Check if we can propagate the limit to a SelectStep and/or OrderStep.
+    // We can only do this if there are no unions, traversals, or set differences between them.
+    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep']);
+
+    let selectStepIndex = -1;
+    let orderStepIndex = -1;
+    for (let i = 0; i < limitStepIndex; i++) {
+      const step = processedSteps[i];
+      if (step._tag === 'SelectStep') {
+        selectStepIndex = i;
+      }
+      if (step._tag === 'OrderStep') {
+        orderStepIndex = i;
+      }
+      if (BLOCKERS.has(step._tag)) {
+        // Found a blocker after the select/order step - can't propagate.
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
+      // A child-of FilterStep prunes results in-memory after the SelectStep, so pushing the
+      // limit into the SelectStep would slice candidates before the filter runs and starve
+      // the result set (e.g. wildcard select of 10 random objects, then child-of leaves 0).
+      if (step._tag === 'FilterStep' && _filterContainsChildOf(step.filter)) {
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
+    }
+
+    if (selectStepIndex === -1 && orderStepIndex === -1) {
+      return QueryPlan.Plan.make(processedSteps);
+    }
+
+    // A content-based reorder (by property value or system timestamp) needs the FULL candidate set
+    // before slicing — the index scan order does not match the requested order. Pushing the limit
+    // into the SelectStep would slice an arbitrary subset before sorting. Natural (by id) and rank
+    // (FTS scan already returns by rank) orders are consistent with the scan, so keep optimizing
+    // those.
+    if (orderStepIndex !== -1) {
+      const orderStep = processedSteps[orderStepIndex];
+      const reordersByContent =
+        orderStep._tag === 'OrderStep' &&
+        orderStep.order.some((order) => order.kind === 'property' || order.kind === 'timestamp');
+      if (reordersByContent) {
+        selectStepIndex = -1;
+      }
+    }
+
+    // Create a mutable copy of steps to modify.
+    const newSteps = [...processedSteps];
+
+    // Propagate the limit to the SelectStep if found.
+    if (selectStepIndex !== -1) {
+      const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
+      newSteps[selectStepIndex] = {
+        ...selectStep,
+        limit: limitValue,
+      };
+    }
+
+    // Propagate the limit to the OrderStep if found.
+    if (orderStepIndex !== -1) {
+      const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
+      newSteps[orderStepIndex] = {
+        ...orderStep,
+        limit: limitValue,
+      };
+    }
+
+    // Remove the LimitStep since limit is now propagated.
+    newSteps.splice(limitStepIndex, 1);
+
+    return QueryPlan.Plan.make(newSteps);
+  }
+}
+
+/**
+ * Context for query planning.
+ */
+type GenerationContext = {
+  /**
+   * The original query.
+   */
+  originalQuery: QueryAST.Query | null;
+
+  /**
+   * The scope to select from (space IDs, queues, etc.).
+   */
+  scope: readonly QueryAST.Scope[];
+
+  /**
+   * How to handle deleted objects.
+   */
+  deletedHandling: 'include' | 'exclude' | 'only';
+
+  /**
+   * When generating a selection clause, whether to invert the filter.
+   */
+  selectionInverted: boolean;
+};
+
+const DEFAULT_CONTEXT: GenerationContext = {
+  originalQuery: null,
+  scope: [],
+  deletedHandling: 'exclude',
+  selectionInverted: false,
+};
+
+const NOOP_FILTER: QueryAST.Filter = {
+  type: 'object',
+  typename: null,
+  id: [],
+  props: {},
+};
+
+const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['direction']): QueryPlan.Step => ({
+  _tag: 'TraverseStep',
+  traversal: {
+    _tag: 'RelationTraversal',
+    direction,
+  },
+});
+
+/**
+ * Returns true if the filter is `child-of` or composes one via `and` / `or` / `not`.
+ */
+const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'child-of':
+      return true;
+    case 'not':
+      return _filterContainsChildOf(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
+  }
+};
+
+/**
+ * Recursively flattens nested `and` filters into a single list.
+ */
+const _flattenAnd = (filters: readonly QueryAST.Filter[]): QueryAST.Filter[] => {
+  const result: QueryAST.Filter[] = [];
+  for (const f of filters) {
+    if (f.type === 'and') {
+      result.push(..._flattenAnd(f.filters));
+    } else {
+      result.push(f);
+    }
+  }
+  return result;
+};
+
+const _timestampFilterToSelector = (filter: QueryAST.FilterTimestamp): QueryPlan.TimestampSelector => {
+  const selector: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
+  const key =
+    filter.field === 'updatedAt'
+      ? filter.operator === 'gte' || filter.operator === 'gt'
+        ? 'updatedAfter'
+        : 'updatedBefore'
+      : filter.operator === 'gte' || filter.operator === 'gt'
+        ? 'createdAfter'
+        : 'createdBefore';
+  selector[key] = filter.value;
+  return selector;
+};
+
+const _mergeTimestampSelectors = (selectors: QueryPlan.TimestampSelector[]): QueryPlan.TimestampSelector => {
+  const merged: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
+  for (const selector of selectors) {
+    if (selector.updatedAfter != null) {
+      merged.updatedAfter = Math.max(merged.updatedAfter ?? 0, selector.updatedAfter);
+    }
+    if (selector.updatedBefore != null) {
+      merged.updatedBefore = Math.min(merged.updatedBefore ?? Infinity, selector.updatedBefore);
+    }
+    if (selector.createdAfter != null) {
+      merged.createdAfter = Math.max(merged.createdAfter ?? 0, selector.createdAfter);
+    }
+    if (selector.createdBefore != null) {
+      merged.createdBefore = Math.min(merged.createdBefore ?? Infinity, selector.createdBefore);
+    }
+  }
+  return merged;
+};
+
+const isTrivialTypenameFilter = (filter: QueryAST.Filter): boolean => {
+  return (
+    filter.type === 'object' &&
+    filter.typename !== null &&
+    Object.keys(filter.props).length === 0 &&
+    (filter.id === undefined || filter.id.length === 0) &&
+    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0)
+  );
+};

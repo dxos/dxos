@@ -9,10 +9,10 @@ import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { type EchoDatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-db';
-import { EchoTestPeer } from '@dxos/echo-db/testing';
-import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
+import { type DatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-client';
+import { EchoTestPeer } from '@dxos/echo-client/testing';
+import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -24,21 +24,16 @@ import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableSt
 
 export const Text = Schema.Struct({
   content: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.bladeRunner.text',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0')));
 
-export interface Text extends Schema.Schema.Type<typeof Text> {}
+export type Text = Type.InstanceType<typeof Text>;
 
 @trace.resource()
 export class EchoReplicant {
   private readonly _ctx = new Context();
 
   private _testPeer?: EchoTestPeer = undefined;
-  private _db?: EchoDatabaseImpl = undefined;
+  private _db?: DatabaseImpl = undefined;
 
   private readonly _connections = new Map<string, TestReplicatorConnection>();
   private _replicator?: TestReplicator = undefined;
@@ -62,7 +57,7 @@ export class EchoReplicant {
   @trace.span()
   async createDatabase({ spaceKey = PublicKey.random().toHex() }: { spaceKey?: string } = {}) {
     this._db = await this._testPeer!.createDatabase(PublicKey.fromHex(spaceKey));
-    await this._db.graph.schemaRegistry.register([Text]);
+    this._db.graph.registry.add([Text]);
 
     log.trace('dxos.echo-replicant.createDatabase', { spaceKey });
     return {
@@ -74,7 +69,7 @@ export class EchoReplicant {
   @trace.span()
   async openDatabase({ spaceKey, rootUrl }: { spaceKey: string; rootUrl: AutomergeUrl }) {
     this._db = await this._testPeer!.openDatabase(PublicKey.fromHex(spaceKey), rootUrl);
-    await this._db.graph.schemaRegistry.register([Text]);
+    this._db.graph.registry.add([Text]);
 
     log.trace('dxos.echo-replicant.openDatabase', { spaceKey });
     return {

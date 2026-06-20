@@ -7,13 +7,13 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { useAppGraph, useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
@@ -28,7 +28,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
 
@@ -44,8 +44,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const db = Obj.getDatabase(object);
     const [view] = useObject(object.view);
     const queryAst = view?.query?.ast;
-    const typename = getTypenameFromQuery(queryAst);
-    const schema = useSchema(db, typename);
+    const typeUri = getTypeURIFromQuery(queryAst);
+    const schema = useType(db, typeUri);
     // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
     const queriedObjects = useQueryWorkaround(db, queryAst, schema);
@@ -63,7 +63,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       });
     }, [graph, attendableId]);
 
-    const addRow = useAddRow({ db, schema });
+    const objectSchema = schema && Type.isObject(schema) ? schema : undefined;
+    const addRow = useAddRow({ db, schema: objectSchema });
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
@@ -85,7 +86,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       () => ({
         selection: { enabled: true, mode: 'multiple' },
         dataEditable: true,
-        schemaEditable: schema && Type.isMutable(schema),
+        schemaEditable: schema != null && Type.getDatabase(schema) != null,
       }),
       [],
     );
@@ -95,14 +96,16 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     }, []);
 
     const rowActions = useMemo(
-      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.id }] }],
+      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.profile.key }] }],
       [],
     );
 
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] })),
+          Match.when('open', () =>
+            invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] }),
+          ),
           Match.orElseAbsurd,
         ),
       [invokePromise],
@@ -115,7 +118,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const handleCreate = useCallback(
       (schema: Type.AnyEntity, values: any) => {
         invariant(db);
-        invariant(Type.isObjectSchema(schema));
+        invariant(Type.isObject(schema));
         return db.add(Obj.make(schema, values));
       },
       [db],
@@ -172,6 +175,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             <TableComponent.Content
               classNames='border-t border-separator'
               key={attendableId}
+              attendableId={attendableId}
               model={model}
               presentation={presentation}
               schema={schema}
@@ -194,9 +198,9 @@ const useQueryWorkaround = (
   ast: QueryAST.Query | undefined,
   schema: Type.AnyEntity | undefined,
 ) => {
+  const baseFilter = useSchemaFilter(schema);
   // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
-    const baseFilter = schema ? Filter.type(schema) : Filter.nothing();
     let query = Query.select(baseFilter);
 
     // Apply tag filter from the query AST.
@@ -222,7 +226,7 @@ const useQueryWorkaround = (
     }
 
     return query;
-  }, [ast, schema]);
+  }, [ast, baseFilter]);
 
   return useQuery(db, query);
 };

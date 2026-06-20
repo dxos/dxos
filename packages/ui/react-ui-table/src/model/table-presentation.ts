@@ -6,7 +6,8 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj, type View } from '@dxos/echo';
-import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,
@@ -114,7 +115,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     const cell: DxGridCellValue = {
       get value() {
-        const value = getValue(obj, field.path);
+        const value = SchemaEx.getValue(obj, field.path);
         if (value == null) {
           return '';
         }
@@ -134,7 +135,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               return ''; // TODO(burdon): Show error.
             }
 
-            return getValue(value.target, field.referencePath);
+            return SchemaEx.getValue(value.target, field.referencePath);
           }
 
           default: {
@@ -164,7 +165,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     // Arrays.
     if (props.type === TypeEnum.Array) {
-      const targetArray = getValue(obj, field.path);
+      const targetArray = SchemaEx.getValue(obj, field.path);
       if (targetArray && Array.isArray(targetArray)) {
         // TODO(ZaymonFC): For arrays of objects, objects should have a 'label' annotation on the field
         // that can be used to render tags.
@@ -200,22 +201,22 @@ export class TablePresentation<T extends TableRow = TableRow> {
           })
           .join('');
 
-        cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;
+        cell.accessoryHtml = `<div class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;
       }
     }
 
     // References.
     if (props.format === Format.TypeFormat.Ref && props.referenceSchema) {
-      const targetObj = getValue(obj, field.path)?.target;
+      const targetObj = SchemaEx.getValue(obj, field.path)?.target;
       if (targetObj) {
-        const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor dxn=${dxn} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        const uri = Obj.getURI(targetObj);
+        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
     // Booleans.
     if (props.format === Format.TypeFormat.Boolean) {
-      const value = getValue(obj, field.path);
+      const value = SchemaEx.getValue(obj, field.path);
       cell.accessoryHtml = tableControls.switch.render({
         colIndex,
         rowIndex: displayIndex,
@@ -226,7 +227,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     // Single-Selects.
     if (props.format === Format.TypeFormat.SingleSelect) {
-      const value = getValue(obj, field.path);
+      const value = SchemaEx.getValue(obj, field.path);
       const options = this.model.projection.getFieldProjection(field.id).props.options;
       if (options) {
         const option = options.find((o) => o.id === value);
@@ -238,7 +239,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     // Multi-Selects.
     if (props.format === Format.TypeFormat.MultiSelect) {
-      const values = getValue(obj, field.path) as string[] | undefined;
+      const values = SchemaEx.getValue(obj, field.path) as string[] | undefined;
       const options = this.model.projection.getFieldProjection(field.id).props.options;
       if (options && values && values.length > 0) {
         const tags = values
@@ -338,7 +339,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbar-surface text-description! [&>div]:flex [&>div]:items-stretch',
+        className: 'bg-axis-surface! text-axis-text! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -381,7 +382,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-toolbar-surface',
+          className: 'bg-axis-surface!',
           readonly: true,
           value: '',
         },
@@ -395,7 +396,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           header: true,
           checked: this.model.selection.allRowsSelected,
         }),
-        className: '!bg-toolbar-surface',
+        className: 'bg-axis-surface!',
         readonly: true,
         value: '',
       },
@@ -410,7 +411,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-toolbar-surface',
+        className: 'bg-axis-surface!',
         readonly: true,
         value: '',
       },

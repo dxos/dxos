@@ -6,6 +6,7 @@
 
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -25,11 +26,12 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint, Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { type Blueprint, Trace, Operation } from '@dxos/compute';
+import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
+import { getOperationFromTool } from '../functions/services';
 import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
@@ -42,7 +44,7 @@ export type RunRequirements =
   | ToolResolverService
   | Database.Service
   | Operation.Service
-  | OperationRegistry.Service
+  | Registry.Service
   | Trace.TraceService;
 
 export type Options = {
@@ -58,6 +60,13 @@ export type Options = {
    * This is useful for streaming the output to a queue.
    */
   onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
+
+  /**
+   * When false, turn messages are not appended to the feed or written as persisted trace blocks.
+   *
+   * @default true
+   */
+  persist?: boolean;
 };
 
 export type RunProps<R = never> = {
@@ -137,6 +146,9 @@ export class Request {
     Effect.gen(this, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
+      if (this._options.persist === false) {
+        return message;
+      }
       for (const block of message.blocks) {
         log('write complete block', {
           messageId: message.id,
@@ -205,7 +217,7 @@ export class Request {
     toolkit: opaqueToolkit,
   }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
-      log.info('request', {
+      log('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
         history: this._history.length,
@@ -234,6 +246,7 @@ export class Request {
           onPart: (part) => observer.onPart(part as any),
           onEnd: (summary) => observer.onEnd(summary),
         }),
+        Stream.map((block) => enrichToolCallBlock(block, toolkit)),
         Stream.mapEffect(
           (block) =>
             Effect.gen(this, function* () {
@@ -266,7 +279,7 @@ export class Request {
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
-      log.info('messages', { messages });
+      log('messages', { messages });
 
       const toolCalls = this.getToolCalls();
 
@@ -334,6 +347,42 @@ export class Request {
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
+
+/**
+ * Annotates `toolCall` blocks with metadata about the backing Operation, when one exists.
+ * Tool calls that resolve to a toolkit handler (no Operation) are left unchanged so callers can
+ * distinguish operation invocations from inline tool calls.
+ */
+const enrichToolCallBlock = (
+  block: ContentBlock.Any,
+  toolkit: Toolkit.WithHandler<any> | undefined,
+): ContentBlock.Any => {
+  if (block._tag !== 'toolCall' || !toolkit) {
+    return block;
+  }
+  const tool = toolkit.tools[block.name];
+  if (!tool) {
+    return block;
+  }
+  // Some tools (provider-defined, raw MCP) don't carry an Effect `Context` for annotations and
+  // `getOperationFromTool` throws. Be defensive: treat any failure as "no operation".
+  let operationOpt: Option.Option<Operation.Definition.Any>;
+  try {
+    operationOpt = getOperationFromTool(tool);
+  } catch {
+    return block;
+  }
+  if (Option.isNone(operationOpt)) {
+    return block;
+  }
+  const { meta } = operationOpt.value;
+  return {
+    ...block,
+    operationKey: meta.key,
+    operationName: meta.name,
+    operationIcon: meta.icon,
+  } satisfies ContentBlock.ToolCall;
+};
 
 const createSnippet = (text: string, len = 32) =>
   text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');

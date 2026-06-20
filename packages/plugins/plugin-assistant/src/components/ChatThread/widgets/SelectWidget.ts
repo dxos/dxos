@@ -31,7 +31,7 @@ export class SelectWidget extends WidgetType {
         ...this.options.map((option) =>
           Domino.of('button')
             .classNames('dx-button inline-block max-w-[100cqi]')
-            .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'fine' })
+            .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'md' })
             .text(option),
         ),
       ).root;

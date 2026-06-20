@@ -3,86 +3,82 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
-import { findAnnotation } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
-import { type LatLngLiteral } from '@dxos/react-ui-geo';
+import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
+import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { Position } from '@dxos/util';
 
-import { MapArticle, MapViewEditor } from '#containers';
-import { LocationAnnotationId, Map, MapCapabilities } from '#types';
+import { MapSurface, MapViewEditor } from '#containers';
+import { LocationAnnotationId, Map, MapInline } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.map',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Map.Map),
           AppSurface.object(AppSurface.Section, Map.Map),
         ),
-        component: ({ data, role }) => {
-          const state = useAtomCapability(MapCapabilities.State);
-          const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
-          const [zoom, setZoom] = useState<number | undefined>(undefined);
-
-          const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
-            setCenter(center);
-            setZoom(zoom);
-          }, []);
-
-          return (
-            <MapArticle
-              role={role}
-              subject={data.subject}
-              type={state.type}
-              center={center}
-              zoom={zoom}
-              onChange={handleChange}
-            />
-          );
-        },
+        component: ({ data, role }) => (
+          <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
+      }),
+      // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
+      // role (e.g. TripArticle renders `<Surface.Surface type={MapInline} data={{ subject, attendableId }} />`).
+      Surface.create({
+        id: 'surface.mapInline',
+        filter: AppSurface.subject(MapInline, Obj.isObject),
+        component: ({ data, role }) => (
+          <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
+      }),
+      // Companion surface for any object that has markers (gated by app-graph-builder, which only
+      // emits the `map` companion node when a MarkerProvider matches the primary object).
+      Surface.create({
+        id: 'surface.mapCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'map'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data, role }) => (
+          <MapSurface subject={data.companionTo} attendableId={data.attendableId} role={role} />
+        ),
       }),
       Surface.create({
-        id: 'surface.object-properties',
-        position: 'hoist',
+        id: 'surface.objectProperties',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: 'surface.create-initial-schema-form-[property-of-interest]',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
-          prop: string;
-          schema: Schema.Schema<any>;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
-          return !!annotation;
-        },
-        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        id: 'surface.createInitialSchemaForm',
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, LocationAnnotationId)),
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
+          const target = data.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
           const { typename } = useFormValues('MapForm');
 
-          const [schema] = db?.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).runSync() ?? [];
+          const schema =
+            typename && db
+              ? db.graph.registry
+                  .list()
+                  .filter(Type.isType)
+                  .find((t) => Type.getTypename(t) === typename)
+              : undefined;
           const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
 
           const coordinateProperties = useMemo(() => {
@@ -92,7 +88,12 @@ export default Capability.makeModule(() =>
 
             // Look for properties that use the LatLng format enum
             const properties = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                'format' in value &&
+                value.format === Format.TypeFormat.GeoPoint
+              ) {
                 acc.push(key);
               }
               return acc;

@@ -5,13 +5,12 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { type Database, Filter, type Type } from '@dxos/echo';
-import { isMutable } from '@dxos/echo/internal';
+import { type Database, Filter, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useType } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
 import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
-import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { type ProjectionModel, getTypeURIFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
 import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
@@ -45,15 +44,15 @@ export const useTestTableModel = <T extends Type.AnyObj = Type.AnyObj>(): TestTa
 
   const tables = useQuery(space?.db, Filter.type(Table.Table));
   const table = tables.at(0);
-  const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
-  const schema = useSchema<T>(space?.db, typename);
+  const typeUri = table?.view.target?.query ? getTypeURIFromQuery(table.view.target.query.ast) : undefined;
+  const schema = useType<T>(space?.db, typeUri);
   const projection = useProjectionModel(schema, table, registry);
 
   const features = useMemo(
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
+      schemaEditable: schema != null && Type.getDatabase(schema) != null,
     }),
     [schema],
   );

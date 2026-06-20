@@ -40,7 +40,6 @@ Field labels and descriptions come from `.annotations({ title, description })` o
 | Plugin             | Reason                                                                                                                                                               |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `plugin-debug`     | Action buttons (download diagnostics, download logs, repair), `Toast`, and a storage-adapter selector wired to `client.config` rather than the plugin settings atom. |
-| `plugin-files`     | `IconButton` actions (select root, export, import) and gating on non-schema state (`state.rootHandle`).                                                              |
 | `plugin-space`     | Renders a list of spaces with per-space "open settings" buttons — not bound to any schema field.                                                                     |
 | `plugin-spacetime` | Section is currently empty; nothing to render.                                                                                                                       |
 | `plugin-thread`    | Settings schema is `Schema.Struct({})` — nothing to render.                                                                                                          |

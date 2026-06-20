@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
+import { Collection, Database, Entity, Obj, QueryAST, Type, View, DXN } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
@@ -19,18 +19,18 @@ const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
 export namespace CollectionOperation {
   export const Create = Operation.make({
-    meta: { key: `${COLLECTION_OPERATION}.create`, name: 'Create Collection' },
+    meta: { key: DXN.make(`${COLLECTION_OPERATION}.create`), name: 'Create Collection', icon: 'ph--folder--regular' },
     services: [Capability.Service],
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Collection.Collection,
+      object: Type.getSchema(Collection.Collection),
     }),
   });
 }
 
-const SPACE_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Operations for the Space plugin.
@@ -38,9 +38,10 @@ const SPACE_OPERATION = `${meta.id}.operation`;
 export namespace SpaceOperation {
   export const Create = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.create`,
+      key: makeKey('create'),
       name: 'Create Space',
       description: 'Create a new space.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service, Plugin.Service],
     input: SpaceForm,
@@ -53,9 +54,10 @@ export namespace SpaceOperation {
 
   export const Join = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.join`,
+      key: makeKey('join'),
       name: 'Join Space',
       description: 'Join a space via invitation.',
+      icon: 'ph--sign-in--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -67,9 +69,10 @@ export namespace SpaceOperation {
 
   export const Open = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open`,
+      key: makeKey('open'),
       name: 'Open Space',
       description: 'Open a space.',
+      icon: 'ph--arrow-square-out--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -80,9 +83,24 @@ export namespace SpaceOperation {
 
   export const Close = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.close`,
+      key: makeKey('close'),
       name: 'Close Space',
       description: 'Close a space.',
+      icon: 'ph--x-circle--regular',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
+  });
+
+  export const Delete = Operation.make({
+    meta: {
+      key: makeKey('delete'),
+      name: 'Delete Space',
+      description: 'Delete a space. The deletion replicates to all of your devices.',
+      icon: 'ph--trash--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -93,9 +111,10 @@ export namespace SpaceOperation {
 
   export const Share = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.share`,
+      key: makeKey('share'),
       name: 'Share Space',
       description: 'Share a space.',
+      icon: 'ph--share-network--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -110,9 +129,10 @@ export namespace SpaceOperation {
 
   export const OpenSettings = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-settings`,
+      key: makeKey('openSettings'),
       name: 'Open Space Settings',
       description: 'Open space settings.',
+      icon: 'ph--gear--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -123,9 +143,10 @@ export namespace SpaceOperation {
 
   export const WaitForObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.wait-for-object`,
+      key: makeKey('waitForObject'),
       name: 'Wait For Object',
       description: 'Wait for an object to be available.',
+      icon: 'ph--clock-countdown--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -136,17 +157,17 @@ export namespace SpaceOperation {
 
   export const AddObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-object`,
+      key: makeKey('addObject'),
       name: 'Add Object',
       description: 'Add an object to a space.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
       object: Obj.Unknown.annotations({ description: 'The object to add.' }),
-      target: Schema.Union(Database.Database, Collection.Collection).annotations({
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
         description: 'The database or collection to add to.',
       }),
-      hidden: Schema.optional(Schema.Boolean),
       targetNodeId: Schema.optional(
         Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
       ),
@@ -158,9 +179,12 @@ export namespace SpaceOperation {
     }),
   });
 
+  // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
   export const RemoveObjectsOutput = Schema.Struct({
-    objects: Schema.Array(Obj.Unknown).annotations({ description: 'The removed objects.' }),
-    parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
+    objects: Schema.Array(Entity.Unknown).annotations({ description: 'The removed entities.' }),
+    parentCollection: Type.getSchema(Collection.Collection).annotations({
+      description: 'The collection removed from.',
+    }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
     wasActive: Schema.Array(Schema.String).annotations({
       description: 'IDs of objects that were active before removal.',
@@ -171,14 +195,17 @@ export namespace SpaceOperation {
 
   export const RemoveObjects = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.remove-objects`,
+      key: makeKey('removeObjects'),
       name: 'Remove Objects',
-      description: 'Remove objects from a space.',
+      description: 'Remove entities (objects, relations, or persisted types) from a space.',
+      icon: 'ph--trash--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to remove.' }),
-      target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
+      objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to remove.' }),
+      target: Schema.optional(Type.getSchema(Collection.Collection)).annotations({
+        description: 'The collection to remove from.',
+      }),
     }),
     output: RemoveObjectsOutput,
   });
@@ -194,13 +221,14 @@ export namespace SpaceOperation {
 
   export const DeleteField = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.delete-field`,
+      key: makeKey('deleteField'),
       name: 'Delete Field',
       description: 'Delete a field from a view.',
+      icon: 'ph--minus-circle--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      view: View.View.annotations({ description: 'The view to delete the field from.' }),
+      view: Type.getSchema(View.View).annotations({ description: 'The view to delete the field from.' }),
       fieldId: Schema.String,
     }),
     output: DeleteFieldOutput,
@@ -208,13 +236,14 @@ export namespace SpaceOperation {
 
   export const OpenCreateObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-create-object`,
+      key: makeKey('openCreateObject'),
       name: 'Open Create Object Dialog',
       description: 'Open the create object dialog.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      target: Schema.Union(Database.Database, Collection.Collection).annotations({
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
         description: 'The database or collection to create in.',
       }),
       views: Schema.optional(Schema.Boolean),
@@ -232,9 +261,10 @@ export namespace SpaceOperation {
 
   export const OpenCreateSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-create-space`,
+      key: makeKey('openCreateSpace'),
       name: 'Open Create Space Dialog',
       description: 'Open the create space dialog.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service],
     input: Schema.Void,
@@ -243,9 +273,10 @@ export namespace SpaceOperation {
 
   export const OpenImportSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-import-space`,
+      key: makeKey('openImportSpace'),
       name: 'Open Import Space Dialog',
       description: 'Open the import space dialog to create a new space from a backup.',
+      icon: 'ph--download--regular',
     },
     services: [Capability.Service],
     input: Schema.Void,
@@ -254,9 +285,10 @@ export namespace SpaceOperation {
 
   export const ImportSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.import-space`,
+      key: makeKey('importSpace'),
       name: 'Import Space',
       description: 'Import a space archive as a new space.',
+      icon: 'ph--upload--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -264,6 +296,7 @@ export namespace SpaceOperation {
         filename: Schema.String,
         contents: Schema.instanceOf(Uint8Array),
       }),
+      tags: Schema.Array(Schema.String).pipe(Schema.optional),
     }),
     output: Schema.Struct({
       space: SpaceSchema,
@@ -272,9 +305,10 @@ export namespace SpaceOperation {
 
   export const ExportSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.export-space`,
+      key: makeKey('exportSpace'),
       name: 'Export Space',
       description: 'Export a space as a backup and download the archive.',
+      icon: 'ph--download--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -286,9 +320,10 @@ export namespace SpaceOperation {
 
   export const Migrate = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.migrate`,
+      key: makeKey('migrate'),
       name: 'Migrate Space',
       description: 'Migrate a space to a new version.',
+      icon: 'ph--arrows-clockwise--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -300,9 +335,10 @@ export namespace SpaceOperation {
 
   export const Snapshot = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.snapshot`,
+      key: makeKey('snapshot'),
       name: 'Create Snapshot',
       description: 'Create a snapshot of the space.',
+      icon: 'ph--camera--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -316,9 +352,10 @@ export namespace SpaceOperation {
 
   export const Rename = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.rename`,
+      key: makeKey('rename'),
       name: 'Rename Space',
       description: 'Rename a space.',
+      icon: 'ph--pencil-simple--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -330,13 +367,14 @@ export namespace SpaceOperation {
 
   export const RenameObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.rename-object`,
+      key: makeKey('renameObject'),
       name: 'Rename Object',
-      description: 'Rename an object.',
+      description: 'Rename an entity (object, relation, or persisted type).',
+      icon: 'ph--pencil-simple--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      object: Obj.Unknown,
+      object: Entity.Unknown,
       caller: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
@@ -344,9 +382,10 @@ export namespace SpaceOperation {
 
   export const OpenMembers = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-members`,
+      key: makeKey('openMembers'),
       name: 'Open Members',
       description: 'Open the members panel for a space.',
+      icon: 'ph--users--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -357,9 +396,10 @@ export namespace SpaceOperation {
 
   export const GetShareLink = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.get-share-link`,
+      key: makeKey('getShareLink'),
       name: 'Get Share Link',
       description: 'Get a shareable link for a space.',
+      icon: 'ph--link--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -374,11 +414,12 @@ export namespace SpaceOperation {
     name: Schema.optional(Schema.String),
   });
 
-  export const AddSchema = Operation.make({
+  export const AddType = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-schema`,
-      name: 'Add Schema',
-      description: 'Add a schema to the space.',
+      key: makeKey('addType'),
+      name: 'Add Type',
+      description: 'Add a type to the space.',
+      icon: 'ph--code--regular',
     },
     services: [Capability.Service, Plugin.Service],
     input: Schema.Struct({
@@ -386,22 +427,22 @@ export namespace SpaceOperation {
       name: Schema.optional(Schema.String),
       typename: Schema.optional(Schema.String),
       version: Schema.optional(Schema.String),
-      // TODO(wittjosiah): Schema for schema?
-      schema: Schema.Any,
+      // TODO(wittjosiah): Schema for type?
+      type: Schema.Any,
       show: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
       id: Schema.String,
-      object: Type.PersistentType,
-      schema: Schema.instanceOf(Type.RuntimeType),
+      object: Type.getSchema(Type.Type),
     }),
   });
 
   export const AddRelation = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-relation`,
+      key: makeKey('addRelation'),
       name: 'Add Relation',
       description: 'Add a relation between objects.',
+      icon: 'ph--link--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -421,14 +462,15 @@ export namespace SpaceOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const DuplicateObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.duplicate-object`,
+      key: makeKey('duplicateObject'),
       name: 'Duplicate Object',
       description: 'Duplicate an object.',
+      icon: 'ph--file--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
       object: Obj.Unknown,
-      target: Schema.Union(Database.Database, Collection.Collection),
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
     }),
     output: Schema.Void,
   });
@@ -438,13 +480,14 @@ export namespace SpaceOperation {
    */
   export const RestoreField = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.restore-field`,
+      key: makeKey('restoreField'),
       name: 'Restore Field',
       description: 'Restore a deleted field to a view.',
+      icon: 'ph--clock-counter-clockwise--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      view: View.View.annotations({ description: 'The view to restore the field to.' }),
+      view: Type.getSchema(View.View).annotations({ description: 'The view to restore the field to.' }),
       field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
       // TODO(wittjosiah): This creates a type error with PropertySchema.
       props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
@@ -454,18 +497,21 @@ export namespace SpaceOperation {
   });
 
   /**
-   * Restore deleted objects to a space (inverse of RemoveObjects).
+   * Restore deleted entities to a space (inverse of RemoveObjects).
    */
   export const RestoreObjects = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.restore-objects`,
+      key: makeKey('restoreObjects'),
       name: 'Restore Objects',
-      description: 'Restore deleted objects to a space.',
+      description: 'Restore deleted entities to a space.',
+      icon: 'ph--clock-counter-clockwise--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
-      parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
+      objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to restore.' }),
+      parentCollection: Type.getSchema(Collection.Collection).annotations({
+        description: 'The collection to restore to.',
+      }),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
       wasActive: Schema.Array(Schema.String).annotations({
         description: 'IDs of objects that were active before deletion.',

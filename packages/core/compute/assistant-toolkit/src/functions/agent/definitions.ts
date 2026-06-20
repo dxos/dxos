@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Routine, Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Routine, Trace, Operation } from '@dxos/compute';
+import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import * as Chat from '../../types/Chat';
@@ -14,9 +15,10 @@ import * as Chat from '../../types/Chat';
 // TODO(dmaretskyi): Rename to RunRoutine.
 export const AgentPrompt = Operation.make({
   meta: {
-    key: 'org.dxos.function.prompt',
+    key: DXN.make('org.dxos.function.prompt'),
     name: 'Run Routine',
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     prompt: Ref.Ref(Routine.Routine),
@@ -27,7 +29,7 @@ export const AgentPrompt = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default @anthropic/claude-opus-4-6
+     * @default ai.claude.model.claude-opus-4-8
      */
     model: Schema.optional(ModelName),
 
@@ -48,9 +50,8 @@ export const AgentPrompt = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    Feed.FeedService,
     OpaqueToolkit.OpaqueToolkitProvider,
-    OperationRegistry.Service,
+    Registry.Service,
     Trace.TraceService,
   ],
-}).pipe(Operation.intrinsic);
+});

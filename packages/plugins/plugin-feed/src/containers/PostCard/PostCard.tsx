@@ -11,17 +11,16 @@ import { Card } from '@dxos/react-ui';
 
 import { Subscription } from '#types';
 
-import { formatDate } from '../../util/format-date';
+import { formatDate, getImageUrl, getSnippet } from '../../util';
 
 export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 
 /**
  * Compact preview of a {@link Subscription.Post}. Rendered into the
- * `AppSurface.Card` slot — Card.Root is supplied by the surface host
- * (popovers, sections, related-objects), so the body emits Card.Content only.
+ * `AppSurface.CardContent` slot — Card.Root is supplied by the surface host
+ * (popovers, sections, related-objects), so the body emits Card.Body only.
  */
 export const PostCard = ({ subject }: PostCardProps) => {
-  // Re-render on in-place mutations (readAt, archived, content fetched lazily, …).
   const [post] = useObject(subject);
 
   // Resolve the source feed's display name when present. `post.feed?.target?.name` only
@@ -30,29 +29,30 @@ export const PostCard = ({ subject }: PostCardProps) => {
   const db = Obj.getDatabase(post);
   const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
   const feedName = useMemo(() => {
-    const dxn = post.source?.dxn.toString();
+    const dxn = post.source?.uri;
     if (!dxn) {
       return undefined;
     }
-    return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
+    return allFeeds.find((feed) => Obj.getURI(feed) === dxn)?.name;
   }, [post.source, allFeeds]);
 
   const published = formatDate(post.published);
+  // snippet/imageUrl are derived from the Post's description (no content-feed entry in this surface).
+  const imageUrl = getImageUrl(post);
+  const snippet = useMemo(() => getSnippet(post) || undefined, [post.description]);
 
   return (
-    <Card.Content>
-      {post.imageUrl && (
-        <Card.Poster alt={post.title ?? ''} image={post.imageUrl} fit='cover' classNames='rounded-t-xs' />
-      )}
+    <Card.Body>
+      {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Card.Row>
-          <Card.Heading classNames='line-clamp-2'>{post.title}</Card.Heading>
+          <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title>
         </Card.Row>
       )}
-      {post.snippet && (
+      {snippet && (
         <Card.Row>
           <Card.Text variant='description' classNames='line-clamp-3'>
-            {post.snippet}
+            {snippet}
           </Card.Text>
         </Card.Row>
       )}
@@ -65,6 +65,6 @@ export const PostCard = ({ subject }: PostCardProps) => {
         </Card.Row>
       )}
       {post.link && <Card.Link label={post.link} href={post.link} />}
-    </Card.Content>
+    </Card.Body>
   );
 };

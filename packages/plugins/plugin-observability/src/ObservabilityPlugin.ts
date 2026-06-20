@@ -9,11 +9,11 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
 import {
-  AppGraphBuilder,
   ClientReady,
   ObservabilitySettings,
   ObservabilityState,
   OperationHandler,
+  PrivacyNotice,
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -31,7 +31,6 @@ export type ObservabilityPluginOptions = {
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ observability }) => ({
@@ -67,6 +66,10 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       ),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.make('org.dxos.plugin.client.event.identityCreated'),
+    activate: PrivacyNotice,
+  }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(

@@ -5,9 +5,12 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
+import { IntegrationSync, LayoutOperation } from '@dxos/app-toolkit';
+
+const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = IntegrationSync;
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
@@ -374,7 +377,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
     if (localListName && !listId) {
       log.warn('trello push: listName has no matching remote list; card will not move', {
-        cardId: Obj.getDXN(target).toString(),
+        cardId: Obj.getURI(target),
         listName: localListName,
       });
     }
@@ -455,9 +458,9 @@ export const findKanbanForBoard: (
   boardId: string,
 ) => Effect.Effect<Kanban.Kanban | undefined, never, Database.Service> = Effect.fn('findKanbanForBoard')(
   function* (boardId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Kanban.Kanban, [{ source: TRELLO_SOURCE, id: boardId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Kanban.Kanban) : undefined;
   },
 );
@@ -512,9 +515,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = kanbanRef
-        ? `${integrationId}.${kanbanRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        ? `${integrationId}.${EID.getEntityId(EID.tryParse(kanbanRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       // Wrap the body in `Effect.either` so we can emit a toast on either path
@@ -540,9 +543,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // and the ref written back; subsequent syncs see `target.object` and
           // skip materialization. This is where `getSyncTargets`'s read-only
           // discovery hands off to actual local writes.
-          // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
+          // Stored target refs use the space-relative form (`echo:/<id>`); the
           // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
-          const kanbanFilterId = kanbanRef?.dxn.asEchoDXN()?.echoId;
+          const kanbanFilterId = kanbanRef ? EID.getEntityId(EID.tryParse(kanbanRef.uri)!) : undefined;
           const targetEntries: Array<{
             entry: (typeof integrationObj.targets)[number];
             kanban: Kanban.Kanban;
@@ -580,7 +583,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
               });
             }
 
-            const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
+            const targetEchoId = EID.getEntityId(EID.tryParse(Ref.make(localObj).uri)!);
             if (kanbanFilterId && targetEchoId !== kanbanFilterId) {
               continue;
             }
@@ -698,9 +701,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       if (outcome._tag === 'Right') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-success.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
             icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.id }],
+            title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
         return outcome.right;
@@ -708,9 +711,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         const message = formatTrelloSyncFailure(outcome.left);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-error.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
             icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.id }],
+            title: ['sync-toast.error.label', { ns: meta.profile.key }],
             description: message,
           }),
         );

@@ -26,6 +26,7 @@ export class GraphHierarchicalProjector<
     });
 
     this.mergeData(graph);
+    this.emitUpdate('topology');
     const selected = this.selection?.getSelectedIds()[0];
     if (selected) {
       const node = this.layout.graph.nodes.find((node) => node.id === selected);

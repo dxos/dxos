@@ -9,17 +9,18 @@ import { Capability, Capabilities } from '@dxos/app-framework';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { Database, Feed, Obj } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { AssistantOperation } from '#types';
+
+import { getChatsPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Chat.Chat.typename,
+        id: Type.getTypename(Chat.Chat),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
@@ -29,13 +30,12 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
+              targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId),
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Blueprint.Blueprint.typename,
+        id: Type.getTypename(Blueprint.Blueprint),
         inputSchema: AssistantOperation.BlueprintForm,
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -43,39 +43,36 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Routine.Routine.typename,
+        id: Type.getTypename(Routine.Routine),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Routine.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Sequence.Sequence.typename,
+        id: Type.getTypename(Sequence.Sequence),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Obj.make(Sequence.Sequence, props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Agent.Agent.typename,
+        id: Type.getTypename(Agent.Agent),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make());
@@ -83,17 +80,13 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }).pipe(
             Effect.provide(
-              ServiceResolver.provide(
-                { space: options.db.spaceId },
-                Database.Service,
-                Feed.FeedService,
-                QueueService,
-              ).pipe(Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver))),
+              ServiceResolver.provide({ space: options.db.spaceId }, Database.Service).pipe(
+                Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
+              ),
             ),
           ),
       }),

@@ -224,7 +224,7 @@ The alternative worth seriously considering is **Option B**, if the team prefers
 **Agent** — 22+ non-test files, concentrated in:
 
 - `plugin-assistant` (containers, capabilities, plugin entrypoints, translations, CLI) — ~12
-- `core/compute/assistant-toolkit` (blueprints/project + project-wizard functions) — ~8
+- `core/compute/assistant-toolkit` (blueprints/agent + agent-wizard functions) — ~8
 - `plugin-sidekick` (types) — ~2
 
 The two types intersect most tightly in `plugin-assistant/src/operations` (the `AgentPrompt`/`RunPromptInNewChat` operations) and in `plugin-assistant/src/containers/{RoutineArticle, AgentArticle}` (parallel UI surfaces).

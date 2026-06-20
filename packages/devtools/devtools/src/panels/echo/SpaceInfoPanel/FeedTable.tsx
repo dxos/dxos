@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';

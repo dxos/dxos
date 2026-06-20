@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
@@ -18,8 +18,8 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
-  type ObjectMeta,
-  ObjectMetaIndex,
+  type EntityMeta,
+  EntityMetaIndex,
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
@@ -32,20 +32,20 @@ export type IndexingResult = {
   updated: number;
   done: boolean;
   spaces: ReadonlySet<SpaceId>;
-  queues: ReadonlySet<ObjectId>;
+  queues: ReadonlySet<EntityId>;
   documents: ReadonlySet<string>;
   types: ReadonlySet<string>;
-  objects: ReadonlySet<ObjectId>;
+  objects: ReadonlySet<EntityId>;
 };
 
 type MutableIndexingResult = {
   updated: number;
   done: boolean;
   spaces: Set<SpaceId>;
-  queues: Set<ObjectId>;
+  queues: Set<EntityId>;
   documents: Set<string>;
   types: Set<string>;
-  objects: Set<ObjectId>;
+  objects: Set<EntityId>;
 };
 
 const makeEmptyIndexingResult = (): MutableIndexingResult => ({
@@ -72,7 +72,7 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
       acc.types.add(String(t));
     }
     if (obj.data.id) {
-      acc.objects.add(obj.data.id as ObjectId);
+      acc.objects.add(obj.data.id as EntityId);
     }
   }
 };
@@ -106,20 +106,20 @@ export interface IndexDataSource {
 
 export interface IndexEngineParams {
   tracker: IndexTracker;
-  objectMetaIndex: ObjectMetaIndex;
+  objectMetaIndex: EntityMetaIndex;
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
 }
 
 export class IndexEngine {
   readonly #tracker: IndexTracker;
-  readonly #objectMetaIndex: ObjectMetaIndex;
+  readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
 
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
-    this.#objectMetaIndex = params?.objectMetaIndex ?? new ObjectMetaIndex();
+    this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
   }
@@ -151,7 +151,7 @@ export class IndexEngine {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
-  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
   }
 
@@ -164,8 +164,8 @@ export class IndexEngine {
   }
 
   queryType(
-    query: Pick<ObjectMeta, 'spaceId' | 'typeDXN'>,
-  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
+  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.query(query);
   }
 
@@ -174,18 +174,18 @@ export class IndexEngine {
    */
   queryChildren(query: {
     spaceId: SpaceId[];
-    parentIds: ObjectId[];
-  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    parentIds: EntityId[];
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryChildren(query);
   }
 
   queryTypes(query: {
     spaceIds: readonly SpaceId[];
-    typeDxns: readonly ObjectMeta['typeDXN'][];
+    typeDxns: readonly EntityMeta['typeDXN'][];
     inverted?: boolean;
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
-  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
   queryByTimeRange(query: {
@@ -196,17 +196,17 @@ export class IndexEngine {
     createdBefore?: number;
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
-  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByTimeRange(query);
   }
 
   queryRelations(query: {
     endpoint: 'source' | 'target';
     anchorDxns: readonly string[];
-  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryRelations(query);
   }
-  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
 
@@ -214,8 +214,15 @@ export class IndexEngine {
     objectId: string;
     spaceId: string;
     queueId: string;
-  }): Effect.Effect<ObjectMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
+  }): Effect.Effect<EntityMeta | null, SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.lookupByObjectId(query);
+  }
+
+  queryObjectIds(query: {
+    spaceIds: readonly SpaceId[];
+    objectIds: readonly EntityMeta['objectId'][];
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryObjectIds(query);
   }
 
   update(
@@ -260,7 +267,7 @@ export class IndexEngine {
    * Update a dependent index that requires recordId enrichment.
    * This method:
    * 1. Gets changed objects from the source.
-   * 2. Ensures those objects exist in ObjectMetaIndex.
+   * 2. Ensures those objects exist in EntityMetaIndex.
    * 3. Looks up recordIds for those objects.
    * 4. Enriches objects with recordIds.
    * 5. Updates the dependent index.
@@ -278,22 +285,26 @@ export class IndexEngine {
     return Effect.gen(this, function* () {
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
 
+      // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
+      // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
+      // TransactionConnection context. If those reads ran inside withTransaction, they would
+      // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
+      const cursors = yield* this.#tracker.queryCursors({
+        indexName: opts.indexName,
+        sourceName: source.sourceName,
+        // Pass undefined to get all cursors when spaceId is null.
+        spaceId: opts.spaceId ?? undefined,
+      });
+      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, { limit: opts.limit });
+
+      if (objects.length === 0) {
+        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+      }
+
+      // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {
-          const cursors = yield* this.#tracker.queryCursors({
-            indexName: opts.indexName,
-            sourceName: source.sourceName,
-            // Pass undefined to get all cursors when spaceId is null.
-            spaceId: opts.spaceId ?? undefined,
-          });
-          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, {
-            limit: opts.limit,
-          });
-          if (objects.length === 0) {
-            return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
-          }
-
-          // Ensure objects exist in ObjectMetaIndex.
+          // Ensure objects exist in EntityMetaIndex.
           yield* this.#objectMetaIndex.update(objects);
 
           // Look up recordIds for the objects.

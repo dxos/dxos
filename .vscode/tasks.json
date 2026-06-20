@@ -93,6 +93,21 @@
       }
     },
     {
+      "label": "serve composer-app (local edge)",
+      "type": "shell",
+      "command": "lsof -ti:5173 | xargs kill -9 2>/dev/null; lsof -i:5173 && DX_EDGE_BASE_URL=http://localhost:8787 moon r composer-app:serve --port 5173 --strictPort",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
       "label": "build and test all packages",
       "type": "shell",
       "command": "moon run :build :test --concurrency 12",

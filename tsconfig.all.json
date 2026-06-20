@@ -22,6 +22,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "packages/common/av/tsconfig.json"
+    },
+    {
       "path": "packages/common/codec-protobuf/tsconfig.json"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "packages/common/effect-atom-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/common/effect-proto/tsconfig.json"
     },
     {
       "path": "packages/common/effect-zod/tsconfig.json"
@@ -64,6 +70,9 @@
       "path": "packages/common/hypercore/tsconfig.json"
     },
     {
+      "path": "packages/common/i18n/tsconfig.json"
+    },
+    {
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
@@ -83,6 +92,9 @@
     },
     {
       "path": "packages/common/log-store-idb/tsconfig.json"
+    },
+    {
+      "path": "packages/common/markdown/tsconfig.json"
     },
     {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
@@ -151,6 +163,9 @@
       "path": "packages/core/compute/assistant-e2e/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/assistant-evals/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/assistant-toolkit/tsconfig.json"
     },
     {
@@ -161,6 +176,9 @@
     },
     {
       "path": "packages/core/compute/conductor/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/extractor/tsconfig.json"
     },
     {
       "path": "packages/core/compute/functions/tsconfig.json"
@@ -187,16 +205,16 @@
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-atom/tsconfig.json"
+      "path": "packages/core/echo/echo-client/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-db/tsconfig.json"
+      "path": "packages/core/echo/echo-client-e2e/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-generator/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-pipeline/tsconfig.json"
+      "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"
@@ -206,9 +224,6 @@
     },
     {
       "path": "packages/core/echo/echo-react/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/echo-registry/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
@@ -245,6 +260,9 @@
     },
     {
       "path": "packages/core/mesh/teleport/tsconfig.json"
+    },
+    {
+      "path": "packages/core/mesh/teleport-e2e/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/teleport-extension-automerge-replicator/tsconfig.json"
@@ -295,9 +313,6 @@
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
-      "path": "packages/experimental/script-toolbox/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -313,6 +328,9 @@
       "path": "packages/plugins/plugin-board/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-bookmarks/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
@@ -323,6 +341,12 @@
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-comments/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
@@ -346,13 +370,16 @@
       "path": "packages/plugins/plugin-doctor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-duffel/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-files/tsconfig.json"
+      "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
@@ -415,6 +442,12 @@
       "path": "packages/plugins/plugin-observability/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-onboarding/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-osrm/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
@@ -434,6 +467,9 @@
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-sandbox/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-script/tsconfig.json"
@@ -508,6 +544,12 @@
       "path": "packages/plugins/plugin-trello/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-trip/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-video/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {
@@ -542,6 +584,9 @@
     },
     {
       "path": "packages/sdk/client/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/client-e2e/tsconfig.json"
     },
     {
       "path": "packages/sdk/client-protocol/tsconfig.json"
@@ -580,6 +625,9 @@
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-inbox/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-ui/tsconfig.json"
     },
     {
@@ -610,6 +658,9 @@
       "path": "packages/ui/react-ui-attention/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-audio/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-board/tsconfig.json"
     },
     {
@@ -635,6 +686,9 @@
     },
     {
       "path": "packages/ui/react-ui-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-experimental/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-form/tsconfig.json"
@@ -679,9 +733,6 @@
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-sfx/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-stack/tsconfig.json"
     },
     {
@@ -692,9 +743,6 @@
     },
     {
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"

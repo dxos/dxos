@@ -54,9 +54,12 @@ const parseToolText = (result: { content: Array<{ type: string; text?: string }>
 describe('introspect-mcp server', () => {
   let env: Connected;
 
+  // Bump the hook timeout: under CI load `createIntrospector({ cache: false })`
+  // + `introspector.ready` (which indexes the fixture monorepo) can take more
+  // than the default 10s, leading to spurious hook timeouts.
   beforeAll(async () => {
     env = await connect();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await env.close();

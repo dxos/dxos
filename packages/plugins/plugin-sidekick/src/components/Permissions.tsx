@@ -23,7 +23,7 @@ export type PermissionsProps = {
 };
 
 export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (entries.length === 0) {
     return null;

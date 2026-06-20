@@ -14,11 +14,12 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
+import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ObjectId } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
+import * as StorageService from './StorageService';
 import * as Trace from './Trace';
 
 //
@@ -80,8 +81,10 @@ export interface Callbacks<I, O, R> {
 
 /**
  * Services that are always available to all processes.
+ * Provided unconditionally by the runtime, so handlers may use them without declaring them
+ * in {@link MakeProcessOpts.services}.
  */
-export type BaseServices = Trace.TraceService;
+export type BaseServices = Trace.TraceService | StorageService.StorageService;
 
 export type ChildEvent<T> =
   | {
@@ -138,9 +141,15 @@ export interface Params {
   readonly name: string | null;
 
   /**
-   * Target object that this process is assigned to.
+   * URI of the target this process is assigned to.
    */
-  readonly target: ObjectId | null;
+  readonly target: URI.URI | null;
+
+  /**
+   * User-facing notifications requested for this process's lifecycle phases.
+   * Surfaced on {@link Info} so a notification tracker can subscribe to the process monitor.
+   */
+  readonly notify?: Operation.NotifyOptions;
 }
 
 //
@@ -238,13 +247,23 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   };
 };
 
+/**
+ * Durable marker recording that an operation's input handler has begun executing.
+ * Persisted before the handler runs so that, after an interruption (suspend/restart), a
+ * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
+ * when the process reaches a terminal state (the runtime clears the process's storage).
+ */
+const OperationStartedKey = StorageService.key(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
+  StorageService.withDefault(() => false),
+);
+
 export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,
 ): Process<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
   make(
     {
-      key: op.meta.key,
+      key: DXN.getName(op.meta.key),
       input: op.input,
       output: op.output,
       services: op.services,
@@ -252,15 +271,31 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     (ctx) =>
       Effect.gen(function* () {
         const semaphore = yield* Effect.makeSemaphore(1);
+        // The process runtime assumes handlers are idempotent and always re-delivers an input
+        // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
+        // a re-delivery that observes the durable "started" marker fails instead of repeating
+        // side effects. Idempotent operations skip the marker and are simply re-run.
+        const idempotent = Operation.isIdempotent(op);
 
         return {
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
+              if (!idempotent) {
+                const started = yield* OperationStartedKey.get;
+                if (started) {
+                  return yield* Effect.die(
+                    new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
+                  );
+                }
+                yield* OperationStartedKey.set(true);
+              }
+
               // Emit operation start event.
               log('operation process invoking', { key: op.meta.key, name: op.meta.name });
               yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
               });
               // Emit ephemeral operation input event for live subscribers
               // (history tracker, devtools) without persisting raw input.
@@ -293,6 +328,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
                 outcome: 'success',
               });
             }).pipe(
@@ -303,6 +339,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
+                    icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
                   });

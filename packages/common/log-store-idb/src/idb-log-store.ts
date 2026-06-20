@@ -24,15 +24,26 @@ const DEFAULT_FLUSH_BATCH_SIZE = 500;
 const DEFAULT_MAX_RECORDS = 150_000;
 const DEFAULT_EVICTION_INTERVAL = 30_000;
 const EVICTION_LOCK_NAME = '@dxos/log-store-idb:evictor';
+// v2 introduced chunked rows with out-of-line array keys (v1 stored one row per line
+// under an autoincrement keyPath).
+const DB_VERSION = 2;
 
 /**
- * Stored log row. The line is pre-encoded JSONL (no trailing newline).
+ * Chunk key: `[epochMs, writerId, writerSeq, lineCount]`.
+ *
+ * Keys order chunks by flush time; `writerId`/`writerSeq` keep keys from concurrent
+ * writers unique. `lineCount` rides in the key so eviction can compute the retention
+ * budget from `getAllKeys()` alone, without deserializing chunk values.
  */
-type LogRow = {
-  /** Auto-incremented sequence (commit order). */
-  seq?: number;
-  /** Encoded JSONL line. */
-  line: string;
+type ChunkKey = [epochMs: number, writerId: string, writerSeq: number, lineCount: number];
+
+/**
+ * Stored row: one flush batch of pre-encoded JSONL lines joined with `\n` (no trailing
+ * newline). Storing the whole batch as a single record keeps the per-flush cost at one
+ * structured clone and one backend record regardless of batch size.
+ */
+type LogChunk = {
+  lines: string;
 };
 
 export type IdbLogStoreOptions = {
@@ -45,9 +56,10 @@ export type IdbLogStoreOptions = {
   /** Auto-flush when in-memory queue reaches this size. Default `500`. */
   flushBatchSize?: number;
   /**
-   * Soft cap on retained records. Older rows are evicted past this. Default `150_000`,
-   * sized for roughly 50 MB on disk at typical JSONL line sizes (~350 bytes average
-   * observed in the Composer app).
+   * Soft cap on retained log records (JSONL lines). Eviction drops whole flush chunks,
+   * oldest first; the newest chunk is always retained. Default `150_000`, sized for
+   * roughly 50 MB on disk at typical JSONL line sizes (~350 bytes average observed in
+   * the Composer app).
    */
   maxRecords?: number;
   /** Eviction sweep interval in milliseconds. Default `30_000`. */
@@ -67,13 +79,14 @@ export type IdbLogStoreOptions = {
 /**
  * IndexedDB-backed log store.
  *
- * Logs are batched in memory and flushed to IndexedDB as pre-encoded JSONL strings.
- * Multiple browsing contexts can write to the same database concurrently — IDB
- * serializes transactions, so no extra coordination is needed for writes.
- * Eviction is deduplicated across tabs via the Web Locks API (`ifAvailable`).
+ * Logs are batched in memory and each flush is written as a single chunk record of
+ * pre-encoded JSONL. Multiple browsing contexts can write to the same database
+ * concurrently — IDB serializes transactions, so no extra coordination is needed for
+ * writes. Eviction is deduplicated across tabs via the Web Locks API (`ifAvailable`).
  *
  * Flushes are triggered by:
- * - the configured interval timer,
+ * - a deferred task after `flushInterval` (background priority where the Scheduler API
+ *   is available, so flushes don't compete with input handling and rendering),
  * - the queue exceeding `flushBatchSize`,
  * - `visibilitychange` to `hidden` and `pagehide` events.
  */
@@ -86,9 +99,12 @@ export class IdbLogStore {
   readonly #evictionInterval: number;
   readonly #tabId: string;
   readonly #filters: LogFilter[];
+  /** Distinguishes chunk keys written by concurrent contexts against the same database. */
+  readonly #writerId = Math.random().toString(36).slice(2);
 
   #queue: string[] = [];
-  #flushTimer: ReturnType<typeof setTimeout> | undefined;
+  #writerSeq = 0;
+  #flushTask: ScheduledTask | undefined;
   #evictionTimer: ReturnType<typeof setInterval> | undefined;
   #pendingFlush: Promise<void> | undefined;
   #db: IDBDatabase | undefined;
@@ -129,9 +145,9 @@ export class IdbLogStore {
 
     if (this.#queue.length >= this.#flushBatchSize) {
       void this.flush();
-    } else if (this.#flushTimer === undefined) {
-      this.#flushTimer = setTimeout(() => {
-        this.#flushTimer = undefined;
+    } else if (this.#flushTask === undefined) {
+      this.#flushTask = scheduleBackgroundTask(() => {
+        this.#flushTask = undefined;
         void this.flush();
       }, this.#flushInterval);
     }
@@ -142,9 +158,9 @@ export class IdbLogStore {
    * Concurrent calls share a single in-flight flush.
    */
   async flush(): Promise<void> {
-    if (this.#flushTimer !== undefined) {
-      clearTimeout(this.#flushTimer);
-      this.#flushTimer = undefined;
+    if (this.#flushTask !== undefined) {
+      this.#flushTask.cancel();
+      this.#flushTask = undefined;
     }
     if (this.#pendingFlush) {
       return this.#pendingFlush;
@@ -171,11 +187,13 @@ export class IdbLogStore {
   async export(options: { maxSize?: number } = {}): Promise<string> {
     await this.flush();
     const db = await this.#open();
-    const lines = await readAllLines(db, this.#storeName);
+    const chunks = await readAllChunks(db, this.#storeName);
     if (options.maxSize !== undefined && options.maxSize >= 0) {
+      // Trim on individual lines so the size cap never under-fills by a whole chunk.
+      const lines = chunks.flatMap((chunk) => chunk.split('\n'));
       return trimJsonlToSize(lines, options.maxSize);
     }
-    return lines.join('\n');
+    return chunks.join('\n');
   }
 
   /**
@@ -183,9 +201,9 @@ export class IdbLogStore {
    */
   async clear(): Promise<void> {
     this.#queue = [];
-    if (this.#flushTimer !== undefined) {
-      clearTimeout(this.#flushTimer);
-      this.#flushTimer = undefined;
+    if (this.#flushTask !== undefined) {
+      this.#flushTask.cancel();
+      this.#flushTask = undefined;
     }
     const db = await this.#open();
     await runTransaction(db, this.#storeName, 'readwrite', (store) => {
@@ -244,11 +262,10 @@ export class IdbLogStore {
     }
 
     try {
+      const chunk: LogChunk = { lines: batch.join('\n') };
+      const key: ChunkKey = [Date.now(), this.#writerId, this.#writerSeq++, batch.length];
       await runTransaction(db, this.#storeName, 'readwrite', (store) => {
-        for (const line of batch) {
-          const row: LogRow = { line };
-          store.add(row);
-        }
+        store.add(chunk, key);
       });
     } catch {
       // Ignore write errors.
@@ -315,14 +332,12 @@ export class IdbLogStore {
       return;
     }
 
-    const count = await runTransaction(db, this.#storeName, 'readonly', (store) => promisifyRequest(store.count()));
-    if (count <= this.#maxRecords) {
-      return;
-    }
-
-    const toDelete = count - this.#maxRecords;
     await runTransaction(db, this.#storeName, 'readwrite', async (store) => {
-      const cutoff = await findCutoffKey(store, toDelete);
+      // Keys carry per-chunk line counts, so the retention budget is computed from
+      // getAllKeys() alone — no count() pre-pass and no chunk values are read.
+      // Cast: IDB types keys as IDBValidKey[]; this store only ever receives ChunkKey keys.
+      const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
+      const cutoff = findEvictionCutoff(keys, this.#maxRecords);
       if (cutoff !== undefined) {
         store.delete(IDBKeyRange.upperBound(cutoff));
       }
@@ -362,12 +377,16 @@ export class IdbLogStore {
 
 const openDatabase = (name: string, storeName: string): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(name, 1);
+    const request = indexedDB.open(name, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
-      if (!db.objectStoreNames.contains(storeName)) {
-        db.createObjectStore(storeName, { keyPath: 'seq', autoIncrement: true });
+      // The v1 schema stored one row per line under an autoincrement keyPath; chunked
+      // storage requires out-of-line keys, so the store is recreated and v1 data is
+      // discarded (logs are expendable diagnostics).
+      if (db.objectStoreNames.contains(storeName)) {
+        db.deleteObjectStore(storeName);
       }
+      db.createObjectStore(storeName);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -439,37 +458,54 @@ const runTransaction = <T>(
   });
 };
 
-const readAllLines = async (db: IDBDatabase, storeName: string): Promise<string[]> => {
+const readAllChunks = async (db: IDBDatabase, storeName: string): Promise<string[]> => {
   return runTransaction(db, storeName, 'readonly', (store) =>
-    promisifyRequest(store.getAll()).then((rows) => (rows as LogRow[]).map((row) => row.line)),
+    promisifyRequest(store.getAll()).then((rows) => (rows as LogChunk[]).map((row) => row.lines)),
   );
 };
 
 /**
- * Walk the store in key order and return the key of the `count`-th entry.
- * Returns `undefined` if the store has fewer than `count` entries.
+ * Given all chunk keys in ascending (key) order, return the key of the newest chunk that
+ * must be evicted — delete it and everything older — so the retained line total stays
+ * within `maxRecords`. The newest chunk is always retained, even if it alone exceeds the
+ * budget. Returns `undefined` when everything fits.
  */
-const findCutoffKey = (store: IDBObjectStore, count: number): Promise<IDBValidKey | undefined> => {
-  return new Promise((resolve, reject) => {
-    if (count <= 0) {
-      resolve(undefined);
-      return;
+const findEvictionCutoff = (keys: readonly ChunkKey[], maxRecords: number): ChunkKey | undefined => {
+  let retained = 0;
+  for (let index = keys.length - 1; index >= 0; index--) {
+    const [, , , lineCount] = keys[index];
+    retained += lineCount;
+    if (retained > maxRecords && index < keys.length - 1) {
+      return keys[index];
     }
-    const request = store.openKeyCursor();
-    let advanced = false;
-    request.onsuccess = () => {
-      const cursor = request.result;
-      if (!cursor) {
-        resolve(undefined);
-        return;
-      }
-      if (!advanced && count > 1) {
-        advanced = true;
-        cursor.advance(count - 1);
-        return;
-      }
-      resolve(cursor.key);
-    };
-    request.onerror = () => reject(request.error);
-  });
+  }
+  return undefined;
+};
+
+type ScheduledTask = { cancel: () => void };
+
+type SchedulerLike = {
+  postTask: (
+    callback: () => void,
+    options?: { priority?: 'background' | 'user-visible' | 'user-blocking'; delay?: number; signal?: AbortSignal },
+  ) => Promise<unknown>;
+};
+
+/**
+ * Run `callback` after `delay` ms at background priority where the Scheduler API is
+ * available, so deferred work yields to input handling and rendering; falls back to a
+ * plain timeout elsewhere.
+ */
+const scheduleBackgroundTask = (callback: () => void, delay: number): ScheduledTask => {
+  // The Scheduler API is not in the TS DOM lib yet.
+  const scheduler = (globalThis as { scheduler?: SchedulerLike }).scheduler;
+  if (typeof scheduler?.postTask === 'function') {
+    const controller = new AbortController();
+    scheduler.postTask(callback, { priority: 'background', delay, signal: controller.signal }).catch(() => {
+      // Rejects on abort; the callback never ran.
+    });
+    return { cancel: () => controller.abort() };
+  }
+  const timer = setTimeout(callback, delay);
+  return { cancel: () => clearTimeout(timer) };
 };

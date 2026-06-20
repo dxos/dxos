@@ -10,12 +10,12 @@ import { meta } from '#meta';
 
 export const TriggerTemplate = Schema.Union(
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
-  Schema.Struct({ type: Schema.Literal('queue'), queueDXN: Schema.Any }),
+  Schema.Struct({ type: Schema.Literal('feed'), feed: Schema.Any }),
 );
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${meta.id}.action.create-trigger-from-template`,
+    `${meta.profile.key}.action.create-trigger-from-template`,
     {
       input: Schema.Struct({
         db: Database.Database,

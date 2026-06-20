@@ -6,6 +6,7 @@ import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -26,12 +27,12 @@ export const StackSection = ({
   id,
   view,
   object,
-  metadata: { icon = 'ph--placeholder--regular' },
+  metadata: { icon = 'ph--circle-dashed--regular' },
 }: StackSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-  const attendableId = `${parentAttendableId}/${object.id}`;
+  const attendableId = Paths.getCollectionObjectPath(parentAttendableId, object.id);
   const attentionAttrs = useAttentionAttributes(attendableId);
   const stackItem = useMemo(() => ({ id }), [id]);
   const data = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);

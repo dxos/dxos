@@ -4,10 +4,12 @@
 
 import React, { type ReactElement, useCallback, useRef } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities, type FileInfo } from '@dxos/app-toolkit';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { FileOperation } from '@dxos/plugin-file/types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { File } from '@dxos/types';
 
 export type UseFileUploadOptions = {
   /** ECHO subject whose containing database receives the upload. */
@@ -16,17 +18,17 @@ export type UseFileUploadOptions = {
   accept?: string;
   /** Allow selecting multiple files. */
   multiple?: boolean;
-  /** Called once per uploaded file with the resulting `FileInfo`. */
-  onUpload: (info: FileInfo & { url: string }, file: File) => void | Promise<void>;
+  /** Called once per uploaded file with the resulting `File.File` ECHO object. */
+  onUpload: (uploaded: File.File, source: globalThis.File) => void | Promise<void>;
 };
 
 export type UseFileUploadResult = {
   /** Programmatically open the OS file picker. No-op when `enabled` is false. */
   open: () => void;
   /**
-   * `true` when a `FileUploader` capability is registered and the subject is
-   * attached to a database. Use this to disable upload affordances (toolbar
-   * buttons, drop targets) until the upload path is ready.
+   * `true` when the operation invoker is available and the subject is attached
+   * to a database. Use this to disable upload affordances (toolbar buttons,
+   * drop targets) until the upload path is ready.
    */
   enabled: boolean;
   /**
@@ -39,27 +41,23 @@ export type UseFileUploadResult = {
 /**
  * Reusable file-upload hook for plugin containers.
  *
- * Wraps the `AppCapabilities.FileUploader` capability and a hidden `<input type="file">`
- * so a container can offer "Add file" affordances without inlining the picker boilerplate.
- *
- * @example
- * const { open, enabled, input } = useFileUpload({
- *   subject: gallery,
- *   accept: 'image/*',
- *   onUpload: (info) => Obj.update(gallery, (obj) => { ... }),
- * });
- * // render: {input}
- * // wire: <Toolbar.IconButton disabled={!enabled} onClick={open} />
+ * Invokes `FileOperation.Create` (which dispatches to whichever
+ * `FileCapabilities.Backend` is active) and adds the resulting `File.File`
+ * object to the subject's space. The `onUpload` callback receives the new
+ * ECHO object so the caller can build a `Ref` to it.
  */
 export const useFileUpload = ({ subject, accept, multiple, onUpload }: UseFileUploadOptions): UseFileUploadResult => {
-  const [uploader] = useCapabilities(AppCapabilities.FileUploader);
+  const { invokePromise } = useOperationInvoker();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const enabled = !!uploader && !!Obj.getDatabase(subject);
+  const enabled = !!invokePromise && !!Obj.getDatabase(subject);
 
   const open = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
     inputRef.current?.click();
-  }, []);
+  }, [enabled]);
 
   const handleChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,22 +71,26 @@ export const useFileUpload = ({ subject, accept, multiple, onUpload }: UseFileUp
       event.target.value = '';
 
       const db = Obj.getDatabase(subject);
-      if (!uploader || !db) {
+      if (!invokePromise || !db) {
         return;
       }
-      for (const file of files) {
+
+      for (const source of files) {
         try {
-          const info = await uploader(db, file);
-          if (info?.url) {
-            await onUpload({ ...info, url: info.url } as FileInfo & { url: string }, file);
+          const created = await invokePromise(FileOperation.Create, { file: source, db });
+          const fileObj = created.data?.object;
+          if (!fileObj) {
+            continue;
           }
+          const added = await invokePromise(SpaceOperation.AddObject, { target: db, object: fileObj });
+          await onUpload((added.data?.object ?? fileObj) as File.File, source);
         } catch (err) {
           // TODO(burdon): Surface to caller via an `onError` option once a UX for upload errors is decided.
-          log.warn('file upload failed', { file: file.name, err });
+          log.warn('file upload failed', { file: source.name, err });
         }
       }
     },
-    [uploader, subject, onUpload],
+    [invokePromise, subject, onUpload],
   );
 
   const input = (

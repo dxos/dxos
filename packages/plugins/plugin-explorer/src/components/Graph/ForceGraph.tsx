@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type GraphController,
   GraphForceProjector,
@@ -16,7 +17,7 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
-import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
+import { getHashStyles } from '@dxos/ui-theme';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] }>({ nodes: [], edges: [] });

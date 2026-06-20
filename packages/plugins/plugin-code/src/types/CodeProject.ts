@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 import { meta } from '../meta';
 import * as SourceFile from './SourceFile';
@@ -17,18 +17,12 @@ export const CodeProject = Schema.Struct({
   spec: Ref.Ref(Spec.Spec),
   files: Schema.optional(Schema.Array(Ref.Ref(SourceFile.SourceFile))),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.codeProject',
-    version: '0.1.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--app-window--regular',
-    hue: meta.iconHue,
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--app-window--regular', hue: meta.profile.icon?.hue }),
+  Type.makeObject(DXN.make('org.dxos.type.codeProject', '0.1.0')),
 );
 
-export interface CodeProject extends Schema.Schema.Type<typeof CodeProject> {}
+export type CodeProject = Type.InstanceType<typeof CodeProject>;
 
 export const make = ({ name, spec, files = [] }: { name?: string; spec: Spec.Spec; files?: SourceFile.SourceFile[] }) =>
   Obj.make(CodeProject, {

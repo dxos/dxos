@@ -10,8 +10,9 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { trim } from '@dxos/util';
 
 import { TranscriptOperation } from '../types';
@@ -48,7 +49,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-sonnet-4-0'),
+          AiService.model('ai.claude.model.claude-sonnet-4-6'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
@@ -58,7 +59,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          registryLayerNoop,
         ),
       ),
     ),

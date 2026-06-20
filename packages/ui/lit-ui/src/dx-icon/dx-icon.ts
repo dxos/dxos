@@ -26,7 +26,7 @@ export class DxIcon extends LitElement {
   size: Size = 4;
 
   @property({ type: String })
-  icon: string = 'ph--placeholder--regular';
+  icon: string = 'ph--circle-dashed--regular';
 
   // Retained for backwards compatibility with consumers that set it; no longer used.
   @property({ type: Boolean })

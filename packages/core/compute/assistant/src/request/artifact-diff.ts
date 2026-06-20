@@ -4,8 +4,8 @@
 
 import * as Context from 'effect/Context';
 
-import { type ObjectVersion } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/keys';
+import { type ObjectVersion } from '@dxos/echo-client';
+import { type EntityId } from '@dxos/keys';
 
 /**
  * Resolves artifact ids to their versions.
@@ -25,12 +25,12 @@ export namespace ArtifactDiffResolver {
   export type Service = {
     resolve: (
       artifacts: {
-        id: ObjectId;
+        id: EntityId;
         lastVersion: ObjectVersion;
       }[],
     ) => Promise<
       Map<
-        ObjectId,
+        EntityId,
         {
           version: ObjectVersion;
           diff?: string;

@@ -9,10 +9,10 @@ import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, slottable } from '@dxos/react-ui';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
-import { composable, composableProps, slottable } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -112,7 +112,7 @@ PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
 
 export const PipelineToolbar = composable<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
   return (

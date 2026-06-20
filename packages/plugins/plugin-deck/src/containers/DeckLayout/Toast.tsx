@@ -2,17 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { type LayoutOperation } from '@dxos/app-toolkit';
-import {
-  Button,
-  Icon,
-  Toast as NaturalToast,
-  type ToastRootProps,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Toast as NaturalToast, type ToastRootProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -25,37 +18,34 @@ export const Toast = ({
   duration,
   actionLabel,
   actionAlt,
-  closeLabel,
   onAction,
   onOpenChange,
 }: LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
+
+  // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
+  // unmounting abruptly. Both the close button and Radix's own timeout/swipe route through here.
+  const [open, setOpen] = useState(true);
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
 
   return (
-    <NaturalToast.Root data-testid={id} defaultOpen duration={duration} onOpenChange={onOpenChange}>
-      <NaturalToast.Body>
-        <NaturalToast.Title classNames='items-center'>
-          {icon && <Icon icon={icon} classNames='inline mr-1' />}
-          {title && <span>{toLocalizedString(title, t)}</span>}
-        </NaturalToast.Title>
-        {description && (
-          <NaturalToast.Description>{description && toLocalizedString(description, t)}</NaturalToast.Description>
-        )}
-      </NaturalToast.Body>
-      <NaturalToast.Actions>
-        {onAction && actionAlt && actionLabel && (
+    <NaturalToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
+      <NaturalToast.Title icon={icon} onClose={() => handleOpenChange(false)}>
+        {title && <span>{toLocalizedString(title, t)}</span>}
+      </NaturalToast.Title>
+      {description && <NaturalToast.Description>{toLocalizedString(description, t)}</NaturalToast.Description>}
+      {onAction && actionAlt && actionLabel && (
+        <NaturalToast.Actions>
           <NaturalToast.Action altText={toLocalizedString(actionAlt, t)} asChild>
             <Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
               {toLocalizedString(actionLabel, t)}
             </Button>
           </NaturalToast.Action>
-        )}
-        {closeLabel && (
-          <NaturalToast.Close asChild>
-            <Button data-testid='toast.close'>{toLocalizedString(closeLabel, t)}</Button>
-          </NaturalToast.Close>
-        )}
-      </NaturalToast.Actions>
+        </NaturalToast.Actions>
+      )}
     </NaturalToast.Root>
   );
 };

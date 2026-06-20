@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-bluesky",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "DXOS plugin that integrates Bluesky / atproto as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -51,6 +51,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -65,7 +66,9 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -73,12 +76,15 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-feed": "workspace:*",
     "@dxos/plugin-integration": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -86,6 +92,13 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

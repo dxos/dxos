@@ -13,13 +13,13 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 
 import { EditMessage } from '#components';
 
-import { type EditMessageProps } from '../../components/EditMessage/EditMessage';
+import { type EditMessageProps } from '../../components';
 import { email } from '../../extensions';
 import { GmailFunctions } from '../../operations/google/gmail';
 import { stripQuotedMessage } from '../../util';
@@ -44,7 +44,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('@anthropic/claude-haiku-4-5').pipe(
+            AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),
@@ -62,7 +62,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
       }
 
       await runtime.runPromise(
-        Operation.invoke(GmailFunctions.Send, { message }).pipe(
+        Operation.invoke(GmailFunctions.Send, { message }, { spaceId }).pipe(
           Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
         ),
       );
@@ -72,6 +72,9 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
 
   return (
     <Panel.Root role={role} className='dx-document'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <EditMessage message={subject} extensions={extensions} onSend={handleSend} />
       </Panel.Content>

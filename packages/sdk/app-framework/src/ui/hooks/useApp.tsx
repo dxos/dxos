@@ -9,7 +9,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
@@ -59,18 +59,12 @@ export type StartupProgress = {
   humanizedName?: string;
 };
 
-export type PlaceholderProps = {
-  stage?: number;
-  progress?: StartupProgress;
-};
-
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
   onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
   pluginRegistryProvider?: PluginManager.ManagerOptions['pluginRegistryProvider'];
   plugins?: Plugin.Plugin[];
-  core?: string[];
   defaults?: string[];
   /**
    * Additional activation events to fire before startup.
@@ -82,7 +76,6 @@ export type UseAppOptions = {
   debounce?: number;
   timeout?: number;
   fallback?: FC<FallbackProps>;
-  placeholder?: FC<PlaceholderProps>;
 };
 
 /**
@@ -91,10 +84,9 @@ export type UseAppOptions = {
  *
  * @example
  * const plugins = [LayoutPlugin(), MyPlugin()];
- * const core = [LayoutPluginId];
- * const default = [MyPluginId];
- * const fallback = <div>Initializing Plugins...</div>;
- * const App = useApp({ plugins, core, default, fallback });
+ * const defaults = [MyPluginId];
+ * const fallback = () => <div>Initializing Plugins...</div>;
+ * const App = useApp({ plugins, defaults, fallback });
  * createRoot(document.getElementById('root')!).render(
  *   <StrictMode>
  *     <App />
@@ -102,13 +94,11 @@ export type UseAppOptions = {
  * );
  *
  * @param params.pluginLoader A function which loads new plugins.
- * @param params.plugins All plugins available to the application.
- * @param params.core Core plugins which will always be enabled.
+ * @param params.plugins All plugins available to the application. Plugins whose `meta.profile.tags` includes `'system'` are treated as core (force-enabled, not user-toggleable).
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
  * @param params.fallback Fallback component to render if an error occurs during startup.
- * @param params.placeholder Placeholder component to render during startup.
  */
 export const useApp = ({
   pluginManager,
@@ -116,10 +106,8 @@ export const useApp = ({
   onPluginRemove,
   pluginRegistryProvider,
   plugins: pluginsProp,
-  core: coreProp,
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
-  placeholder,
   fallback = ErrorFallback,
   cacheEnabled = false,
   safeMode = false,
@@ -127,7 +115,6 @@ export const useApp = ({
   timeout = 30_000,
 }: UseAppOptions) => {
   const plugins = useDefaultValue(pluginsProp, () => []);
-  const core = useDefaultValue(coreProp, () => plugins.map(({ meta }) => meta.id));
   const defaults = useDefaultValue(defaultsProp, () => []);
   const setupEvents = useDefaultValue(setupEventsProp, () => []);
 
@@ -136,7 +123,7 @@ export const useApp = ({
       pluginLoaderProp ??
       ((id: string) =>
         Effect.sync(() => {
-          const plugin = plugins.find((plugin) => plugin.meta.id === id);
+          const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
           invariant(plugin, `Plugin not found: ${id}`);
           return { plugin };
         })),
@@ -165,14 +152,13 @@ export const useApp = ({
       PluginManager.make({
         pluginLoader,
         plugins,
-        core,
         enabled,
         onRemove: onPluginRemove,
         pluginRegistryProvider,
       });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove, pluginRegistryProvider]);
+  }, [pluginManager, pluginLoader, plugins, enabled, onPluginRemove, pluginRegistryProvider]);
 
   useEffect(() => {
     if (!cacheEnabled) {
@@ -217,7 +203,7 @@ export const useApp = ({
               // the `!module` guard the listener would mark the app ready on
               // the *first* such module rather than waiting for the event-level
               // completion — leaving downstream capabilities (operation-invoker,
-              // app-graph, …) un-registered when the placeholder dismisses.
+              // app-graph, …) un-registered when the boot loader dismisses.
               if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
                 clearTimeout(timeoutId);
                 setReady(true);
@@ -235,7 +221,7 @@ export const useApp = ({
               }
               // `activating` is the start-of-load signal. Surface the raw
               // `module` (or `event`) plus a pre-humanized label so the
-              // host placeholder can decide what to render — show
+              // boot loader can decide how to render each transition — show
               // everything, suppress noisy sub-modules, group by plugin,
               // or apply its own formatting. We intentionally do NOT touch
               // these fields on `activated`: pairing the two would cause
@@ -313,7 +299,7 @@ export const useApp = ({
           activeModules: manager.getActive(),
           pendingReset: manager.getPendingReset(),
         });
-        void runAndForwardErrors(Fiber.interrupt(fiber));
+        void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
         setError(new Error(`Startup timed out after ${timeout}ms`));
       }
     }, timeout);
@@ -321,9 +307,9 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
-      void runAndForwardErrors(Fiber.interrupt(fiber));
+      void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
-        void runAndForwardErrors(manager.shutdown());
+        void EffectEx.runAndForwardErrors(manager.shutdown());
       }
     };
   }, [manager]);
@@ -337,19 +323,13 @@ export const useApp = ({
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
-              <App
-                placeholder={placeholder}
-                ready={ready}
-                error={error}
-                debounce={debounce}
-                progress={progressRef.current}
-              />
+              <App ready={ready} error={error} debounce={debounce} progress={progressRef.current} />
             </RegistryContext.Provider>
           </ContextProtocolProvider>
         </PluginManagerProvider>
       </ErrorBoundary>
     ),
-    [fallback, manager, placeholder, ready, error],
+    [fallback, manager, ready, error],
   );
 };
 

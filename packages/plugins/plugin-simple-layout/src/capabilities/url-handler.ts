@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -32,7 +32,7 @@ export default Capability.makeModule(
           handlers.map((handler) => handler(url)),
           { concurrency: 'unbounded' },
         );
-      }).pipe(Effect.provideService(Capability.Service, capabilities), runAndForwardErrors);
+      }).pipe(Effect.provideService(Capability.Service, capabilities), EffectEx.runAndForwardErrors);
 
     /**
      * Handle navigation from a URL.
@@ -48,8 +48,8 @@ export default Capability.makeModule(
         pathname = '/';
       }
 
-      const qualifiedId = fromUrlPath(pathname);
-      const workspace = getWorkspaceFromPath(qualifiedId);
+      const qualifiedId = Paths.fromUrlPath(pathname);
+      const workspace = Paths.getWorkspaceFromPath(qualifiedId);
 
       void invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
 
@@ -108,7 +108,7 @@ export default Capability.makeModule(
           lastWorkspace = workspace;
           lastActive = active;
 
-          const path = active ? toUrlPath(active) : toUrlPath(workspace);
+          const path = active ? Paths.toUrlPath(active) : Paths.toUrlPath(workspace);
           if (window.location.pathname !== path) {
             history.pushState(null, '', `${path}${window.location.search}`);
           }

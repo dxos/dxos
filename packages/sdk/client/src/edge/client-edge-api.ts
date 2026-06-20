@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
-import { type QueryContext, QueryResultImpl } from '@dxos/echo-db';
+import { type QueryContext, QueryResultImpl } from '@dxos/echo-client';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -144,9 +144,11 @@ const getTargetSpacesForQuery = (query: QueryAST.Query): string[] => {
 
   const visitor = (node: QueryAST.Query) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
-      if (node.from.scope.spaceIds) {
-        for (const spaceId of node.from.scope.spaceIds) {
-          spaces.add(spaceId);
+      for (const scope of node.from.scopes) {
+        // A space scope without `spaceId` targets the owning space; it adds no
+        // explicit space restriction.
+        if (scope._tag === 'space' && scope.spaceId !== undefined) {
+          spaces.add(scope.spaceId);
         }
       }
     }

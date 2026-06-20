@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-crm",
-  "version": "0.8.3",
+  "version": "0.9.0",
+  "private": true,
   "description": "CRM plugin for Composer. Provides a blueprint for researching people and organizations and producing structured Profile documents.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,6 +49,11 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
     },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -61,6 +67,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -75,7 +82,9 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -83,26 +92,30 @@
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/schema": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "react": "catalog:"
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@effect/vitest": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

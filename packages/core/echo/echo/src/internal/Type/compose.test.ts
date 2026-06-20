@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { FieldPath } from '../Annotation';
 import { EchoObjectSchema } from '../Entity';
 import { FormatAnnotation, TypeFormat } from '../Format';
@@ -16,7 +18,7 @@ describe('schema composition', () => {
     const BaseType = Schema.Struct({
       name: Schema.String,
       email: Schema.String,
-    }).pipe(EchoObjectSchema({ typename: 'com.example.person', version: '0.1.0' }));
+    }).pipe(EchoObjectSchema(DXN.make('com.example.person', '0.1.0')));
 
     const OverlaySchema = Schema.Struct({
       email: Schema.String.pipe(FieldPath('$.email'), FormatAnnotation.set(TypeFormat.Email)),

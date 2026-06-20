@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-support",
-  "version": "0.8.3",
+  "version": "0.9.0",
+  "private": true,
   "description": "In-app support assistant plugin for Composer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -70,6 +71,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -89,40 +91,48 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/brand": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "date-fns": "catalog:",
     "effect": "catalog:",
+    "html-to-image": "catalog:",
     "react-joyride": "catalog:"
   },
   "devDependencies": {
@@ -145,8 +155,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

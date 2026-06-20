@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Mutable, type ObjectMeta } from '@dxos/echo/internal';
+import { type Mutable, type EntityMeta } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 
 // TODO: use URL scheme for source?
@@ -17,7 +17,7 @@ const isSecure = (protocol: string) => {
 /**
  * NOTE: functionId is backend ID, not ECHO object id.
  */
-export const getUserFunctionIdInMetadata = (meta: ObjectMeta) => {
+export const getUserFunctionIdInMetadata = (meta: EntityMeta) => {
   return meta.keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
 };
 
@@ -25,7 +25,7 @@ export const getUserFunctionIdInMetadata = (meta: ObjectMeta) => {
  * NOTE: functionId is backend ID, not ECHO object id.
  * Must be called within an Obj.update callback to get mutable meta.
  */
-export const setUserFunctionIdInMetadata = (meta: Mutable<ObjectMeta>, functionId: string) => {
+export const setUserFunctionIdInMetadata = (meta: Mutable<EntityMeta>, functionId: string) => {
   const key = meta.keys.find((key) => key.source === FUNCTIONS_META_KEY);
   if (key) {
     if (key.id !== functionId) {

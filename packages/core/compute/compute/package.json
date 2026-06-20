@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Umbrella package for AI-aware DXOS compute primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./AgentService": {
+      "source": "./src/AgentService.ts",
+      "types": "./dist/types/src/AgentService.d.ts",
+      "default": "./dist/lib/neutral/AgentService.mjs"
     },
     "./StorageService": {
       "source": "./src/StorageService.ts",
@@ -37,6 +42,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -44,9 +50,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/vendor-kbn-handlebars": "workspace:*",
-    "@effect-atom/atom": "catalog:"
+    "@effect-atom/atom": "catalog:",
+    "@effect/platform": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

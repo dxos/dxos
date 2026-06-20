@@ -44,9 +44,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
-        component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
+        component: ({ data }) => <PipelineProperties subject={data.subject} />,
       }),
     ]),
   ),

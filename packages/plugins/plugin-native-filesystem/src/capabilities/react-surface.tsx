@@ -13,13 +13,13 @@ import { WorkspaceSettingsContainer } from '#containers';
 import { useActiveFilesystemWorkspace } from '#hooks';
 import { meta } from '#meta';
 
-const GENERAL_TYPE = `${meta.id}.general`;
+const GENERAL_TYPE = `${meta.profile.key}.general`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'workspace-settings',
+        id: 'workspaceSettings',
         filter: AppSurface.literal(AppSurface.Article, GENERAL_TYPE),
         component: () => {
           const workspace = useActiveFilesystemWorkspace();

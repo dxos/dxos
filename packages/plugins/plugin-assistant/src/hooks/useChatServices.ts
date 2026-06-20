@@ -4,7 +4,7 @@
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { type Key } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 
@@ -21,7 +21,7 @@ export type UseChatServicesProps = {
  */
 export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
-  id ??= getPersonalSpace(client)?.id;
+  id ??= AppSpace.getPersonalSpace(client)?.id;
 
   const runtime = useCapability(Capabilities.ProcessManagerRuntime);
   return id ? runtime : undefined;

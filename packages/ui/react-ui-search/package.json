@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-search",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Search-domain components: SearchList, SearchPanel, SearchResult, fuzzy filter hook. Composes the Picker primitive from @dxos/react-ui-list.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,6 +36,7 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

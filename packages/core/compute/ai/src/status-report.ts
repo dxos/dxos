@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { DXN, Annotation, Type } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 
 /**
  * AI agents self-reporting their current status.
@@ -14,17 +14,12 @@ import { ObjectId } from '@dxos/keys';
  * LLMs are prompted to emit <status>Brewing tea</status> tokens during their execution to notify the client of their current status.
  */
 export const AgentStatus = Schema.Struct({
-  parentMessage: Schema.optional(ObjectId),
+  parentMessage: Schema.optional(EntityId),
   toolCallId: Schema.optional(Schema.String),
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the status was sent.' }),
     Annotation.GeneratorAnnotation.set('date.iso8601'),
   ),
   message: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.agentStatus',
-    version: '0.1.0',
-  }),
-);
-export interface AgentStatus extends Schema.Schema.Type<typeof AgentStatus> {}
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.agentStatus', '0.1.0')));
+export type AgentStatus = Type.InstanceType<typeof AgentStatus>;

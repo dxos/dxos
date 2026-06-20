@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-chess",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Chess for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -71,6 +71,12 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -85,39 +91,36 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@automerge/automerge": "catalog:",
-    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "chess.js": "catalog:",

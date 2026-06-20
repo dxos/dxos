@@ -9,8 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
@@ -125,9 +125,9 @@ export const findChannelForConversation: (
   conversationId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForConversation')(
   function* (conversationId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Channel.Channel, [{ source: SLACK_SOURCE, id: conversationId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );
@@ -247,10 +247,9 @@ const TARGET_CONCURRENCY = 3;
  * Failure on one target writes `lastError` on that target only and continues
  * with the next; targets are processed in parallel up to `TARGET_CONCURRENCY`.
  *
- * `Database.Service` and `Feed.FeedService` are provided inside the handler.
- * The integration's `target` ref carries the database; the space (and its
- * `queues`, used to build `Feed.FeedService`) is resolved via the Client
- * capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
+ * `Database.Service` is provided inside the handler.
+ * The integration's `target` ref carries the database; the space db is resolved
+ * via the Client capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
  */
 const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = SlackOperation.SyncSlackChannel.pipe(
   Operation.withHandler(
@@ -265,9 +264,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = channelRef
-        ? `${integrationId}.${channelRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        ? `${integrationId}.${EID.getEntityId(EID.tryParse(channelRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -280,7 +279,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           const allConversations = yield* SlackApi.fetchConversations();
           const conversationsById = new Map(allConversations.map((c) => [c.id, c]));
 
-          const channelFilterId = channelRef?.dxn.asEchoDXN()?.echoId;
+          const channelFilterId = channelRef ? EID.getEntityId(EID.tryParse(channelRef.uri)!) : undefined;
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
             channel: Channel.Channel;
@@ -313,7 +312,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               });
             }
 
-            const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
+            const targetEchoId = EID.getEntityId(EID.tryParse(Ref.make(localObj).uri)!);
             if (channelFilterId && targetEchoId !== channelFilterId) {
               continue;
             }
@@ -350,7 +349,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                       return { added: 0 };
                     }
 
-                    const feed = yield* Database.load(targetChannel.feed);
+                    yield* Database.load(targetChannel.backend.config);
+                    const feed = Channel.getFeed(targetChannel);
+                    invariant(feed, 'Channel is not feed-backed');
                     yield* Feed.append(feed, mapped);
 
                     const newestTs = sorted[sorted.length - 1].ts;
@@ -419,7 +420,6 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           return { pulled };
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.provide(createFeedServiceLayer(space.queues)),
           Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration)),
         ),
       );
@@ -427,9 +427,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       if (outcome._tag === 'Right') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-success.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
             icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.id }],
+            title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
         return outcome.right;
@@ -437,9 +437,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
         const message = formatSlackSyncFailure(outcome.left);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-error.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
             icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.id }],
+            title: ['sync-toast.error.label', { ns: meta.profile.key }],
             description: message,
           }),
         );

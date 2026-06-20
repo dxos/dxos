@@ -17,7 +17,7 @@ const DEFAULT_DEV_PLUGIN_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manif
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: RegistrySettingsSchema,
       defaultValue: () => ({ devPluginUrl: DEFAULT_DEV_PLUGIN_URL }),
     });
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contributes(RegistryCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.id,
+        prefix: meta.profile.key,
         schema: RegistrySettingsSchema,
         atom: settingsAtom,
       }),

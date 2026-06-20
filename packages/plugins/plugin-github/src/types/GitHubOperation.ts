@@ -7,12 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, DXN } from '@dxos/echo';
 import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const GITHUB_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Discovery only — list GitHub repositories the integration's token can see.
@@ -25,9 +25,10 @@ const GITHUB_OPERATION = `${meta.id}.operation`;
  */
 export const GetGitHubRepositories = Operation.make({
   meta: {
-    key: `${GITHUB_OPERATION}.get-github-repositories`,
+    key: makeKey('getGithubRepositories'),
     name: 'Get GitHub Repositories',
     description: 'List GitHub repositories reachable from an integration without materializing local objects.',
+    icon: 'ph--github-logo--regular',
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
@@ -57,9 +58,10 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
-    key: `${GITHUB_OPERATION}.sync-github-repositories`,
+    key: makeKey('syncGithubRepositories'),
     name: 'Sync GitHub Repositories',
     description: 'Reconcile selected GitHub repos plus their owning orgs, members, issues, PRs, and comments.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

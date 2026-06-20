@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, JsonSchema, Obj, Ref, Type, Format } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 import * as Blueprint from './Blueprint';
-import * as Template from './Template';
 
 /**
  * Prompt-based operation.
@@ -24,28 +24,22 @@ export const Routine = Schema.Struct({
   output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
     description: 'Output schema',
   }),
-  // TODO(burdon): Form editor.
-  instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
-    description: 'Agent instructions',
-  }),
+  instructions: Ref.Ref(Text.Text).pipe(
+    Annotation.FormInputAnnotation.set(false),
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
+  ),
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
-  // TODO(burdon): Change to map?
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.routine',
-    version: '0.1.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--scroll--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.routine', '0.1.0')),
 );
 
-export interface Routine extends Schema.Schema.Type<typeof Routine> {}
+export type Routine = Type.InstanceType<typeof Routine>;
 
-export type MakeOptions = {
+export type MakeProps = {
   name?: string;
   description?: string;
   input?: Schema.Schema.AnyNoContext;
@@ -63,13 +57,13 @@ export const make = ({
   instructions,
   blueprints = [],
   context = [],
-}: MakeOptions): Routine =>
+}: MakeProps): Routine =>
   Obj.make(Routine, {
     name,
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
-    instructions: Template.make({ source: instructions }),
+    instructions: Ref.make(Text.make({ content: instructions ?? '' })),
     blueprints,
     context,
   });

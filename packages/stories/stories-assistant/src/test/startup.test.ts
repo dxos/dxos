@@ -87,7 +87,7 @@ describe('ClientPlugin startup', () => {
     const plugins: Plugin.Plugin[] = [GraphPlugin(), ProcessManagerPlugin(), clientPlugin];
 
     const pluginLoader = Effect.fn(function* (id: string) {
-      const plugin = plugins.find((plugin) => plugin.meta.id === id);
+      const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
       invariant(plugin, `Plugin not found: ${id}`);
       return { plugin };
     });
@@ -95,7 +95,7 @@ describe('ClientPlugin startup', () => {
     const manager = PluginManager.make({
       pluginLoader,
       plugins,
-      core: plugins.map(({ meta }) => meta.id),
+      enabled: plugins.map(({ meta }) => meta.profile.key),
     });
     mark('PluginManager.make', phaseStart);
 

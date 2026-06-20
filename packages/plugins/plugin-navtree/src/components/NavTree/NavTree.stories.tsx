@@ -31,19 +31,15 @@ random.seed(1234);
 
 const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
 
-// TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
-// TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
-
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
-// TODO(burdon): Factor out PlankHeader.
 const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   console.log('hasAttention', hasAttention);
   return (
     <div className='flex p-1 items-center border-b border-separator'>
       <IconButton
-        density='coarse'
+        density='lg'
         icon='ph--circle--regular'
         label='Test'
         iconOnly
@@ -165,8 +161,10 @@ export const Default: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
-    // Find the element with treegrid role and click on its parent
-    const treegridElement = await canvas.findByRole('treegrid');
+    // Plugin startup is async; the treegrid only appears after the Startup event
+    // fires and the graph is built. Use a generous timeout so slower CI runners
+    // don't race the default 1 s limit.
+    const treegridElement = await canvas.findByRole('treegrid', {}, { timeout: 10000 });
     const treegridParent = treegridElement.parentElement;
     if (treegridParent) {
       await userEvent.click(treegridParent);

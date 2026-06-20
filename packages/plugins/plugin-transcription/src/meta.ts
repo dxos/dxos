@@ -2,19 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.transcription',
-  name: 'Transcription',
-  description: trim`
-    Real-time voice-to-text transcription service for capturing spoken content.
-    Convert audio input into searchable text that integrates seamlessly with notes and documents.
-  `,
-  icon: 'ph--microphone--regular',
-  iconHue: 'sky',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transcription',
-  tags: ['labs'],
-  screenshots: [],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

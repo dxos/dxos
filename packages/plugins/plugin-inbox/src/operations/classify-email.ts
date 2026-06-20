@@ -10,28 +10,29 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Trace, Operation } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '../types';
+import { InboxOperation, Mailbox } from '../types';
 import { renderMarkdown } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
-        if (message['@type'] !== Type.getDXN(Message.Message)!.toString()) {
+        if (message['@type'] !== Type.getURI(Message.Message)) {
           log.info('not a message object, skipping classification', { message });
           return;
         }
 
         log.info('classify message', { message });
 
-        const tags = yield* Database.runQuery(Filter.type(Tag.Tag));
+        const tags = yield* Database.query(Filter.type(Tag.Tag)).run;
         log.info('tags', { count: tags.length });
 
         if (tags.length === 0) {
@@ -76,18 +77,29 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           return yield* Effect.fail(new Error(`Tag not found: ${selectedTagLabel}`));
         }
 
-        log.info('selected tag', { tagId: Obj.getDXN(selectedTag).toString(), tagLabel: selectedTag.label });
+        log.info('selected tag', { tagId: Obj.getURI(selectedTag), tagLabel: selectedTag.label });
 
-        const messageDXN = DXN.parse(message['@dxn']);
-        const queueDXNInfo = messageDXN.asQueueDXN();
-        log.info('queueDXNInfo', queueDXNInfo);
-
-        if (!queueDXNInfo) {
-          return yield* Effect.fail(new Error('Message is not in a feed'));
+        // Find the feed by querying for mailboxes in the database.
+        // Message identifiers are ECHO-kind (echo://spaceId/itemId) and no longer embed the
+        // queue/feed ID, so we locate the feed via the mailbox object.
+        const messageEchoId = EID.tryParse((message as any)['@uri']);
+        if (!messageEchoId) {
+          return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }
 
-        const feedDXN = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
-        const feed = yield* Database.load(Ref.fromDXN(feedDXN));
+        const mailboxes = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
+        if (mailboxes.length === 0) {
+          return yield* Effect.fail(new Error('No mailbox found in database'));
+        }
+
+        // Use the first mailbox whose feed exists.
+        const mailbox = mailboxes.find((mb) => mb.feed?.target != null);
+        if (!mailbox) {
+          return yield* Effect.fail(new Error('No mailbox with a feed found'));
+        }
+
+        const feed = mailbox.feed!.target as Feed.Feed;
+        log.info('found feed via mailbox', { mailboxId: mailbox.id, feedDxn: Feed.getQueueUri(feed)?.toString() });
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,
@@ -95,31 +107,29 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
             ...message,
             id: message.id,
           }),
-          completedAt: new Date().toISOString(),
         });
 
         yield* Feed.append(feed, [relation]);
         yield* Database.flush();
 
         return {
-          tagId: Obj.getDXN(selectedTag).toString(),
+          tagId: Obj.getURI(selectedTag),
           tagLabel: selectedTag.label,
         };
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-haiku-4-5'),
+          AiService.model('ai.claude.model.claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
           Database.notAvailable,
-          Feed.notAvailable,
           Layer.succeed(Operation.Service, {
             invoke: () => Effect.die('Not available.'),
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          registryLayerNoop,
         ),
       ),
     ),

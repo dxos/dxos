@@ -14,9 +14,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { scheduleTask } from '@dxos/async';
+import { SpeakingMonitor } from '@dxos/av';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { SpeakingMonitor } from '@dxos/plugin-calls';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -104,7 +104,7 @@ export const useStoryAppendSegments = (
 //
 
 export type UseStoryTranscriberOptions = Pick<
-  TranscriptionCapabilities.GetTranscriberProps,
+  TranscriptionCapabilities.TranscriberProviderProps,
   'transcriberConfig' | 'recorderConfig' | 'onSegments'
 > & {
   audioStreamTrack?: MediaStreamTrack;
@@ -226,6 +226,7 @@ const enableQueryIndexes = (services: { QueryService?: any }) =>
           { kind: IndexKind.Kind.SCHEMA_MATCH },
           { kind: IndexKind.Kind.GRAPH },
           { kind: IndexKind.Kind.VECTOR },
+          { kind: IndexKind.Kind.FULL_TEXT },
         ],
       }),
     );

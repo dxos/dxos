@@ -17,6 +17,7 @@ import * as Stream from 'effect/Stream';
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { type Event } from '@dxos/types';
@@ -40,7 +41,7 @@ type BaseSyncProps<T = unknown> = {
 
 const findIntegrationTargetIdx = (integration: Integration.Integration, calendar: Calendar.Calendar): number =>
   integration.targets?.findIndex((target) => {
-    if (target.object?.dxn?.asEchoDXN()?.echoId === calendar.id) {
+    if (target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === calendar.id) {
       return true;
     }
     const fkId = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE)?.id;
@@ -85,9 +86,9 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
  */
 const findOrCreateCalendar = (remoteId: string, name: string) =>
   Effect.gen(function* () {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Calendar.Calendar, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
-    );
+    ).run;
     if (existing.length > 0) {
       const candidate = existing[0];
       // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.
@@ -199,10 +200,10 @@ export default InboxOperation.GoogleCalendarSync.pipe(
         const integrationObj = yield* Database.load(integrationRef);
         const calendars: Calendar.Calendar[] = [];
         if (calendarRef) {
-          log('syncing google calendar', { calendar: calendarRef.dxn.toString(), ...defaults });
+          log('syncing google calendar', { calendar: calendarRef.uri, ...defaults });
           calendars.push(yield* Database.load(calendarRef));
         } else {
-          log('syncing all calendar targets on integration', { integration: integrationRef.dxn.toString() });
+          log('syncing all calendar targets on integration', { integration: integrationRef.uri });
           for (const target of integrationObj.targets ?? []) {
             const cal = target.object?.target;
             if (Calendar.instanceOf(cal)) {

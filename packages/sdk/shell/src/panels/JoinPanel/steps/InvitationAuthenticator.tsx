@@ -70,7 +70,7 @@ export const InvitationAuthenticator = ({
             <Input.PinInput
               {...{
                 disabled,
-                density: 'coarse',
+                density: 'lg',
                 length: pinLength,
                 inputMode: 'numeric',
                 autoComplete: 'off',

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-mosaic",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Modular UI components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -81,7 +81,6 @@
     "bind-event-listener": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

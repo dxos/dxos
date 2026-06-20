@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Script } from '@dxos/compute';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -17,45 +17,31 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'space-settings-automation',
+        id: 'spaceSettingsAutomation',
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'automations',
-              type: `${meta.id}.space-settings-automation`,
-              label: ['automation-panel.label', { ns: meta.id }],
+              type: `${meta.profile.key}.space-settings-automation`,
+              label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               iconHue: 'indigo',
-              position: 'fallback',
+              position: Position.last,
             }),
           ]),
       }),
       GraphBuilder.createExtension({
-        id: 'space-settings-functions',
-        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        id: 'automationCompanion',
+        match: NodeMatcher.whenEchoObjectMatches,
         connector: () =>
-          Effect.succeed([
-            AppNode.makeSettingsPanel({
-              id: 'functions',
-              type: `${meta.id}.space-settings-functions`,
-              label: ['functions-panel.label', { ns: meta.id }],
-              icon: 'ph--function--regular',
-              iconHue: 'indigo',
-              position: 'fallback',
-            }),
-          ]),
-      }),
-      GraphBuilder.createTypeExtension({
-        id: 'script-companion',
-        type: Script.Script,
-        connector: (script) =>
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('automation'),
-              label: ['script-automation.label', { ns: meta.id }],
+              label: ['automation-companion.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
+              position: Position.last,
             }),
           ]),
       }),

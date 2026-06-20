@@ -22,21 +22,11 @@ export type PluginConfig = {
   isStrict?: boolean;
 };
 
-export const getCore = (): string[] => [
-  AutomationPlugin.meta.id,
-  ClientPlugin.meta.id,
-  ObservabilityPlugin.meta.id,
-  ProcessManagerPlugin.meta.id,
-  RegistryPlugin.meta.id,
-  SpacePlugin.meta.id,
-  IntegrationPlugin.meta.id,
-];
-
 export const getDefaults = (): string[] => [
-  ChessPlugin.meta.id,
-  SamplePlugin.meta.id,
-  InboxPlugin.meta.id,
-  MarkdownPlugin.meta.id,
+  ChessPlugin.meta.profile.key,
+  SamplePlugin.meta.profile.key,
+  InboxPlugin.meta.profile.key,
+  MarkdownPlugin.meta.profile.key,
 ];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {

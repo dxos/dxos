@@ -1,0 +1,97 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "dx.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-crx"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
+    }
+  ]
+}

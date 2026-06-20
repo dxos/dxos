@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
-import { createEditorStateStore } from '@dxos/ui-editor';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { meta } from '#meta';
 import { MarkdownCapabilities } from '#types';
+
+import { createEditorViewStateStore } from './editor-view-state';
 
 const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => {
   const views = new Map<string, MarkdownCapabilities.EditorViewEntry>();
@@ -28,13 +30,15 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}.state`,
+      key: `${meta.profile.key}.state`,
       schema: MarkdownCapabilities.StateSchema,
       defaultValue: () => ({ viewMode: {} }),
     });
 
-    // TODO(wittjosiah): Fold into state.
-    const editorState = createEditorStateStore(`${meta.id}.editor`);
+    // Resolve ViewStateManager contributed by plugin-attention (guaranteed available because this
+    // module activates only after AttentionEvents.AttentionReady fires — see MarkdownPlugin.tsx).
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const editorState = createEditorViewStateStore(viewState);
 
     const editorViews = createEditorViewRegistry();
 

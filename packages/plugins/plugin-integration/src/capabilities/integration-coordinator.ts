@@ -6,13 +6,13 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -27,7 +27,6 @@ import {
   pendingIntegrationStorageKey,
 } from '../constants';
 import { IntegrationProviderNotFoundError, SpaceUnavailableError } from '../errors';
-import { IntegrationOperation } from '../types';
 import { Integration } from '../types';
 
 /** Pending integration awaiting an OAuth callback. */
@@ -95,14 +94,6 @@ const openProviderFormDialog = (
     },
   });
 
-const dispatchAccessTokenCreated = (
-  invoker: Operation.OperationService,
-  accessToken: AccessToken.AccessToken,
-): Effect.Effect<void, never> =>
-  invoker
-    .invoke(IntegrationOperation.AccessTokenCreated, { accessToken })
-    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('AccessTokenCreated dispatch failed', { error }))));
-
 const runOnTokenCreated = (
   provider: IntegrationProviderEntry,
   input: {
@@ -132,7 +123,7 @@ const navigateToNewIntegration = (
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(LayoutOperation.Open, {
-      subject: [integrationDeckSubject(getSpacePath(db.spaceId), integrationId)],
+      subject: [integrationDeckSubject(Paths.getSpacePath(db.spaceId), integrationId)],
       navigation: 'immediate',
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new integration failed', { error }))));
@@ -167,8 +158,6 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
     const persistedIntegration = db.add(integration);
     Obj.setParent(persistedToken, persistedIntegration);
 
-    yield* dispatchAccessTokenCreated(invoker, persistedToken);
-
     yield* runOnTokenCreated(provider, {
       accessToken: persistedToken,
       integration: persistedIntegration,
@@ -177,7 +166,9 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
 
     yield* Effect.all(
       [
-        navigateToNewIntegration(invoker, db, persistedIntegration.id),
+        // Skip navigation when the flow began from a pre-existing target (e.g. a
+        // Mailbox): the user is already on that surface and expects to stay there.
+        existingTarget ? Effect.void : navigateToNewIntegration(invoker, db, persistedIntegration.id),
         provider.getSyncTargets
           ? openSyncTargetsDialogAfterIntegrationCreated(
               invoker,
@@ -232,7 +223,7 @@ type PendingSnapshot = {
   tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
   integrationSnapshot: { name: string; providerId: string };
   /** Serialized DXN of the existing target to attach the first new selection to. */
-  existingTargetDXN?: string;
+  existingTargetDxn?: string;
 };
 
 const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
@@ -313,6 +304,7 @@ export default Capability.makeModule(
         if (!entry) {
           return;
         }
+        deletePendingSnapshot(decoded.accessTokenId);
         Obj.update(entry.token, (token) => {
           token.token = decoded.accessToken;
         });
@@ -320,7 +312,7 @@ export default Capability.makeModule(
       });
 
     const handleMessage = (event: MessageEvent): void => {
-      void runAndForwardErrors(handleOAuthPostMessage(event));
+      void EffectEx.runAndForwardErrors(handleOAuthPostMessage(event));
     };
 
     window.addEventListener('message', handleMessage);
@@ -377,16 +369,16 @@ export default Capability.makeModule(
 
         pending.set(token.id, { token, integration, db, provider, existingTarget });
 
-        if (oauth.useRedirectFlow) {
-          // Persist a snapshot so the new tab can finalize without sharing memory.
-          writePendingSnapshot(token.id, {
-            spaceId,
-            providerId: provider.id,
-            tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
-            integrationSnapshot: { name: label, providerId: provider.id },
-            ...(existingTarget ? { existingTargetDXN: existingTarget.dxn.toString() } : {}),
-          });
-        }
+        // Written for all providers: if window.opener is lost during auth, Edge
+        // redirects the popup to /redirect/oauth and this snapshot is the only
+        // recovery path.
+        writePendingSnapshot(token.id, {
+          spaceId,
+          providerId: provider.id,
+          tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
+          integrationSnapshot: { name: label, providerId: provider.id },
+          ...(existingTarget ? { existingTargetDxn: existingTarget.uri } : {}),
+        });
 
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
@@ -395,9 +387,7 @@ export default Capability.makeModule(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(token.id);
-              if (oauth.useRedirectFlow) {
-                deletePendingSnapshot(token.id);
-              }
+              deletePendingSnapshot(token.id);
             }),
           ),
         );
@@ -465,8 +455,8 @@ export default Capability.makeModule(
           targets: [],
         });
 
-        const existingTarget = snapshot.existingTargetDXN
-          ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDXN))
+        const existingTarget = snapshot.existingTargetDxn
+          ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
         yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });

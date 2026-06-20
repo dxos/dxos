@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Collection, Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
@@ -46,7 +48,7 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
   const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
@@ -62,7 +64,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = space.properties[Collection.Collection.typename]?.target?.objects[0]?.target;
+  const target = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+    ?.target?.objects[0]?.target;
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
@@ -77,7 +80,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             type: Invitation.Type.INTERACTIVE,
             authMethod: Invitation.AuthMethod.SHARED_SECRET,
             multiUse: false,
-            target: target && Obj.getDXN(target).toString(),
+            target: target && Obj.getURI(target),
           });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
@@ -97,7 +100,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             type: Invitation.Type.DELEGATED,
             authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
             multiUse: true,
-            target: target && Obj.getDXN(target).toString(),
+            target: target && Obj.getURI(target),
           });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
@@ -207,7 +210,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
           <QR

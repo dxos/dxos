@@ -19,6 +19,8 @@ import {
 import { meta } from '#meta';
 import { Integration } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const IntegrationPlugin = Plugin.define(meta).pipe(
@@ -43,6 +45,9 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
     activate: OAuthRedirect,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

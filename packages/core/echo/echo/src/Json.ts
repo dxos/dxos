@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import * as Database from './Database';
 import * as Obj from './Obj';
@@ -30,7 +30,7 @@ const isEncodedRef = (value: unknown): value is { '/': string } =>
 const toJson = (obj: Obj.Any): unknown => (typeof (obj as any).toJSON === 'function' ? (obj as any).toJSON() : obj);
 
 /**
- * Returns a {@link JsonReplacer} that inlines ECHO ref objects (`{ "/": "dxn:echo:..." }`) up to
+ * Returns a {@link JsonReplacer} that inlines ECHO ref objects (`{ "/": "echo:..." }`) up to
  * `depth` ref hops. Beyond that depth refs are left in their encoded form.
  *
  * Implemented as a per-call `JSON.stringify` replacer (not a one-shot tree walk at root) so it
@@ -64,21 +64,22 @@ export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): 
       // an unparseable string would otherwise crash the whole `JSON.stringify`.
       // Treat any parse miss as "leave as-is" rather than propagating.
       const dxnString = value['/'];
-      if (!dxnString.startsWith('dxn:')) {
+      if (!dxnString.startsWith('dxn:') && !dxnString.startsWith('echo:')) {
         return value;
       }
 
-      let echoId: string | undefined;
+      let echoUri: string | undefined;
       try {
-        echoId = DXN.parse(dxnString).asEchoDXN()?.echoId;
+        const parsed = EID.tryParse(dxnString);
+        echoUri = parsed ? EID.getEntityId(parsed) : undefined;
       } catch {
         return value;
       }
 
-      if (!echoId) {
+      if (!echoUri) {
         return value;
       }
-      const target = db.getObjectById(echoId);
+      const target = db.getObjectById(echoUri);
       if (!target) {
         return value;
       }

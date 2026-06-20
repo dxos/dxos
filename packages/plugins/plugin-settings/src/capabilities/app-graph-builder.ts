@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -31,7 +31,7 @@ export default Capability.makeModule(
               id: 'root',
               data: () => Operation.invoke(SettingsOperation.Open, {}),
               properties: {
-                label: ['plugin-settings.label', { ns: meta.id }],
+                label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
                 disposition: 'menu',
                 keyBinding: {
@@ -49,12 +49,12 @@ export default Capability.makeModule(
           Effect.succeed([
             Node.make({
               id: SETTINGS_ID,
-              type: meta.id,
+              type: meta.profile.key,
               properties: {
-                label: ['plugin-settings.label', { ns: meta.id }],
+                label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
                 disposition: 'pin-end',
-                position: 'hoist',
+                position: Position.first,
                 testId: 'treeView.appSettings',
               },
             }),
@@ -62,7 +62,7 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
-        match: NodeMatcher.whenId(getSpacePath(SETTINGS_ID)),
+        match: NodeMatcher.whenId(Paths.getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
@@ -70,7 +70,7 @@ export default Capability.makeModule(
             manager
               .getPlugins()
               .map((plugin: Plugin$.Plugin): [Plugin$.Meta, AppCapabilities.Settings] | null => {
-                const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
+                const settings = allSettings.find((s) => s.prefix === plugin.meta.profile.key);
                 if (!settings) {
                   return null;
                 }
@@ -78,15 +78,20 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
-              .sort(([a], [b]) => (a.name ?? a.id).localeCompare(b.name ?? b.id, undefined, { sensitivity: 'base' }))
+              .sort(([a], [b]) =>
+                (a.profile.name ?? a.profile.key).localeCompare(b.profile.name ?? b.profile.key, undefined, {
+                  sensitivity: 'base',
+                }),
+              )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
                 Node.make({
-                  id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+                  id: `${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,
                   properties: {
-                    label: meta.name ?? meta.id,
-                    icon: meta.icon ?? 'ph--circle--regular',
+                    label: meta.profile.name ?? meta.profile.key,
+                    icon: meta.profile.icon?.key ?? 'ph--circle--regular',
+                    iconHue: meta.profile.icon?.hue,
                   },
                 }),
               ),

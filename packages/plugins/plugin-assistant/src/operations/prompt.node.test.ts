@@ -9,8 +9,8 @@ import { describe, test } from 'vitest';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
-import { ObjectId } from '@dxos/keys';
+import { EffectEx } from '@dxos/effect';
+import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -20,7 +20,7 @@ import { Message } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {
   // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).
@@ -33,7 +33,9 @@ describe('Agent prompt (composer plugin harness)', () => {
         plugins: [ClientPlugin({}), AssistantPlugin(), AutomationPlugin()],
       });
 
-      const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+      const { personalSpace } = await EffectEx.runAndForwardErrors(
+        initializeIdentity(harness.get(ClientCapabilities.Client)),
+      );
 
       await harness.runPromise(
         Effect.gen(function* () {
@@ -70,9 +72,7 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
           expect(result).toBe('ack');
-        }).pipe(
-          Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService)),
-        ),
+        }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
         { timeout: 30_000 },
       );
     },

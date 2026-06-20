@@ -10,11 +10,17 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Dream } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const ZenPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addSchemaModule({ schema: [Dream.Dream] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 

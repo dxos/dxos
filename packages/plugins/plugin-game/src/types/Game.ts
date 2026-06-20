@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * A player in a game.
@@ -29,7 +29,7 @@ export const Player = Schema.Struct({
   ),
 });
 
-export interface Player extends Schema.Schema.Type<typeof Player> {}
+export type Player = Schema.Schema.Type<typeof Player>;
 
 /**
  * Base Game object. Variant-specific state lives in a separate referenced object.
@@ -45,27 +45,21 @@ export const Game = Schema.Struct({
     .annotations({ description: 'Reference to variant-specific state object.' })
     .pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.game',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--sword--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
   // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
   // the static `ph--sword--regular` above while the variant ref is still loading.
   Annotation.IconFromRefAnnotation.set('variant'),
+  Type.makeObject(DXN.make('org.dxos.type.game', '0.1.0')),
 );
 
-export interface Game extends Schema.Schema.Type<typeof Game> {}
+export type Game = Type.InstanceType<typeof Game>;
 
 /**
  * Variant-narrowed reference to a Game.
  *
- * Encodes — at the type level — that the variant ref points to a specific state schema.
- * Runtime narrowing is performed by `loadGame(ref, variantSchema)` which validates and
+ * Encodes — at the type level — that the variant ref points to a specific state type.
+ * Runtime narrowing is performed by `loadGame(ref, variantType)` which validates and
  * returns the resolved Game together with its typed variant state.
  *
  * @example
@@ -80,8 +74,8 @@ export interface Game extends Schema.Schema.Type<typeof Game> {}
  */
 export type GameRef<_V> = Ref.Ref<Game>;
 
-export const GameRef = <S extends Schema.Schema.AnyNoContext>(_variantSchema: S) =>
-  Ref.Ref(Game) as Schema.Schema<GameRef<Schema.Schema.Type<S>>, any, never>;
+export const GameRef = <S extends Type.AnyObj>(_variantType: S) =>
+  Ref.Ref(Game) as Schema.Schema<GameRef<Type.InstanceType<S>>, any, never>;
 
 /**
  * Build a base `Game` object referencing the given variant-state ECHO object.

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 /**
@@ -38,22 +39,23 @@ export const syncObjects: (
         if (!ref.target) {
           continue;
         }
-        if (Obj.getDXN(ref.target).isLocalObjectId()) {
+        const targetUri = EID.tryParse(Obj.getURI(ref.target));
+        if (targetUri && EID.isLocal(targetUri)) {
           // obj not persisted to db.
           const [target] = yield* syncObjects([ref.target], { foreignKeyId });
           (obj as any)[key] = Ref.make(target);
         }
       }
 
-      const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
+      const type = Obj.getType(obj) ?? failedInvariant('No type.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
-      const [existing] = yield* Database.runQuery(
-        Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
-      );
+      const [existing] = yield* Database.query(
+        Query.select(Filter.foreignKeys(type, [{ source: foreignKeyId, id: foreignId }])),
+      ).run;
       log('sync object', {
         type: Obj.getTypename(obj),
         foreignId,
-        existing: existing ? Obj.getDXN(existing) : undefined,
+        existing: existing ? Obj.getURI(existing) : undefined,
       });
       if (!existing) {
         yield* Database.add(obj);

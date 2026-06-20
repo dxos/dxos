@@ -10,6 +10,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SpotlightEvents } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const SpotlightPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -28,6 +31,9 @@ export const SpotlightPlugin = Plugin.define(meta).pipe(
     id: Capability.getModuleTag(ReactRoot),
     activatesOn: ActivationEvents.Startup,
     activate: ReactRoot,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

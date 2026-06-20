@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
@@ -32,7 +32,7 @@ export type PromptEditorProps = {
  * CodeMirror instance ourselves.
  */
 export const PromptEditor = ({ id, text, placeholder }: PromptEditorProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () =>

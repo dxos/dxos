@@ -4,16 +4,14 @@
 
 import React, { Fragment } from 'react';
 
-import { Keyboard } from '@dxos/keyboard';
+import { keySymbols, Keyboard } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { Key } from './Key';
-
 export const ShortcutsList = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const bindings = Keyboard.singleton.getBindings();
 
   // TODO(burdon): Get shortcuts from TextEditor.
@@ -32,5 +30,20 @@ export const ShortcutsList = () => {
         </Fragment>
       ))}
     </dl>
+  );
+};
+
+export const Key = ({ binding }: { binding: string }) => {
+  return (
+    <span role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
+      {keySymbols(binding).map((c, i) => (
+        <span
+          key={i}
+          className='flex w-[24px] h-[24px] justify-center items-center rounded-sm bg-input-surface text-base-fg'
+        >
+          {c}
+        </span>
+      ))}
+    </span>
   );
 };

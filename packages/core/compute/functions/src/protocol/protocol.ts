@@ -5,38 +5,31 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
-  Blueprint,
   FunctionError,
+  Header,
   InvalidOperationInputError,
   InvalidOperationOutputError,
   Operation,
-  OperationRegistry,
   Trace,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
-import { createFeedServiceLayer, EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { EchoClient, type DatabaseImpl, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import {
-  configuredCredentialsLayer,
-  credentialsLayerFromDatabase,
-  FunctionInvocationService,
-  QueueService,
-} from '../services';
+import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
@@ -49,12 +42,6 @@ export interface FunctionWrappingOptions {
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
-
-  /**
-   * Blueprint registry to expose as `Blueprint.RegistryService` inside handler Effects.
-   * Required for operations that declare `Blueprint.RegistryService` in their `services` list.
-   */
-  blueprintRegistry?: Blueprint.Registry;
 }
 
 /**
@@ -81,9 +68,7 @@ export const wrapFunctionHandler = (
     },
     handler: async ({ data, context }) => {
       if (
-        (serviceTags.includes(Database.Service.key) ||
-          serviceTags.includes(QueueService.key) ||
-          serviceTags.includes(Feed.FeedService.key)) &&
+        serviceTags.includes(Database.Service.key) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -109,7 +94,7 @@ export const wrapFunctionHandler = (
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
         if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
-          await funcContext.db.graph.schemaRegistry.register(types as Type.AnyEntity[]);
+          funcContext.db.graph.registry.add(types);
         }
 
         const dataWithDecodedRefs =
@@ -120,7 +105,7 @@ export const wrapFunctionHandler = (
         let result: any = await func.handler(dataWithDecodedRefs);
 
         if (Effect.isEffect(result)) {
-          result = await runAndForwardErrors(
+          result = await EffectEx.runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),
@@ -130,7 +115,7 @@ export const wrapFunctionHandler = (
 
         // Flush in-memory ECHO writes before the function scope closes.
         // Writes performed by `db.add` / `db.remove` are buffered in the in-memory
-        // `EchoDatabaseImpl` and only pushed across the `DataService` binding when
+        // `DatabaseImpl` and only pushed across the `DataService` binding when
         // `db.flush({ disk })` is called. `FunctionContext._close` (invoked by the
         // `await using` above) calls `db.close()` but does NOT flush, so mutations
         // performed by handlers that declare `Database.Service` (e.g. `object-create`,
@@ -166,8 +151,7 @@ export const wrapFunctionHandler = (
 class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
-  db: EchoDatabaseImpl | undefined;
-  queues: QueueFactory | undefined;
+  db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
@@ -197,8 +181,6 @@ class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
-    this.queues =
-      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
   }
 
   override async _close() {
@@ -210,23 +192,17 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
-    const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
       ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
-      ? InternalAiServiceLayer(this.context.services.functionsAiService)
+      ? InternalAiServiceLayer(this.context.services.functionsAiService).pipe(Layer.provide(credentials))
       : AiService.notAvailable;
 
     const operationServiceLayer = this.context.services.functionsService
       ? makeOperationServiceLayer(this.context.services.functionsService)
       : unavailableOperationServiceLayer;
-
-    const operationRegistryLayer = this.context.services.functionsService
-      ? makeOperationRegistryLayer(this.context.services.functionsService, this.context.spaceId as SpaceId | undefined)
-      : emptyOperationRegistryLayer;
 
     const traceWriterLayer = this.context.services.traceService
       ? makeTraceWriterLayer(this.context.services.traceService)
@@ -242,21 +218,18 @@ class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
-    const blueprintRegistryLayer = this.opts.blueprintRegistry
-      ? Layer.succeed(Blueprint.RegistryService, this.opts.blueprintRegistry)
-      : Blueprint.RegistryService.notAvailable;
+    const registryLayer = this.db
+      ? Layer.succeed(Registry.Service, this.db.graph.registry)
+      : Layer.succeed(Registry.Service, makeRegistry());
 
     return Layer.mergeAll(
       dbLayer,
-      queuesLayer,
-      feedLayer,
       credentials,
       operationServiceLayer,
-      operationRegistryLayer,
       aiLayer,
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
-      blueprintRegistryLayer,
+      registryLayer,
 
       // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
       // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)
@@ -286,22 +259,18 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
     },
   });
 
-/**
- * AI service layer that proxies HTTP requests through the EDGE-provided `FunctionsAiService`.
- */
-const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) =>
-  AiModelResolver.AiModelResolver.buildAiService.pipe(
-    Layer.provide(
-      AnthropicResolver.make().pipe(
-        Layer.provide(
-          AnthropicClient.layer({
-            // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
-            apiUrl: 'http://internal/provider/anthropic',
-          }).pipe(Layer.provide(FunctionsAiHttpClient.layer(functionsAiService))),
-        ),
-      ),
-    ),
+/** Proxies Anthropic requests through the EDGE-provided `FunctionsAiService`, BYOK-wrapped. */
+const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) => {
+  // `apiUrl` is a sentinel — the request gets re-routed by the AI gateway in EDGE.
+  const httpClient = Header.byokLayer('anthropic.com').pipe(
+    Layer.provide(FunctionsAiHttpClient.layer(functionsAiService)),
   );
+  const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://internal/provider/anthropic' }).pipe(
+    Layer.provide(httpClient),
+  );
+  const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
+  return AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+};
 
 /**
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
@@ -319,6 +288,9 @@ const makeOperationServiceLayer = (
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
     const result = await functionsService.invoke(op.meta.deployedId, input, {
       spaceId: options?.spaceId,
+      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+      // services (e.g. `AiContext.Service`) needed by operations like `GetContext`.
+      conversation: options?.conversation,
     });
     if (result._kind === 'success') {
       return { data: result.data };
@@ -334,7 +306,7 @@ const makeOperationServiceLayer = (
           outcome.error ? Effect.die(outcome.error) : Effect.succeed(outcome.data as never),
         ),
       )) as Operation.OperationService['invoke'],
-    schedule: ((op: Operation.Definition.Any, input: unknown) =>
+    schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
         invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
         // Fire and forget — schedule is intentionally non-awaiting.
@@ -357,28 +329,7 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   }),
 } as Operation.OperationService);
 
-/**
- * Backs `OperationRegistry.Service` with the EDGE-provided `FunctionsService.query`. Returns
- * the first persistent operation matching the requested key, or `Option.none()` when not found.
- */
-const makeOperationRegistryLayer = (
-  functionsService: EdgeFunctionEnv.FunctionsService,
-  spaceId: SpaceId | undefined,
-): Layer.Layer<OperationRegistry.Service> =>
-  Layer.succeed(OperationRegistry.Service, {
-    resolve: (key: string) =>
-      Effect.gen(function* () {
-        const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
-        const match = (records as Operation.PersistentOperation[]).find((record) => Operation.getKey(record) === key);
-        return match ? Option.some(Operation.deserialize(match)) : Option.none();
-      }),
-  });
-
-const emptyOperationRegistryLayer = Layer.succeed(OperationRegistry.Service, {
-  resolve: () => Effect.succeed(Option.none()),
-});
-
-const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
+const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseImpl): unknown => {
   if (value == null) {
     return value;
   }

@@ -4,32 +4,27 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { DiscordPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('DiscordPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), DiscordPlugin()],
+      plugins: [ClientPlugin({}), IntegrationPlugin(), DiscordPlugin()],
     });
 
+    // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
+    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // OperationPlugin — both reach the DiscordPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([moduleId('DiscordIntegrationProvider'), moduleId('OperationHandler')]),
     );
-
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
-  });
+  }, 30_000);
 });

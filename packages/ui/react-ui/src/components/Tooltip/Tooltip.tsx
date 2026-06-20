@@ -54,7 +54,7 @@ type TooltipContextValue = {
   open: boolean;
   stateAttribute: 'closed' | 'delayed-open' | 'instant-open';
   trigger: TooltipTriggerElement | null;
-  onTriggerChange(trigger: TooltipTriggerElement | null): void;
+  onTriggerChange(trigger: TooltipTriggerElement | null, content?: ReactNode, side?: TooltipSide): void;
   onTriggerEnter(): void;
   onTriggerLeave(): void;
   onOpen(): void;
@@ -111,15 +111,18 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
 
   const popperScope = usePopperScope(__scopeTooltip);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
-  const [content, setContent] = useState<string>('');
+  const [content, setContent] = useState<ReactNode>(null);
   const [side, setSide] = useState<TooltipSide | undefined>(undefined);
   const triggerRef = useRef<HTMLButtonElement | null>(trigger);
-  const handleTriggerChange = useCallback((nextTrigger: HTMLButtonElement | null) => {
-    setTrigger(nextTrigger);
-    triggerRef.current = nextTrigger;
-    setContent(nextTrigger?.getAttribute('data-tooltip-content') ?? '');
-    setSide((nextTrigger?.getAttribute('data-tooltip-side') as TooltipSide | null) ?? undefined);
-  }, []);
+  const handleTriggerChange = useCallback(
+    (nextTrigger: HTMLButtonElement | null, nextContent?: ReactNode, nextSide?: TooltipSide) => {
+      setTrigger(nextTrigger);
+      triggerRef.current = nextTrigger;
+      setContent(nextContent ?? null);
+      setSide(nextSide);
+    },
+    [],
+  );
   const contentId = useId();
   const openTimerRef = useRef(0);
   const wasOpenDelayedRef = useRef(false);
@@ -244,13 +247,13 @@ const TooltipVirtualTrigger = ({
 // TooltipTrigger
 //
 
-const TRIGGER_NAME = 'TooltipTrigger';
+const TRIGGER_NAME = 'Tooltip.Trigger';
 
 type TooltipTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-type TooltipTriggerProps = PrimitiveButtonProps &
+type TooltipTriggerProps = Omit<PrimitiveButtonProps, 'content'> &
   Pick<TooltipProps, 'delayDuration'> & {
-    content?: string;
+    content?: ReactNode;
     side?: TooltipSide;
     onInteract?: (event: SyntheticEvent) => void;
   };
@@ -283,8 +286,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
         // commonly anchors and the anchor `type` attribute signifies MIME type.
         aria-describedby={context.open ? context.contentId : undefined}
         data-state={context.stateAttribute}
-        data-tooltip-content={content}
-        data-tooltip-side={side}
         {...triggerProps}
         ref={composedRefs}
         onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {
@@ -296,7 +297,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
             if (event.defaultPrevented) {
               return;
             }
-            context.onTriggerChange(ref.current);
+            context.onTriggerChange(ref.current, content, side);
             context.onTriggerEnter();
             hasPointerMoveOpenedRef.current = true;
           }
@@ -326,7 +327,7 @@ TooltipTrigger.displayName = TRIGGER_NAME;
 // TooltipPortal
 //
 
-const PORTAL_NAME = 'TooltipPortal';
+const PORTAL_NAME = 'Tooltip.Portal';
 
 type PortalContextValue = { forceMount?: true };
 const [PortalProvider, usePortalContext] = createTooltipContext<PortalContextValue>(PORTAL_NAME, {
@@ -367,7 +368,7 @@ TooltipPortal.displayName = PORTAL_NAME;
 // TooltipContent
 //
 
-const CONTENT_NAME = 'TooltipContent';
+const CONTENT_NAME = 'Tooltip.Content';
 
 type TooltipContentElement = TooltipContentImplElement;
 type TooltipContentProps = TooltipContentImplProps & {
@@ -578,7 +579,7 @@ TooltipContent.displayName = CONTENT_NAME;
 // TooltipArrow
 //
 
-const ARROW_NAME = 'TooltipArrow';
+const ARROW_NAME = 'Tooltip.Arrow';
 
 type TooltipArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>;

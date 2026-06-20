@@ -16,7 +16,7 @@ import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState }
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
-const FILESYSTEM_TYPE = `${meta.id}.workspace`;
+const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 
 describe('native filesystem app graph builder', () => {
   test('shows nested directories and files when expanded', async ({ expect }) => {
@@ -33,7 +33,7 @@ describe('native filesystem app graph builder', () => {
               path: '/workspace/archive',
               children: [
                 createMarkdownFile({
-                  id: 'nested-note',
+                  id: 'nestedNote',
                   name: 'Nested note.md',
                   path: '/workspace/archive/nested-note.md',
                   text: '# Nested note',
@@ -41,7 +41,7 @@ describe('native filesystem app graph builder', () => {
               ],
             },
             createMarkdownFile({
-              id: 'top-note',
+              id: 'topNote',
               name: 'Top note.md',
               path: '/workspace/top-note.md',
               text: '# Top note',
@@ -57,10 +57,10 @@ describe('native filesystem app graph builder', () => {
 
     expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace')).map((node) => node.id)).toEqual([
       qualifyId(Node.RootId, 'workspace', 'archive'),
-      qualifyId(Node.RootId, 'workspace', 'top-note'),
+      qualifyId(Node.RootId, 'workspace', 'topNote'),
     ]);
     expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace', 'archive')).map((node) => node.id)).toEqual([
-      qualifyId(Node.RootId, 'workspace', 'archive', 'nested-note'),
+      qualifyId(Node.RootId, 'workspace', 'archive', 'nestedNote'),
     ]);
   });
 
@@ -165,7 +165,7 @@ const setupNativeFilesystemGraphBuilder = ({
 
 const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystemState>) =>
   GraphBuilder.createExtension({
-    id: 'test-workspaces',
+    id: 'testWorkspaces',
     match: NodeMatcher.whenRoot,
     connector: (_node, get) =>
       Effect.succeed(

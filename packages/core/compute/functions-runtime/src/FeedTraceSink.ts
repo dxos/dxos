@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import { Trace } from '@dxos/compute';
 import { ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Order, Query } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -42,13 +42,13 @@ export class FeedTraceSink extends Context.Tag('@dxos/functions-runtime/FeedTrac
 /**
  * Layer that resolves a space's trace feed, wires up a buffered flushing
  * writer, and exposes it as {@link FeedTraceSink}. Requires ambient
- * {@link Database.Service} and {@link Feed.FeedService} (per-space).
+ * {@link Database.Service} (per-space).
  */
-export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service | Feed.FeedService> = Layer.scopedContext(
+export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = Layer.scopedContext(
   Effect.gen(function* () {
     const feed = yield* getOrCreateTraceFeed();
 
-    const runtime = yield* Effect.runtime<Feed.FeedService>();
+    const runtime = yield* Effect.runtime<Database.Service>();
     let buffer: Trace.Message[] = [];
     let flushMore = false;
     let flushFiber: Fiber.RuntimeFiber<void> | undefined;
@@ -132,14 +132,11 @@ export const layerDirect: Layer.Layer<Trace.TraceSink, never, FeedTraceSink> = L
  * Convenience that combines {@link layerLive} and {@link layerDirect} — the
  * pre-refactor shape of `layerLive` (provides both services).
  */
-export const layerLiveWithDirectSink: Layer.Layer<
-  Trace.TraceSink | FeedTraceSink,
-  never,
-  Database.Service | Feed.FeedService
-> = layerDirect.pipe(Layer.provideMerge(layerLive));
+export const layerLiveWithDirectSink: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Database.Service> =
+  layerDirect.pipe(Layer.provideMerge(layerLive));
 
 export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* () {
-  const feeds = yield* Database.runQuery(query);
+  const feeds = yield* Database.query(query).run;
   if (feeds.length > 0) {
     return feeds[0];
   }
@@ -185,7 +182,7 @@ export const makeRoutingSink = (opts: { resolver: ServiceResolver.ServiceResolve
       return;
     }
     const effect = opts.resolver.resolve(FeedTraceSink, { space }).pipe(Effect.scoped);
-    runAndForwardErrors(effect).then(
+    EffectEx.runAndForwardErrors(effect).then(
       (service) => {
         const entry = perSpace.get(space);
         perSpace.set(space, { status: 'ready', sink: service.sink });

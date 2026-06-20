@@ -6,16 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  createEdgeExistenceChecker,
-  expandPath,
-  validateNavigationTarget,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Database, EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -37,17 +31,34 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // Validate navigation targets, redirecting to 404 if not found.
       const capabilities = yield* Capability.Service;
       const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
-      const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
-        Effect.map((client) =>
-          createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body)),
-        ),
+      const client = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
+      // Existence checkers for the resolved EID: local (load + catchTag) first, then remote (edge).
+      const checkLocalExistence = client
+        ? (id: EID.EID) => {
+            const spaceId = EID.getSpaceId(id);
+            const space = spaceId ? client.spaces.get(spaceId) : undefined;
+            if (!space) {
+              return Effect.succeed(false);
+            }
+            return Database.load(space.db.makeRef(id)).pipe(
+              Effect.as(true),
+              Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+              Effect.catchAll(() => Effect.succeed(false)),
+            );
+          }
+        : undefined;
+      const checkRemoteExistence = client
+        ? NotFound.createEdgeExistenceChecker((spaceId, body) =>
+            client.edge.http.execQuery(new Context(), spaceId, body),
+          )
+        : undefined;
 
       // Immediate: skip 404 / resolver checks but still expand the path (same as validate’s first step).
       if (input.navigation === 'immediate') {
         for (const subjectId of input.subject) {
-          expandPath(graph, subjectId);
+          NotFound.expandPath(graph, subjectId);
         }
       }
 
@@ -55,7 +66,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         input.subject.map((subjectId) =>
           input.navigation === 'immediate'
             ? Effect.succeed(subjectId)
-            : validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
+            : NotFound.validateNavigationTarget({
+                graph,
+                subjectId,
+                pathResolvers,
+                checkLocalExistence,
+                checkRemoteExistence,
+              }),
         ),
       );
       input = { ...input, subject: validatedSubjects };

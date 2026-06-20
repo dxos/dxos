@@ -36,7 +36,7 @@ const PACKAGES = [
   '@dxos/functions',
   '@dxos/functions-runtime-cloudflare',
   '@dxos/ai',
-  '@dxos/echo-db',
+  '@dxos/echo-client',
   '@dxos/log',
   // Note: Causes circular dependency, if you will leave it in package.json.
   // '@dxos/assistant',
@@ -68,6 +68,8 @@ await build({
   format: 'esm',
   platform: 'browser',
   conditions: ['workerd', 'worker', 'browser'],
+  // node:* modules are provided by workerd's Node.js compat layer at runtime.
+  external: ['node:*'],
   metafile: true,
   logLevel: 'error',
   plugins: [rawImportPlugin()],

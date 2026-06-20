@@ -4,10 +4,12 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
+import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+// `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
+// `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
+import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -38,6 +40,18 @@ namespace Order1 {
   export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
     new OrderClass({
       kind: 'rank',
+      direction,
+    });
+  export const updated = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
+    new OrderClass({
+      kind: 'timestamp',
+      field: 'updatedAt',
+      direction,
+    });
+  export const created = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
+    new OrderClass({
+      kind: 'timestamp',
+      field: 'createdAt',
       direction,
     });
 }
@@ -83,9 +97,9 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static id(...ids: ObjectId[]): Filter$.Any {
+  static id(...ids: EntityId[]): Filter$.Any {
     // assertArgument(
-    //   ids.every((id) => ObjectId.isValid(id)),
+    //   ids.every((id) => EntityId.isValid(id)),
     //   'ids',
     //   'ids must be valid',
     // );
@@ -102,16 +116,18 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static type<S extends Schema.Schema.All>(
-    schema: S | string,
-    props?: Filter$.Props<Schema.Schema.Type<S>>,
-  ): Filter$.Filter<Schema.Schema.Type<S>> {
+  static type<T extends Type$.AnyEntity>(
+    type: T,
+    props?: Filter$.Props<Type$.InstanceType<T>>,
+  ): Filter$.Filter<Type$.InstanceType<T>>;
+  static type(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
+  static type(schema: Type$.AnyEntity | string, props?: Filter$.Props<unknown>): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDXN(schema),
+      typename: makeTypeDxn(schema),
       ...propsFilterToAst(props ?? {}),
     });
   }
@@ -119,15 +135,15 @@ class FilterClass implements Filter$.Any {
   static typename(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDXN(typename),
+      typename: makeTypeDxn(typename),
       props: {},
     });
   }
 
-  static typeDXN(dxn: DXN): Filter$.Any {
+  static typeURI(uri: URI.URI): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: dxn.toString(),
+      typename: uri,
       props: {},
     });
   }
@@ -165,15 +181,15 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static foreignKeys<S extends Schema.Schema.All>(
-    schema: S | string,
+  static foreignKeys<S extends Type$.AnyEntity | string>(
+    schema: S,
     keys: ForeignKey[],
-  ): Filter$.Filter<Schema.Schema.Type<S>> {
+  ): Filter$.Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> {
     assertArgument(typeof schema === 'string', 'schema');
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
       type: 'object',
-      typename: `dxn:type:${schema}`,
+      typename: makeTypeDxn(schema),
       props: {},
       foreignKeys: keys,
     });
@@ -261,13 +277,13 @@ class FilterClass implements Filter$.Any {
     return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+  static childOf(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
-      if (isDxnLike(item)) {
-        return item.toString();
+      if (isEchoUriLike(item)) {
+        return item.toString() as EID.EID;
       }
-      throw new TypeError('childOf requires DXN values in query-lite');
+      throw new TypeError('childOf requires EID values in query-lite');
     });
     return new FilterClass({
       type: 'child-of',
@@ -339,7 +355,7 @@ export { Filter1 as Filter };
 type RefPropKey<T> = keyof T & string;
 
 const propsFilterToAst = (predicates: Filter$.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
-  let idFilter: readonly ObjectId[] | undefined;
+  let idFilter: readonly EntityId[] | undefined;
   if ('id' in predicates) {
     assertArgument(
       typeof predicates.id === 'string' || Array.isArray(predicates.id),
@@ -417,7 +433,16 @@ class QueryClass implements Query$.Any {
     }
   }
 
-  static type(schema: Schema.Schema.All | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+  static type<S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter$.Props<Schema.Schema.Type<S>>,
+  ): Query$.Query<Schema.Schema.Type<S>>;
+  static type(type: Type$.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
+  static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
+  static type(schema: Schema.Schema.All | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+    if (typeof schema !== 'string') {
+      throw new TypeError('expected typename as the first paramter');
+    }
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema, predicates).ast,
@@ -444,26 +469,31 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static from(source: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  static from(...args: any[]): Query$.Any {
     const baseQuery: QueryAST.Query = {
       type: 'select',
       filter: FilterClass.everything().ast,
     };
     const wrapper = new QueryClass(baseQuery);
-    return wrapper.from(source, options);
+    return (wrapper.from as (...args: any[]) => Query$.Any)(...args);
   }
 
-  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  from(...args: any[]): Query$.Any {
+    // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
+    if (args.length > 1 && args.every((arg) => _isScopeLike(arg))) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: args as QueryAST.Scope[] },
+      });
+    }
+
+    const [arg] = args;
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
-        },
+        from: { _tag: 'scope', scopes: [] },
       });
     }
 
@@ -471,7 +501,7 @@ class QueryClass implements Query$.Any {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: { _tag: 'scope', scope: arg },
+        from: { _tag: 'scope', scopes: Array.isArray(arg) ? arg : [arg] },
       });
     }
 
@@ -495,13 +525,11 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
-    const typename =
-      target !== undefined
-        ? (assertArgument(typeof target === 'string', 'target'),
-          assertArgument(!target.startsWith('dxn:'), 'target'),
-          target)
-        : null;
+  referencedBy(target?: Type$.AnyEntity | string, key?: string): Query$.Any {
+    if (target !== undefined && typeof target !== 'string') {
+      throw new TypeError('referencedBy requires a typename string in query-lite');
+    }
+    const typename = target !== undefined ? makeTypeDxn(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
@@ -510,21 +538,37 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  sourceOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  sourceOf(
+    relation?: Type$.Relation<any, any, any, any> | string,
+    predicates?: Filter$.Props<unknown> | undefined,
+  ): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
+      filter:
+        relation === undefined
+          ? undefined
+          : typeof relation === 'string'
+            ? FilterClass.type(relation, predicates).ast
+            : FilterClass.type(relation, predicates).ast,
     });
   }
 
-  targetOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  targetOf(
+    relation?: Type$.Relation<any, any, any, any> | string,
+    predicates?: Filter$.Props<unknown> | undefined,
+  ): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
+      filter:
+        relation === undefined
+          ? undefined
+          : typeof relation === 'string'
+            ? FilterClass.type(relation, predicates).ast
+            : FilterClass.type(relation, predicates).ast,
     });
   }
 
@@ -608,13 +652,17 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-const makeTypeDXN = (typename: string) => {
+const makeTypeDxn = (typename: string): DXN.DXN => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  return `dxn:type:${typename}`;
+  // Inline template (rather than `DXN.make`) to keep the value-side `@dxos/keys` import out of this bundle.
+  return `dxn:${typename}` as DXN.DXN;
 };
 
-const isDxnLike = (value: unknown): value is DXN => {
+const isDxnLike = (value: unknown): value is DXN.DXN => {
+  if (typeof value === 'string') {
+    return value.startsWith('dxn:');
+  }
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -624,13 +672,37 @@ const isDxnLike = (value: unknown): value is DXN => {
   );
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
-
-const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
+const isEchoUriLike = (value: unknown): value is EID.EID => {
+  if (typeof value === 'string') {
+    return value.startsWith('echo:');
   }
-  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    isEchoUriLike(value.toString())
+  );
+};
+
+const SCOPE_TAGS = new Set(['space', 'feed', 'registry']);
+
+const _isScopeLike = (value: unknown): value is QueryAST.Scope | QueryAST.Scope[] => {
+  if (Array.isArray(value)) {
+    return value.every((item) => _isSingleScopeLike(item));
+  }
+  return _isSingleScopeLike(value);
+};
+
+const _isSingleScopeLike = (value: unknown): value is QueryAST.Scope => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    '_tag' in value &&
+    typeof value._tag === 'string' &&
+    SCOPE_TAGS.has(value._tag)
+  );
 };
 
 const prettyFilter = (filter: QueryAST.Filter): string => {
@@ -717,6 +789,10 @@ const prettyQuery = (query: QueryAST.Query): string => {
         if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
         }
+        if (o.kind === 'timestamp') {
+          const fn = o.field === 'updatedAt' ? 'updated' : 'created';
+          return `Order.${fn}(${JSON.stringify(o.direction)})`;
+        }
         return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
       });
       return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
@@ -733,18 +809,21 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'from': {
       if (query.from._tag === 'scope') {
-        const scope = query.from.scope;
-        const parts: string[] = [];
-        if (scope.spaceIds !== undefined) {
-          parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
+        if (query.from.scopes.length === 0) {
+          return `${prettyQuery(query.query)}.from('all-accessible-spaces')`;
         }
-        if (scope.feeds !== undefined) {
-          parts.push(`feeds: [${scope.feeds.join(', ')}]`);
-        }
-        if (scope.allFeedsFromSpaces !== undefined) {
-          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
-        }
-        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+        const scopeStrs = query.from.scopes.map((scope) => {
+          if (scope._tag === 'space') {
+            return scope.includeAllFeeds
+              ? `{ space: ${JSON.stringify(scope.spaceId)}, includeAllFeeds: true }`
+              : `{ space: ${JSON.stringify(scope.spaceId)} }`;
+          }
+          if (scope._tag === 'feed') {
+            return `{ feed: ${String(scope.feedUri)} }`;
+          }
+          return `{ registry: ${JSON.stringify(scope.location)} }`;
+        });
+        return `${prettyQuery(query.query)}.from([${scopeStrs.join(', ')}])`;
       }
       return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
     }

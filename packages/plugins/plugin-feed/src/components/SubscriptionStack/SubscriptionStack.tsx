@@ -4,9 +4,9 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card, Icon, ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Subscription } from '#types';
 
@@ -126,12 +126,14 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
       <Mosaic.Tile asChild classNames='dx-hover dx-current' id={feed.id} data={data} location={location}>
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
-            <Card.Toolbar>
-              <Card.Icon icon={icon} classNames={iconClassName} />
+            <Card.Header>
+              <Card.Block>
+                <Icon icon={icon} classNames={iconClassName} />
+              </Card.Block>
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
               <Card.Menu items={menuItems} />
-            </Card.Toolbar>
-            <Card.Content>
+            </Card.Header>
+            <Card.Body>
               {/* {feed.url && (
                 <Card.Row>
                   <Card.Text classNames='truncate' variant='description'>
@@ -144,7 +146,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
                   <Card.Text variant='description'>{feed.description}</Card.Text>
                 </Card.Row>
               )}
-            </Card.Content>
+            </Card.Body>
           </Card.Root>
         </Focus.Item>
       </Mosaic.Tile>

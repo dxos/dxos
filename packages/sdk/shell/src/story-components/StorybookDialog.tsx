@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { Clipboard, Dialog, Tooltip } from '@dxos/react-ui';
-import { type DialogSize } from '@dxos/ui-theme';
+import { type DialogSize } from '@dxos/react-ui';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */

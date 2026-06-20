@@ -3,7 +3,6 @@
 //
 
 import { Registry } from '@effect-atom/atom';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -17,6 +16,7 @@ import { OperationInvoker } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
+import { layerIdb } from './idb-key-value-store';
 
 //
 // Capability Module
@@ -30,9 +30,9 @@ import { Capability, Plugin } from '../core';
 // 2. Collects all contributed {@link LayerSpec.LayerSpec}s and builds a
 //    {@link LayerStack} whose {@link ServiceResolver} drives process-scoped
 //    service resolution.
-// 3. Collects all contributed {@link Capabilities.OperationHandler} sets and
-//    merges them into a single {@link OperationHandlerSet} used by the
-//    {@link ProcessManager.ProcessOperationInvoker}.
+// 3. Wires a reactive {@link OperationHandlerSet} that tracks
+//    {@link Capabilities.OperationHandler} contributions and invalidates its
+//    cached merge when new handlers register.
 // 4. Composes the fixed runtime requirements (capability/plugin managers,
 //    service resolver, operation invoker, process manager) into a single
 //    {@link Layer} and builds a {@link ManagedRuntime} from it.
@@ -49,7 +49,6 @@ export default Capability.makeModule(
     yield* Plugin.activate(ActivationEvents.SetupProcessManager);
 
     const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
-    const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
     const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
@@ -93,7 +92,10 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
-    const handlerSet = handlerSets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...handlerSets);
+    const handlerSet = OperationHandlerSet.reactive(
+      atomRegistry,
+      capabilityManager.atom(Capabilities.OperationHandler),
+    );
 
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
     const mergedTraceSink = Trace.mergeSinks(traceSinks);
@@ -108,7 +110,7 @@ export default Capability.makeModule(
       Layer.succeed(Registry.AtomRegistry, atomRegistry),
       Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver),
       OperationHandlerSet.provide(handlerSet),
-      KeyValueStore.layerMemory,
+      layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
     );
 

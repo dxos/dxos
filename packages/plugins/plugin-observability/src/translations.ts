@@ -9,8 +9,9 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Telemetry',
+        'help.label': 'Feedback',
         'settings.title': 'Telemetry settings',
         'observability-toast.label': 'Privacy Notice',
         'observability-toast.description':

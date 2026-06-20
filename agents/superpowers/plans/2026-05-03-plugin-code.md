@@ -362,9 +362,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
                 extensions={extensions}
               />
             ) : (
-              <div role='none' className='flex items-center justify-center text-description p-4'>
-                {t('code view placeholder')}
-              </div>
+              <div className='flex items-center justify-center text-description p-4'>{t('code view placeholder')}</div>
             )}
           </Panel.Content>
         </Panel.Root>
@@ -523,7 +521,7 @@ export const CodeProject = Schema.Struct({
   name: Schema.optional(Schema.String),
   spec: Ref.Ref(Spec),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.codeProject',
     version: '0.1.0',
   }),

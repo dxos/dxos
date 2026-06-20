@@ -13,7 +13,7 @@ import IconChevronRight from '../../components/svg/IconChevronRight.astro';
 const canonicalUrl = new URL(`/blog/${Astro.params.slug}`, Astro.site ?? 'https://dxos.org').href;
 
 export const getStaticPaths = async () => {
-  const posts = await getCollection('blog');
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
   return posts.map((post) => ({
     params: { slug: post.data.slug },
     props: { post },

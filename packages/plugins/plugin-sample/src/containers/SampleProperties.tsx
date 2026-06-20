@@ -24,7 +24,7 @@ export type SamplePropertiesProps = {
 };
 
 export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleRandomize = useCallback(() => {

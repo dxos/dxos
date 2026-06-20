@@ -3,13 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as PubSub from 'effect/PubSub';
 import * as Stream from 'effect/Stream';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
-import { UndoOperation } from '../../common';
+import { type Label } from '../../common';
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
 import { resolveMessage } from './undo-mapping';
@@ -22,12 +23,23 @@ const HISTORY_LIMIT = 100;
 //
 
 /**
+ * Emitted when a new undoable action is recorded; consumed by the UI to surface an undo affordance
+ * (e.g. the deck notification tracker's undo toast).
+ */
+export type UndoableEvent = {
+  /** Message describing the undoable action. */
+  message?: Label;
+};
+
+/**
  * HistoryTracker interface - tracks operation history and provides undo.
  */
 export interface HistoryTracker {
   undo: () => Effect.Effect<void, Error>;
   undoPromise: () => Promise<{ error?: Error }>;
   canUndo: () => boolean;
+  /** Stream of undoable actions, published as they are recorded. */
+  undoable: PubSub.PubSub<UndoableEvent>;
 }
 
 //
@@ -35,27 +47,29 @@ export interface HistoryTracker {
 //
 
 /**
- * Creates a HistoryTracker that subscribes to invocation events and provides undo.
+ * Creates a HistoryTracker that subscribes to (successful) invocation events, derives undoability from
+ * the undo registry, maintains the undo stack, and publishes an {@link UndoableEvent} for each undoable
+ * action so the UI can offer an undo affordance. The invoker itself is undo-agnostic.
  */
 export const make = (
   invoker: OperationInvoker.OperationInvokerInternal,
   undoRegistry: UndoRegistry,
 ): HistoryTracker => {
   const history: HistoryEntry[] = [];
+  const undoable = Effect.runSync(PubSub.unbounded<UndoableEvent>());
 
-  // Subscribe to invocation stream.
-  const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
+  // Record an invocation; returns the undoable event to publish, or undefined if not undoable.
+  const recordInvocation = (event: OperationInvoker.InvocationEvent): UndoableEvent | undefined => {
     const mapping = undoRegistry.lookup(event.operation);
     if (!mapping) {
-      // Operation is not undoable, skip.
-      return;
+      // Operation is not undoable.
+      return undefined;
     }
 
     const inverseInput = mapping.deriveContext(event.input, event.output);
     if (inverseInput === undefined) {
       // Operation is conditionally not undoable (deriveContext returned undefined).
-      log('operation not undoable', { key: event.operation.meta.key });
-      return;
+      return undefined;
     }
 
     const entry: HistoryEntry = {
@@ -75,19 +89,20 @@ export const make = (
       history.splice(0, history.length - HISTORY_LIMIT);
     }
 
-    // Show undo toast (resolve message if it's a function).
-    const resolvedMessage = resolveMessage(mapping.message, event.input, event.output);
-    Effect.runFork(
-      invoker.invoke(UndoOperation.ShowUndo, {
-        message: resolvedMessage,
-      }),
-    );
+    return { message: resolveMessage(mapping.message, event.input, event.output) };
   };
 
   // Fork a fiber to consume the invocation stream.
   Effect.runFork(
     Stream.fromPubSub(invoker.invocations).pipe(
-      Stream.runForEach((event) => Effect.sync(() => handleInvocation(event))),
+      Stream.runForEach((event) =>
+        Effect.gen(function* () {
+          const undoableEvent = recordInvocation(event);
+          if (undoableEvent) {
+            yield* PubSub.publish(undoable, undoableEvent);
+          }
+        }),
+      ),
     ),
   );
 
@@ -108,7 +123,7 @@ export const make = (
   };
 
   const undoPromise = async (): Promise<{ error?: Error }> => {
-    return runAndForwardErrors(undo())
+    return EffectEx.runAndForwardErrors(undo())
       .then(() => ({}))
       .catch((error) => {
         log.catch(error);
@@ -124,5 +139,6 @@ export const make = (
     undo,
     undoPromise,
     canUndo,
+    undoable,
   };
 };

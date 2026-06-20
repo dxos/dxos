@@ -81,3 +81,10 @@ export const Default: Story = {
     },
   },
 };
+
+export const WithNestedChildren: Story = {
+  args: {
+    ...Default.args,
+    depth: 2,
+  },
+};

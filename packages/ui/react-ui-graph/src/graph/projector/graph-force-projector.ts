@@ -153,6 +153,7 @@ export type GraphForceProjectorOptions = GraphProjectorOptions & {
 /**
  * D3 force directed graph layout using d3 simulation..
  */
+// TODO(burdon): Rename ForceGraphProjector.
 export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
   private _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();
@@ -197,7 +198,8 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     }
 
     this._simulation
-      .on('tick', () => propagating && this.emitUpdate())
+      // Each tick only mutates `x/y` — emit 'positions' so the renderer can fast-path.
+      .on('tick', () => propagating && this.emitUpdate('positions'))
       .velocityDecay(0.3)
       .alphaDecay(1 - Math.pow(0.001, 1 / 300))
       .alpha(1)
@@ -228,6 +230,9 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     this.mergeData(graph);
     this.updateLayout();
     this.updateForces(this.forces);
+    // Signal topology change so the renderer rebinds enter/exit and runs attribute callbacks once.
+    // Subsequent ticks emit 'positions' and skip the expensive path.
+    this.emitUpdate('topology');
     this.restart();
   }
 

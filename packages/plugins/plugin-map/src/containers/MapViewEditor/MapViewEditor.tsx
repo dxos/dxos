@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { JsonSchema, Obj, type Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
-import { useSchema } from '@dxos/react-client/echo';
+import { Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
+import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { type Map } from '#types';
 
@@ -24,34 +24,32 @@ type MapViewEditorProps = { object: Map.Map };
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const db = Obj.getDatabase(object);
   const view = object?.view?.target;
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(db, typename);
-  const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const currentSchema = useType(db, typeUri);
+  const [allSchemata, setAllSchemata] = useState<Type.AnyEntity[]>([]);
 
   useEffect(() => {
     if (!db) {
       return;
     }
 
-    const unsubscribe = db.schemaRegistry.query().subscribe(
-      (query) => {
-        const schemata = query.results;
-        setAllSchemata(schemata);
-      },
-      { fire: true },
-    );
-    return () => unsubscribe();
+    setAllSchemata([...db.graph.registry.list().filter(Type.isType)]);
+    return db.graph.registry.changed.on(() => {
+      setAllSchemata([...db.graph.registry.list().filter(Type.isType)]);
+    });
   }, [db]);
 
   const schemaOptions = useMemo(() => {
-    const uniqueTypenames = new Set(allSchemata.map((schema) => schema.typename));
+    const uniqueTypenames = new Set(
+      allSchemata.map((schema) => Type.getTypename(schema)).filter((typename): typename is string => typename != null),
+    );
     return Array.from(uniqueTypenames).map((typename) => ({
       value: typename,
       label: typename,
     }));
   }, [allSchemata]);
 
-  const jsonSchema = useMemo(() => (currentSchema ? JsonSchema.toJsonSchema(currentSchema) : {}), [currentSchema]);
+  const jsonSchema = useMemo(() => (currentSchema ? currentSchema.jsonSchema : {}), [currentSchema]);
   const locationFields = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];
@@ -79,8 +77,12 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: typename, coordinateColumn: view?.projection.pivotFieldId }),
-    [view],
+    () => ({
+      // The coordinate-source select lists schemas by typename, so match the current type by typename.
+      coordinateSource: currentSchema ? Type.getTypename(currentSchema) : undefined,
+      coordinateColumn: view?.projection.pivotFieldId,
+    }),
+    [currentSchema, view],
   );
 
   const fieldMap = useMemo<FormFieldMap>(

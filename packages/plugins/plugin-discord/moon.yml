@@ -8,10 +8,8 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/DiscordPlugin.tsx'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/DiscordPlugin.ts'
       - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'

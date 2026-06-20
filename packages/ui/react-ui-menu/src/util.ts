@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Node } from '@dxos/app-graph';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
@@ -23,7 +23,7 @@ export const executeMenuAction = async (action: MenuAction, params: Node.InvokeP
     effect = effect.pipe(Effect.provide(action._actionContext));
   }
 
-  await runAndForwardErrors(effect);
+  await EffectEx.runAndForwardErrors(effect);
 };
 
 export const getShortcut = (action: Node.ActionLike) => {
@@ -32,7 +32,7 @@ export const getShortcut = (action: Node.ActionLike) => {
     : action.properties?.keyBinding?.[getHostPlatform()];
 };
 
-export const fallbackIcon = 'ph--placeholder--regular';
+export const fallbackIcon = 'ph--circle-dashed--regular';
 
 export const createMenuAction = <P extends {} = {}>(
   id: string,
@@ -46,12 +46,7 @@ export const createMenuAction = <P extends {} = {}>(
     data: () => Effect.sync(invoke),
   }) satisfies MenuAction;
 
-export const createMenuItemGroup = <
-  P extends MenuItemGroupProperties = MenuItemGroupProperties & Partial<MenuActionProperties>,
->(
-  id: string,
-  properties: P,
-) =>
+export const createMenuItemGroup = <P extends MenuItemGroupProperties>(id: string, properties: P) =>
   ({
     id,
     type: Node.ActionGroupType,

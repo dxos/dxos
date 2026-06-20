@@ -4,15 +4,11 @@ name: DiscordPlugin
 version: 0.1.0
 ---
 
-A Composer plugin that configures and controls a Discord bot. The bot runs as a
-Cloudflare Worker, receives Discord slash commands, and communicates with DXOS
-EDGE. The plugin stores bot identity and configuration as ECHO objects in the
-space — the bot's credentials, guild bindings, and channel mappings are all
-first-class replicated data.
-
-Two packages:
-- `packages/plugins/plugin-discord` — Composer plugin (types, surfaces, operations).
-- `packages/experimental/discord-worker` — Cloudflare Worker (slash command handler).
+A Composer plugin that connects a Discord bot to a workspace so that server
+channels stream alongside everything else the user is working on. Messages
+from every guild the bot belongs to are synced into ECHO as `@dxos/types`
+`Message` objects inside `Channel` feeds — fully local-first and replicated
+to all peers.
 
 ## Extensions
 
@@ -26,389 +22,277 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `service`   | `org.dxos.mdl.service@1.0`    |
 
 ## Types
 
 ```mdl
-type BotStatus
-  literals: disconnected | connected | error
-```
-
-```mdl
-type ChannelBinding
-  desc: A Discord channel mapped to the current space.
+type RemoteTarget
+  desc: Wire shape returned by GetDiscordChannels representing one Discord text channel.
   fields:
-    channelId: string
-    channelName: string
+    id: string                       # Discord channel snowflake id
+    name: string                     # "#channel — Guild" display label
+    description?: string             # channel topic, if set
+    metadata?: Record<string, unknown>  # guildId, guildName, channelType, etc.
 ```
 
 ```mdl
-type Bot
-  desc: >
-    Core ECHO object representing a Discord bot instance.
-    Stores identity, credentials, and guild binding.
-    NOTE: In the current phase the HALO keypair lives directly in this object.
-    A future phase will promote the bot to its own ECHO identity.
+type DiscordTargetOptions
+  desc: Per-target sync options stored under IntegrationTarget.options and edited from the Integration UI.
   fields:
-    name: string
-    token?: string                # Discord bot token (encrypted in space)
-    applicationId?: string        # Discord application ID
-    did?: string                  # Bot DID derived from HALO keypair
-    publicKey?: string            # HALO public key (hex)
-    privateKey?: string           # HALO private key (hex)
-    guildId?: string              # Connected Discord guild ID
-    guildName?: string            # Connected guild display name
-    channels: ChannelBinding[]    # Tracked channels
-    status: BotStatus             # Connection state
-    inviteUrl?: string            # OAuth URL for adding bot to guild
+    daysOfHistory?: number           # initial backfill window in days (default 30; ignored after first sync)
 ```
 
-## Components
-
 ```mdl
-component BotArticle
-  desc: >
-    Configuration article surface bound to a Bot object.
-    Displays bot identity, connection status, and guild binding.
-    Initial version is minimal — read-only display with setup actions.
-  props:
-    bot: Bot
-  state:
-    tokenVisible: boolean         # Toggle masked/unmasked token display
-  slots:
-    header?: ReactNode
-    actions?: ReactNode           # Slot for future admin actions
-  actions:
-    copyInviteUrl()               # Copy OAuth invite URL to clipboard
-    disconnect()                  # Remove guild binding
-    setToken(token: string)       # Paste-to-set bot token
-    setApplicationId(id: string)  # Set Discord application ID
-  emits:
-    onDisconnect()
-  layout: |
-    ┌─────────────────────────────────┐
-    │ [header slot]                   │
-    ├─────────────────────────────────┤
-    │ Status: ● connected             │
-    │ Name:   my-bot                  │
-    ├─────────────────────────────────┤
-    │ Application ID  [__________]    │
-    │ Bot Token       [••••••••] 👁   │
-    ├─────────────────────────────────┤
-    │ Invite URL      [Copy]          │
-    ├─────────────────────────────────┤
-    │ Guild: My Server                │
-    │ Channels:                       │
-    │   #general                      │
-    │   #bugs                         │
-    ├─────────────────────────────────┤
-    │ [actions slot]                  │
-    │ [Disconnect]                    │
-    └─────────────────────────────────┘
+type PullResult
+  desc: Summary of a completed incremental sync for one target channel.
+  fields:
+    added: number                    # number of new Message objects appended to the channel feed
 ```
 
 ## Services
 
 ```mdl
-service EdgeGateway
+service DiscordREST
   desc: >
-    DXOS EDGE endpoint that receives requests from the Cloudflare Worker.
-    Validates bot DID membership and routes commands to the appropriate space.
-  ops:
-    connect(did: string, guildId: string, guildName: string, channelId: string, spaceKey: string) → void
-    track(did: string, spaceKey: string, markdown: string, threadName: string) → void
-  errors:
-    Unauthorized: DID is not a member of the target space
-    SpaceNotFound: space key does not match any known space
-```
-
-```mdl
-service DiscordApi
-  desc: Discord REST API used by the Worker to fetch thread messages.
+    dfx DiscordREST service layer. Wraps Discord's REST API v10 with an
+    in-memory rate-limit store. All HTTP traffic is routed through the edge
+    CORS proxy via makeEdgeProxyHttpClientLayer so browser-side requests work
+    without direct Discord API access.
   loading: lazy
   ops:
-    getThreadMessages(channelId: string, botToken: string) → Message[]
+    getMyUser() → User
+    listMyGuilds(params) → Guild[]
+    listGuildChannels(guildId: string) → Channel[]
+    listMessages(channelId: string, params) → Message[]
   errors:
-    Forbidden: bot lacks permissions to read the channel
-    NotFound: channel does not exist
+    ErrorResponse: non-2xx Discord API error (code + message in body)
+    RatelimitedResponse: HTTP 429; cause carries retry_after seconds
+  note: >
+    The layer is constructed per-operation via makeDiscordLayer (integration ref)
+    or makeDiscordLayerFromToken (raw token for credential-form validation).
+    The CORS proxy is temporary; a future revision will route through the
+    authenticated /proxy/* edge endpoint using signed verifiable presentations.
 ```
 
 ## Operations
 
 ```mdl
-op createBot
-  desc: Creates a new Bot object with a generated HALO keypair and stores it in the space.
-  input:
-    name: string
-    applicationId?: string
-  output: Bot
-  effects: [echo:write]
-  note: >
-    Generates a HALO keypair using the DXOS client available in the plugin context.
-    Derives the DID from the public key. Constructs the OAuth invite URL from
-    the application ID with pre-configured scopes (bot, applications.commands).
-```
-
-```mdl
-op setToken
-  desc: Sets the Discord bot token on an existing Bot object.
-  input:
-    bot: Bot
-    token: string
-  output: Bot
-  effects: [echo:write]
-  note: Token is stored encrypted in the space via ECHO.
-```
-
-```mdl
-op connectGuild
+op GetDiscordChannels
   desc: >
-    Called when the /connect slash command completes successfully.
-    Updates the Bot object with guild info and channel binding.
+    Discovery only. Lists every text and announcement channel (type 0 and 5)
+    across all guilds the bot belongs to and returns one RemoteTarget per
+    channel. Read-only: never creates a local Channel object. Guild pagination
+    is drained in full; channel fetch failures for individual guilds are logged
+    and skipped so the rest of the discovery result remains usable.
   input:
-    bot: Bot
-    guildId: string
-    guildName: string
-    channelId: string
-    channelName: string
-  output: Bot
-  effects: [echo:write]
+    integration: Ref<Integration>
+  output: { targets: RemoteTarget[] }
+  effects: [http]
+  requires: [DiscordREST]
   note: >
-    Triggered by EDGE after the Worker forwards the /connect interaction.
-    Adds the guild binding and initial channel to the Bot object.
+    Channel names are rendered as "#channel — Guild" so the integration UI can
+    disambiguate same-named channels across multiple guilds without a separate
+    grouping concept.
 ```
 
 ```mdl
-op disconnectGuild
-  desc: Removes guild binding from the Bot object.
-  input:
-    bot: Bot
-  output: Bot
-  effects: [echo:write]
-  note: Clears guildId, guildName, channels. Sets status to disconnected.
-```
-
-```mdl
-op trackThread
+op SyncDiscordChannel
   desc: >
-    Called when the /track slash command completes.
-    Creates a Markdown document in the space from a Discord thread transcript.
+    Pull-only incremental sync for the currently-selected Discord targets on an
+    Integration. For each selected channel: resolves (or materializes) the local
+    ECHO Channel keyed by the Discord channel snowflake id, pages through messages
+    newer than target.cursor (or from "now minus daysOfHistory" on first sync),
+    maps each Discord message to a @dxos/types Message, appends the batch to the
+    channel's ECHO Feed, then advances target.cursor to the newest id seen.
+    Targets are processed in parallel (concurrency 3). Failures on one target
+    record lastError on that target and continue; the overall op only fails if
+    the outer guild-list or Discord layer setup fails.
   input:
-    spaceKey: string
-    threadName: string
-    markdown: string
-  output: Document
-  effects: [echo:write]
+    integration: Ref<Integration>
+    channel?: Ref<Channel>           # optional: narrow to a single target channel
+  output: { pulled: PullResult }
+  effects: [http, echo:write]
+  requires: [DiscordREST]
   note: >
-    Creates a new Markdown document with the thread content.
-    Placeholder for future agent behavior — initially just a raw transcript.
+    Message mapping skips non-DEFAULT/non-REPLY types (joins, pins, calls, …)
+    to keep the feed clean. Discord embeds and attachments are not yet mapped
+    to ContentBlock — plain text only for now. A toast is emitted on success
+    or failure via LayoutOperation.AddToast.
 ```
 
 ## Features
 
 ```mdl
-feat F-1: Bot Creation
+feat F-1: Bot Identity and Credential Setup
 
-  req F-1.1: User can create a Bot object from Composer via blueprint.
-  req F-1.2: HALO keypair generated and stored in Bot on creation.
-  req F-1.3: DID derived from public key and stored in Bot.
-  req F-1.4: Bot created with status disconnected.
+  req F-1.1: User provides a bot token from the Discord developer portal via the credential form.
+  req F-1.2:
+    when: user submits the credential form
+    then: token is validated against GET /users/@me before any Integration is persisted
+    errors: [InvalidToken: Discord rejected the token with 401]
+  req F-1.3:
+    when: token is valid
+    then: bot's display name (global_name ?? username) is stored on AccessToken.account
+  req F-1.4: AccessToken is stored in ECHO and referenced by the Integration; the raw token is never re-exposed after setup.
 ```
 
 ```mdl
-feat F-2: Bot Configuration
+feat F-2: Channel Discovery
 
-  req F-2.1: User can set the Discord bot token via the BotArticle surface.
-  req F-2.2: User can set the Discord application ID.
-  req F-2.3: Invite URL auto-generated from application ID with scopes: bot, applications.commands.
-  req F-2.4: Invite URL can be copied to clipboard.
-  req F-2.5: Bot token displayed masked by default, toggleable.
+  req F-2.1:
+    when: user opens the Integration target picker
+    then: op:GetDiscordChannels is invoked and returns one entry per reachable text/announcement channel
+  req F-2.2: Entries are labeled "#channel — Guild" to disambiguate channels with identical names across guilds.
+  req F-2.3:
+    when: a guild's channel list cannot be fetched (bot removed, network error)
+    then: that guild's channels are omitted from results; other guilds are unaffected
+  req F-2.4: User selects one or more channels as Integration targets; unselected channels leave no trace in the space.
 ```
 
 ```mdl
-feat F-3: Guild Connection (/connect)
+feat F-3: Incremental Message Sync
 
-  req F-3.1: Discord /connect slash command registered with the Worker.
+  req F-3.1:
+    when: op:SyncDiscordChannel is invoked for an Integration
+    then: for each selected target channel, messages newer than target.cursor are fetched and appended
   req F-3.2:
-    when: user invokes /connect <space-key> in Discord
-    then: Worker forwards to EDGE with bot DID
+    when: a target has no cursor (first sync)
+    then: lookback window is determined by DiscordTargetOptions.daysOfHistory (default 30, max ~3 years)
   req F-3.3:
-    when: EDGE validates DID membership
-    then: Bot object updated with guild and channel info
+    when: sync succeeds for a target
+    then: target.cursor advances to the newest message snowflake id seen; subsequent runs are incremental
   req F-3.4:
-    when: connection succeeds
-    then: Bot.status set to connected; ephemeral Discord confirmation sent
-  req F-3.5:
-    when: EDGE rejects the DID
-    then: ephemeral Discord error sent; Bot unchanged
+    when: sync fails for a target
+    then: target.lastError is set with a human-readable description; other targets continue unaffected
+  req F-3.5: System messages (joins, pins, calls) are filtered out; only DEFAULT (type 0) and REPLY (type 19) messages are stored.
+  req F-3.6: Discord bot replies carry the referenced message id in Message.threadId to enable reply-chain reconstruction.
 ```
 
 ```mdl
-feat F-4: Thread Tracking (/track)
+feat F-4: Channel Materialization
 
-  req F-4.1: Discord /track slash command registered with the Worker.
-  req F-4.2:
-    when: user invokes /track in a Discord thread
-    then: Worker fetches all messages in the thread
+  req F-4.1:
+    when: a target channel is synced for the first time
+    then: a local ECHO Channel keyed by the Discord channel snowflake id is created in the space
+  req F-4.2: Channel keying uses Obj.Meta foreign-key [{source: 'discord.com', id: channelSnowflakeId}]; re-running sync on the same channel is idempotent.
   req F-4.3:
-    when: messages fetched
-    then: formatted as Markdown (author, timestamp, content per message)
+    when: the channel's name changes on Discord
+    then: the local Channel.name is updated to the "#channel — Guild" label on the next sync
   req F-4.4:
-    when: Markdown ready
-    then: Worker POSTs to EDGE; new Markdown document created in space
-  req F-4.5:
-    when: document created
-    then: ephemeral Discord confirmation with document reference
+    when: a target ref exists from a legacy integration (remoteId not set)
+    then: the Discord channel id is recovered from the Channel's foreign-key metadata rather than the target entry
 ```
 
 ```mdl
-feat F-5: Configuration Surface
+feat F-5: ECHO Persistence and Replication
 
-  req F-5.1: BotArticle rendered as article surface when Bot object selected.
-  req F-5.2: Shows bot name, status indicator, application ID, masked token.
-  req F-5.3: Shows connected guild name and tracked channels when connected.
-  req F-5.4: Disconnect button removes guild binding.
-  req F-5.5: Copy button for invite URL.
-```
-
-```mdl
-feat F-6: Worker (discord-worker)
-
-  req F-6.1: Cloudflare Worker receives Discord interaction webhooks.
-  req F-6.2: Verifies Discord request signatures.
-  req F-6.3: Routes /connect and /track to appropriate handlers.
-  req F-6.4: Stateless — all persistent state lives in the space.
-  req F-6.5: Bot token stored as Cloudflare Worker secret for Discord API calls.
+  req F-5.1: Each synced Message is appended to the Channel's ECHO Feed via Feed.append.
+  req F-5.2:
+    when: a peer receives a Message-feed update
+    then: the channel's message list reflects the new messages without additional sync
+    tags: [collaborative]
+  req F-5.3: All ECHO mutations (Channel creation, Message append, cursor update) are transacted per-target so a mid-sync crash cannot leave the space in a partially-updated state.
 ```
 
 ## Acceptance
 
 ```mdl
-test T-1: Create bot with keypair
-  given: user is in a space in Composer
-  when: user creates a Discord Bot via blueprint
+test T-1: Valid bot token accepted
+  given: user opens the Discord integration credential form
+  when: user pastes a valid bot token and submits
   then:
-    - Bot object created in space
-    - Bot.did is a valid DID string
-    - Bot.publicKey and Bot.privateKey are set
-    - Bot.status === disconnected
-    - Bot.channels is empty
+    - GET /users/@me returns 200
+    - AccessToken created with account = bot display name
+    - Integration created with targets: []
 ```
 
 ```mdl
-test T-2: Set bot token
-  given: a Bot object exists in the space
-  when: user pastes a bot token in the BotArticle
+test T-2: Invalid token rejected
+  given: user opens the credential form
+  when: user pastes an invalid token (application id, expired token, etc.)
   then:
-    - Bot.token is set
-    - Token displays masked in the UI
+    - Discord returns 401
+    - Form shows error: 'Discord rejected the token (401). Reset the bot token…'
+    - No AccessToken or Integration is persisted
 ```
 
 ```mdl
-test T-3: Generate invite URL
-  given: a Bot with applicationId set
-  when: BotArticle renders
+test T-3: Channel discovery lists all guilds
+  given: a valid Integration whose bot belongs to two guilds, each with two text channels
+  when: op:GetDiscordChannels is invoked
   then:
-    - Invite URL contains the application ID
-    - URL includes scopes: bot, applications.commands
-    - Copy button copies URL to clipboard
+    - output.targets contains four entries, one per channel
+    - each entry has id, name ("#channel — Guild"), and optional description
 ```
 
 ```mdl
-test T-4: Connect guild via slash command
-  given: a Bot exists with valid DID, Worker is deployed
-  when: user runs /connect <space-key> in Discord
+test T-4: Channel discovery skips failed guild
+  given: bot belongs to two guilds; guild B's channel list returns 403
+  when: op:GetDiscordChannels is invoked
   then:
-    - Worker POSTs to EDGE with DID and guild info
-    - Bot.guildId and Bot.guildName populated
-    - Bot.status === connected
-    - Ephemeral Discord message confirms connection
+    - targets contains only guild A's channels
+    - no error is raised; guild B failure is logged and skipped
 ```
 
 ```mdl
-test T-5: Reject unauthorized connect
-  given: a Bot whose DID is not a member of the target space
-  when: /connect <space-key> invoked
+test T-5: First sync materializes channel and appends messages
+  given: Integration with one selected target (no cursor); Discord returns 10 messages
+  when: op:SyncDiscordChannel is invoked
   then:
-    - EDGE returns Unauthorized
-    - Ephemeral Discord error message shown
-    - Bot object unchanged
+    - local Channel created in space with source=discord.com foreign key
+    - 10 Message objects appended to Channel.feed
+    - target.cursor set to the newest message snowflake id
+    - output.pulled.added === 10
 ```
 
 ```mdl
-test T-6: Track thread creates document
-  given: a connected Bot, user is in a Discord thread with 5 messages
-  when: user runs /track
+test T-6: Incremental sync fetches only new messages
+  given: target.cursor is set to snowflake S; Discord returns 3 messages after S
+  when: op:SyncDiscordChannel is invoked
   then:
-    - Worker fetches 5 thread messages
-    - Markdown document created in space
-    - Document contains all 5 messages with author and timestamp
-    - Ephemeral Discord confirmation sent
+    - only messages with id > S are fetched
+    - 3 new Messages appended; existing Messages unchanged
+    - target.cursor advances to the newest of the 3 ids
+    - output.pulled.added === 3
 ```
 
 ```mdl
-test T-7: Disconnect guild
-  given: a Bot with status connected and a guild binding
-  when: user clicks Disconnect in BotArticle
+test T-7: System messages filtered out
+  given: Discord returns 5 messages: 2 DEFAULT, 1 REPLY, 1 JOIN (type 7), 1 PIN (type 6)
+  when: op:SyncDiscordChannel maps the batch
   then:
-    - Bot.guildId and Bot.guildName cleared
-    - Bot.channels emptied
-    - Bot.status === disconnected
+    - 3 Messages appended (DEFAULT + REPLY only)
+    - JOIN and PIN messages discarded
 ```
 
 ```mdl
-test T-8: BotArticle displays configuration
-  given: a Bot with token, applicationId, and connected guild
-  when: BotArticle renders
+test T-8: Sync failure recorded per target
+  given: Integration with two selected targets; target B's channel returns 403
+  when: op:SyncDiscordChannel is invoked
   then:
-    - Status indicator shows connected
-    - Token displayed as masked (••••)
-    - Guild name visible
-    - Channel list visible
-    - Disconnect button enabled
+    - target A syncs successfully; its cursor advances
+    - target B.lastError is set with a human-readable Discord error string
+    - op returns without throwing; output.pulled.added counts only target A's messages
 ```
 
----
+```mdl
+test T-9: Channel re-sync is idempotent
+  given: Channel already exists for discord channel id X with 5 Messages
+  when: op:SyncDiscordChannel is invoked again with same cursor
+  then:
+    - no duplicate Channel created (foreign-key lookup returns existing Channel)
+    - 0 Messages appended (no new messages beyond cursor)
+    - output.pulled.added === 0
+```
 
-## Design Notes
-
-### Authentication Model
-
-The initial authentication model is stateless DID-in-header (approach 3):
-- Worker includes the bot DID in requests to EDGE.
-- EDGE validates that the DID is a member of the target space.
-- No request signing in this phase.
-
-**Future iteration:** Add HALO request signing. The Worker signs each request
-with the bot's private key (stored as a Cloudflare secret). EDGE verifies
-the signature against the DID's public key.
-
-### Bot Identity Evolution
-
-Current phase: Bot's HALO keypair (publicKey, privateKey) stored directly in
-the Bot config object. The bot does not have a full ECHO identity.
-
-Future phase: Bot promoted to its own ECHO identity with full HALO credentials.
-The Bot type schema is designed so this migration is additive — the keypair
-fields become redundant but don't break.
-
-### Worker Configuration
-
-The Worker requires two secrets:
-- `DISCORD_PUBLIC_KEY` — for verifying Discord interaction signatures.
-- `BOT_TOKEN` — for Discord API calls (fetching thread messages).
-
-**Future iteration:** Worker fetches its own config from the space via EDGE,
-eliminating the need for env-var configuration. The bot authenticates to EDGE
-with its DID, pulls its token and other config from the Bot ECHO object.
-
-### Relationship to existing discord-bot
-
-The `packages/experimental/discord-bot` package is superseded by this design.
-Useful code (Discord.js patterns, message fetching) should be absorbed into
-`discord-worker`. The experimental package can be deleted once the Worker is
-functional.
+```mdl
+test T-10: daysOfHistory controls initial lookback
+  given: new target with DiscordTargetOptions.daysOfHistory = 14
+  when: op:SyncDiscordChannel is invoked for the first time
+  then:
+    - after parameter is a snowflake derived from (now - 14 days)
+    - Messages older than 14 days are not fetched
+```
 
 ---
 
@@ -419,7 +303,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -430,7 +314,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -440,7 +324,7 @@ ext feat
 
 ```mdl
 ext test
-  uri: dxos.spec/ext/test@1.0
+  uri: org.dxos.mdl.test@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]
@@ -477,16 +361,4 @@ ext op
     effects?: EffectList        # echo:read | echo:write | http | fs | ...
     requires?: ServiceList      # injected service dependencies
     note?: Prose                # implementation guidance (non-normative)
-```
-
-```mdl
-ext service
-  uri: org.dxos.mdl.service@1.0
-  desc: An external or system-level dependency providing named operations.
-  fields:
-    desc?: Prose
-    loading?: eager | lazy
-    ops?: OpMap                 # name(params) → ReturnType
-    errors?: ErrorMap
-    note?: Prose
 ```

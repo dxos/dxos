@@ -12,11 +12,18 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
+    },
     {
       "path": "../../common/log"
     },
@@ -25,9 +32,6 @@
     },
     {
       "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -39,10 +43,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../plugin-assistant"
+      "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../plugin-navtree"
+      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-testing"

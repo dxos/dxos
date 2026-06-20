@@ -19,7 +19,7 @@ import { type Integration } from '../../types';
 export type IntegrationArticleProps = AppSurface.ObjectArticleProps<Integration.Integration>;
 
 export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [integration] = useObject(subject);
   const accessToken = integration.accessToken.target;
   const provider = useIntegrationProvider(integration.providerId);
@@ -126,11 +126,11 @@ const TargetRow = ({
   targetIndex: number;
   optionsSchema?: Schema.Schema<any, any>;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const target = integration.targets[targetIndex];
   const obj = target?.object?.target;
   const label = obj
-    ? ((obj as any).name ?? Obj.getDXN(obj).toString())
+    ? (Obj.getLabel(obj) ?? Obj.getURI(obj))
     : (target?.name ?? t('pending-sync.label', { defaultValue: 'Pending first sync…' }));
 
   // Stable default-values reference so Form.Root doesn't reinitialize on

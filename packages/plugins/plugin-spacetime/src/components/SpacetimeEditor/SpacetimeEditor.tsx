@@ -18,7 +18,7 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { type Scene } from '#types';
 

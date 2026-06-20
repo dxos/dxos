@@ -41,7 +41,7 @@ const INCLUDE_BLUEPRINTS = [
 export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(notebook);
   const { hasAttention } = useAttention(attendableId);
@@ -112,7 +112,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
-              [prompt.dxn.toString()]: result,
+              [prompt.uri]: result,
             })),
         });
       }

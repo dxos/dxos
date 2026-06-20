@@ -9,8 +9,6 @@ import { random } from '@dxos/random';
 
 import { Magazine, Subscription } from '#types';
 
-import { makeSnippet, stripHtml } from '../util/extract';
-
 /** Generates an array of random posts. */
 export const generatePosts = (count: number): Subscription.Post[] => {
   const now = new Date();
@@ -40,11 +38,19 @@ export const generateFeed = (
     description: props.description ?? random.lorem.sentence(),
   });
 
-/** Generates a curated Post with snippet and (optionally) imageUrl populated, as CurateMagazine would. */
-export const generateCuratedPost = (props: { imageUrl?: string; read?: boolean } = {}): Subscription.Post => {
+/**
+ * Generates a Post. Note: per-Post state (snippet, imageUrl, readAt) is no
+ * longer on the Post itself — it lives on the source Subscription's or
+ * Magazine's `postState` map. The caller is responsible for seeding those if
+ * the story / test needs them. The `read` / `imageUrl` params are kept on
+ * the signature for back-compat call sites; they are currently no-ops and
+ * will be wired through state-seeding helpers in a follow-up.
+ */
+export const generateCuratedPost = (_props: { imageUrl?: string; read?: boolean } = {}): Subscription.Post => {
   const description = random.lorem.paragraph(random.number.int({ min: 2, max: 4 }));
-  const imageUrl =
-    props.imageUrl ?? (Math.random() < 0.6 ? `https://picsum.photos/seed/${random.string.uuid()}/480/320` : undefined);
+  // TODO: seed Magazine.postState / Subscription.postState here once the
+  // builder has access to them; for now Posts are bare feed entries and
+  // tile snippets are recomputed on render from `description`.
   return Subscription.makePost({
     title: random.lorem.sentence(random.number.int({ min: 4, max: 10 })),
     link: random.internet.url(),
@@ -52,9 +58,6 @@ export const generateCuratedPost = (props: { imageUrl?: string; read?: boolean }
     author: random.person.fullName(),
     published: new Date(Date.now() - Math.random() * 7 * 24 * 3600 * 1000).toISOString(),
     guid: random.string.uuid(),
-    snippet: makeSnippet(stripHtml(description)),
-    imageUrl,
-    readAt: props.read ? new Date().toISOString() : undefined,
   });
 };
 
@@ -65,9 +68,10 @@ export const generateMagazine = (
     feeds: Subscription.Subscription[];
     posts: Subscription.Post[];
   }> = {},
-): Magazine.Magazine =>
-  Magazine.make({
+): Magazine.Magazine => {
+  return Magazine.make({
     name: props.name ?? random.company.name() + ' Reading List',
     feeds: (props.feeds ?? []).map((feed) => Ref.make(feed)),
     posts: (props.posts ?? []).map((post) => Ref.make(post)),
   });
+};

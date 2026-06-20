@@ -53,7 +53,7 @@ Execution: all three run in the **browser** via `AutomationCapabilities.ComputeR
 edge endpoints are required for the initial implementation. (A future optimisation chains Whisper
 → Claude inside the existing Cloudflare worker to save one client-side round trip.)
 
-Model: `@anthropic/claude-haiku-4-5` for all passes — same model used by `update-chat-name` and
+Model: `ai.claude.model.claude-haiku-4-5` for all passes — same model used by `update-chat-name` and
 `assistant-toolkit`'s `qualifier`. Cheap, fast, and competent at structured output.
 
 ## Pass A — Enrichment
@@ -225,11 +225,11 @@ Follow-up PRs:
 
 ## Defaults
 
-| Knob                     | Default                           | Notes                                         |
-| ------------------------ | --------------------------------- | --------------------------------------------- |
-| Model                    | `@anthropic/claude-haiku-4-5`     | Same as `update-chat-name` / `qualifier`.     |
-| Pass A window            | 8 transcript blocks               | Approximately 30 s at default Whisper config. |
-| Pass A concurrency       | Latest-wins (interrupt in-flight) | One fiber per article.                        |
-| Pass B silence threshold | 5 000 ms                          | Re-arms on next speech edge.                  |
-| Pass B min interval      | 60 000 ms                         | Lower bound on summary cadence.               |
-| Pass B concurrency       | Skip-if-busy                      | Avoids piling up cumulative calls.            |
+| Knob                     | Default                            | Notes                                         |
+| ------------------------ | ---------------------------------- | --------------------------------------------- |
+| Model                    | `ai.claude.model.claude-haiku-4-5` | Same as `update-chat-name` / `qualifier`.     |
+| Pass A window            | 8 transcript blocks                | Approximately 30 s at default Whisper config. |
+| Pass A concurrency       | Latest-wins (interrupt in-flight)  | One fiber per article.                        |
+| Pass B silence threshold | 5 000 ms                           | Re-arms on next speech edge.                  |
+| Pass B min interval      | 60 000 ms                          | Lower bound on summary cadence.               |
+| Pass B concurrency       | Skip-if-busy                       | Avoids piling up cumulative calls.            |

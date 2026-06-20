@@ -22,6 +22,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
@@ -46,6 +49,9 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): More relevant event?
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

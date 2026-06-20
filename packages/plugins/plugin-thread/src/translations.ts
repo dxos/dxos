@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Channel } from '@dxos/types';
 
@@ -11,7 +12,7 @@ export const translations = [
   {
     'en-US': {
       // TODO(burdon): Thread.
-      [Channel.Channel.typename]: {
+      [Type.getTypename(Channel.Channel)]: {
         'typename.label': 'Channel',
         'typename.label_zero': 'Channels',
         'typename.label_one': 'Channel',
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete channel',
         'object-deleted.label': 'Channel deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Chat',
         'channel-title.label': 'Title',
         'message.placeholder': 'Reply…',

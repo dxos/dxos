@@ -4,22 +4,23 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
-  type MapContentProps,
+  type MapViewportProps,
   type MapController,
   type MapRootProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
-import { composable } from '@dxos/ui-theme';
 
 import { type GeoControlProps } from '../types';
 
-export type MapControlProps = GeoControlProps & MapContentProps & MapRootProps;
+export type MapControlProps = GeoControlProps & MapViewportProps & MapRootProps;
 
 export const MapControl = composable<HTMLDivElement, MapControlProps>(
-  ({ center, zoom, markers, selected, onToggle, onChange, ...props }, forwardedRef) => {
+  // Map.Root is headless and exposes the controller via ref, so MapControl has no DOM ref to forward.
+  ({ center, zoom, markers, selected, onSelect, onToggle, onChange, tileUrl, lines, ...props }, _forwardedRef) => {
     const [controller, setController] = useState<MapController | null>(null);
     const handleZoomAction = useMapZoomHandler(controller);
 
@@ -27,22 +28,29 @@ export const MapControl = composable<HTMLDivElement, MapControlProps>(
       (action) => {
         switch (action) {
           case 'toggle': {
+            // Emit the live position so the next control inherits the user's current view.
+            const center = controller?.getCenter();
+            const zoom = controller?.getZoom();
+            if (center && typeof zoom === 'number') {
+              onChange?.({ center, zoom });
+            }
             onToggle?.();
             break;
           }
         }
       },
-      [onToggle],
+      [controller, onChange, onToggle],
     );
 
     return (
-      <Map.Root {...props} onChange={onChange} ref={forwardedRef}>
-        <Map.Content ref={setController} center={center} zoom={zoom}>
-          <Map.Tiles />
-          <Map.Markers markers={markers} selected={selected} />
+      <Map.Root onChange={onChange} ref={setController}>
+        <Map.Viewport {...props} center={center} zoom={zoom} minZoom={3}>
+          <Map.Tiles url={tileUrl} />
+          <Map.Lines lines={lines} />
+          <Map.Markers markers={markers} lines={lines} selected={selected} onSelect={onSelect} />
           {onToggle && <Map.Action onAction={handleAction} />}
           <Map.Zoom onAction={handleZoomAction} />
-        </Map.Content>
+        </Map.Viewport>
       </Map.Root>
     );
   },

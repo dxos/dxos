@@ -9,7 +9,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Main } from '@dxos/react-ui';
@@ -42,8 +42,8 @@ random.seed(101);
 const storySurfaceExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
-    id: 'story-article',
-    role: 'article',
+    id: 'storyArticle',
+    filter: Surface.makeFilter(AppSurface.Article),
     component: ({ data }) => {
       const subject = (data as any)?.subject;
       if (!subject) {

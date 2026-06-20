@@ -3,6 +3,7 @@
 //
 
 import { Script } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -11,7 +12,7 @@ import { Notebook } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Script.Script.typename]: {
+      [Type.getTypename(Script.Script)]: {
         'typename.label': 'Script',
         'typename.label_zero': 'Scripts',
         'typename.label_one': 'Script',
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete script',
         'object-deleted.label': 'Script deleted',
       },
-      [Notebook.Notebook.typename]: {
+      [Type.getTypename(Notebook.Notebook)]: {
         'typename.label': 'Notebook',
         'typename.label_zero': 'Notebooks',
         'typename.label_one': 'Notebook',
@@ -33,7 +34,7 @@ export const translations = [
         'delete-object.label': 'Delete notebook',
         'object-deleted.label': 'Notebook deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Scripts',
         'settings.title': 'Scripts settings',
         'description.label': 'Description',

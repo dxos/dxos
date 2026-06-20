@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-code",
-  "version": "0.1.0",
+  "version": "0.9.0",
+  "private": true,
   "description": "Composer plugin for AI-assisted plugin development",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -65,6 +66,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -79,7 +81,9 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@codemirror/lang-javascript": "catalog:",
@@ -90,9 +94,11 @@
     "@dxos/compute": "workspace:*",
     "@dxos/deus": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -105,7 +111,10 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "effect": "catalog:"
+    "@typescript/vfs": "catalog:",
+    "effect": "catalog:",
+    "esbuild-wasm": "catalog:",
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",
@@ -123,8 +132,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

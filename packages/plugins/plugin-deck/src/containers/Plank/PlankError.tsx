@@ -52,7 +52,7 @@ export const PlankError = ({
  * User facing error fallback.
  */
 export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   useEffect(() => {
     if (error) {
@@ -64,15 +64,18 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
     return <ErrorFallback title='Plank Error' error={error} />;
   } else {
     const errorString = error?.toString() ?? '';
+
     return (
       <div
         role='alert'
         data-testid='plank-content-error'
         className='dx-attention-surface overflow-y-auto p-8 grid place-items-center'
       >
-        <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
-          {error ? errorString : t('error-fallback.message')}
-        </p>
+        <div className='flex flex-col items-center gap-2'>
+          <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
+            {error ? errorString : t('error-fallback.message')}
+          </p>
+        </div>
       </div>
     );
   }

@@ -47,28 +47,47 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
     const sqlite3 = WaSqlite.Factory(factory);
     const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create('opfs', factory));
     sqlite3.vfs_register(vfs as any, false);
+    let shutdownRequested = false;
     const db = yield* Effect.acquireRelease(
       Effect.try({
         try: () => sqlite3.open_v2(options.dbName, undefined, 'opfs'),
         catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
       }),
-      (db) => Effect.sync(() => sqlite3.close(db)),
+      (handle) =>
+        Effect.sync(() => {
+          sqlite3.close(handle);
+          if (shutdownRequested) {
+            options.port.postMessage(['closed', undefined, undefined]);
+          }
+        }),
     );
 
     return yield* Effect.async<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
+        let lastSql: string | undefined;
+        let lastParams: ReadonlyArray<unknown> | undefined;
         const message = event.data as OpfsWorkerMessage;
         try {
           switch (message[0]) {
             case 'close': {
-              options.port.close();
+              shutdownRequested = true;
               return resume(Effect.void);
             }
             case 'import': {
               const [, id, data] = message;
               messageId = id;
+              log('opfs import', { bytes: data.byteLength });
               sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
+              for (const stmt of sqlite3.statements(db, 'VACUUM')) {
+                let result = sqlite3.step(stmt);
+                while (result === WaSqlite.SQLITE_ROW) {
+                  result = sqlite3.step(stmt);
+                }
+                if (result !== WaSqlite.SQLITE_DONE) {
+                  throw new Error('VACUUM failed while persisting imported database');
+                }
+              }
               options.port.postMessage([id, void 0, void 0]);
               return;
             }
@@ -92,6 +111,8 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
             default: {
               const [id, sql, params] = message;
               messageId = id;
+              lastSql = sql;
+              lastParams = params;
               const results: Array<any> = [];
               const begin = performance.now();
               let columns: Array<string> | undefined;
@@ -112,7 +133,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
         } catch (e: any) {
           // Logged at debug level: SQL errors are returned to the caller via postMessage,
           // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
-          log('sqlite error', { error: e });
+          log('sqlite error', { error: e, sql: lastSql, params: lastParams });
           const message = 'message' in e ? e.message : String(e);
           options.port.postMessage([messageId!, message, undefined]);
         }

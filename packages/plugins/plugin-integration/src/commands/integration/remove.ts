@@ -12,7 +12,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Database, DXN, Filter } from '@dxos/echo';
+import { Database, Filter, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { AccessToken } from '@dxos/types';
 
 import { printTokenRemoved } from './util';
@@ -30,13 +31,13 @@ export const remove = Command.make(
       const token = yield* Option.match(id, {
         onSome: (value) =>
           Effect.gen(function* () {
-            const dxn = DXN.fromLocalObjectId(value);
-            return yield* Database.resolve(dxn, AccessToken.AccessToken);
+            const dxn = EID.make({ entityId: value });
+            return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
         onNone: () =>
           Effect.gen(function* () {
             const filter = Filter.type(AccessToken.AccessToken);
-            const tokens = yield* Database.runQuery(filter);
+            const tokens = yield* Database.query(filter).run;
 
             if (tokens.length === 0) {
               return yield* Effect.fail(new Error('No tokens found to remove'));
@@ -52,8 +53,8 @@ export const remove = Command.make(
               choices,
             }).pipe(Prompt.run);
 
-            const dxn = DXN.fromLocalObjectId(selectedId);
-            return yield* Database.resolve(dxn, AccessToken.AccessToken);
+            const dxn = EID.make({ entityId: selectedId });
+            return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
       });
       yield* Database.remove(token);

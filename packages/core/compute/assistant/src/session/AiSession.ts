@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -15,10 +15,10 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
+import { type Blueprint, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -28,6 +28,7 @@ import { ToolExecutionServices } from '../functions';
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
+import { SessionLoader } from './SessionLoader';
 import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {
@@ -40,12 +41,20 @@ export type RunProps<R = never> = {
    * Space-level MCP servers to connect alongside blueprint-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
+
+  /**
+   * When false, messages from this request are not appended to the feed or persisted to trace.
+   *
+   * @default true
+   */
+  persist?: boolean;
 };
 
 export type Options = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Feed.FeedService>;
-  registry?: Registry.Registry;
+  runtime: Runtime.Runtime<Database.Service>;
+  /** @effect-atom/atom-react Registry for reactive state. */
+  registry?: AtomRegistry.Registry;
 };
 
 /**
@@ -64,7 +73,8 @@ export class Session extends Resource {
    */
   private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  private readonly _sessionLoader = new SessionLoader();
 
   public constructor(options: Options) {
     super();
@@ -94,7 +104,8 @@ export class Session extends Resource {
   public async getHistory(): Promise<Message.Message[]> {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
-    return items.filter(Obj.instanceOf(Message.Message));
+    const messages = items.filter(Obj.instanceOf(Message.Message));
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, messages));
   }
 
   getTools(): Effect.Effect<
@@ -114,10 +125,10 @@ export class Session extends Resource {
   makeToolExecutionServices(): Layer.Layer<
     ToolExecutionService | ToolResolverService,
     never,
-    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | OperationRegistry.Service
+    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | Registry.Service
   > {
     return ToolExecutionServices.pipe(
-      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() })),
+      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) })),
     );
   }
 
@@ -141,6 +152,7 @@ export class Session extends Resource {
       const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
+        persist: params.persist,
         onOutput: (message) =>
           Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
       });
@@ -193,7 +205,7 @@ export class Session extends Resource {
             binder: this.context,
           }),
           Layer.succeed(Service, this),
-          Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() }),
+          Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) }),
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
@@ -214,7 +226,7 @@ export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Ser
         Layer.scoped(
           Service,
           Effect.gen(function* () {
-            const session = yield* acquireReleaseResource(() => new Session(options));
+            const session = yield* EffectEx.acquireReleaseResource(() => new Session(options));
             return session;
           }),
         ),
@@ -226,11 +238,11 @@ export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Ser
    */
   static layerNewFeed = (
     options?: Omit<Options, 'feed' | 'runtime'>,
-  ): Layer.Layer<Service | AiContext.Service, never, Database.Service | Feed.FeedService> =>
+  ): Layer.Layer<Service | AiContext.Service, never, Database.Service> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
         const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         return Service.layer({ ...options, feed, runtime });
       }),
     );

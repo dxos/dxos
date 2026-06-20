@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SpaceSyncState } from '@dxos/echo-db';
+import { type SpaceSyncState } from '@dxos/echo-client';
 import { type SpaceId } from '@dxos/keys';
 
 export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;

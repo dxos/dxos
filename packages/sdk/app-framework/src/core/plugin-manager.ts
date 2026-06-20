@@ -14,8 +14,7 @@ import * as HashSet from 'effect/HashSet';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
-import { runAndForwardErrors } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { EffectEx, Performance } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -99,7 +98,6 @@ export type LoadedPlugin = {
 export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
-  core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
   /**
@@ -333,7 +331,6 @@ class ManagerImpl implements PluginManager {
   constructor({
     pluginLoader,
     plugins = [],
-    core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
     pluginRegistryProvider,
@@ -341,6 +338,12 @@ class ManagerImpl implements PluginManager {
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
   }: ManagerOptions) {
+    // Core plugins are derived from `meta.tags.includes('system')`; the set is
+    // a snapshot of the initial `plugins` array (later `add()` calls do not
+    // promote plugins to core).
+    const core: string[] = plugins
+      .filter(({ meta }) => meta.profile.tags?.includes('system'))
+      .map(({ meta }) => meta.profile.key);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
@@ -373,7 +376,7 @@ class ManagerImpl implements PluginManager {
         Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
         Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause)),
       )
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -530,7 +533,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
       const { plugin, dev = false } = yield* this._pluginLoader(id);
-      const pluginId = plugin.meta.id;
+      const pluginId = plugin.meta.profile.key;
       const existing = this._getPlugin(pluginId);
 
       if (dev && existing && existing !== plugin) {
@@ -546,7 +549,9 @@ class ManagerImpl implements PluginManager {
           yield* this.disable(pluginId);
         }
         this._markDev(pluginId, { plugin: existing, wasEnabled });
-        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === pluginId ? plugin : p)));
+        this._update(this._pluginsAtom, (plugins) =>
+          plugins.map((p) => (p.meta.profile.key === pluginId ? plugin : p)),
+        );
       } else {
         this._addPlugin(plugin);
         if (dev) {
@@ -720,7 +725,7 @@ class ManagerImpl implements PluginManager {
       if (!Plugin.isLazy(plugin)) {
         return plugin;
       }
-      const id = plugin.meta.id;
+      const id = plugin.meta.profile.key;
 
       const existing = this._resolvingPlugins.get(id);
       if (existing) {
@@ -746,7 +751,9 @@ class ManagerImpl implements PluginManager {
               }),
           }),
         );
-        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === id ? resolvedPlugin : p)));
+        this._update(this._pluginsAtom, (plugins) =>
+          plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)),
+        );
         yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(
@@ -1014,17 +1021,17 @@ class ManagerImpl implements PluginManager {
   }
 
   private _getPlugin(id: string): Plugin.Plugin | undefined {
-    return this._get(this._pluginsAtom).find((plugin) => plugin.meta.id === id);
+    return this._get(this._pluginsAtom).find((plugin) => plugin.meta.profile.key === id);
   }
 
   private _getPluginIdForModule(moduleId: string): string | undefined {
     return this._get(this._pluginsAtom).find((plugin) => plugin.modules.some((module) => module.id === moduleId))?.meta
-      .id;
+      .profile.key;
   }
 
   /** Looks up an id in the cached registry catalog, returning the entry or `undefined`. */
-  private _getCatalogEntry(id: string): PluginRegistry.Plugin | undefined {
-    return this._get(this.pluginRegistry.plugins).entries.find((entry) => entry.id === id);
+  private _getCatalogEntry(id: string): Plugin.Meta | undefined {
+    return this._get(this.pluginRegistry.plugins).entries.find((entry) => entry.profile.key === id);
   }
 
   /**
@@ -1036,10 +1043,10 @@ class ManagerImpl implements PluginManager {
   private _directDependencies(id: string): string[] {
     const plugin = this._getPlugin(id);
     if (plugin) {
-      return [...(plugin.meta.dependsOn ?? [])];
+      return [...(plugin.meta.profile.dependsOn ?? [])];
     }
     const catalog = this._getCatalogEntry(id);
-    return catalog?.dependsOn ? [...catalog.dependsOn] : [];
+    return catalog?.profile.dependsOn ? [...catalog.profile.dependsOn] : [];
   }
 
   /**
@@ -1067,8 +1074,8 @@ class ManagerImpl implements PluginManager {
     let cycle: string[] | undefined;
 
     const knownIds = new Set<string>([
-      ...this._get(this._pluginsAtom).map((plugin) => plugin.meta.id),
-      ...this._get(this.pluginRegistry.plugins).entries.map((entry) => entry.id),
+      ...this._get(this._pluginsAtom).map((plugin) => plugin.meta.profile.key),
+      ...this._get(this.pluginRegistry.plugins).entries.map((entry) => entry.profile.key),
     ]);
 
     const visit = (currentId: string): void => {
@@ -1119,8 +1126,8 @@ class ManagerImpl implements PluginManager {
    */
   private _collectDependents(id: string, opts: { transitive: boolean; enabledOnly: boolean }): string[] {
     const direct = this._get(this._pluginsAtom)
-      .filter((plugin) => plugin.meta.dependsOn?.includes(id))
-      .map((plugin) => plugin.meta.id);
+      .filter((plugin) => plugin.meta.profile.dependsOn?.some((dep) => dep === id))
+      .map((plugin) => plugin.meta.profile.key);
 
     if (!opts.transitive) {
       return opts.enabledOnly
@@ -1136,8 +1143,8 @@ class ManagerImpl implements PluginManager {
       }
       visited.add(currentId);
       const parents = this._get(this._pluginsAtom)
-        .filter((plugin) => plugin.meta.dependsOn?.includes(currentId))
-        .map((plugin) => plugin.meta.id);
+        .filter((plugin) => plugin.meta.profile.dependsOn?.some((dep) => dep === currentId))
+        .map((plugin) => plugin.meta.profile.key);
       for (const parentId of parents) {
         visit(parentId);
         if (parentId !== id && !result.includes(parentId)) {
@@ -1162,7 +1169,7 @@ class ManagerImpl implements PluginManager {
   private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
     const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
     const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed', { id, phase, reason, error: error.message });
+    log.warn('plugin failed to activate', { id, phase, reason, error: error.message });
     this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
   }
 
@@ -1173,6 +1180,10 @@ class ManagerImpl implements PluginManager {
    * them being non-removable; the failure record is enough signal).
    */
   private _scheduleAutoDisable(id: string): void {
+    if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+      // Transient HMR failures must not persist; skip auto-disable in dev server.
+      return;
+    }
     if (this._get(this._coreAtom).includes(id)) {
       return;
     }
@@ -1181,6 +1192,7 @@ class ManagerImpl implements PluginManager {
     }
     this._runForkedFiber(
       this.disable(id).pipe(
+        Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
         Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
         Effect.ignore,
       ),
@@ -1275,14 +1287,14 @@ class ManagerImpl implements PluginManager {
   //
 
   private _addPlugin(plugin: Plugin.Plugin): void {
-    log('add plugin', { id: plugin.meta.id });
+    log('add plugin', { id: plugin.meta.profile.key });
     // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
     this._update(this._pluginsAtom, (plugins) => (plugins.includes(plugin) ? plugins : [...plugins, plugin]));
   }
 
   private _removePlugin(id: string): void {
     log('remove plugin', { id });
-    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.id !== id));
+    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.profile.key !== id));
   }
 
   private _addModule(module: Plugin.PluginModule): void {
@@ -1342,7 +1354,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
-      log('activating modules', { key, modules: activatingModuleIds });
+      log('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
@@ -1580,9 +1592,14 @@ class ManagerImpl implements PluginManager {
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) => {
               const error = Cause.squash(cause);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              const missingCapability = errorMessage.match(/No capability found for ([^\s\[]+)/)?.[1];
               log.error('module failed to activate', {
                 module: module.id,
-                error: error instanceof Error ? error.message : String(error),
+                parentEvent,
+                missingCapability,
+                registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
+                error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });

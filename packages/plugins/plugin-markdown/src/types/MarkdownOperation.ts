@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, Type, DXN } from '@dxos/echo';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 import { trim } from '@dxos/util';
 
@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 import * as Markdown from './Markdown';
 
-const MARKDOWN_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 const Edit = Schema.Struct({
   oldString: Schema.String.annotations({
@@ -32,9 +32,10 @@ const Edit = Schema.Struct({
 
 export const Create = Operation.make({
   meta: {
-    key: 'org.dxos.function.markdown.create',
+    key: DXN.make('org.dxos.function.markdown.create'),
     name: 'Create',
     description: 'Creates a new markdown document and adds it to the space.',
+    icon: 'ph--file-text--regular',
   },
   input: Schema.Struct({
     name: Schema.String,
@@ -49,22 +50,27 @@ export const Create = Operation.make({
 });
 
 export const CreateMarkdown = Operation.make({
-  meta: { key: `${MARKDOWN_OPERATION}.create`, name: 'Create Markdown Document' },
+  meta: {
+    key: makeKey('create'),
+    name: 'Create Markdown Document',
+    icon: 'ph--file-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     content: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
-    object: Markdown.Document,
+    object: Type.getSchema(Markdown.Document),
   }),
 });
 
 export const Open = Operation.make({
   meta: {
-    key: 'org.dxos.function.markdown.open',
+    key: DXN.make('org.dxos.function.markdown.open'),
     name: 'Open',
     description: 'Opens and reads the contents of a new markdown document.',
+    icon: 'ph--arrow-square-out--regular',
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotations({
@@ -78,7 +84,11 @@ export const Open = Operation.make({
 });
 
 export const ScrollToAnchor = Operation.make({
-  meta: { key: `${MARKDOWN_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor' },
+  meta: {
+    key: makeKey('scrollToAnchor'),
+    name: 'Scroll To Anchor',
+    icon: 'ph--anchor-simple--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),
@@ -90,7 +100,7 @@ export const ScrollToAnchor = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const SetViewMode = Operation.make({
-  meta: { key: `${MARKDOWN_OPERATION}.set-view-mode`, name: 'Set View Mode' },
+  meta: { key: makeKey('setViewMode'), name: 'Set View Mode', icon: 'ph--layout--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     id: Schema.String,
@@ -101,11 +111,12 @@ export const SetViewMode = Operation.make({
 
 export const Update = Operation.make({
   meta: {
-    key: 'org.dxos.function.markdown.update',
+    key: DXN.make('org.dxos.function.markdown.update'),
     name: 'Update',
     description: trim`
       Applies a set of edits to the markdown document.
     `,
+    icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotations({

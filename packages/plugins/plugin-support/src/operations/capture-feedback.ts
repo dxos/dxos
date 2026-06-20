@@ -15,7 +15,10 @@ const handler: Operation.WithHandler<typeof SupportOperation.CaptureUserFeedback
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
         const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-        observability.feedback.captureUserFeedback({ message: input.message, includeLogs: input.includeLogs });
+        const eventUuid = yield* Effect.promise(() =>
+          observability.feedback.captureUserFeedback({ message: input.message, includeLogs: input.includeLogs }),
+        );
+        return eventUuid;
       }),
     ),
   );

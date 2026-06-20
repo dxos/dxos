@@ -5,6 +5,7 @@
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
+- DO NOT EVER ASK a-or-b questions without numbering them.
 - ALWAYS test your work after each step.
 
 ## Dependencies
@@ -28,10 +29,15 @@
 ## Planning
 
 - **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error. `as const` is NOT a cast in this sense — it narrows a literal rather than bypassing the checker, and is always acceptable (no comment or justification needed).
+  - Default: fix the type at its source (inference, signature, generic), not the call site that surfaced the error. A red typecheck during a refactor is a finding, not an obstacle to paper over.
+  - Casts are only acceptable at genuine type-system boundaries (external/untyped data, deliberate coercions), and must carry a concise comment saying why no typed alternative exists.
+  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review. (`as const` is intentionally excluded from this pattern.)
+  - Casts accumulate fastest during large codemods — treat each as a deliberate decision, never an autopilot stopgap.
 
 ## Knowledge
 
-- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/skills/*`.
 - Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style
@@ -40,12 +46,14 @@
 - Use TypeScript with single quotes for strings.
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
+- **Internal module imports** (e.g. `@dxos/echo` entrypoints importing `src/internal/<Module>/`): import the capitalized internal barrel as a lowercase `*Internal` namespace — `import * as objInternal from './internal/Obj'`, `import * as queryInternal from './internal/Query'`. Do not deep-import submodules (`./internal/Obj/atoms`, `./internal/Ref/ref`, etc.); re-export needed symbols from the module's `index.ts` instead. The top-level `./internal` barrel is for cross-cutting re-exports only — prefer the per-module barrel when a single entrypoint owns the dependency. Atom factories inside internal modules use the `makeAtom` name (not `make`) to avoid clashing with public `make` APIs.
 - Error handling: use Effect-TS patterns.
-- Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
 - JSDoc comments for public functions, all comments end with period.
+- Comments state _why the code is necessary_ (the invariant or constraint it satisfies), concise and self-contained. Never narrate the fix, reference this conversation, or use before/after framing ("rather than X we now do Y", "this used to…"). State the constraint that makes the code correct; drop the history.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
+- Avoid default exports unless required.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.
@@ -54,6 +62,68 @@
 - Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
 - Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
 - Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
+- For exported functions with multiple overloads, declare them as `const` with the overload signatures inline in the type annotation rather than using `export function` with repeated declarations. This keeps the implementation as an arrow function and groups all signatures together:
+  ```ts
+  export const myFn: {
+    <T extends Foo>(a: T): Bar<T>;
+    (a: string): Bar<any>;
+  } = (a): Bar<unknown> => { ... };
+  ```
+
+### Testing
+
+- place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
+- **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
+- **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
+- Prefer unified `TestLayer` for all tests instead of creating a separate one for each test.
+- `TestLayer(opts?)` can be parametrized so tests can configure it.
+- Place test layer, configuration, and main definitions on top of the suite, while helpers go on the bottom.
+- Avoid sleep and polling in tests as much as possible. Try to use events and TestClock instead.
+
+### Namespaces exports in packages
+
+- We're converting more and more packages to ones with namespaces exports. Example:
+
+```text
+src/
+  Foo.ts
+  Bar.ts
+  errors.ts
+  index.ts
+  testing/
+    index.ts
+  internal/
+    foo.ts
+    bar.ts
+    baz.ts
+```
+
+```ts
+// index.ts
+export * as Foo from './Foo';
+export * as Bar from './Bar';
+export * from './errors';
+```
+
+```ts
+// Foo.ts
+
+// @import-as-namespace
+export const one = 1;
+export const two = 2;
+export const func: {
+  (a: string): number;
+  (a: number): string;
+} = (a) => {
+  return a;
+};
+```
+
+- Code is organized into modules exported as namespace. Modules have capital case names.
+- `@import-as-namespace` linter directive is used to mark the file as a namespace export.
+- Internal code is hidden in the `internal/` directory that is not exported.
+- `testing/` directory and `errors.ts` are the exception.
+- Use `@dxos/echo` as a reference for this pattern.
 
 ### React
 
@@ -66,17 +136,26 @@
 
 ## Workflow
 
-- Never work on `main`
-  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
-  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
-  - If there are unstaged changes, stash these and move them into the worktree.
+- Never work on `main`; always work within the session-generated worktree.
+  - If there are unstaged changes, stash these and move them into the worktree; tell the user.
+  - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
   - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
 - If updating `pnpm-workspace.yaml` make sure to preserve comments.
+
+## Interacting The User
+
+- When collaborating closely with the User, determine if the user's role can be automated.
+- Be precise about what you are asking the user to do and actively manage the process.
+- **IMPORTANT**: Model the user as a very expensive, intermittent resource and minimize round-trips to them. The wasteful pattern to avoid: the user waits a long time for the agent to finish, only to be asked to test or supply something the agent could have anticipated.
+  - At task start, analyze ALL human dependencies up-front (test credentials, assets, design decisions, accounts, manual verification steps).
+  - Gather/build/scaffold anything obtainable autonomously BEFORE asking the user for anything.
+  - Request all needed resources from the user in ONE batch, alongside a very concise plan; get a single go-ahead.
+  - Then execute the remainder of the task uninterrupted; do not bounce back for things that could have been front-loaded.
+  - If you hit an unforeseen human dependency mid-task, park it and continue all other reachable work; only surface an immediate ask when you are fully blocked and cannot make progress otherwise. Batch parked asks for the next checkpoint.
 
 ## PR Naming Convention
 
@@ -109,7 +188,7 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push all pending changes.
+  - Commit and push ALL unstaged changes (including any edits that the user may have made in the worktree).
   - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
@@ -117,6 +196,7 @@ Examples:
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
   - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.
+  - **IMPORTANT**: ALWAYS surface the Composer preview URL next to the PR number/link in chat summaries AND in the final message. The `preview-deploy.yml` workflow publishes a sticky `composer-preview` comment on the PR containing a branch-alias URL of the form `https://<branch-alias>.composer-app.pages.dev` and a per-deployment URL — fetch it with `gh pr view <pr> --json comments` (or `gh api repos/dxos/dxos/issues/<pr>/comments`) and include it verbatim. If the preview comment is not yet posted (deploy still running), say "preview pending" alongside the PR link and re-check on the next status update.
 
 ## Cursor Cloud specific instructions
 

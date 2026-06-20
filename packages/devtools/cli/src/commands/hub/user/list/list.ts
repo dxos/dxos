@@ -21,7 +21,7 @@ export const list = Command.make(
   Effect.fn(function* () {
     const config = yield* ConfigService;
     const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
-    const url = path.join(baseUrl, '/api/user/profile');
+    const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);
     }
@@ -43,7 +43,7 @@ export const list = Command.make(
       return yield* Console.log(result);
     } else {
       // TODO(burdon): Output table. Look at @effect/printer.
-      return yield* Console.log((result as any).profiles?.length + ' profiles');
+      return yield* Console.log((result as any).entries?.length + ' waitlist entries');
     }
   }),
 ).pipe(Command.withDescription('List hub users.'));

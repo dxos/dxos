@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createDocAccessor } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { createDocAccessor } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -63,7 +63,7 @@ describe('diff', () => {
   it('should append text to an empty document', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Text.Text]);
+    graph.registry.add([Text.Text]);
 
     const text = db.add(Text.make({ content: '' }));
     const accessor = createDocAccessor(text, ['content']);

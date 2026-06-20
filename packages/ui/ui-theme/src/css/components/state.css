@@ -1,0 +1,76 @@
+/**
+ * Selected / Current / Highlighted state utilities.
+ *
+ * See `./selected.md` for the ARIA pairing grammar — every class below
+ * fires off a specific attribute and silently does nothing without it.
+ */
+
+@layer dx-components {
+  /*
+   * Pure visual affordance, no ARIA pair. Combine with dx-selected or dx-current.
+   *
+   * Picks the hover variant matching the element's underlying state:
+   *   - neither aria-selected nor aria-current → hover-surface
+   *   - aria-selected="true"                   → selected-surface-hover
+   *   - aria-current="true"                    → current-surface-hover (wins if both)
+   *
+   * Higher-specificity rules (attribute selectors) override the plain :hover rule,
+   * and `aria-current` is listed last so it beats `aria-selected` at equal specificity.
+   */
+  .dx-hover {
+    @apply cursor-pointer
+      hover:bg-hover-surface-subtle! hover:text-hover-fg!
+      hover:aria-selected:bg-selected-surface-hover hover:aria-selected:text-selected-fg
+      hover:aria-[current=true]:bg-current-surface-hover hover:aria-[current=true]:text-current-fg;
+  }
+  .dx-hover-row {
+    @apply group-hover/row:bg-hover-surface-subtle! group-hover/row:text-hover-fg!
+      group-hover/row:group-aria-selected/row:bg-selected-surface-hover!
+      group-hover/row:group-aria-selected/row:text-selected-fg!
+      group-hover/row:group-aria-[current=true]/row:bg-current-surface-hover!
+      group-hover/row:group-aria-[current=true]/row:text-current-fg!;
+  }
+
+  /*
+   * Pairs with `aria-selected`. Use for listbox/option selection (master/detail).
+   * `!` is required: these utilities live in the `dx-components` layer, but
+   * background utilities like `bg-card-surface` live in Tailwind's
+   * `utilities` layer (declared later in the cascade), so without
+   * `!important` the card background would override the state colour.
+   *
+   * NOTE: Declared before `.dx-current` so that when an element has both
+   * `aria-selected="true"` and `aria-current="true"`, `dx-current` wins at
+   * equal specificity (consistent with how `dx-hover` resolves the same
+   * conflict).
+   */
+  .dx-selected {
+    @apply aria-selected:bg-selected-surface! aria-selected:text-selected-fg!
+      aria-selected:font-semibold aria-selected:tracking-normal
+      transition-[color,font-variation-settings,letter-spacing];
+  }
+
+  /*
+   * Pairs with `aria-current="true|page|…"`. Use for "you are here" navigation.
+   *
+   * The ring uses the subdued focus indicator (neutral) rather than the
+   * accent blue — `dx-current` marks position, not focus, so a saturated
+   * ring would compete with the actual keyboard focus ring.
+   */
+  .dx-current {
+    @apply dx-ring-pseudo
+      aria-[current=true]:bg-current-surface! aria-[current=true]:text-current-fg!
+      aria-[current=true]:after:ring-focus-ring-subtle!;
+  }
+  .dx-current-row {
+    @apply group-aria-[current=true]/row:bg-current-surface! group-aria-[current=true]/row:text-current-fg!;
+  }
+
+  /*
+   * Pairs with Radix-managed `data-highlighted`. Don't set the attribute manually.
+   */
+  .dx-highlighted {
+    @apply data-[highlighted]:bg-current-surface
+      data-[highlighted]:text-current-fg
+      hover:data-[highlighted]:bg-current-surface-hover;
+  }
+}

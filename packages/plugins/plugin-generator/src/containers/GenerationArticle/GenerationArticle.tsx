@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
-import { Carousel, MediaPlayer, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Carousel, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PromptEditor } from '#components';
@@ -22,7 +22,7 @@ type Status = 'idle' | 'busy' | 'error';
 export type GenerationArticleProps = AppSurface.ObjectArticleProps<Generation.Generation>;
 
 export const GenerationArticle = ({ role, subject, attendableId }: GenerationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [generation] = useObject(subject);
   const settings = useAtomCapability(GeneratorCapabilities.Settings);
   const apiKey = settings?.apiKey;
@@ -91,7 +91,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
         .action(
           'generate',
           {
-            label: [busy ? 'generating.label' : 'generate.label', { ns: meta.id }],
+            label: [busy ? 'generating.label' : 'generate.label', { ns: meta.profile.key }],
             icon: busy ? 'ph--spinner-gap--regular' : 'ph--play--regular',
             iconOnly: true,
             iconClassNames: busy ? 'animate-spin' : undefined,
@@ -102,7 +102,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
         .action(
           'delete',
           {
-            label: ['delete-media.label', { ns: meta.id }],
+            label: ['delete-media.label', { ns: meta.profile.key }],
             icon: 'ph--trash--regular',
             iconOnly: true,
             disabled: !hasMedia || busy,
@@ -131,22 +131,22 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
        * letterboxing within whatever aspect the bounded viewport ends up with.
        */}
       <Panel.Content classNames='dx-container grid grid-rows-[minmax(0,1fr)_minmax(0,50%)]'>
-        <PromptEditor id={generation.prompt.dxn.toString()} text={generation.prompt.target} />
+        <PromptEditor id={generation.prompt.uri} text={generation.prompt.target} />
         {urls.length > 0 && (
           // Carousel resets to index 0 (the latest) every time a new url is
           // prepended — `key={urls.length}` forces a fresh mount on growth so
           // the user lands on the new clip without manual navigation.
-          <Carousel.Root key={urls.length} count={urls.length} classNames='min-h-0 h-full p-2'>
-            <Carousel.Previous />
-            <Carousel.Viewport classNames='aspect-auto h-full'>
-              {urls.map((url, index) => (
-                <Carousel.Slide key={url} index={index}>
-                  <MediaPlayer src={url} kind={generation.type} />
-                </Carousel.Slide>
-              ))}
-            </Carousel.Viewport>
-            <Carousel.Next />
-            <Carousel.Indicators />
+          <Carousel.Root key={urls.length} count={urls.length}>
+            <Carousel.Content classNames='min-h-0 h-full p-2'>
+              <Carousel.Previous />
+              <Carousel.Viewport classNames='aspect-auto h-full'>
+                {urls.map((url, index) => (
+                  <Carousel.Slide key={url} index={index} src={url} kind={generation.type} />
+                ))}
+              </Carousel.Viewport>
+              <Carousel.Next />
+              <Carousel.Indicators />
+            </Carousel.Content>
           </Carousel.Root>
         )}
       </Panel.Content>

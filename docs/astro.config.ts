@@ -46,7 +46,7 @@ export default defineConfig({
         },
         {
           label: 'Composer',
-          autogenerate: { directory: 'docs/composer' },
+          items: [{ autogenerate: { directory: 'docs/composer' } }],
           collapsed: false,
         },
         {
@@ -58,27 +58,27 @@ export default defineConfig({
             },
             {
               label: 'Installation',
-              autogenerate: { directory: 'docs/echo/installation' },
+              items: [{ autogenerate: { directory: 'docs/echo/installation' } }],
             },
             {
               label: 'Typescript',
-              autogenerate: { directory: 'docs/echo/typescript' },
+              items: [{ autogenerate: { directory: 'docs/echo/typescript' } }],
             },
             {
               label: 'React',
-              autogenerate: { directory: 'docs/echo/react' },
+              items: [{ autogenerate: { directory: 'docs/echo/react' } }],
             },
           ],
           collapsed: false,
         },
         {
           label: 'HALO Identity',
-          autogenerate: { directory: 'docs/halo' },
+          items: [{ autogenerate: { directory: 'docs/halo' } }],
           collapsed: false,
         },
         {
           label: 'Additional Resources',
-          autogenerate: { directory: 'docs/additional-resources' },
+          items: [{ autogenerate: { directory: 'docs/additional-resources' } }],
           collapsed: false,
         },
       ],

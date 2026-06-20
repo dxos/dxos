@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
 import { COMMANDS_DIALOG } from '#meta';
@@ -23,29 +24,22 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'navigation',
-        role: 'navigation',
-        filter: (data): data is { popoverAnchorId?: string; current: string } => typeof data.current === 'string',
-        component: ({ data, ref }) => {
-          return (
-            <NavTreeContainer
-              tab={data.current}
-              popoverAnchorId={data.popoverAnchorId as string | undefined}
-              ref={ref}
-            />
-          );
-        },
+        filter: Surface.makeFilter(AppSurface.Navigation),
+        component: ({ data, ref }) => (
+          <NavTreeContainer tab={data.current} popoverAnchorId={data.popoverAnchorId} ref={ref} />
+        ),
       }),
       Surface.create({
-        id: 'document-title',
-        role: 'document-title',
+        id: 'documentTitle',
+        filter: Surface.makeFilter(AppSurface.DocumentTitle),
         component: ({ data }) => (
           <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
         ),
       }),
       Surface.create({
-        id: 'search-input',
-        role: 'search-input',
-        position: 'fallback',
+        id: 'searchInput',
+        filter: Surface.makeFilter(AppSurface.SearchInput),
+        position: Position.last,
         component: () => <CommandsTrigger />,
       }),
     ]),

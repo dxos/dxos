@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { BeaconStatusIndicator } from '#components';
 
@@ -14,8 +15,8 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'beacon-status',
-        role: 'status-indicator',
+        id: 'beaconStatus',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => <BeaconStatusIndicator />,
       }),
     ]),

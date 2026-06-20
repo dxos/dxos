@@ -38,7 +38,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
 
     return (
       <div
-        className='flex flex-col w-[15rem] min-h-[10rem] overflow-hidden rounded-md shadow-xl bg-accent-surface text-accent-foreground'
+        className='flex flex-col w-[15rem] min-h-[10rem] overflow-hidden rounded-md shadow-xl bg-accent-bg text-accent-fg'
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
@@ -46,9 +46,9 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
         ref={forwardedRef}
       >
         <div className='flex p-2'>
-          <h2 className='grow px-2 py-1 text-lg font-medium text-accent-foreground'>{title}</h2>
+          <h2 className='grow px-2 py-1 text-lg font-medium text-accent-fg'>{title}</h2>
           <IconButton
-            density='fine'
+            density='md'
             icon='ph--x--bold'
             iconOnly
             label={closeProps['aria-label']}

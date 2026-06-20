@@ -30,6 +30,11 @@ export const useSections = (): SectionItem[] => {
           icon: 'ph--hard-drives--regular',
         },
         {
+          id: '/client/sqlite',
+          title: 'SQLite',
+          icon: 'ph--database--regular',
+        },
+        {
           id: '/client/logs',
           title: 'Logs',
           icon: 'ph--receipt--regular',

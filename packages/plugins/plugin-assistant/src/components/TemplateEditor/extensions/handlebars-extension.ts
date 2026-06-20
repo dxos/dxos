@@ -57,8 +57,8 @@ const regex = {
   // {{var}}
   var: /\{\{(?!\s*!)(\w[^}]*)\}\}/g,
 
-  // @dxn:queue:data:xxx
-  dxn: /@?dxn:[\w@:]+/g,
+  // @echo://space/id or @dxn:nsid
+  dxn: /@?(?:echo:\/{1,3}[\w/]+|dxn:[\w.-]+)/g,
 
   // example.com/path/xxx
   url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,

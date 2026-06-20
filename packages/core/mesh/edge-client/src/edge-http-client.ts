@@ -4,33 +4,31 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { sleep } from '@dxos/async';
-import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
-import { runAndForwardErrors } from '@dxos/effect';
+import { type Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
+  type CompleteOAuthRegistrationRequest,
+  type CompleteOAuthRegistrationResponse,
   type CreateAgentRequestBody,
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EDGE_CLIENT_TAG_HEADER,
-  EdgeAuthChallengeError,
-  EdgeCallFailedError,
-  type EdgeFailure,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
   type ExportBundleResponse,
   type FeedProtocol,
   type GetAgentStatusResponseBody,
-  type GetPluginVersionsResponseBody,
-  type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
+  type GetPluginsResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
@@ -49,14 +47,14 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { createUrl } from '@dxos/util';
 
-import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
-import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
-import { getEdgeUrlWithProtocol } from './utils';
+import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
+import { proxyFetchLegacy } from './cors-proxy';
+import { HttpConfig, withLogging, withRetryConfig } from './http-client';
+
+export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client';
 
 /**
- * HTTP wire shape returned by `/queue/.../query`. Unlike `FeedProtocol.QueryResult`
- * (the RPC proto type, which transports object payloads as JSON strings), the edge
- * HTTP endpoint embeds each object directly in the response JSON.
+ * HTTP wire shape returned by `/queue/.../query`.
  */
 export type EdgeQueryQueueResponse = {
   objects?: unknown[];
@@ -64,83 +62,37 @@ export type EdgeQueryQueueResponse = {
   prevCursor?: string;
 };
 
-const DEFAULT_RETRY_TIMEOUT = 1500;
-const DEFAULT_RETRY_JITTER = 500;
-const DEFAULT_MAX_RETRIES_COUNT = 3;
-const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
-
-export type RetryConfig = {
-  /**
-   * A number of call retries, not counting the initial request.
-   */
-  count: number;
-  /**
-   * Delay before retries in ms.
-   */
-  timeout?: number;
-  /**
-   * A random amount of time before retrying to help prevent large bursts of requests.
-   */
-  jitter?: number;
+export type UploadPluginBundleRequest = {
+  slug: string;
+  version: string;
+  files: { path: string; content: string }[];
 };
 
-type EdgeHttpRequestArgs = {
-  method: string;
-  retry?: RetryConfig;
-  body?: any;
-  /**
-   * @default true
-   */
-  json?: boolean;
-
-  /**
-   * Force authentication.
-   * This should be used for requests with large bodies to avoid sending the body twice.
-   * The client will call /auth endpoint to generate the auth header.
-   */
-  auth?: boolean;
+export type TriggersDispatcherStatus = {
+  isActive: boolean;
+  nextCronTaskRunTimestamp?: number;
+  registeredTriggers: string[];
+  stopAfterTimestamp?: number;
+  remainingMs?: number;
+  nextAlarmTimestamp?: number;
 };
-
-export type EdgeHttpCallArgs = Pick<EdgeHttpRequestArgs, 'retry' | 'auth'>;
 
 export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
-export type EdgeHttpClientOptions = {
-  /**
-   * Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header on every request.
-   * Used on Edge to classify traffic for metering (e.g. `ci-e2e`).
-   */
-  clientTag?: string;
-};
+export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
-export class EdgeHttpClient {
-  private readonly _baseUrl: string;
-  private readonly _clientTag: string | undefined;
-
-  private _edgeIdentity: EdgeIdentity | undefined;
-
-  /**
-   * Auth header is cached until receiving the next 401 from EDGE, at which point it gets refreshed.
-   */
-  private _authHeader: string | undefined;
-
+/**
+ * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).
+ *
+ * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} — the two
+ * services run at different URLs and are never both available from the same base URL.
+ */
+export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
-    this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
-    this._clientTag = options?.clientTag;
-    log('created', { url: this._baseUrl });
-  }
-
-  get baseUrl() {
-    return this._baseUrl;
-  }
-
-  setIdentity(identity: EdgeIdentity): void {
-    if (this._edgeIdentity?.identityKey !== identity.identityKey || this._edgeIdentity?.peerKey !== identity.peerKey) {
-      this._edgeIdentity = identity;
-      this._authHeader = undefined;
-    }
+    super(baseUrl, options);
+    log('created', { url: this.baseUrl });
   }
 
   //
@@ -208,7 +160,7 @@ export class EdgeHttpClient {
   }
 
   //
-  // Invitations
+  // Invitations (space join)
   //
 
   public async joinSpaceByInvitation(
@@ -221,7 +173,7 @@ export class EdgeHttpClient {
   }
 
   //
-  // OAuth and credentials
+  // OAuth
   //
 
   public async initiateOAuthFlow(
@@ -230,6 +182,14 @@ export class EdgeHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<InitiateOAuthFlowResponse> {
     return this._call(ctx, new URL('/oauth/initiate', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  public async completeOAuthRegistration(
+    ctx: Context,
+    body: CompleteOAuthRegistrationRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<CompleteOAuthRegistrationResponse> {
+    return this._call(ctx, new URL('/oauth/registration/complete', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -262,10 +222,7 @@ export class EdgeHttpClient {
         reverse: query.reverse,
         objectIds: query.objectIds?.join(','),
       }),
-      {
-        ...args,
-        method: 'GET',
-      },
+      { ...args, method: 'GET' },
     );
   }
 
@@ -297,10 +254,7 @@ export class EdgeHttpClient {
       createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
         ids: objectIds.join(','),
       }),
-      {
-        ...args,
-        method: 'DELETE',
-      },
+      { ...args, method: 'DELETE' },
     );
   }
 
@@ -327,14 +281,8 @@ export class EdgeHttpClient {
         filename,
       );
     }
-
     const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
-    return this._call(ctx, new URL(path, this.baseUrl), {
-      ...args,
-      body: formData,
-      method: 'PUT',
-      json: false,
-    });
+    return this._call(ctx, new URL(path, this.baseUrl), { ...args, body: formData, method: 'PUT', json: false });
   }
 
   public async listFunctions(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
@@ -366,12 +314,7 @@ export class EdgeHttpClient {
     if (params.subrequestsLimit) {
       url.searchParams.set('subrequestsLimit', params.subrequestsLimit.toString());
     }
-
-    return this._call(ctx, url, {
-      ...args,
-      body: input,
-      method: 'POST',
-    });
+    return this._call(ctx, url, { ...args, body: input, method: 'POST' });
   }
 
   //
@@ -402,6 +345,18 @@ export class EdgeHttpClient {
     });
   }
 
+  public async getTriggersDispatcherStatus(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<TriggersDispatcherStatus> {
+    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/triggers/${spaceId}/status`, this.baseUrl), {
+      ...args,
+      method: 'GET',
+      auth: true,
+    });
+  }
+
   public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
     return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
@@ -412,9 +367,6 @@ export class EdgeHttpClient {
   // Query
   //
 
-  /**
-   * Execute a QueryAST query against a space.
-   */
   public async execQuery(
     ctx: Context,
     spaceId: SpaceId,
@@ -428,34 +380,30 @@ export class EdgeHttpClient {
   // Registry
   //
 
-  /**
-   * Fetches the hydrated plugin directory from the Edge registry service.
-   * Unauthenticated; safe to call without an identity.
-   */
   public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 
   /**
-   * Fetches the available release versions for a given plugin repo. `repo` is the
-   * GitHub `owner/name` form; this method takes care of URL-encoding before issuing
-   * the request. Unauthenticated; same surface area as {@link getRegistryPlugins}.
-   *
-   * Versions are returned newest first, suitable for direct rendering in a picker.
+   * Uploads a built plugin bundle to the registry's R2-backed hosting. Authenticated
+   * with the caller's hub identity (verifiable presentation) — `setIdentity` must
+   * have been called. Returns the canonical `moduleUrl` (the hosted `manifest.json`).
    */
-  public async getRegistryPluginVersions(
+  public async uploadPluginBundle(
     ctx: Context,
-    repo: string,
+    request: UploadPluginBundleRequest,
     args?: EdgeHttpCallArgs,
-  ): Promise<GetPluginVersionsResponseBody> {
-    return this._call(ctx, new URL(`/registry/plugins/${encodeURIComponent(repo)}/versions`, this.baseUrl), {
+  ): Promise<{ moduleUrl: string }> {
+    return this._call(ctx, new URL('/registry/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
       ...args,
-      method: 'GET',
     });
   }
 
   //
-  // Import/Export space.
+  // Import/Export
   //
 
   public async importBundle(
@@ -473,188 +421,93 @@ export class EdgeHttpClient {
     body: ExportBundleRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<ExportBundleResponse> {
-    return this._call(ctx, new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
-      ...args,
-      body,
-      method: 'POST',
-    });
+    return this._call(ctx, new URL(`/spaces/${spaceId}/export`, this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
-  // Internal
+  // Proxy
   //
 
-  private async _fetch<T>(url: URL, _args: EdgeHttpRequestArgs): Promise<T> {
+  /**
+   * Fetch through the edge proxy for third-party REST APIs.
+   * TEMPORARY: currently routes through legacy open proxy. See https://github.com/dxos/edge/pull/576.
+   */
+  public async proxyFetch(target: URL, init: RequestInit = {}): Promise<Response> {
+    return proxyFetchLegacy(target, init, this._clientTag);
+  }
+
+  //
+  // AI service.
+  //
+
+  /**
+   * Issue an authenticated request to the EDGE AI route (`/ai/generate/anthropic/*`), which
+   * proxies to the AI service. Used as the backend HTTP client for the Anthropic AI provider
+   * (see {@link EdgeAiHttpClient}).
+   *
+   * Returns the raw `Response` so streaming bodies are forwarded unchanged to `@effect/ai`.
+   * Requires an identity to have been set via {@link setIdentity}.
+   */
+  // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
+  // the auth/retry loop below duplicates the one in `_call`.
+  public async anthropicAiRequest(request: Request): Promise<Response> {
+    const incoming = new URL(request.url);
+    const base = this.baseUrl.replace(/\/$/, '');
+    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
+
+    const method = request.method;
+    const body = method === 'GET' || method === 'HEAD' ? undefined : await request.arrayBuffer();
+
+    let handledAuth = false;
+    while (true) {
+      if (!this._authHeader) {
+        const authResponse = await fetch(new URL('/auth', this.baseUrl));
+        if (authResponse.status === 401) {
+          this._authHeader = await this._handleUnauthorized(authResponse);
+        }
+      }
+
+      const headers = new Headers(request.headers);
+      if (this._authHeader) {
+        headers.set('Authorization', this._authHeader);
+      }
+      if (this._clientTag) {
+        headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
+      }
+
+      const response = await fetch(target, { method, headers, body, signal: request.signal });
+      // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
+      // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s (e.g. invalid BYOK rejected
+      // by Anthropic) lack it and must be surfaced verbatim.
+      if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
+        this._authHeader = await this._handleUnauthorized(response);
+        handledAuth = true;
+        continue;
+      }
+
+      return response;
+    }
+  }
+
+  //
+  // Internal (Effect-based, used by tests)
+  //
+
+  public async _fetch<T>(url: URL, _args: { method: string }): Promise<T> {
     return Function.pipe(
-      HttpClient.get(url),
+      HttpClient.execute(HttpClientRequest.make(_args.method as any)(url.toString())),
       withLogging,
       withRetryConfig,
       Effect.provide(FetchHttpClient.layer),
       Effect.provide(HttpConfig.default),
       Effect.withSpan('EdgeHttpClient'),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     ) as T;
-  }
-
-  // TODO(burdon): Refactor with effect (see edge-http-client.test.ts).
-  private async _call<T>(ctx: Context, url: URL, args: EdgeHttpRequestArgs): Promise<T> {
-    const shouldRetry = createRetryHandler(args);
-    log('fetch', { url, request: args.body });
-
-    const traceHeaders = getTraceHeaders(ctx);
-
-    let handledAuth = false;
-    const tryCount = 1;
-    while (true) {
-      let processingError: EdgeCallFailedError | undefined = undefined;
-      try {
-        if (!this._authHeader && args.auth) {
-          const response = await fetch(new URL(`/auth`, this.baseUrl));
-          if (response.status === 401) {
-            this._authHeader = await this._handleUnauthorized(response);
-          }
-        }
-
-        const request = createRequest(args, this._authHeader, traceHeaders, this._clientTag);
-        log('call edge', { url, tryCount, authHeader: !!this._authHeader });
-        const response = await fetch(url, request);
-
-        if (response.ok) {
-          const body = await response.clone().json();
-          invariant(body, 'Expected body to be present');
-          if (!('success' in body)) {
-            return body;
-          }
-          if (body.success) {
-            return body.data;
-          }
-        } else if (response.status === 401 && !handledAuth) {
-          this._authHeader = await this._handleUnauthorized(response);
-          handledAuth = true;
-          continue;
-        }
-
-        const body: EdgeFailure =
-          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
-
-        invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
-
-        if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
-          processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
-        } else if (body?.success === false) {
-          processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
-        } else {
-          invariant(!response.ok, 'Expected response to not be ok.');
-          processingError = await EdgeCallFailedError.fromHttpFailure(response);
-        }
-      } catch (error: any) {
-        processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
-      }
-
-      if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
-        log.verbose('retrying edge request', { url, processingError });
-      } else {
-        throw processingError!;
-      }
-    }
-  }
-
-  private async _handleUnauthorized(response: Response): Promise<string> {
-    if (!this._edgeIdentity) {
-      log.warn('unauthorized response received before identity was set');
-      throw await EdgeCallFailedError.fromHttpFailure(response);
-    }
-
-    const challenge = await handleAuthChallenge(response, this._edgeIdentity);
-    return encodeAuthHeader(challenge);
   }
 }
 
-const createRequest = (
-  { method, body, json = true }: EdgeHttpRequestArgs,
-  authHeader: string | undefined,
-  traceHeaders?: Record<string, string>,
-  clientTag?: string,
-): RequestInit => {
-  let requestBody: BodyInit | undefined;
-  const headers: HeadersInit = {};
-
-  if (json) {
-    requestBody = body && JSON.stringify(body);
-    headers['Content-Type'] = 'application/json';
-  } else {
-    requestBody = body;
-  }
-
-  if (typeof requestBody === 'string' && requestBody.length > WARNING_BODY_SIZE) {
-    log.warn('Request with large body', { bodySize: requestBody.length });
-  }
-
-  if (authHeader) {
-    headers['Authorization'] = authHeader;
-  }
-
-  if (traceHeaders) {
-    Object.assign(headers, traceHeaders);
-  }
-
-  if (clientTag) {
-    headers[EDGE_CLIENT_TAG_HEADER] = clientTag;
-  }
-
-  return {
-    method,
-    body: requestBody,
-    headers,
-  };
-};
-
-/**
- * Extract W3C Trace Context headers (traceparent/tracestate) from a DXOS Context.
- */
-const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
-  const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
-  if (!traceCtx) {
-    return undefined;
-  }
-
-  const headers: Record<string, string> = { traceparent: traceCtx.traceparent };
-  if (traceCtx.tracestate) {
-    headers.tracestate = traceCtx.tracestate;
-  }
-  return headers;
-};
-
-/**
- * @deprecated
- */
-const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
-  if (!retry || retry.count < 1) {
-    return async () => false;
-  }
-
-  let retries = 0;
-  const maxRetries = retry.count ?? DEFAULT_MAX_RETRIES_COUNT;
-  const baseTimeout = retry.timeout ?? DEFAULT_RETRY_TIMEOUT;
-  const jitter = retry.jitter ?? DEFAULT_RETRY_JITTER;
-  return async (ctx: Context, retryAfter?: number) => {
-    if (++retries > maxRetries || ctx.disposed) {
-      return false;
-    }
-
-    if (retryAfter) {
-      await sleep(retryAfter);
-    } else {
-      const timeout = baseTimeout + Math.random() * jitter;
-      await sleep(timeout);
-    }
-
-    return true;
-  };
-};
-
 const getFileMimeType = (filename: string) =>
-  ['.js', '.mjs'].some((codeExtension) => filename.endsWith(codeExtension))
+  ['.js', '.mjs'].some((ext) => filename.endsWith(ext))
     ? 'application/javascript+module'
     : filename.endsWith('.wasm')
       ? 'application/wasm'

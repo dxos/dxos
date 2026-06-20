@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type SelectionManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
@@ -31,7 +31,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   {
     id: string;
     settings: Markdown.Settings;
-    selectionManager?: SelectionManager;
+    viewState?: ViewStateManager;
   } & Pick<MarkdownPluginState, 'extensionProviders'> &
     Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
@@ -48,7 +48,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const initialValue = docContent ?? textContent;
 
     // Extensions from other plugins.
-    const otherExtensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
+    const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
     const extensions = useMemo<Extension[]>(() => {
       if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
         return [];
@@ -115,7 +115,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         id={id}
         attendableId={attendableId}
         object={object}
-        compact={role !== 'article'}
+        compact={role !== AppSurface.Article.role}
         extensions={extensions}
         settings={settings}
         viewMode={viewMode}

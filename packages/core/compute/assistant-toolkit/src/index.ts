@@ -5,6 +5,7 @@
 export * from './blueprints';
 export * from './crud';
 export * from './functions';
+export * from './supervisor';
 export * from './sync';
 export * from './toolkits';
 export * from './types';

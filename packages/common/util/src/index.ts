@@ -37,7 +37,7 @@ export * from './order-keys';
 export * from './order';
 export * from './pick';
 export * from './platform';
-export * from './position';
+export * as Position from './Position';
 export * from './random';
 export * from './range';
 export * from './reducers';

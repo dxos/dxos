@@ -1,0 +1,75 @@
+---
+id: org.dxos.plugin.thread
+name: ThreadPlugin
+version: 0.1.0
+---
+
+ThreadPlugin provides chat: channels backed by an ECHO feed and free-standing message threads.
+It renders the channel article + companion surfaces and a thread surface, and contributes the
+operations that create a channel and append messages. Shared message/thread UI comes from
+`@dxos/react-ui-thread`, and the `Channel`/`Message`/`Thread` schema comes from `@dxos/types`.
+Document comments and the comment-thread AI agent live in `@dxos/plugin-comments`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type Channel
+  desc: |
+    A chat channel. Defined in @dxos/types. Carries an optional `feed` Ref whose
+    queue holds the channel's Message objects in order.
+```
+
+## Operations
+
+```mdl
+op OnCreateSpace
+  key: org.dxos.plugin.thread.operation.onCreateSpace
+  desc: On space creation, create a default "General" channel in the root collection.
+```
+
+```mdl
+op CreateChannel
+  key: org.dxos.plugin.thread.operation.createChannel
+  desc: Create a new Channel in the given space.
+  in:
+    spaceId: SpaceId
+    name?: String
+  out:
+    object: Channel
+```
+
+```mdl
+op AppendChannelMessage
+  key: org.dxos.plugin.thread.operation.appendChannelMessage
+  desc: Append a Message authored by `sender` to the channel's feed.
+  in:
+    channel: Channel
+    sender: Actor
+    text: String
+```
+
+## Features
+
+```mdl
+feat F-1: Channel chat
+  req F-1.1: A Channel article MUST render its feed messages newest-last with a
+    pinned composer; sending invokes AppendChannelMessage.
+  req F-1.2: Externally-synced channels (those carrying foreign-key Obj.Meta) MUST
+    render read-only — the composer is suppressed.
+```
+
+```mdl
+feat F-2: Thread chat
+  req F-2.1: A Thread article MUST render the thread's messages and append new
+    messages by pushing onto `thread.messages`.
+```

@@ -23,15 +23,14 @@ import * as Struct from 'effect/Struct';
 
 import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, DXN, Filter, Obj, Query } from '@dxos/echo';
-import { causeToError } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { filterReadyFeedItems } from './feed-position';
 import { createInvocationPayload } from './input-builder';
-import { filterReadyQueueItems } from './queue-position';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
@@ -83,9 +82,9 @@ export interface TriggerExecutionResult {
   result: Exit.Exit<unknown>;
 
   /**
-   * Only for queue triggers.
+   * Only for feed triggers.
    */
-  queueCursor?: string;
+  feedCursor?: string;
 }
 
 /**
@@ -97,15 +96,10 @@ interface ScheduledTrigger {
   nextExecution: Date;
 }
 
-type TriggerDispatcherServices =
-  | Registry.AtomRegistry
-  | ProcessManager.Service
-  | TriggerStateStore
-  | QueueService
-  | Database.Service;
+type TriggerDispatcherServices = Registry.AtomRegistry | ProcessManager.Service | TriggerStateStore | Database.Service;
 
 export type InvocationsState = {
-  invocationId: ObjectId;
+  invocationId: EntityId;
   trigger: Trigger.Trigger;
   function: Operation.Definition.Any | null;
   event: TriggerEvent.TriggerEvent;
@@ -154,7 +148,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     /**
      * Invoke all scheduled triggers who are due.
      * @param opts.kinds - The kinds of triggers to invoke.
-     * @param opts.untilExhausted - Invoke until no more triggers are due. By default only one queue/subscription item is processed at a time.
+     * @param opts.untilExhausted - Invoke until no more triggers are due. By default only one feed/subscription item is processed at a time.
      */
     invokeScheduledTriggers(opts?: {
       kinds?: Trigger.Kind[];
@@ -260,7 +254,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       if (this.timeControl === 'natural') {
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
           Effect.tapErrorCause((cause) => {
-            const error = causeToError(cause);
+            const error = EffectEx.causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
             registry.update(
@@ -314,7 +308,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
-      const invocationId = ObjectId.random();
+      const invocationId = EntityId.random();
       const invocation: InvocationsState = {
         invocationId,
         trigger,
@@ -361,8 +355,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         const manager = yield* ProcessManager.Service;
         const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        // Thread the dispatcher's space through `ProcessManager.spawn` so the
+        // spawned process resolves space-affinity services (e.g.
+        // `Database.Service`) for the same space the dispatcher is bound to.
+        // Pulled from the captured `Database.Service` rather than a separate
+        // option so the dispatcher API stays single-source-of-truth on space.
+        const { db } = yield* Database.Service;
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
+          environment: { space: db.spaceId },
         });
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
@@ -376,7 +377,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const triggerExecutionResult: TriggerExecutionResult = {
         triggerId: trigger.id,
         result,
-        queueCursor: trigger.spec?.kind === 'queue' && 'cursor' in event ? event.cursor : undefined,
+        feedCursor: trigger.spec?.kind === 'feed' && 'cursor' in event ? event.cursor : undefined,
       };
       if (Exit.isSuccess(result)) {
         log('trigger execution success', {
@@ -390,7 +391,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         log.error('trigger execution failure', {
           triggerId: trigger.id,
           cooldownUntil: until,
-          error: causeToError(result.cause),
+          error: EffectEx.causeToError(result.cause),
         });
       }
       registry.update(
@@ -405,10 +406,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     }).pipe(Effect.provide(this._services));
 
-  invokeScheduledTriggers = ({
-    kinds = ['timer', 'queue', 'subscription'],
-    untilExhausted = false,
-  } = {}): Effect.Effect<TriggerExecutionResult[]> =>
+  invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
+    TriggerExecutionResult[]
+  > =>
     Effect.gen(this, function* () {
       yield* this.refreshTriggers();
       const invocations: TriggerExecutionResult[] = [];
@@ -446,24 +446,29 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               );
             }
             break;
-          case 'queue': {
+          case 'feed': {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
-              if (spec?.kind !== 'queue') {
+              if (spec?.kind !== 'feed') {
                 continue;
               }
               if (this._isInCooldown(trigger.id)) {
                 log('skipping trigger in cooldown', { triggerId: trigger.id });
                 continue;
               }
-              const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
-              const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
+              const feedRef = spec.feed;
+              if (!feedRef) {
+                log('skipping feed trigger with no feed reference', { triggerId: trigger.id });
+                continue;
+              }
+              const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
+              const feed = yield* Database.load(feedRef).pipe(Effect.orDie);
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
               // TODO(dmaretskyi): Include cursor & limit in the query.
-              const chunks = yield* Effect.promise(() => queue.queryObjects()).pipe(
-                Effect.map((objects) => filterReadyQueueItems(objects, cursor)),
+              const chunks = yield* Feed.runQuery(feed, Filter.everything()).pipe(
+                Effect.map((objects) => filterReadyFeedItems(objects, cursor)),
                 Effect.map(Array.chunksOf(concurrency)),
               );
 
@@ -474,10 +479,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                     this.invokeTrigger({
                       trigger,
                       event: {
-                        queue: spec.queue,
+                        feed: feedRef,
                         item,
                         cursor: position,
-                      } satisfies TriggerEvent.QueueEvent,
+                      } satisfies TriggerEvent.FeedEvent,
                     }),
                   { concurrency: 'unbounded' },
                 );
@@ -491,10 +496,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 );
                 if (Option.isSome(lastSuccessfulInvocation)) {
                   Obj.update(trigger, (trigger) => {
-                    Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                    Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
                     Obj.getMeta(trigger).keys.push({
-                      source: KEY_QUEUE_CURSOR,
-                      id: lastSuccessfulInvocation.value.queueCursor ?? failedInvariant(),
+                      source: KEY_FEED_CURSOR,
+                      id: lastSuccessfulInvocation.value.feedCursor ?? failedInvariant(),
                     });
                   });
                   yield* Database.flush();
@@ -502,7 +507,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   break;
                 }
 
-                // We only invoke one trigger for each queue at a time.
+                // We only invoke one trigger for each feed at a time.
                 if (!untilExhausted) {
                   break;
                 }
@@ -521,7 +526,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const objects = yield* Database.runQuery(Query.fromAst(spec.query.ast));
+              const objects = yield* Database.query(Query.fromAst(spec.query.ast)).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TriggerStateNotFound', () =>
@@ -559,7 +564,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                       // TODO(dmaretskyi): Change type not supported.
                       type: 'unknown',
 
-                      subject: db.makeRef(Obj.getDXN(object)),
+                      subject: db.makeRef(Obj.getURI(object)),
 
                       changedObjectId: object.id,
                     } satisfies TriggerEvent.SubscriptionEvent,
@@ -661,9 +666,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const objects = yield* Database.runQuery(
+      const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
-      );
+      ).run;
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
@@ -678,6 +683,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 }
 
 /**
- * Key for the current queue cursor for queue triggers.
+ * Key for the current cursor for feed triggers.
  */
-export const KEY_QUEUE_CURSOR = 'org.dxos.key.local-trigger-dispatcher.queue-cursor';
+export const KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';

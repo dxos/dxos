@@ -7,6 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { DXN } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
@@ -117,10 +118,13 @@ const CounterComponent = () => {
 };
 
 // Plugin that provides the Counter capability and renders the UI
-const CounterPlugin = Plugin.define({
-  id: 'org.dxos.plugin.counter',
-  name: 'Counter Plugin',
-}).pipe(
+const CounterPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.counter'),
+    name: 'Counter Plugin',
+    tags: ['system'],
+  }),
+).pipe(
   Plugin.addModule({
     id: 'CounterMain',
     activatesOn: ActivationEvents.Startup,
@@ -154,19 +158,9 @@ const CounterPlugin = Plugin.define({
 )();
 
 const plugins = [CounterPlugin];
-const core = ['org.dxos.plugin.counter'];
-const placeholder = () => (
-  <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>
-    Initializing Application...
-  </div>
-);
 
 const DefaultStory = () => {
-  const App = useApp({
-    plugins,
-    core,
-    placeholder,
-  });
+  const App = useApp({ plugins });
 
   return <App />;
 };

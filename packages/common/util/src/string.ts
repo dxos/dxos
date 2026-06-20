@@ -14,6 +14,22 @@ export const capitalize = (str: string): string => {
 };
 
 /**
+ * Collapse a multi-line tagged template literal to a single space-separated string.
+ * Useful for statically concatenating long lists of class names across multiple lines:
+ *
+ * ```ts
+ * const cls = inline`
+ *   rounded-xs outline-none
+ *   data-[focused]:bg-accent-bg
+ * `;
+ * ```
+ */
+export function inline(strings: TemplateStringsArray, ...values: any[]): string {
+  const raw = strings.reduce((out, str, i) => out + str + (i < values.length ? String(values[i]) : ''), '');
+  return raw.replace(/\s+/g, ' ').trim();
+}
+
+/**
  * Remove leading space from multi-line strings.
  */
 export function trim(strings: TemplateStringsArray, ...values: any[]) {

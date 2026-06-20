@@ -6,18 +6,12 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Format, Obj, View } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
-import {
-  EchoSchema,
-  type JsonProp,
-  type JsonSchemaType,
-  type Mutable,
-  TypeEnum,
-  formatToType,
-  typeToFormat,
-} from '@dxos/echo/internal';
+import { Format, Obj, Type, View } from '@dxos/echo';
+import { TypeEnum, formatToType, typeToFormat } from '@dxos/echo/Format';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import { type Mutable } from '@dxos/echo/Obj';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
@@ -50,30 +44,21 @@ export type ProjectionChangeCallback = {
 };
 
 /**
- * Creates a change callback for ECHO-backed View and EchoSchema objects.
+ * Creates a change callback for ECHO-backed View and Type.Type objects.
  * Use this when the view is stored in the ECHO database.
  *
- * Note: Type assertions are needed because:
- * 1. PersistentSchema's type doesn't include [KindId] but runtime value does
- * 2. Inside Obj.update, the mutable object has different type constraints
- *
  * @param view - The ECHO-backed view object.
- * @param schema - Optional EchoSchema. If not provided, schema mutations will throw.
+ * @param schema - Optional persisted `Type.AnyEntity`. If not provided, schema mutations will throw.
  */
-export const createEchoChangeCallback = (
-  view: View.View,
-  schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
-): ProjectionChangeCallback => ({
+export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntity): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
   schema:
-    schema instanceof EchoSchema
-      ? (mutate) => Obj.update(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
-      : schema
-        ? (mutate) => mutate(schema)
-        : () => {
-            throw new Error('Schema is not mutable');
-          },
+    schema == null
+      ? () => {
+          throw new Error('Schema is not mutable');
+        }
+      : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema)),
 });
 
 /**
@@ -132,7 +117,7 @@ export class ProjectionModel {
     this._baseSchema = baseSchema;
     this._change = change;
 
-    this._viewAtom = AtomObj.make(this._view);
+    this._viewAtom = Obj.atom(this._view);
 
     // Derived atom that extracts projection from the view snapshot.
     this._projectionAtom = Atom.make((get) => {
@@ -293,7 +278,7 @@ export class ProjectionModel {
     const values: typeof PropertySchema.Type = {
       type,
       format,
-      property: field.path as JsonProp,
+      property: field.path as SchemaEx.JsonProp,
       referenceSchema,
       referencePath: field.referencePath,
       options,
@@ -346,7 +331,7 @@ export class ProjectionModel {
     });
   }
 
-  showFieldProjection(property: JsonProp): void {
+  showFieldProjection(property: SchemaEx.JsonProp): void {
     invariant(this._baseSchema.properties);
     invariant(property in this._baseSchema.properties);
 
@@ -530,11 +515,11 @@ export class ProjectionModel {
 
       // 3. Add missing schema properties as hidden fields (excluding 'id').
       for (const prop of schemaProperties) {
-        if (prop !== 'id' && !fieldPaths.has(prop as JsonProp)) {
+        if (prop !== 'id' && !fieldPaths.has(prop as SchemaEx.JsonProp)) {
           // Add new hidden field.
           projection.fields.push({
             id: View.createFieldId(),
-            path: prop as JsonProp,
+            path: prop as SchemaEx.JsonProp,
             visible: false,
           });
         }
@@ -543,10 +528,10 @@ export class ProjectionModel {
   }
 }
 
-export const createUniqueProperty = (projection: View.Projection): JsonProp => {
+export const createUniqueProperty = (projection: View.Projection): SchemaEx.JsonProp => {
   let n = 1;
   while (true) {
-    const property: JsonProp = `prop_${n++}` as JsonProp;
+    const property: SchemaEx.JsonProp = `prop_${n++}` as SchemaEx.JsonProp;
     const idx = projection.fields.findIndex((field) => field.path === property);
     if (idx === -1) {
       return property;

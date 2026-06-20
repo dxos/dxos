@@ -19,6 +19,7 @@ const make = () =>
         InboxOperation.DraftEmail,
         InboxOperation.ReadEmail,
         InboxOperation.GoogleMailSync,
+        InboxOperation.ExtractMessage,
       ],
       tools: [],
     }),
@@ -33,7 +34,7 @@ const make = () =>
 
         # References
         - Use references to objects in the form of:
-        @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+        @echo://B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ/01K24XPK464FSCKVQJAB2H662M
         - References are rendered as rich content in the response to the user.
 
         # Tasks
@@ -48,6 +49,9 @@ const make = () =>
         - [ ] Task description.
 
         Additional information can be included (indented).
+
+        # Email extraction
+        Parse confirmation emails (e.g., flight bookings or hotel reservations) into structured objects.
 
         Note: Sending emails is handled by the "Inbox (Send)" blueprint.
       `,

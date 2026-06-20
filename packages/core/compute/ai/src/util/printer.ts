@@ -128,7 +128,7 @@ export class ConsolePrinter {
               if (tool && formatter && formatter.debugFormatResult) {
                 try {
                   const result = Schema.decodeUnknownSync(tool.successSchema as any)(
-                    JSON.parse(content.result ?? '{}'),
+                    typeof content.result === 'string' ? JSON.parse(content.result) : content.result,
                   );
                   payload = formatter.debugFormatResult(result as never);
                   if (typeof payload !== 'string') {
@@ -137,7 +137,7 @@ export class ConsolePrinter {
                 } catch {}
               } else {
                 try {
-                  payload = JSON.parse(content.result ?? '{}');
+                  payload = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
                   if (typeof payload !== 'string') {
                     payload = inspect(payload, { depth: null, colors: true });
                   }
@@ -151,7 +151,7 @@ export class ConsolePrinter {
             break;
           }
           case 'reference':
-            this.log(`${prefix}🔗 [Reference] ${content.reference.dxn.toString()}`);
+            this.log(`${prefix}🔗 [Reference] ${content.reference.uri}`);
             break;
           case 'summary':
             this.log(`${prefix}📝 [Summary] ${content.content}`);

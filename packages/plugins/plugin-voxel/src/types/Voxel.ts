@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /** Properties stored for each voxel. */
 export const VoxelProps = Schema.Struct({
@@ -13,7 +13,7 @@ export const VoxelProps = Schema.Struct({
   hue: Schema.String,
 });
 
-export interface VoxelProps extends Schema.Schema.Type<typeof VoxelProps> {}
+export type VoxelProps = Schema.Schema.Type<typeof VoxelProps>;
 
 /** Single voxel position and properties (used as the in-memory representation). */
 export type VoxelData = {
@@ -37,18 +37,12 @@ export const World = Schema.Struct({
   /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.voxel',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--cube--regular',
-    hue: 'white',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'white' }),
+  Type.makeObject(DXN.make('org.dxos.type.voxel', '0.1.0')),
 );
 
-export interface World extends Schema.Schema.Type<typeof World> {}
+export type World = Type.InstanceType<typeof World>;
 
 const DEFAULT_GRID_SIZE = 32;
 const DEFAULT_BLOCK_SIZE = 1;

@@ -7,13 +7,12 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
@@ -23,12 +22,12 @@ import { Subscription } from '#types';
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
 
   const feeds = useQuery(space.db, Filter.type(Subscription.Subscription));
-  const currentId = useSelected(attendableId, 'single');
+  const currentId = useSelection(attendableId, 'single');
 
   const handleAction = useCallback(
     (action: SubscriptionStackAction) => {
@@ -57,7 +56,11 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
         case 'sync': {
           const feedToSync = feeds.find((feed) => feed.id === action.feedId);
           if (feedToSync) {
-            void invokePromise(FeedOperation.SyncFeed, { feed: feedToSync });
+            void invokePromise(
+              FeedOperation.SyncFeed,
+              { feed: Ref.make(feedToSync) },
+              { spaceId: Obj.getDatabase(feedToSync)?.spaceId },
+            );
           }
           break;
         }
@@ -77,7 +80,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   const handleCreate = useCallback(() => {
     void invokePromise(SpaceOperation.OpenCreateObject, {
       target: space.db,
-      typename: Subscription.Subscription.typename,
+      typename: Type.getTypename(Subscription.Subscription),
     });
   }, [space, invokePromise]);
 

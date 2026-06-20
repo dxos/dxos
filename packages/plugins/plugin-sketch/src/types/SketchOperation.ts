@@ -7,21 +7,23 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 import * as Sketch from './Sketch';
 
-const SKETCH_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: `${SKETCH_OPERATION}.create`, name: 'Create Sketch' },
+  meta: { key: makeKey('create'), name: 'Create Sketch', icon: 'ph--pencil-simple--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     schema: Schema.optional(Schema.String),
     content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   }),
   output: Schema.Struct({
-    object: Sketch.Sketch,
+    object: Type.getSchema(Sketch.Sketch),
   }),
 });

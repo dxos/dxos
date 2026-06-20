@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
-import { isPinnedWorkspace } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, useActionRunner, useEdges } from '@dxos/plugin-graph';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -15,12 +15,12 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useActions, useLoadDescendents } from '#hooks';
+import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemAction, NavTreeItemColumns } from '../NavTreeItem';
+import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
 export type L1PanelProps = {
   open?: boolean;
@@ -34,7 +34,7 @@ export type L1PanelProps = {
  * Space or settings panel.
  */
 const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const title = toLocalizedString(item.properties.label, t);
   const isActivated = useIsActivatedWorkspace(item);
   const shouldRenderContent = isCurrent || isActivated;
@@ -83,7 +83,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider density='fine'>
+    <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
@@ -95,7 +95,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
             path={path}
             levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
@@ -114,51 +114,37 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
  * Header row.
  */
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path' | 'onBack'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-  const backCapableWorkspace = isPinnedWorkspace(item.id);
+  const backCapableWorkspace = Paths.isPinnedWorkspace(item.id);
 
-  const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
+  const { menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
 
   return (
     <div
       data-tauri-drag-region
-      className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'
+      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center dx-app-drag dx-density-lg'
     >
       {backCapableWorkspace ? (
         <IconButton
-          density='coarse'
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
+          size={4}
           label={t('button-back.button')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
         />
       ) : (
-        <div data-tauri-drag-region className='w-6' />
+        <div />
       )}
       <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
         {title}
       </h2>
-      {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div className='contents dx-app-no-drag'>
-        {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
-          <NavTreeItemAction
-            testId={primaryAction.properties?.testId}
-            label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
-            parent={item}
-            path={path}
-            monolithic={Node.isAction(primaryAction)}
-            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
-            menuType={primaryAction.properties?.menuType}
-            caller={NAV_TREE_ITEM}
-          />
-        )}
         <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open />}
       </div>
@@ -167,8 +153,6 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
 };
 
 type L1MenuActions = {
-  primaryAction: Node.ActionLike;
-  groupedActions: Record<string, Node.Action[]>;
   menuActions: Node.Action[];
   onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
 };
@@ -185,7 +169,7 @@ const MenuActions = ({
 }: {
   item: Node.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (menuActions.length === 0) {
     return null;
@@ -194,11 +178,11 @@ const MenuActions = ({
   if (menuActions.length === 1) {
     return (
       <IconButton
-        density='coarse'
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
-        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
+        size={4}
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as Node.Action)}
@@ -210,11 +194,11 @@ const MenuActions = ({
     <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
       <Menu.Trigger asChild>
         <IconButton
-          density='coarse'
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           iconOnly
+          size={4}
           label={t('tree-item-actions.label')}
           data-testid='navtree.treeItem.actionsLevel0'
         />
@@ -230,14 +214,7 @@ const MenuActions = ({
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): L1MenuActions => {
   const runAction = useActionRunner();
 
-  const { actions: actionsProp, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = actionsProp.toSorted((a, _b) =>
-    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
-  );
-
-  const menuActions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp)
-    .flatMap((action) => (Node.isAction(action) ? [action] : []))
-    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
+  const menuActions = getListActions(useActions(item));
 
   const onAction = useCallback(
     (action: Node.Action, params?: Node.InvokeProps) => {
@@ -246,7 +223,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): 
     [runAction, path],
   );
 
-  return { primaryAction, groupedActions, menuActions, onAction };
+  return { menuActions, onAction };
 };
 
 export const L1Panel = memo(L1Panel$);

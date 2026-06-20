@@ -9,14 +9,17 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Registry',
         'details.label': 'Details',
+        'description.label': 'Description',
+        'preview.label': 'Preview',
         'home-page.label': 'Website',
         'source.label': 'Source',
+        'resources.label': 'Resources',
         'plugin-registry.label': 'Plugins',
         'plugin-settings.label': 'Plugin Settings',
-        'official-plugins.label': 'Official',
+        'bundled-plugins.label': 'Bundled',
         'installed-plugins.label': 'Enabled',
         'recommended-plugins.label': 'Recommended',
         'labs-plugins.label': 'Labs',
@@ -61,9 +64,10 @@ export const translations = [
         'failure-phase-activation.label': 'activation',
         'failure-reason-timeout.label': 'timed out',
         'failure-reason-error.label': 'error',
-        'dependencies.label': 'Requires',
+        'dependencies.label': 'Dependencies',
         'dependents.label': 'Required by',
         'spec.label': 'Specification',
+        'open-spec.label': 'Open Specification',
         'disable-dependents-dialog.title': 'Disable dependent plugins?',
         'disable-dependents-dialog.description':
           'Disabling {{plugin}} will also disable the following plugins that depend on it:',

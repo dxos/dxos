@@ -13,9 +13,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -28,7 +25,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/halo/credentials"

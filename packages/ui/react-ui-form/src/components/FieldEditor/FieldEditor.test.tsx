@@ -8,14 +8,17 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { ProjectionModel } from '@dxos/schema';
 
-import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { FIELD_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './FieldEditor.stories';
 import { type FieldEditorDebugObjects } from './FieldEditor.stories';
 
 const { Default } = composeStories(stories);
 
 describe('FieldEditor', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
   });
 

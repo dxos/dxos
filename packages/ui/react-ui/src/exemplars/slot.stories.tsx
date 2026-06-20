@@ -7,9 +7,10 @@ import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
-import { composable, composableProps, mx, slottable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { withTheme } from '../testing';
+import { composable, composableProps, slottable } from '../util';
 import { ThemedClassName } from '../util';
 
 /**
@@ -106,7 +107,7 @@ export const Inner: Story = {
 
 export const Error: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+    <Outer asChild classNames='p-2 border border-green-500 rounded'>
       <Middle asChild>
         <Simple>Simple</Simple>
       </Middle>

@@ -18,6 +18,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/effect-proto"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -39,13 +42,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/react-client"
@@ -81,10 +87,16 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
+      "path": "../ui"
+    },
+    {
       "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

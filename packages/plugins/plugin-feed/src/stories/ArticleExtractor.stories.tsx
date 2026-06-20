@@ -6,15 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { IconButton, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { composable } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
 import { PostContent } from '../components';
+import { type ExtractedArticle, extractArticle } from '../operations/extraction';
 import { Subscription } from '../types';
-import { type ExtractedArticle, extractArticle } from '../util';
 
 type State =
   | { status: 'idle' }
@@ -145,9 +145,12 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
           title: article.title,
           author: article.author,
           published: article.published,
-          description: article.description,
-          imageUrl: article.image,
-          content: article.markdown,
+          // The story renders the extracted body via `description`; the new
+          // Post schema no longer carries `content`/`imageUrl` — those live
+          // on Subscription.postState now. The storybook flow is a
+          // standalone preview (no Subscription), so we just feed the body
+          // through `description`.
+          description: article.markdown,
         }),
       [article],
     );
@@ -164,7 +167,7 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
         <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
           <ScrollArea.Viewport>
             <SyntaxHighlighter language='markdown' classNames='m-4'>
-              {post.content}
+              {article.markdown}
             </SyntaxHighlighter>
           </ScrollArea.Viewport>
         </ScrollArea.Root>

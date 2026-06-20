@@ -1,9 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/keys"
+    },
     {
       "path": "../../common/log"
     },
@@ -27,6 +31,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-navtree"
     },
     {
       "path": "../plugin-testing"

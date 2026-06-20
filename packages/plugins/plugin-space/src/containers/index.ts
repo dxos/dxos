@@ -17,13 +17,14 @@ export const MembersContainer: ComponentType<any> = lazy(() => import('./Members
 export const MenuFooter: ComponentType<any> = lazy(() => import('./MenuFooter'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack'));
 export const ObjectProperties: ComponentType<any> = lazy(() => import('./ObjectProperties'));
-export const ObjectRenamePopover: ComponentType<any> = lazy(() => import('./ObjectRenamePopover'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));
+export const RenamePopover: ComponentType<any> = lazy(() => import('./RenamePopover'));
 export const SchemaContainer: ComponentType<any> = lazy(() => import('./SchemaContainer'));
 export const SmallPresenceLive: ComponentType<any> = lazy(() => import('./SmallPresenceLive'));
 export const SpacePresence: ComponentType<any> = lazy(() => import('./SpacePresence'));
-export const SpaceRenamePopover: ComponentType<any> = lazy(() => import('./SpaceRenamePopover'));
+export const SpaceHomeArticle: ComponentType<any> = lazy(() => import('./SpaceHomeArticle'));
+export const SpaceHomeRecent: ComponentType<any> = lazy(() => import('./SpaceHomeRecent'));
 export const SpaceSettingsContainer: ComponentType<any> = lazy(() => import('./SpaceSettingsContainer'));
 export const SyncStatus: ComponentType<any> = lazy(() => import('./SyncStatus'));
 export const ViewEditor: ComponentType<any> = lazy(() => import('./ViewEditor'));

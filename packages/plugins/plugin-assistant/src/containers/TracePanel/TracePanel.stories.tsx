@@ -23,10 +23,13 @@ import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { buildExecutionGraph } from '#execution-graph';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { buildExecutionGraph } from './execution-graph';
+import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
+// TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
+import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
 import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
@@ -97,6 +100,28 @@ const SnapshotStory = () => {
     [allMessages],
   );
 
+  return <TimelinePlayback messages={sortedMessages} />;
+};
+
+// Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()` (see
+// TracePanel). External JSON → typed at this boundary; `buildExecutionGraph` only reads
+// `meta`/`events`, so the plain data shape is sufficient.
+const subAgentMessages = subAgentFixture as unknown as Trace.Message[];
+
+const FixtureStory = () => {
+  const sortedMessages = useMemo(
+    () => [...subAgentMessages].sort((a, b) => (a.events[0]?.timestamp ?? 0) - (b.events[0]?.timestamp ?? 0)),
+    [],
+  );
+
+  return <TimelinePlayback messages={sortedMessages} />;
+};
+
+/**
+ * Step/playback over a fixed list of trace messages — renders the execution-graph Timeline at each
+ * step so layout (e.g. concurrent sub-agent lanes) can be inspected as events "stream" in.
+ */
+const TimelinePlayback = ({ messages: sortedMessages }: { messages: readonly Trace.Message[] }) => {
   const total = sortedMessages.length;
   const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
@@ -258,6 +283,11 @@ export const Default: Story = {
   ],
 };
 
+export const WithSubAgentFixture: Story = {
+  render: FixtureStory,
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
+};
+
 export const WithSnapshot: Story = {
   render: SnapshotStory,
   decorators: [
@@ -268,16 +298,47 @@ export const WithSnapshot: Story = {
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Trace.Message],
-          onClientInitialized: ({ client }) =>
-            Effect.promise(async () => {
-              await client.halo.createIdentity();
-              const data = await import('../../testing/data/trace-timeline.dx.json');
-              const space = await client.spaces.import({
-                filename: 'trace-events.dx.json',
-                contents: new TextEncoder().encode(JSON.stringify(data)),
-              });
-              await space.db.flush();
-            }),
+          onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-remote.dx.json'),
+          ),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteMultipleSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-multiple.dx.json'),
+          ),
         }),
         AutomationPlugin(),
       ],

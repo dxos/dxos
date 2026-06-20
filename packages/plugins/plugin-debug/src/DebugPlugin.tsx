@@ -13,6 +13,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { type DebugPluginOptions } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
@@ -30,6 +33,9 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.sync(() => setupDevtools()),
   }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 
@@ -38,7 +44,7 @@ const setupDevtools = () => {
 
   // Used to test how composer handles breaking protocol changes.
   (globalThis as any).composer.changeStorageVersionInMetadata = async (version: number) => {
-    const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
+    const { changeStorageVersionInMetadata } = await import('@dxos/echo-host/testing');
     const { createStorageObjects } = await import('@dxos/client-services');
     const client: Client = (window as any).dxos.client;
     const config = client.config;

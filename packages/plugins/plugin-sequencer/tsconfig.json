@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -19,6 +20,9 @@
   "references": [
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -54,13 +58,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-audio"
+    },
+    {
       "path": "../../ui/react-ui-canvas"
     },
     {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/ui-theme"

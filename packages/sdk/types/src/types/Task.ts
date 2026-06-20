@@ -6,16 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/echo';
-import {
-  Format,
-  FormatAnnotation,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 import * as Person from './Person';
 import * as Project from './Project';
@@ -86,17 +82,10 @@ export const Task = Schema.Struct({
   // TODO(burdon): Generic tags.
   // tags: [String],
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.task',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--check-circle--regular',
-    hue: 'neutral',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
+  Type.makeObject(DXN.make('org.dxos.type.task', '0.1.0')),
 );
 
-export interface Task extends Schema.Schema.Type<typeof Task> {}
-
+export type Task = Type.InstanceType<typeof Task>;
 export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);

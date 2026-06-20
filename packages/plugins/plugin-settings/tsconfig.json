@@ -5,9 +5,13 @@
     "/node_modules/"
   ],
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/keys"
+    },
     {
       "path": "../../common/util"
     },
@@ -22,6 +26,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../plugin-graph"

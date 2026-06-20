@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { ResearchInputQueue } from '../testing';
 import { type ModuleProps } from './types';
@@ -22,14 +22,23 @@ export const ResearchOutputModule = ({ space }: ModuleProps) => {
   );
 
   return (
-    <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
-      {objects.map((object) => (
-        <li key={object.id}>
-          <Card.Root>
-            <Surface.Surface type={AppSurface.Card} data={{ subject: object }} limit={1} />
-          </Card.Root>
-        </li>
-      ))}
-    </ul>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Text>Research Output</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
+            {objects.map((object) => (
+              <Card.Root key={object.id}>
+                <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+              </Card.Root>
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

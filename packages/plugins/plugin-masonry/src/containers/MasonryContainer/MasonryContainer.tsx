@@ -2,21 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
+import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 export type MasonryContainerProps = {
@@ -34,35 +31,36 @@ export const MasonryContainer = ({
   const [view] = useObject(viewOrRef);
   const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
+  const [cardSchema, setCardSchema] = useState<Type.AnyEntity>();
 
   useEffect(() => {
-    const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = schemas.flat().find((schema) => Type.getURI(schema) === typeUri);
     if (staticSchema) {
       setCardSchema(() => staticSchema);
+      return;
     }
-    if (!staticSchema && typename && db) {
-      const query = db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setCardSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
+    if (typeUri && db) {
+      const findInRegistry = () =>
+        db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((t) => Type.getURI(t) === typeUri);
+      setCardSchema(() => findInRegistry());
+      return db.graph.registry.changed.on(() => {
+        setCardSchema(() => findInRegistry());
+      });
     }
-  }, [schemas, typename, db]);
+    setCardSchema(undefined);
+  }, [schemas, typeUri, db]);
 
-  const query = useMemo(() => {
-    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
-    return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
-  }, [cardSchema, tag]);
+  const baseFilter = useSchemaFilter(cardSchema);
+  const query = useMemo(
+    () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
+    [baseFilter, tag],
+  );
   const objects = useQuery(db, query);
 
   const sortedObjects = useMemo(
@@ -98,28 +96,26 @@ export const MasonryContainer = ({
 
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
-  const icon = Function.pipe(
-    Obj.getSchema(data),
-    Option.fromNullable,
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
-  );
+  const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
   return (
     <Menu.Root>
       <Card.Root>
-        <Card.Toolbar>
-          <Card.Icon icon={icon} />
-          <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Header>
+          <Card.Block>
+            <Icon icon={icon} />
+          </Card.Block>
+          <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-          </Menu.Trigger>
-          <Menu.Content items={objectMenuItems} />
-        </Card.Toolbar>
+          <Card.Block end>
+            <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+              <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            </Menu.Trigger>
+            <Menu.Content items={objectMenuItems} />
+          </Card.Block>
+        </Card.Header>
         <Surface.Surface
-          type={AppSurface.Card}
+          type={AppSurface.CardContent}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />

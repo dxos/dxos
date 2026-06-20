@@ -42,7 +42,7 @@ export const withLayoutVariants = ({
     { elevation: 'positioned', surface: 'bg-card-surface' },
     { elevation: 'base', surface: 'bg-base-surface' },
   ],
-  densities = ['coarse'],
+  densities = ['md'],
 }: Config = {}): Decorator => {
   return (Story) => <Panel Story={Story} elevations={elevations} densities={densities} />;
 };

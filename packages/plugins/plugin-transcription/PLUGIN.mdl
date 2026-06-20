@@ -1,0 +1,421 @@
+---
+id: org.dxos.plugin.transcription
+name: TranscriptionPlugin
+version: 0.1.0
+---
+
+A real-time voice-to-text transcription plugin for DXOS Composer.
+Captures spoken audio from a microphone, converts it to timestamped text segments via the
+Whisper speech-recognition service, and stores the results in an ECHO `Transcript` object
+backed by a `Feed`.
+The plugin also exposes blueprint-compatible operations that let AI assistants open and
+summarize transcripts inside agent workflows.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type TranscriptSegment
+  fields:
+    text: string              # transcribed text for this segment
+    started: string           # ISO-8601 wall-clock timestamp of segment start
+```
+
+```mdl
+type Message
+  fields:
+    id: string
+    created: string           # ISO-8601 creation timestamp
+    blocks: TranscriptSegment[]
+    sender:
+      identityDid?: string    # DID of the speaker, if known
+```
+
+```mdl
+type Transcript
+  fields:
+    id: string
+    feed: Ref<Feed>           # ECHO feed that stores Message objects
+    started?: string          # ISO-8601 timestamp when recording started
+```
+
+```mdl
+type WhisperWord
+  fields:
+    word: string
+    start: number             # seconds from start of audio chunk
+    end: number
+```
+
+```mdl
+type WhisperSegment
+  fields:
+    text: string
+    start: number
+    end: number
+    no_speech_prob: number    # probability of silence; used to filter noise
+    words: WhisperWord[]
+```
+
+```mdl
+type Settings
+  fields:
+    entityExtraction: boolean    # default: true — annotate transcript with references to known objects
+```
+
+## Components
+
+```mdl
+component Transcription
+  desc: Read-only CodeMirror editor that renders transcript messages as Markdown with byline headings.
+  props:
+    transcript?: Transcript
+    model: SerializationModel<Message>
+  slots:
+    (none — self-contained editor viewport)
+  layout: |
+    ┌─────────────────────────────────┐
+    │ [CodeMirror editor — read-only] │
+    │  ## Speaker · HH:MM             │
+    │  Transcribed text…              │
+    │  …                              │
+    └─────────────────────────────────┘
+```
+
+```mdl
+component Oracle
+  desc: |
+    Ambient display surface with an SVG graph canvas and a centered text overlay.
+    Used to show the latest transcribed utterance alongside a live visualization.
+  props:
+    text?: string             # latest utterance to display
+    delay?: number            # per-character reveal delay in ms (default 12)
+  slots:
+    canvas?: ReactNode        # replaces default SVG.Graph when provided
+  layout: |
+    ┌─────────────────────────────────┐
+    │  [SVG canvas — absolutely fills]│
+    │         [Oracle.Text]           │
+    │   "latest utterance…"           │
+    └─────────────────────────────────┘
+```
+
+```mdl
+component TranscriptionArticle
+  desc: Full-page article panel combining the Transcription editor with a start/stop recording toolbar action.
+  props:
+    subject: Transcript
+    role: string
+    attendableId?: string
+  state:
+    recording: boolean        # whether microphone capture is active
+  actions:
+    toggleRecording()
+  layout: |
+    ┌─────────────────────────────────┐
+    │ [Toolbar]  [🎤 Start/Stop]      │
+    ├─────────────────────────────────┤
+    │ [Transcription editor]          │
+    │  …                              │
+    └─────────────────────────────────┘
+```
+
+## Operations
+
+Pure operations — no side-effects.
+
+```mdl
+op openTranscript
+  desc: Loads a Transcript from ECHO, reads all Messages from its Feed, and returns the full text content rendered with speaker bylines.
+  input:
+    transcript: Ref<Transcript>
+  output: string
+  errors:
+    TranscriptNotFound: no Transcript object found for the given ref
+    FeedNotFound: the Transcript's feed ref cannot be resolved
+  requires: [Database, FeedService]
+```
+
+Effectful operations — produce output via AI or mutate persistent state.
+
+```mdl
+op createTranscript
+  desc: Creates a new Feed and a Transcript object linked to it, then writes both into the current ECHO space.
+  input:
+    name?: string
+    space: Space
+  output: Transcript
+  effects: [echo:write]
+```
+
+```mdl
+op summarizeTranscript
+  desc: Sends a transcript string and optional participant notes to an LLM and returns a Markdown summary with key points, verbatim quotes, and actionable tasks extracted from the conversation.
+  input:
+    transcript: string
+    notes?: string
+  output: string
+  effects: [http]
+  requires: [AiService]
+  note: |
+    Uses Claude Sonnet. Prompt instructs the model to bold speaker names,
+    include verbatim quotes, and emit only tasks that are directly actionable
+    and clearly assigned.
+```
+
+```mdl
+op enrichMessage
+  desc: Extracts proper nouns from each transcript block of a Message using a small LLM, full-text-searches the space for matching objects, and rewrites the text with inline `[noun](dxn)` reference links.
+  input:
+    message: Message
+  output:
+    message: Message
+  effects: [echo:read, ai:inference]
+  requires: [AiService, Database]
+  note: |
+    Uses Claude Haiku. Falls back to the raw message if extraction fails (e.g. the AI
+    service is unavailable). Gated by the entityExtraction setting.
+```
+
+```mdl
+op normalizeSentences
+  desc: Post-processes an array of raw transcript messages, merging word-level tokens into grammatically complete sentences.
+  input:
+    messages: Message[]
+  output: Message[]
+  note: pure transformation; no effects or service dependencies
+```
+
+## Features
+
+```mdl
+feat F-1: Recording Lifecycle
+
+  req F-1.1: User can start microphone capture from TranscriptionArticle toolbar.
+  req F-1.2: User can stop microphone capture; final buffered chunks are flushed and transcribed.
+  req F-1.3: TranscriptionManager restarts the Transcriber automatically when the audio track changes.
+```
+
+```mdl
+feat F-2: Audio Chunking and Transcription
+
+  req F-2.1:
+    when: user is speaking and chunk count reaches transcribeAfterChunksAmount
+    then: Transcriber schedules a deferred transcription task
+
+  req F-2.2:
+    when: transcription task runs
+    then: buffered PCM chunks are merged into a WAV file and POSTed to the Whisper endpoint
+
+  req F-2.3:
+    when: Whisper response is received
+    then: segments are filtered by no_speech_prob and aligned to absolute wall-clock timestamps
+
+  req F-2.4:
+    when: user is not speaking
+    then: only prefixBufferChunksAmount most-recent chunks are retained; older chunks discarded
+```
+
+```mdl
+feat F-3: Transcript Persistence
+
+  req F-3.1:
+    when: aligned segments are produced
+    then: a Message object with the segments is appended to the Transcript's ECHO Feed
+
+  req F-3.2:
+    when: a messageEnricher is configured
+    then: Message is passed through the enricher before being written to the Feed
+
+  req F-3.3:
+    when: a peer's ECHO space receives the Feed update
+    then: TranscriptionArticle re-renders with the new messages
+    tags: [collaborative]
+```
+
+```mdl
+feat F-4: Transcript Display
+
+  req F-4.1:
+    when: a Transcript object is opened
+    then: all Messages are rendered in the Transcription editor with speaker bylines and timestamps
+
+  req F-4.2:
+    when: new messages arrive during live recording
+    then: the SerializationModel is updated and the editor scrolls to show the latest content
+```
+
+```mdl
+feat F-5: AI Summary
+
+  req F-5.1:
+    when: op:summarizeTranscript is invoked
+    then: LLM returns a structured Markdown document with key points, quotes, and tasks
+
+  req F-5.2:
+    when: participant notes are provided
+    then: notes are correlated with transcript content in the summary
+
+  req F-5.3:
+    when: no actionable tasks are found
+    then: the tasks section is omitted from the summary
+```
+
+```mdl
+feat F-6: Blueprint Integration
+
+  req F-6.1: Blueprint exposes op:openTranscript and op:summarizeTranscript as AI tools.
+  req F-6.2: An AI assistant can open a transcript by Ref and return formatted text to the user.
+  req F-6.3: An AI assistant can invoke the summary operation and present the result as a message.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create transcript
+  given: a DXOS space is available
+  when: op:createTranscript is invoked
+  then:
+    - a new Feed is created in the space
+    - a Transcript object linked to the Feed is created in the space
+    - the returned Transcript.feed.target is not null
+```
+
+```mdl
+test T-2: Record and persist segment
+  given: a Transcript with a Feed, microphone capture active
+  when: the user speaks and silence is detected
+  then:
+    - Whisper returns at least one segment
+    - a Message is appended to the Feed
+    - Message.blocks contains at least one TranscriptSegment with non-empty text
+```
+
+```mdl
+test T-3: Deduplicate segments across chunk boundaries
+  given: two consecutive transcription tasks with overlapping Whisper output
+  when: the second task produces segments whose end timestamps fall before lastTimestamp
+  then:
+    - duplicate segments are filtered out
+    - only novel words (start >= lastTimestamp) are included
+```
+
+```mdl
+test T-4: Open transcript
+  given: a Transcript with three Messages in its Feed
+  when: op:openTranscript is invoked
+  then:
+    - content string contains three byline sections
+    - each section starts with "## <speaker> · <time>"
+```
+
+```mdl
+test T-5: Summarize transcript
+  given: a transcript string and optional notes string
+  when: op:summarizeTranscript is invoked
+  then:
+    - summary is a non-empty Markdown string
+    - speaker names appear in bold
+    - a tasks section is present if actionable tasks were detected
+```
+
+```mdl
+test T-6: Sentence normalization is pure
+  given: an array of raw word-level Messages
+  when: op:normalizeSentences is called
+  then:
+    - output messages contain complete sentences
+    - no ECHO writes occur
+    - input array is not mutated
+```
+
+```mdl
+test T-7: Toggle recording in UI
+  given: TranscriptionArticle is mounted with a Transcript
+  when: user clicks the Start Recording toolbar button
+  then:
+    - recording state becomes true
+    - toolbar button label changes to "Stop Recording"
+    - microphone capture begins
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

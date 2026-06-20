@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 
 import { type Gallery, GalleryOperation } from '../types';
 
@@ -28,16 +28,7 @@ const handler: Operation.WithHandler<typeof GalleryOperation.DescribeImage> = Ga
       if (index < 0 || index >= images.length) {
         return { description: '' };
       }
-
-      const description = PLACEHOLDER_DESCRIPTIONS[index % PLACEHOLDER_DESCRIPTIONS.length];
-
-      Obj.update(obj, (obj) => {
-        const next = [...(obj.images ?? [])];
-        next[index] = { ...next[index], description };
-        obj.images = next;
-      });
-
-      return { description };
+      return { description: PLACEHOLDER_DESCRIPTIONS[index % PLACEHOLDER_DESCRIPTIONS.length] };
     }),
   ),
 );

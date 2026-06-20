@@ -48,9 +48,10 @@ type DefaultStoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 const DefaultStory = ({ text, ...props }: DefaultStoryProps) => {
   const [controller, setController] = useState<EditorController | null>(null);
   const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
-    <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+    <EditorMenuProvider getView={getView} groups={groupsRef.current} {...menuProps}>
       <EditorStory ref={setController} text={text} extensions={extension} />
     </EditorMenuProvider>
   );
@@ -81,7 +82,7 @@ const LinkStory = (args: DefaultStoryProps) => {
             label: object.name,
             icon: 'ph--user--regular',
             onSelect: ({ view, head }) => {
-              const link = `[${object.name}](${Obj.getDXN(object)})`;
+              const link = `[${object.name}](${Obj.getURI(object)})`;
               if (text?.startsWith('@')) {
                 insertAtLineStart(view, head, `!${link}\n`);
               } else {

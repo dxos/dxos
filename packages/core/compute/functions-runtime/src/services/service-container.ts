@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
-import { ConfiguredCredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
+import { Credential, Operation, Trace } from '@dxos/compute';
+import { Database, Registry } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
+import { ConfiguredCredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
@@ -27,10 +28,7 @@ const SERVICES = {
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
-  operationRegistryService: OperationRegistry.Service,
-  /** @deprecated Use feeds instead. */
-  queues: QueueService,
-  feeds: Feed.FeedService,
+  registryService: Registry.Service,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
 /**
@@ -103,10 +101,6 @@ export class ServiceContainer {
       this._services.database != null
         ? Layer.succeed(Database.Service, this._services.database)
         : Database.notAvailable;
-    const queues =
-      this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
-    const feeds =
-      this._services.feeds != null ? Layer.succeed(Feed.FeedService, this._services.feeds) : Feed.notAvailable;
     const trace = Layer.succeed(Trace.TraceService, this._services.trace ?? Trace.noopWriter);
     const functionCallService = Layer.succeed(
       RemoteFunctionExecutionService,
@@ -119,20 +113,16 @@ export class ServiceContainer {
       invokePromise: async () => ({ error: new Error('Not available') }),
     } as any);
 
-    const operationRegistryService = Layer.succeed(OperationRegistry.Service, {
-      resolve: () => Effect.succeed(undefined),
-    } as any);
+    const registryService = registryLayerNoop;
 
     return Layer.mergeAll(
       ai,
       credentials,
       database,
-      queues,
-      feeds,
       trace,
       functionCallService,
       operationService,
-      operationRegistryService,
+      registryService,
     ) as any;
   }
 }

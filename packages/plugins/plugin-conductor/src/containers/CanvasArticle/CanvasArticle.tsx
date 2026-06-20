@@ -9,11 +9,10 @@ import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 import { AiService } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
 import { ComputeGraphModel } from '@dxos/conductor';
-import { Database, Feed, Obj } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
@@ -38,7 +37,7 @@ export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.Canva
 
 export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
   const [canvas] = useObject(subject);
-  const id = Obj.getDXN(canvas).toString();
+  const id = Obj.getURI(canvas);
   const graph = useMemo(
     () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
     [subject, canvas.layout],
@@ -59,7 +58,7 @@ export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: Ca
     return;
   }
 
-  const Root = role === 'section' ? Container : Fragment;
+  const Root = role === AppSurface.Section.role ? Container : Fragment;
 
   return (
     <ComputeContext.Provider value={{ controller }}>
@@ -98,8 +97,6 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
       { space: spaceId },
       AiService.AiService,
       Database.Service,
-      Feed.FeedService,
-      QueueService,
       Credential.CredentialsService,
       Operation.Service,
       OperationRegistry.Service,

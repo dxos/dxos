@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Atom from '@effect-atom/atom/Atom';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
 import { type CleanupFn } from '@dxos/async';
 
 import type * as Entity from './Entity';
@@ -103,4 +107,26 @@ export interface QueryResult<T> {
    * Subscribes to changes in query results.
    */
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: SubscriptionOptions): CleanupFn;
+
+  /**
+   * Self-updating atom. Updates automatically when query results change.
+   *
+   * Memoized per QueryResult instance — repeated accesses on the same instance return the same
+   * Atom. Safe only when the QueryResult is itself held stable across re-renders (e.g. behind a
+   * `useMemo`). It must NOT be used in graph-builder connectors/actions or other atom computes,
+   * where `db.query(...)` is called fresh on each re-evaluation: every run constructs a new
+   * QueryResult and so a new atom + subscription, leaking the previous ones. Use the memoized
+   * {@link atom} family there instead.
+   */
+  readonly atom: Atom.Atom<T[]>;
+}
+
+/**
+ * Effect that returns a QueryResult when evaluated, but also has shorthand methods for running the query or getting the first result.
+ */
+export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
+  run: Effect.Effect<T[], E, R>;
+  first: Effect.Effect<Option.Option<T>, E, R>;
+
+  // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.
 }

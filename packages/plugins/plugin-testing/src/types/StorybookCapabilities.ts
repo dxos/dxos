@@ -29,7 +29,7 @@ export type LayoutStateProps = {
   popoverVariant?: 'virtual' | 'react';
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
-  popoverKind?: 'base' | 'card';
+  popoverKind?: 'base' | 'card' | 'rename';
   popoverTitle?: Label;
   popoverContent?: any;
 
@@ -38,4 +38,4 @@ export type LayoutStateProps = {
   workspace: string;
 };
 
-export const LayoutState = Capability.make<Atom.Writable<LayoutStateProps>>(`${meta.id}.state`);
+export const LayoutState = Capability.make<Atom.Writable<LayoutStateProps>>(`${meta.profile.key}.state`);

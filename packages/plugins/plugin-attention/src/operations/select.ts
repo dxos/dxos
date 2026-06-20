@@ -8,31 +8,32 @@ import * as Match from 'effect/Match';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { selectionAspect } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities } from '../types';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Select> = LayoutOperation.Select.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const selection = yield* Capability.get(AttentionCapabilities.Selection);
+      const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
       Match.value(input.subject).pipe(
         Match.when({ mode: 'single', id: undefined }, () => {
-          selection.clearSelection(input.contextId);
+          viewState.set(selectionAspect, input.contextId, { mode: 'single' });
         }),
         Match.when({ mode: 'single' }, (s) => {
-          selection.updateSingle(input.contextId, s.id!);
+          viewState.set(selectionAspect, input.contextId, { mode: 'single', id: s.id });
         }),
         Match.when({ mode: 'multi' }, (s) => {
-          selection.updateMulti(input.contextId, s.ids);
+          viewState.set(selectionAspect, input.contextId, { mode: 'multi', ids: [...s.ids] });
         }),
         Match.when({ mode: 'range', from: undefined, to: undefined }, () => {
-          selection.clearSelection(input.contextId);
+          viewState.set(selectionAspect, input.contextId, { mode: 'range' });
         }),
         Match.when({ mode: 'range' }, (s) => {
-          selection.updateRange(input.contextId, s.from!, s.to!);
+          viewState.set(selectionAspect, input.contextId, { mode: 'range', from: s.from, to: s.to });
         }),
         Match.when({ mode: 'multi-range' }, (s) => {
-          selection.updateMultiRange(input.contextId, s.ranges);
+          viewState.set(selectionAspect, input.contextId, { mode: 'multi-range', ranges: [...s.ranges] });
         }),
         Match.exhaustive,
       );

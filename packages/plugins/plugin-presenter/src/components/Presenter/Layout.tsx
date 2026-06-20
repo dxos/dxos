@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 export type LayoutProps = PropsWithChildren<{
   topLeft?: ReactNode;

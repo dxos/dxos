@@ -3,8 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
+import type { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
@@ -17,4 +16,3 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const SupportSettings = Capability.lazy('SupportSettings', () => import('./settings'));
-export const WelcomeProvisioner = Capability.lazy('WelcomeProvisioner', () => import('./welcome-provisioner'));

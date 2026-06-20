@@ -3,17 +3,24 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { Filter, Tag } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
+import { FeedPlugin } from '../../FeedPlugin';
 import { PostArticle } from './PostArticle';
 
 const SAMPLE_MARKDOWN = `# Local-first software
@@ -42,8 +49,10 @@ list of seven ideals, including real-time collaboration and end-to-end privacy.
 `;
 
 const DefaultStory = () => {
-  const { space } = useClientStory();
-  const [post] = useQuery(space?.db, Filter.type(Subscription.Post));
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
+  const posts = useQuery(space?.db, Filter.type(Subscription.Post));
+  const post = posts[0];
   if (!post) {
     return <Loading />;
   }
@@ -51,36 +60,55 @@ const DefaultStory = () => {
   return <PostArticle role='article' subject={post} attendableId='story' />;
 };
 
-const meta = {
+// `PostArticle` calls `useOperationInvoker` (for the star/archive/mark-unread toolbar actions), so
+// the story must render under a plugin manager that provides the OperationInvoker capability — a
+// bare `withClientProvider` throws "Missing PluginManagerContext".
+const seedSpace = ({ client }: { client: Client }) =>
+  Effect.gen(function* () {
+    yield* initializeIdentity(client);
+    const space = (yield* Effect.promise(() => client.spaces.create())) as Space;
+    yield* Effect.promise(() => space.waitUntilReady());
+
+    // Content/imageUrl no longer live on the Post object — they belong on
+    // `Subscription.contentFeed` / `Subscription.postState`. PostContent falls
+    // back to `description` when no fetched body is available, so the sample
+    // markdown is stashed there for the story.
+    space.db.add(
+      Subscription.makePost({
+        title: 'Local-first software: a primer',
+        link: 'https://www.inkandswitch.com/local-first/',
+        author: 'Martin Kleppmann',
+        published: new Date().toISOString(),
+        guid: 'local-first-primer',
+        description: SAMPLE_MARKDOWN,
+      }),
+    );
+    yield* Effect.promise(() => space.db.flush());
+  });
+
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-feed/containers/PostArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
-      onCreateSpace: async ({ space }) => {
-        space.db.add(
-          Subscription.makePost({
-            title: 'Local-first software: a primer',
-            link: 'https://www.inkandswitch.com/local-first/',
-            author: 'Martin Kleppmann',
-            published: new Date().toISOString(),
-            guid: 'local-first-primer',
-            content: SAMPLE_MARKDOWN,
-            imageUrl: 'https://picsum.photos/seed/local-first/960/480',
-          }),
-        );
-      },
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
+          onClientInitialized: seedSpace,
+        }),
+        SpacePlugin({}),
+        StorybookPlugin({}),
+        FeedPlugin(),
+      ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default meta;
 

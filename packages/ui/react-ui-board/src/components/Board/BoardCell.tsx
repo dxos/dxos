@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -69,19 +69,23 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
       onClick={() => onSelect?.(item.id)}
       ref={rootRef}
     >
-      <Card.Toolbar>
+      <Card.Header>
         <Card.DragHandle ref={dragHandleRef} />
-        <Card.ToolbarSeparator variant='gap' />
         {dragState !== 'dragging' && (
-          <Card.ToolbarIconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('delete-object.button')}
-            onClick={() => onDelete?.(item.id)}
-          />
+          <Card.Block end>
+            <IconButton
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={t('delete-object.button')}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete?.(item.id);
+              }}
+            />
+          </Card.Block>
         )}
-      </Card.Toolbar>
+      </Card.Header>
       {children}
     </Card.Root>
   );

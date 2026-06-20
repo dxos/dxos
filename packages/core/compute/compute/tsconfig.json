@@ -21,6 +21,9 @@
       "path": "../../../../vendor/kbn-handlebars"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/errors"
     },
     {
@@ -37,6 +40,9 @@
     },
     {
       "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
     },
     {
       "path": "../../protocols"

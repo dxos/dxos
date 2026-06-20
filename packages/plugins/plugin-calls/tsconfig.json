@@ -13,6 +13,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -22,6 +23,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/av"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -29,6 +33,9 @@
     },
     {
       "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -49,16 +56,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/protocols"
@@ -76,10 +74,10 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-protocol"
+      "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -88,13 +86,13 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
+      "path": "../../ui/react-ui-audio"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-dnd"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
@@ -103,22 +101,22 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
+      "path": "../plugin-debug"
     },
     {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-observability"
+      "path": "../plugin-inbox"
     },
     {
-      "path": "../plugin-space"
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-testing"

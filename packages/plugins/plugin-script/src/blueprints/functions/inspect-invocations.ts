@@ -18,7 +18,7 @@ export default InspectInvocations.pipe(
       const loaded = yield* Database.load(fn);
       const maxResults = limit ?? 20;
 
-      const [properties] = yield* Database.runQuery(Query.type(SpaceProperties));
+      const [properties] = yield* Database.query(Query.type(SpaceProperties)).run;
       if (!properties?.invocationTraceFeed) {
         return { invocations: [], total: 0 };
       }
@@ -34,8 +34,8 @@ export default InspectInvocations.pipe(
         if (!span.invocationTarget || !functionId) {
           return false;
         }
-        const targetDXN = span.invocationTarget.dxn.toString();
-        const uuidPart = targetDXN.split(':').pop();
+        const targetDxn = span.invocationTarget.uri;
+        const uuidPart = targetDxn.split(':').pop();
         return uuidPart === functionId;
       });
 
