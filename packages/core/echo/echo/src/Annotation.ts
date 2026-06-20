@@ -9,6 +9,8 @@ export {
   FieldLookupAnnotationId,
   FormInputAnnotation,
   FormInlineAnnotation,
+  FormCreateAnnotation,
+  FormCreateAnnotationId,
   FormOrderedAnnotation,
   FormLayoutAnnotation,
   FormLayoutAnnotationId,

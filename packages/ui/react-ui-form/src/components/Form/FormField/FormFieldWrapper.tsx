@@ -11,6 +11,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
+import { type FieldPresentation, FieldRow, presentationFor } from './presentation';
+
 //
 // FormFieldLabel
 //
@@ -31,7 +33,7 @@ export type FormFieldLabelProps = ThemedClassName<
      */
     button?: ReactNode;
     onClick?: () => void;
-  } & Pick<FormFieldRendererProps, 'label' | 'readonly'>
+  } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
 >;
 
 export const FormFieldLabel = ({
@@ -39,12 +41,27 @@ export const FormFieldLabel = ({
   label,
   error,
   readonly,
+  required,
   standalone,
   button,
   onClick,
 }: FormFieldLabelProps) => {
-  const Label = readonly || standalone ? 'span' : Input.Label;
-  const labelNode = <Label className={mx(inputTextLabel, 'text-sm')}>{label}</Label>;
+  // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
+  // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
+  // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
+  const labelClassNames = mx(
+    inputTextLabel,
+    'text-sm',
+    required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
+  );
+  // `Input.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
+  // plain `span` used for read-only/standalone labels reads `className`.
+  const labelNode =
+    readonly || standalone ? (
+      <span className={labelClassNames}>{label}</span>
+    ) : (
+      <Input.Label classNames={labelClassNames}>{label}</Input.Label>
+    );
 
   return (
     <div
@@ -98,40 +115,69 @@ const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string =
 
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldRendererProps,
-  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue' | 'jsonPath' | 'format'
+  'readonly' | 'label' | 'presentation' | 'getStatus' | 'getValue' | 'jsonPath' | 'format' | 'required'
 > & {
-  children?: (props: { value: T }) => ReactNode;
+  children?: (props: { value: T; presentation: FieldPresentation }) => ReactNode;
+  /** Render the label as a standalone `<span>` (group/multi-input fields with no single associated control). */
+  standalone?: boolean;
+  /**
+   * Override the read-only/`static` rendering of the value. Fields whose value is not plain text
+   * (refs, selects, markdown) supply this; the default formats scalars/dates via `formatStaticValue`.
+   * Return `null` to render nothing (e.g. an empty/unresolved value).
+   */
+  renderStatic?: (value: T | undefined) => ReactNode;
 };
 
 export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
-  const { children, readonly, layout, label, jsonPath, format, getStatus, getValue } = props;
+  const {
+    children,
+    readonly,
+    presentation,
+    label,
+    jsonPath,
+    format,
+    required,
+    standalone,
+    renderStatic,
+    getStatus,
+    getValue,
+  } = props;
   const { status, error } = getStatus();
-
+  const resolved = presentationFor(presentation);
   const value = getValue();
-  if (layout === 'static' && value == null) {
+  // Omit an entirely-absent value in static presentation — a labelled row with no value is just noise.
+  // Fields with richer "empty" semantics (e.g. a present-but-unresolved ref) handle that in `renderStatic`.
+  if (resolved.isStatic && value == null) {
     return null;
   }
 
   const str = formatStaticValue(value, format);
 
   return (
-    <div className='contents'>
+    <FieldRow presentation={resolved}>
       <Input.Root validationValence={status}>
-        {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-        {layout === 'static' ? (
-          <p className='truncate min-w-0' title={str}>
-            {str}
-          </p>
-        ) : children ? (
-          children({ value })
-        ) : null}
-        {layout === 'full' && error && (
+        {resolved.showLabel && (
+          <FormFieldLabel
+            error={error}
+            readonly={readonly}
+            required={required}
+            standalone={standalone}
+            label={label}
+            path={jsonPath}
+          />
+        )}
+        {resolved.isStatic
+          ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{str}</p>)
+          : children
+            ? children({ value, presentation: resolved })
+            : null}
+        {resolved.showError && error && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>
           </Input.DescriptionAndValidation>
         )}
       </Input.Root>
-    </div>
+    </FieldRow>
   );
 };
 

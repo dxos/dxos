@@ -14,13 +14,7 @@ import { SchemaEx } from '@dxos/effect';
 import { IconBlock, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
-import {
-  type CreateOptions,
-  type FormFieldOptions,
-  type FormFieldRenderer,
-  type FormFieldRendererProps,
-  type RefFieldDataProps,
-} from '#types';
+import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
@@ -56,19 +50,34 @@ export type FormFieldProps = {
   name: string | null;
 
   /**
+   * Explicit label, overriding the `title ?? capitalize(name)` derivation. Used by `ArrayField` to
+   * give scalar/ref items the array's resolved title (e.g. `Tags`) rather than re-capitalizing the
+   * raw array property name (e.g. `_tags`), since the element type carries no title of its own.
+   */
+  label?: string;
+
+  /**
    * Path to the current object from the root. Used with nested forms.
    */
   path?: (string | number)[];
   autoFocus?: boolean;
-} & FormFieldOptions &
-  Pick<RefFieldDataProps, 'getOptions' | 'onCreate' | 'useType'> &
-  CreateOptions;
+  /** Whether the field is required (non-optional in the schema). Drives the label asterisk. */
+  required?: boolean;
+  /**
+   * Force a `Ref` field to render its target inline (a nested form) instead of the picker.
+   * Set by `ArrayField` for owned-ref arrays (`FormCreateAnnotation`); equivalent to
+   * `FormInlineAnnotation` but driven by the parent array rather than the element's own AST.
+   */
+  refInline?: boolean;
+} & FieldContext;
 
 export const FormField = (props: FormFieldProps) => {
   const {
     type,
     name,
+    label: labelOverride,
     path,
+    required,
     projection,
     fieldMap,
     fieldProvider,
@@ -85,6 +94,7 @@ export const FormField = (props: FormFieldProps) => {
     useType,
     getOptions,
     onCreate,
+    refInline,
   } = props;
   const { t } = useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
@@ -95,7 +105,10 @@ export const FormField = (props: FormFieldProps) => {
   // downstream consumers keep their `label: string` types, and the falsy
   // value lets `FormFieldSet`'s `label && <FormFieldLabel ...>` guard skip
   // the header.
-  const label = useMemo(() => title ?? (name == null ? '' : String.capitalize(name)), [title, name]);
+  const label = useMemo(
+    () => labelOverride ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [labelOverride, title, name],
+  );
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
@@ -110,14 +123,15 @@ export const FormField = (props: FormFieldProps) => {
     label,
     jsonPath,
     placeholder,
-    layout,
+    presentation: layout,
+    required,
     db,
     ...fieldState,
   };
 
   // Omit empty fields entirely in read-only mode -- an empty value has nothing
   // to display, so a labelled row with a blank input is just noise. This
-  // mirrors what `FormFieldWrapper` already does for `layout === 'static'`, but
+  // mirrors what `FormFieldWrapper` already does for `presentation === 'static'`, but
   // covers every field type (including those that bypass the wrapper:
   // RefField, SelectField, MarkdownField, ...). Container fields
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
@@ -190,8 +204,10 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
-    // Inline a single referenced object's own fields (nested form) instead of a picker.
-    const inline = Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
+    // Inline a single referenced object's own fields (nested form) instead of a picker. `refInline` lets a
+    // parent (e.g. an owned-ref `ArrayField`) force this for elements whose own AST carries no annotation.
+    const inline =
+      refInline || Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
     if (inline && !refProps.isArray) {
       return <InlineRefField {...fieldProps} {...refProps} db={db} useType={useType} onCreate={onCreate} />;
     }

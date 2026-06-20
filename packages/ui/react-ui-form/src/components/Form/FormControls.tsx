@@ -32,11 +32,8 @@ import {
   useFormHandler,
   useKeyHandler,
 } from '../../hooks';
-import {
-  FormFieldSet as NaturalFormFieldSet,
-  type FormFieldSetProps as NaturalFormFieldSetProps,
-} from './FormFieldSet';
-import { FormLayout as NaturalFormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
+import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
+import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
 
 //
 // Root
@@ -149,15 +146,16 @@ FormContent.displayName = FORM_CONTENT_NAME;
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-export type FormFieldSetProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
+export type FormFieldSetControllerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
 
-export const FormFieldSet = (props: FormFieldSetProps) => {
+/** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
+export const FormFieldSetController = (props: FormFieldSetControllerProps) => {
   const { form, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
 
-  return <NaturalFormFieldSet schema={form.schema} {...contextProps} {...props} />;
+  return <FormFieldSet schema={form.schema} {...contextProps} {...props} />;
 };
 
-FormFieldSet.displayName = FORM_FIELDSET_NAME;
+FormFieldSetController.displayName = FORM_FIELDSET_NAME;
 
 //
 // Layout
@@ -167,17 +165,18 @@ const FORM_LAYOUT_NAME = 'Form.Layout';
 
 export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
 
-export const FormLayout = ({ schema, ...props }: FormLayoutProps) => {
+/** Context-reading binding for `Form.Layout`: resolves the schema (prop or form) and delegates to {@link FormLayout}. */
+export const FormLayoutController = ({ schema, ...props }: FormLayoutProps) => {
   const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
   const resolvedSchema = schema ?? form.schema;
   if (!resolvedSchema) {
     return null;
   }
 
-  return <NaturalFormLayout schema={resolvedSchema} {...contextProps} {...props} />;
+  return <FormLayout schema={resolvedSchema} {...contextProps} {...props} />;
 };
 
-FormLayout.displayName = FORM_LAYOUT_NAME;
+FormLayoutController.displayName = FORM_LAYOUT_NAME;
 
 //
 // Actions

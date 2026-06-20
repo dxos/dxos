@@ -7,7 +7,9 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ReactNode, useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
+import { useType as defaultUseType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -59,12 +61,35 @@ export const ArrayField = ({
   // Order is meaningful and user-controllable -> render as a drag-to-reorder list.
   const ordered = Annotation.FormOrderedAnnotation.getFromAst(type).pipe(Option.getOrElse(() => false));
 
+  // Owned-ref array (`FormCreateAnnotation`): "add" creates a new target object of the annotation's typename,
+  // and each row renders that target inline (no existing-object picker).
+  const { db, onCreate, getCreateDefaults, useType = defaultUseType } = props;
+  const createTypename = Annotation.FormCreateAnnotation.getFromAst(type).pipe(Option.getOrUndefined);
+  const createSchema = useType(db, createTypename ? DXN.make(createTypename) : undefined);
+  const createInline =
+    !!createTypename && !!elementType && Ref.isRefType(elementType) && !readonly && layout !== 'static';
+
   // Synthetic identity map (see `DND_ID`). The counter only advances when the
   // array grows; reconciliation here covers the initial mount and any external
   // length change, while the handlers below keep ids aligned on mutation.
   const idsRef = useRef<string[]>([]);
   const counterRef = useRef(0);
   const nextId = useCallback(() => `${DND_ID}-${counterRef.current++}`, []);
+
+  // Create a new owned target object and append its ref (see `createInline`).
+  const handleAddCreate = useCallback(async () => {
+    if (!createSchema || !onCreate) {
+      return;
+    }
+    // Let the container pre-populate the new object (e.g. a back-reference to the parent).
+    const defaults = getCreateDefaults?.({ jsonPath: SchemaEx.createJsonPath(path ?? []), schema: createSchema }) ?? {};
+    const created = await onCreate(createSchema, defaults);
+    if (!created) {
+      return;
+    }
+    idsRef.current.push(nextId());
+    onValueChange(type, [...(values ?? []), Ref.make(created)]);
+  }, [createSchema, onCreate, getCreateDefaults, onValueChange, type, path, values, nextId]);
 
   const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
     const baseNode = SchemaEx.findNode(typeNode, SchemaEx.isDiscriminatedUnion);
@@ -129,28 +154,46 @@ export const ArrayField = ({
 
   // Object items: a recursively-rendered FormField (multiple sub-rows for the
   // object's fields). Scalar items (refs, primitives): a single inline FormField.
-  const renderField = (index: number, isLast: boolean): ReactNode => (
-    <FormField
-      {...props}
-      autoFocus={isLast}
-      type={elementType}
-      // Suppress the per-item header for object items only — the recursive
-      // form already renders labels for each sub-field. Scalar items
-      // (refs, primitives) keep the parent name so inline-layout children
-      // (e.g. RefField) have a real label to use as a fallback placeholder.
-      {...(renderItemAsObject && { name: null })}
-      path={[...(path ?? []), index]}
-      readonly={readonly || layout === 'static'}
-      layout={renderItemAsObject ? (layout === 'static' ? 'static' : undefined) : 'inline'}
-    />
-  );
+  const renderField = (index: number, isLast: boolean): ReactNode => {
+    const field = (
+      <FormField
+        {...props}
+        autoFocus={isLast}
+        type={elementType}
+        // Suppress the per-item header for object items and owned-ref items (both render their own
+        // sub-field labels). Scalar items (refs, primitives) take the array's resolved label (e.g. its
+        // `title` annotation, `Tags`) so inline-layout children (e.g. RefField) have a real label to use
+        // as a fallback placeholder, rather than re-deriving it from the raw array property name (`_tags`).
+        {...(renderItemAsObject || createInline ? { name: null } : { label })}
+        path={[...(path ?? []), index]}
+        readonly={readonly || layout === 'static'}
+        layout={renderItemAsObject ? (layout === 'static' ? 'static' : undefined) : 'inline'}
+        refInline={createInline || undefined}
+      />
+    );
+
+    // TODO(burdon): Hacky.
+    // An owned inline object form must establish its own column context: otherwise it inherits the parent
+    // form's `--dx-col` (center) placement and collapses into the array row's narrow second track.
+    return createInline ? (
+      <div role='none' className='w-full min-w-0 [--dx-col:auto]'>
+        {field}
+      </div>
+    ) : (
+      field
+    );
+  };
 
   const header = (layout !== 'static' || (values && values.length > 0)) && (
     <FieldHeader
       label={label}
       path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}
-      add={layout !== 'static' ? { label: t('add-item.button'), onClick: handleAdd } : undefined}
+      add={
+        layout !== 'static'
+          ? { label: t('add-item.button'), onClick: createInline ? () => void handleAddCreate() : handleAdd }
+          : undefined
+      }
     />
   );
 
@@ -211,7 +254,10 @@ export const ArrayField = ({
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
           return (
-            <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
+            <div
+              key={index}
+              className={`grid grid-cols-[1fr_min-content] ${renderItemAsObject || createInline ? 'items-start' : 'items-center'} mb-1 last:mb-form-gap`}
+            >
               {renderField(index, isLast)}
               {!readonly && layout !== 'static' && (
                 <CompactIconButton
