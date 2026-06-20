@@ -140,6 +140,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/i18n/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/invariant/package.json",
           "jsonpath": "$.version"
         },
