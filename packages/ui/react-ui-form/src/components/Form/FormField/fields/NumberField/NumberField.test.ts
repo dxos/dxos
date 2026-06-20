@@ -21,4 +21,9 @@ describe('getNumericConstraints', () => {
   test('returns empty constraints for an unconstrained number', ({ expect }) => {
     expect(getNumericConstraints(Schema.Number.ast)).toEqual({ integer: false });
   });
+
+  test('aggregates stacked bounds to the strictest (intersection semantics)', ({ expect }) => {
+    const { ast } = Schema.Number.pipe(Schema.greaterThanOrEqualTo(5), Schema.greaterThanOrEqualTo(10));
+    expect(getNumericConstraints(ast)).toEqual({ min: 10, max: undefined, integer: false });
+  });
 });

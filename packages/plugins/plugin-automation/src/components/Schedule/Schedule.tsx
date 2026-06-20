@@ -106,8 +106,11 @@ const pad = (value: number): string => String(value).padStart(2, '0');
 const switchKind = (current: ScheduleValue, kind: ScheduleKind): ScheduleValue => {
   const cron = scheduleToCron(current);
   const spec = cron ? fromCron(cron) : undefined;
-  const minute = spec && 'minute' in spec ? spec.minute : 0;
-  const hour = spec && 'hour' in spec ? spec.hour : 0;
+  // Fall back to the shared default time (not midnight) when the source cron carries no time-of-day,
+  // so switching from e.g. hourly to daily lands on a sensible hour rather than 00:00.
+  const [defaultHour, defaultMinute] = DEFAULT_TIME.split(':').map(Number);
+  const minute = spec && 'minute' in spec ? spec.minute : defaultMinute;
+  const hour = spec && 'hour' in spec ? spec.hour : defaultHour;
   const time = `${pad(hour)}:${pad(minute)}`;
   switch (kind) {
     case 'hourly':
@@ -346,15 +349,15 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   <Input.Root>
                     <Input.Checkbox
                       checked={checked}
-                      onCheckedChange={(next) =>
-                        onChange({
-                          ...value,
-                          // Preserve the canonical `Days` order so the summary reads naturally.
-                          days: next
-                            ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))
-                            : value.days.filter((d) => d !== day),
-                        })
-                      }
+                      onCheckedChange={(next) => {
+                        // Preserve the canonical `Days` order so the summary reads naturally.
+                        const nextDays = next
+                          ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))
+                          : value.days.filter((d) => d !== day);
+                        // A weekly schedule must keep at least one day; an empty set serializes to `*`
+                        // (every day), silently broadening execution. Ignore the uncheck in that case.
+                        onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
+                      }}
                     />
                   </Input.Root>
                   <span className='text-sm'>{label}</span>

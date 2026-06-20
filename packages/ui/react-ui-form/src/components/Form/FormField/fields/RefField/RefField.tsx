@@ -41,7 +41,14 @@ export const findRefOption = (value: unknown, options: RefOption[]): RefOption |
   if (!isRef && !isRefSnapshot(value)) {
     return undefined;
   }
-  const valueEid = EID.tryParse(isRef ? value.uri : value['/']);
+  const valueUri = isRef ? value.uri : value['/'];
+  // Keyed/registry entities (blueprints, operations) are referenced by a named DXN rather than an
+  // entity-id, so they carry no parseable EID; match those by direct URI equality against the option id.
+  const directMatch = options.find((option) => option.id === valueUri);
+  if (directMatch) {
+    return directMatch;
+  }
+  const valueEid = EID.tryParse(valueUri);
   if (!valueEid) {
     return undefined;
   }

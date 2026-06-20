@@ -8,7 +8,7 @@ export const MinutelySpec = Schema.Struct({
   frequency: Schema.Literal('minutely').annotations({ title: 'Frequency' }),
   interval: Schema.Number.pipe(Schema.int(), Schema.between(1, 59)).annotations({
     title: 'Every (minutes)',
-    description: '0–59',
+    description: '1–59',
   }),
 });
 
@@ -16,7 +16,7 @@ export const HourlySpec = Schema.Struct({
   frequency: Schema.Literal('hourly').annotations({ title: 'Frequency' }),
   interval: Schema.Number.pipe(Schema.int(), Schema.between(1, 23)).annotations({
     title: 'Every (hours)',
-    description: '0–23',
+    description: '1–23',
   }),
   minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59)).annotations({
     title: 'At minute',

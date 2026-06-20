@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';

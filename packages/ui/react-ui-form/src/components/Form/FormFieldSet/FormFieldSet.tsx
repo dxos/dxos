@@ -30,7 +30,7 @@ export type FormFieldSetProps<T extends AnyProperties> = Merge<
      * shows/hides the field set body. Used for nested objects.
      */
     collapsible?: boolean;
-    exclude?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
+    filter?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
     /**
      * Picks a named layout out of `FormLayoutAnnotation` when present.
      * Falls back to `'default'`. Ignored when the schema has no annotation
@@ -54,14 +54,14 @@ export const FormFieldSet = ({
   path,
   sort,
   collapsible,
-  exclude,
+  filter,
   projection,
   layout,
   layoutName = DEFAULT_LAYOUT_NAME,
   ...props
 }: FormFieldSetProps<any>) => {
   const values = useFormValues(FORM_FIELDSET_NAME, path);
-  const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
+  const properties = useFormFieldSetProperties({ schema, values, filter, sort, projection });
   if ((readonly || layout === 'static') && values == null) {
     return null;
   }
@@ -116,17 +116,17 @@ export const FormFieldSet = ({
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
 
-type UseFormFieldSetPropertiesParams = Pick<FormFieldSetProps<any>, 'schema' | 'exclude' | 'projection' | 'sort'> & {
+type UseFormFieldSetPropertiesParams = Pick<FormFieldSetProps<any>, 'schema' | 'filter' | 'projection' | 'sort'> & {
   values: AnyProperties | undefined;
   sort?: string[];
 };
 
 /**
- * Resolves ordered schema properties for a field set (projection order, exclude, or sort).
+ * Resolves ordered schema properties for a field set (projection order, filter, or sort).
  */
 const useFormFieldSetProperties = ({
   schema,
-  exclude,
+  filter,
   projection,
   values,
   sort,
@@ -138,9 +138,9 @@ const useFormFieldSetProperties = ({
       return [];
     }
 
-    // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
+    // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & filter function.
     const schemaProps = getRootFormProperties(schema.ast, values);
-    const filteredProps = exclude ? exclude(schemaProps) : schemaProps;
+    const filteredProps = filter ? filter(schemaProps) : schemaProps;
 
     // Use projection-based field management when view and projection are available.
     if (projection) {
@@ -171,5 +171,5 @@ const useFormFieldSetProperties = ({
     return sort
       ? [...filteredProps].sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
       : filteredProps;
-  }, [schema, values, exclude, sort, projection]);
+  }, [schema, values, filter, sort, projection]);
 };

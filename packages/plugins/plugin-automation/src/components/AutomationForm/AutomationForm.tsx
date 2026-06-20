@@ -132,7 +132,7 @@ const ActionEditor = ({ db, automation }: { db: Database.Database; automation: A
           onChange={handleOperationChange}
         />
       ) : ownedRoutine ? (
-        <RoutineEditor db={db} routine={ownedRoutine} />
+        <RoutineEditor routine={ownedRoutine} />
       ) : null}
     </div>
   );
@@ -190,14 +190,44 @@ const OperationEditor = ({
 
 const ROUTINE_SCHEMA = Type.getSchema(Routine.Routine);
 
-/** Sub-form: edits the owned Routine's `instructions` (Markdown) and `blueprints`, edited in place. */
-const RoutineEditor = ({ db, routine }: { db: Database.Database; routine: Routine.Routine }) => {
+// Owned-routine action fields surfaced for editing.
+const ROUTINE_FIELDS = new Set(['instructions', 'blueprints']);
+
+/**
+ * Sub-form: edits the owned Routine's `instructions` (Markdown) and `blueprints` in place. A bare
+ * Form.Root + FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action
+ * forms; the rendered fields are written back so blueprint selections persist to the routine.
+ */
+const RoutineEditor = ({ routine }: { routine: Routine.Routine }) => {
+  const db = Obj.getDatabase(routine);
   const defaultValues = useMemo(() => Obj.getSnapshot(routine), [routine]);
+  const handleValuesChanged = useCallback(
+    (values: Partial<Routine.Routine>, { isValid }: { isValid: boolean }) => {
+      // Skip while invalid (e.g. an empty ref slot just added by the array field) so a partial blueprint
+      // selection isn't persisted; the write lands once a blueprint is chosen.
+      if (!isValid) {
+        return;
+      }
+
+      Obj.update(routine, (routine) => {
+        if (values.instructions) {
+          routine.instructions = values.instructions;
+        }
+        routine.blueprints = [...(values.blueprints ?? [])];
+      });
+    },
+    [routine],
+  );
+
   return (
-    <Form.Root key={routine.id} schema={ROUTINE_SCHEMA} db={db} defaultValues={defaultValues}>
-      <Form.FieldSet
-        exclude={(props) => props.filter((prop) => prop.name === 'instructions' || prop.name === 'blueprints')}
-      />
+    <Form.Root
+      key={routine.id}
+      schema={ROUTINE_SCHEMA}
+      db={db}
+      defaultValues={defaultValues}
+      onValuesChanged={handleValuesChanged}
+    >
+      <Form.FieldSet filter={(props) => props.filter((prop) => ROUTINE_FIELDS.has(prop.name.toString()))} />
     </Form.Root>
   );
 };

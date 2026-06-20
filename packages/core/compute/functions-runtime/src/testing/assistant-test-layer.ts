@@ -14,6 +14,7 @@ import * as Match from 'effect/Match';
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AiContext, AiSession, CompleteBlock } from '@dxos/assistant';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import {
   AgentService,
   Blueprint,
@@ -29,7 +30,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
@@ -209,7 +210,15 @@ export const AssistantTestBaseLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Blueprint.Blueprint, Routine.Routine, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
+  types.push(
+    Blueprint.Blueprint,
+    Routine.Routine,
+    Operation.PersistentOperation,
+    Feed.Feed,
+    Trigger.Trigger,
+    Tag.Tag,
+    SpaceProperties,
+  );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
@@ -217,6 +226,9 @@ export const AssistantTestBaseLayer = ({
       TestDatabaseLayer({
         spaceKey: 'fixed',
         types,
+        // Mirror a real space: collection-aware operations (CollectionModel.add) require exactly one
+        // SpaceProperties object to resolve the root collection.
+        onInit: () => Database.add(Obj.make(SpaceProperties, {})).pipe(Effect.asVoid),
       }),
     ),
     Layer.provideMerge(configuredCredentialsLayer(credentials)),

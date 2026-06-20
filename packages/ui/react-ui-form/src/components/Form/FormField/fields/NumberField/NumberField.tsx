@@ -28,11 +28,12 @@ export const getNumericConstraints = (ast: SchemaAST.AST): { min?: number; max?:
   while (node && SchemaAST.isRefinement(node)) {
     const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(node));
     if (jsonSchema != null) {
-      if (min === undefined && 'minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
-        min = jsonSchema.minimum;
+      // Stacked refinements intersect: keep the strictest bound (largest min, smallest max).
+      if ('minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
+        min = min === undefined ? jsonSchema.minimum : Math.max(min, jsonSchema.minimum);
       }
-      if (max === undefined && 'maximum' in jsonSchema && typeof jsonSchema.maximum === 'number') {
-        max = jsonSchema.maximum;
+      if ('maximum' in jsonSchema && typeof jsonSchema.maximum === 'number') {
+        max = max === undefined ? jsonSchema.maximum : Math.min(max, jsonSchema.maximum);
       }
       if (
         ('type' in jsonSchema && jsonSchema.type === 'integer') ||
@@ -104,14 +105,19 @@ export const NumberField = ({
 
   const handleBlur = useCallback(
     (event: React.FocusEvent<HTMLElement>) => {
-      // If the field was left empty or invalid, reset to the last committed value.
-      if (safeParseFloat(raw) === undefined) {
+      const parsed = safeParseFloat(raw);
+      if (parsed === undefined) {
+        // The field was left empty or invalid; reset to the last committed value.
         const committed = getValue();
         setRaw(committed !== undefined ? String(committed) : '');
+      } else {
+        // Reflect the clamped value even when it equals the previously committed one (so `externalValue`
+        // doesn't change), otherwise the input keeps showing the out-of-range text the user typed.
+        setRaw(String(clamp(parsed)));
       }
       onBlur(event);
     },
-    [raw, getValue, onBlur],
+    [raw, getValue, onBlur, clamp],
   );
 
   return (
