@@ -14,6 +14,7 @@ import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
+import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app';
@@ -75,13 +76,41 @@ export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Se
 
 export const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
+/**
+ * Returns true when the object is eligible to live inside a collection:
+ * collections are always eligible; other types require {@link CollectionItemAnnotation}.
+ */
+export const isCollectionItem = (object: Obj.Unknown): boolean => {
+  if (Obj.instanceOf(Collection.Collection, object)) {
+    return true;
+  }
+  const type = Obj.getType(object);
+  if (!type) {
+    return false;
+  }
+  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+};
+
+/** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
+export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
+  Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && isCollectionItem(source.item.data);
+
 //
 // Module-level caches.
 //
 
 export const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
 export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
-export const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
+
+/** Stable rearrange callback that reorders a Collection's objects array. Keyed by collection URI. */
+export const makeCollectionRearrangeCallback = createFactory(
+  (collection: Collection.Collection) => (nextOrder: unknown[]) => {
+    Obj.update(collection, (collection) => {
+      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+    });
+  },
+  (collection) => Obj.getURI(collection),
+);
 
 //
 // Collection partials.
@@ -92,7 +121,11 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
+  canDrop: CAN_DROP_COLLECTION_ITEM,
   onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
+    if (!isCollectionItem(child.data)) {
+      return;
+    }
     Obj.update(collection, (collection) => {
       if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
@@ -151,18 +184,24 @@ export const makeObject = ({
   db,
   object,
   disposition,
+  draggable = true,
   droppable = true,
   navigable = false,
-  parentCollection,
+  onRearrange,
+  canDrop: canDropOverride,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.Context;
   db: Database.Database;
   object: Obj.Unknown;
   disposition?: string;
+  draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;
-  parentCollection?: Collection.Collection;
+  /** Rearrange callback invoked with the next sibling order on drop. */
+  onRearrange?: (nextOrder: unknown[]) => void;
+  /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
+  canDrop?: (source: TreeData) => boolean;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -206,20 +245,6 @@ export const makeObject = ({
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
-  let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
-  if (parentCollection) {
-    const collectionUri = Obj.getURI(parentCollection);
-    onRearrange = rearrangeCache.get(collectionUri);
-    if (!onRearrange) {
-      onRearrange = (nextOrder: unknown[]) => {
-        Obj.update(parentCollection, (parentCollection) => {
-          parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-        });
-      };
-      rearrangeCache.set(collectionUri, onRearrange);
-    }
-  }
-
   const objectUri = Obj.getURI(object);
   let blockInstruction = blockInstructionCache.get(objectUri);
   if (!blockInstruction) {
@@ -227,7 +252,7 @@ export const makeObject = ({
     blockInstructionCache.set(objectUri, blockInstruction);
   }
 
-  const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
+  const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
 
   return {
     id: object.id,
@@ -246,6 +271,7 @@ export const makeObject = ({
       persistenceClass: 'echo',
       persistenceKey: db.spaceId,
       selectable,
+      draggable: draggable ? undefined : false,
       droppable: droppable ? undefined : false,
       onRearrange,
       blockInstruction,

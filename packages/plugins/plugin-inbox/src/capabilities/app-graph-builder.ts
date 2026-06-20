@@ -19,7 +19,7 @@ import { Integration } from '@dxos/plugin-integration';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Event, Message } from '@dxos/types';
-import { kebabize, Position } from '@dxos/util';
+import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
@@ -157,7 +157,7 @@ export default Capability.makeModule(
               icon: 'ph--tray--regular',
               iconHue: 'rose',
               space,
-              position: Position.first,
+              position: 301,
             }),
           ]);
         },
@@ -366,7 +366,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      TypeSection.createTypeSectionExtension(Calendar.Calendar),
+      TypeSection.createTypeSectionExtension(Calendar.Calendar, { position: 302 }),
 
       GraphBuilder.createExtension({
         id: 'calendarsSectionActions',

@@ -24,7 +24,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       yield* CollectionModel.add({
         object,
         target: Database.isDatabase(target) ? undefined : target,
-        hidden: true,
       }).pipe(Effect.provide(Database.layer(db)));
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {

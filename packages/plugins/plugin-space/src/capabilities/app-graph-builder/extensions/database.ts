@@ -113,6 +113,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           return objects.length > 0 || viewIndex.typeUrisWithViews.has(typeUri);
         });
 
+        // TODO(wittjosiah): Sort types alphabetically by display name. Static types' labels are
+        // translation keys (`typename.label`) resolved at render, so sorting here would need a way to
+        // resolve translations outside React — which we don't have yet.
         return Effect.succeed(visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })));
       },
     }),
@@ -159,6 +162,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
               get,
               db: space.db,
               object,
+              draggable: false,
               droppable: false,
             }),
           )
@@ -193,6 +197,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
                 get,
                 db: space.db,
                 object,
+                draggable: false,
                 droppable: false,
               });
             })

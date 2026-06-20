@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, Ref } from '@dxos/echo';
-
+import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',
@@ -24,4 +23,10 @@ export const BlueprintsAnnotation = Annotation.make<string[]>({
 export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean }>({
   id: 'org.dxos.annotation.graph-props',
   schema: Schema.Struct({ managesAutofocus: Schema.optional(Schema.Boolean) }),
+});
+
+/** Per-type object ordering stored on space.properties, keyed by typename. */
+export const SectionOrderAnnotation = Annotation.make({
+  id: 'org.dxos.space.sectionOrder',
+  schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
 });

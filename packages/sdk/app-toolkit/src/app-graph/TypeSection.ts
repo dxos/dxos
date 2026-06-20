@@ -8,15 +8,40 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { Annotation, Filter, Key, Obj, Query, Type } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import { type TreeData } from '@dxos/react-ui-list';
+import { inferObjectOrder, Position } from '@dxos/util';
 
 import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';
 import { AppNodeMatcher } from '../app-graph';
 import { AppNode } from '../app-graph';
+import { AppAnnotation } from '../echo';
+
+/** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
+export const makeSectionRearrangeCallback = AppNode.createFactory(
+  (space: Space, typename: string) => (nextOrder: unknown[]) => {
+    const refs = nextOrder.filter(Obj.isObject).map(Ref.make);
+    if (Option.isNone(Annotation.get(space.properties, AppAnnotation.SectionOrderAnnotation))) {
+      Obj.update(space.properties, (props) => {
+        Annotation.set(props, AppAnnotation.SectionOrderAnnotation, { [typename]: refs });
+      });
+    } else {
+      // Splice in place so only this type's array changes; Annotation.update validates the result.
+      Annotation.update(space.properties, AppAnnotation.SectionOrderAnnotation, (order) => {
+        if (order[typename]) {
+          order[typename].splice(0, order[typename].length, ...refs);
+        } else {
+          order[typename] = refs;
+        }
+      });
+    }
+  },
+  (space, typename) => `${typename}:${space.id}`,
+);
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under
@@ -34,11 +59,6 @@ import { AppNode } from '../app-graph';
  * registered via {@link AppCapabilities.NavigationPathResolver} for deep-link support.
  *
  * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
- *
- * @idiom org.dxos.app-toolkit.typeSection
- *   applies: Dedicated sidebar sections that list objects of a single ECHO type under a space
- *   instead-of: Only surfacing the type in plugin-space's generic database subtree, which buries it and reduces discoverability for the app user
- *   uses: {@link createTypeSectionExtension}, {@link Paths.createTypeSectionPaths}, {@link createTypeSectionPathResolver}, {@link AppNodeMatcher.whenSpace}, {@link Filter.type}, {@link AppNode.makeObject}
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
@@ -63,6 +83,10 @@ export const createTypeSectionExtension = (
 
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
 
+  // Only allow reordering within this section — reject drops from other type sections.
+  const canDropSameType = (source: TreeData) =>
+    Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename;
+
   return GraphBuilder.createExtension({
     id: typename,
     match: AppNodeMatcher.whenSpace,
@@ -71,6 +95,21 @@ export const createTypeSectionExtension = (
       if (objects.length === 0) {
         return Effect.succeed([]);
       }
+
+      // Re-emits when space.properties changes; the stored order is a list of object refs (uri read without
+      // loading the target).
+      const storedRefs =
+        get(Annotation.atomProperty(space.properties, AppAnnotation.SectionOrderAnnotation, typename)) ?? [];
+      const order = storedRefs
+        .map((ref) => (EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined))
+        .filter((id): id is string => id !== undefined);
+      // Objects not in the stored order follow in query order.
+      const orderedObjects = inferObjectOrder(
+        Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
+        order,
+      );
+
+      const onRearrange = makeSectionRearrangeCallback(space, typename);
 
       // Mirror AppNode.makeObject: look up the registered Type.Type entity to read icon/hue.
       // Raw schema classes don't carry annotations reliably; the registry copy does.
@@ -99,12 +138,14 @@ export const createTypeSectionExtension = (
             icon,
             ...(iconHue ? { iconHue } : {}),
             role: 'branch',
+            draggable: false,
+            droppable: false,
             space,
             testId,
             ...(options?.position ? { position: options.position } : {}),
           },
-          nodes: objects
-            .map((object) => AppNode.makeObject({ get, db: space.db, object }))
+          nodes: orderedObjects
+            .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
             .filter((node): node is NonNullable<typeof node> => node !== null),
         }),
       ]);
@@ -128,11 +169,6 @@ export const createTypeSectionExtension = (
  * ```ts
  * targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
  * ```
- *
- * @idiom org.dxos.app-toolkit.typeSectionPathResolver
- *   applies: Plugins that expose a type section via {@link createTypeSectionExtension} and need navigation to the type section instead of falling back to the generic database section.
- *   instead-of: Navigating to the database section after object creation, or getting a 404 on deep-link and page reload before the graph has populated.
- *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link Paths.createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
 export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabilities.NavigationPathResolver => {
   const typename = Type.getTypename(type);
