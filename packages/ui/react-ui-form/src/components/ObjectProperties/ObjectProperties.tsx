@@ -137,12 +137,12 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 );
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
+  hue: ({ type, label, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
       <>
-        {layout !== 'inline' && <Form.Label label={label} />}
+        {presentation !== 'inline' && <Form.Label label={label} />}
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
       </>
     );

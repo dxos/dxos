@@ -3,48 +3,51 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation } from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { type Merge } from '@dxos/util';
 
-import { translationKey } from '#translations';
-import { type CreateOptions, type FormFieldOptions, type RefFieldDataProps } from '#types';
+import { type FieldContext } from '#types';
 
 import { type FormHandlerProps, useFormValues } from '../../../hooks';
 import { getRootFormProperties } from '../../../util';
-import { FormField, FormFieldErrorBoundary, FormFieldLabel, type FormFieldProps } from '../FormField';
+import { FieldContainer, FormField, FormFieldErrorBoundary, type FormFieldProps, presentationFor } from '../FormField';
 import { FormLayout } from '../FormLayout';
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-export type FormFieldSetProps<T extends AnyProperties> = {
-  label?: string;
-  sort?: string[];
-  /**
-   * When set, renders a toggle button at the end of the label row that
-   * shows/hides the field set body. Used for nested objects.
-   */
-  collapsible?: boolean;
-  exclude?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
-  /**
-   * Picks a named layout out of `FormLayoutAnnotation` when present.
-   * Falls back to `'default'`. Ignored when the schema has no annotation
-   * (linear rendering then takes over).
-   */
-  layoutName?: string;
-} & FormFieldOptions &
-  CreateOptions &
-  Pick<FormHandlerProps<T>, 'schema'> &
-  Pick<FormFieldProps, 'path' | 'autoFocus'> &
-  Pick<RefFieldDataProps, 'useType' | 'getOptions' | 'onCreate' | 'getCreateDefaults'>;
+export type FormFieldSetProps<T extends AnyProperties> = Merge<
+  {
+    /** Applied to the field set's container (the bordered box when collapsible). */
+    classNames?: string;
+    label?: string;
+    sort?: string[];
+    /**
+     * When set, renders a toggle button at the end of the label row that
+     * shows/hides the field set body. Used for nested objects.
+     */
+    collapsible?: boolean;
+    exclude?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
+    /**
+     * Picks a named layout out of `FormLayoutAnnotation` when present.
+     * Falls back to `'default'`. Ignored when the schema has no annotation
+     * (linear rendering then takes over).
+     */
+    layoutName?: string;
+  },
+  Pick<FormHandlerProps<T>, 'schema'>,
+  Pick<FormFieldProps, 'path' | 'autoFocus'>,
+  FieldContext
+>;
 
 /**
  * Renders a set of form fields derived from a schema object.
  */
 export const FormFieldSet = ({
+  classNames,
   label,
   schema,
   readonly,
@@ -57,11 +60,8 @@ export const FormFieldSet = ({
   layoutName = DEFAULT_LAYOUT_NAME,
   ...props
 }: FormFieldSetProps<any>) => {
-  const { t } = useTranslation(translationKey);
   const values = useFormValues(FORM_FIELDSET_NAME, path);
   const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
-  // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
-  const [collapsed, setCollapsed] = useState(false);
   if ((readonly || layout === 'static') && values == null) {
     return null;
   }
@@ -89,6 +89,7 @@ export const FormFieldSet = ({
               type={property.type}
               name={name}
               path={[...(path ?? []), name]}
+              required={!property.isOptional}
               readonly={readonly}
               layout={layout}
               projection={projection}
@@ -99,41 +100,18 @@ export const FormFieldSet = ({
       })
     );
 
-  const showBody = !(collapsible && collapsed);
-  const content = (
-    <>
-      {layout !== 'inline' && label && (
-        <FormFieldLabel
-          standalone
-          classNames='pl-2'
-          label={label}
-          path={SchemaEx.createJsonPath(path ?? [])}
-          button={
-            collapsible && (
-              <ToggleIconButton
-                active={!collapsed}
-                classNames='px-1 mr-0.5'
-                variant='ghost'
-                density='xs'
-                iconOnly
-                icon='ph--caret-right--regular'
-                label={t(collapsed ? 'expand-fields.label' : 'collapse-fields.label')}
-              />
-            )
-          }
-          onClick={() => setCollapsed((value) => !value)}
-        />
-      )}
-      {showBody && (collapsible ? <div className='px-2 pb-2'>{body}</div> : body)}
-    </>
+  return (
+    <FieldContainer
+      classNames={classNames}
+      label={label}
+      path={SchemaEx.createJsonPath(path ?? [])}
+      readonly={readonly}
+      presentation={presentationFor(layout)}
+      collapsible={collapsible}
+    >
+      {body}
+    </FieldContainer>
   );
-
-  // Nested field sets render inside an indented, bordered container with a collapse toggle.
-  if (collapsible) {
-    return <div className='border border-subdued-separator rounded-sm my-1.5'>{content}</div>;
-  }
-
-  return content;
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;

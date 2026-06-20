@@ -3,7 +3,7 @@
 //
 
 import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
-import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
+import { getSize, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
   type ComponentFunction,
@@ -35,12 +35,6 @@ const textInputSurfaceFocus =
   'transition-colors bg-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
 
 const textInputSurfaceHover = 'hover:bg-focus-surface';
-
-const booleanInputSurface =
-  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-bg aria-[checked=mixed]:bg-accent-bg';
-
-const booleanInputSurfaceHover =
-  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-bg-hover hover:aria-[checked=mixed]:bg-accent-bg-hover';
 
 // TODO(burdon): Replace with semantic tokens.
 const valence = (valence?: MessageValence) => {
@@ -103,26 +97,9 @@ const checkbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
 const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
   mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
-const switchRoot: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
-  mx(
-    getHeight(size),
-    getWidth(snapSize(sizeValue(size) * 1.75, 9)),
-    booleanInputSurface,
-    !disabled && booleanInputSurfaceHover,
-    // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.
-    'cursor-pointer shrink-0 rounded-full px-1 mx-1 relative',
-    'dx-focus-ring',
-    ...etc,
-  );
+const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-checkbox--switch dx-focus-ring', ...etc);
 
-const switchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
-  mx(
-    getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
-    'block bg-white rounded-full transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
-    ...etc,
-  );
-
-const withSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
     props.density === 'lg'
@@ -174,17 +151,20 @@ const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
     ...etc,
   );
 
+const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  mx('grid place-items-center w-[var(--dx-rail-item)] h-[var(--dx-rail-item)]', ...etc);
+
 export const inputTheme = {
   input,
   textArea,
-  inputWithSegments: withSegmentsInput,
+  pin,
   segment,
-  checkbox,
-  checkboxIndicator,
   label,
   description,
-  switch: switchRoot,
-  switchThumb,
+  checkbox,
+  checkboxIndicator,
+  switch: switch_,
+  block,
   validation,
   descriptionAndValidation,
   triggerIcon,

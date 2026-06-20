@@ -58,7 +58,10 @@ export type FormFieldRendererProps<T = any> = {
   jsonPath?: string;
   placeholder?: string;
   autoFocus?: boolean;
-  layout?: FormPresentation;
+  /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
+  presentation?: FormPresentation;
+  /** Whether the field is required (non-optional in the schema); surfaces a trailing asterisk on the label. */
+  required?: boolean;
 } & FormFieldStateProps<T>;
 
 export type FormFieldRenderer = FC<FormFieldRendererProps>;
@@ -139,3 +142,16 @@ export type FormFieldOptions = {
    */
   createTypename?: string;
 };
+
+/**
+ * The subset of {@link RefFieldDataProps} that is forwarded down the field recursion. `useResults`
+ * is consumed only by `RefField` itself (it defaults internally), so it is not threaded.
+ */
+export type RefThreadedProps = Pick<RefFieldDataProps, 'useType' | 'getOptions' | 'onCreate' | 'getCreateDefaults'>;
+
+/**
+ * Form-wide configuration threaded unchanged down the entire field recursion. This is the single
+ * canonical source for the bag that `FormContextValue`, `FormFieldProps`, and `FormFieldSetProps`
+ * all carry — so none of them re-Picks fragments of the others.
+ */
+export type FieldContext = FormFieldOptions & CreateOptions & RefThreadedProps;

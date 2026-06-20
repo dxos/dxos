@@ -137,8 +137,8 @@ export const TriggerEditor = ({ db, automation, trigger }: TriggerEditorProps) =
       key={`${trigger?.id ?? 'new'}:${resetNonce}`}
       schema={TriggerForm}
       db={db}
-      defaultValues={defaultValues}
       fieldMap={fieldMap}
+      defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
     >
       <Form.Content>

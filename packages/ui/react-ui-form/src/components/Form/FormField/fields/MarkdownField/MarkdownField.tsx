@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-client';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -15,7 +15,7 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldWrapper } from '../../FormFieldWrapper';
 
 const editorClassNames =
   'min-h-[6lh] transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2';
@@ -30,24 +30,26 @@ const editorClassNames =
 export const MarkdownField = ({
   type,
   readonly,
-  label,
-  jsonPath,
   placeholder,
-  layout,
   db,
-  getStatus,
   getValue,
   onValueChange,
+  ...props
 }: FormFieldRendererProps) => {
-  const { status, error } = getStatus();
   const isRef = Ref.isRefType(type);
-  const value = getValue();
 
-  if ((readonly || layout === 'static') && value == null) {
-    return null;
-  }
+  // The field value is a runtime union the form's value type can't express: a `Ref<Text>` when the
+  // property is a markdown ref, or a plain string when it is annotated markdown text. `isRef`
+  // selects the branch, so the casts below narrow the opaque value accordingly.
+  const renderStatic = (value: unknown) => {
+    if (isRef) {
+      const reference = value as Ref.Ref<any> | undefined;
+      return reference ? <RefStaticText reference={reference} /> : null;
+    }
+    return <p className='whitespace-pre-wrap'>{(value as string | undefined) ?? ''}</p>;
+  };
 
-  const renderEditor = () => {
+  const renderEditor = (value: unknown) => {
     if (isRef) {
       const reference = value as Ref.Ref<any> | undefined;
       if (reference) {
@@ -71,21 +73,10 @@ export const MarkdownField = ({
     );
   };
 
-  const renderStatic = () => {
-    if (isRef) {
-      const reference = value as Ref.Ref<any> | undefined;
-      return reference ? <RefStaticText reference={reference} /> : null;
-    }
-
-    return <p className='whitespace-pre-wrap'>{(value as string | undefined) ?? ''}</p>;
-  };
-
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-      {layout === 'static' ? renderStatic() : renderEditor()}
-      {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
-    </Input.Root>
+    <FormFieldWrapper readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
+      {({ value }) => renderEditor(value)}
+    </FormFieldWrapper>
   );
 };
 

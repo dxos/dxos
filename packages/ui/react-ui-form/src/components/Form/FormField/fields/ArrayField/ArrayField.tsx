@@ -10,8 +10,10 @@ import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -111,10 +113,18 @@ export const ArrayField = ({
   };
 
   const handleAdd = useCallback(() => {
-    const defaultValue =
-      elementType && SchemaEx.isNestedType(elementType)
-        ? getDefaultObjectValue(elementType)
-        : getDefaultValue(elementType);
+    let defaultValue;
+    try {
+      defaultValue =
+        elementType && SchemaEx.isNestedType(elementType)
+          ? getDefaultObjectValue(elementType)
+          : getDefaultValue(elementType);
+    } catch (err) {
+      // `getDefaultValue` throws on element types it can't seed (runs in this click handler, so an
+      // unguarded throw would be uncaught). Skip the add rather than crash the form.
+      log.catch(err);
+      return;
+    }
     idsRef.current.push(nextId());
     // `values` is `undefined` on first render for arrays whose parent path
     // hasn't been materialised in the form values yet (e.g. `package.repos`
@@ -160,11 +170,11 @@ export const ArrayField = ({
         {...props}
         autoFocus={isLast}
         type={elementType}
-        // Suppress the per-item header for object items only — the recursive
-        // form already renders labels for each sub-field. Scalar items
-        // (refs, primitives) keep the parent name so inline-layout children
-        // (e.g. RefField) have a real label to use as a fallback placeholder.
-        {...((renderItemAsObject || createInline) && { name: null })}
+        // Suppress the per-item header for object items and owned-ref items (both render their own
+        // sub-field labels). Scalar items (refs, primitives) take the array's resolved label (e.g. its
+        // `title` annotation, `Tags`) so inline-layout children (e.g. RefField) have a real label to use
+        // as a fallback placeholder, rather than re-deriving it from the raw array property name (`_tags`).
+        {...(renderItemAsObject || createInline ? { name: null } : { label })}
         path={[...(path ?? []), index]}
         readonly={readonly || layout === 'static'}
         layout={renderItemAsObject ? (layout === 'static' ? 'static' : undefined) : 'inline'}
@@ -250,13 +260,16 @@ export const ArrayField = ({
   return (
     <>
       {header}
-      <div className='flex flex-col'>
+      <div className='flex flex-col gap-2'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
           return (
             <div
               key={index}
-              className={`grid grid-cols-[1fr_min-content] ${createInline ? 'items-start' : 'items-center'} mb-1 last:mb-form-gap`}
+              className={mx(
+                'grid grid-cols-[1fr_min-content]',
+                renderItemAsObject || createInline ? 'items-start' : 'items-center',
+              )}
             >
               {renderField(index, isLast)}
               {!readonly && layout !== 'static' && (
