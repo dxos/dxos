@@ -59,11 +59,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeSection({
             id: Paths.Segments.database,
             type: DATABASE_SECTION_TYPE,
-            label: ['types-section.label', { ns: meta.profile.key }],
+            label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
             position: Position.last,
-            testId: 'spacePlugin.typesSection',
+            testId: 'spacePlugin.databaseSection',
           }),
         ]);
       },
