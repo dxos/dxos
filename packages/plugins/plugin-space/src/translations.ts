@@ -299,7 +299,7 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
-        'types-section.label': 'Database',
+        'database-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-all.label': 'All',
 

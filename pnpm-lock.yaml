@@ -4003,6 +4003,12 @@ importers:
         specifier: 'catalog:'
         version: 8.0.7
 
+  packages/common/i18n:
+    dependencies:
+      i18next:
+        specifier: 'catalog:'
+        version: 21.10.0
+
   packages/common/invariant: {}
 
   packages/common/keyboard:
@@ -13960,6 +13966,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -14272,6 +14281,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -15279,6 +15291,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/i18n':
+        specifier: workspace:*
+        version: link:../../common/i18n
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -16725,6 +16740,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/i18n':
+        specifier: workspace:*
+        version: link:../../common/i18n
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -18493,6 +18511,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/i18n':
+        specifier: workspace:*
+        version: link:../../common/i18n
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

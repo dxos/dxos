@@ -40,7 +40,6 @@ export const makeCreateObjectEntryForDatabaseType = (type: Type.AnyObj): SpaceCa
       return yield* Operation.invoke(SpaceOperation.AddObject, {
         object,
         target: options.target,
-        hidden: true,
       });
     }),
 });
