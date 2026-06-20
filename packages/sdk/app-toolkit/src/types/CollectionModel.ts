@@ -9,7 +9,6 @@ import * as Option from 'effect/Option';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 
 import * as AppNode from '../app-graph/AppNode';
 import { AppAnnotation } from '../echo';
@@ -29,7 +28,15 @@ export const add = Effect.fn(function* ({ object, target }: AddProps) {
     yield* Database.add(object);
   } else {
     const objects = yield* Database.query(Query.type(SpaceProperties)).run;
-    invariant(objects.length === 1, 'Space properties not found');
+    // A fully-scaffolded space has exactly one SpaceProperties carrying the root collection. In a bare
+    // database (e.g. a headless/agent test harness) it may be absent; rather than assert, fall back to
+    // persisting the object directly so collection-aware operations still work without a root collection.
+    if (objects.length !== 1) {
+      if (!Obj.getDatabase(object)) {
+        yield* Database.add(object);
+      }
+      return;
+    }
     const properties: Obj.Any = objects[0];
 
     const collectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(

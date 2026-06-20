@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';

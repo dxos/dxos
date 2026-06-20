@@ -37,6 +37,7 @@ export const translations: Resource[] = [
         'schedule.kind.monthly.label': 'Monthly',
         'schedule.kind.custom.label': 'Custom',
         'schedule.at.label': 'At',
+        'schedule.on.label': 'On',
         'schedule.minute.label': 'At minute',
         'schedule.day.label': 'Day of month',
         'schedule.cron.label': 'Cron',

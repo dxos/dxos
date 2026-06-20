@@ -277,7 +277,7 @@ export const Schedule = {
 
 const Field = ({ label, children }: PropsWithChildren<{ label: string }>) => (
   <label className='flex items-center gap-2'>
-    <span className='text-sm text-description'>{label}</span>
+    <span className='text-sm'>{label}</span>
     {children}
   </label>
 );
@@ -341,29 +341,32 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
             </Input.Root>
           </Field>
-          <div className='grid grid-cols-7 gap-2 w-fit'>
-            {Days.map(({ value: day, label }) => {
-              const checked = value.days.includes(day);
-              return (
-                <label key={day} className='flex items-center gap-1'>
-                  <Input.Root>
-                    <Input.Checkbox
-                      checked={checked}
-                      onCheckedChange={(next) => {
-                        // Preserve the canonical `Days` order so the summary reads naturally.
-                        const nextDays = next
-                          ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))
-                          : value.days.filter((d) => d !== day);
-                        // A weekly schedule must keep at least one day; an empty set serializes to `*`
-                        // (every day), silently broadening execution. Ignore the uncheck in that case.
-                        onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
-                      }}
-                    />
-                  </Input.Root>
-                  <span className='text-sm'>{label}</span>
-                </label>
-              );
-            })}
+          <div className='flex gap-2'>
+            <div className='flex items-center text-sm'>{t('schedule.on.label')}</div>
+            <div className='grid grid-cols-7 gap-2 w-fit'>
+              {Days.map(({ value: day, label }) => {
+                const checked = value.days.includes(day);
+                return (
+                  <label key={day} className='flex items-center gap-1'>
+                    <Input.Root>
+                      <Input.Checkbox
+                        checked={checked}
+                        onCheckedChange={(next) => {
+                          // Preserve the canonical `Days` order so the summary reads naturally.
+                          const nextDays = next
+                            ? Days.map((d) => d.value).filter((d) => d === day || value.days.includes(d))
+                            : value.days.filter((d) => d !== day);
+                          // A weekly schedule must keep at least one day; an empty set serializes to `*`
+                          // (every day), silently broadening execution. Ignore the uncheck in that case.
+                          onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
+                        }}
+                      />
+                    </Input.Root>
+                    <span className='text-sm'>{label}</span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
         </div>
       );

@@ -153,15 +153,16 @@ const OperationActionForm = Schema.Struct({
 });
 type OperationActionValues = Schema.Schema.Type<typeof OperationActionForm>;
 
-// Operation picker options: surface each operation's registry key (plugin/id) in the label and sort by it.
-// The `id` derivation mirrors the RefField default so a selected operation ref still matches its option.
-const getOperationOptions = (results: Entity.Any[]): { id: string; label: string }[] =>
+// Operation picker options: surface each operation's registry key (plugin/id) as the option's secondary
+// line and sort by name. The `id` derivation mirrors the RefField default so a selected operation ref
+// still matches its option.
+const getOperationOptions = (results: Entity.Any[]): { id: string; label: string; description?: string }[] =>
   results
     .map((operation) => {
       const id = Entity.getURI(operation, { prefer: 'named' });
       const name = Entity.getLabel(operation) ?? id;
       const key = Obj.instanceOf(Operation.PersistentOperation, operation) ? Operation.getKey(operation) : undefined;
-      return { id, label: key ? `${name} (${key})` : name };
+      return { id, label: name, description: key };
     })
     .sort((left, right) => left.label.localeCompare(right.label));
 
