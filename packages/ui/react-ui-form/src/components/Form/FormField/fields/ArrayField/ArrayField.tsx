@@ -10,6 +10,7 @@ import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -112,10 +113,18 @@ export const ArrayField = ({
   };
 
   const handleAdd = useCallback(() => {
-    const defaultValue =
-      elementType && SchemaEx.isNestedType(elementType)
-        ? getDefaultObjectValue(elementType)
-        : getDefaultValue(elementType);
+    let defaultValue;
+    try {
+      defaultValue =
+        elementType && SchemaEx.isNestedType(elementType)
+          ? getDefaultObjectValue(elementType)
+          : getDefaultValue(elementType);
+    } catch (err) {
+      // `getDefaultValue` throws on element types it can't seed (runs in this click handler, so an
+      // unguarded throw would be uncaught). Skip the add rather than crash the form.
+      log.catch(err);
+      return;
+    }
     idsRef.current.push(nextId());
     // `values` is `undefined` on first render for arrays whose parent path
     // hasn't been materialised in the form values yet (e.g. `package.repos`

@@ -482,8 +482,18 @@ Grouped so each builds on the previous. Items marked ⟂ are independently shipp
 
 **Cleanup (⟂, any time)**
 
-- Remove `Form.Submit`; implement or drop `onCancel`; narrow `useFormFieldSetProperties` deps; document
-  `changed`/`touched`/`canSave`; pass AST to `fieldProvider`; guard `getDefaultValue`.
+- **Landed:** `fieldProvider`'s schema is memoized (no `Schema.make` per render); `getDefaultValue` is
+  guarded in `ArrayField`'s add handler; `changed`/`touched`/`canSave` are documented.
+- **Deferred (breaking / cross-package — own PRs):**
+  - **Remove `Form.Submit`** — used by 7+ plugins (trip, space, game, inbox, thread, integration);
+    removal is a migration, not a cleanup.
+  - **[R-7]** hook-props (`useType`/`useResults`/`getOptions`) — passed by `react-ui-table` and
+    `plugin-automation`; replacing them with service injection changes a public API.
+  - **[R-10]** density control-row token — a `@dxos/react-ui` (Switch/Checkbox/IconBlock) change that
+    affects every Switch app-wide; out of scope for the form package.
+  - `onCancel` already delegates to the parent (which owns revert, as the stories show) — left as-is.
+  - Narrowing `useFormFieldSetProperties`' `values` dep risks discriminated-union rendering for a memo
+    micro-opt — left as-is.
 
 ### Suggested first PR
 

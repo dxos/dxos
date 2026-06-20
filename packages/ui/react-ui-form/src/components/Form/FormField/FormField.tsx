@@ -114,6 +114,10 @@ export const FormField = (props: FormFieldProps) => {
     [examples, description, label],
   );
 
+  // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
+  // we don't reconstruct it on every render.
+  const providerSchema = useMemo(() => (fieldProvider ? Schema.make(type) : undefined), [fieldProvider, type]);
+
   const fieldState = useFormFieldState(FormField.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
   const fieldProps: FormFieldRendererProps = {
@@ -150,10 +154,11 @@ export const FormField = (props: FormFieldProps) => {
     return <CustomField {...fieldProps} />;
   }
 
-  // TODO(burdon): Expensive to create schema each time; pass AST?
-  const component = fieldProvider?.({ schema: Schema.make(type), prop: name ?? '', fieldProps });
-  if (component) {
-    return component;
+  if (fieldProvider && providerSchema) {
+    const component = fieldProvider({ schema: providerSchema, prop: name ?? '', fieldProps });
+    if (component) {
+      return component;
+    }
   }
 
   //

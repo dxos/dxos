@@ -13,28 +13,27 @@ import { type FormPresentation } from '#types';
  */
 export type FieldPresentation = {
   layout?: FormPresentation;
+  /** Render the value as read-only plain DOM rather than an editable control. */
+  isStatic: boolean;
   /** Render the field's label row. */
   showLabel: boolean;
   /** Render the inline validation/error block beneath the control. */
   showError: boolean;
-  /** Render the value as read-only plain DOM rather than an editable control. */
-  isStatic: boolean;
   /** Class applied to the field's outer wrapper element (the customization seam for the field row). */
-  fieldClassName: string;
+  fieldClassName?: string;
 };
 
 /**
  * Derive the {@link FieldPresentation} for a layout.
+ * - `static` renders read-only plain DOM.
  * - `inline` drops the label (the control stands alone, e.g. an array row).
  * - `full` adds the inline error block.
- * - `static` renders read-only plain DOM.
  */
 export const presentationFor = (layout?: FormPresentation): FieldPresentation => ({
   layout,
+  isStatic: layout === 'static',
   showLabel: layout !== 'inline',
   showError: layout === 'full',
-  isStatic: layout === 'static',
-  fieldClassName: '',
 });
 
 export type FieldRowProps = PropsWithChildren<{ presentation: FieldPresentation }>;
