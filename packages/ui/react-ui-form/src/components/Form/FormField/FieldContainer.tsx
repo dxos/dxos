@@ -64,5 +64,5 @@ export const FieldContainer = ({ label, path, readonly, presentation, collapsibl
   );
 
   // Nested groups render inside an indented, bordered container with a collapse toggle.
-  return collapsible ? <div className='border border-subdued-separator rounded-sm my-1.5'>{content}</div> : content;
+  return collapsible ? <div className='border border-subdued-separator rounded-sm'>{content}</div> : content;
 };

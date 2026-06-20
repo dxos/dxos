@@ -12,6 +12,7 @@ import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -250,13 +251,16 @@ export const ArrayField = ({
   return (
     <>
       {header}
-      <div className='flex flex-col'>
+      <div className='flex flex-col gap-2'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
           return (
             <div
               key={index}
-              className={`grid grid-cols-[1fr_min-content] ${renderItemAsObject || createInline ? 'items-start' : 'items-center'} mb-1 last:mb-form-gap`}
+              className={mx(
+                'grid grid-cols-[1fr_min-content]',
+                renderItemAsObject || createInline ? 'items-start' : 'items-center',
+              )}
             >
               {renderField(index, isLast)}
               {!readonly && layout !== 'static' && (

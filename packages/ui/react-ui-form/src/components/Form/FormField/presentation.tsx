@@ -34,9 +34,7 @@ export const presentationFor = (layout?: FormPresentation): FieldPresentation =>
   showLabel: layout !== 'inline',
   showError: layout === 'full',
   isStatic: layout === 'static',
-  // `contents` lets the parent grid own the field's rows; the seam for presentation-specific
-  // wrappers (e.g. a future `table`/cell variant) lives here.
-  fieldClassName: 'contents',
+  fieldClassName: '',
 });
 
 export type FieldRowProps = PropsWithChildren<{ presentation: FieldPresentation }>;
