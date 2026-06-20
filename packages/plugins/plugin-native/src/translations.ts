@@ -9,18 +9,30 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'update-ready.label': 'Ready to update',
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Update',
         'update.alt': 'Relaunch the app to update',
-        'settings.title': 'Native',
-        'settings.spotlight-shortcut.label': 'Spotlight shortcut',
-        'settings.spotlight-shortcut.description':
-          'Global keyboard shortcut to toggle the spotlight quick-access window. Click record and press the desired key combination.',
-        'settings.spotlight-shortcut.placeholder': 'Press a key combination…',
-        'settings.spotlight-shortcut.record.label': 'Record',
-        'settings.spotlight-shortcut.cancel.label': 'Cancel',
+        'settings.title': 'App',
+        'settings.spotlight.label': 'Spotlight shortcut',
+        'settings.spotlight.description': 'Global keyboard shortcut to open the spotlight window.',
+        'settings.spotlight.record.label': 'Record',
+        'settings.spotlight.recording.label': 'Recording…',
+        'settings.updates.label': 'Updates',
+        'settings.updates.check.label': 'Check for updates',
+        'settings.updates.checking.label': 'Checking…',
+        'settings.updates.update-now.label': 'Update now',
+        'settings.updates.downloading.label': 'Downloading…',
+        'settings.updates.relaunch.label': 'Restart to install',
+        'settings.updates.idle.message': 'Check now for a newer version of Composer.',
+        'settings.updates.checking.message': 'Checking for updates…',
+        'settings.updates.up-to-date.message': 'You are running the latest version of Composer. Checked {{checkedAt}}.',
+        'settings.updates.available.message': 'Version {{version}} is available.',
+        'settings.updates.downloading.message': 'Downloading… {{percent}}%',
+        'settings.updates.ready.message': 'Update ready. Restart Composer to apply.',
+        'settings.updates.failed.message': 'Update failed: {{error}}',
+        'settings.updates.unsupported.message': 'Updates are not available on this platform.',
       },
     },
   },

@@ -10,16 +10,15 @@ pub use config::SpotlightConfig;
 
 use std::sync::Mutex;
 
-use tauri::{AppHandle, LogicalSize, Manager, Runtime, Size, WebviewUrl};
+use tauri::{AppHandle, LogicalSize, Manager, Runtime, Size, State, WebviewUrl};
 use tauri_nspanel::{
     tauri_panel, CollectionBehavior, ManagerExt, PanelBuilder, PanelHandle, PanelLevel, StyleMask,
 };
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
-
-/// Tracks the spotlight shortcut currently bound to the OS so updates can swap it cleanly.
-pub struct SpotlightShortcut(pub Mutex<String>);
 
 use crate::LOCALHOST_PORT;
+
+/// Managed state that tracks the currently registered global shortcut string.
+pub struct RegisteredShortcut(pub Mutex<String>);
 
 // Define panel class - no event handlers needed (frontend-driven dismiss).
 tauri_panel! {
@@ -146,42 +145,27 @@ fn center_panel_on_screen(app: &AppHandle, panel: &PanelHandle<tauri::Wry>) -> R
     Ok(())
 }
 
-/// Update the global keyboard shortcut bound to the spotlight panel.
-///
-/// Tries to bind the new shortcut first; only on success does it unregister the previously bound
-/// shortcut. This guarantees that if the new shortcut is invalid or already taken, the previous
-/// shortcut keeps working.
+/// Update the global shortcut used to toggle the spotlight panel at runtime.
+/// Unregisters the old shortcut and registers the new one using the same handler.
 #[tauri::command]
-pub fn set_spotlight_shortcut(app: AppHandle, shortcut: String) -> Result<(), String> {
-    let state = app.state::<SpotlightShortcut>();
-    let manager = app.global_shortcut();
+pub fn update_spotlight_shortcut(
+    app: AppHandle,
+    state: State<RegisteredShortcut>,
+    old_shortcut: String,
+    new_shortcut: String,
+) -> Result<(), String> {
+    use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
-    let mut current = state
-        .0
-        .lock()
-        .map_err(|err| format!("Spotlight shortcut state poisoned: {err}"))?;
+    let mut current = state.0.lock().map_err(|e| e.to_string())?;
 
-    if *current == shortcut {
-        return Ok(());
+    if app.global_shortcut().is_registered(&old_shortcut) {
+        app.global_shortcut().unregister(&old_shortcut).map_err(|e| e.to_string())?;
     }
 
-    let handler_config = SpotlightConfig::default();
-    manager
-        .on_shortcut(shortcut.as_str(), move |app, _shortcut, event| {
-            if event.state == ShortcutState::Pressed {
-                if let Err(err) = toggle_spotlight(app, &handler_config) {
-                    log::error!("[spotlight] toggle failed: {err}");
-                }
-            }
-        })
-        .map_err(|err| format!("Failed to register spotlight shortcut '{shortcut}': {err}"))?;
+    app.global_shortcut().register(&new_shortcut).map_err(|e| e.to_string())?;
+    *current = new_shortcut;
 
-    if let Err(err) = manager.unregister(current.as_str()) {
-        log::warn!("[spotlight] failed to unregister previous shortcut '{}': {err}", *current);
-    }
-
-    log::info!("[spotlight] shortcut updated '{}' -> '{}'", *current, shortcut);
-    *current = shortcut;
+    log::info!("Spotlight shortcut updated to: {}", *current);
     Ok(())
 }
 

@@ -1,5 +1,6 @@
 //! Composer Tauri application entry point.
 
+mod asset_cache;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
@@ -21,7 +22,17 @@ pub const LOCALHOST_PORT: u16 = 26777;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default()
+        .manage(asset_cache::AssetCacheState::default())
+        // Custom URI scheme: serves cached third-party plugin assets so plugins keep
+        // working offline. Same scheme on desktop and mobile to share Rust code.
+        .register_asynchronous_uri_scheme_protocol(asset_cache::URI_SCHEME, |ctx, request, responder| {
+            let app = ctx.app_handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let response = asset_cache::handle_uri(&app, &request);
+                responder.respond(response);
+            });
+        });
 
     // Serve bundled assets via localhost plugin on desktop only (needed for SharedWorker support).
     // Mobile uses Tauri's default asset protocol instead.
@@ -63,25 +74,28 @@ pub fn run() {
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]
         {
-            use spotlight::{toggle_spotlight, SpotlightConfig};
+            use spotlight::{toggle_spotlight, RegisteredShortcut, SpotlightConfig};
             use tauri_plugin_global_shortcut::ShortcutState;
 
             let spotlight_config = SpotlightConfig::default();
             let config_for_shortcut = spotlight_config.clone();
+            let initial_shortcut = spotlight_config.shortcut.clone();
 
-            builder.plugin(
-                tauri_plugin_global_shortcut::Builder::new()
-                    .with_shortcuts([spotlight_config.shortcut.as_str()])
-                    .unwrap()
-                    .with_handler(move |app, _shortcut, event| {
-                        if event.state == ShortcutState::Pressed {
-                            if let Err(e) = toggle_spotlight(app, &config_for_shortcut) {
-                                eprintln!("[spotlight] Error toggling spotlight: {}", e);
+            builder
+                .manage(RegisteredShortcut(std::sync::Mutex::new(initial_shortcut)))
+                .plugin(
+                    tauri_plugin_global_shortcut::Builder::new()
+                        .with_shortcuts([spotlight_config.shortcut.as_str()])
+                        .unwrap()
+                        .with_handler(move |app, _shortcut, event| {
+                            if event.state == ShortcutState::Pressed {
+                                if let Err(e) = toggle_spotlight(app, &config_for_shortcut) {
+                                    eprintln!("[spotlight] Error toggling spotlight: {}", e);
+                                }
                             }
-                        }
-                    })
-                    .build(),
-            )
+                        })
+                        .build(),
+                )
         }
         #[cfg(not(target_os = "macos"))]
         {
@@ -89,18 +103,13 @@ pub fn run() {
         }
     };
 
-    // Track the currently bound spotlight shortcut so it can be swapped from the frontend.
-    #[cfg(target_os = "macos")]
-    let builder = {
-        use std::sync::Mutex;
-        builder.manage(spotlight::SpotlightShortcut(Mutex::new(
-            spotlight::SpotlightConfig::default().shortcut,
-        )))
-    };
-
     // Configure invoke handler with platform-specific commands.
     #[cfg(desktop)]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        asset_cache::cache_plugin_assets,
+        asset_cache::evict_plugin,
+        asset_cache::resolve_cached_url,
+        asset_cache::list_cached_plugins,
         oauth::start_oauth_server,
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
@@ -114,11 +123,16 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
         #[cfg(target_os = "macos")]
-        spotlight::set_spotlight_shortcut,
+        spotlight::update_spotlight_shortcut,
     ]);
 
     #[cfg(mobile)]
-    let builder = builder.invoke_handler(tauri::generate_handler![]);
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        asset_cache::cache_plugin_assets,
+        asset_cache::evict_plugin,
+        asset_cache::resolve_cached_url,
+        asset_cache::list_cached_plugins,
+    ]);
 
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());
