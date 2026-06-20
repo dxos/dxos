@@ -69,7 +69,6 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     invariant(Obj.instanceOf(Meeting.Meeting, createResult.data?.object));
     const addResult = await invokePromise(SpaceOperation.AddObject, {
       target: db,
-      hidden: true,
       object: createResult.data?.object,
     });
     invariant(Obj.instanceOf(Meeting.Meeting, addResult.data?.object));

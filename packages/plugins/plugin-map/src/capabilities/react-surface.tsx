@@ -12,6 +12,7 @@ import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { Position } from '@dxos/util';
 
 import { MapSurface, MapViewEditor } from '#containers';
 import { LocationAnnotationId, Map, MapInline } from '#types';
@@ -52,7 +53,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.objectProperties',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),

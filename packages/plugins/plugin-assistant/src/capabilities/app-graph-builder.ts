@@ -18,6 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -134,7 +135,7 @@ export default Capability.makeModule(
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
-                position: 'first',
+                position: Position.first,
               }),
             ];
           }),
@@ -167,13 +168,14 @@ export default Capability.makeModule(
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
 
       // Section node: standalone Chat.Chat objects per space (companions are excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
+        position: 100,
         // Exclude chats that are the source of a CompanionTo relation; those belong to
         // their primary object's companion panel and should not appear in the top-level list.
         query: Query.without(
@@ -202,7 +204,7 @@ export default Capability.makeModule(
                   );
                   const { subject } = yield* Operation.invoke(
                     SpaceOperation.AddObject,
-                    { object: chat, target: space.db, hidden: true, targetNodeId: getChatsPath(space.db.spaceId) },
+                    { object: chat, target: space.db, targetNodeId: getChatsPath(space.db.spaceId) },
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(

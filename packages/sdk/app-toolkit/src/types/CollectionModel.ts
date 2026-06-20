@@ -11,21 +11,21 @@ import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
+import * as AppNode from '../app-graph/AppNode';
 import { AppAnnotation } from '../echo';
 
 type AddProps = {
   object: Obj.Unknown;
   target?: Collection.Collection;
-  hidden?: boolean;
 };
 
-export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
+export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {
     Obj.update(target, (target) => {
       target.objects.push(objectRef);
     });
-  } else if (hidden) {
+  } else if (!AppNode.isCollectionItem(object)) {
     yield* Database.add(object);
   } else {
     const objects = yield* Database.query(Query.type(SpaceProperties)).run;

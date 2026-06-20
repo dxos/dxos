@@ -17,6 +17,7 @@ import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
+import { Position } from '@dxos/util';
 
 import { AssistantSettings } from '#components';
 import {
@@ -53,7 +54,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceHomeContent),
-        position: 'last',
+        position: Position.last,
         component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
       }),
       Surface.create({

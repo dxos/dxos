@@ -10,6 +10,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space';
 import { getParentId } from '@dxos/react-ui-attention';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Devtools } from '#types';
@@ -59,7 +60,7 @@ export default Capability.makeModule(
                   label: ['devtools.label', { ns: meta.profile.key }],
                   icon: 'ph--hammer--regular',
                   disposition: 'pin-end',
-                  position: 'last',
+                  position: Position.last,
                 },
                 nodes: [
                   Node.make({
@@ -399,7 +400,7 @@ export default Capability.makeModule(
               label: ['debug.label', { ns: meta.profile.key }],
               icon: 'ph--bug--regular',
               data: 'debug',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -415,7 +416,7 @@ export default Capability.makeModule(
               label: ['devtools-overview.label', { ns: meta.profile.key }],
               icon: 'ph--equalizer--regular',
               data: 'devtools' as const,
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -431,7 +432,7 @@ export default Capability.makeModule(
               label: ['space-objects.label', { ns: meta.profile.key }],
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),

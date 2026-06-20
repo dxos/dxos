@@ -157,7 +157,7 @@ export default Capability.makeModule(
               icon: 'ph--tray--regular',
               iconHue: 'rose',
               space,
-              position: 'first',
+              position: 301,
             }),
           ]);
         },
@@ -366,7 +366,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      TypeSection.createTypeSectionExtension(Calendar.Calendar),
+      TypeSection.createTypeSectionExtension(Calendar.Calendar, { position: 302 }),
 
       GraphBuilder.createExtension({
         id: 'calendarsSectionActions',

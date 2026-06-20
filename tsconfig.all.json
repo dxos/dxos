@@ -70,6 +70,9 @@
       "path": "packages/common/hypercore/tsconfig.json"
     },
     {
+      "path": "packages/common/i18n/tsconfig.json"
+    },
+    {
       "path": "packages/common/invariant/tsconfig.json"
     },
     {

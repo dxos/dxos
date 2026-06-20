@@ -15,6 +15,7 @@ import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
+import { snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
 import { isEntity, getDatabase } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
@@ -76,19 +77,6 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     return loadRefTarget(ref, get, setupTargetSubscription);
   }).pipe(Atom.keepAlive);
 });
-
-/**
- * Snapshot a value to create a new reference for comparison and React dependency tracking.
- */
-const snapshotForComparison = <V>(value: V): V => {
-  if (Array.isArray(value)) {
-    return [...value] as V;
-  }
-  if (value !== null && typeof value === 'object') {
-    return { ...value } as V;
-  }
-  return value;
-};
 
 /**
  * Atom family for ECHO object properties.

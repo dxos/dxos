@@ -9,6 +9,7 @@ import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -112,7 +113,7 @@ export default Capability.makeModule(
                   macos: "meta+'",
                 },
                 disposition: 'pin-end',
-                position: 'last',
+                position: Position.last,
                 l0Breakpoint: 'lg',
               },
             };
