@@ -21,6 +21,8 @@ const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
 export type FormFieldSetProps<T extends AnyProperties> = Merge<
   {
+    /** Applied to the field set's container (the bordered box when collapsible). */
+    classNames?: string;
     label?: string;
     sort?: string[];
     /**
@@ -45,6 +47,7 @@ export type FormFieldSetProps<T extends AnyProperties> = Merge<
  * Renders a set of form fields derived from a schema object.
  */
 export const FormFieldSet = ({
+  classNames,
   label,
   schema,
   readonly,
@@ -99,6 +102,7 @@ export const FormFieldSet = ({
 
   return (
     <FieldContainer
+      classNames={classNames}
       label={label}
       path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}

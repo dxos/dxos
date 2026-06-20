@@ -4,32 +4,43 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import { FieldHeader } from './FieldHeader';
 import { type FieldPresentation } from './presentation';
 
-export type FieldContainerProps = PropsWithChildren<{
-  label?: string;
-  /** JSON path of the group, forwarded to the label as field metadata. */
-  path?: string;
-  readonly?: boolean;
-  presentation: FieldPresentation;
-  /**
-   * Render a collapse toggle in the header and wrap the body in an indented, bordered box.
-   * Used for nested objects (struct fields, object-array items, inline refs).
-   */
-  collapsible?: boolean;
-}>;
+export type FieldContainerProps = ThemedClassName<
+  PropsWithChildren<{
+    label?: string;
+    /** JSON path of the group, forwarded to the label as field metadata. */
+    path?: string;
+    readonly?: boolean;
+    presentation: FieldPresentation;
+    /**
+     * Render a collapse toggle in the header and wrap the body in an indented, bordered box.
+     * Used for nested objects (struct fields, object-array items, inline refs).
+     */
+    collapsible?: boolean;
+  }>
+>;
 
 /**
  * Shared chrome for a labelled group of sub-fields: an optional header (label + collapse toggle) and,
  * when collapsible, an indented bordered container around the body. Nested structs, object-array items,
  * and inline refs all reach this via `FormFieldSet`, so their visual containment is identical.
  */
-export const FieldContainer = ({ label, path, readonly, presentation, collapsible, children }: FieldContainerProps) => {
+export const FieldContainer = ({
+  classNames,
+  label,
+  path,
+  readonly,
+  presentation,
+  collapsible,
+  children,
+}: FieldContainerProps) => {
   const { t } = useTranslation(translationKey);
   // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
   const [collapsed, setCollapsed] = useState(false);
@@ -63,6 +74,12 @@ export const FieldContainer = ({ label, path, readonly, presentation, collapsibl
     </>
   );
 
-  // Nested groups render inside an indented, bordered container with a collapse toggle.
-  return collapsible ? <div className='border border-subdued-separator rounded-sm'>{content}</div> : content;
+  // Nested groups render inside an indented, bordered container with a collapse toggle. A non-collapsible
+  // group only materializes a wrapper when `classNames` is supplied — otherwise the body flows straight
+  // into the parent grid (the default, grid-transparent behavior).
+  if (collapsible) {
+    return <div className={mx('border border-subdued-separator rounded-sm', classNames)}>{content}</div>;
+  }
+
+  return classNames ? <div className={mx(classNames)}>{content}</div> : content;
 };
