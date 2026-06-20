@@ -335,7 +335,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='flex gap-3'>
+        <div className='flex justify-between'>
           <Field label={t('schedule.at.label')}>
             <Input.Root>
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />

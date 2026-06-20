@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Operation, Routine, Trigger } from '@dxos/compute';
-import { DXN, type Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
@@ -153,6 +153,18 @@ const OperationActionForm = Schema.Struct({
 });
 type OperationActionValues = Schema.Schema.Type<typeof OperationActionForm>;
 
+// Operation picker options: surface each operation's registry key (plugin/id) in the label and sort by it.
+// The `id` derivation mirrors the RefField default so a selected operation ref still matches its option.
+const getOperationOptions = (results: Entity.Any[]): { id: string; label: string }[] =>
+  results
+    .map((operation) => {
+      const id = Entity.getURI(operation, { prefer: 'named' });
+      const name = Entity.getLabel(operation) ?? id;
+      const key = Obj.instanceOf(Operation.PersistentOperation, operation) ? Operation.getKey(operation) : undefined;
+      return { id, label: key ? `${name} (${key})` : name };
+    })
+    .sort((left, right) => left.label.localeCompare(right.label));
+
 /** Sub-form: ref picker for an Operation. Draws options from the queried operation set (space + registry). */
 const OperationEditor = ({
   db,
@@ -166,7 +178,11 @@ const OperationEditor = ({
   onChange?: (operation?: Ref.Ref<Operation.PersistentOperation>) => void;
 }) => {
   const fieldMap = useMemo<FormFieldMap>(
-    () => ({ operation: (props) => <RefField {...props} db={db} useResults={() => operations} /> }),
+    () => ({
+      operation: (props) => (
+        <RefField {...props} db={db} useResults={() => operations} getOptions={getOperationOptions} />
+      ),
+    }),
     [db, operations],
   );
   const defaultValues = useMemo<Partial<OperationActionValues>>(() => ({ operation }), [operation]);
