@@ -474,7 +474,7 @@ Switch.displayName = 'Input.Switch';
 const Block = forwardRef<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div aria-hidden='true' {...props} className={tx('input.block')} ref={forwardedRef}>
+    <div {...props} className={tx('input.block')} ref={forwardedRef}>
       {children}
     </div>
   );
