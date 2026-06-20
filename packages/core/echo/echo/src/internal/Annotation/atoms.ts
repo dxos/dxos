@@ -3,6 +3,7 @@
 //
 
 import * as Atom from '@effect-atom/atom/Atom';
+import * as Data from 'effect/Data';
 import * as Option from 'effect/Option';
 
 import { assertArgument } from '@dxos/invariant';
@@ -42,32 +43,35 @@ const annotationFamily = Atom.family((target: Entity.Unknown) =>
 
 /**
  * Atom family for a single key of a record-valued annotation on an entity instance.
+ * Keyed by a value-equal `Data.tuple([target, annotation, key])` so nested families are avoided.
  */
-const annotationPropertyFamily = Atom.family((target: Entity.Unknown) =>
-  Atom.family(<V>(annotation: Annotation.Annotation<Record<string, V>>) =>
-    Atom.family((key: string): Atom.Atom<V | undefined> => {
-      const read = (): V | undefined =>
-        getAnnotation(target, annotation).pipe(
-          Option.map((value) => snapshotForComparison(value[key])),
-          Option.getOrUndefined,
-        );
+const annotationPropertyFamily = Atom.family(
+  ([target, annotation, key]: readonly [
+    Entity.Unknown,
+    Annotation.Annotation<Record<string, any>>,
+    string,
+  ]): Atom.Atom<any> => {
+    const read = (): unknown =>
+      getAnnotation(target, annotation).pipe(
+        Option.map((value) => snapshotForComparison(value[key])),
+        Option.getOrUndefined,
+      );
 
-      return Atom.make<V | undefined>((get) => {
-        let previous = read();
+    return Atom.make<unknown>((get) => {
+      let previous = read();
 
-        const unsubscribe = subscribe(target, () => {
-          const next = read();
-          if (next !== previous) {
-            previous = next;
-            get.setSelf(next);
-          }
-        });
-        get.addFinalizer(() => unsubscribe());
+      const unsubscribe = subscribe(target, () => {
+        const next = read();
+        if (next !== previous) {
+          previous = next;
+          get.setSelf(next);
+        }
+      });
+      get.addFinalizer(() => unsubscribe());
 
-        return previous;
-      }).pipe(Atom.keepAlive);
-    }),
-  ),
+      return previous;
+    }).pipe(Atom.keepAlive);
+  },
 );
 
 /** Equal when both empty, or both present with the same (snapshotted) value. */
@@ -95,5 +99,5 @@ export const makeProperty = <V>(
   key: string,
 ): Atom.Atom<V | undefined> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
-  return annotationPropertyFamily(target)(annotation)(key);
+  return annotationPropertyFamily(Data.tuple(target, annotation as Annotation.Annotation<Record<string, any>>, key)) as Atom.Atom<V | undefined>;
 };
