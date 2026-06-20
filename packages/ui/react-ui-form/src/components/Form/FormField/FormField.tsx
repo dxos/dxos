@@ -281,7 +281,7 @@ FormField.displayName = 'Form.FormField';
 export const CompactIconButton = (props: IconButtonProps) => {
   return (
     // IconBlock defaults to aria-hidden (decorative slot); the button is interactive, so un-hide it.
-    <IconBlock aria-hidden={false} classNames='my-[1px]'>
+    <IconBlock aria-hidden={false}>
       <IconButton variant='ghost' density='xs' square iconOnly {...props} />
     </IconBlock>
   );
