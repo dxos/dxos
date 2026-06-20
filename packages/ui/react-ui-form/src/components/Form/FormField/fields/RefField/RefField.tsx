@@ -20,6 +20,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
 import { FormFieldLabel } from '../../FormFieldWrapper';
+import { presentationFor } from '../../presentation';
 
 // TODO(burdon): Factor out.
 const isRefSnapshot = (val: any): val is { '/': string } => {
@@ -99,7 +100,8 @@ export const RefField = (props: RefFieldProps) => {
     label,
     jsonPath,
     placeholder,
-    layout,
+    presentation,
+    required,
     getStatus,
     getValue,
     createOptionLabel,
@@ -115,6 +117,7 @@ export const RefField = (props: RefFieldProps) => {
   } = props;
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
+  const resolved = presentationFor(presentation);
 
   const typename = useMemo(
     () => (type ? SchemaEx.findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
@@ -185,13 +188,15 @@ export const RefField = (props: RefFieldProps) => {
     [item, handleUpdate],
   );
 
-  if (!typename || ((readonly || layout === 'static') && !item)) {
+  if (!typename || ((readonly || resolved.isStatic) && !item)) {
     return null;
   }
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
+      {resolved.showLabel && (
+        <FormFieldLabel error={error} readonly={readonly} required={required} label={label} path={jsonPath} />
+      )}
       <div>
         {readonly ? (
           !item ? (
@@ -241,7 +246,7 @@ export const RefField = (props: RefFieldProps) => {
           </ObjectPicker.Root>
         )}
       </div>
-      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {resolved.showError && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };

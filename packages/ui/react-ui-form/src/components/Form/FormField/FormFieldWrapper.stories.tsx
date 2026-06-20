@@ -61,12 +61,37 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const props: Story['args'] = {
+  label: 'Label',
+  required: true,
+  getStatus: () => ({ status: 'error', error: 'Required field' }),
+  getValue: () => 'DXOS',
+};
+
 export const Default: Story = {
   args: {
-    label: 'Label',
-    getStatus: () => ({ status: 'error', error: 'Required field' }),
-    getValue: () => 'DXOS',
-    onBlur: () => {},
-    onValueChange: () => {},
+    ...props,
+    presentation: 'full',
+  },
+};
+
+export const Compact: Story = {
+  args: {
+    ...props,
+    presentation: 'compact',
+  },
+};
+
+export const Inline: Story = {
+  args: {
+    ...props,
+    presentation: 'inline',
+  },
+};
+
+export const Static: Story = {
+  args: {
+    ...props,
+    presentation: 'static',
   },
 };

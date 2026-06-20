@@ -15,15 +15,17 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { FactoryAnnotation } from '@dxos/schema';
 
 import { translationKey } from '#translations';
-import { type FormFieldMap } from '#types';
+import { type FormFieldMap, type RefFieldDataProps } from '#types';
 
 import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
-export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
+export type ObjectPropertiesProps = PropsWithChildren<
+  { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults'>
+>;
 
 // TODO(wittjosiah): Reconcile w/ ObjectForm.
 export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
-  ({ children, object, ...props }, forwardedRef) => {
+  ({ children, object, getCreateDefaults, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const meta = Obj.getMeta(object);
     // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
@@ -121,6 +123,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         db={db}
         onValuesChanged={handleChange}
         onCreate={handleCreate}
+        getCreateDefaults={getCreateDefaults}
       >
         <Form.Viewport {...composableProps(props)} ref={forwardedRef}>
           <Form.Content>
@@ -134,12 +137,12 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 );
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
+  hue: ({ type, label, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
       <>
-        {layout !== 'inline' && <Form.Label label={label} />}
+        {presentation !== 'inline' && <Form.Label label={label} />}
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
       </>
     );
