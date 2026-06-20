@@ -59,7 +59,7 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
 };
 
 /**
- * Canonical qualified path to the types section of a space.
+ * Canonical qualified path to the database section of a space.
  * Optional additional segments are appended.
  */
 export const getDatabasePath = (spaceId: string, ...segments: string[]): string => {
