@@ -1,0 +1,332 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { AiContext } from '@dxos/assistant';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
+
+export const Query = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.query'),
+    name: 'Query',
+    icon: 'ph--magnifying-glass--regular',
+    description: trim`
+      Query for objects in ECHO.
+      Use this tool when searching for information in the space (both automerge and queues).
+      Currently, two types of queries are supported:
+        - Full-text search - terms may appear anywhere in the object.
+        - Type-based search - objects of a specific type.
+      You can use them together, for example, to search for objects of a specific type that match a full-text query.
+      Important: Whem querying by typename, make sure to list the schema first, to get the exact typename.
+
+      Omit both typename and text to search for all objects.
+
+      <output_format>
+        You can choose to either return the full object data, or just the DXN, type and label.
+        When expecting a lot of results, run with includeContent=false to not pollute the context, and then load specific objects using the load tool.
+
+        You can choose to get the content right away, if you don't expect a lot of results.
+        To load content right away, run with includeContent=true.
+        When loading content, set an appropriate limit on the number of results to avoid overwhelming the context.
+      </output_format>
+
+      <example description="All tasks related to Cyberdyne and Bob">
+        {
+          "typename": "org.dxos.type.task",
+          "text": "cyberdyne bob",
+        }
+      </example>
+
+      <example description="Financial report Q1 2026">
+        {
+          "typename": "org.dxos.type.document",
+          "text": "financial report Q1 2026",
+          "includeContent": true
+          "limit": 3
+        }
+      </example>
+
+      <example description="Emails from specific mailboxes">
+        {
+          "in": [{"/" : "echo:/YYYYYY"}, {"/" : "echo:/XXXXXXX"}],
+          "typename": "org.dxos.type.email",
+          "includeContent": true,
+          "limit": 20
+        }
+      </example>
+    `,
+  },
+  input: Schema.Struct({
+    in: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+        description:
+          'Scope the query to children of specific objects (transitively). ' +
+          'Use this to query items within containers such as feeds or folders. ' +
+          'For example, to find emails use `in: [mailbox1.feed, mailbox2.feed]`.',
+      }),
+    ),
+    typename: Schema.optional(
+      Schema.String.annotations({
+        description: 'The typename of the objects to list.',
+        example: 'org.dxos.type.task',
+      }),
+    ),
+    text: Schema.optional(
+      Schema.String.annotations({
+        description: 'Full text search query.',
+        example: 'email cyberdyne bob',
+      }),
+    ),
+    includeContent: Schema.optional(
+      Schema.Boolean.annotations({
+        description: 'Include the full object data in the response.',
+        default: false,
+      }),
+    ),
+    limit: Schema.optional(
+      Schema.Number.annotations({
+        description: 'The maximum number of results to return.',
+        default: 10,
+      }),
+    ),
+    includeQueues: Schema.optional(
+      Schema.Boolean.annotations({
+        description: 'Search in queues as well as spaces. Only use this if searching for emails.',
+        default: false,
+      }),
+    ),
+  }),
+  output: Schema.Array(Schema.Unknown),
+  services: [Database.Service],
+});
+
+export const Load = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.load'),
+    name: 'Load object',
+    icon: 'ph--download--regular',
+    description: trim`
+      Loads the object or relation content.
+      Can load multiple objects at at time.
+      Use the to read the data when you have a DXN.
+      Call this tool with an array of one or more DXNs or object IDs.
+      When use see a reference ({ '/': 'echo:...' }), you can call this function to load the object.
+      Note that returned data is only a snapshot in time, and might have changed since the object was last loaded.
+    `,
+  },
+  input: Schema.Struct({
+    refs: Schema.Array(Ref.Ref(Obj.Unknown)),
+  }),
+  output: Schema.Unknown,
+  services: [Database.Service],
+});
+
+export const ObjectCreate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.objectCreate'),
+    name: 'Create object',
+    icon: 'ph--plus--regular',
+    description: trim`
+      Creates a new object and adds it to the current space.
+      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
+      References are provided in the following format: { "/": "echo:..." }.
+      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+    `,
+  },
+  input: Schema.Struct({
+    typename: Schema.String,
+    data: Schema.Any,
+  }),
+  output: Schema.Unknown,
+  services: [Database.Service],
+});
+
+export const ObjectUpdate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.objectUpdate'),
+    name: 'Update object',
+    icon: 'ph--pencil--regular',
+    description: trim`
+      Updates the object properties.
+      References are provided in the following format: { "/": "echo:..." }.
+      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+    `,
+  },
+  input: Schema.Struct({
+    obj: Ref.Ref(Obj.Unknown),
+    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+  }),
+  output: Schema.Unknown,
+  services: [Database.Service],
+});
+
+export const ObjectDelete = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.objectDelete'),
+    name: 'Delete object',
+    description: trim`
+      Deletes the object.
+    `,
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    obj: Ref.Ref(Obj.Unknown),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
+export const SchemaAdd = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.schemaAdd'),
+    name: 'Add schema',
+    icon: 'ph--plus--regular',
+    description: trim`
+      Adds a schema to the space.
+      The name will be used when displayed to the user.
+    `,
+  },
+  input: Schema.Struct({
+    name: Schema.String,
+    typename: Schema.String.annotations({
+      description: 'The typename of the schema in the format of "com.example.type.type".',
+    }),
+    jsonSchema: Schema.Any,
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
+export const SchemaList = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.schemaList'),
+    name: 'List schemas',
+    icon: 'ph--list--regular',
+    description: trim`
+      Lists schemas definitions.
+    `,
+  },
+  input: Schema.Struct({
+    limit: Schema.optional(Schema.Number),
+  }),
+  output: Schema.Array(Schema.Unknown),
+  services: [Database.Service],
+});
+
+export const ContextAdd = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.contextAdd'),
+    name: 'Add to context',
+    icon: 'ph--plus-circle--regular',
+    description: trim`
+      Adds the object to the chat context.
+      Use this it for objects that are useful long-term for the conversation.
+    `,
+  },
+  input: Schema.Struct({
+    obj: Ref.Ref(Obj.Unknown).annotations({
+      description: 'Object to add to the chat context.',
+    }),
+  }),
+  output: Schema.Void,
+  services: [AiContext.Service],
+});
+
+export const ContextRemove = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.contextRemove'),
+    name: 'Remove from context',
+    icon: 'ph--minus-circle--regular',
+    description: trim`
+      Removes the object from the chat context.
+      Use this it for objects that are no longer useful for the conversation.
+    `,
+  },
+  input: Schema.Struct({
+    obj: Ref.Ref(Obj.Unknown).annotations({
+      description: 'Object to remove from the chat context.',
+    }),
+  }),
+  output: Schema.Void,
+  services: [AiContext.Service],
+});
+
+export const RelationCreate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.relationCreate'),
+    name: 'Create relation',
+    icon: 'ph--arrows-merge--regular',
+    description: trim`
+      Creates a new relation and adds it to the current space.
+      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
+    `,
+  },
+  input: Schema.Struct({
+    typename: Schema.String,
+    source: Ref.Ref(Obj.Unknown),
+    target: Ref.Ref(Obj.Unknown),
+    properties: Schema.Any.annotations({
+      description: 'The data to be stored in the relation.',
+    }),
+  }),
+  output: Schema.Unknown,
+  services: [Database.Service],
+});
+
+export const RelationDelete = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.relationDelete'),
+    name: 'Delete relation',
+    description: trim`
+      Deletes the relation.
+    `,
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    rel: Ref.Ref(Relation.Unknown),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
+export const TagAdd = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.tagAdd'),
+    name: 'Add tag',
+    icon: 'ph--tag--regular',
+    description: trim`
+      Adds a tag to an object.
+      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
+      You must search database for available tags, or create a new one.
+    `,
+  },
+  input: Schema.Struct({
+    tag: Ref.Ref(Tag.Tag),
+    obj: Ref.Ref(Obj.Unknown),
+  }),
+  output: Schema.Unknown,
+  services: [Database.Service],
+});
+
+export const TagRemove = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.database.tagRemove'),
+    name: 'Remove tag',
+    icon: 'ph--tag--regular',
+    description: trim`
+      Removes a tag from an object.
+      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
+    `,
+  },
+  input: Schema.Struct({
+    tag: Ref.Ref(Tag.Tag),
+    obj: Ref.Ref(Obj.Unknown),
+  }),
+  output: Schema.Unknown,
+  services: [Database.Service],
+});

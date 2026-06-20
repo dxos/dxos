@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
-import { Matrix } from '@dxos/react-ui-sfx';
+import { Matrix } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
@@ -76,7 +76,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
         </NaturalChatStatus.Icon>
       )}
       {show && (
-        <div role='none' className='flex items-center'>
+        <div className='flex items-center'>
           {requestTiming && (
             <NaturalChatStatus.Text>
               <Elapsed timing={requestTiming} />

@@ -1,7 +1,11 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-// Eager re-export of `SettingsPlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale.
-export * from './SettingsPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const SettingsPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { SettingsOperationHandlerSet } from './operations';

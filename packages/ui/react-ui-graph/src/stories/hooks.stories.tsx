@@ -109,9 +109,14 @@ const Component = ({
   }, [markersRef]);
 
   useEffect(() => {
+    // Prime the projector with the initial graph — `model.subscribe` only fires on changes by default,
+    // so without this the simulation starts empty and the renderer never sees any nodes.
+    // The subscribe callback receives `(model, graph)` from GraphModel; use the model reference
+    // we already have to fetch the current snapshot.
+    projector.updateData(model.graph);
     void projector.start();
     return combine(
-      model.subscribe((graph) => projector.updateData(graph)),
+      model.subscribe(() => projector.updateData(model.graph)),
       projector.updated.on(({ layout }) => renderer.render(layout)),
       () => projector.stop(),
     );

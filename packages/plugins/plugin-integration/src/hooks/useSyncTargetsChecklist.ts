@@ -6,7 +6,7 @@ import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { useIntegrationProvider } from '#hooks';
@@ -49,9 +49,13 @@ export const useSyncTargetsChecklist = (
     }
     setLoading(true);
     try {
-      const result = await invokePromise(provider.getSyncTargets, {
-        integration: Ref.make(integration),
-      });
+      const result = await invokePromise(
+        provider.getSyncTargets,
+        {
+          integration: Ref.make(integration),
+        },
+        { spaceId: Obj.getDatabase(integration)?.spaceId },
+      );
       if (result.error) {
         throw result.error;
       }
@@ -67,12 +71,12 @@ export const useSyncTargetsChecklist = (
     } catch (err) {
       log.catch(err);
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/get-sync-targets-error`,
+        id: `${meta.profile.key}/get-sync-targets-error`,
         icon: 'ph--warning--regular',
         duration: 5_000,
-        title: ['get-sync-targets-error.title', { ns: meta.id }],
+        title: ['get-sync-targets-error.title', { ns: meta.profile.key }],
         description: String((err as Error).message ?? err),
-        closeLabel: ['close.label', { ns: meta.id }],
+        closeLabel: ['close.label', { ns: meta.profile.key }],
       });
     } finally {
       setLoading(false);

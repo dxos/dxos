@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isBun } from '@dxos/util';
@@ -27,7 +26,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const personal = getPersonalSpace(client);
+      const personal = AppSpace.getPersonalSpace(client);
       if (!personal) {
         throw new Error('No space ID provided and no personal space found.');
       }
@@ -39,7 +38,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
 export const spaceLayer = (
   spaceId$: Option.Option<Key.SpaceId>,
   fallbackToPersonalSpace = false,
-): Layer.Layer<Database.Service | QueueService, never, ClientService> => {
+): Layer.Layer<Database.Service, never, ClientService> => {
   const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
 
@@ -56,7 +55,7 @@ export const spaceLayer = (
       }
       return spaceId$.pipe(
         Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(getPersonalSpace(client))),
+        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
         Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
       );
     };
@@ -93,31 +92,7 @@ export const spaceLayer = (
     ),
   );
 
-  const queue = Layer.effect(
-    QueueService,
-    Effect.gen(function* () {
-      const space = yield* getSpace();
-      if (!space) {
-        return {
-          queues: {
-            get: (_dxn) => {
-              throw new Error('Queues not available');
-            },
-            create: () => {
-              throw new Error('Queues not available');
-            },
-          },
-          queue: undefined,
-        };
-      }
-      return {
-        queues: space.queues,
-        queue: undefined,
-      };
-    }),
-  );
-
-  return Layer.merge(db, queue);
+  return db;
 };
 
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.

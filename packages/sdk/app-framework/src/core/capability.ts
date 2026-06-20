@@ -5,6 +5,9 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import type { DXN } from '@dxos/keys';
 
 import type * as CapabilityManager from './capability-manager';
 import type * as Plugin from './plugin';
@@ -72,6 +75,12 @@ export const atomByModule = <T>(
 ): Effect.Effect<Atom.Atom<Record<string, T[]>>, never, Service> =>
   Effect.map(Service, (manager) => manager.atomByModule(interfaceDef));
 
+/**
+ * Constructs a layer that will request its interface implementation from the capability manager.
+ */
+export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I, T>): Layer.Layer<I, never, Service> =>
+  Layer.effect(tag, get(interfaceDef).pipe(Effect.orDie));
+
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
 /**
@@ -93,8 +102,13 @@ export namespace InterfaceDef {
 
 /**
  * Helper to define the interface of a capability.
+ * Static NSID strings are validated at compile time via {@link DXN.Name}.
  */
-export const make = <T>(identifier: string) => {
+export const make: {
+  <T, S extends string = string>(
+    identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
+  ): InterfaceDef<T>;
+} = <T>(identifier: string): InterfaceDef<T> => {
   return { identifier } as InterfaceDef<T>;
 };
 
@@ -172,8 +186,8 @@ export type LazyCapability<Props = void, Capabilities extends ModuleReturn = Mod
 export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
   name: string,
   c: LoadCapability<T, R> | LoadCapabilities<T, R>,
-): LazyCapability<T, R> => {
-  const lazyFn: LazyCapability<T, R> = (props: T) =>
+): LazyCapability<T> => {
+  const lazyFn = (props: T) =>
     Effect.gen(function* () {
       const { default: getCapability } = yield* Effect.promise(() => c());
       const result = yield* getCapability(props);
@@ -181,7 +195,11 @@ export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
       return normalized as NormalizeReturn<R>;
     });
 
-  return Object.assign(lazyFn, { [ModuleTag]: name });
+  // Props (T) are preserved so callers pass correctly-typed options, but the contributed
+  // Capabilities type is widened to the opaque base. The concrete capability type often traces to a
+  // module-internal source path that TypeScript cannot name in declaration files (TS2883); the base
+  // type is portable. The contributed type is checked at Capability.contributes regardless.
+  return Object.assign(lazyFn, { [ModuleTag]: name }) as LazyCapability<T>;
 };
 
 /**

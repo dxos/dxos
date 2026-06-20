@@ -5,50 +5,17 @@
 import { Atom, type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-/**
- * A registry plugin entry as seen by the plugin manager layer.
- * Populated from the registry catalog; represents the latest available version of a plugin.
- *
- * Independently defined from @dxos/protocols PluginEntry — similar shape but not the same type.
- * Implementations of {@link PluginProvider} (e.g. {@link EdgeRegistryPluginProvider})
- * are responsible for mapping their wire-format entries to this shape.
- */
-export type Plugin = {
-  id: string;
-  name: string;
-  description?: string;
-  homePage?: string;
-  source?: string;
-  screenshots?: string[];
-  tags?: string[];
-  icon?: string;
-  iconHue?: string;
-  /** URL to dynamic-import the latest version of this plugin module. */
-  moduleUrl: string;
-  /** GitHub repository slug, e.g. `owner/name`. Used to fetch version history. */
-  repo: string;
-  /**
-   * Latest known version string, e.g. `v1.2.0`.
-   * Corresponds to releaseTag in the wire-format PluginEntry; named `version` here
-   * because the plugin manager layer speaks versions, not release tags.
-   */
-  version: string;
-};
+import type * as Plugin from './plugin';
 
 /**
- * A single installable version of a registry plugin.
+ * A registry catalog entry is a {@link Plugin.Meta} (profile + the latest release), the same
+ * runtime type bundled plugins use. {@link PluginProvider} implementations (e.g.
+ * {@link EdgeRegistryPluginProvider}) map their wire-format entries (`PluginView`) to this shape.
+ * A single installable version is a {@link Plugin.Release}.
  */
-export type PluginVersion = {
-  /** Version string, e.g. `v1.2.0`. */
-  tag: string;
-  /** URL to dynamic-import this specific version of the plugin module. */
-  moduleUrl: string;
-  /** Unix ms of when this version was published (optional; omitted when unknown). */
-  releasedAt?: number;
-};
 
 /**
  * Abstraction over the plugin registry catalog backend.
@@ -61,23 +28,22 @@ export type PluginVersion = {
  */
 export interface PluginProvider {
   /**
-   * Returns all healthy registry plugins (latest version of each).
+   * Returns all registry plugins (latest version of each).
    */
-  listPlugins(): Effect.Effect<readonly Plugin[], Error>;
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error>;
 
   /**
-   * Returns all known versions of a plugin identified by its GitHub repo slug.
-   * Until the backend implements a versions endpoint, implementations MUST
-   * return at least one entry representing the current/latest release.
+   * Returns all known versions of a plugin, identified by its composer plugin id (NSID).
+   * Ordered newest-first. Must return at least one entry.
    */
-  listVersions(repo: string): Effect.Effect<readonly PluginVersion[], Error>;
+  listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error>;
 
   /**
-   * Returns a single plugin entry for the given repo.
+   * Returns a single plugin entry for the given id.
    * If `version` is omitted, returns the latest.
-   * Fails if the specified version is not found.
+   * Fails if the plugin or version is not found.
    */
-  getPlugin(repo: string, version?: string): Effect.Effect<Plugin, Error>;
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error>;
 }
 
 /**
@@ -86,7 +52,7 @@ export interface PluginProvider {
  * (loading state, list contents, last error).
  */
 export type PluginsState = {
-  entries: readonly Plugin[];
+  entries: readonly Plugin.Meta[];
   loading: boolean;
   error: Error | null;
 };
@@ -100,7 +66,7 @@ export type PluginsState = {
  * callers know they need to configure a real provider.
  */
 const NULL_PROVIDER: PluginProvider = {
-  listPlugins: () => Effect.succeed([] as readonly Plugin[]),
+  listPlugins: () => Effect.succeed([] as readonly Plugin.Meta[]),
   listVersions: () => Effect.fail(new Error('No plugin registry provider configured')),
   getPlugin: () => Effect.fail(new Error('No plugin registry provider configured')),
 };
@@ -126,7 +92,7 @@ export class Manager {
 
     if (provider !== undefined) {
       // Fire-and-forget initial load. Errors are surfaced via the atom's `error` field.
-      void runAndForwardErrors(
+      void EffectEx.runAndForwardErrors(
         provider.listPlugins().pipe(
           Effect.match({
             onSuccess: (entries) => atomRegistry.set(this.plugins, { entries, loading: false, error: null }),
@@ -141,17 +107,17 @@ export class Manager {
   }
 
   /** Forwards to the underlying provider. */
-  listPlugins(): Effect.Effect<readonly Plugin[], Error> {
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
     return this.#provider.listPlugins();
   }
 
   /** Forwards to the underlying provider. */
-  listVersions(repo: string): Effect.Effect<readonly PluginVersion[], Error> {
-    return this.#provider.listVersions(repo);
+  listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {
+    return this.#provider.listVersions(id);
   }
 
   /** Forwards to the underlying provider. */
-  getPlugin(repo: string, version?: string): Effect.Effect<Plugin, Error> {
-    return this.#provider.getPlugin(repo, version);
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error> {
+    return this.#provider.getPlugin(id, version);
   }
 }

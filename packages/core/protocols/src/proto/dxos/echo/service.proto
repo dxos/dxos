@@ -60,8 +60,21 @@ message DocumentUpdate {
   /**
    * Automerge document incremental update.
    * Value returned by `Automerge.saveSince()`.
+   * Optional: if absent, the update only carries a transition signal (e.g.
+   * `requesting`) and not new bytes.
    */
-  bytes mutation = 2;
+  optional bytes mutation = 2;
+
+  /**
+   * Set by the worker when the disk probe for this document completes
+   * negative — i.e. the document is not on local storage, and the worker
+   * has started a network fetch. The client moves the corresponding
+   * `DocHandleProxy` from `'pending'` to `'requesting'`. Once the bytes
+   * eventually arrive, a normal `mutation` update follows and the handle
+   * transitions to `'ready'`. Used by query-driven (disk-only) callers to
+   * give up on a load without waiting on the network.
+   */
+  optional bool requesting = 3;
 }
 
 message DocHeadsList {

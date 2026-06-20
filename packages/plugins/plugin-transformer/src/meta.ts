@@ -2,17 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.transformer',
-  name: 'Transformer',
-  description: trim`
-    Execute local machine learning transformers and AI models directly in your browser.
-    Run embeddings, classifications, and other ML tasks without server dependencies.
-  `,
-  icon: 'ph--cpu--regular',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transformer',
-  tags: ['labs'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

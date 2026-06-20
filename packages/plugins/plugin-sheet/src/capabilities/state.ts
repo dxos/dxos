@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 
-import { type GridEntry, type GridRegistry, SheetCapabilities } from '#types';
+import { SheetCapabilities } from '#types';
 
-const createGridRegistry = (): GridRegistry => {
-  const grids = new Map<string, GridEntry>();
+const createGridRegistry = (): SheetCapabilities.GridRegistry => {
+  const grids = new Map<string, SheetCapabilities.GridEntry>();
   return {
     register: (attendableId, grid, setActiveRefs) => {
       grids.set(attendableId, { grid, setActiveRefs });

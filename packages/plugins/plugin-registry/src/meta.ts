@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { pinnedWorkspaceId } from '@dxos/app-toolkit';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
+import { Paths } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 
-export const REGISTRY_ID = pinnedWorkspaceId('dxos:plugin-registry');
+import config from '../dx.config';
+
+export const REGISTRY_ID = Paths.pinnedWorkspaceId('dxos:plugin-registry');
 export const REGISTRY_KEY = 'plugin-registry';
 
 // TODO(wittjosiah): Should this be a special separator or use the standard path separator?
@@ -18,13 +20,19 @@ export const registryCategoryId = (category: string): string => `${REGISTRY_KEY}
 /** Qualified graph path to a specific plugin node. */
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.registry',
-  name: 'Plugins',
-  description: trim`
-    Plugin management system for discovering, installing, and configuring workspace extensions.
-    Browse available plugins and customize your workspace capabilities.
-  `,
-  icon: 'ph--squares-four--regular',
-  tags: ['system'],
-};
+/**
+ * Qualified graph path to the bundled MDL spec child node for a plugin.
+ *
+ * The child is contributed by whichever plugin can render MDL (today:
+ * `plugin-code`). plugin-registry only knows the path convention so it can:
+ *  - dispatch `LayoutOperation.Open` to open the spec viewer, and
+ *  - probe the app graph for the child's existence to gate the "View
+ *    specification" button. If no plugin contributes a renderer for the
+ *    child, the node is absent and the button stays hidden.
+ */
+export const getPluginSpecPath = (pluginId: string): string => `${getPluginPath(pluginId)}/spec`;
+
+export const meta = Plugin.getMetaFromConfig(config);
+
+/** Cascade-disable confirmation dialog surface id. */
+export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${meta.profile.key}.disableDependentsDialog`);

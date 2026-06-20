@@ -4,9 +4,12 @@
 
 export * from './errors';
 
+export * as AgentService from './AgentService';
 export * as Blueprint from './Blueprint';
 export * as Credential from './Credential';
+export * as Header from './Header';
 export * as McpServer from './McpServer';
+export * as LayerSpec from './LayerSpec';
 export * as Operation from './Operation';
 export * as OperationHandlerSet from './OperationHandlerSet';
 export * as OperationRegistry from './OperationRegistry';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/env-tests",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Testing that our code compiles in different environments.",
   "homepage": "https://dxos.org",
@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {
@@ -32,7 +32,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",

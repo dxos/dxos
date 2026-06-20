@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { type Script, Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
 
 import { Update } from './definitions';
 
@@ -61,7 +61,7 @@ export default Update.pipe(
       }
 
       return {
-        function: Obj.getDXN(loaded).toString(),
+        function: Obj.getURI(loaded),
       };
     }),
   ),

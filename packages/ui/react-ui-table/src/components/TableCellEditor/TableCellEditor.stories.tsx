@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, Type, View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
@@ -53,7 +52,10 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: Task.Task.typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(Task.Task),
+        });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {

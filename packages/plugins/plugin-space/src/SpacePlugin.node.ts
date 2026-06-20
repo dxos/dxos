@@ -5,7 +5,7 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
@@ -63,7 +63,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(UndoMappings),
-        activatesOn: ActivationEvents.SetupOperationHandler,
+        activatesOn: ActivationEvents.SetupProcessManager,
         activate: () => UndoMappings({ createInvitationUrl, observability: false }),
       };
     },

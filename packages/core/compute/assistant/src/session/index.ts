@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './artifact-diff';
-export * from './observer';
-export * from './request';
 export * from './toolkit';
-export * from './version-pin';
-export * from './format';
+
+export * as AiContext from './AiContext';
+export * as AiSession from './AiSession';
+export { SessionLoader } from './SessionLoader';
+export * as SessionLink from './SessionLink';

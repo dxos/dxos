@@ -11,7 +11,7 @@ export const translations = [
   ...introspectTranslations,
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Debug',
         'settings.title': 'Debug settings',
         'open-devtools.label': 'Open DevTools',
@@ -21,7 +21,7 @@ export const translations = [
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
         'debug-app-graph.label': 'App Graph',
-        'debug-tools-explorer.label': 'Tools Explorer',
+        'debug-tools-explorer.label': 'SDK Explorer',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
@@ -52,10 +52,12 @@ export const translations = [
 
         'settings.data-store.label': 'Data Store',
 
+        'reset-data.label': 'Reset data (ERASES ALL DATA)',
         'open-debug-panel.label': 'Show Debug',
         'client.label': 'Client',
         'config.label': 'Config',
         'storage.label': 'Storage',
+        'sqlite.label': 'SQLite',
         'logs.label': 'Logs',
         'diagnostics.label': 'Diagnostics',
         'tracing.label': 'Tracing',
@@ -70,6 +72,7 @@ export const translations = [
         'feeds.label': 'Feeds',
         'objects.label': 'Objects',
         'schema.label': 'Schema',
+        'registry.label': 'Registry',
         'automerge.label': 'Automerge',
         'queues.label': 'Queues',
         'members.label': 'Members',
@@ -85,6 +88,12 @@ export const translations = [
         'workflows.label': 'Workflows',
         'traces.label': 'Traces',
         'testing.label': 'Testing',
+        // GitHub (deck-companion--github surface).
+        'github-loading.message': 'Loading…',
+        'github-unavailable.message': 'GitHub feed unavailable.',
+        'recent-prs.label_one': '{{count}} recent PR',
+        'recent-prs.label_other': '{{count}} recent PRs',
+        'view-on-github.button': 'View on GitHub',
       },
     },
   },

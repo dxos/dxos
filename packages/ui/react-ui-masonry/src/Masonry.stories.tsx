@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Card, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -19,15 +19,17 @@ import { Masonry, MasonryRootProps } from './Masonry';
 const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
     <Card.Root>
-      <Card.Toolbar>
-        <Card.Icon icon='ph--building-office--regular' />
+      <Card.Header>
+        <Card.Block>
+          <Icon icon='ph--building-office--regular' />
+        </Card.Block>
         <Card.Title>{name}</Card.Title>
-      </Card.Toolbar>
+      </Card.Header>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       {description && (
-        <Card.Section classNames='px-2 pb-2'>
+        <Card.Row fullWidth classNames='px-2 pb-2'>
           <Card.Text variant='description'>{description}</Card.Text>
-        </Card.Section>
+        </Card.Row>
       )}
     </Card.Root>
   );

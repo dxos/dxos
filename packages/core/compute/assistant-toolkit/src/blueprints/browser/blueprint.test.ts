@@ -12,18 +12,18 @@ import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { Person } from '@dxos/types';
 
 import { DatabaseBlueprint, DatabaseHandlers } from '../database';
 import BrowserBlueprint from './blueprint';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
@@ -33,7 +33,8 @@ const TestLayer = AssistantTestLayerWithTriggers({
   tracing: 'pretty',
 });
 
-describe('Browser', () => {
+// NOTE: Not run by default since it acceses internet.
+describe('Browser', { tags: ['llm'] }, () => {
   it.effect(
     'scrape effect blog',
     Effect.fnUntraced(
@@ -47,9 +48,9 @@ describe('Browser', () => {
           Create Markdown document for each article.
         `);
         yield* agent.waitForCompletion();
-        const people = yield* Database.runQuery(Query.type(Person.Person));
+        const people = yield* Database.query(Query.type(Person.Person)).run;
         log.info(`people`, { people });
-        const documents = yield* Database.runQuery(Query.type(Markdown.Document));
+        const documents = yield* Database.query(Query.type(Markdown.Document)).run;
         log.info(`documents`, { documents });
       },
       WithProperties,

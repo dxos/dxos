@@ -5,4 +5,4 @@
 import { type ComponentType, lazy } from 'react';
 
 export const RangeList: ComponentType<any> = lazy(() => import('./RangeList'));
-export const SheetContainer: ComponentType<any> = lazy(() => import('./SheetContainer'));
+export const SheetArticle: ComponentType<any> = lazy(() => import('./SheetArticle'));

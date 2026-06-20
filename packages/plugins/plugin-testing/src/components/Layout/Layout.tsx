@@ -12,7 +12,6 @@ import {
   AlertDialog,
   Button,
   Dialog,
-  Icon,
   Main,
   Popover,
   type PopoverContentInteractOutsideEvent,
@@ -25,12 +24,12 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { LayoutState, type LayoutStateProps } from '#types';
+import { StorybookCapabilities } from '#types';
 
 const debounce_delay = 100;
 
 const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Toast.Root
       data-testid={toast.id}
@@ -42,43 +41,35 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
         }
       }}
     >
-      <Toast.Body>
-        <Toast.Title classNames='items-center'>
-          {toast.icon && <Icon icon={toast.icon} classNames='inline mr-1' />}
-          {toast.title && <span>{toLocalizedString(toast.title, t)}</span>}
-        </Toast.Title>
-        {toast.description && <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>}
-      </Toast.Body>
-      <Toast.Actions>
-        {toast.onAction && toast.actionAlt && toast.actionLabel && (
+      <Toast.Title icon={toast.icon} onClose={toast.closeLabel ? () => onDismiss(toast.id) : undefined}>
+        {toast.title && <span>{toLocalizedString(toast.title, t)}</span>}
+      </Toast.Title>
+      {toast.description && <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>}
+      {toast.onAction && toast.actionAlt && toast.actionLabel && (
+        <Toast.Actions>
           <Toast.Action altText={toLocalizedString(toast.actionAlt, t)} asChild>
             <Button variant='primary' onClick={() => toast.onAction?.()}>
               {toLocalizedString(toast.actionLabel, t)}
             </Button>
           </Toast.Action>
-        )}
-        {toast.closeLabel && (
-          <Toast.Close asChild>
-            <Button>{toLocalizedString(toast.closeLabel, t)}</Button>
-          </Toast.Close>
-        )}
-      </Toast.Actions>
+        </Toast.Actions>
+      )}
     </Toast.Root>
   );
 };
 
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
-  const stateAtom = useCapability(LayoutState);
+  const stateAtom = useCapability(StorybookCapabilities.LayoutState);
   const layout = useAtomValue(stateAtom);
   const [iter, setIter] = useState(0);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateState = useCallback(
-    (updates: Partial<LayoutStateProps>) => {
+    (updates: Partial<StorybookCapabilities.LayoutStateProps>) => {
       const current = registry.get(stateAtom);
       registry.set(stateAtom, { ...current, ...updates });
     },
@@ -135,7 +126,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <Toast.Provider>
-      <div role='none' className='fixed inset-0 flex overflow-hidden'>
+      <div className='fixed inset-0 flex overflow-hidden'>
         <Mosaic.Root>
           <Popover.Root open={open}>
             <Main.Root
@@ -180,6 +171,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             <Popover.Portal>
               <Popover.Content
                 side={layout.popoverSide}
+                onOpenAutoFocus={(event) => event.preventDefault()}
                 onInteractOutside={handleInteractOutside}
                 onEscapeKeyDown={handleInteractOutside}
                 sticky='always'
@@ -188,20 +180,20 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 <Popover.Viewport>
                   {layout.popoverKind === 'card' && (
                     <Card.Root>
-                      <Card.Toolbar>
-                        {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                        <span />
+                      <Card.Header>
+                        {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
+                        <Card.DragHandle />
                         {layout.popoverTitle ? (
                           <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
                         ) : (
                           <span />
                         )}
-                        <Card.CloseIconButton onClick={handleClose} />
-                      </Card.Toolbar>
-                      <Surface.Surface type={AppSurface.Card} data={layout.popoverContent} limit={1} />
+                        <Card.ActionIconButton action='close' onClick={handleClose} />
+                      </Card.Header>
+                      <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}
-                  {layout.popoverKind === 'base' && (
+                  {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
                     <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                   )}
                 </Popover.Viewport>
@@ -220,7 +212,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const ErrorFallback = ({ error }: { error?: Error }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const errorString = error?.toString() ?? '';
   return (
     <div

@@ -19,8 +19,13 @@
 @layer dx-components {
   dx-grid {
     display: contents;
-    --dx-grid-gap: 1px;
-    --dx-plane-gap: 1px;
+    /*
+     * Cells touch edge-to-edge; lines come from each cell's border-right /
+     * border-bottom. Setting either gap to a non-zero value re-introduces the
+     * doubled-line artifact at plane seams.
+     */
+    --dx-grid-gap: 0;
+    --dx-plane-gap: 0;
   }
 
   .dx-grid {
@@ -56,7 +61,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-indicator);
+      border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
     }
   }
 
@@ -70,16 +75,26 @@
 
   .dx-grid {
     --grid-cell-surface: var(--color-grid-surface);
+    --grid-cell-fg: var(--color-grid-fg);
 
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
       background: var(--grid-cell-surface);
+      color: var(--grid-cell-fg);
       cursor: pointer;
       position: relative;
 
-      border-right: 1px solid var(--color-grid-line);
-      border-bottom: 1px solid var(--color-grid-line);
+      /*
+       * Paint grid lines via inset box-shadow rather than border so the cell's
+       * content-box equals its border-box. This lets `.dx-grid__cell__content`
+       * (with block-size/inline-size: 100%) fill the cell exactly — including
+       * the right/bottom edges. When focused, the cell-content's own border
+       * (focus ring) then aligns with the grid lines pixel-for-pixel.
+       */
+      box-shadow:
+        inset calc(-1 * var(--dx-grid-focus-indicator-width)) 0 0 var(--color-grid-line),
+        inset 0 calc(-1 * var(--dx-grid-focus-indicator-width)) 0 var(--color-grid-line);
 
       &[aria-readonly='true'] {
         cursor: default;
@@ -125,7 +140,8 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          --grid-cell-surface: var(--color-grid-selection-overlay);
+          --grid-cell-surface: var(--color-grid-selection-surface);
+          --grid-cell-fg: var(--color-grid-selection-fg);
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible,
@@ -147,7 +163,7 @@
     }
 
     &:has(.dx-grid__row--cta__cell:hover) .dx-grid__row--cta__cell {
-      background: var(--color-grid-hover-overlay);
+      background: var(--color-grid-highlight);
     }
   }
 
@@ -160,10 +176,15 @@
         &:focus,
         &:focus-within {
           & > .dx-grid__cell__content {
-            min-block-size: 100%;
-            block-size: min-content;
-            max-block-size: min(12em, 50vh);
-
+            /*
+             * Inline (horizontal) unfurl: cell-content can grow horizontally
+             * to show wider content. Block-size stays clamped to the cell
+             * height so the focus ring aligns with the bottom grid line —
+             * `block-size: min-content` would let cell-content overshoot the
+             * cell when the content's natural height (line-height + padding +
+             * border) exceeds the cell track size by even a fraction of a
+             * pixel, pushing the focus ring's bottom edge below the grid line.
+             */
             min-inline-size: 100%;
             inline-size: min-content;
             max-inline-size: min(60ch, 90vw);
@@ -172,23 +193,20 @@
             scrollbar-width: thin;
             overscroll-behavior: contain;
 
-            white-space: normal;
-            hyphens: auto;
-            overflow-wrap: break-word;
-
             z-index: 1;
 
             background: var(--grid-cell-surface);
+            color: var(--grid-cell-fg);
           }
 
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
-            border-color: var(--color-grid-focus-indicator);
+            border-color: var(--color-focus-ring);
           }
         }
       }
 
       &:focus-visible > .dx-grid__cell__content {
-        border-color: var(--color-grid-focus-indicator);
+        border-color: var(--color-focus-ring);
       }
     }
   }
@@ -200,7 +218,7 @@
     overflow-wrap: break-word;
 
     background: var(--dx-grid-base, var(--color-base-surface));
-    border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-indicator);
+    border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
     border-radius: 2px;
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
@@ -226,7 +244,7 @@
     [role='columnheader'],
     [role='rowheader'] {
       &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
-        border-color: var(--color-grid-focus-indicator);
+        border-color: var(--color-focus-ring);
       }
     }
   }

@@ -13,13 +13,10 @@ import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/clien
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Filter } from '@dxos/echo';
-import { Obj } from '@dxos/echo';
-import { type Database } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -32,7 +29,6 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -41,6 +37,7 @@ import { Client } from '../client';
 import {
   ClientServicesProxy,
   DedicatedWorkerClientServices,
+  type LeaderTimeoutOptions,
   LocalClientServices,
   MemoryWorkerCoordiantor,
 } from '../services';
@@ -69,8 +66,7 @@ export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
   public config: Config;
-  public storage?: () => Storage;
-  public level?: () => LevelDB;
+  public sqlitePath?: string;
 
   _transport: TransportKind;
   private _coordinator?: MemoryWorkerCoordiantor;
@@ -107,8 +103,6 @@ export class TestBuilder {
 
     const services = new ClientServicesHost({
       config: this.config,
-      storage: this?.storage?.(),
-      level: this?.level?.(),
       runtimeProps,
       runtime: runtime.runtimeEffect,
       ...this.networking,
@@ -124,23 +118,21 @@ export class TestBuilder {
    * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
   createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean; sqlitePath?: string }): LocalClientServices {
-    // When the test supplies a sqlitePath, run FILE-backed SQLite; otherwise use MEMORY so the
-    // test doesn't depend on OPFS (which is browser-only).
-    const sqliteMode = options?.sqlitePath
-      ? Runtime.Client.Storage.SqliteMode.FILE
-      : Runtime.Client.Storage.SqliteMode.MEMORY;
+    // When a sqlitePath is provided (options or builder or config.dataRoot), run FILE-backed SQLite; otherwise use MEMORY.
+    const configDataRoot = this.config.get('runtime.client.storage.dataRoot');
+    const sqlitePath =
+      options?.sqlitePath ?? this.sqlitePath ?? (configDataRoot ? `${configDataRoot}/storage.db` : undefined);
+    const sqliteMode = sqlitePath ? Runtime.Client.Storage.SqliteMode.FILE : Runtime.Client.Storage.SqliteMode.MEMORY;
     const config = new Config({ runtime: { client: { storage: { sqliteMode } } } }, this.config.values);
     const services = new LocalClientServices({
       config,
-      storage: this?.storage?.(),
-      level: this?.level?.(),
       runtimeProps: {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
           : {}),
         invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
-      sqlitePath: options?.sqlitePath,
+      sqlitePath,
       ...this.networking,
     });
 
@@ -169,7 +161,9 @@ export class TestBuilder {
    * Create dedicated worker client services.
    * All services share the same worker factory and coordinator.
    */
-  createDedicatedWorkerClientServices(): DedicatedWorkerClientServices {
+  createDedicatedWorkerClientServices(options?: {
+    leaderTimeouts?: LeaderTimeoutOptions;
+  }): DedicatedWorkerClientServices {
     // Shared coordinator for leader election across all services.
     if (!this._coordinator) {
       this._coordinator = new MemoryWorkerCoordiantor();
@@ -185,6 +179,7 @@ export class TestBuilder {
     const services = new DedicatedWorkerClientServices({
       createWorker: () => this._workerFactory!.make(),
       createCoordinator: () => this._coordinator!,
+      leaderTimeouts: options?.leaderTimeouts,
     });
 
     this._ctx.onDispose(() => services.close());

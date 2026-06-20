@@ -1,12 +1,14 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities } from '@dxos/app-framework';
 import { SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Migrations } from '@dxos/migrations';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { Annotation } from '@dxos/echo';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceCapabilities } from '../types';
 import { SpaceOperation } from './definitions';
@@ -34,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOpera
         properties: {
           spaceId: space.id,
           targetVersion,
-          version: Migrations.versionProperty ? space.properties[Migrations.versionProperty] : undefined,
+          version: Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined),
         },
       });
 

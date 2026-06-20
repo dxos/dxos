@@ -10,16 +10,45 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/InboxPlugin.tsx'
+      - '--entryPoint=src/InboxPlugin.node.ts'
+      - '--entryPoint=src/InboxPlugin.workerd.ts'
       - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/capabilities/node.ts'
+      - '--entryPoint=src/components/index.ts'
+      - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/hooks/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/services/index.ts'
       - '--entryPoint=src/services/mail-live/index.ts'
+      - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'
       # mail-live's IMAP/SMTP transport imports `cloudflare:sockets`, a Workers
       # built-in module. The bundle leaves it external; only Workers-side
       # consumers (e.g. edge mail-service) actually load it.
       - '--ignorePackage=cloudflare:sockets'
+  check-module-structure:
+    # Fail when the operations entrypoint pulls in `@dxos/react-ui`. The operations
+    # module must remain UI-free so it can be loaded in non-DOM environments.
+    command: >-
+      pnpm exec dx-trace-imports
+      --from src/operations/index.ts
+      --to "@dxos/react-ui"
+      --conditions source,workerd,worker,node
+      --fail-on present
+    deps:
+      - dx-trace-imports:compile
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
   deploy-functions:
     script: |
       $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts && \

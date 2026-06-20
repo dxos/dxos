@@ -25,6 +25,12 @@ export type ExtensionsOptions = {
    * this extension only consumes the buffered logs (via `export()`).
    */
   logStore?: IdbLogStore;
+  /**
+   * Maximum byte size passed to `logStore.export()` when uploading feedback logs.
+   * Should match the upload limit enforced by the server receiving the logs.
+   * When omitted the full store is exported without trimming.
+   */
+  feedbackLogMaxSize?: number;
 };
 
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
@@ -54,6 +60,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   environment,
   posthog: posthogConfig,
   logStore,
+  feedbackLogMaxSize,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -149,28 +156,39 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         kind: 'feedback',
         // TODO(wittjosiah): Support custom surveys.
         captureUserFeedback: (form) => {
-          posthog.getSurveys(async (surveys) => {
-            const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
-            if (!survey || survey.questions.length === 0) {
-              log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
-              return;
-            }
+          return new Promise<string | undefined>((resolve, reject) => {
+            posthog.getSurveys((surveys) => {
+              void (async () => {
+                try {
+                  const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
+                  if (!survey || survey.questions.length === 0) {
+                    log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
+                    resolve(undefined);
+                    return;
+                  }
 
-            let debugLogDumpKey: string | null = null;
-            if (form.includeLogs !== false && logStore !== undefined) {
-              const ndjson = await logStore.export();
-              if (ndjson.length > 0) {
-                debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
-              }
-            }
+                  let debugLogDumpKey: string | null = null;
+                  if (form.includeLogs !== false && logStore !== undefined) {
+                    const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
+                    if (ndjson.length > 0) {
+                      debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
+                    }
+                  }
 
-            // https://posthog.com/docs/surveys/implementing-custom-surveys
-            const question = survey.questions[0];
-            posthog.capture('survey sent', {
-              $survey_id: survey.id,
-              $survey_questions: [{ id: question.id, question: question.question }],
-              [`$survey_response_${question.id}`]: form.message,
-              debug_log_dump_key: debugLogDumpKey,
+                  // https://posthog.com/docs/surveys/implementing-custom-surveys
+                  const question = survey.questions[0];
+                  const result = posthog.capture('survey sent', {
+                    $survey_id: survey.id,
+                    $survey_questions: [{ id: question.id, question: question.question }],
+                    [`$survey_response_${question.id}`]: form.message,
+                    debug_log_dump_key: debugLogDumpKey,
+                  });
+                  resolve(result?.uuid);
+                } catch (err) {
+                  log.error('Failed to capture user feedback', { err });
+                  reject(err);
+                }
+              })();
             });
           });
         },

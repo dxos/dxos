@@ -39,7 +39,7 @@ export type IntegrationCoordinator = {
     /** Provider-specific hint forwarded to Edge as `loginHint` (atproto handle / DID). */
     loginHint?: string;
   }) => Effect.Effect<CreateIntegrationResult, Error>;
-  /** Persist manual token + Integration after `PROVIDER_FORM_DIALOG`; same finalize path as OAuth (`AccessTokenCreated`, navigation). */
+  /** Persist manual token + Integration after `PROVIDER_FORM_DIALOG`; same finalize path as OAuth (navigation). */
   createCustomIntegration: (input: {
     db: Database.Database;
     providerId: string;
@@ -72,5 +72,5 @@ export type IntegrationCoordinator = {
 };
 
 export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(
-  `${meta.id}.capability.integration-coordinator`,
+  `${meta.profile.key}.capability.integration-coordinator`,
 );

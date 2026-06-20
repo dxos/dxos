@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Node } from '@dxos/plugin-graph';
+import { Paths } from '@dxos/app-toolkit';
 
 /** Well-known local segment names. */
 const Segments = {
@@ -15,11 +15,11 @@ const Segments = {
 export const getCodeProjectsSectionId = (): string => Segments.codeProjects;
 
 /** Canonical qualified path to the code-projects section of a space. */
-export const getCodeProjectsPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.codeProjects}`;
+export const getCodeProjectsPath = (spaceId: string): string => Paths.getSpacePath(spaceId, Segments.codeProjects);
 
 /** Canonical qualified path to a specific CodeProject within a space. */
 export const getCodeProjectPath = (spaceId: string, projectId: string): string =>
-  `${getCodeProjectsPath(spaceId)}/${projectId}`;
+  Paths.getSpacePath(spaceId, Segments.codeProjects, projectId);
 
 /** Canonical segment ID for the spec child node. */
 export const getCodeProjectSpecId = (): string => Segments.spec;

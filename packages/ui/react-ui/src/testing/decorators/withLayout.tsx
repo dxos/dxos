@@ -47,31 +47,21 @@ export const withLayout =
   };
 
 const layouts: Record<ContainerType, FC<ContainerProps>> = {
-  default: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className={mx('p-4', classNames)}>
-      {children}
-    </div>
-  ),
+  default: ({ classNames, children }: ContainerProps) => <div className={mx('p-4', classNames)}>{children}</div>,
 
   fullscreen: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-black', classNames)}>
-      {children}
-    </div>
+    <div className={mx('fixed inset-0 flex overflow-hidden bg-black', classNames)}>{children}</div>
   ),
 
   centered: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-black')}>
-      <div role='none' className={mx('flex flex-col bg-base-surface', classNames)}>
-        {children}
-      </div>
+    <div className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-black')}>
+      <div className={mx('flex flex-col dx-attention-surface', classNames)}>{children}</div>
     </div>
   ),
 
   column: ({ classNames, children }: ContainerProps) => (
-    <div role='none' className='fixed inset-0 flex overflow-hidden justify-center bg-black'>
-      <div role='none' className={mx('flex flex-col w-[40rem] bg-base-surface', classNames)}>
-        {children}
-      </div>
+    <div className='fixed inset-0 flex overflow-hidden justify-center bg-black'>
+      <div className={mx('flex flex-col w-[40rem] dx-attention-surface', classNames)}>{children}</div>
     </div>
   ),
 };

@@ -59,13 +59,16 @@
       "path": "../../../sdk/types"
     },
     {
+      "path": "../../compute-runtime"
+    },
+    {
       "path": "../../echo/echo"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../echo/echo-client"
     },
     {
-      "path": "../../echo/echo-pipeline"
+      "path": "../../echo/echo-host"
     },
     {
       "path": "../../echo/echo-protocol"

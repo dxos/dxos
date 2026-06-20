@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './capabilities';
-export * from './events';
+export * as ObservabilityCapabilities from './ObservabilityCapabilities';
+export * as ObservabilityEvents from './ObservabilityEvents';
+export * as ObservabilityOperation from './ObservabilityOperation';
 export * as Settings from './Settings';

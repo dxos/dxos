@@ -16,16 +16,13 @@ export type RelatedContactsProps = {
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   if (!contacts.length) {
     return null;
   }
 
   return (
-    <>
-      <Card.Row>
-        <Card.Heading variant='subtitle'>{t('related-contacts.title')}</Card.Heading>
-      </Card.Row>
+    <Card.Section title={t('related-contacts.title')}>
       {contacts.map((contact) => (
         <Card.Action
           key={contact.id}
@@ -35,6 +32,6 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
           actionIcon='ph--arrow-right--regular'
         />
       ))}
-    </>
+    </Card.Section>
   );
 };

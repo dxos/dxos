@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Goal > Action > Result.
 
@@ -47,16 +47,14 @@ namespace Proposition {
     ),
   });
 
-  export interface Fields extends Schema.Schema.Type<typeof Fields> {}
+  export interface Fields {
+    readonly text: string;
+    children?: Fields[];
+  }
 
-  export const Object = Fields.pipe(
-    Type.object({
-      typename: 'org.dxos.type.proposition',
-      version: '0.1.0',
-    }),
-  );
+  export const Object = Fields.pipe(Type.makeObject(DXN.make('org.dxos.type.proposition', '0.1.0')));
 
-  export interface Object extends Schema.Schema.Type<typeof Object> {}
+  export type Object = Type.InstanceType<typeof Object>;
 
   // TODO(burdon): Obfuscates Obj.make?
   export const make = (props: Pick<Object, 'text'>) => Obj.make(Object, Fields.make(props));
@@ -73,11 +71,11 @@ export namespace Research {}
 
 export namespace OKR {
   const Properties = Schema.Struct({
-    objectives: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    objectives: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotations({
       name: 'Objectives',
       description: 'Qualitative, ambitious aspirations.',
     }),
-    keyResults: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    keyResults: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotations({
       name: 'Key Results',
       description: 'Quantitative metrics tracking progress towards those objectives.',
     }),
@@ -85,14 +83,9 @@ export namespace OKR {
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
-  const Object = Properties.pipe(
-    Type.object({
-      typename: 'org.dxos.type.okr',
-      version: '0.1.0',
-    }),
-  );
+  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.okr', '0.1.0')));
 
-  export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
+  export type Object = Type.InstanceType<typeof Object>;
 
   export const make = () => Obj.make(Object, { objectives: [], keyResults: [] });
 }
@@ -122,14 +115,9 @@ export namespace SWOT {
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
-  const Object = Properties.pipe(
-    Type.object({
-      typename: 'org.dxos.type.swot',
-      version: '0.1.0',
-    }),
-  );
+  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.swot', '0.1.0')));
 
-  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
+  export type Any = Type.InstanceType<typeof Object>;
 
   export const make = () => Obj.make(Object, { strengths: [], weaknesses: [], opportunities: [], threats: [] });
 }
@@ -139,14 +127,9 @@ export namespace Plan {
     name: Schema.String,
   });
 
-  const Object = Properties.pipe(
-    Type.object({
-      typename: 'org.dxos.type.plan',
-      version: '0.1.0',
-    }),
-  );
+  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
 
-  export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
+  export type Object = Type.InstanceType<typeof Object>;
 
   export const make = ({ name }: Object) => Obj.make(Object, { name });
 }

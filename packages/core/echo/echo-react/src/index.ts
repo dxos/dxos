@@ -3,5 +3,5 @@
 //
 
 export * from './useQuery';
-export * from './useSchema';
+export * from './useType';
 export * from './useObject';

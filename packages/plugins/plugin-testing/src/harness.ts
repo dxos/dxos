@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp, type TestAppOptions, type TestHarness } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { SettingsPlugin } from '@dxos/plugin-settings';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AttentionPlugin } from '@dxos/plugin-attention/testing';
+import { GraphPlugin } from '@dxos/plugin-graph/testing';
+import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 
 export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
   /** Plugins to register in addition to the Composer core plugins. */
@@ -26,26 +27,34 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
 const headlessCorePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin(),
   GraphPlugin(),
-  OperationPlugin(),
-  RuntimePlugin(),
+  ProcessManagerPlugin(),
   SettingsPlugin(),
 ];
 
 /**
  * Creates a TestHarness pre-loaded with the Composer core plugins
- * (Attention, Graph, Operation, Runtime, Settings, optionally Theme).
+ * (Attention, Graph, ProcessManager, Settings, optionally Theme).
  *
  * For a ClientPlugin-backed harness, pass `ClientPlugin({ ... })` via `plugins`.
+ *
+ * @idiom org.dxos.plugin-testing.pluginModuleActivation
+ *   applies: Writing a basic activation smoke-test for any Composer plugin
+ *   instead-of: Manually inspecting PluginManager internals or relying on e2e tests for activation checks
+ *   uses: {@link createComposerTestApp}, {@link AppActivationEvents}
+ *   related: org.dxos.app-framework.testing.operationCapture
  */
 export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): Promise<TestHarness> => {
   const { plugins = [], theme = false, ...rest } = opts;
   const core = headlessCorePlugins();
   if (theme) {
-    const { ThemePlugin } = await import('@dxos/plugin-theme');
-    const { defaultTx } = await import('@dxos/ui-theme');
+    const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
+    const { defaultTx } = await import('@dxos/react-ui');
     core.push(ThemePlugin({ tx: defaultTx }));
   }
   return createTestApp({
+    // Composer always fires SetupSettings before Startup so that settings modules
+    // activate before graph builders (which use allOf(SetupSettings, SetupAppGraph)).
+    setupEvents: [AppActivationEvents.SetupSettings],
     ...rest,
     plugins: [...core, ...plugins],
   });

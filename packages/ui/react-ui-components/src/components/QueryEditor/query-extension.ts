@@ -259,7 +259,7 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { fill, border, surface } = getStyles(this._hue);
+    const { bg: fill, border, surface } = getStyles(this._hue);
     return container(
       border,
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
@@ -325,6 +325,16 @@ class SymbolWidget extends WidgetType {
 const styles = EditorView.theme({
   '.cm-line': {
     lineHeight,
+  },
+  // Match the standard Input block size (md density): 2.5rem, 2rem on pointer-fine devices.
+  '.cm-scroller': {
+    alignItems: 'center',
+    minHeight: '2.5rem',
+  },
+  '@media (pointer: fine)': {
+    '.cm-scroller': {
+      minHeight: '2rem',
+    },
   },
 });
 

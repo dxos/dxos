@@ -8,11 +8,11 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
-import { ScriptOperation } from '#operations';
+import { ScriptOperation } from '#types';
 
 import { type Template } from '../templates';
 import { deployScript } from '../util';

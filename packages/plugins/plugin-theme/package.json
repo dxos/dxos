@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-theme",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,47 +8,61 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/ThemePlugin.ts",
-    "#meta": "./src/meta.ts",
-    "#translations": "./src/translations.ts"
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/ThemePlugin.ts",
+      "types": "./dist/types/src/ThemePlugin.d.ts",
+      "default": "./dist/lib/neutral/ThemePlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
-    },
-    "./meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "browser": "./dist/lib/browser/plugin.mjs"
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/i18n": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

@@ -15,8 +15,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const danglingRefsDiagnostic: DiagnosticProvider = {
   id: 'dangling-refs',
-  label: ['diagnostic.dangling-refs.label', { ns: meta.id }],
-  description: ['diagnostic.dangling-refs.description', { ns: meta.id }],
+  label: ['diagnostic.dangling-refs.label', { ns: meta.profile.key }],
+  description: ['diagnostic.dangling-refs.description', { ns: meta.profile.key }],
   run: async ({ client, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const spaces = getReadySpaces(client);
@@ -41,7 +41,7 @@ export const danglingRefsDiagnostic: DiagnosticProvider = {
               issues.push({
                 id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:dangling`,
                 severity: 'error',
-                message: `Dangling reference at "${path.join('.')}" → ${ref.dxn.toString()}.`,
+                message: `Dangling reference at "${path.join('.')}" → ${ref.uri}.`,
                 subjectLabel: labelObject(obj),
                 spaceId: space.id,
               });

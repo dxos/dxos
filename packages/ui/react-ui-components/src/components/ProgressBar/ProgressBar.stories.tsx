@@ -44,7 +44,7 @@ const DefaultStory = ({ items, ...props }: DefaultStoryProps) => {
   }, [running]);
 
   return (
-    <div role='none' className='flex flex-col w-[400px] gap-8 overflow-hidden'>
+    <div className='flex flex-col w-[400px] gap-8 overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
         <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>
@@ -55,7 +55,7 @@ const DefaultStory = ({ items, ...props }: DefaultStoryProps) => {
         <div className='p-2 text-subdued'>{nodes.length}</div>
       </Toolbar.Root>
 
-      <div role='none' className='flex flex-col gap-1'>
+      <div className='flex flex-col gap-1'>
         <ProgressBar
           nodes={nodes}
           index={index}

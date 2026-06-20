@@ -23,7 +23,9 @@ import {
 import { type EditorMenuGroup, type EditorMenuItem } from './menu';
 
 export type EditorMenuProviderProps = PropsWithChildren<{
-  view?: EditorView | null;
+  // Provided as a getter (not a value prop) so the live `EditorView` is never carried in a React prop that
+  // the dev render-logger would walk into a cross-origin frame. See `controller.ts` for the full rationale.
+  getView?: () => EditorView | null;
   groups?: EditorMenuGroup[];
   currentItem?: string;
   open?: boolean;
@@ -42,7 +44,7 @@ export type EditorMenuProviderProps = PropsWithChildren<{
  */
 export const EditorMenuProvider = ({
   children,
-  view,
+  getView,
   groups,
   currentItem,
   open: openProp,
@@ -56,13 +58,15 @@ export const EditorMenuProvider = ({
   const { tx } = useThemeContext();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  const viewRef = useDynamicRef(view);
+  // Hold the latest `getView` so callbacks/effects always read the current view without re-subscribing.
+  const getViewRef = useDynamicRef(getView);
   const [open, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
     onChange: (open) => {
-      invariant(viewRef.current);
-      onOpenChange?.({ view: viewRef.current, open });
+      const view = getViewRef.current?.();
+      invariant(view);
+      onOpenChange?.({ view, open });
     },
   });
 
@@ -81,7 +85,10 @@ export const EditorMenuProvider = ({
         if (!dxn) {
           triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
-            onActivate({ view: viewRef.current!, trigger: trigger.getAttribute('data-trigger') ?? undefined });
+            const view = getViewRef.current?.();
+            if (view) {
+              onActivate({ view, trigger: trigger.getAttribute('data-trigger') ?? undefined });
+            }
           } else {
             requestAnimationFrame(() => setOpen(true));
           }
@@ -96,10 +103,11 @@ export const EditorMenuProvider = ({
 
   const handleSelect = useCallback<NonNullable<MenuProps['onSelect']>>(
     (item) => {
-      invariant(viewRef.current);
-      onSelect?.({ view: viewRef.current, item });
+      const view = getViewRef.current?.();
+      invariant(view);
+      onSelect?.({ view, item });
     },
-    [viewRef, onSelect],
+    [getViewRef, onSelect],
   );
 
   const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
@@ -118,7 +126,7 @@ export const EditorMenuProvider = ({
           }}
           // NOTE: We keep the focus in the editor, but Radix routes escape key.
           onEscapeKeyDown={() => {
-            const currentView = viewRef.current;
+            const currentView = getViewRef.current?.();
             if (currentView) {
               onCancel?.({ view: currentView });
             }
@@ -137,7 +145,7 @@ export const EditorMenuProvider = ({
       </Popover.Portal>
 
       {/* Content */}
-      <div role='none' className='contents' ref={setRoot}>
+      <div className='contents' ref={setRoot}>
         {children}
       </div>
     </Popover.Root>

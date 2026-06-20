@@ -3,7 +3,7 @@
 //
 
 import { Blueprint, Trigger, Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -19,7 +19,7 @@ const instructions = trim`
   Triggers are configured by the properties of the Trigger object.
   - enabled: Must be true for trigger to run.
   - spec: Events that the trigger matches.
-  - function: Ref to a ${Operation.PersistentOperation.typename} object that will be invoked. Query the functions present in the space first, and reference them in the trigger.
+  - function: Ref to a ${Type.getTypename(Operation.PersistentOperation)} object that will be invoked. Query the functions present in the space first, and reference them in the trigger.
   - input: The spec of the input data that will be passed to the function.
 
   ## Input patterns
@@ -32,21 +32,21 @@ const instructions = trim`
   {
     item: '{{event.item}}',
     instructions: 'Summarize and perform entity-extraction'
-    mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+    mailbox: { '/': 'echo://AAA/ZZZ' }
   }
 
   ## Trigger kinds
 
   - Timer: Triggered by a cron schedule.
   - Queue: Subscribes and processes items begginging to end.
-            Note: queues are the same as feeds. The queue DXN should be of form: dxn:queue:data:<space-id>:<queue-id>.
+            Note: queues are the same as feeds. The queue EID should be of form: echo://<space-id>/<queue-id>.
   - Subscription: Subscribes and processes database items based on a query.
 
   Avoid: email and webhook triggers.
 
   ## Editing triggers
 
-  Triggers are represented as objects of type ${Trigger.Trigger.typename}.
+  Triggers are represented as objects of type ${Type.getTypename(Trigger.Trigger)}.
   You need access to the Database blueprint to manipulate triggers.
   Read trigger schema before manipulating triggers.
   Having a Trigger object in the database is enough to setup an automation. 
@@ -56,7 +56,7 @@ const instructions = trim`
   Timer:
 
   {
-    "function": { "/": "dxn:echo:AAA:ZZZ" },
+    "function": { "/": "echo://AAA/ZZZ" },
     "enabled": true,
     "spec": {
       "kind": "timer",
@@ -67,22 +67,22 @@ const instructions = trim`
   Queue:
 
   {
-    "function": { "/": "dxn:echo:AAA:ZZZ" },
+    "function": { "/": "echo://AAA/ZZZ" },
     "enabled": true,
     "spec": {
       "kind": "queue",
-      "queue": "dxn:queue:data:XXX:YYY"
+      "queue": "echo://XXX/YYY"
     }
   }
 
   Subscription:
 
   {
-    "function": { "/": "dxn:echo:AAA:ZZZ" },
+    "function": { "/": "echo://AAA/ZZZ" },
     "enabled": true,
     "spec": {
       "kind": "subscription",
-      "query": { "ast": { "type": "select", "filter": { "type": "object", "typename": "dxn:type:org.dxos.type.person" } } }
+      "query": { "ast": { "type": "select", "filter": { "type": "object", "typename": "dxn:org.dxos.type.person" } } }
     }
   }
 `;

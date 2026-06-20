@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -28,7 +28,7 @@ const createPerson = () =>
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');
-const personSchema = omitId(Person.Person);
+const personSchema = omitId(Type.getSchema(Person.Person));
 
 // Mock functions for testing
 const mockHandleSelect = fn();
@@ -48,7 +48,7 @@ const DefaultStory = () => {
     }
   }, [space]);
 
-  // Get all objects in the space (similar to BoardContainer)
+  // Get all objects in the space (similar to BoardArticle)
   const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker
@@ -76,7 +76,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='w-96'>
+    <div className='w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
           <Button variant='primary' data-testid='trigger' classNames='w-full'>

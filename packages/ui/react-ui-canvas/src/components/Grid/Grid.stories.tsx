@@ -15,7 +15,7 @@ const DefaultStory = (props: GridProps) => {
   const [{ scale, offset }] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });
 
   return (
-    <div role='none' ref={ref} className='grow'>
+    <div ref={ref} className='grow'>
       <GridComponent scale={scale} offset={offset} {...props} />
     </div>
   );

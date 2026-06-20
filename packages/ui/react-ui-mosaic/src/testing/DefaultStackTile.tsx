@@ -5,7 +5,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Toolbar } from '@dxos/react-ui';
+import { Card, IconButton } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -18,7 +18,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
     () => [
       createMenuAction('toggle-details', () => setOpen((prev) => !prev), {
         label: open ? 'Hide details' : 'Show details',
-        icon: 'ph--placeholder--regular',
+        icon: 'ph--circle-dashed--regular',
       }),
     ],
     [open],
@@ -35,14 +35,16 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
           <Card.Root className='dx-current dx-hover'>
-            <Card.Toolbar>
+            <Card.Header>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-              <Menu.Trigger asChild disabled={!menuItems?.length}>
-                <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-              </Menu.Trigger>
+              <Card.Block end>
+                <Menu.Trigger asChild disabled={!menuItems?.length}>
+                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+                </Menu.Trigger>
+              </Card.Block>
               <Menu.Content items={menuItems} />
-            </Card.Toolbar>
+            </Card.Header>
             {open && (
               <Card.Row>
                 <JsonHighlighter data={props.data} classNames='text-xs' />

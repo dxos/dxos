@@ -16,6 +16,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SampleItem } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
   // Activates during `SetupAppGraph` event.
@@ -25,7 +28,7 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   // `createObject` is the factory called when users create this type via the UI.
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
 
-  // Registers operation handlers. Activates during `SetupOperationHandler` event.
+  // Registers operation handlers. Activates during `SetupProcessManager` event.
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
 
   // Registers ECHO schemas so the framework knows about this type.
@@ -42,6 +45,9 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
 
   // Finalizes the plugin. Must be the last call in the chain.
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 

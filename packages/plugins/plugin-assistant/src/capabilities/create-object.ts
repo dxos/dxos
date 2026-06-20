@@ -3,24 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
+import { Capability, Capabilities } from '@dxos/app-framework';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { Obj } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { Database, Obj, Type } from '@dxos/echo';
+import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
+
+import { getChatsPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Chat.Chat.typename,
+        id: Type.getTypename(Chat.Chat),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
@@ -30,13 +30,12 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
+              targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId),
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Blueprint.Blueprint.typename,
+        id: Type.getTypename(Blueprint.Blueprint),
         inputSchema: AssistantOperation.BlueprintForm,
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -44,64 +43,53 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Routine.Routine.typename,
+        id: Type.getTypename(Routine.Routine),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Routine.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Sequence.typename,
+        id: Type.getTypename(Sequence.Sequence),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Obj.make(Sequence, props);
+            const object = Obj.make(Sequence.Sequence, props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Agent.Agent.typename,
+        id: Type.getTypename(Agent.Agent),
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
-              withComputeRuntime(options.db.spaceId),
-            );
+            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make());
+
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          }),
+          }).pipe(
+            Effect.provide(
+              ServiceResolver.provide({ space: options.db.spaceId }, Database.Service).pipe(
+                Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
+              ),
+            ),
+          ),
       }),
     ];
   }),
 );
-
-// TODO(dmaretskyi): Extract to a helper module.
-const withComputeRuntime =
-  (spaceId: SpaceId) =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
-    Effect.gen(function* () {
-      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
-      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
-      return yield* effect.pipe(Effect.provide(runtime));
-    });

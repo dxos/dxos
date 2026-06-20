@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -18,10 +18,8 @@
     "@dxos/context": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-generator": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -39,14 +37,10 @@
     "@effect/platform-browser": "catalog:",
     "@ngneat/falso": "catalog:",
     "@opentelemetry/api": "catalog:",
-    "@opentelemetry/auto-instrumentations-node": "catalog:",
-    "@trpc/server": "catalog:",
     "effect": "catalog:",
-    "partysocket": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router-dom": "catalog:",
-    "webrtc-adapter": "catalog:"
+    "react-router-dom": "catalog:"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
@@ -54,6 +48,7 @@
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-log": "workspace:*",
+    "@dxos/vite-plugin-shutdown": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "partykit": "catalog:",

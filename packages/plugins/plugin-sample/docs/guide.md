@@ -23,15 +23,15 @@ Every plugin has two critical files:
 
 The plugin definition chains these registration helpers:
 
-| Helper                      | What it registers                                  | Activation event        |
-| --------------------------- | -------------------------------------------------- | ----------------------- |
-| `addOperationHandlerModule` | Operation handlers                                 | `SetupOperationHandler` |
-| `addSurfaceModule`          | React surface contributions                        | `SetupReactSurface`     |
-| `addAppGraphModule`         | Graph extensions (actions, connectors, companions) | `SetupAppGraph`         |
-| `addMetadataModule`         | Type metadata (icon, createObject factory)         | `SetupMetadata`         |
-| `addSchemaModule`           | ECHO schemas                                       | `SetupSchema`           |
-| `addSettingsModule`         | Plugin settings                                    | `SetupSettings`         |
-| `addTranslationsModule`     | i18n translations                                  | `SetupTranslations`     |
+| Helper                      | What it registers                                  | Activation event      |
+| --------------------------- | -------------------------------------------------- | --------------------- |
+| `addOperationHandlerModule` | Operation handlers                                 | `SetupProcessManager` |
+| `addSurfaceModule`          | React surface contributions                        | `SetupReactSurface`   |
+| `addAppGraphModule`         | Graph extensions (actions, connectors, companions) | `SetupAppGraph`       |
+| `addMetadataModule`         | Type metadata (icon, createObject factory)         | `SetupMetadata`       |
+| `addSchemaModule`           | ECHO schemas                                       | `SetupSchema`         |
+| `addSettingsModule`         | Plugin settings                                    | `SetupSettings`       |
+| `addTranslationsModule`     | i18n translations                                  | `SetupTranslations`   |
 
 ## Operations
 
@@ -74,7 +74,7 @@ See [Graph Builder API](../../../sdk/app-toolkit/docs/graph-builder-api.md) for 
 
 [`src/types/SampleItem.ts`](../src/types/SampleItem.ts) — Defines an ECHO schema using Effect/Schema with annotations:
 
-- `Type.object()` — Registers the typename for ECHO storage.
+- `Type.makeObject()` — Registers the typename for ECHO storage.
 - `LabelAnnotation` — Framework uses this for display labels.
 - `IconAnnotation` — Sets the icon/color in the navigation tree.
 - `Obj.make()` — Factory for creating reactive ECHO objects.

@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { ObservabilityCapabilities } from '../types';
-import { SendEvent } from './definitions';
+import { ObservabilityCapabilities, ObservabilityOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof SendEvent> = SendEvent.pipe(
+const handler: Operation.WithHandler<typeof ObservabilityOperation.SendEvent> = ObservabilityOperation.SendEvent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       // NOTE: This is to ensure that events fired before observability is ready are still sent.

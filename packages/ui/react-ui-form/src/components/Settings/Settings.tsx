@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type Label, ScrollArea, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -36,9 +37,7 @@ const SettingsViewport = composable<HTMLDivElement>(({ children, ...props }, for
   return (
     <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered thin ref={forwardedRef}>
       <ScrollArea.Viewport classNames='px-4 pointer-coarse:px-2'>
-        <div role='none' className='dx-document flex flex-col gap-2 py-4'>
-          {children}
-        </div>
+        <div className='dx-document flex flex-col gap-2 py-4'>{children}</div>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

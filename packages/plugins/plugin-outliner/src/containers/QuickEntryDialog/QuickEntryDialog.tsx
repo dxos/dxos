@@ -8,11 +8,11 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Format } from '@dxos/echo';
-import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { OutlineOperation } from '#operations';
+import { OutlineOperation } from '#types';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
@@ -35,7 +35,7 @@ type QuickEntryActionsProps = {
  * Custom form actions with Cancel, Save & Add Another, and Save buttons.
  */
 const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const {
     form: { canSave, onSave, onCancel },
   } = useFormContext(QUICK_ENTRY_ACTIONS_NAME);
@@ -51,7 +51,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   }, [onSave, continueRef]);
 
   return (
-    <div role='none' className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
+    <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -84,7 +84,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
 };
 
 export const QuickEntryDialog = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [formKey, setFormKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -135,7 +135,7 @@ export const QuickEntryDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('quick-entry-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
@@ -147,12 +147,12 @@ export const QuickEntryDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Form.Viewport>
+          <Column.Center>
             <Form.Content>
               <Form.FieldSet />
               <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
             </Form.Content>
-          </Form.Viewport>
+          </Column.Center>
         </Form.Root>
       </Dialog.Body>
     </Dialog.Content>

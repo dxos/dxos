@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Agent } from '@dxos/assistant-toolkit';
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { Journal } from '@dxos/plugin-outliner/types';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Journal } from '@dxos/plugin-outliner';
 
 /**
  * Represents a Sidekick instance. Manages an Agent and a Journal.
@@ -19,17 +19,11 @@ export const Profile = Schema.Struct({
   journal: Ref.Ref(Journal.Journal),
   journalEnabled: Schema.optional(Schema.Boolean),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.sidekick.profile',
-    version: '0.1.0',
-  }),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--brain--regular',
-    hue: 'violet',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'violet' }),
+  Type.makeObject(DXN.make('org.dxos.type.sidekick.profile', '0.1.0')),
 );
 
-export interface Profile extends Schema.Schema.Type<typeof Profile> {}
+export type Profile = Type.InstanceType<typeof Profile>;
 
 /** Creates a Sidekick profile with journal enabled by default. */
 export const make = (props: { agent: Ref.Ref<Agent.Agent>; journal: Ref.Ref<Journal.Journal>; name?: string }) =>

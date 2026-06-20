@@ -4,8 +4,7 @@
 
 import { type FC } from 'react';
 
-import { type Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, type Obj } from '@dxos/echo';
 import { type Label } from '@dxos/react-ui';
 import { type StackItemSize } from '@dxos/react-ui-stack';
 

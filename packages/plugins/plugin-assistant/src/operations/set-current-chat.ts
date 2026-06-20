@@ -8,16 +8,15 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 
-import { AssistantCapabilities } from '../types';
-import { CreateChat, SetCurrentChat } from './definitions';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof SetCurrentChat> = SetCurrentChat.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.SetCurrentChat> = AssistantOperation.SetCurrentChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ companionTo, chat }) {
-      const companionToId = Obj.getDXN(companionTo).toString();
+      const companionToId = Obj.getURI(companionTo);
 
       if (chat) {
-        const chatId = Obj.getDXN(chat).toString();
+        const chatId = Obj.getURI(chat);
         yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
           ...current,
           currentChat: { ...current.currentChat, [companionToId]: chatId },
@@ -29,7 +28,7 @@ const handler: Operation.WithHandler<typeof SetCurrentChat> = SetCurrentChat.pip
         const db = Obj.getDatabase(companionTo);
         if (db) {
           const { data } = yield* Effect.promise(() =>
-            operationInvoker.invokePromise(CreateChat, { db, addToSpace: false }),
+            operationInvoker.invokePromise(AssistantOperation.CreateChat, { db, addToSpace: false }),
           );
           if (data?.object) {
             yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({

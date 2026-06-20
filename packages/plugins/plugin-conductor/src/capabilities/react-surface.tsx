@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { CanvasContainer } from '#containers';
+import { CanvasArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, CanvasBoard.CanvasBoard),
         ),
         component: ({ data, role }) => (
-          <CanvasContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <CanvasArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
     ),

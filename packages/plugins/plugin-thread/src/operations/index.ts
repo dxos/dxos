@@ -4,19 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as ThreadOperation from './definitions';
-
 export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-message'),
   () => import('./append-channel-message'),
-  () => import('./create'),
   () => import('./create-channel'),
-  () => import('./create-proposals'),
-  () => import('./delete'),
-  () => import('./delete-message'),
-  () => import('./on-create-space'),
-  () => import('./restore'),
-  () => import('./restore-message'),
-  () => import('./select'),
-  () => import('./toggle-resolved'),
 );

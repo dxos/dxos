@@ -7,14 +7,13 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getMailboxMessagePath } from '../paths';
-import { DraftMessage } from '../types';
+import { DraftMessage, InboxOperation } from '../types';
 import { createDraftMessage } from '../util';
-import { DraftEmailAndOpen } from './definitions';
 
-const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOpen.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, mode, message, subject, body, mailbox }) {
       const props = createDraftMessage({ mode, message, subject, body, mailbox });
@@ -22,7 +21,6 @@ const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOp
       yield* Operation.invoke(SpaceOperation.AddObject, {
         object: draft,
         target: db,
-        hidden: true,
       });
 
       // Same linked path as feed messages; feed-object resolver resolves drafts from the DB.

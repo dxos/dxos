@@ -9,40 +9,27 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
-import type * as Types from 'effect/Types';
 
-import { type Database, Filter, Format, JsonSchema, Obj, Query, Ref, type SchemaRegistry, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
-import {
-  type JsonSchemaType,
-  LabelAnnotation,
-  type Mutable,
-  ReferenceAnnotationId,
-  type ReferenceAnnotationValue,
-  TypeEnum,
-  toEffectSchema,
-} from '@dxos/echo/internal';
-import {
-  type JsonPath,
-  type JsonProp,
-  findAnnotation,
-  getAnnotation,
-  getProperties,
-  isArrayType,
-  isNestedType,
-  runAndForwardErrors,
-} from '@dxos/effect';
+import { type Database, Entity, Filter, Format, Obj, Query, Ref, type Registry, Scope, Type, View } from '@dxos/echo';
+import { LabelAnnotation, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
+import { TypeEnum } from '@dxos/echo/Format';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
+import { type Mutable } from '@dxos/echo/Obj';
+import { EffectEx, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type ProjectionChangeCallback, ProjectionModel } from '../projection';
+import { ProjectionModel, createEchoChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
+  // TODO(wittjosiah): Revisit this and try to unify this. Maybe always expect Type.AnyEntity since it can be created from JsonSchema anyways.
   jsonSchema: JsonSchemaType; // Base schema.
+  /** Persisted `Type.Type` entity backing `jsonSchema`, when one exists; enables `Type.update` on schema edits. */
+  type?: Type.AnyEntity;
   overrideSchema?: JsonSchemaType; // Override schema.
   fields?: string[];
   pivotFieldName?: string;
@@ -51,7 +38,15 @@ type MakeProps = {
 /**
  * Create view from provided schema.
  */
-export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivotFieldName }: MakeProps): View.View => {
+export const make = ({
+  query,
+  queryRaw,
+  jsonSchema,
+  type,
+  overrideSchema,
+  fields,
+  pivotFieldName,
+}: MakeProps): View.View => {
   const view = Obj.make(View.View, {
     query: { raw: queryRaw, ast: query.ast },
     projection: {
@@ -60,22 +55,16 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
-  // Create change callback that wraps mutations in Obj.update.
-  const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-  };
-
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: changeCallback,
+    change: createEchoChangeCallback(view, type),
   });
   projection.normalizeView();
-  const schema = toEffectSchema(jsonSchema);
-  const properties = getProperties(schema.ast);
+  const effectSchema = toEffectSchema(jsonSchema);
+  const properties = SchemaEx.getProperties(effectSchema.ast);
   for (const property of properties) {
-    const name = property.name.toString() as JsonProp;
+    const name = property.name.toString() as SchemaEx.JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
     if (!include) {
       continue;
@@ -83,7 +72,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 
     const format = Format.FormatAnnotation.getFromAst(property.type);
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if ((isNestedType(property.type) && Option.isNone(format)) || isArrayType(property.type)) {
+    if ((SchemaEx.isNestedType(property.type) && Option.isNone(format)) || SchemaEx.isArrayType(property.type)) {
       continue;
     }
 
@@ -114,7 +103,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  registry?: SchemaRegistry.SchemaRegistry;
+  registry?: Registry.Registry;
 };
 
 /**
@@ -125,6 +114,7 @@ export const makeWithReferences = async ({
   query,
   queryRaw,
   jsonSchema,
+  type,
   overrideSchema,
   fields,
   pivotFieldName,
@@ -134,26 +124,21 @@ export const makeWithReferences = async ({
     query,
     queryRaw,
     jsonSchema,
+    type,
     overrideSchema,
     fields,
     pivotFieldName,
   });
 
-  // Create change callback that wraps mutations in Obj.update.
-  const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-  };
-
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: changeCallback,
+    change: createEchoChangeCallback(view, type),
   });
-  const schema = toEffectSchema(jsonSchema);
-  const properties = getProperties(schema.ast);
+  const effectSchema = toEffectSchema(jsonSchema);
+  const properties = SchemaEx.getProperties(effectSchema.ast);
   for (const property of properties) {
-    const name = property.name.toString() as JsonProp;
+    const name = property.name.toString() as SchemaEx.JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
     if (!include) {
       continue;
@@ -166,31 +151,33 @@ export const makeWithReferences = async ({
     projection.showFieldProjection(name);
 
     await Effect.gen(function* () {
-      const referenceDxn = yield* Function.pipe(
-        findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
+      const referenceDXN = yield* Function.pipe(
+        SchemaEx.findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
         Option.fromNullable,
-        Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
+        Option.map((ref) => DXN.make(ref.typename, ref.version)),
       );
 
-      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry));
+      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));
 
       const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
+        Option.map((schema) => Type.getSchema(schema)),
         Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
       );
 
       if (referenceSchema && referencePath) {
         const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
-        const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
+        const title =
+          SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
         projection.setFieldProjection({
           field: {
             id: fieldId,
-            path: property.name as JsonPath,
-            referencePath: referencePath as JsonPath,
+            path: property.name as SchemaEx.JsonPath,
+            referencePath: referencePath as SchemaEx.JsonPath,
           },
           props: {
-            property: property.name as JsonProp,
+            property: property.name as SchemaEx.JsonProp,
             type: TypeEnum.Ref,
             format: Format.TypeFormat.Ref,
             referenceSchema: Type.getTypename(referenceSchema),
@@ -203,7 +190,7 @@ export const makeWithReferences = async ({
         (error) => error._tag === 'NoSuchElementException',
         () => Effect.succeed('Recovering from NoSuchElementException'),
       ),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }
 
@@ -226,28 +213,38 @@ export const makeFromDatabase = async ({
   ...props
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
-    const [schema] = await db.schemaRegistry.register([createDefaultSchema()]);
-    typename = schema.typename;
+    const type = await db.addType(createDefaultSchema());
+    // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the
+    // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
+    typename = Type.getTypename(type);
   } else {
     createInitial = 0;
   }
 
-  const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
-  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
-  invariant(jsonSchema, `Schema not found: ${typename}`);
-  invariant(schema && Type.isObjectSchema(schema), `Schema is not an object schema: ${typename}`);
+  const allTypes = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
+  const type = allTypes.find((t) => Type.getTypename(t) === typename);
+  invariant(type, `Type not found: ${typename}`);
+  // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
+  // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
+  // `Entity.getKind` rather than the entity-level `Type.isObject` guard.
+  const effectSchema = Type.getSchema(type);
+  invariant(Entity.getKind(effectSchema) === Entity.Kind.Object, `Schema is not an object schema: ${typename}`);
+  const jsonSchema = type.jsonSchema;
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(schema, {}));
+    db.add(Obj.make(Type.assertObject(type), {}));
   });
 
   return {
     jsonSchema,
     view: await makeWithReferences({
       ...props,
-      query: Query.select(Filter.typename(typename)),
+      // Objects created from DB type entities are stamped with the entity's echo:/@:<id>
+      // URI, not the typename DXN; Filter.type matches that URI whereas Filter.typename misses it.
+      query: Query.select(Filter.type(type)),
       jsonSchema,
-      registry: db.schemaRegistry,
+      type,
+      registry: db.graph.registry,
     }),
   };
 };

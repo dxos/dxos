@@ -31,10 +31,10 @@ describe('alignWhisperSegments', () => {
       0,
     );
     expect(result.transcripts).toEqual([]);
-    expect(result.lastUsedTimestamp).toBeUndefined();
+    expect(result.lastTimestamp).toBeUndefined();
   });
 
-  test('absolute-timestamps and deduplicates segments against lastUsedTimestamp', ({ expect }) => {
+  test('absolute-timestamps and deduplicates segments against lastTimestamp', ({ expect }) => {
     const segments: WhisperSegment[] = [
       segment({
         text: 'hello world',
@@ -52,15 +52,15 @@ describe('alignWhisperSegments', () => {
     expect(first.transcripts[0]._tag).toBe('transcript');
     expect(first.transcripts[0].text).toBe('hello world');
     expect(new Date(first.transcripts[0].started).getTime()).toBe(T0);
-    expect(first.lastUsedTimestamp).toBe(T0 + 1_000);
+    expect(first.lastTimestamp).toBe(T0 + 1_000);
 
-    // Same segments, same chunk start: every word's absolute start is < lastUsedTimestamp -> filtered out.
-    const second = alignWhisperSegments(segments, [chunk(0)], first.lastUsedTimestamp!);
+    // Same segments, same chunk start: every word's absolute start is < lastTimestamp -> filtered out.
+    const second = alignWhisperSegments(segments, [chunk(0)], first.lastTimestamp!);
     expect(second.transcripts).toEqual([]);
-    expect(second.lastUsedTimestamp).toBeUndefined();
+    expect(second.lastTimestamp).toBeUndefined();
   });
 
-  test('keeps later words when earlier words fall before lastUsedTimestamp', ({ expect }) => {
+  test('keeps later words when earlier words fall before lastTimestamp', ({ expect }) => {
     const segments: WhisperSegment[] = [
       segment({
         text: 'old new',
@@ -78,10 +78,10 @@ describe('alignWhisperSegments', () => {
     expect(result.transcripts).toHaveLength(1);
     expect(result.transcripts[0].text).toBe('new');
     expect(new Date(result.transcripts[0].started).getTime()).toBe(T0 + 1_500);
-    expect(result.lastUsedTimestamp).toBe(T0 + 2_000);
+    expect(result.lastTimestamp).toBe(T0 + 2_000);
   });
 
-  test('drops segments that end before lastUsedTimestamp', ({ expect }) => {
+  test('drops segments that end before lastTimestamp', ({ expect }) => {
     const segments: WhisperSegment[] = [
       segment({
         text: 'stale',

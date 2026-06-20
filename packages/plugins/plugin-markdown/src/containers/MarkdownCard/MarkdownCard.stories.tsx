@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { Markdown } from '@dxos/plugin-markdown';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
@@ -34,11 +34,11 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
   return (
     <CardContainer icon='ph--text-aa--regular'>
       <Card.Root border={false}>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
           <Card.Menu />
-        </Card.Toolbar>
+        </Card.Header>
         <MarkdownCard subject={subject} {...args} />
       </Card.Root>
     </CardContainer>
@@ -51,7 +51,7 @@ const meta: Meta<typeof MarkdownCardStory> = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

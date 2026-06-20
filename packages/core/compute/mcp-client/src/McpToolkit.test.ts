@@ -12,13 +12,13 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, type OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
 import * as McpToolkit from './McpToolkit';
 
-const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking: false }).pipe(
+const AiServiceLayer = AiService.model('ai.claude.model.claude-opus-4-6', { thinking: false }).pipe(
   Layer.provide(
     TestAiService({
       disableMemoization: true,
@@ -34,7 +34,7 @@ describe('connectWithFallback', () => {
       timeout: 30_000,
     },
     async () => {
-      const toolkit = await runAndForwardErrors(
+      const toolkit = await EffectEx.runAndForwardErrors(
         McpToolkit.make({
           url: 'https://mcp.linear.app/mcp',
           protocol: 'sse',

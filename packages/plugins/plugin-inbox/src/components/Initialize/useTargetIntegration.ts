@@ -6,22 +6,31 @@ import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Filter, useQuery } from '@dxos/react-client/echo';
-
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
+import { Integration } from '@dxos/plugin-integration';
+import { useQuery } from '@dxos/react-client/echo';
 /**
  * Find the `Integration` whose `targets` include the given `target` object.
  * Returns the matching integration (or `undefined` if none exists).
  */
 export const useTargetIntegration = <T extends Obj.Any>(
-  target: T,
+  target: T | undefined,
 ): { integration: Integration.Integration | undefined } => {
-  const db = Obj.getDatabase(target);
+  const db = target ? Obj.getDatabase(target) : undefined;
   const integrations = useQuery(db, Filter.type(Integration.Integration));
-  const integration = integrations.find((candidate) =>
-    candidate.targets.some((entry) => entry.object?.dxn.asEchoDXN()?.echoId === target.id),
-  );
+  const integration = target
+    ? integrations.find((candidate) =>
+        candidate.targets.some((entry) => {
+          if (!entry.object) {
+            return false;
+          }
+          // Guard against malformed stored URIs (tryParse returns undefined).
+          const eid = EID.tryParse(entry.object.uri);
+          return eid ? EID.getEntityId(eid) === target.id : false;
+        }),
+      )
+    : undefined;
   return { integration };
 };
 
@@ -38,6 +47,7 @@ export const useTargetSync = <T extends Obj.Any>(
   target: T,
   operation: Operation.Definition<any, any>,
   targetKey: string,
+  notify?: Operation.NotifyOptions,
 ): {
   integration: Integration.Integration | undefined;
   sync: () => Promise<void>;
@@ -53,14 +63,18 @@ export const useTargetSync = <T extends Obj.Any>(
     }
     setSyncing(true);
     try {
-      await invokePromise(operation, {
-        integration: Ref.make(integration),
-        [targetKey]: Ref.make(target),
-      });
+      await invokePromise(
+        operation,
+        {
+          integration: Ref.make(integration),
+          [targetKey]: Ref.make(target),
+        },
+        { spaceId: Obj.getDatabase(target)?.spaceId, notify },
+      );
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, integration, operation, target, targetKey]);
+  }, [invokePromise, integration, operation, target, targetKey, notify]);
 
   return { integration, sync, syncing };
 };

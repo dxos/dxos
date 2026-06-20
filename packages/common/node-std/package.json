@@ -1,6 +1,6 @@
 {
   "name": "@dxos/node-std",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -18,50 +18,62 @@
       "node": "./dist/lib/browser/_/config.mjs"
     },
     "./assert": {
+      "workerd": "./src/node/assert.js",
       "browser": "./dist/lib/browser/assert.mjs",
       "node": "./src/node/assert.js"
     },
     "./buffer": {
+      "workerd": "./src/node/buffer.js",
       "browser": "./dist/lib/browser/buffer.mjs",
       "node": "./src/node/buffer.js"
     },
     "./crypto": {
+      "workerd": "./src/node/crypto.js",
       "browser": "./dist/lib/browser/crypto.mjs",
       "node": "./src/node/crypto.js"
     },
     "./events": {
+      "workerd": "./src/node/events.js",
       "browser": "./dist/lib/browser/events.mjs",
       "node": "./src/node/events.js"
     },
     "./fs": {
+      "workerd": "./dist/lib/browser/fs.mjs",
       "browser": "./dist/lib/browser/fs.mjs",
       "node": "./src/node/fs.js"
     },
     "./fs/promises": {
+      "workerd": "./dist/lib/browser/fs/promises.mjs",
       "browser": "./dist/lib/browser/fs/promises.mjs",
       "node": "./src/node/fs/promises.js"
     },
     "./globals": {
+      "workerd": "./src/node/globals.js",
       "browser": "./dist/lib/browser/globals.mjs",
       "node": "./src/node/globals.js"
     },
     "./inject-globals": {
+      "workerd": "./src/node/inject-globals.js",
       "browser": "./dist/lib/browser/inject-globals.mjs",
       "node": "./src/node/inject-globals.js"
     },
     "./path": {
+      "workerd": "./src/node/path.js",
       "browser": "./dist/lib/browser/path.mjs",
       "node": "./src/node/path.js"
     },
     "./process": {
+      "workerd": "./src/node/process.js",
       "browser": "./dist/lib/browser/process.mjs",
       "node": "./src/node/process.js"
     },
     "./stream": {
+      "workerd": "./src/node/stream.js",
       "browser": "./dist/lib/browser/stream.mjs",
       "node": "./src/node/stream.js"
     },
     "./util": {
+      "workerd": "./src/node/util.js",
       "browser": "./dist/lib/browser/util.mjs",
       "node": "./src/node/util.js"
     }

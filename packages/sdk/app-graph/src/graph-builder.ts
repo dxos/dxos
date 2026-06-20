@@ -10,13 +10,13 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
-import type * as Schema from 'effect/Schema';
-import { scheduleTask, yieldOrContinue } from 'main-thread-scheduling';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
-import { type Entity, type Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
+import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
+
+import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './graph';
 import * as Node from './node';
@@ -63,7 +63,7 @@ export type ActionGroupsExtension = (
 
 export type BuilderExtension = Readonly<{
   id: string;
-  position: Position;
+  position?: Position.Position;
   relation?: Node.RelationInput;
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
@@ -198,9 +198,7 @@ class GraphBuilderImpl implements GraphBuilder {
     );
     if (ids.length > 0) {
       const sortedIds = [...nodes]
-        .sort((a, b) =>
-          byPosition(a.properties ?? ({} as { position?: Position }), b.properties ?? ({} as { position?: Position })),
-        )
+        .sort((a, b) => Position.compare({ position: a.properties?.position }, { position: b.properties?.position }))
         .map((n) => n.id);
       Graph.sortEdges(this._graph, id, relation, sortedIds);
     }
@@ -233,7 +231,7 @@ class GraphBuilderImpl implements GraphBuilder {
       return Function.pipe(
         get(this._extensions),
         Record.values,
-        Array.sortBy(byPosition),
+        Array.sortBy(Position.compare),
         Array.map(({ resolver }) => resolver),
         Array.filter(isNonNullable),
         Array.map((resolver) => get(resolver(id))),
@@ -256,7 +254,7 @@ class GraphBuilderImpl implements GraphBuilder {
       const extensions = Function.pipe(
         get(this._extensions),
         Record.values,
-        Array.sortBy(byPosition),
+        Array.sortBy(Position.compare),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
             Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
@@ -558,11 +556,29 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
 export type CreateExtensionRawOptions = {
   id: string;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
+};
+
+/**
+ * Validates that a graph extension or surface local ID follows NSID conventions:
+ * the final dot-separated segment must be camelCase (letters and digits only,
+ * starting with a letter — no hyphens or underscores). This mirrors the rule
+ * enforced when the id is appended to a plugin's NSID to form a full DXN path.
+ *
+ * @example Valid:   'about', 'devtools', 'integrationsSection'
+ * @example Invalid: 'integration-article', 'plugin-spec'
+ */
+const validateLocalId = (id: string): void => {
+  const finalSegment = id.split('.').pop()!;
+  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
+    throw new Error(
+      `Invalid extension id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
+    );
+  }
 };
 
 /**
@@ -571,13 +587,14 @@ export type CreateExtensionRawOptions = {
 export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
   const {
     id,
-    position = 'static',
+    position,
     relation = 'child',
     resolver: _resolver,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
+  validateLocalId(id);
   const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
 
@@ -677,7 +694,7 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
   resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
 };
 
 /**
@@ -797,15 +814,12 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   id: string;
   type: T;
   actions?: (
-    object: Entity.Entity<Schema.Schema.Type<T>>,
+    object: Type.InstanceType<T>,
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
-  connector?: (
-    object: Entity.Entity<Schema.Schema.Type<T>>,
-    get: Atom.Context,
-  ) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
 };
 
 /**
@@ -817,7 +831,7 @@ export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, connector, relation, position } = options;
-  return createExtension<Entity.Entity<Schema.Schema.Type<T>>, R>({
+  return createExtension<Type.InstanceType<T>, R>({
     id,
     match: NodeMatcher.whenEchoType(type),
     actions,

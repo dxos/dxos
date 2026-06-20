@@ -10,14 +10,14 @@ Moved from `packages/core/echo/echo/API.md` on 2026-03-09.
 ```ts
 const Mailbox = Schema.Struct({
   messages: Ref.Ref(Feed.Feed)
-}).pipe(Type.object({ typename: 'com.example.type.mailbox', version: '0.1.0' }));
+}).pipe(Type.makeObject({ typename: 'com.example.type.mailbox', version: '0.1.0' }));
 interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
 
 typeof mailbox.messages === Feed.Feed;
 
 const Collection = Schema.Struct({
   objects: Schema.Array(Ref.Ref(Obj.Unknown))
-}).pipe(Type.relation({ typename: 'com.example.type.collection', version: '0.1.0' }));
+}).pipe(Type.makeRelation({ typename: 'com.example.type.collection', version: '0.1.0' }));
 interface Collection extends Schema.Schema.Type<typeof Collection> {}
 
 typeof collection.objects === Obj.Unknown[];
@@ -61,14 +61,14 @@ Types:
 
 Functions:
 
-- function `Type.object(...)` - defines a new object schema; returns `Type.Obj<T>`. **DONE**
-- function `Type.relation(...)` - defines a new relation schema; returns `Type.Relation<T>`. **DONE**
+- function `Type.makeObject(...)` - defines a new object schema; returns `Type.Obj<T>`. **DONE**
+- function `Type.makeRelation(...)` - defines a new relation schema; returns `Type.Relation<T>`. **DONE**
 - function `Type.get*(schema: Type.UnknownEntity)` - getters for schema metadata. **DONE** (`Type.getTypename`, `Type.getVersion`, `Type.getDXN`, `Type.getMeta`)
 - function `Ref.Ref(...)` define a schema for a reference to an object of instance type `T`. **DONE**
 
 Worth mentioning:
 
-- `Type.Obj<Feed.Feed>` - instance of a schema for a Feed object. **DONE** (Feed.Feed schema is created via `Type.object()`)
+- `Type.Obj<Feed.Feed>` - instance of a schema for a Feed object. **DONE** (Feed.Feed schema is created via `Type.makeObject()`)
 
 ## `Entity` module
 
@@ -147,7 +147,7 @@ Types:
 
 Constants:
 
-- constant `Feed.Feed` - schema that represents a feed. **Deliberatly same name as the type.** Used in schema definictions and queries. **DONE** (schema created via `Type.object()`)
+- constant `Feed.Feed` - schema that represents a feed. **Deliberatly same name as the type.** Used in schema definictions and queries. **DONE** (schema created via `Type.makeObject()`)
 
 Functions:
 
@@ -158,7 +158,7 @@ Functions:
 ```ts
 const Foo = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
-}).pipe(Type.object({ typename: 'com.example.type.foo', version: '0.1.0' }));
+}).pipe(Type.makeObject({ typename: 'com.example.type.foo', version: '0.1.0' }));
 
 Query.select(Filter.type(Feed.Feed));
 ```

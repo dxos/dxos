@@ -3,7 +3,7 @@
 //
 
 export * from './common';
+export * from './config';
 export * from './context';
 export * from './core';
-export * from './plugin-operation';
-export * from './plugin-runtime';
+export * from './plugin-process-manager';

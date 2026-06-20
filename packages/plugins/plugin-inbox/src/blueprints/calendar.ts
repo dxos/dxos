@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { Calendar } from '#types';
 
 const make = () =>

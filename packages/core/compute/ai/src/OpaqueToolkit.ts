@@ -138,6 +138,10 @@ export const empty: OpaqueToolkit = make(Toolkit.empty, Layer.empty);
 
 /**
  * Merges multiple portable toolkits into a single portable toolkit.
+ *
+ * Returns the empty toolkit when called with zero arguments, since both
+ * `Toolkit.merge(...[])` and `Layer.mergeAll(...[])` return malformed values
+ * (the latter returns `undefined`, which corrupts later `Effect.provide`).
  */
 export const merge = <const Toolkits extends ReadonlyArray<Any>>(
   /**
@@ -149,6 +153,13 @@ export const merge = <const Toolkits extends ReadonlyArray<Any>>(
   Failure<Toolkits[number]>,
   Requirements<Toolkits[number]>
 > => {
+  if (toolkits.length === 0) {
+    return empty as unknown as OpaqueToolkit<
+      InvocationRequirements<Toolkits[number]>,
+      Failure<Toolkits[number]>,
+      Requirements<Toolkits[number]>
+    >;
+  }
   return make(
     Toolkit.merge(...toolkits.map((t) => t.toolkit)),
     Layer.mergeAll(...(toolkits.map((t) => t.layer) as [any, ...any[]])),

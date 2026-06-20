@@ -9,7 +9,8 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/query.ts'
+      - '--entryPoint=src/app-framework/AppActivationEvents.ts'
+      - '--entryPoint=src/echo/Query.ts'
       - '--entryPoint=src/ui/index.ts'
   test:
     inputs:

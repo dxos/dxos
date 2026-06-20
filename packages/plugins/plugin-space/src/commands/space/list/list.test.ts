@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './list';
 
@@ -20,7 +20,7 @@ describe('spaces list', () => {
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       expect(TestConsole.extractJsonString(logs[0])).toEqual('[]');
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 
   it('should list spaces', () =>
     Effect.gen(function* () {
@@ -33,5 +33,5 @@ describe('spaces list', () => {
       expect(logs).toHaveLength(1);
       const formattedSpaces = TestConsole.parseJson(logs[0]);
       expect(formattedSpaces).toHaveLength(1);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

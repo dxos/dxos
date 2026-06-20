@@ -6,76 +6,70 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Database } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
-import { type Queue } from '@dxos/react-client/echo';
+import { Database, Entity, Feed, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { type Message } from '@dxos/types';
 
 import { createMessageGenerator } from './test-generator';
 
-class RecordingQueue implements Queue<Message.Message> {
-  readonly dxn = new DXN(DXN.kind.QUEUE, [SpaceId.random(), ObjectId.random()]);
-  readonly #subscribers = new Set<() => void>();
+/**
+ * In-memory Database.Service that records appendToFeed calls and emits a change event
+ * whenever `appendToFeed` is called. Used to verify the streaming-message generator
+ * emits per-chunk updates.
+ */
+const makeRecordingDatabaseLayer = () => {
+  const items: Message.Message[] = [];
+  const subscribers = new Set<() => void>();
 
-  objects: Message.Message[] = [];
-  isLoading = false;
-  error = null;
+  const dbService: Database.Database = {
+    get spaceId() {
+      return 'recording' as any;
+    },
+    add: (obj: any) => obj as any,
+    addType: async () => undefined as any,
+    remove: () => {},
+    appendToFeed: async (_feed: Feed.Feed, newItems: Entity.Unknown[]) => {
+      items.push(...(newItems as Message.Message[]));
+      for (const fn of subscribers) {
+        fn();
+      }
+    },
+    removeFeedItemsByIds: async () => {},
+    queryFeed: () => ({ subscribe: () => () => {}, results: [], run: async () => [] }) as any,
+    query: () => ({ subscribe: () => () => {}, results: [], run: async () => [] }) as any,
+    syncFeed: async () => {},
+    getFeedSyncState: async () => ({ blocksToPull: 0, blocksToPush: 0, totalBlocks: 0 }),
+    flush: async () => {},
+    makeRef: () => undefined as any,
+    deleteFromFeed: async () => {},
+  } as unknown as Database.Database;
 
-  declare query: Queue<Message.Message>['query'];
-
-  subscribe(callback: () => void) {
-    this.#subscribers.add(callback);
-    return () => this.#subscribers.delete(callback);
-  }
-
-  async append(objects: Message.Message[]) {
-    this.objects = [...this.objects, ...objects];
-    this.#emit();
-  }
-
-  async delete(ids: string[]) {
-    this.objects = this.objects.filter((object) => !ids.includes(object.id));
-    this.#emit();
-  }
-
-  async sync() {}
-
-  async queryObjects() {
-    return this.objects;
-  }
-
-  async getObjectsById(ids: ObjectId[]) {
-    return ids.map((id) => this.objects.find((object) => object.id === id));
-  }
-
-  async refresh() {}
-
-  #emit() {
-    for (const subscriber of this.#subscribers) {
-      subscriber();
-    }
-  }
-}
+  return {
+    items,
+    onAppend: (cb: () => void) => subscribers.add(cb),
+    layer: Layer.succeed(Database.Service, { db: dbService }),
+  };
+};
 
 describe('createMessageGenerator', () => {
   test('streaming message publishes updates for chunk mutations', async ({ expect }) => {
-    const queue = new RecordingQueue();
+    const recording = makeRecordingDatabaseLayer();
     let updates = 0;
-    queue.subscribe(() => updates++);
+    recording.onAppend(() => updates++);
+
+    const feed = Obj.make(Feed.Feed, { name: 'recording' });
 
     // The streaming step is the third entry (index 2) — earlier indices are the initial
     // user prompt and an assistant message with an Organization link (which requires
-    // `Database.Service`, unavailable in this unit-test layer).
-    await runAndForwardErrors(
+    // a real database; the recording layer stub is sufficient for this streaming test).
+    await EffectEx.runAndForwardErrors(
       createMessageGenerator()[2]!.pipe(
-        Effect.provide(Layer.mergeAll(ContextQueueService.layer(queue), Database.notAvailable)),
+        Effect.provide(Layer.mergeAll(Feed.ContextFeedService.layer(feed), recording.layer)),
       ),
     );
 
-    expect(queue.objects).toHaveLength(1);
+    expect(recording.items).toHaveLength(1);
     expect(updates).toBeGreaterThan(1);
-    expect(queue.objects[0].blocks[0]).toMatchObject({ pending: false });
+    expect(recording.items[0].blocks[0]).toMatchObject({ pending: false });
   });
 });

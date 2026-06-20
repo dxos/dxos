@@ -10,7 +10,7 @@ import { ObservabilityPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ObservabilityPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -19,7 +19,7 @@ describe('ObservabilityPlugin', () => {
       plugins: [ObservabilityPlugin({} as any)],
     });
 
-    // OperationHandler fires automatically (OperationPlugin fires SetupOperationHandler during Startup).
+    // OperationHandler fires automatically (ProcessManagerPlugin fires SetupProcessManager during Startup).
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

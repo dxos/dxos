@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const ExplorerContainer: ComponentType<any> = lazy(() => import('./ExplorerContainer'));
+export const ExplorerArticle: ComponentType<any> = lazy(() => import('./ExplorerArticle'));

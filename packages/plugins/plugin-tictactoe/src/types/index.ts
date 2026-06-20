@@ -3,3 +3,4 @@
 //
 
 export * as TicTacToe from './TicTacToe';
+export * as TicTacToeOperation from './TicTacToeOperation';

@@ -3,3 +3,4 @@
 //
 
 export * as Voxel from './Voxel';
+export * as VoxelOperation from './VoxelOperation';

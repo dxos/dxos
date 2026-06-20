@@ -60,7 +60,7 @@ export const TaskType = Schema.Struct({
   name: Schema.String,
   completed: Schema.optional(Schema.Boolean),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.task',
     version: '0.1.0',
   }),
@@ -73,7 +73,7 @@ Types can be used to make queries as well:
 
 ```ts{10,19} file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 
 import { TaskType } from './schema';
 

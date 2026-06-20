@@ -6,28 +6,22 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Format } from '@dxos/echo/Format';
 
 export const Project = Schema.Struct({
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.project',
-    version: '0.1.0',
-  }),
   Schema.annotations({ title: 'Project' }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--check-square-offset--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'indigo' }),
+  Type.makeObject(DXN.make('org.dxos.type.project', '0.1.0')),
 );
 
-export interface Project extends Schema.Schema.Type<typeof Project> {}
-
+export type Project = Type.InstanceType<typeof Project>;
 /** Factory wrapper around `Obj.make` for {@link Project}. */
 export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}): Project =>
   Obj.make(Project, {

@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
@@ -51,7 +51,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
     }),
   ],
 } satisfies Meta<typeof DeploymentDialogStory>;

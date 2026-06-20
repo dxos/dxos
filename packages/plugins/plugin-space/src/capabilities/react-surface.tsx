@@ -4,21 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Database, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
-import { findAnnotation } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
+import { SchemaEx } from '@dxos/effect';
+import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
-import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
+import { Position } from '@dxos/util';
 
 import { SpaceSettings } from '#components';
 import {
@@ -26,19 +25,21 @@ import {
   CollectionSection,
   CreateObjectDialog,
   CreateSpaceDialog,
+  ImportSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
   MenuFooter,
   ObjectCardStack,
   ObjectProperties,
-  ObjectRenamePopover,
   RecordArticle,
   RelatedArticle,
+  RenamePopover,
   SchemaContainer,
   SmallPresenceLive,
+  SpaceHomeArticle,
+  SpaceHomeRecent,
   SpacePresence,
-  SpaceRenamePopover,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
@@ -49,7 +50,8 @@ import {
   HueAnnotationId,
   IconAnnotationId,
   SpaceCapabilities,
-  type Settings,
+  SpaceHomeContent,
+  SPACE_HOME_NODE_TYPE,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -57,9 +59,9 @@ import {
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
-  OBJECT_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
+  RENAME_POPOVER,
 } from '../constants';
 
 type ReactSurfaceOptions = {
@@ -70,28 +72,37 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'collection-fallback',
-        position: 'fallback',
+        id: 'spaceHome',
+        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
+        component: ({ data, role }) => (
+          <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.properties?.space} />
+        ),
+      }),
+      Surface.create({
+        id: 'spaceHomeRecent',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+      }),
+      Surface.create({
+        id: 'collectionFallback',
+        position: Position.last,
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'record-article',
-        position: 'fallback',
+        id: 'recordArticle',
+        position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          const spaces = useSpaces({ all: settings.showHidden });
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        component: () => {
+          const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
           return (
             <SpaceSettings
-              settings={settings}
-              onSettingsChange={updateSettings}
               spaces={spaces}
               onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
             />
@@ -99,7 +110,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'companion.object-properties',
+        id: 'companion.objectProperties',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'settings'),
           AppSurface.companion(AppSurface.Article),
@@ -115,8 +126,8 @@ export default Capability.makeModule(
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: 'space-settings-properties',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.general`),
+        id: 'spaceSettingsProperties',
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -127,9 +138,9 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'space-settings-members',
-        position: 'hoist',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
+        id: 'spaceSettingsMembers',
+        position: Position.first,
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -140,8 +151,8 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'space-settings-schema',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.schema`),
+        id: 'spaceSettingsSchema',
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.schema`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -152,22 +163,17 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'selected-objects',
-        role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: 'selected-objects' } => {
-          if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
-            return false;
-          }
-
-          const schema = Obj.getSchema(data.companionTo);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
-          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
-          return !!viewTarget;
-        },
+        id: 'selectedObjects',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'selected-objects'),
+          AppSurface.companion(AppSurface.Article, Obj.isObject),
+        ),
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
-          const schema = Obj.getSchema(data.companionTo);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.companionTo);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           if (!view) {
             return null;
@@ -175,8 +181,8 @@ export default Capability.makeModule(
 
           return (
             <ObjectCardStack
-              key={Obj.getDXN(data.companionTo).toString()}
-              objectId={Obj.getDXN(data.companionTo).toString()}
+              key={Obj.getURI(data.companionTo)}
+              objectId={Obj.getURI(data.companionTo)}
               view={view}
               ref={ref}
             />
@@ -194,6 +200,11 @@ export default Capability.makeModule(
         component: () => <CreateSpaceDialog />,
       }),
       Surface.create({
+        id: IMPORT_SPACE_DIALOG,
+        filter: AppSurface.component(AppSurface.Dialog, IMPORT_SPACE_DIALOG),
+        component: () => <ImportSpaceDialog />,
+      }),
+      Surface.create({
         id: CREATE_OBJECT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof CreateObjectDialog>>(
           AppSurface.Dialog,
@@ -202,19 +213,15 @@ export default Capability.makeModule(
         component: ({ data }) => <CreateObjectDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'create-initial-space-form-[hue]',
-        role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
-          return !!annotation;
-        },
+        id: 'createInitialSpaceFormHue',
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, HueAnnotationId)),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
-          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldRendererProps;
           const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [ast, onValueChange]);
           const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
@@ -226,19 +233,15 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'create-initial-space-form-[icon]',
-        role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
-          return !!annotation;
-        },
+        id: 'createInitialSpaceFormIcon',
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, IconAnnotationId)),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
-          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldRendererProps;
           const handleChange = useCallback((nextIcon: string) => onValueChange(ast, nextIcon), [ast, onValueChange]);
           const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
@@ -255,56 +258,45 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'typename-form-input',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
-          prop: string;
-          schema: Schema.Schema.Any;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          if (data.prop !== 'typename') {
-            return false;
-          }
-
-          const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
-          return !!annotation;
-        },
-        component: ({ data: { schema, target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        id: 'typenameFormInput',
+        filter: AppSurface.formInput(
+          (data) =>
+            data.prop === 'typename' && !!SchemaEx.findAnnotation(data.schema.ast, TypeInputOptionsAnnotationId),
+        ),
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-          const space = useSpace(db?.spaceId);
-          const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
-          const options = useTypeOptions({ space, annotation });
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
+          const target = data.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
+          const annotation = SchemaEx.findAnnotation<TypeInputOptions>(data.schema.ast, TypeInputOptionsAnnotationId)!;
+          const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;
         },
       }),
       Surface.create({
-        id: 'object-properties',
-        role: 'object-properties',
-        filter: (data): data is { subject: Obj.Unknown } => {
+        id: 'objectProperties',
+        filter: Surface.makeFilter(AppSurface.ObjectProperties, (data) => {
           if (!Obj.isObject(data.subject)) {
             return false;
           }
-
-          const schema = Obj.getSchema(data.subject);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.subject);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
           return !!viewTarget;
-        },
+        }),
         component: ({ data }) => {
-          const schema = Obj.getSchema(data.subject);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.subject);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
-
           if (!view) {
             return null;
           }
@@ -313,28 +305,18 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: SPACE_RENAME_POPOVER,
-        role: 'popover',
-        filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
-        component: ({ data }) => <SpaceRenamePopover space={data.props} />,
+        id: RENAME_POPOVER,
+        filter: AppSurface.component<Space | Entity.Unknown>(AppSurface.Popover, RENAME_POPOVER),
+        component: ({ data }) => <RenamePopover subject={data.props} />,
       }),
       Surface.create({
-        id: OBJECT_RENAME_POPOVER,
-        role: 'popover',
-        filter: (data): data is { props: Obj.Unknown } =>
-          data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
-        component: ({ data }) => <ObjectRenamePopover object={data.props} />,
-      }),
-      Surface.create({
-        id: 'menu-footer',
+        id: 'menuFooter',
         filter: AppSurface.subject(AppSurface.MenuFooter, Obj.isObject),
         component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Surface.create({
-        id: 'navtree-presence',
-        role: 'navtree-item-end',
-        filter: (data): data is { id: string; subject: Obj.Unknown; open?: boolean } =>
-          typeof data.id === 'string' && Obj.isObject(data.subject),
+        id: 'navtreePresence',
+        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, Obj.isObject),
         component: ({ data }) => {
           const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
           return <SmallPresenceLive id={data.id} open={data.open} viewers={ephemeral.viewersByObject[data.id]} />;
@@ -342,29 +324,31 @@ export default Capability.makeModule(
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
-        id: 'navtree-presence-fallback',
-        role: 'navtree-item-end',
-        position: 'fallback',
-        filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
+        id: 'navtreePresenceFallback',
+        position: Position.last,
+        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
       // TODO(wittjosiah): Broken?
       Surface.create({
-        id: 'navtree-sync-status',
-        role: 'navtree-item-end',
-        filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
+        id: 'navtreeSyncStatus',
+        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, isSpace),
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
       Surface.create({
-        id: 'navbar-presence',
-        role: 'navbar-end',
-        position: 'hoist',
-        filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
+        id: 'navbarPresence',
+        position: Position.first,
+        filter: AppSurface.subject(
+          AppSurface.NavbarEnd,
+          (value): value is Space | Obj.Unknown => isSpace(value) || Obj.isObject(value),
+        ),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
             ? data.subject.state.get() === SpaceState.SPACE_READY
-              ? (space?.properties[Collection.Collection.typename]?.target as Collection.Collection)
+              ? space &&
+                Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+                  ?.target
               : undefined
             : data.subject;
 
@@ -372,13 +356,13 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'collection-section',
+        id: 'collectionSection',
         filter: AppSurface.object(AppSurface.Section, Collection.Collection),
         component: ({ data }) => <CollectionSection subject={data.subject} />,
       }),
       Surface.create({
-        id: 'status',
-        role: 'status-indicator',
+        id: 'syncStatus',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => <SyncStatus />,
       }),
     ]);

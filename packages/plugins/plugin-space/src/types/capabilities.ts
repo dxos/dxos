@@ -10,8 +10,7 @@ import type { ComponentType } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { type Database } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, type Database, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
@@ -22,7 +21,7 @@ import * as Settings from './Settings';
 import { type CreateObject, type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
 
   /** Schema for persisted space plugin state. */
   export const StateSchema = Schema.mutable(
@@ -35,7 +34,7 @@ export namespace SpaceCapabilities {
   export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 
   /** Persisted state (stored in KVS/localStorage). */
-  export const State = Capability.make<Atom.Writable<SpaceState>>(`${meta.id}.capability.state`);
+  export const State = Capability.make<Atom.Writable<SpaceState>>(`${meta.profile.key}.capability.state`);
 
   /** Ephemeral space plugin state (not persisted). */
   export type SpaceEphemeralState = {
@@ -48,35 +47,39 @@ export namespace SpaceCapabilities {
 
   /** Transient/ephemeral state (not persisted). */
   export const EphemeralState = Capability.make<Atom.Writable<SpaceEphemeralState>>(
-    `${meta.id}.capability.ephemeral-state`,
+    `${meta.profile.key}.capability.ephemeral-state`,
   );
 
-  export type SettingsSection = { id: string; label: Label; position?: Position };
-  export const SettingsSection = Capability.make<SettingsSection>(`${meta.id}.capability.settings-section`);
+  export type SettingsSection = { id: string; label: Label; position?: Position.Position };
+  export const SettingsSection = Capability.make<SettingsSection>(`${meta.profile.key}.capability.settings-section`);
 
   export type OnCreateSpace = (params: {
     space: Space;
     isDefault: boolean;
     rootCollection: Collection.Collection;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}.capability.on-space-created`);
+  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.profile.key}.capability.on-space-created`);
 
-  export type OnSchemaAdded = (params: {
+  export type OnTypeAdded = (params: {
     db: Database.Database;
-    schema: Schema.Schema.AnyNoContext;
+    type: Type.AnyEntity;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnSchemaAdded = Capability.make<OnSchemaAdded>(`${meta.id}.capability.on-schema-added`);
+  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.profile.key}.capability.on-type-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
-  export const Repair = Capability.make<HandleRepair>(`${meta.id}.capability.repair`);
+  export const Repair = Capability.make<HandleRepair>(`${meta.profile.key}.capability.repair`);
 
   /** Typed creation entry contributed per typename by plugins that support creating objects. */
   export type CreateObjectEntry = Readonly<{
     id: string;
     createObject: CreateObject;
+    /**
+     * Effect Schema describing the create form inputs. To use a `Type.Type`
+     * entity as the form schema, extract its schema first via `Type.getSchema(...)`.
+     */
     inputSchema?: Schema.Schema.AnyNoContext;
     /**
      * Optional custom React panel rendered in place of the default `inputSchema` form.
@@ -85,7 +88,7 @@ export namespace SpaceCapabilities {
      */
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
-  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.id}.capability.create-object`);
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.profile.key}.capability.create-object`);
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */
   export type CreateObjectCustomPanelProps = {

@@ -4,15 +4,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { Filter, Query, parseId } from '@dxos/react-client/echo';
-import { type Message } from '@dxos/types';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
+import { EID, parseId } from '@dxos/keys';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { Meeting, MeetingCapabilities } from '../types';
-import { HandlePayload } from './definitions';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof HandlePayload> = HandlePayload.pipe(
+const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -30,9 +28,16 @@ const handler: Operation.WithHandler<typeof HandlePayload> = HandlePayload.pipe(
 
       const enabled = !!transcriptionEnabled;
       const { transcriptionManager } = store.state;
-      if (space && transcriptDxn) {
-        const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
-        transcriptionManager?.setQueue(queue);
+      if (space && transcriptDxn && transcriptionManager) {
+        // Resolve the feed object from its queue/echo URI.
+        const echoUri = EID.tryParse(transcriptDxn);
+        const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
+        const feed = feedObjectId
+          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
+          : undefined;
+        if (feed && Obj.instanceOf(Feed.Feed, feed)) {
+          transcriptionManager.setFeed(space, feed);
+        }
       }
 
       if (transcriptionManager) {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
@@ -63,8 +63,8 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -92,7 +92,6 @@
     "@dxos/websocket-rpc": "workspace:*",
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
-    "@effect/sql-sqlite-node": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
     "effect": "catalog:",
@@ -113,7 +112,7 @@
       {
         "root": "src/packlets/services/service-host.ts",
         "dependencies": [
-          "@dxos/echo-db"
+          "@dxos/echo-client"
         ]
       }
     ]

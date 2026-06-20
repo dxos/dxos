@@ -4,5 +4,5 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const MeetingContainer: ComponentType<any> = lazy(() => import('./MeetingContainer'));
+export const MeetingArticle: ComponentType<any> = lazy(() => import('./MeetingArticle'));
 export const MeetingsList: ComponentType<any> = lazy(() => import('./MeetingsList'));

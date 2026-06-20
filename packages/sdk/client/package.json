@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -119,11 +119,10 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -145,18 +144,14 @@
     "@dxos/websocket-rpc": "workspace:*",
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
-    "base-x": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",
     "jwt-decode": "catalog:",
-    "lodash.isequalwith": "catalog:",
-    "web-worker": "1.5.0"
+    "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequalwith": "catalog:",
-    "fast-check": "catalog:",
     "typedoc": "catalog:"
   },
   "peerDependencies": {

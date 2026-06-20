@@ -13,10 +13,8 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
-import { QueueService } from '@dxos/functions';
+import { Operation, Trace } from '@dxos/compute';
+import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -56,13 +54,13 @@ export const GptInput = Schema.Struct({
    * Conversation queue.
    * If specified, node will read the history, and write the new messages to the queue.
    */
-  conversation: Schema.optional(Ref.Ref(Queue)),
+  conversation: Schema.optional(Ref.Ref(Feed.Feed)),
 
   /**
    * History messages.
    * Cannot be used together with `conversation`.
    */
-  history: Schema.optional(Schema.Array(Message.Message)),
+  history: Schema.optional(Schema.Array(Type.getSchema(Message.Message))),
 
   /**
    * Tools to use.
@@ -76,7 +74,7 @@ export const GptOutput = Schema.Struct({
   /**
    * Messages emitted by the model.
    */
-  messages: Schema.Array(Message.Message),
+  messages: Schema.Array(Type.getSchema(Message.Message)),
 
   /**
    * Artifact emitted by the model.
@@ -107,7 +105,7 @@ export const GptOutput = Schema.Struct({
    * Conversation queue containing the history and model's response.
    * Present if the conversation was passed as an input.
    */
-  conversation: Schema.optional(Ref.Ref(Queue)),
+  conversation: Schema.optional(Ref.Ref(Feed.Feed)),
 });
 
 export type GptOutput = Schema.Schema.Type<typeof GptOutput>;
@@ -123,12 +121,11 @@ export const gptNode = defineComputeNode({
       'Cannot use both history and conversation',
     );
 
-    const { queues } = yield* QueueService;
-    const historyMessages = conversation
-      ? yield* Effect.tryPromise({
-          try: () => queues.get<Message.Message>(conversation.dxn).queryObjects(),
-          catch: (e) => e as Error,
-        })
+    const conversationFeed = conversation
+      ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
+      : undefined;
+    const historyMessages = conversationFeed
+      ? yield* Feed.runQuery(conversationFeed, Filter.type(Message.Message))
       : (history ?? []);
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
@@ -144,7 +141,7 @@ export const gptNode = defineComputeNode({
         }).pipe(Effect.provideService(Trace.TraceService, traceWriter)),
     });
 
-    const request = new AiRequest({ observer });
+    const request = new AiRequest.Request({ observer });
     const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
     const trace = yield* Trace.TraceService;
@@ -160,7 +157,7 @@ export const gptNode = defineComputeNode({
       Layer.succeed(Trace.TraceService, trace),
       Layer.succeed(Database.Service, yield* Database.Service),
       Layer.succeed(Operation.Service, yield* Operation.Service),
-      Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
+      Layer.succeed(Registry.Service, yield* Registry.Service),
     );
 
     // TODO(dmaretskyi): Should this use conversation instead?
@@ -175,8 +172,8 @@ export const gptNode = defineComputeNode({
         .pipe(Effect.provide(runDeps));
       log.info('messages', { messages });
 
-      if (conversation) {
-        yield* Effect.promise(() => queues.get<Message.Message>(conversation.dxn).append([...messages]));
+      if (conversationFeed) {
+        yield* Feed.append(conversationFeed, [...messages]).pipe(Effect.provide(runDeps));
       }
 
       const text = messages

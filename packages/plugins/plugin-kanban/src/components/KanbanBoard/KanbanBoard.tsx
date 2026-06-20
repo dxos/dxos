@@ -7,9 +7,9 @@ import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallba
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';
@@ -57,7 +57,7 @@ export const KanbanBoardRoot = ({
   onCardRemove,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
   const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;
@@ -90,7 +90,7 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div role='none' className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
         {t('select-pivot.placeholder')}
       </div>
     );
@@ -98,7 +98,7 @@ export const KanbanBoardRoot = ({
 
   return (
     <KanbanBoardContext
-      kanbanId={Obj.getDXN(kanban).toString()}
+      kanbanId={Obj.getURI(kanban)}
       projection={projection}
       columnFieldPath={columnFieldPath}
       pivotFieldId={pivotFieldId}

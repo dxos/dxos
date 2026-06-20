@@ -5,11 +5,11 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { QueryComposerLogs } from '#operations';
+import { DoctorOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.doctor';
 
-const operations = [QueryComposerLogs];
+const operations = [DoctorOperation.QueryComposerLogs];
 
 const make = () =>
   Blueprint.make({

@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { Type } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CodeProject, Spec } from '#types';
 
@@ -15,20 +16,19 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Spec.Spec.typename,
+        id: Type.getTypename(Spec.Spec),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Spec.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: CodeProject.CodeProject.typename,
+        id: Type.getTypename(CodeProject.CodeProject),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const spec = Spec.make();
@@ -37,13 +37,11 @@ export default Capability.makeModule(
             yield* Operation.invoke(SpaceOperation.AddObject, {
               object: spec,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object: project,
               target: options.target,
-              hidden: false,
               targetNodeId: options.targetNodeId,
             });
           }),

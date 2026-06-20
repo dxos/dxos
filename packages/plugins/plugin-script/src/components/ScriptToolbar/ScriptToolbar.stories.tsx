@@ -6,10 +6,10 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Script } from '@dxos/compute';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
@@ -53,7 +53,7 @@ const meta = {
     withTheme(),
     withLayout({ classNames: 'w-document-max-width' }),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

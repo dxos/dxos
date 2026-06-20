@@ -12,12 +12,13 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Feed } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { Operation, Trace } from '@dxos/compute';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { registryLayerNoop } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
+import { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -32,17 +33,11 @@ const TestLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
-      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+      registryLayerNoop,
     ),
   ),
   Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer(),
-      configuredCredentialsLayer([]),
-      Feed.notAvailable,
-      Trace.writerLayerNoop,
-    ),
+    Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]), Trace.writerLayerNoop),
   ),
 );
 
@@ -52,10 +47,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime();
-        runtime.registerGraph('dxn:compute:gpt1', gpt1());
+        runtime.registerGraph(URI.make('dxn:compute:gpt1'), gpt1());
 
         const computeResult = yield* runtime
-          .runGraph('dxn:compute:gpt1', ValueBag.make({ prompt: 'What is the meaning of life?' }))
+          .runGraph(URI.make('dxn:compute:gpt1'), ValueBag.make({ prompt: 'What is the meaning of life?' }))
           .pipe(Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
@@ -71,16 +66,16 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime();
-        runtime.registerGraph('dxn:compute:gpt2', gpt2());
+        runtime.registerGraph(URI.make('dxn:compute:gpt2'), gpt2());
 
         const output: ValueBag<GptOutput> = yield* runtime.runGraph(
-          'dxn:compute:gpt2',
+          URI.make('dxn:compute:gpt2'),
           ValueBag.make({
             prompt: 'What is the meaning of life?',
           }),
         );
 
-        const logger = runAndForwardErrors(output.values.text).then((token: any) => {
+        const logger = EffectEx.runAndForwardErrors(output.values.text).then((token: any) => {
           log.info('token', { token });
         });
 
@@ -127,14 +122,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   // TODO(burdon): Update these tests to use TestLayer when re-enabling.
   // test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
   //   const runtime = new TestRuntime();
-  //   runtime.registerGraph('dxn:compute:gpt1', gpt1());
+  //   runtime.registerGraph(URI.make('dxn:compute:gpt1'), gpt1());
   //
-  //   await runAndForwardErrors(
+  //   await EffectEx.runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const computeResult = yield* runtime
   //         .runGraph(
-  //           'dxn:compute:gpt1',
+  //           URI.make('dxn:compute:gpt1'),
   //           ValueBag.make({
   //             prompt: 'What is the meaning of life?',
   //           }),
@@ -152,14 +147,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   // test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
   //   const runtime = new TestRuntime();
-  //   runtime.registerGraph('dxn:compute:gpt2', gpt2());
+  //   runtime.registerGraph(URI.make('dxn:compute:gpt2'), gpt2());
   //
-  //   await runAndForwardErrors(
+  //   await EffectEx.runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const outputs: ValueBag<GptOutput> = yield* runtime
   //         .runGraph(
-  //           'dxn:compute:gpt2',
+  //           URI.make('dxn:compute:gpt2'),
   //           ValueBag.make({
   //             prompt: 'What is the meaning of life?',
   //           }),
@@ -168,7 +163,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   //       // log.info('text in test', { text: getDebugName(text) });
   //
-  //       const p = runAndForwardErrors(outputs.values.text).then((x) => {
+  //       const p = EffectEx.runAndForwardErrors(outputs.values.text).then((x) => {
   //         console.log({ x });
   //       });
   //

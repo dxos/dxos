@@ -4,18 +4,22 @@
 
 import { Collection, Feed, Type, View } from '@dxos/echo';
 
-import * as CollectionModel from './CollectionModel';
+import * as StateMap from '../StateMap';
+import * as TagIndex from '../TagIndex';
 import * as Expando from './Expando';
 import * as Text from './Text';
 import * as ViewModel from './ViewModel';
 
-export { Expando, Text, CollectionModel, ViewModel };
+export { Expando, Text, ViewModel };
+export { APIKey } from './APIKey';
 
 export const DataTypes: Type.AnyEntity[] = [
   Collection.Collection,
   Expando.Expando,
   Feed.Feed,
+  StateMap.StateMap,
+  TagIndex.TagIndex,
   Text.Text,
-  Type.PersistentType,
+  Type.Type,
   View.View,
 ];

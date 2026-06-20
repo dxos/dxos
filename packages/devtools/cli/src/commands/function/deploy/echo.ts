@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import path from 'node:path';
 
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig } from '@dxos/cli-util';
-import { Filter, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Script, Operation } from '@dxos/compute';
-import { Database, Obj, Ref, type Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
@@ -28,7 +28,7 @@ export const DATA_TYPES: Type.AnyEntity[] = [
 export const getNextVersion = (fnObject: Option.Option<Operation.PersistentOperation>) => {
   return Option.match(fnObject, {
     onNone: () => '0.0.1',
-    onSome: (fnObject) => incrementSemverPatch(fnObject.version),
+    onSome: (fnObject) => incrementSemverPatch(Obj.getMeta(fnObject).version ?? '0.0.0'),
   });
 };
 
@@ -71,15 +71,16 @@ export const upsertFunctionObject: (opts: {
     functionObject = existingObject;
   } else {
     functionObject = Obj.make(Operation.PersistentOperation, {
+      [Obj.Meta]: { version: uploadResult.version },
       name: path.basename(filePath, path.extname(filePath)),
-      version: uploadResult.version,
     });
     space.db.add(functionObject);
   }
   Obj.update(functionObject, (functionObject) => {
-    functionObject.key = uploadResult.meta.key ?? functionObject.key;
+    const meta = Obj.getMeta(functionObject);
+    meta.key = uploadResult.meta.key ?? meta.key;
+    meta.version = uploadResult.version;
     functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
-    functionObject.version = uploadResult.version;
     functionObject.description = uploadResult.meta.description;
     functionObject.inputSchema = uploadResult.meta.inputSchema;
     functionObject.outputSchema = uploadResult.meta.outputSchema;
@@ -94,12 +95,14 @@ export const upsertFunctionObject: (opts: {
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Unknown) {
-  const collectionRef = space.properties[Collection.Collection.typename] as Ref.Ref<Collection.Collection> | undefined;
+  const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+    Option.getOrUndefined,
+  );
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {
       Obj.update(collection, (collection) => {
-        collection.objects.push(Ref.make(collection));
+        collection.objects.push(Ref.make(obj));
       });
     }
   }

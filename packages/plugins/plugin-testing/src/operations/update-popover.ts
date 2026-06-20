@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
-import { type LayoutStateProps } from '../types';
+import { StorybookCapabilities } from '../types';
 import { updateState } from './update-state';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdatePopover> = LayoutOperation.UpdatePopover.pipe(
@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdatePopover> = Lay
     Effect.fnUntraced(function* (input) {
       const { subject, state, side, kind, props } = input;
       yield* updateState(() => {
-        const base: Partial<LayoutStateProps> = {
+        const base: Partial<StorybookCapabilities.LayoutStateProps> = {
           popoverKind: kind ?? 'base',
           popoverTitle: kind === 'card' ? input.title : undefined,
           popoverContent:

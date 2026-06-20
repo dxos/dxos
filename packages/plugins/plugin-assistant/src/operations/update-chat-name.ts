@@ -13,18 +13,13 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { UpdateChatName } from './definitions';
+import { AssistantOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> = AssistantOperation.UpdateChatName.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
-      function* ({ chat }) {
+      function* ({ chat, prompt: initialPrompt }) {
         log.info('updating chat name', { chat });
-
-        const feed = yield* Database.load(chat.feed);
-        const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
-
-        log.info('history', { history: history.length });
 
         const system = trim`
           It is extremely important that you respond only with the title and nothing else.
@@ -35,17 +30,26 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
           Fishing Trip
           </example_reply>
         `;
-        const prompt = 'Suggest a name for this chat';
 
-        const historyPrompt = yield* AiPreprocessor.preprocessPrompt(history, {
-          system,
-          cacheControl: 'ephemeral',
-        });
+        let namePrompt: Prompt.Prompt;
+        if (initialPrompt) {
+          // Use the provided prompt text directly; the feed may not have messages yet.
+          namePrompt = Prompt.setSystem(
+            Prompt.make(`User's first message: "${initialPrompt}"\n\nSuggest a name for this chat.`),
+            system,
+          );
+        } else {
+          const feed = yield* Database.load(chat.feed);
+          const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+          log.info('history', { history: history.length });
+          const historyPrompt = yield* AiPreprocessor.preprocessPrompt(history, {
+            system,
+            cacheControl: 'ephemeral',
+          });
+          namePrompt = Prompt.merge(historyPrompt, 'Suggest a name for this chat');
+        }
 
-        const response = yield* LanguageModel.generateText({
-          prompt: Prompt.merge(historyPrompt, prompt),
-        });
-
+        const response = yield* LanguageModel.generateText({ prompt: namePrompt });
         const newName = response.text.replaceAll(/[^a-zA-Z0-9\s]/g, '').trim();
 
         Obj.update(chat, (chat) => {
@@ -53,7 +57,7 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
         });
         log.info('chat name updated', { chat, newName: chat.name });
       },
-      Effect.provide(AiService.model('@anthropic/claude-haiku-4-5')),
+      Effect.provide(AiService.model('ai.claude.model.claude-haiku-4-5')),
     ),
   ),
 );

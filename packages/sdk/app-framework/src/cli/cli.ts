@@ -15,7 +15,7 @@ const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>
   (id: string) =>
     Effect.sync(() => {
-      const plugin = plugins.find((plugin) => plugin.meta.id === id);
+      const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
       invariant(plugin, `Plugin not found: ${id}`);
       return { plugin };
     });
@@ -28,7 +28,6 @@ export type CreateCliAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
   plugins?: Plugin.Plugin[];
-  core?: string[];
   enabled?: string[];
   safeMode?: boolean;
 };
@@ -44,8 +43,7 @@ export type CreateCliAppOptions = {
  *
  * @param options.pluginManager Optional existing PluginManager instance.
  * @param options.pluginLoader Function to load plugins by ID.
- * @param options.plugins All plugins available to the application.
- * @param options.core Core plugins which will always be enabled.
+ * @param options.plugins All plugins available to the application. Plugins whose `meta.profile.tags` includes `'system'` are treated as core.
  * @param options.enabled Enabled plugins.
  * @param options.safeMode Whether to enable safe mode, which disables optional plugins.
  */
@@ -55,12 +53,10 @@ export const createCliApp = Effect.fn(function* ({
   pluginManager: pluginManagerProp,
   pluginLoader: pluginLoaderProp,
   plugins: pluginsProp = [],
-  core: coreProp,
   enabled: enabledProp = [],
   safeMode = false,
 }: CreateCliAppOptions) {
   const plugins = pluginsProp;
-  const core = coreProp ?? plugins.map(({ meta }) => meta.id);
   const pluginLoader = pluginLoaderProp ?? defaultPluginLoader(plugins);
   const enabled = safeMode ? [] : enabledProp;
   const manager =
@@ -68,7 +64,6 @@ export const createCliApp = Effect.fn(function* ({
     PluginManager.make({
       pluginLoader,
       plugins,
-      core,
       enabled,
     });
 

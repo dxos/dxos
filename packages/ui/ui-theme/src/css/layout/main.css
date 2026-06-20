@@ -81,7 +81,13 @@
       @apply backdrop-blur-lg;
     }
     background-color: var(--color-sidebar-surface);
+    color: var(--color-sidebar-fg);
     --surface-bg: var(--color-sidebar-surface);
+
+    /* Current / selected items read one stop brighter than default body text. */
+    & :is([aria-current]:not([aria-current='false']), [aria-selected='true']) {
+      color: var(--color-sidebar-current-fg);
+    }
 
     transition-property: inset-inline-start, inset-inline-end, inline-size;
     inset-block-start: max(0.5rem, env(safe-area-inset-top));

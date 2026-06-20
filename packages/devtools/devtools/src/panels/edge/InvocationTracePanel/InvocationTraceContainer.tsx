@@ -8,18 +8,19 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
-import { type Database, Filter, type Obj } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { type Database, type Obj, Type } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
+import { Format } from '@dxos/echo/Format';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -32,7 +33,7 @@ import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;
-  queueDxn?: DXN;
+  feedDXN?: URI.URI;
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
@@ -43,9 +44,8 @@ export type InvocationTraceContainerProps = {
 export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTraceContainerProps>(
   (
     {
-      classNames,
       db,
-      queueDxn,
+      feedDXN,
       detailAxis = 'inline',
       showSpaceSelector = false,
       target,
@@ -55,7 +55,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     forwardedRef,
   ) => {
     const resolver = useFunctionNameResolver({ db });
-    const hookSpans = useInvocationSpans({ queueDxn, target });
+    const hookSpans = useInvocationSpans({ feedDXN, target });
     const invocationSpans = invocationSpansProp ?? hookSpans;
 
     const [selectedId, setSelectedId] = useState<string>();
@@ -102,8 +102,8 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             size: 110,
           },
           {
-            name: 'queue',
-            title: 'Queue',
+            name: 'feed',
+            title: 'Feed',
             format: Format.TypeFormat.String,
             // TODO(burdon): Add formatter.
             // formatter: (value: string) => value.split(':').pop(),
@@ -119,24 +119,24 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       return invocationSpans.map((invocation) => {
         const status = invocation.outcome;
         // Handle both Ref objects and encoded references.
-        const targetDxn =
-          invocation.invocationTarget?.dxn ??
-          (invocation.invocationTarget && '/' in invocation.invocationTarget
-            ? DXN.parse((invocation.invocationTarget as any)['/'])
+        const targetDXN: URI.URI | undefined =
+          invocation.invocationTarget?.uri ??
+          (EncodedReference.isEncodedReference(invocation.invocationTarget)
+            ? EncodedReference.toURI(invocation.invocationTarget)
             : undefined);
 
         // TODO(burdon): Use InvocationTraceStartEvent.
         return {
           id: invocation.id,
-          target: resolver(targetDxn),
+          target: resolver(targetDXN),
           // TODO(burdon): Change to timestamp?
           time: new Date(invocation.timestamp),
           duration: formatDuration(invocation.duration),
           status,
-          queue:
-            invocation.invocationTraceQueue?.dxn?.toString() ??
-            (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
-              ? (invocation.invocationTraceQueue as any)['/']
+          feed:
+            invocation.invocationTraceFeed?.uri ??
+            (EncodedReference.isEncodedReference(invocation.invocationTraceFeed)
+              ? EncodedReference.toURI(invocation.invocationTraceFeed)
               : 'unknown'),
           _original: invocation,
         };
@@ -170,8 +170,9 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       [],
     );
 
+    // TODO(burdon): Use Panel.Root
     return (
-      <div {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
         <PanelContainer
           toolbar={
             showSpaceSelector ? (
@@ -196,27 +197,24 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  const queue = span.invocationTraceQueue?.target;
-  const objects = useQuery(queue, Filter.everything());
+  // TODO(dmaretskyi): Per-invocation trace event feeds are deprecated; the
+  // log/exception/execution-graph panels render an empty snapshot until a
+  // replacement tracing data structure lands.
+  const objects: TraceEvent[] = [];
 
   const contents = Array.head(objects).pipe(
     Option.getOrUndefined,
     Match.value,
     Match.not(Match.defined, () => 'unknown'),
-    Match.when(Schema.is(TraceEvent), () => 'logs'),
+    Match.when(Schema.is(Type.getSchema(TraceEvent)), () => 'logs'),
     Match.orElse(() => 'execution-graph'),
   );
 
   const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
-    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator'>
-      <Tabs.Root
-        classNames='grid grid-rows-[min-content_1fr] min-h-0 [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'
-        orientation='horizontal'
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
+    <Tabs.Root asChild orientation='horizontal' value={activeTab} onValueChange={setActiveTab}>
+      <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
         <Tabs.Tablist classNames='border-b border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
@@ -250,11 +248,11 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         )}
         {contents === 'execution-graph' && (
           <Tabs.Panel value='execution-graph'>
-            <ExecutionGraphPanel queue={queue} />
+            <ExecutionGraphPanel objects={objects} />
           </Tabs.Panel>
         )}
-      </Tabs.Root>
-    </div>
+      </div>
+    </Tabs.Root>
   );
 };
 

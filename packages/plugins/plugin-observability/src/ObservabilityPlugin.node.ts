@@ -9,7 +9,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#operations';
+import { ObservabilityOperation } from '#types';
 
 // TODO(wittjosiah): Hook up.
 export const ObservabilityPlugin = Plugin.define(meta).pipe(

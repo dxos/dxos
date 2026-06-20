@@ -1,34 +1,109 @@
 /**
  * Surfaces
+ *
+ * A surface zone paints a background AND publishes its colour as `--surface-bg`, so descendant
+ * controls can derive a visible hover/current highlight from the actual surface (see the
+ * derivation block below) and surface-matching elements (avatars, gradients) can read it directly.
+ *
+ * Always enter a surface via one of these `dx-*-surface` classes. A bare `bg-*-surface` utility
+ * paints the colour but does NOT publish `--surface-bg`, so control hover collapses onto the
+ * base-surface fallback and can become invisible when the surface shares that elevation.
  */
 
 @layer dx-components {
   .dx-base-surface {
-    @apply bg-base-surface text-base-surface-text;
+    @apply bg-base-surface text-base-fg;
     --surface-bg: var(--color-base-surface);
   }
 
+  .dx-deck-surface {
+    @apply bg-deck-surface text-base-fg;
+    --surface-bg: var(--color-deck-surface);
+  }
+
   .dx-sidebar-surface {
-    @apply bg-sidebar-surface text-base-surface-text;
+    @apply bg-sidebar-surface text-base-fg;
     --surface-bg: var(--color-sidebar-surface);
   }
 
+  .dx-header-surface {
+    @apply bg-header-surface text-base-fg;
+    --surface-bg: var(--color-header-surface);
+  }
+
+  .dx-card-surface {
+    @apply bg-card-surface text-base-fg;
+    --surface-bg: var(--color-card-surface);
+  }
+
+  .dx-group-surface {
+    @apply bg-group-surface text-base-fg;
+    --surface-bg: var(--color-group-surface);
+  }
+
+  .dx-input-surface {
+    @apply bg-input-surface text-base-fg;
+    --surface-bg: var(--color-input-surface);
+  }
+
+  .dx-toolbar-surface {
+    @apply bg-toolbar-surface text-base-fg;
+    --surface-bg: var(--color-toolbar-surface);
+  }
+
   .dx-modal-surface {
-    @apply bg-modal-surface text-base-surface-text backdrop-blur-md;
+    @apply bg-modal-surface text-base-fg backdrop-blur-md;
     --surface-bg: var(--color-modal-surface);
   }
 
+  .dx-popover-surface {
+    @apply bg-popover-surface text-base-fg backdrop-blur-md;
+    --surface-bg: var(--color-popover-surface);
+  }
+
   .dx-attention-surface {
-    @apply bg-attention-surface text-base-surface-text;
+    @apply bg-attention-surface text-base-fg;
     --surface-bg: var(--color-attention-surface);
   }
 }
 
-/* TODO(burdon): Resolve. */
-/* @layer dx-tokens {
-  .dx-sidebar-surface, .dx-modal-surface {
-    --color-hover-surface: light-dark(var(--color-neutral-300), var(--color-neutral-700));
-    --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-    --color-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+@layer dx-tokens {
+  /*
+   * Re-derive the state colours (hover, current, selected) off the host surface for every context
+   * that publishes its own --surface-bg. Custom-property substitution runs once per scope, so the
+   * formula must be repeated here (it cannot simply inherit from semantic.css, which resolved it
+   * against the root surface). Listing all surface zones in one block keeps the offsets identical
+   * across surfaces — there is no per-surface divergence to tune.
+   *
+   * Magnitudes mirror semantic.css; selected-* track current-* via the aliases declared there.
+   */
+  .dx-base-surface,
+  .dx-deck-surface,
+  .dx-sidebar-surface,
+  .dx-header-surface,
+  .dx-card-surface,
+  .dx-group-surface,
+  .dx-input-surface,
+  .dx-toolbar-surface,
+  .dx-modal-surface,
+  .dx-popover-surface,
+  .dx-attention-surface,
+  .dx-main-sidebar {
+    --color-hover-surface: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.08) c h),
+      oklch(from var(--surface-bg) calc(l + 0.08) c h)
+    );
+    --color-hover-surface-subtle: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.02) c h),
+      oklch(from var(--surface-bg) calc(l + 0.02) c h)
+    );
+    --color-current-surface: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.1) c h),
+      oklch(from var(--surface-bg) calc(l + 0.1) c h)
+    );
+    --color-current-surface-hover: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.12) c h),
+      oklch(from var(--surface-bg) calc(l + 0.12) c h)
+    );
   }
-} */
+}

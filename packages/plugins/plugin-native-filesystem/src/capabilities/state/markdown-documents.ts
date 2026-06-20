@@ -8,9 +8,10 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { DXN, Obj } from '@dxos/echo';
-import { updateText } from '@dxos/echo-db';
+import { Filter, Obj } from '@dxos/echo';
+import { updateText } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
@@ -18,9 +19,9 @@ import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from 
 
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
-  getFileXattrDxn,
+  getFileXattrDXN,
   readFileMap,
-  setFileXattrDxn,
+  setFileXattrDXN,
   watchMarkdownFile,
   writeFileMap,
   type FileMapEntry,
@@ -36,25 +37,26 @@ const RESTORE_YIELD_EVERY_N_FILES = 25;
  * `ref.tryLoad()` because objects in linked documents may not be hydrated until async load.
  */
 const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): Promise<Text.Text | undefined> => {
-  const parsed = DXN.tryParse(dxnStr);
-  if (!parsed) {
+  const echoUri = EID.tryParse(dxnStr);
+  if (!echoUri) {
     return undefined;
   }
-  const echoDxn = parsed.asEchoDXN();
-  if (!echoDxn) {
+  const spaceId = EID.getSpaceId(echoUri);
+  const objectId = EID.getEntityId(echoUri);
+  if (!spaceId || !objectId) {
     return undefined;
   }
-  const owningSpace = echoDxn.spaceId ? client.spaces.get(echoDxn.spaceId) : undefined;
+  const owningSpace = client.spaces.get(spaceId);
   if (!owningSpace) {
     return undefined;
   }
 
-  const byId = owningSpace.db.getObjectById(echoDxn.echoId);
+  const byId = owningSpace.db.query(Filter.id(objectId)).runSync()[0];
   if (byId && Obj.instanceOf(Text.Text, byId)) {
     return byId;
   }
 
-  const ref = owningSpace.db.makeRef(parsed);
+  const ref = owningSpace.db.makeRef(echoUri);
   const syncTarget = ref.target as Text.Text | undefined;
   if (syncTarget && Obj.instanceOf(Text.Text, syncTarget)) {
     return syncTarget;
@@ -73,7 +75,7 @@ export type MarkdownDocuments = {
   /** Lookup text object by filesystem file id. */
   getByFileId: (fileId: string) => Text.Text | undefined;
   /** Resolve disk write target from Echo DXN string. */
-  getWriteTargetByDxn: (dxn: string) => { path: string; fileId: string } | undefined;
+  getWriteTargetByDXN: (uri: string) => { path: string; fileId: string } | undefined;
   /** Restore existing objects then create Text for any unmapped markdown files. */
   syncFromDisk: (workspace: FilesystemWorkspace) => Effect.Effect<void>;
   /** Evict all cached documents and file watchers for a workspace. */
@@ -121,11 +123,11 @@ export const createMarkdownDocuments = (
     registry.update(markdownBindingGeneration(fileId), (generation) => generation + 1);
   };
 
-  /** Update both forward (fileId→doc) and reverse (dxn→writeTarget) maps. */
+  /** Update both forward (fileId→doc) and reverse (uri→writeTarget) maps. */
   const updateMapsForDocument = (fileId: string, path: string, doc: Text.Text): void => {
-    const dxn = Obj.getDXN(doc).toString();
+    const uri = Obj.getURI(doc);
     documentsByFileId.set(fileId, doc);
-    writeTargetByDxn.set(dxn, { path, fileId });
+    writeTargetByDxn.set(uri, { path, fileId });
   };
 
   /** Update maps and bump the reactive generation so graph nodes re-render. */
@@ -231,7 +233,7 @@ export const createMarkdownDocuments = (
    *  2. `.composer/filemap.json` in the workspace root (portable fallback for
    *     filesystems that don't support xattr, or after file moves).
    */
-  const persistFileIdentity = (file: FilesystemFile, workspaceId: string, dxn: string): void => {
+  const persistFileIdentity = (file: FilesystemFile, workspaceId: string, uri: string): void => {
     const state = registry.get(stateAtom);
     const workspace = state.workspaces.find((ws) => ws.id === workspaceId);
     if (!workspace) {
@@ -240,12 +242,12 @@ export const createMarkdownDocuments = (
 
     void Effect.runFork(
       Effect.gen(function* () {
-        yield* setFileXattrDxn(file.path, dxn);
+        yield* setFileXattrDXN(file.path, uri);
 
         const relPath = relativePath(workspace.path, file.path);
         const fileMap = yield* readFileMap(workspace.path);
         const existingIdx = fileMap.files.findIndex((entry) => entry.relativePath === relPath);
-        const newEntry: FileMapEntry = { relativePath: relPath, objectDxn: dxn };
+        const newEntry: FileMapEntry = { relativePath: relPath, objectDXN: uri };
         if (existingIdx >= 0) {
           fileMap.files[existingIdx] = newEntry;
         } else {
@@ -285,8 +287,8 @@ export const createMarkdownDocuments = (
     indexDocument(file.id, file.path, doc);
     ensureFileWatcher(file);
 
-    const dxn = Obj.getDXN(doc).toString();
-    persistFileIdentity(file, workspaceId, dxn);
+    const uri = Obj.getURI(doc);
+    persistFileIdentity(file, workspaceId, uri);
 
     return doc;
   };
@@ -311,7 +313,7 @@ export const createMarkdownDocuments = (
       }
 
       const fileMap = yield* readFileMap(workspace.path);
-      const fileMapByPath = new Map(fileMap.files.map((entry) => [entry.relativePath, entry.objectDxn]));
+      const fileMapByPath = new Map(fileMap.files.map((entry) => [entry.relativePath, entry.objectDXN]));
       let fileMapDirty = false;
 
       let fileIndex = 0;
@@ -327,7 +329,7 @@ export const createMarkdownDocuments = (
         }
 
         // Try xattr first, fall back to filemap.
-        let dxnStr = yield* getFileXattrDxn(file.path);
+        let dxnStr = yield* getFileXattrDXN(file.path);
 
         if (!dxnStr) {
           const relPath = relativePath(workspace.path, file.path);
@@ -338,7 +340,7 @@ export const createMarkdownDocuments = (
           continue;
         }
 
-        const parsedDxn = DXN.tryParse(dxnStr);
+        const parsedDxn = EID.tryParse(dxnStr);
         if (!parsedDxn) {
           continue;
         }
@@ -347,7 +349,7 @@ export const createMarkdownDocuments = (
         try {
           target = yield* Effect.promise(() => resolveTextObjectFromStoredDxn(client, dxnStr));
         } catch (error) {
-          log.warn('Ref resolution threw during restore', { fileId: file.id, path: file.path, dxn: dxnStr, error });
+          log.warn('Ref resolution threw during restore', { fileId: file.id, path: file.path, uri: dxnStr, error });
           continue;
         }
 
@@ -355,7 +357,7 @@ export const createMarkdownDocuments = (
           log.warn('Failed to restore object for file', {
             fileId: file.id,
             path: file.path,
-            dxn: dxnStr,
+            uri: dxnStr,
             found: !!target,
           });
           continue;
@@ -378,7 +380,7 @@ export const createMarkdownDocuments = (
         }
 
         // Ensure xattr is set (may have been restored from filemap only).
-        yield* setFileXattrDxn(file.path, dxnStr);
+        yield* setFileXattrDXN(file.path, dxnStr);
 
         // Keep filemap in sync.
         const relPath = relativePath(workspace.path, file.path);
@@ -391,7 +393,7 @@ export const createMarkdownDocuments = (
 
       if (fileMapDirty) {
         const updatedFileMap = {
-          files: Array.from(fileMapByPath.entries()).map(([rp, dxn]) => ({ relativePath: rp, objectDxn: dxn })),
+          files: Array.from(fileMapByPath.entries()).map(([rp, uri]) => ({ relativePath: rp, objectDXN: uri })),
         };
         yield* writeFileMap(workspace.path, updatedFileMap);
       }
@@ -408,8 +410,8 @@ export const createMarkdownDocuments = (
       return documentsByFileId.get(fileId);
     },
 
-    getWriteTargetByDxn: (dxn: string): { path: string; fileId: string } | undefined => {
-      return writeTargetByDxn.get(dxn);
+    getWriteTargetByDXN: (uri: string): { path: string; fileId: string } | undefined => {
+      return writeTargetByDxn.get(uri);
     },
 
     /**
@@ -457,8 +459,8 @@ export const createMarkdownDocuments = (
         const doc = documentsByFileId.get(fileId);
         documentsByFileId.delete(fileId);
         if (doc) {
-          const dxn = Obj.getDXN(doc).toString();
-          writeTargetByDxn.delete(dxn);
+          const uri = Obj.getURI(doc);
+          writeTargetByDxn.delete(uri);
         }
         // Bump so graph nodes notice the document is gone.
         bumpMarkdownBinding(fileId);

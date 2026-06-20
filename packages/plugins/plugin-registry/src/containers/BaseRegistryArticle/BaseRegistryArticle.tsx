@@ -9,16 +9,18 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { type Plugin } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { EffectEx } from '@dxos/effect';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';
 
+import { useDisableConfirmation } from '../../hooks';
+
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
-  const haystack = `${plugin.meta.name ?? ''} ${plugin.meta.id}`.toLowerCase();
+  const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();
   return haystack.includes(query);
 };
 
@@ -65,7 +67,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
@@ -77,7 +79,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       return query.length === 0 ? plugins : plugins.filter((plugin) => matchesFilter(plugin, query));
     }, [plugins, filter]);
 
-    const handleChange = useCallback(
+    const dispatchToggle = useCallback(
       (pluginId: string, nextEnabled: boolean) =>
         Effect.gen(function* () {
           if (nextEnabled) {
@@ -91,8 +93,21 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
               ? { plugin: pluginId, enabled: nextEnabled, source }
               : { plugin: pluginId, enabled: nextEnabled },
           });
-        }).pipe(runAndForwardErrors),
+        }).pipe(EffectEx.runAndForwardErrors),
       [invoke, manager, source],
+    );
+
+    const requestDisable = useDisableConfirmation(manager, (id) => void dispatchToggle(id, false));
+
+    const handleChange = useCallback(
+      (pluginId: string, nextEnabled: boolean) => {
+        if (nextEnabled) {
+          void dispatchToggle(pluginId, true);
+          return;
+        }
+        requestDisable(pluginId);
+      },
+      [dispatchToggle, requestDisable],
     );
 
     const handleClick = useCallback(

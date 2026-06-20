@@ -12,7 +12,7 @@ import { getSize, mx } from '@dxos/ui-theme';
 export const Emoji = ({ text, className }: { text?: string; className?: string }) => {
   const size = 14;
   return (
-    <div role='none' className={mx(getSize(size), 'rounded-sm relative pointer-events-none', className)}>
+    <div className={mx(getSize(size), 'rounded-sm relative pointer-events-none', className)}>
       <svg viewBox={`0 0 ${size * 4} ${size * 4}`} width={size * 4} height={size * 4}>
         <text
           x='50%'
@@ -34,9 +34,5 @@ export const Emoji = ({ text, className }: { text?: string; className?: string }
  */
 export const Centered = (props: PropsWithChildren) => {
   const { children } = props;
-  return (
-    <div role='none' className='absolute inset-0 flex items-center justify-center'>
-      {children}
-    </div>
-  );
+  return <div className='absolute inset-0 flex items-center justify-center'>{children}</div>;
 };

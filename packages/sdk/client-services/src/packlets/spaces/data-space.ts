@@ -13,15 +13,15 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type DatabaseRoot,
   type EchoHost,
-  type MetadataStore,
+  type IMetadataStore,
   type Space,
   createMappedFeedWriter,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
@@ -74,10 +74,10 @@ export type DataSpaceCallbacks = {
 export type DataSpaceProps = {
   initialState: SpaceState;
   inner: Space;
-  metadataStore: MetadataStore;
+  metadataStore: IMetadataStore;
   gossip: Gossip;
   presence: Presence;
-  keyring: Keyring;
+  keyring: KeyringApi;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
   signingContext: SigningContext;
@@ -104,9 +104,9 @@ export class DataSpace {
 
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
-  private readonly _keyring: Keyring;
+  private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
-  private readonly _metadataStore: MetadataStore;
+  private readonly _metadataStore: IMetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;
@@ -487,7 +487,7 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    let handle: DocHandle<DatabaseDirectory>;
+    let handle: DocHandle<DatabaseDirectory> | null = null;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
@@ -503,12 +503,16 @@ export class DataSpace {
         if (this._ctx.disposed) {
           return;
         }
+        if (!handle) {
+          log.warn('automerge root doc not available yet', { space: this.key, rootUrl });
+          return;
+        }
 
         // Ensure only one root is processed at a time.
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space keys to legacy documents.
-        const doc = handle.doc() ?? failedInvariant();
+        const doc = handle.doc();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };
@@ -614,6 +618,24 @@ export class DataSpace {
       await this._close(ctx);
     }
     this._state = SpaceState.SPACE_INACTIVE;
+    log('new state', { state: SpaceState[this._state] });
+    this.stateUpdate.emit();
+  }
+
+  /**
+   * Tombstones (soft-deletes) the space by moving it to a terminal state.
+   * This is intentionally separate from teardown: the caller is responsible for {@link close}-ing the
+   * space (teardown uses the resource lifecycle, distinct from this state transition).
+   * Terminal: {@link activate} will not re-open a deleted space. Data is not removed until garbage
+   * collection (future work).
+   */
+  @synchronized
+  async delete(): Promise<void> {
+    if (this._state === SpaceState.SPACE_DELETED) {
+      return;
+    }
+    await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_DELETED);
+    this._state = SpaceState.SPACE_DELETED;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
   }

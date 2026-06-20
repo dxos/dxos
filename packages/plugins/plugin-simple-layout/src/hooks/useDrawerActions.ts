@@ -14,7 +14,7 @@ import { type ActionExecutor, type ActionGraphProps, createGapSeparator } from '
 
 import { useMobileLayout } from '#components';
 import { meta } from '#meta';
-import { SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
+import { SimpleLayoutCapabilities } from '#types';
 
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
@@ -30,8 +30,8 @@ export type DrawerActions = {
  * Builds the drawer actions including companion tabs and toolbar buttons.
  */
 export const useDrawerActions = (consumerName: string): DrawerActions => {
-  const { t } = useTranslation(meta.id);
-  const stateAtom = useCapability(SimpleLayoutStateCapability);
+  const { t } = useTranslation(meta.profile.key);
+  const stateAtom = useCapability(SimpleLayoutCapabilities.State);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const { updateState } = useSimpleLayoutState();

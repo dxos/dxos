@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Repo } from '@automerge/automerge-repo';
+import { Repo, initSubduction } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { Obj, Query, Ref } from '@dxos/echo';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, useThemeContext } from '@dxos/react-ui';
@@ -60,6 +60,9 @@ const DefaultStory = () => {
 
   useEffect(() => {
     queueMicrotask(async () => {
+      // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
+      // initialized first or the constructor throws `'set_subduction_logger' of undefined`.
+      await initSubduction();
       const repo1 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
       const repo2 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
 

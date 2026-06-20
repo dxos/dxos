@@ -12,18 +12,14 @@ export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organiz
   const { name, image, description, website } = subject;
 
   return (
-    <Card.Content>
-      <Card.Poster
-        alt={name ?? ''}
-        {...(image ? { image } : { icon: 'ph--building-office--regular' })}
-        classNames={!image && 'opacity-50'}
-      />
+    <Card.Body>
+      {image && <Card.Poster alt={name ?? ''} image={image} />}
       {description && (
         <Card.Row>
           <Card.Text variant='description'>{description}</Card.Text>
         </Card.Row>
       )}
       {website && <Card.Link label={website} href={website} />}
-    </Card.Content>
+    </Card.Body>
   );
 };

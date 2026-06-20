@@ -85,7 +85,7 @@ export const MyOperationHandlerSet = OperationHandlerSet.lazy(
 
 ## App-Toolkit Helper: `AppPlugin.addOperationHandlerModule`
 
-Registers the handler set with the framework during the `SetupOperationHandler` activation event.
+Registers the handler set with the framework during the `SetupProcessManager` activation event.
 
 ```typescript
 import { AppPlugin } from '@dxos/app-toolkit';

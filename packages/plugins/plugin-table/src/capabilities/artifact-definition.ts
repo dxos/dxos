@@ -12,11 +12,10 @@ import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
-import { Obj, Query } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Filter, type Space } from '@dxos/react-client/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { type Space } from '@dxos/react-client/echo';
 import { Table, TableView } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -71,7 +70,8 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first.
-            const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+            const types = await extensions.space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
@@ -80,7 +80,7 @@ export default Capability.makeModule(() =>
               db: extensions.space.db,
               typename,
             });
-            const table = Table.make({ name: name ?? schema.typename, view, jsonSchema });
+            const table = Table.make({ name: name ?? Type.getTypename(schema), view, jsonSchema });
 
             const { error } = await extensions.invoke(SpaceOperation.AddObject, {
               target: extensions.space,
@@ -111,7 +111,7 @@ export default Capability.makeModule(() =>
                 }
 
                 return {
-                  id: Obj.getDXN(view).toString(),
+                  id: Obj.getURI(view),
                   name: view.name ?? 'Unnamed Table',
                   typename: view.query.typename,
                 };
@@ -139,7 +139,11 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = await space.db.schemaRegistry.query({ typename }).first();
+            const types = await space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
             return ToolResult.Success(schema);
           },
         }),
@@ -166,7 +170,11 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = await space.db.schemaRegistry.query({ typename }).first();
+            const types = await space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
             const { objects: rows } = await space.db.query(Filter.type(schema)).run();
             return ToolResult.Success(rows);
           },
@@ -193,7 +201,11 @@ export default Capability.makeModule(() =>
               .first()) as View.View;
             // Get schema for validation.
             const typename = view.query.typename;
-            const schema = await space.db.schemaRegistry.query({ typename }).first();
+            const types = await space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
 
             const table = await view.presentation.load();
             invariant(Obj.instanceOf(TableView, table));
@@ -212,7 +224,6 @@ export default Capability.makeModule(() =>
               const { error } = await extensions.invoke(SpaceOperation.AddObject, {
                 target: space.db,
                 object,
-                hidden: true,
               });
               if (error) {
                 return ToolResult.Error(error?.message ?? 'Failed to add rows to table');

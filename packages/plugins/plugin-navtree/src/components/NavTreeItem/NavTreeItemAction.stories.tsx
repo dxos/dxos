@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Node } from '@dxos/app-graph';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -52,7 +52,7 @@ const meta = {
   } satisfies Partial<NavTreeItemActionMenuProps>,
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), RuntimePlugin()],
+      plugins: [...corePlugins(), ProcessManagerPlugin()],
     }),
   ],
   parameters: {

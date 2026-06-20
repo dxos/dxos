@@ -5,27 +5,19 @@
 import * as Schema from 'effect/Schema';
 
 // TODO(burdon): Share with Edge.
-// TOOD(burdon): Clean-up deprecated models.
 export const DEFAULT_EDGE_MODELS = [
-  // AI Gateway.
-  // https://developers.cloudflare.com/ai-gateway
-  '@anthropic/claude-3-5-haiku-latest',
-  '@anthropic/claude-3-5-haiku-20241022',
-  '@anthropic/claude-3-5-sonnet-20241022',
-  '@anthropic/claude-haiku-4-5',
-  '@anthropic/claude-sonnet-4-0',
-  '@anthropic/claude-sonnet-4-5',
-  '@anthropic/claude-opus-4-0',
-  '@anthropic/claude-opus-4-5',
-  '@anthropic/claude-opus-4-6',
-
-  // Workers AI.
-  // https://developers.cloudflare.com/workers-ai/models
-  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
-  '@hf/nousresearch/hermes-2-pro-mistral-7b',
-  '@ollama/llama-3-1-nemotron-70b-instruct',
-  '@ollama/llama-3-1-nemotron-mini-4b-instruct',
-  '@ollama/llama-3-2-3b',
+  // https://platform.claude.com/docs/en/about-claude/models/overview
+  'ai.claude.model.claude-opus-4-8',
+  'ai.claude.model.claude-sonnet-4-6',
+  'ai.claude.model.claude-haiku-4-5',
+  // Older versions (retained for memoized test compatibility).
+  'ai.claude.model.claude-opus-4-6',
+  'ai.claude.model.claude-opus-4-5',
+  'ai.claude.model.claude-opus-4-0',
+  'ai.claude.model.claude-sonnet-4-5',
+  'ai.claude.model.claude-3-5-haiku-latest',
+  'ai.claude.model.claude-3-5-haiku-20241022',
+  'ai.claude.model.claude-3-5-sonnet-20241022',
 ] as const;
 
 /**
@@ -33,11 +25,11 @@ export const DEFAULT_EDGE_MODELS = [
  */
 export const DEFAULT_LMSTUDIO_MODELS = [
   // prettier-ignore
-  '@google/gemma-3-27b',
-  '@meta/llama-3.1-8b-instruct',
-  '@meta/llama-3.2-3b-instruct',
-  'ministral-3-14b-reasoning',
-  'openai/gpt-oss-20b',
+  'ai.google.model.gemma-3-27b',
+  'ai.meta.model.llama-3.1-8b-instruct',
+  'ai.meta.model.llama-3.2-3b-instruct',
+  'ai.mistral.model.ministral-3-14b-reasoning',
+  'ai.openai.model.gpt-oss-20b',
 ] as const;
 
 /**
@@ -45,12 +37,12 @@ export const DEFAULT_LMSTUDIO_MODELS = [
  */
 export const DEFAULT_OLLAMA_MODELS = [
   // prettier-ignore
-  'qwen2.5:14b', // Test function calling?
-  'llama3.2:1b',
-  'llama3:70b',
-  'deepseek-r1:latest',
-  'gpt-oss:20b',
-  'gemma4:latest',
+  'ai.ollama.model.qwen2.5:14b',
+  'ai.ollama.model.llama3.2:1b',
+  'ai.ollama.model.llama3:70b',
+  'ai.ollama.model.deepseek-r1:latest',
+  'ai.ollama.model.gpt-oss:20b',
+  'ai.ollama.model.gemma4:latest',
 ] as const;
 
 /**
@@ -58,11 +50,11 @@ export const DEFAULT_OLLAMA_MODELS = [
  */
 export const DEFAULT_OPENAI_MODELS = [
   // prettier-ignore
-  '@openai/gpt-4o',
-  '@openai/gpt-4o-mini',
-  '@openai/o1',
-  '@openai/o3',
-  '@openai/o3-mini',
+  'ai.openai.model.gpt-4o',
+  'ai.openai.model.gpt-4o-mini',
+  'ai.openai.model.o1',
+  'ai.openai.model.o3',
+  'ai.openai.model.o3-mini',
 ] as const;
 
 export const ModelName = Schema.Literal(
@@ -74,10 +66,10 @@ export const ModelName = Schema.Literal(
 
 export type ModelName = Schema.Schema.Type<typeof ModelName>;
 
-export const DEFAULT_EDGE_MODEL: ModelName = '@anthropic/claude-opus-4-6';
-export const DEFAULT_LMSTUDIO_MODEL: ModelName = '@meta/llama-3.2-3b-instruct';
-export const DEFAULT_OLLAMA_MODEL: ModelName = 'llama3.2:1b';
-export const DEFAULT_OPENAI_MODEL: ModelName = '@openai/gpt-4o';
+export const DEFAULT_EDGE_MODEL: ModelName = 'ai.claude.model.claude-sonnet-4-6';
+export const DEFAULT_LMSTUDIO_MODEL: ModelName = 'ai.meta.model.llama-3.2-3b-instruct';
+export const DEFAULT_OLLAMA_MODEL: ModelName = 'ai.ollama.model.llama3.2:1b';
+export const DEFAULT_OPENAI_MODEL: ModelName = 'ai.openai.model.gpt-4o';
 
 export type ModelCapabilities = {
   cot?: boolean;

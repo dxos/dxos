@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection } from '@dxos/echo';
 
-import { StackContainer } from '#containers';
+import { StackArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
         id: 'article',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ role, data }) => {
-          return <StackContainer attendableId={data.attendableId} role={role} subject={data.subject} />;
+          return <StackArticle attendableId={data.attendableId} role={role} subject={data.subject} />;
         },
       }),
     ),

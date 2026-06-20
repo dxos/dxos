@@ -1,0 +1,136 @@
+# Implementation step for issues triaged ACTIONABLE by `claude-composer-triage.yml`.
+# Fires when (a) the triage agent adds `needs-implementation`, or (b) a human
+# reviewer adds it manually. Opens a DRAFT PR. See
+# `agents/prompts/claude-triage-and-implement-workflows.md` for design notes.
+name: Claude Composer implement
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  # One implementation across the whole repo at a time — keeps token spend
+  # predictable and avoids two Claude PRs racing on the same files. Tune
+  # `cancel-in-progress` to `true` if you'd rather supersede.
+  group: claude-composer-implement-global
+  cancel-in-progress: false
+
+jobs:
+  implement:
+    # PILOT GATE — see `claude-composer-triage.yml` for the rationale. The
+    # implement step inherits the same upstream-bug exposure, so it stays
+    # gated behind `claude-pilot` until anthropics/claude-code-action#1351
+    # is resolved. To re-enable, delete the
+    # `contains(github.event.issue.labels.*.name, 'claude-pilot') &&` line
+    # from the `if:` block below (and this comment), in lockstep with the
+    # matching change in `claude-composer-triage.yml`.
+    if: >
+      github.event.label.name == 'needs-implementation' &&
+      contains(github.event.issue.labels.*.name, 'Composer') &&
+      contains(github.event.issue.labels.*.name, 'claude-pilot') &&
+      !contains(github.event.issue.labels.*.name, 'claude-implementing')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          # Full history so Claude can branch off main.
+          fetch-depth: 0
+          # The Claude implementation step pushes its branch through the
+          # GitHub App identity (claude-code-action handles auth), not the
+          # checkout's persisted GITHUB_TOKEN, so we can drop credential
+          # persistence here. Matches `check.yml`.
+          persist-credentials: false
+
+      # Mark the issue so a follow-up label edit doesn't re-enter.
+      - name: Mark in-progress
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['claude-implementing'],
+            });
+
+      - name: Run Claude implementation
+        uses: anthropics/claude-code-action@beta
+        with:
+          # See claude-composer-triage.yml for the auth caveat — the org-level
+          # ANTHROPIC_API_KEY is rejected; the repo's CLAUDE_CODE_OAUTH_TOKEN
+          # is the currently-working credential.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # `mode: tag` (default) — `agent` mode only accepts
+          # `workflow_dispatch`/`schedule` events. With `direct_prompt` set
+          # the tag-mode trigger check returns true unconditionally, so the
+          # workflow's own `if:` gate on the `needs-implementation` label is
+          # what filters which events reach this step.
+          max_turns: 15
+          # `direct_prompt` carries the implementation instructions. (HEAD of
+          # the action's repo renamed this to `prompt` — swap when @beta
+          # catches up.)
+          direct_prompt: |
+            This issue has been triaged as actionable. Implement a fix or
+            feature in a DRAFT pull request.
+
+            ## Steps
+
+            1. Read the issue body. Note the type/severity/area trailer and
+               (if present) the screenshot. The `area/<plugin-id>` label
+               tells you which package is most relevant — start there.
+            2. Read `CLAUDE.md` and the relevant package's `PLUGIN.mdl`
+               (if any) for conventions.
+            3. Reproduce the issue if it's a bug — write a failing test
+               first, then implement the fix.
+            4. For features, write the implementation plus a test or
+               storybook story exercising the new surface.
+            5. Run `moon run <package>:build` and `moon run <package>:lint
+               -- --fix` on every package you touch. The PR must build
+               clean before you open it.
+            6. Open a DRAFT pull request titled
+               `feat(<package>): <short summary>` or `fix(<package>): …`.
+               Body must reference the issue (`closes #<number>` or
+               `part of #<number>`).
+            7. Comment on the original issue with a link to the PR.
+
+            ## Guardrails
+
+            - Stop and post a comment if any of the following:
+              - The change would touch more than 3 packages.
+              - The change requires a breaking API change.
+              - You can't reproduce a reported bug after reasonable effort
+                (use the screenshot, version, and area hints).
+              - Tests fail in a way you can't immediately fix.
+            - Open the PR as DRAFT. A human will mark it ready for review.
+            - NEVER push to `main` directly.
+            - NEVER merge anything.
+            - Keep the PR description focused on what + why; let the test
+              plan describe how to verify.
+
+      # If Claude exited without opening a PR (ran out of turns, hit a
+      # guardrail, or errored), clear the implementing label so a human can
+      # retry by re-adding `needs-implementation`. Runs even on failure.
+      - name: Clear in-progress label
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'claude-implementing',
+              });
+            } catch (err) {
+              // Label may have been removed already; non-fatal.
+              core.info('claude-implementing label already absent');
+            }

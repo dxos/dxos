@@ -3,145 +3,214 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
-import { getSpace, type Space } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
-import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { type EntityId, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { type Magazine, Subscription } from '../types';
-import { dxnToObjectId, extractImageUrls, makeSnippet, stripHtml } from '../util';
-import { CurateMagazine } from './definitions';
+import { FeedOperation, Magazine, Subscription } from '../types';
+import { collectCandidates, partitionByKeepBound } from './util';
 
-/**
- * Returns the canonical space.db proxy for a Post by id, if it has been
- * registered there before; otherwise registers the supplied queue-side proxy
- * and returns it.
- *
- * Why this exists: `queue.queryObjects()` re-decodes from JSON on every call,
- * yielding a fresh proxy backed by a fresh `ObjectCore` whose
- * `core.database` link is unset. If the underlying object was previously
- * added to `space.db` (e.g. by a prior curate's `createRef` →
- * `database.add`), `space.db._objects` already maps that id to an OLDER
- * core. Letting the deep-mapper run `createRef` on the fresh queue proxy
- * then calls `database.add(freshCore)` → `addCore` → the
- * `!_objects.has(core.id)` invariant fires.
- *
- * Reusing the canonical proxy (its core has `core.database === space.db`,
- * so `addCore` returns early) sidesteps the invariant entirely. For a Post
- * being curated for the first time we still call `db.add` ourselves, which
- * is the safe path because the id is genuinely new.
- */
-const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promise<Subscription.Post> => {
-  const id = (post as { id: string }).id;
-  const existing = await db
-    .query(Filter.id(id))
-    .first()
-    .catch(() => undefined);
-  if (existing) {
-    return existing as Subscription.Post;
-  }
-
-  return db.add(post);
-};
-
-/**
- * Pure-additive curation logic, extracted from the operation handler so it can
- * be exercised directly from unit tests without an Operation runtime.
- *
- * For every uncurated candidate Post in the Magazine's referenced feeds,
- * derives a snippet and image from the Post's existing `description` (no HTTP fetch).
- * Appends each enriched Post's ref to `magazine.posts`.
- * Skips Posts with empty descriptions.
- *
- * The Magazine-level `keep` bound is enforced separately by the Clear button
- * (and the post-curate prune in `MagazineArticle.handleCurate`) so curate
- * stays purely additive — making it safe to re-run without pruning
- * previously-curated items the user may want to keep.
- */
-export const curateMagazine = async (space: Space, magazine: Magazine.Magazine): Promise<{ added: number }> => {
-  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
-  const added: Ref.Ref<Subscription.Post>[] = [];
-
-  for (const feedRef of magazine.feeds) {
-    const feed = await feedRef.load();
-    const echoFeed = feed.feed?.target;
-    if (!echoFeed) {
-      continue;
-    }
-    const feedDxn = Feed.getQueueDxn(echoFeed);
-    if (!feedDxn) {
-      continue;
-    }
-
-    const queue = space.queues.get(feedDxn);
-    const items = (await queue.queryObjects()) ?? [];
-
-    for (const item of items) {
-      if (!Obj.instanceOf(Subscription.Post, item)) {
-        continue;
-      }
-
-      const queuePost = item;
-      const postId = (queuePost as { id: string }).id;
-      if (seenIds.has(postId)) {
-        continue;
-      }
-
-      const source = queuePost.description ?? '';
-      // Snippet is rendered as plain text on the magazine tile, so strip HTML rather than
-      // converting to markdown — otherwise `**bold**` / `[link](url)` syntax leaks through.
-      const text = stripHtml(source);
-      if (!text) {
-        continue;
-      }
-      const snippet = makeSnippet(text);
-      const imageUrl = extractImageUrls(source)[0];
-
-      // Resolve to the canonical space.db proxy (or register if new) so
-      // the ref we hand to the deep-mapper has a working `core.database`
-      // link. Without this, a re-curate after Clear (or any path that
-      // re-encounters a post already in space.db via a fresh queue proxy)
-      // trips `addCore`'s `!_objects.has(core.id)` invariant.
-      const post = await reuseOrAdd(space.db, queuePost);
-
-      Obj.update(post, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
-        mutable.snippet = snippet;
-        if (imageUrl) {
-          mutable.imageUrl = imageUrl;
-        }
-      });
-      added.push(Ref.make(post));
-      seenIds.add(postId);
-    }
-  }
-
-  let appended = 0;
-  if (added.length > 0) {
-    Obj.update(magazine, (magazine) => {
-      const mutable = magazine as Obj.Mutable<typeof magazine>;
-      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
-      const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.dxn)));
-      if (fresh.length > 0) {
-        mutable.posts = [...mutable.posts, ...fresh];
-      }
-      appended = fresh.length;
-    });
-  }
-
-  return { added: appended };
-};
-
-const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pipe(
+export default FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());
-      const space = getSpace(magazine);
-      invariant(space, 'Space not found.');
-      return yield* Effect.promise(() => curateMagazine(space, magazine));
+
+      const validFeeds = yield* loadValidFeeds(magazine);
+      const synced = yield* syncFeeds(validFeeds);
+
+      // Select matching Posts via the agent (single-shot structured output), then add them mechanically.
+      const candidates = yield* collectCandidates(magazine);
+      const spaceId = Obj.getDatabase(magazine)?.spaceId;
+      const selectedEntries =
+        candidates.length > 0 && spaceId ? yield* selectPostIds(magazine, candidates, spaceId) : [];
+      const selected = resolveSelected(candidates, selectedEntries);
+
+      // Build the next posts list as a pure function of (existing curated + newly selected), bounded
+      // by the magazine's `keep`, then commit it in one update. collectCandidates already excludes
+      // posts already curated, so the additions are simply appended (resolveSelected deduped them).
+      const db = Obj.getDatabase(magazine);
+      const starredUri = db ? yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred')) : undefined;
+      const merged = [...magazine.posts, ...selected.map(({ post }) => Ref.make(post))];
+      const nextPosts = applyKeep(merged, magazine.keep ?? Subscription.DEFAULT_KEEP, starredUri);
+      const curated = selected.length;
+
+      const changed =
+        nextPosts.length !== magazine.posts.length ||
+        nextPosts.some((ref, index) => ref.uri !== magazine.posts[index]?.uri);
+      if (changed) {
+        Obj.update(magazine, (magazine) => {
+          magazine.posts = nextPosts;
+        });
+      }
+
+      // Write agent-generated snippet/imageUrl into per-post magazine state.
+      for (const { post, snippet, imageUrl } of selected) {
+        if (snippet || imageUrl) {
+          Magazine.patchPostState(magazine, post.id as EntityId, { snippet, imageUrl });
+        }
+      }
+
+      return { synced, curated };
     }),
   ),
+  Operation.opaqueHandler,
 );
 
-export default handler;
+// -- Schemas --
+
+/** Lightweight summary of a candidate Post handed to the curation agent. */
+const Candidate = Schema.Struct({
+  id: Obj.ID,
+  feedName: Schema.optional(Schema.String),
+  title: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  author: Schema.optional(Schema.String),
+  published: Schema.optional(Schema.String),
+  link: Schema.optional(Schema.String),
+});
+
+/** Input schema of the curation routine: the candidate Posts to choose from. */
+const CurationInput = Schema.Struct({
+  candidates: Schema.Array(Candidate),
+});
+
+/** Output schema of the curation routine: the selected Posts with agent-generated display values. */
+const CurationOutput = Schema.Struct({
+  posts: Schema.Array(
+    Schema.Struct({
+      id: Obj.ID,
+      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
+      snippet: Schema.optional(Schema.String),
+      /** Best image URL found for this article (from the post or fetched content). */
+      imageUrl: Schema.optional(Schema.String),
+    }),
+  ),
+});
+
+// -- Helpers --
+
+/** Bound on concurrent feed syncs. */
+const SYNC_CONCURRENCY = 8;
+
+/** Loads each referenced feed (and its backing ECHO feed), tolerating individual failures, keeping only syncable feeds. */
+const loadValidFeeds = (magazine: Magazine.Magazine) =>
+  Effect.forEach(magazine.feeds, (ref) =>
+    Effect.gen(function* () {
+      const feed = yield* Database.load(ref);
+      if (feed.feed) {
+        yield* Database.load(feed.feed); // Hydrate the backing ECHO feed.
+      }
+      return feed;
+    }).pipe(
+      Effect.tapError((error) => Effect.sync(() => log.catch(error))),
+      Effect.option,
+    ),
+  ).pipe(Effect.map((feeds) => feeds.flatMap(Option.toArray).filter((feed) => Boolean(feed.url))));
+
+/** Syncs all feeds in parallel, tolerating per-feed failures; resolves to the count synced successfully. */
+const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
+  Effect.forEach(
+    validFeeds,
+    (feed) =>
+      Operation.invoke(
+        FeedOperation.SyncFeed,
+        { feed: Ref.make(feed) },
+        { spaceId: Obj.getDatabase(feed)?.spaceId },
+      ).pipe(
+        Effect.as(true),
+        Effect.catchAll((error) => Effect.sync(() => (log.catch(error, { feedUrl: feed.url }), false))),
+      ),
+    { concurrency: SYNC_CONCURRENCY },
+  ).pipe(Effect.map((results) => results.filter(Boolean).length));
+
+/**
+ * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
+ * The base methodology blueprint is referenced by its registry DXN (no clone into the space); the
+ * Magazine's instructions Text carries only the topic. Tolerates agent/parse failures (logs → no selection).
+ */
+const selectPostIds = (
+  magazine: Magazine.Magazine,
+  candidates: ReadonlyArray<{ post: Subscription.Post; feed: Subscription.Subscription }>,
+  spaceId: SpaceId,
+) =>
+  Effect.gen(function* () {
+    const input = {
+      candidates: candidates.map(({ post, feed }) => ({
+        id: post.id,
+        feedName: feed.name,
+        title: post.title,
+        description: post.description,
+        author: post.author,
+        published: post.published,
+        link: post.link,
+      })),
+    };
+    const topic = (yield* Effect.promise(() => magazine.instructions.source.load())).content ?? '';
+    // Resolve the base methodology blueprint from the registry by its key and hold it by value. A
+    // bare `Ref.fromURI(registryURI(key))` is unhydrated — `Database.load` fails with EntityNotFoundError
+    // resolve it ("Resolver is not set") — so we resolve to the object and let `Ref.make` carry it.
+    const blueprint = yield* Blueprint.resolve(Magazine.BLUEPRINT_KEY).pipe(Effect.option);
+    const routine = Routine.make({
+      input: CurationInput,
+      output: CurationOutput,
+      instructions: topic,
+      blueprints: Option.toArray(blueprint).map((value) => Ref.make(value)),
+    });
+
+    return yield* Operation.invoke(AgentPrompt, { prompt: Ref.make(routine), input }, { spaceId }).pipe(
+      Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
+      Effect.map((output) => output.posts),
+      Effect.catchAll((error) =>
+        Effect.sync(() => {
+          log.warn('curation selection failed', { error });
+          return [] as readonly (typeof CurationOutput.Type.posts)[number][];
+        }),
+      ),
+    );
+  });
+
+type SelectedEntry = {
+  post: Subscription.Post;
+  snippet: string | undefined;
+  imageUrl: string | undefined;
+};
+
+/** Resolves the agent's selected entries back to candidate Posts, preserving order and dropping unknown/duplicate ids. */
+export const resolveSelected = (
+  candidates: ReadonlyArray<{ post: Subscription.Post }>,
+  entries: readonly { id: string; snippet?: string; imageUrl?: string }[],
+): SelectedEntry[] => {
+  const byId = new Map(candidates.map(({ post }) => [post.id, post]));
+  const seen = new Set<string>();
+  const selected: SelectedEntry[] = [];
+  for (const { id, snippet, imageUrl } of entries) {
+    const post = byId.get(id);
+    if (post && !seen.has(id)) {
+      seen.add(id);
+      selected.push({ post, snippet, imageUrl });
+    }
+  }
+  return selected;
+};
+
+/**
+ * Bounds a curated posts ref list to `keep` total (non-starred) posts: keeps all starred posts and
+ * unresolved refs, plus the `keep` newest non-starred by published date. Pure; returns the retained
+ * refs. Delegates the sort/slice/starred partition to {@link partitionByKeepBound}.
+ */
+export const applyKeep = (
+  posts: readonly Ref.Ref<Subscription.Post>[],
+  keep: number,
+  starredUri: string | undefined,
+): Ref.Ref<Subscription.Post>[] => {
+  const isStarred = (post: Subscription.Post) => Subscription.hasTag(post.source?.target, post.id, starredUri);
+  const resolved = posts.map((ref) => ref.target).filter((post): post is Subscription.Post => post !== undefined);
+  const unresolved = posts.filter((ref) => !ref.target);
+  const { kept } = partitionByKeepBound(resolved, keep, isStarred);
+  return [...kept.map((post) => Ref.make(post)), ...unresolved];
+};

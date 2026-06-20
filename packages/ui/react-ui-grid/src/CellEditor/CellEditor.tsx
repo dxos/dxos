@@ -132,11 +132,22 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
       extensions: [
         extensions ?? [],
         filterChars(/[\n\r]+/),
-        EditorView.focusChangeEffect.of((state, focusing) => {
-          if (!focusing) {
-            onBlur?.(state.doc.toString());
-          }
-          return null;
+        // Observe the underlying blur DOM event rather than `EditorView.focusChangeEffect`. The
+        // focus-change facet fires asynchronously (CodeMirror schedules it on a 10ms setTimeout),
+        // which means in React strict mode the destroy → blur of the first EditorView runs the
+        // callback after the second view has mounted — committing stale data and closing the
+        // editor on the user's first keystroke. Deferring via `queueMicrotask` runs the check
+        // *after* `view.destroy()` finishes its synchronous body (which calls `dom.remove()`),
+        // so `view.dom.isConnected === false` reliably distinguishes a programmatic teardown
+        // from a real user blur. Pass `undefined` on teardown so downstream handlers can consume
+        // any pending suppress-next-blur flag without committing stale data.
+        EditorView.domEventObservers({
+          blur: (_event, view) => {
+            const doc = view.state.doc.toString();
+            queueMicrotask(() => {
+              onBlur?.(view.dom.isConnected ? doc : undefined);
+            });
+          },
         }),
         createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({

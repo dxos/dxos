@@ -18,7 +18,7 @@ pnpm i @dxos/echo
 
 Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
 
-License: [MIT](./LICENSE) Copyright 2022 © DXOS
+License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2022 © DXOS
 
 ## API
 
@@ -31,7 +31,7 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | **SCHEMA API**                |
 | Define schema                 | `Type.Obj()`               | `Type.Relation()`          | `Ref.Ref()`    |
 | Any schema type               | `Type.AnyObj`              | `Type.Relation.Any`        | `Type.Ref.Any` |
-| Get DXN (of schema)           | `Type.getDXN(schema)`      | `Type.getDXN(schema)`      |                |
+| Get DXN (of schema)           | `Type.getURI(schema)`      | `Type.getURI(schema)`      |                |
 | Get typename (of schema)      | `Type.getTypename(schema)` | `Type.getTypename(schema)` |                |
 | Get type metadata (of schema) | `Type.getMeta(schema)`     | `Type.getMeta(schema)`     |                |
 | Is mutable schema             | `Type.isMutable(schema)`   | `Type.isMutable(schema)`   |                |
@@ -51,7 +51,7 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | Is deleted | `Obj.isDeleted(obj)` |
 
 ```ts
-Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
+Type.getURI(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 Type.getMeta(schema) == { typename: }
 Type.getTypename(schema) === 'type.example.type.person'
 Type.getVersion(schema) === '0.1.0'
@@ -59,12 +59,12 @@ Type.getVersion(schema) === '0.1.0'
 Obj.getDXN(obj) === DXN.parse('dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX')
 
 // We need this for objects that have typename defined, but their schema can't be resolved (Obj.getSchema(obj) === undefined)
-Obj.getTypeDXN(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
+Obj.getTypeURI(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 
 /**
  * @deprecated
  **/
-// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeDXN(obj)?.asTypeDXN()?.type`
+// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeURI(obj)?.asTypeDXN()?.type`
 Obj.getTypename(obj) === 'com.example.type.person'
 ```
 

@@ -4,13 +4,13 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
@@ -37,7 +37,7 @@ export type DebugSettingsProps = AppSurface.SettingsArticleProps<
 >;
 
 export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
@@ -65,7 +65,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = getPersonalSpace(client);
+      const personalSpace = AppSpace.getPersonalSpace(client);
       if (!personalSpace) {
         log.error('no personal space available for upload');
         return;
@@ -153,7 +153,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.Item title={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
@@ -209,13 +209,10 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
         {/* TODO(burdon): Move to layout? */}
         {toast && (
           <Toast.Root>
-            <Toast.Body>
-              <Toast.Title>
-                <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
-                <span>{toast.title}</span>
-              </Toast.Title>
-              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-            </Toast.Body>
+            <Toast.Title icon='ph--gift--duotone'>
+              <span>{toast.title}</span>
+            </Toast.Title>
+            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
           </Toast.Root>
         )}
 

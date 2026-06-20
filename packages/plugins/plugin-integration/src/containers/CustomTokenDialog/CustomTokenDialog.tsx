@@ -8,9 +8,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -43,13 +43,14 @@ export const CustomTokenDialog = ({
   providerLabel,
   existingTarget,
 }: CustomTokenDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invoke } = useOperationInvoker();
   const coordinator = useCapability(IntegrationCoordinator);
   const providers = useCapabilities(IntegrationProvider).flat();
   const provider = useMemo(() => providers.find((entry) => entry.id === providerId), [providers, providerId]);
   const credentialForm = provider?.credentialForm;
   const [error, setError] = useState<string>();
+  const [isPending, setIsPending] = useState(false);
 
   const handleSave = useCallback(
     (values: unknown) => {
@@ -58,23 +59,33 @@ export const CustomTokenDialog = ({
         return;
       }
       setError(undefined);
-      void runAndForwardErrors(
-        Effect.gen(function* () {
-          // Close the dialog before re-entering the coordinator so OAuth
-          // popups / new tabs aren't blocked by a stacked layout op.
-          yield* invoke(LayoutOperation.UpdateDialog, { state: false });
-          yield* coordinator.submitCredentialForm({ db, spaceId, providerId, values, existingTarget });
-        }).pipe(
+      setIsPending(true);
+
+      const validationEffect = credentialForm?.onValidate
+        ? credentialForm.onValidate({ values: values as never, provider })
+        : Effect.void;
+
+      void EffectEx.runAndForwardErrors(
+        validationEffect.pipe(
+          Effect.andThen(
+            Effect.gen(function* () {
+              // Close the dialog before re-entering the coordinator so OAuth
+              // popups / new tabs aren't blocked by a stacked layout op.
+              yield* invoke(LayoutOperation.UpdateDialog, { state: false });
+              yield* coordinator.submitCredentialForm({ db, spaceId, providerId, values, existingTarget });
+            }),
+          ),
           Effect.catchAll((failure) =>
             Effect.sync(() => {
               log.catch(failure);
               setError(String(failure instanceof Error ? failure.message : failure));
+              setIsPending(false);
             }),
           ),
         ),
       );
     },
-    [coordinator, db, spaceId, providerId, provider, invoke, existingTarget],
+    [coordinator, credentialForm, db, spaceId, providerId, provider, invoke, existingTarget],
   );
 
   if (!credentialForm) {
@@ -83,7 +94,7 @@ export const CustomTokenDialog = ({
         <Dialog.Header>
           <Dialog.Title>{providerLabel ?? providerId}</Dialog.Title>
           <Dialog.Close asChild>
-            <Dialog.CloseIconButton />
+            <Dialog.ActionIconButton action='close' />
           </Dialog.Close>
         </Dialog.Header>
         <Dialog.Body>
@@ -106,7 +117,7 @@ export const CustomTokenDialog = ({
       <Dialog.Header>
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
@@ -116,12 +127,12 @@ export const CustomTokenDialog = ({
           defaultValues={credentialForm.defaultValues ?? {}}
           onSave={handleSave}
         >
-          <Form.Viewport>
+          <Column.Center>
             <Form.Content>
               <Form.FieldSet />
-              <Form.Submit />
+              <Form.Submit disabled={isPending ? true : undefined} />
             </Form.Content>
-          </Form.Viewport>
+          </Column.Center>
         </Form.Root>
         {error && <p className='text-error'>{error}</p>}
       </Dialog.Body>

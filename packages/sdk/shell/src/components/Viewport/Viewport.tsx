@@ -77,7 +77,7 @@ type ViewportViewsProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'ch
 const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) => {
   const size = { inlineSize: `${Math.ceil(children.length) * 100}%` };
   return (
-    <div role='none' style={size} {...props} className={mx('flex', classNames)}>
+    <div style={size} {...props} className={mx('flex', classNames)}>
       {children}
     </div>
   );

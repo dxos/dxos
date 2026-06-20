@@ -22,10 +22,13 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/test-utils"
@@ -38,9 +41,6 @@
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"

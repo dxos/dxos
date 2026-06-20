@@ -1,6 +1,6 @@
 {
   "name": "@dxos/edge-client",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "EDGE Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
@@ -18,10 +18,20 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./cors-proxy": {
+      "source": "./src/cors-proxy.ts",
+      "types": "./dist/types/src/cors-proxy.d.ts",
+      "default": "./dist/lib/neutral/cors-proxy.mjs"
+    },
     "./muxer": {
       "source": "./src/edge-ws-muxer.ts",
       "types": "./dist/types/src/edge-ws-muxer.d.ts",
       "default": "./dist/lib/neutral/edge-ws-muxer.mjs"
+    },
+    "./service": {
+      "source": "./src/service/index.ts",
+      "types": "./dist/types/src/service/index.d.ts",
+      "default": "./dist/lib/neutral/service/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -40,15 +50,14 @@
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
     "@opentelemetry/api": "catalog:",

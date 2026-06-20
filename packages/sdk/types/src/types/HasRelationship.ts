@@ -6,24 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 import * as Person from './Person';
-
-/** @deprecated Use HasRelationship instead. */
-export const LegacyHasRelationship = Schema.Struct({
-  id: Obj.ID,
-  kind: Schema.String,
-}).pipe(
-  Type.relation({
-    typename: 'org.dxos.relation.has-relationship',
-    version: '0.1.0',
-    source: Person.Person,
-    target: Person.Person,
-  }),
-);
-
-export interface LegacyHasRelationship extends Schema.Schema.Type<typeof LegacyHasRelationship> {}
 
 export const HasRelationship = Schema.Struct({
   id: Obj.ID,
@@ -32,18 +17,16 @@ export const HasRelationship = Schema.Struct({
     examples: ['friend', 'colleague', 'family', 'parent', 'spouse'],
   }),
 })
+  .annotations({
+    description: 'A relationship between two people.',
+  })
   .pipe(
-    Type.relation({
-      typename: 'org.dxos.relation.hasRelationship',
-      version: '0.1.0',
+    Type.makeRelation({
+      dxn: DXN.make('org.dxos.relation.hasRelationship', '0.1.0'),
       source: Person.Person,
       target: Person.Person,
     }),
-  )
-  .annotations({
-    description: 'A relationship between two people.',
-  });
+  );
 
-export interface HasRelationship extends Schema.Schema.Type<typeof HasRelationship> {}
-
+export type HasRelationship = Type.InstanceType<typeof HasRelationship>;
 export const make = (props: Relation.MakeProps<typeof HasRelationship>) => Relation.make(HasRelationship, props);

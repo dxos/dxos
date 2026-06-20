@@ -19,7 +19,7 @@ type DefaultStoryProps = {
 const DefaultStory = ({ tooltips, defaultOpen }: DefaultStoryProps) => {
   return (
     <Tooltip.Provider defaultOpen={defaultOpen}>
-      <div role='none' className='w-32'>
+      <div className='w-32'>
         {tooltips.map(({ label, content }, i) => (
           <Tooltip.Trigger asChild key={i} content={content} side='right'>
             <Button classNames='block w-full'>{label}</Button>
@@ -50,9 +50,6 @@ export const Default: Story = {
       },
     ],
   },
-  parameters: {
-    chromatic: { delay: 500 },
-  },
 };
 
 export const DefaultOpen: Story = {
@@ -64,9 +61,6 @@ export const DefaultOpen: Story = {
         content: 'This is the tooltip content',
       },
     ],
-  },
-  parameters: {
-    chromatic: { delay: 500 },
   },
 };
 
@@ -80,8 +74,5 @@ export const StressTest: Story = {
       }),
       { count: 32 },
     ),
-  },
-  parameters: {
-    chromatic: { disableSnapshot: true },
   },
 };

@@ -6,15 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { Annotation } from '@dxos/echo';
-import {
-  Format,
-  FormatAnnotation,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
+import { DXN, Annotation, Format, Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [
@@ -84,18 +79,11 @@ export const Organization = OrganizationSchema.pipe(
   ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--building-office--regular',
-    hue: 'neutral',
-  }),
-  Type.object({
-    typename: 'org.dxos.type.organization',
-    version: '0.1.0',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
+  Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );
 
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
-
+export type Organization = Type.InstanceType<typeof Organization>;
 export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
 
 // TODO(wittjosiah): Remove to move location into base schema.
@@ -103,12 +91,6 @@ export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) =>
 export const LegacyOrganization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--building-office--regular',
-    hue: 'neutral',
-  }),
-  Type.object({
-    typename: 'org.dxos.type.organization',
-    version: '0.1.0',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
+  Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );

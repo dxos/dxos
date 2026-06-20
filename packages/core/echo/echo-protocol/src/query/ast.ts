@@ -5,13 +5,14 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
-  description: 'DXN or null; null matches any type',
-});
+// Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
+// Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
+// matches any type.
+const TypenameSpecifier = Schema.Union(URI.Schema, Schema.Null);
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
@@ -26,7 +27,7 @@ const FilterObject_ = Schema.Struct({
 
   typename: TypenameSpecifier,
 
-  id: Schema.optional(Schema.Array(ObjectId)),
+  id: Schema.optional(Schema.Array(EntityId)),
 
   /**
    * Filter by property.
@@ -41,6 +42,17 @@ const FilterObject_ = Schema.Struct({
    * Objects that have any of the given foreign keys.
    */
   foreignKeys: Schema.optional(Schema.Array(ForeignKey)),
+
+  /**
+   * Match objects whose meta `key` equals this fully-qualified registry key (FQN format).
+   */
+  metaKey: Schema.optional(Schema.String),
+
+  /**
+   * Semver range matched against the object's meta `version`.
+   * Only consulted when {@link metaKey} is set. Objects with no `version` do not satisfy a version-constrained filter.
+   */
+  metaVersion: Schema.optional(Schema.String),
 
   // NOTE: Make sure to update `FilterStep.isNoop` if you change this.
 });
@@ -173,7 +185,7 @@ export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 const FilterChildOf_ = Schema.Struct({
   type: Schema.Literal('child-of'),
   /** Parent DXNs to match children of. */
-  parents: Schema.Array(DXN.Schema),
+  parents: Schema.Array(EID.Schema),
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive: Schema.Boolean,
 });
@@ -344,6 +356,12 @@ const Order_ = Schema.Union(
     kind: Schema.Literal('rank'),
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by system timestamp (createdAt / updatedAt) from the object meta index.
+    kind: Schema.Literal('timestamp'),
+    field: Schema.Literal('createdAt', 'updatedAt'),
+    direction: OrderDirection,
+  }),
 );
 
 export type Order = Schema.Schema.Type<typeof Order_>;
@@ -391,7 +409,7 @@ export const QueryFromClause_ = Schema.Struct({
   query: Schema.suspend(() => Query),
   from: Schema.Union(
     Schema.TaggedStruct('scope', {
-      scope: Schema.suspend(() => Scope),
+      scopes: Schema.Array(Schema.suspend(() => Scope)),
     }),
     Schema.TaggedStruct('query', {
       query: Schema.suspend(() => Query),
@@ -435,29 +453,45 @@ export const QueryOptions = Schema.Struct({
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 /**
- * Specifies the scope of the data to query from.
+ * Selects from a space (automerge documents).
+ * When `spaceId` is omitted, targets the owning space — i.e. the space of whichever
+ * database executes the query. This lets callers reference "this space" without
+ * having to look up its id.
+ * When `includeAllFeeds` is true, also selects from all feeds belonging to that space.
  */
-export const Scope = Schema.Struct({
-  /**
-   * The nested select statemets will select from the given spaces.
-   *
-   * NOTE: Spaces and queues are unioned together if both are specified.
-   */
-  spaceIds: Schema.optional(Schema.Array(Schema.String)),
-
-  /**
-   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
-   */
-  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
-
-  /**
-   * The nested select statemets will select from the given queues.
-   *
-   * NOTE: Spaces and queues are unioned together if both are specified.
-   */
-  queues: Schema.optional(Schema.Array(DXN.Schema)),
+export const SpaceScope = Schema.TaggedStruct('space', {
+  spaceId: Schema.optional(Schema.String),
+  includeAllFeeds: Schema.optional(Schema.Boolean),
 });
-export interface Scope extends Schema.Schema.Type<typeof Scope> {}
+export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
+
+/**
+ * Selects from a specific feed (by its underlying queue DXN).
+ */
+export const FeedScope = Schema.TaggedStruct('feed', {
+  feedUri: Schema.String,
+});
+export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
+
+/**
+ * Selects from a code-shipped object registry.
+ *
+ * - `'local'`  — the in-process registry attached to the hypergraph.
+ * - `'remote'` — a future remote registry service (not yet implemented).
+ *
+ * To include both, add two separate `RegistryScope` entries to the `scopes` array.
+ */
+export const RegistryScope = Schema.TaggedStruct('registry', {
+  location: Schema.Literal('local', 'remote'),
+});
+export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> {}
+
+/**
+ * Specifies the scope of the data to query from.
+ * A `from` clause may carry multiple scopes; results are unioned across them.
+ */
+export const Scope = Schema.Union(SpaceScope, FeedScope, RegistryScope);
+export type Scope = Schema.Schema.Type<typeof Scope>;
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {
   visitor(query);

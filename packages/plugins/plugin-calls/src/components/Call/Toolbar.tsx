@@ -1,0 +1,204 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { useAtomValue } from '@effect-atom/atom-react';
+import React from 'react';
+
+import { useCapability } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { Node, useActionRunner } from '@dxos/plugin-graph';
+import { useActions, useNode } from '@dxos/plugin-graph';
+import {
+  Icon,
+  IconButton,
+  type IconButtonProps,
+  Toolbar as NaturalToolbar,
+  type ThemedClassName,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
+import { type Channel } from '@dxos/types';
+import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
+
+import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
+
+export type ToolbarProps = ThemedClassName<{
+  channel?: Channel.Channel;
+  participants?: number;
+  autoHideControls?: boolean;
+  isInRoom?: boolean;
+  onJoin?: () => void;
+  onLeave?: () => void;
+}>;
+
+// TODO(wittjosiah): Use ToolbarMenu.
+export const Toolbar = ({
+  classNames,
+  channel,
+  participants,
+  autoHideControls = true,
+  isInRoom,
+  onJoin,
+  onLeave,
+}: ToolbarProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
+  const call = useCapability(CallsCapabilities.Manager);
+  const audioEnabled = useAtomValue(call.audioEnabledAtom);
+  const videoEnabled = useAtomValue(call.videoEnabledAtom);
+  const isScreensharing = useAtomValue(call.screensharingAtom);
+  const joined = useAtomValue(call.joinedAtom);
+  const raisedHand = useAtomValue(call.raisedHandAtom);
+  // Room-scoped membership, not the global session: when joined to a *different* room this toolbar
+  // must still offer "join". Callers pass `isInRoom`; fall back to global joined when unset.
+  const inRoom = isInRoom ?? joined;
+
+  // Channel app graph node.
+  const node = useNode(graph, channel && Obj.getURI(channel));
+  const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
+
+  // Screen sharing.
+  const canSharescreen =
+    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
+
+  // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
+  return (
+    <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
+      <NaturalToolbar.Root classNames={['p-2 bg-modal-surface rounded-md shadow-md', classNames]}>
+        <ToggleButton
+          active={audioEnabled}
+          state={{
+            on: {
+              icon: 'ph--microphone--regular',
+              label: t('mic-off.button'),
+              onClick: () => call.turnAudioOff(),
+              classNames: 'bg-call-active',
+            },
+            off: {
+              icon: 'ph--microphone-slash--duotone',
+              label: t('mic-on.button'),
+              onClick: () => call.turnAudioOn(),
+            },
+          }}
+        />
+        <ToggleButton
+          active={videoEnabled}
+          state={{
+            on: {
+              icon: 'ph--video-camera--regular',
+              label: t('camera-off.button'),
+              onClick: () => call.turnVideoOff(),
+            },
+            off: {
+              icon: 'ph--video-camera-slash--duotone',
+              label: t('camera-on.button'),
+              onClick: () => call.turnVideoOn(),
+            },
+          }}
+        />
+
+        {(participants !== undefined && (
+          <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
+            <Icon icon='ph--users--regular' />
+            <div>{participants}</div>
+          </div>
+        )) || <NaturalToolbar.Separator variant='gap' />}
+
+        {inRoom && (
+          <>
+            <ToggleButton
+              disabled={!canSharescreen}
+              active={isScreensharing}
+              state={{
+                on: {
+                  icon: 'ph--monitor--regular',
+                  label: t('screenshare-off.button'),
+                  onClick: () => call.turnScreenshareOff(),
+                },
+                off: {
+                  icon: 'ph--monitor-arrow-up--duotone',
+                  label: t('screenshare-on.button'),
+                  onClick: () => call.turnScreenshareOn(),
+                },
+              }}
+            />
+
+            {/* Companion actions. */}
+            {actions
+              .filter((action): action is Node.Action => Node.isAction(action))
+              .map((action) => (
+                <IconButton
+                  key={action.id}
+                  {...defaultButtonProps}
+                  icon={action.properties.icon}
+                  label={toLocalizedString(action.properties.label, t)}
+                  classNames={action.properties.classNames}
+                  onClick={() => node && void runAction(action, { parent: node })}
+                />
+              ))}
+
+            <ToggleButton
+              active={raisedHand}
+              state={{
+                on: {
+                  icon: 'ph--hand-waving--regular',
+                  label: t('lower-hand.button'),
+                  onClick: () => call.setRaisedHand(false),
+                },
+                off: {
+                  icon: 'ph--hand-palm--duotone',
+                  label: t('raise-hand.button'),
+                  onClick: () => call.setRaisedHand(true),
+                },
+              }}
+            />
+          </>
+        )}
+        {inRoom ? (
+          <IconButton
+            variant='destructive'
+            icon='ph--phone-x--regular'
+            label={t('leave-call.button')}
+            onClick={onLeave}
+          />
+        ) : (
+          <IconButton
+            variant='primary'
+            icon='ph--phone-incoming--regular'
+            label={t('join-call.button')}
+            onClick={onJoin}
+          />
+        )}
+      </NaturalToolbar.Root>
+    </div>
+  );
+};
+
+Toolbar.displayName = 'MeetingToolbar';
+
+type ToolbarButtonProps = Pick<IconButtonProps, 'disabled'> & {
+  active?: boolean;
+  state: {
+    on: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    off: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+  };
+};
+
+const defaultButtonProps: Partial<IconButtonProps> = {
+  size: 5,
+  iconOnly: true,
+};
+
+const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
+  <IconButton
+    {...defaultButtonProps}
+    classNames={[active ? (state.on.classNames ?? 'bg-call-active') : state.off.classNames]}
+    icon={active ? state.on.icon : state.off.icon}
+    label={active ? state.on.label : state.off.label}
+    onClick={active ? state.on.onClick : state.off.onClick}
+  />
+);

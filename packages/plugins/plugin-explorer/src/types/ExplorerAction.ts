@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
+import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 
 export const GraphProps = Schema.Struct({
   name: Schema.optional(Schema.String),

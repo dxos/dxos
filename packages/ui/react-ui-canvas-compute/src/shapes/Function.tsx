@@ -8,9 +8,10 @@ import React, { useCallback, useRef } from 'react';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
+import { Filter, Ref } from '@dxos/echo';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
+import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
-import { Filter, parseId } from '@dxos/react-client/echo';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -61,7 +62,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       }
 
       const space = client.spaces.get(spaceId);
-      const object = space?.db.getObjectById(objectId);
+      const object = space?.db.query(Filter.id(objectId)).runSync()[0];
       if (!space || !isInstanceOf(Script.Script, object)) {
         return;
       }
@@ -73,8 +74,8 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       node.value = value;
       node.function = Ref.make(fn);
-      node.inputSchema = fn.inputSchema ? getSnapshot(fn.inputSchema) : undefined;
-      node.outputSchema = fn.outputSchema ? getSnapshot(fn.outputSchema) : undefined;
+      node.inputSchema = fn.inputSchema;
+      node.outputSchema = fn.outputSchema;
     },
     [client, node],
   );

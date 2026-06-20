@@ -146,6 +146,8 @@ message RecoverIdentityRequest {
     string recovery_code = 1;
     ExternalSignature external = 2;
     string token = 3;
+    /// One-time proof minted by edge kms-service after a successful OAuth recovery flow.
+    string recovery_proof = 4;
   }
 }
 
@@ -467,6 +469,8 @@ message ExportSpaceResponse {
 
 message ImportSpaceRequest {
   SpaceArchive archive = 1;
+  /// Immutable tags to set on the imported space at creation time.
+  repeated string tags = 2;
 }
 
 message ImportSpaceResponse {

@@ -19,11 +19,11 @@ export type ScriptPluginSettingsProps = AppSurface.SettingsArticleProps<
 >;
 
 export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticate }: ScriptPluginSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         {/* TODO(wittjosiah): Hide outside of dev environments. */}
         <SettingsForm.Item title={t('authenticate-action.label')} description={t('authenticate-action.description')}>
           <Button disabled={!onSettingsChange} onClick={onAuthenticate}>

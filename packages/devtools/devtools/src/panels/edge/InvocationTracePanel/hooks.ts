@@ -2,18 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { Script, Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { InvocationOutcome } from '@dxos/functions-runtime';
-import { type InvocationTraceEvent } from '@dxos/functions-runtime';
-import { createInvocationSpans } from '@dxos/functions-runtime';
-import { type DXN } from '@dxos/keys';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { type InvocationSpan } from '@dxos/functions-runtime';
+import { type URI } from '@dxos/keys';
+import { useQuery } from '@dxos/react-client/echo';
 
-import { getUuidFromDxn } from './utils';
+import { getUuidFromDXN } from './utils';
 
 /**
  * Maps invocation target identifiers to readable script names.
@@ -22,11 +20,11 @@ export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
   const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return useCallback(
-    (invocationTargetId: DXN | undefined) => {
+    (invocationTargetId: URI.URI | undefined) => {
       if (!invocationTargetId) {
         return undefined;
       }
-      const uuidPart = getUuidFromDxn(invocationTargetId);
+      const uuidPart = getUuidFromDXN(invocationTargetId);
 
       const matchingFunction = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart);
       return matchingFunction?.name;
@@ -52,36 +50,7 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
-  const functionsForScript = useInvocationTargetsForScript(target);
-  const invocationsQueue = useQueue<InvocationTraceEvent>(queueDxn, {
-    pollInterval: 1000,
-  });
-  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.objects), [invocationsQueue?.objects]);
-  const scopedInvocationSpans = useMemo(() => {
-    if (functionsForScript) {
-      return invocationSpans.filter((span) => {
-        if (!span.invocationTarget) {
-          return false;
-        }
-        const targetId = span.invocationTarget.dxn;
-        const uuidPart = getUuidFromDxn(targetId);
-        return uuidPart ? functionsForScript?.has(uuidPart) : false;
-      });
-    } else if (target) {
-      return invocationSpans.filter((span) => span.invocationTarget?.dxn.toString() === Obj.getDXN(target).toString());
-    }
-    return invocationSpans;
-  }, [functionsForScript, target, invocationSpans]);
-
-  // If there are any pending spans, update the current time every second.
-  const [_, update] = useState({});
-  useEffect(() => {
-    if (scopedInvocationSpans.some((span) => span.outcome === InvocationOutcome.PENDING)) {
-      const interval = setInterval(() => update({}), 1_000);
-      return () => clearInterval(interval);
-    }
-  }, [scopedInvocationSpans]);
-
-  return scopedInvocationSpans;
-};
+// TODO(dmaretskyi): Per-invocation trace event feeds are deprecated and no
+// longer functional; this hook returns an empty span list until a replacement
+// tracing data structure lands.
+export const useInvocationSpans = (_args: { feedDXN?: URI.URI; target?: Obj.Unknown }): InvocationSpan[] => [];

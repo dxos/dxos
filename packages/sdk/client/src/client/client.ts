@@ -20,7 +20,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient } from '@dxos/echo-db';
+import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -51,20 +51,24 @@ import { ClientRuntime } from './client-runtime';
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
+
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
+
   /** ECHO schema. */
   types?: Type.AnyEntity[];
+
   /** Shell path. */
   shell?: string;
+
+  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
+  sqlitePath?: string;
+
   /** Create client worker. */
   createWorker?: () => SharedWorker;
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
-
-  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
-  sqlitePath?: string;
 };
 
 /**
@@ -144,7 +148,7 @@ export class Client {
     // TODO(wittjosiah): This is ill-advised.
     //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
     //   Moving this to `initialize` causes issues with re-initialization.
-    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    this._echoClient.graph.registry.add([SpaceProperties]);
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
@@ -260,10 +264,7 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
-    if (exists.length > 0) {
-      await this._echoClient.graph.schemaRegistry.register(exists);
-    }
+    this._echoClient.graph.registry.add(types);
   }
 
   /**
@@ -356,6 +357,7 @@ export class Client {
       return this;
     }
 
+    performance.mark('client.initialize:called');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
@@ -374,13 +376,13 @@ export class Client {
           : Runtime.Client.ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
-        // - FILE when a sqlitePath was supplied (Node/Bun CLI)
+        // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
         // - MEMORY otherwise
         const sqliteMode = clientCfg?.storage?.sqliteMode
           ? undefined
           : this._options.createOpfsWorker
             ? Runtime.Client.Storage.SqliteMode.OPFS
-            : this._options.sqlitePath
+            : this._options.sqlitePath || clientCfg?.storage?.dataRoot
               ? Runtime.Client.Storage.SqliteMode.FILE
               : Runtime.Client.Storage.SqliteMode.MEMORY;
         this._config = new Config(
@@ -422,6 +424,8 @@ export class Client {
     }
 
     this._initialized = true;
+    performance.mark('client.initialize:completed');
+    performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
     return this;
   }

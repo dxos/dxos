@@ -10,20 +10,21 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { trim } from '@dxos/util';
 
-import { Summarize } from './definitions';
+import { TranscriptOperation } from '../types';
 
 /**
  * Summarize a transcript of a meeting.
  */
-const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
+const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = TranscriptOperation.Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         }).run({
           prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
@@ -48,7 +49,7 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-sonnet-4-0'),
+          AiService.model('ai.claude.model.claude-sonnet-4-6'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
@@ -58,7 +59,7 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          registryLayerNoop,
         ),
       ),
     ),

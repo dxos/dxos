@@ -49,7 +49,7 @@ export const ProgressBar = ({
 
   return (
     <AnimatePresence>
-      <div role='none' className={mx('flex items-center w-full h-[32px] overflow-hidden', classNames)} ref={ref}>
+      <div className={mx('flex items-center w-full h-[32px] overflow-hidden', classNames)} ref={ref}>
         <div className='flex'>
           {visibleNodes?.map((node, i) => (
             <Node

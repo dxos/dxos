@@ -8,8 +8,8 @@ import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
 import { ThemedClassName } from '@dxos/ui-types';
 
-import { Column } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
+import { Column } from '../Column';
 import { Input } from '../Input';
 import { ScrollArea } from './ScrollArea';
 
@@ -48,11 +48,7 @@ const Row = ({ items = 50 }: { items?: number }) => (
 );
 
 const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  return (
-    <div role='none' className={mx('border border-separator rounded-md overflow-hidden', classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx('border border-separator rounded-md overflow-hidden', classNames)}>{children}</div>;
 };
 
 export const Vertical = {

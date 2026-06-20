@@ -14,14 +14,15 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { composableProps, type DialogSize, osTranslations, slottable } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
-import { type ThemedClassName } from '../../util';
+import { ElevationProvider } from '../../primitives';
+import { type DialogSize } from '../../theme';
+import { type ThemedClassName, composableProps, slottable } from '../../util';
 import { IconButton } from '../Button';
-import { ElevationProvider } from '../ElevationProvider';
+import { Column } from '../Column';
 
 //
 // Root
@@ -40,13 +41,15 @@ const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   </ElevationProvider>
 );
 
+DialogRoot.displayName = 'Dialog.Root';
+
 //
 // Trigger
 //
 
 type DialogTriggerProps = DialogPrimitive.DialogTriggerProps;
 
-const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogPrimitive.Trigger;
+const DialogTrigger = DialogPrimitive.Trigger;
 
 //
 // Portal
@@ -54,13 +57,13 @@ const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogPrimitive.Tri
 
 type DialogPortalProps = DialogPrimitive.DialogPortalProps;
 
-const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPrimitive.Portal;
+const DialogPortal = DialogPrimitive.Portal;
 
 //
 // Overlay
 //
 
-const DIALOG_OVERLAY_NAME = 'DialogOverlay';
+const DIALOG_OVERLAY_NAME = 'Dialog.Overlay';
 
 type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 
@@ -96,7 +99,7 @@ DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 // Content
 //
 
-const DIALOG_CONTENT_NAME = 'DialogContent';
+const DIALOG_CONTENT_NAME = 'Dialog.Content';
 
 type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> & {
   size?: DialogSize;
@@ -151,20 +154,35 @@ const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props },
   );
 });
 
+DialogHeader.displayName = 'Dialog.Header';
+
 //
-// CloseIconButton
+// ActionIconButton
 //
 
-type DialogCloseIconButtonProps = { label?: string };
+type DialogActionIconButtonAction = 'close' | 'delete';
 
-const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>(
-  ({ label, ...props }, forwardedRef) => {
+type DialogActionIconButtonProps = { action: DialogActionIconButtonAction; label?: string };
+
+const DIALOG_ACTION_ICONS: Record<DialogActionIconButtonAction, string> = {
+  close: 'ph--x--regular',
+  delete: 'ph--trash--regular',
+};
+
+const DIALOG_ACTION_LABEL_KEYS: Record<DialogActionIconButtonAction, string> = {
+  // Preserves the legacy `close-dialog.label` translation key for backward compat.
+  close: 'close-dialog.label',
+  delete: 'toolbar-delete.label',
+};
+
+const DialogActionIconButton = forwardRef<HTMLButtonElement, DialogActionIconButtonProps>(
+  ({ action, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(osTranslations);
     return (
       <IconButton
         {...props}
-        label={label ?? t('close-dialog.label')}
-        icon='ph--x--regular'
+        label={label ?? t(DIALOG_ACTION_LABEL_KEYS[action])}
+        icon={DIALOG_ACTION_ICONS[action]}
         iconOnly
         size={4}
         variant='ghost'
@@ -173,6 +191,8 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
     );
   },
 );
+
+DialogActionIconButton.displayName = 'Dialog.ActionIconButton';
 
 //
 // Body
@@ -191,6 +211,8 @@ const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, f
   );
 });
 
+DialogBody.displayName = 'Dialog.Body';
+
 //
 // Title
 //
@@ -205,6 +227,8 @@ const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
     );
   },
 );
+
+DialogTitle.displayName = 'Dialog.Title';
 
 //
 // Description
@@ -225,6 +249,8 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
   },
 );
 
+DialogDescription.displayName = 'Dialog.Description';
+
 //
 // ActionBar
 //
@@ -242,13 +268,15 @@ const DialogActionBar = slottable<HTMLDivElement>(({ children, asChild, ...props
   );
 });
 
+DialogActionBar.displayName = 'Dialog.ActionBar';
+
 //
 // Close
 //
 
 type DialogCloseProps = DialogPrimitive.DialogCloseProps;
 
-const DialogClose: FunctionComponent<DialogCloseProps> = DialogPrimitive.Close;
+const DialogClose = DialogPrimitive.Close;
 
 //
 // Dialog
@@ -266,7 +294,7 @@ export const Dialog = {
   Description: DialogDescription,
   ActionBar: DialogActionBar,
   Close: DialogClose,
-  CloseIconButton: DialogCloseIconButton,
+  ActionIconButton: DialogActionIconButton,
 };
 
 export type {
@@ -281,5 +309,6 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
-  DialogCloseIconButtonProps,
+  DialogActionIconButtonAction,
+  DialogActionIconButtonProps,
 };

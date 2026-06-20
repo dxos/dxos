@@ -195,7 +195,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
       className={mx(
         'group w-full items-center cursor-pointer bg-hover-surface',
         // TODO(burdon): Use data-active.
-        selected?.[id] && 'bg-active-surface',
+        selected?.[id] && 'bg-current-surface',
         className,
       )}
       onClick={() => selected && onChangeSelected?.(id, !selected[id])}
@@ -220,7 +220,7 @@ export const TreeNode = (props: TreeNodeProps & { ancestors?: TreeNodeData[] }) 
   const { root, header } = getSlots?.(props.node, open?.[id] ?? false, depth, ancestors) ?? {};
 
   return (
-    <div role='none' className={mx('flex flex-col', root)}>
+    <div className={mx('flex flex-col', root)}>
       <TreeNodeRow {...props} className={header} />
       {(children?.length ?? 0) > 0 && open?.[id] && <TreeChildNodes {...props} ancestors={ancestors} />}
     </div>

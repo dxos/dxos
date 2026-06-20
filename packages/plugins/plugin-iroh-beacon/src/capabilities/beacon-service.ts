@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Capabilities } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { meta } from '#meta';
 
@@ -15,7 +15,7 @@ import { BroadcastChannelTransport } from '../transport/broadcast-channel-transp
 import { type BeaconState } from '../types';
 
 export namespace BeaconCapabilities {
-  export const State = Capability.make<Atom.Atom<BeaconState>>(`${meta.id}.capability.state`);
+  export const State = Capability.make<Atom.Atom<BeaconState>>(`${meta.profile.key}.capability.state`);
 }
 
 const INITIAL_STATE: BeaconState = {

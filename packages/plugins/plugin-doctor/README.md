@@ -14,4 +14,4 @@ The tool is read-only and never writes back to the log store.
 - [Developer Documentation](https://docs.dxos.org)
 - Talk to us on [Discord](https://dxos.org/discord)
 
-License: [MIT](./LICENSE) Copyright 2026 © DXOS
+License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2026 © DXOS

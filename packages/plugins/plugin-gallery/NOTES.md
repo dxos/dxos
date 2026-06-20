@@ -76,7 +76,7 @@ asChild` cleanly.
   `AppCapabilities.FileUploader` capability + a hidden `<input type="file">`,
   returns `{ open, enabled, input }`. Drop-in for any container offering an
   "Add file" affordance. (Currently lives in `plugin-gallery/src/hooks/`;
-  candidate to promote to `app-toolkit` or a new `plugin-files-ui`.)
+  candidate to promote to `app-toolkit` or a `plugin-file-ui` helper package.)
 - `useImageUrl(url, type?)` — resolves `wnfs://` URLs to blob URLs via
   `WnfsCapabilities.Blockstore` / `Instances`; passes `http(s)://` through.
   Depends on `@dxos/plugin-wnfs/helpers` (added as a public export).
@@ -89,7 +89,7 @@ asChild` cleanly.
 ## Aspect-ratio image rendering inside Card.Root
 
 - `Card.Root` is a grid (icon | title | menu). A bare `<img>` lands in a
-  single column. Wrap with `<div role='none' className='col-span-full'>`
+  single column. Wrap with `<div className='col-span-full'>`
   to span the full card width — same trick `Card.Poster` uses.
 - For aspect-driven masonry tiles, render `<img class="block w-full h-auto"
 width={W} height={H} style={{ aspectRatio: W / H }}>`. Set width/height

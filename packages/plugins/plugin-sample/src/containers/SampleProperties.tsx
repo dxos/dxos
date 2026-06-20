@@ -16,7 +16,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#operations';
+import { SampleOperation } from '#types';
 import type { SampleItem } from '#types';
 
 export type SamplePropertiesProps = {
@@ -24,7 +24,7 @@ export type SamplePropertiesProps = {
 };
 
 export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleRandomize = useCallback(() => {

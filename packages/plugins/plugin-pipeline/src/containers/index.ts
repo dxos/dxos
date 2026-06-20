@@ -4,5 +4,5 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const PipelineContainer: ComponentType<any> = lazy(() => import('./PipelineContainer'));
+export const PipelineArticle: ComponentType<any> = lazy(() => import('./PipelineArticle'));
 export const PipelineProperties: ComponentType<any> = lazy(() => import('./PipelineProperties'));

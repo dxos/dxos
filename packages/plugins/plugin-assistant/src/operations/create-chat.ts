@@ -5,19 +5,17 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantBlueprint } from '#blueprints';
+import { AssistantOperation } from '#types';
 
-import { CreateChat } from './definitions';
-
-const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -31,42 +29,20 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
         space.db.add(chat);
       }
 
-      // TODO(wittjosiah): This should be a space-level setting.
-      // TODO(burdon): Clone when activated. Copy-on-write for template.
-      const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-      let defaultAssistantBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
-      if (!defaultAssistantBlueprint) {
-        defaultAssistantBlueprint = db.add(AssistantBlueprint.make());
-      }
-      let defaultDatabaseBlueprint = blueprints.find((blueprint) => blueprint.key === DatabaseBlueprint.key);
-      if (!defaultDatabaseBlueprint) {
-        defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
-      }
-      let defaultAgentWizardBlueprint = blueprints.find((blueprint) => blueprint.key === AgentWizardBlueprint.key);
-      if (!defaultAgentWizardBlueprint) {
-        defaultAgentWizardBlueprint = db.add(AgentWizardBlueprint.make());
-      }
       // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
       const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
-      let defaultBlueprintManagerBlueprint = blueprints.find(
-        (blueprint) => blueprint.key === BlueprintManagerBlueprint.key,
-      );
-      if (!defaultBlueprintManagerBlueprint) {
-        defaultBlueprintManagerBlueprint = db.add(BlueprintManagerBlueprint.make());
-      }
 
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
-      const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-      const binder = new AiContextBinder({ feed, runtime, registry });
+      const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+      const binder = new AiContext.Binder({ feed, runtime, registry });
+
+      // Bind default blueprints via registry refs — no DB clone needed since the ECHO ref
+      // resolver already spans the hypergraph registry.
       yield* Effect.promise(() =>
-        binder.use((b: AiContextBinder) =>
+        binder.use((b: AiContext.Binder) =>
           b.bind({
-            blueprints: [
-              Ref.make(defaultAssistantBlueprint!),
-              Ref.make(defaultDatabaseBlueprint!),
-              Ref.make(defaultAgentWizardBlueprint!),
-              Ref.make(defaultBlueprintManagerBlueprint!),
-            ],
+            blueprints: [AssistantBlueprint, DatabaseBlueprint, AgentWizardBlueprint, BlueprintManagerBlueprint].map(
+              ({ key }) => Ref.fromURI(Blueprint.registryURI(key)),
+            ),
           }),
         ),
       );

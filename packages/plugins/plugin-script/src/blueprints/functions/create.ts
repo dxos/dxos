@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CollectionModel } from '@dxos/app-toolkit';
 import { Script, Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { CollectionModel } from '@dxos/schema';
 
 import { Create } from './definitions';
 
@@ -27,14 +27,14 @@ export default Create.pipe(
       db.add(script);
 
       const fn = Obj.make(Operation.PersistentOperation, {
+        [Obj.Meta]: { version: '0.0.0' },
         name,
-        version: '0.0.0',
         source: Ref.make(script),
       });
       yield* CollectionModel.add({ object: fn });
 
       return {
-        function: Obj.getDXN(fn).toString(),
+        function: Obj.getURI(fn),
       };
     }),
   ),

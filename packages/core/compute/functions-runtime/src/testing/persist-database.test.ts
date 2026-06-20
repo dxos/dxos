@@ -5,9 +5,8 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj, Query } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-db/testing';
+import { TestDatabaseLayer, testStoragePath } from '@dxos/compute-runtime/testing';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { Person } from '@dxos/types';
 
@@ -25,7 +24,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const objects = yield* Database.runQuery(Query.select(Filter.everything()));
+        const objects = yield* Database.query(Query.select(Filter.everything())).run;
         expect(objects[0]?.label).toEqual('test');
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -48,7 +47,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
-        const objects = yield* Database.runQuery(Query.select(Filter.type(Person.Person)));
+        const objects = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
         expect(objects.length).toEqual(NUM_OBJECTS);
       }).pipe(Effect.provide(DbLayer));
     }),
@@ -61,7 +60,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         const NUM_OBJECTS = 500;
 
         {
-          const objects = yield* Database.runQuery(Query.select(Filter.type(Person.Person)));
+          const objects = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
           console.log({ count: objects.length });
         }
 
@@ -71,7 +70,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         yield* Database.flush();
 
         {
-          const objects = yield* Database.runQuery(Query.select(Filter.type(Person.Person)));
+          const objects = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
           console.log({ count: objects.length });
         }
       },

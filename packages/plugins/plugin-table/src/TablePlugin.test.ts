@@ -5,23 +5,23 @@
 import { describe, test } from 'vitest';
 
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { TablePlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('TablePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // on-space-created and on-schema-added need SpaceEvents (not fired in tests).
+    // on-type-added needs SpaceEvents (not fired in tests).
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), TablePlugin()],
     });
 
-    // After autoStart: OperationHandler auto-cascades from OperationPlugin.
+    // After autoStart: OperationHandler auto-cascades from ProcessManagerPlugin.
     // schema auto-cascades from ClientPlugin.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('OperationHandler'), moduleId('schema')]),

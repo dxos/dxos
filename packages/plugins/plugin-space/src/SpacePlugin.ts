@@ -5,8 +5,8 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
-import { AttentionEvents } from '@dxos/plugin-attention/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { AttentionEvents } from '@dxos/plugin-attention';
+import { ClientEvents } from '@dxos/plugin-client';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { DataTypes } from '@dxos/schema';
@@ -26,10 +26,8 @@ import {
 } from '@dxos/types';
 
 import {
-  AppGraphSerializer,
   CreateObject,
   IdentityCreated,
-  Migrations,
   NavigationHandler,
   NavigationResolver,
   OperationHandler,
@@ -46,6 +44,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SpaceEvents } from '#types';
 import { type SpacePluginOptions } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
@@ -108,7 +109,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
       id: Capability.getModuleTag(AppGraphBuilder),
-      activatesOn: AppActivationEvents.SetupAppGraph,
+      activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
   ),
@@ -127,16 +128,11 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(UndoMappings),
-        activatesOn: ActivationEvents.SetupOperationHandler,
+        activatesOn: ActivationEvents.SetupProcessManager,
         activate: () => UndoMappings({ createInvitationUrl, observability }),
       };
     },
   ),
-  // TODO(wittjosiah): This could probably be deferred.
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
-  }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
     firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
@@ -144,7 +140,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.LayoutReady,
       AppActivationEvents.AppGraphReady,
       AttentionEvents.AttentionReady,
@@ -154,12 +150,11 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SetupMigration,
-    activate: Migrations,
-  }),
-  Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

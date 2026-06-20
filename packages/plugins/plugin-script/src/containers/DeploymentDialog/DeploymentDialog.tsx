@@ -26,7 +26,7 @@ export type DeploymentDialogProps = {
 };
 
 export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const space = useMemo(() => getSpace(accessToken), [accessToken]);
 
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
@@ -38,24 +38,30 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}.deployment-success`,
+        id: `${meta.profile.key}.deployment-success`,
         icon: 'ph--check--regular',
         duration: Infinity,
-        title: ['script-deployment-toast.label', { ns: meta.id, count: scriptTemplates.length }],
-        description: ['script-deployment-toast.description', { ns: meta.id, count: scriptTemplates.length }],
-        closeLabel: ['script-deployment-toast-close.label', { ns: meta.id, count: scriptTemplates.length }],
+        title: ['script-deployment-toast.label', { ns: meta.profile.key, count: scriptTemplates.length }],
+        description: ['script-deployment-toast.description', { ns: meta.profile.key, count: scriptTemplates.length }],
+        closeLabel: ['script-deployment-toast-close.label', { ns: meta.profile.key, count: scriptTemplates.length }],
       });
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
     }
     if (status === 'error') {
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}.deployment-error`,
+        id: `${meta.profile.key}.deployment-error`,
         icon: 'ph--warning--regular',
         duration: Infinity,
-        title: ['script-deployment-error-toast.label', { ns: meta.id, count: scriptTemplates.length }],
-        description: ['script-deployment-error-toast.description', { ns: meta.id, count: scriptTemplates.length }],
-        closeLabel: ['script-deployment-error-toast-close.label', { ns: meta.id, count: scriptTemplates.length }],
+        title: ['script-deployment-error-toast.label', { ns: meta.profile.key, count: scriptTemplates.length }],
+        description: [
+          'script-deployment-error-toast.description',
+          { ns: meta.profile.key, count: scriptTemplates.length },
+        ],
+        closeLabel: [
+          'script-deployment-error-toast-close.label',
+          { ns: meta.profile.key, count: scriptTemplates.length },
+        ],
       });
     }
   }, [status, invokePromise]);
@@ -65,7 +71,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       <Dialog.Header>
         <Dialog.Title>{t('deployment-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
-import { Chess } from '@dxos/plugin-chess/types';
-import { GameRef, Game, loadGame } from '@dxos/plugin-game/types';
+import { Database, Obj, DXN } from '@dxos/echo';
+import { Chess } from '@dxos/plugin-chess';
+import { GameRef, Game, loadGame } from '@dxos/plugin-game';
 
 const ChessBot = Operation.make({
   meta: {
-    key: 'org.dxos.script.chess-bot',
+    key: DXN.make('org.dxos.script.chessBot'),
     name: 'Chess Bot',
     description: 'Plays a random move in a chess game.',
   },

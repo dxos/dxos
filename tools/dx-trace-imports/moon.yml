@@ -1,0 +1,8 @@
+layer: tool
+language: typescript
+tags:
+  - ts-compile
+tasks:
+  compile:
+    deps:
+      - dx-build:compile

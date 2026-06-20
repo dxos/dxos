@@ -8,13 +8,12 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { Message, type MessageHeaderProps, ObjectArticle, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
@@ -38,7 +37,7 @@ export const MessageArticle = ({
 
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
-    return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
+    return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'markdown';
   }, [message]);
 
   const db = Obj.getDatabase(message);
@@ -74,28 +73,35 @@ export const MessageArticle = ({
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
   const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
+  // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).
+  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
+  // (Database/Feed/Credentials) can materialize.
+  const handleDelete = useCallback(() => {
+    if (mailbox) {
+      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
+    }
+  }, [invokePromise, mailbox, message, db]);
+
   return (
     <Message.Root
       attendableId={toolbarAttendableId}
       viewMode={viewMode}
       message={message}
+      mailbox={mailbox}
       sender={sender}
       onOpen={companionTo ? handleOpen : undefined}
       onReply={handleReply}
       onReplyAll={handleReplyAll}
       onForward={handleForward}
+      onDelete={mailbox ? handleDelete : undefined}
     >
-      <Panel.Root role={role} className='dx-document'>
-        <Panel.Toolbar asChild>
-          <Message.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Message.Viewport role={role}>
-            <Message.Header onContactCreate={handleContactCreate} />
-            <Message.Body />
-          </Message.Viewport>
-        </Panel.Content>
-      </Panel.Root>
+      <ObjectArticle
+        role={role}
+        toolbar={<Message.Toolbar />}
+        header={<Message.Header onContactCreate={handleContactCreate} />}
+      >
+        <Message.Body />
+      </ObjectArticle>
     </Message.Root>
   );
 };

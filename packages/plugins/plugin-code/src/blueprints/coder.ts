@@ -5,30 +5,22 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import {
-  DeleteFile,
-  HelloWorld,
-  ListFiles,
-  ReadFile,
-  ResetProject,
-  RunBuildAgent,
-  ScaffoldProject,
-  VerifySpec,
-  WriteFile,
-} from '#operations';
+import { CodeOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.coder';
 
 const operations = [
-  VerifySpec,
-  RunBuildAgent,
-  ListFiles,
-  ReadFile,
-  WriteFile,
-  DeleteFile,
-  ScaffoldProject,
-  HelloWorld,
-  ResetProject,
+  CodeOperation.VerifySpec,
+  CodeOperation.RunBuildAgent,
+  CodeOperation.ListFiles,
+  CodeOperation.ReadFile,
+  CodeOperation.WriteFile,
+  CodeOperation.DeleteFile,
+  CodeOperation.ScaffoldProject,
+  CodeOperation.HelloWorld,
+  CodeOperation.ResetProject,
+  CodeOperation.BuildProject,
+  CodeOperation.RunBuild,
 ];
 
 /**
@@ -71,6 +63,14 @@ const make = () =>
           - reset-project: delete every file in the project. Destructive — only
             run when the user explicitly asks to clear or reset the project.
 
+        Local build tools (compile + execute in the browser; no remote service):
+          - build-project: compile the project's TypeScript via the TS language
+            service. Returns diagnostics (errors/warnings) and, on a clean
+            build, the emitted JavaScript for the entry file.
+          - run-build: build the project and execute the emitted entry in a
+            console-capturing sandbox. Returns stdout, stderr, and diagnostics.
+            Use after writing source to verify it compiles and runs.
+
         Workflow:
           1. Iterate on the Spec content with the user. Propose features, types,
              operations, and acceptance tests.
@@ -81,9 +81,13 @@ const make = () =>
              over guessing API shapes.
           4. Use scaffold-project to bootstrap a new project, then write-file to add
              files and overwrite as you iterate. Read before you re-write.
-          5. run-build-agent dispatches a build asynchronously when the user is
-             ready. (Build infrastructure lands in a later phase; the call
-             currently returns "queued".)
+          5. After writing source, call build-project. Surface any diagnostics
+             to the user. On a clean build, call run-build to execute the
+             entry and report stdout/stderr.
+          6. run-build-agent is reserved for the remote EDGE codegen service
+             (Claude Agent SDK). Distinct from build-project / run-build,
+             which compile and execute locally in the browser. The remote
+             dispatch currently returns "queued" pending phase-2 infra.
 
         Authoritative state lives in ECHO. The build/sandbox materializes from
         ECHO when invoked; you do not need to push files anywhere else.

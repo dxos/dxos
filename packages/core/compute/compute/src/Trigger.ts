@@ -7,17 +7,16 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
-import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { failedInvariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { OptionsAnnotationId } from '@dxos/echo/Format';
 
 /**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['email', 'queue', 'subscription', 'timer', 'webhook'] as const;
+export const Kinds = ['email', 'feed', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
@@ -32,29 +31,20 @@ export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
  */
 export const specEmail = (): EmailSpec => ({ kind: 'email' });
 
-// TODO(burdon): Change to Feed.
 // TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
-export const QueueSpec = Schema.Struct({
-  kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
-
-  // TODO(dmaretskyi): Rename to `feed` and change to a reference.
-  queue: DXN.Schema,
+export const FeedSpec = Schema.Struct({
+  kind: Schema.Literal('feed').annotations(kindLiteralAnnotations),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Feed' })),
 });
-export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
+export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /**
- * Construct a Queue trigger spec from a queue DXN string.
+ * Construct a Feed trigger spec from a Feed object.
  */
-export const specQueue = (queueDxn: string): QueueSpec => ({
-  kind: 'queue',
-  queue: queueDxn,
+export const specFeed = (feed: Feed.Feed): FeedSpec => ({
+  kind: 'feed',
+  feed: Ref.make(feed),
 });
-
-/**
- * Construct a Queue trigger spec from a Feed object.
- */
-export const specFeed = (feed: Feed.Feed): QueueSpec =>
-  specQueue(Feed.getQueueDxn(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
 
 /**
  * Subscription.
@@ -143,7 +133,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, QueueSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
+export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
 export type Spec = Schema.Schema.Type<typeof Spec>;
@@ -190,20 +180,17 @@ const TriggerSchema = Schema.Struct({
    * {
    *   item: '{{event.item}}',
    *   instructions: 'Summarize and perform entity-extraction'
-   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+   *   mailbox: { '/': 'echo://AAA/ZZZ' }
    * }
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trigger',
-    version: '0.1.0',
-  }),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-  SystemTypeAnnotation.set(true),
+  HiddenAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
 );
 
-export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
+export type Trigger = Type.InstanceType<typeof TriggerSchema>;
 export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/deus",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Deus — pattern specification language for human-agent collaborative software development. Carries the .mdl grammar, CodeMirror extension, and core dialects.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./extension": {
+      "source": "./src/extension/index.ts",
+      "types": "./dist/types/src/extension/index.d.ts",
+      "default": "./dist/lib/neutral/extension/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "docs",
+    "lang",
+    "src"
+  ],
+  "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/lint": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "@lezer/lr": "catalog:"
+  },
+  "devDependencies": {
+    "@lezer/generator": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

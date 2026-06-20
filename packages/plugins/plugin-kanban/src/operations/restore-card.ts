@@ -6,9 +6,9 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { RestoreCard } from './definitions';
+import { KanbanOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof RestoreCard> = RestoreCard.pipe(
+const handler: Operation.WithHandler<typeof KanbanOperation.RestoreCard> = KanbanOperation.RestoreCard.pipe(
   Operation.withHandler(({ card }) =>
     Effect.sync(() => {
       const db = Obj.getDatabase(card);

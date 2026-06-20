@@ -14,8 +14,7 @@ import * as HashSet from 'effect/HashSet';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
-import { runAndForwardErrors } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { EffectEx, Performance } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -99,7 +98,6 @@ export type LoadedPlugin = {
 export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
-  core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
   /**
@@ -198,9 +196,62 @@ export interface PluginManager {
    * (which may differ from the locator used to load it, e.g. URL loaders).
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error>;
-  enable(id: string): Effect.Effect<boolean, Error>;
-  remove(id: string): Effect.Effect<boolean, Error>;
-  disable(id: string): Effect.Effect<boolean, Error>;
+
+  /**
+   * Enables a plugin.
+   *
+   * Default behavior auto-resolves the plugin's declared `dependsOn` closure:
+   * missing entries that exist in the plugin registry catalog are installed via
+   * {@link add}, then enabled in dependency-first order. Set `resolveDependencies`
+   * to `false` to enable only the named plugin and skip the closure walk
+   * entirely — useful when substituting an alternative plugin that satisfies
+   * the dependent's capability needs in its own way.
+   */
+  enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error>;
+
+  /**
+   * Removes a plugin from the manager (disables then unregisters).
+   *
+   * Honors the same cascade option as {@link disable}.
+   */
+  remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error>;
+
+  /**
+   * Disables a plugin.
+   *
+   * By default, cascades to currently-enabled dependents (transitively, leaves
+   * first) so disabling a depended-upon plugin never leaves its dependents
+   * stranded. Pass `cascade: false` to disable only the named plugin and leave
+   * its dependents enabled-but-broken — VS Code-style disable parity for
+   * callers that want the escape hatch (e.g. when swapping in an alternative
+   * implementation that satisfies the dependents' needs in its own way).
+   *
+   * Fails with {@link Plugin.PluginDependencyError} (`reason: 'core-dependent'`)
+   * when cascading would require disabling a core plugin; UI flows should
+   * surface their own confirmation before calling `disable` with the default.
+   */
+  disable(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error>;
+
+  /**
+   * Returns the plugin ids that the given plugin declares as dependencies.
+   *
+   * Walks `meta.dependsOn` from both registered plugins and the plugin registry
+   * catalog so callers can preview the closure for a plugin that isn't yet
+   * installed. With `transitive: true` (default), returns the full dependency
+   * closure in dependency-first order (deps before dependents). Without it,
+   * returns the direct declarations only.
+   */
+  getDependencies(id: string, opts?: { transitive?: boolean }): readonly string[];
+
+  /**
+   * Returns the plugin ids that declare the given plugin as a dependency.
+   *
+   * Walks `meta.dependsOn` over registered plugins. With `transitive: true`
+   * (default), returns the full reverse closure. With `enabledOnly: true`,
+   * filters to currently-enabled dependents — used by UI flows to preview what
+   * a cascading disable would touch.
+   */
+  getDependents(id: string, opts?: { transitive?: boolean; enabledOnly?: boolean }): readonly string[];
   // TODO(wittjosiah): Improve error typing.
   activate(
     event: ActivationEvent.ActivationEvent | string,
@@ -280,7 +331,6 @@ class ManagerImpl implements PluginManager {
   constructor({
     pluginLoader,
     plugins = [],
-    core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
     pluginRegistryProvider,
@@ -288,6 +338,12 @@ class ManagerImpl implements PluginManager {
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
   }: ManagerOptions) {
+    // Core plugins are derived from `meta.tags.includes('system')`; the set is
+    // a snapshot of the initial `plugins` array (later `add()` calls do not
+    // promote plugins to core).
+    const core: string[] = plugins
+      .filter(({ meta }) => meta.profile.tags?.includes('system'))
+      .map(({ meta }) => meta.profile.key);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
@@ -320,7 +376,7 @@ class ManagerImpl implements PluginManager {
         Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
         Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause)),
       )
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -438,6 +494,24 @@ class ManagerImpl implements PluginManager {
     return entry?.shadow;
   }
 
+  getDependencies(id: string, opts?: { transitive?: boolean }): readonly string[] {
+    const transitive = opts?.transitive !== false;
+    if (!transitive) {
+      return this._directDependencies(id);
+    }
+    const walk = this._computeDependencyClosure(id);
+    // Drop the target itself; callers asked for its dependencies, not the
+    // closure including the root.
+    return walk.order.filter((depId) => depId !== id);
+  }
+
+  getDependents(id: string, opts?: { transitive?: boolean; enabledOnly?: boolean }): readonly string[] {
+    return this._collectDependents(id, {
+      transitive: opts?.transitive !== false,
+      enabledOnly: opts?.enabledOnly === true,
+    });
+  }
+
   clearFailure(id: string): boolean {
     const current = this._get(this._failedAtom);
     if (!current.some((failure) => failure.id === id)) {
@@ -459,7 +533,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
       const { plugin, dev = false } = yield* this._pluginLoader(id);
-      const pluginId = plugin.meta.id;
+      const pluginId = plugin.meta.profile.key;
       const existing = this._getPlugin(pluginId);
 
       if (dev && existing && existing !== plugin) {
@@ -475,7 +549,9 @@ class ManagerImpl implements PluginManager {
           yield* this.disable(pluginId);
         }
         this._markDev(pluginId, { plugin: existing, wasEnabled });
-        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === pluginId ? plugin : p)));
+        this._update(this._pluginsAtom, (plugins) =>
+          plugins.map((p) => (p.meta.profile.key === pluginId ? plugin : p)),
+        );
       } else {
         this._addPlugin(plugin);
         if (dev) {
@@ -490,10 +566,118 @@ class ManagerImpl implements PluginManager {
   /**
    * Enables a plugin.
    * @param id The id of the plugin.
+   * @param opts See {@link PluginManager.enable}.
    */
-  enable(id: string): Effect.Effect<boolean, Error> {
+  enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error> {
+    const resolveDependencies = opts?.resolveDependencies !== false;
     return Effect.gen(this, function* () {
-      log('enable plugin', { id });
+      log('enable plugin', { id, resolveDependencies });
+
+      if (!resolveDependencies) {
+        return yield* this._enableOne(id);
+      }
+
+      // If the root id is unknown to both the registered set and the catalog,
+      // fall back to the silent `_enableOne` path (which returns `false`).
+      // This preserves the prior contract for persisted `enabled` entries
+      // whose plugins are no longer bundled, instead of recording a confusing
+      // "missing self-dependency" failure.
+      if (!this._getPlugin(id) && !this._getCatalogEntry(id)) {
+        return yield* this._enableOne(id);
+      }
+
+      // Compute the transitive closure across registered plugins and catalog
+      // entries. Missing or cyclic entries are recorded as failures and the
+      // target plugin is left disabled.
+      const walk = this._computeDependencyClosure(id);
+      if (walk.cycle) {
+        this._recordFailure(
+          id,
+          'load',
+          new Plugin.PluginDependencyError({ context: { id, reason: 'cycle', path: walk.cycle } }),
+        );
+        return false;
+      }
+      if (walk.missing.length > 0) {
+        this._recordFailure(
+          id,
+          'load',
+          new Plugin.PluginDependencyError({ context: { id, reason: 'missing', missing: walk.missing } }),
+        );
+        return false;
+      }
+
+      // Install any catalog-only entries before enabling them. `add` may also
+      // discover further declared deps once the plugin's real meta is loaded;
+      // we re-walk after each install to absorb those.
+      let queue = walk.toInstall.slice();
+      const installed = new Set<string>();
+      while (queue.length > 0) {
+        const next = queue.shift()!;
+        if (installed.has(next) || this._getPlugin(next)) {
+          continue;
+        }
+        const installResult = yield* this.add(next).pipe(Effect.either);
+        if (installResult._tag === 'Left') {
+          this._recordFailure(
+            id,
+            'load',
+            new Plugin.PluginDependencyError({
+              context: { id, reason: 'install-failed', dependency: next },
+              cause: installResult.left,
+            }),
+          );
+          return false;
+        }
+        installed.add(next);
+        const rewalk = this._computeDependencyClosure(id);
+        if (rewalk.cycle) {
+          this._recordFailure(
+            id,
+            'load',
+            new Plugin.PluginDependencyError({ context: { id, reason: 'cycle', path: rewalk.cycle } }),
+          );
+          return false;
+        }
+        if (rewalk.missing.length > 0) {
+          this._recordFailure(
+            id,
+            'load',
+            new Plugin.PluginDependencyError({ context: { id, reason: 'missing', missing: rewalk.missing } }),
+          );
+          return false;
+        }
+        queue = rewalk.toInstall.filter((depId) => !installed.has(depId));
+      }
+
+      // Enable in dependency-first order. `_enableOne` is idempotent on the
+      // enabled atom so previously-enabled deps short-circuit.
+      const order = this._computeDependencyClosure(id).order;
+      let succeeded = false;
+      for (const depId of order) {
+        const ok = yield* this._enableOne(depId);
+        if (depId === id) {
+          succeeded = ok;
+        }
+      }
+      return succeeded;
+    });
+  }
+
+  /**
+   * Enables a single plugin without consulting its declared dependencies.
+   * Used by {@link enable} as the leaf step after closure resolution, and
+   * directly when callers pass `{ resolveDependencies: false }`.
+   *
+   * The underlying operations (`_addModule`, `_setPendingResetByModule`,
+   * `activate`) are all idempotent, so this method is safe to call multiple
+   * times for the same id. The constructor's bootstrap path relies on this:
+   * the persisted `enabled` ids are written into `_enabledAtom` up front, so
+   * the very first `enable(id)` for those plugins sees `alreadyEnabled`-style
+   * state but still needs to perform the module registration and activation.
+   */
+  private _enableOne(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
       const stub = this._getPlugin(id);
       if (!stub) {
         return false;
@@ -541,7 +725,7 @@ class ManagerImpl implements PluginManager {
       if (!Plugin.isLazy(plugin)) {
         return plugin;
       }
-      const id = plugin.meta.id;
+      const id = plugin.meta.profile.key;
 
       const existing = this._resolvingPlugins.get(id);
       if (existing) {
@@ -567,7 +751,9 @@ class ManagerImpl implements PluginManager {
               }),
           }),
         );
-        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === id ? resolvedPlugin : p)));
+        this._update(this._pluginsAtom, (plugins) =>
+          plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)),
+        );
         yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(
@@ -588,12 +774,13 @@ class ManagerImpl implements PluginManager {
   /**
    * Removes a plugin from the manager.
    * @param id The id of the plugin.
+   * @param opts See {@link PluginManager.remove}.
    */
-  remove(id: string): Effect.Effect<boolean, Error> {
+  remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('remove plugin', { id });
       const wasDev = this._devPlugins.has(id);
-      const disabled = yield* this.disable(id);
+      const disabled = yield* this.disable(id, opts);
       if (!disabled) {
         return false;
       }
@@ -629,10 +816,11 @@ class ManagerImpl implements PluginManager {
   /**
    * Disables a plugin.
    * @param id The id of the plugin.
+   * @param opts See {@link PluginManager.disable}.
    */
-  disable(id: string): Effect.Effect<boolean, Error> {
+  disable(id: string, { cascade = true }: { cascade?: boolean } = {}): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      log('disable plugin', { id });
+      log('disable plugin', { id, cascade });
       if (this._get(this._coreAtom).includes(id)) {
         return false;
       }
@@ -642,16 +830,55 @@ class ManagerImpl implements PluginManager {
         return false;
       }
 
+      if (cascade) {
+        const enabledDependents = this._collectDependents(id, { transitive: true, enabledOnly: true });
+        if (enabledDependents.length > 0) {
+          const coreDependent = enabledDependents.find((dependentId) =>
+            this._get(this._coreAtom).includes(dependentId),
+          );
+          if (coreDependent) {
+            return yield* Effect.fail(
+              new Plugin.PluginDependencyError({
+                context: { id, reason: 'core-dependent', coreDependent },
+              }),
+            );
+          }
+          // Disable transitive dependents first (leaves before root). The
+          // walk returns them in dependents-before-deps order — exactly what
+          // we want for teardown.
+          for (const dependentId of enabledDependents) {
+            yield* this._disableOne(dependentId);
+          }
+        }
+      }
+
+      yield* this._disableOne(id);
+      return true;
+    });
+  }
+
+  /**
+   * Disables a single plugin without consulting its dependents. Used by
+   * {@link disable} after the dependents pass has run (or been skipped via
+   * `cascade: false`).
+   */
+  private _disableOne(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      if (this._get(this._coreAtom).includes(id)) {
+        return false;
+      }
+      const plugin = this._getPlugin(id);
+      if (!plugin) {
+        return false;
+      }
       const enabledIndex = this._get(this._enabledAtom).findIndex((enabled) => enabled === id);
       if (enabledIndex !== -1) {
         this._update(this._enabledAtom, (enabled) => enabled.filter((item) => item !== id));
         yield* this.deactivate(id);
-
         plugin.modules.forEach((module) => {
           this._removeModule(module.id);
         });
       }
-
       return true;
     });
   }
@@ -794,12 +1021,142 @@ class ManagerImpl implements PluginManager {
   }
 
   private _getPlugin(id: string): Plugin.Plugin | undefined {
-    return this._get(this._pluginsAtom).find((plugin) => plugin.meta.id === id);
+    return this._get(this._pluginsAtom).find((plugin) => plugin.meta.profile.key === id);
   }
 
   private _getPluginIdForModule(moduleId: string): string | undefined {
     return this._get(this._pluginsAtom).find((plugin) => plugin.modules.some((module) => module.id === moduleId))?.meta
-      .id;
+      .profile.key;
+  }
+
+  /** Looks up an id in the cached registry catalog, returning the entry or `undefined`. */
+  private _getCatalogEntry(id: string): Plugin.Meta | undefined {
+    return this._get(this.pluginRegistry.plugins).entries.find((entry) => entry.profile.key === id);
+  }
+
+  /**
+   * Returns the direct `dependsOn` declarations for an id, drawing from the
+   * registered plugin's meta when available and falling back to the registry
+   * catalog entry. Unknown ids return an empty list (callers detect "missing"
+   * separately).
+   */
+  private _directDependencies(id: string): string[] {
+    const plugin = this._getPlugin(id);
+    if (plugin) {
+      return [...(plugin.meta.profile.dependsOn ?? [])];
+    }
+    const catalog = this._getCatalogEntry(id);
+    return catalog?.profile.dependsOn ? [...catalog.profile.dependsOn] : [];
+  }
+
+  /**
+   * Computes the transitive dependency closure for an id.
+   *
+   * Walks {@link _directDependencies} (registered plugins ∪ catalog entries).
+   * Returns:
+   *  - `order`: closure including the root in dependency-first topological order.
+   *  - `missing`: ids in the closure that are neither registered nor in the catalog.
+   *  - `toInstall`: ids in the closure that are in the catalog but not yet registered.
+   *  - `cycle`: when a cycle is detected, the cycle path; otherwise `undefined`.
+   */
+  private _computeDependencyClosure(id: string): {
+    order: string[];
+    missing: string[];
+    toInstall: string[];
+    cycle?: string[];
+  } {
+    const order: string[] = [];
+    const visited = new Set<string>();
+    const onStack = new Set<string>();
+    const stackPath: string[] = [];
+    const missing: string[] = [];
+    const toInstall: string[] = [];
+    let cycle: string[] | undefined;
+
+    const knownIds = new Set<string>([
+      ...this._get(this._pluginsAtom).map((plugin) => plugin.meta.profile.key),
+      ...this._get(this.pluginRegistry.plugins).entries.map((entry) => entry.profile.key),
+    ]);
+
+    const visit = (currentId: string): void => {
+      if (cycle) {
+        return;
+      }
+      if (visited.has(currentId)) {
+        return;
+      }
+      if (onStack.has(currentId)) {
+        const cycleStart = stackPath.indexOf(currentId);
+        cycle = [...stackPath.slice(cycleStart), currentId];
+        return;
+      }
+      onStack.add(currentId);
+      stackPath.push(currentId);
+
+      if (!knownIds.has(currentId)) {
+        missing.push(currentId);
+      } else if (!this._getPlugin(currentId)) {
+        toInstall.push(currentId);
+      }
+
+      for (const depId of this._directDependencies(currentId)) {
+        visit(depId);
+        if (cycle) {
+          break;
+        }
+      }
+
+      onStack.delete(currentId);
+      stackPath.pop();
+      if (!cycle) {
+        visited.add(currentId);
+        order.push(currentId);
+      }
+    };
+
+    visit(id);
+    return { order, missing, toInstall, cycle };
+  }
+
+  /**
+   * Walks the reverse `dependsOn` edges across registered plugins. With
+   * `enabledOnly`, filters the result to currently-enabled ids. Returns
+   * dependents in dependents-before-deps order so callers (cascade-disable)
+   * can iterate and tear down leaves first.
+   */
+  private _collectDependents(id: string, opts: { transitive: boolean; enabledOnly: boolean }): string[] {
+    const direct = this._get(this._pluginsAtom)
+      .filter((plugin) => plugin.meta.profile.dependsOn?.some((dep) => dep === id))
+      .map((plugin) => plugin.meta.profile.key);
+
+    if (!opts.transitive) {
+      return opts.enabledOnly
+        ? direct.filter((dependentId) => this._get(this._enabledAtom).includes(dependentId))
+        : direct;
+    }
+
+    const result: string[] = [];
+    const visited = new Set<string>();
+    const visit = (currentId: string): void => {
+      if (visited.has(currentId)) {
+        return;
+      }
+      visited.add(currentId);
+      const parents = this._get(this._pluginsAtom)
+        .filter((plugin) => plugin.meta.profile.dependsOn?.some((dep) => dep === currentId))
+        .map((plugin) => plugin.meta.profile.key);
+      for (const parentId of parents) {
+        visit(parentId);
+        if (parentId !== id && !result.includes(parentId)) {
+          result.push(parentId);
+        }
+      }
+    };
+    visit(id);
+
+    return opts.enabledOnly
+      ? result.filter((dependentId) => this._get(this._enabledAtom).includes(dependentId))
+      : result;
   }
 
   /**
@@ -812,7 +1169,7 @@ class ManagerImpl implements PluginManager {
   private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
     const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
     const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed', { id, phase, reason, error: error.message });
+    log.warn('plugin failed to activate', { id, phase, reason, error: error.message });
     this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
   }
 
@@ -823,6 +1180,10 @@ class ManagerImpl implements PluginManager {
    * them being non-removable; the failure record is enough signal).
    */
   private _scheduleAutoDisable(id: string): void {
+    if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+      // Transient HMR failures must not persist; skip auto-disable in dev server.
+      return;
+    }
     if (this._get(this._coreAtom).includes(id)) {
       return;
     }
@@ -831,6 +1192,7 @@ class ManagerImpl implements PluginManager {
     }
     this._runForkedFiber(
       this.disable(id).pipe(
+        Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
         Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
         Effect.ignore,
       ),
@@ -925,14 +1287,14 @@ class ManagerImpl implements PluginManager {
   //
 
   private _addPlugin(plugin: Plugin.Plugin): void {
-    log('add plugin', { id: plugin.meta.id });
+    log('add plugin', { id: plugin.meta.profile.key });
     // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
     this._update(this._pluginsAtom, (plugins) => (plugins.includes(plugin) ? plugins : [...plugins, plugin]));
   }
 
   private _removePlugin(id: string): void {
     log('remove plugin', { id });
-    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.id !== id));
+    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.profile.key !== id));
   }
 
   private _addModule(module: Plugin.PluginModule): void {
@@ -992,7 +1354,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
-      log('activating modules', { key, modules: activatingModuleIds });
+      log('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
@@ -1230,9 +1592,14 @@ class ManagerImpl implements PluginManager {
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) => {
               const error = Cause.squash(cause);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              const missingCapability = errorMessage.match(/No capability found for ([^\s\[]+)/)?.[1];
               log.error('module failed to activate', {
                 module: module.id,
-                error: error instanceof Error ? error.message : String(error),
+                parentEvent,
+                missingCapability,
+                registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
+                error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });

@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
 
 import { printInvokeResult } from './util';
@@ -43,7 +44,7 @@ export const invoke = Command.make(
 
     // We take the last deployment under a given key.
     // TODO(dmaretskyi): Should we make the keys unique?
-    const fn = fns.findLast((fn) => fn.key === key);
+    const fn = fns.findLast((fn) => Obj.getMeta(fn).key === key);
     if (!fn) {
       return yield* Effect.fail(new Error(`Function not found: ${key}`));
     }

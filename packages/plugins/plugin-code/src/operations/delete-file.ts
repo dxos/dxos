@@ -9,9 +9,9 @@ import { Database, Obj, type Ref } from '@dxos/echo';
 
 import { type SourceFile } from '#types';
 
-import { DeleteFile } from './definitions';
+import { CodeOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof DeleteFile> = DeleteFile.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.DeleteFile> = CodeOperation.DeleteFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project, path }) {
       const code = yield* Database.load(project);

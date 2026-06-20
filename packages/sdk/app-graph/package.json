@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-graph",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Constructs knowledge graphs for the purpose of building applications on top of",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,22 +8,30 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#scheduler": {
+      "source": {
+        "browser": "./src/scheduler.browser.ts",
+        "default": "./src/scheduler.ts"
+      },
+      "types": "./dist/types/src/scheduler.d.ts",
+      "default": "./dist/lib/neutral/scheduler.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -35,14 +43,13 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

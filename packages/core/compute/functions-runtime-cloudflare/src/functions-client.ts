@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import { EchoClient } from '@dxos/echo-db';
+import { EchoClient } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
@@ -80,9 +80,3 @@ export const createClientFromEnv = async (env: any): Promise<FunctionsClient> =>
   await client.open();
   return client;
 };
-
-/**
- - Provides data access capabilities for user functions.
- - No real-time replication or reactive queries -- function receives a snapshot.
- - Function event contains the metadata but doesn't need to include the data.
- */

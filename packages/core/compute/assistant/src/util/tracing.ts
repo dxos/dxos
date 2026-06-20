@@ -1,0 +1,60 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Trace } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
+import { ContentBlock, Actor } from '@dxos/types';
+
+/**
+ * Partial content block emitted.
+ */
+export const PartialBlock = Trace.EventType('assistant.partialBlock', {
+  schema: Schema.Struct({
+    messageId: Obj.ID,
+    role: Actor.Role,
+    block: ContentBlock.Any,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Complete content block emitted.
+ */
+export const CompleteBlock = Trace.EventType('assistant.completeBlock', {
+  schema: Schema.Struct({
+    messageId: Obj.ID,
+    role: Actor.Role,
+    block: ContentBlock.Any,
+  }),
+  isEphemeral: false,
+});
+
+export const AgentRequestBegin = Trace.EventType('assistant.agentRequestBegin', {
+  schema: Schema.Struct({}),
+  isEphemeral: false,
+});
+
+export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
+  schema: Schema.Struct({
+    status: Schema.Literal('success', 'error', 'interrupted'),
+    error: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * Emitted when an MCP server connection fails for a request turn.
+ * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
+ * but can still be surfaced to the user via the live ephemeral event stream.
+ */
+export const McpServerError = Trace.EventType('assistant.mcpServerError', {
+  schema: Schema.Struct({
+    url: Schema.String,
+    protocol: Schema.Literal('sse', 'http'),
+    message: Schema.String,
+  }),
+  isEphemeral: true,
+});

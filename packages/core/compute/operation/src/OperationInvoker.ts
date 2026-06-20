@@ -10,8 +10,7 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
 import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
-import { DynamicRuntime, unwrapExit } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { DynamicRuntime, EffectEx, Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -20,7 +19,9 @@ import * as Scheduler from './scheduler';
 // @import-as-namespace
 
 /**
- * Invocation event emitted after each operation.
+ * Emitted after an operation completes successfully. (The in-progress / failure lifecycle is observed
+ * via the process monitor; this stream surfaces successful invocations for layered consumers — e.g.
+ * the undo history tracker, which derives undoability from the operation/input/output.)
  */
 export type InvocationEvent<I = any, O = any> = {
   operation: Operation.Definition<I, O>;
@@ -49,6 +50,12 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, NoHandlerError>;
+  invokePromise: <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
+  ) => Promise<{ data?: O; error?: Error }>;
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent operation completes.
@@ -56,14 +63,10 @@ export interface OperationInvoker {
    */
   schedule: <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
-  ) => Effect.Effect<void>;
-  invokePromise: <I, O>(
-    op: Operation.Definition<I, O>,
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ) => Promise<{ data?: O; error?: Error }>;
+  ) => Effect.Effect<void>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
   /** Number of pending followup operations. */
@@ -148,8 +151,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   // Arrow function to preserve `this` context when destructured.
   schedule = <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
-  ): Effect.Effect<void> => this._followupScheduler.schedule(op, ...(args as [I]));
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
+  ): Effect.Effect<void> => this._followupScheduler.schedule(op, ...(args as [I, Operation.InvokeOptions?]));
 
   // Arrow function to preserve `this` context when destructured.
   invoke = <I, O>(
@@ -163,13 +168,9 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     return Effect.gen(this, function* () {
       const output = yield* this._invokeCore(op, input, options);
 
-      // Publish event after successful invocation.
-      yield* PubSub.publish(this._pubsub, {
-        operation: op,
-        input,
-        output,
-        timestamp: Date.now(),
-      });
+      // Publish a success event. Failures propagate without an event; in-progress/failure lifecycle is
+      // observed via the process monitor, and undoability is derived by downstream consumers.
+      yield* PubSub.publish(this._pubsub, { operation: op, input, output, timestamp: Date.now() });
 
       return output;
     });
@@ -185,7 +186,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const effect = this.invoke(op, ...args);
     const exit = await this._managedRuntime.runPromiseExit(effect);
     try {
-      const data = unwrapExit(exit);
+      const data = EffectEx.unwrapExit(exit);
       return { data };
     } catch (error) {
       log.catch(error as Error);

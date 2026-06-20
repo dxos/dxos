@@ -23,7 +23,6 @@
   ],
   "include": [
     "demos",
-    "script-frame",
     "scripts",
     "src"
   ],
@@ -36,6 +35,9 @@
     },
     {
       "path": "../../../tools/vite-plugin-log"
+    },
+    {
+      "path": "../../../tools/vite-plugin-shutdown"
     },
     {
       "path": "../../common/async"
@@ -104,6 +106,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -143,28 +148,16 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
-    },
-    {
       "path": "../../core/compute/mcp-client"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/echo/echo-protocol"
@@ -245,6 +238,12 @@
       "path": "../../plugins/plugin-board"
     },
     {
+      "path": "../../plugins/plugin-bookmarks"
+    },
+    {
+      "path": "../../plugins/plugin-calls"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -254,13 +253,19 @@
       "path": "../../plugins/plugin-code"
     },
     {
+      "path": "../../plugins/plugin-comments"
+    },
+    {
+      "path": "../../plugins/plugin-commerce"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
-      "path": "../../plugins/plugin-crx"
+      "path": "../../plugins/plugin-crm"
     },
     {
-      "path": "../../plugins/plugin-daily-summary"
+      "path": "../../plugins/plugin-crx"
     },
     {
       "path": "../../plugins/plugin-debug"
@@ -275,13 +280,16 @@
       "path": "../../plugins/plugin-doctor"
     },
     {
+      "path": "../../plugins/plugin-duffel"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-feed"
     },
     {
-      "path": "../../plugins/plugin-files"
+      "path": "../../plugins/plugin-file"
     },
     {
       "path": "../../plugins/plugin-gallery"
@@ -290,13 +298,13 @@
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-generator"
+    },
+    {
       "path": "../../plugins/plugin-github"
     },
     {
       "path": "../../plugins/plugin-graph"
-    },
-    {
-      "path": "../../plugins/plugin-help"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -344,6 +352,12 @@
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-onboarding"
+    },
+    {
+      "path": "../../plugins/plugin-osrm"
+    },
+    {
       "path": "../../plugins/plugin-outliner"
     },
     {
@@ -369,6 +383,9 @@
     },
     {
       "path": "../../plugins/plugin-search"
+    },
+    {
+      "path": "../../plugins/plugin-sequencer"
     },
     {
       "path": "../../plugins/plugin-settings"
@@ -404,10 +421,10 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
-      "path": "../../plugins/plugin-table"
+      "path": "../../plugins/plugin-support"
     },
     {
-      "path": "../../plugins/plugin-template"
+      "path": "../../plugins/plugin-table"
     },
     {
       "path": "../../plugins/plugin-theme"
@@ -423,6 +440,12 @@
     },
     {
       "path": "../../plugins/plugin-trello"
+    },
+    {
+      "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../plugins/plugin-video"
     },
     {
       "path": "../../plugins/plugin-voxel"
@@ -521,7 +544,7 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
-      "path": "../../ui/react-ui-editor"
+      "path": "../../ui/react-ui-experimental"
     },
     {
       "path": "../../ui/react-ui-form"
@@ -557,9 +580,6 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-sfx"
-    },
-    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -570,9 +590,6 @@
     },
     {
       "path": "../../ui/react-ui-tabs"
-    },
-    {
-      "path": "../../ui/react-ui-text-tooltip"
     },
     {
       "path": "../../ui/react-ui-thread"

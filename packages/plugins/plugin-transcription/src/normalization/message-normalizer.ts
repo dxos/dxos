@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import type * as Runtime from 'effect/Runtime';
+
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type Queue } from '@dxos/echo-db';
+import { Database, Feed, Filter } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { type Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { type MessageWithRangeId, type NormalizationOutput, sentenceNormalization } from './normalization';
 import { getActorId } from './utils';
@@ -17,7 +21,8 @@ const MAX_RANGE_ID_COUNT = 10;
 
 export type SegmentsNormalizerProps = {
   functionExecutor: FunctionExecutor;
-  queue: Queue<Message.Message>;
+  feed: Feed.Feed;
+  feedRuntime: Runtime.Runtime<Database.Service>;
   startingCursor: QueueCursor;
 };
 
@@ -30,28 +35,35 @@ export type QueueCursor = {
 export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
 
-  private _queue: Queue<Message.Message>;
+  private _feed: Feed.Feed;
+  private _feedRuntime: Runtime.Runtime<Database.Service>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
   private _normalizationTask?: DeferredTask;
   private _lastProcessedMessageIds?: string[];
 
-  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerProps) {
+  constructor({ functionExecutor, feed, feedRuntime, startingCursor }: SegmentsNormalizerProps) {
     super();
     this._functionExecutor = functionExecutor;
-    this._queue = queue;
+    this._feed = feed;
+    this._feedRuntime = feedRuntime;
     this._cursor = startingCursor;
   }
 
   protected override async _open(): Promise<void> {
     this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
 
+    const queryResult = await Feed.query(this._feed, Filter.type(Message.Message)).pipe(
+      Effect.provide(this._feedRuntime),
+      EffectEx.runAndForwardErrors,
+    );
+
     const updateMessages = () => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return;
       }
 
-      this._messagesToProcess = this._queue.objects.filter((message) => {
+      this._messagesToProcess = (queryResult.results as Message.Message[]).filter((message) => {
         const actorId = getActorId(message.sender);
         return actorId === this._cursor.actorId && message.created >= this._cursor.timestamp;
       });
@@ -62,8 +74,8 @@ export class MessageNormalizer extends Resource {
     // Initial update.
     updateMessages();
 
-    // Subscribe to queue changes.
-    const unsubscribe = this._queue.subscribe(updateMessages);
+    // Subscribe to feed changes.
+    const unsubscribe = queryResult.subscribe(updateMessages);
     this._ctx.onDispose(unsubscribe);
   }
 
@@ -87,7 +99,7 @@ export class MessageNormalizer extends Resource {
         PROCESSING_TIMEOUT,
       );
 
-      this._writeMessages(response.sentences);
+      await this._writeMessages(response.sentences);
       this._lastProcessedMessageIds.push(...response.sentences.map((sentence) => sentence.id));
       if (response.sentences.length === 1 && response.sentences.at(-1)!.rangeId!.length > MAX_RANGE_ID_COUNT) {
         log.warn('Sentence is too long', { messages });
@@ -96,14 +108,14 @@ export class MessageNormalizer extends Resource {
     } catch {
       log.error('Failed to normalize segments', { messages });
       // If processing failed, emit the segments as is.
-      this._writeMessages(messages);
+      await this._writeMessages(messages);
     }
   }
 
-  private _writeMessages(messages: MessageWithRangeId[]): void {
+  private async _writeMessages(messages: MessageWithRangeId[]): Promise<void> {
     log.info('writing messages', { messages });
     const lastMessage = messages[messages.length - 1];
     this._cursor.timestamp = lastMessage.created;
-    void this._queue.append(messages);
+    await Feed.append(this._feed, messages).pipe(Effect.provide(this._feedRuntime), EffectEx.runAndForwardErrors);
   }
 }

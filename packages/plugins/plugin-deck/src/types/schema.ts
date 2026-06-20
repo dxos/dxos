@@ -4,14 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Label, LayoutOperation } from '@dxos/app-toolkit';
+import { AppNode, LayoutOperation, Translations } from '@dxos/app-toolkit';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export * as Settings from './Settings';
-
-export { PLANK_COMPANION_TYPE, DECK_COMPANION_TYPE } from '@dxos/app-toolkit';
+export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
+export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
 export type Part = 'solo' | 'multi' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -93,8 +92,8 @@ export const EphemeralDeckState = Schema.Struct({
   popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
-  popoverKind: Schema.optional(Schema.Literal('base', 'card')),
-  popoverTitle: Schema.optional(Label.annotations({ description: 'The title of the popover.' })),
+  popoverKind: Schema.optional(Schema.Literal('base', 'card', 'rename')),
+  popoverTitle: Schema.optional(Translations.Label.annotations({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
@@ -128,16 +127,19 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}.action.adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.profile.key}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
-    input: Schema.Struct({
-      id: Schema.String,
-      size: Schema.Number,
-    }),
-    output: Schema.Void,
-  }) {}
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(
+    `${meta.profile.key}.action.update-plank-size`,
+    {
+      input: Schema.Struct({
+        id: Schema.String,
+        size: Schema.Number,
+      }),
+      output: Schema.Void,
+    },
+  ) {}
 }

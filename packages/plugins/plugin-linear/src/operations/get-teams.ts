@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
 import { LinearApi } from '../services';
-import { GetLinearTeams } from './definitions';
+import { LinearOperation } from '../types';
 
 /**
  * Discovery only — list Linear teams reachable from the integration's token.
@@ -19,7 +19,7 @@ import { GetLinearTeams } from './definitions';
  * Output is sorted by `key` (case-insensitive) so the picker is stable
  * regardless of Linear's response order.
  */
-const handler: Operation.WithHandler<typeof GetLinearTeams> = GetLinearTeams.pipe(
+const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = LinearOperation.GetLinearTeams.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
       // TODO(wittjosiah): Mirror the Trello pattern — derive the db from the input ref's

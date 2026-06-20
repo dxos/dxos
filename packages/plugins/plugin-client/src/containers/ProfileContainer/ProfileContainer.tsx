@@ -33,7 +33,7 @@ const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?
 const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayNameDirectly] = useState(identity?.profile?.displayName ?? '');
@@ -139,7 +139,7 @@ export const ProfileContainer = () => {
 
         return (
           <Settings.Item title={label} description={t('hue.description')}>
-            <div role='none' className='flex justify-self-end'>
+            <div className='flex justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </div>
           </Settings.Item>

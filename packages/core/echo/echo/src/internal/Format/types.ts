@@ -7,7 +7,7 @@ import type * as JSONSchema from 'effect/JSONSchema';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { createAnnotationHelper } from '../Annotation';
+import { createAnnotationHelper } from '../Annotation/util';
 import { type JsonSchemaType } from '../JsonSchema';
 
 // TODO(burdon): Rename PropertyType.

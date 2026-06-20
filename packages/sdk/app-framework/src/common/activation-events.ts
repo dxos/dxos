@@ -16,29 +16,24 @@ export const Startup = ActivationEvent$.make('org.dxos.app-framework.event.start
 /**
  * Fired to load any newly available surfaces.
  */
-export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.event.setup-react-surface');
+export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.event.setupReactSurface');
 
 /**
- * Fired before the operation invoker is activated.
+ * Fired before the process manager is created.
+ * Plugins should contribute their {@link Capabilities.LayerSpec} entries and
+ * {@link Capabilities.OperationHandler} sets before this event fires so the
+ * process manager's {@link ServiceResolver} and {@link OperationInvoker} pick
+ * them up at construction time.
  */
-export const SetupOperationHandler = ActivationEvent$.make('org.dxos.app-framework.event.setup-operation-handler');
-
-/**
- * Fired before the managed runtime is created.
- * Plugins should contribute their Layer capabilities before this event.
- */
-export const SetupLayer = ActivationEvent$.make('org.dxos.app-framework.event.setup-layer');
+export const SetupProcessManager = ActivationEvent$.make('org.dxos.app-framework.event.setupProcessManager');
 
 //
 // Triggered Events
 //
 
 /**
- * Fired after the operation invoker is ready.
+ * Fired after the process manager runtime is ready and its derived capabilities
+ * (`ProcessManagerRuntime`, `ServiceResolver`, `ProcessMonitor`, `OperationInvoker`)
+ * have been contributed.
  */
-export const OperationInvokerReady = ActivationEvent$.make('org.dxos.app-framework.event.operation-invoker-ready');
-
-/**
- * Fired after the managed runtime is ready.
- */
-export const ManagedRuntimeReady = ActivationEvent$.make('org.dxos.app-framework.event.managed-runtime-ready');
+export const ProcessManagerReady = ActivationEvent$.make('org.dxos.app-framework.event.processManagerReady');

@@ -7,8 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Type } from '@dxos/echo';
 import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
@@ -19,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Collection.Collection.typename,
+        id: Type.getTypename(Collection.Collection),
         inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -27,20 +26,19 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: false,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Type.PersistentType),
+        id: Type.getTypename(Type.Type),
         inputSchema: SpaceOperation.StoredSchemaForm,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
+            const result = yield* Operation.invoke(SpaceOperation.AddType, {
               db: options.db,
               name: props.name,
-              schema: createDefaultSchema(),
+              type: createDefaultSchema(),
             });
             return {
               id: result.id,
@@ -50,55 +48,51 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Organization.Organization.typename,
+        id: Type.getTypename(Organization.Organization),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Organization.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Person.Person.typename,
+        id: Type.getTypename(Person.Person),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Person.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Project.Project.typename,
-        inputSchema: Project.Project,
+        id: Type.getTypename(Project.Project),
+        inputSchema: Type.getSchema(Project.Project),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Project.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Task.Task.typename,
-        inputSchema: Task.Task,
+        id: Type.getTypename(Task.Task),
+        inputSchema: Type.getSchema(Task.Task),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Task.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           }),

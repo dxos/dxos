@@ -9,29 +9,36 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
+// Narrow subpath imports (`/blueprints` and `/types`) so the CLI's
+// `bun run --conditions=source` only walks plugin source files that are free of
+// React-component imports. The plugin root barrels re-export the whole tree
+// (including React components that transitively pull `react-aria-components` —
+// whose `source` export condition advertises a TS file that isn't shipped in
+// its dist, causing Bun resolution to fail).
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
-import { ChessHandlers } from '@dxos/plugin-chess/operations';
+import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { Chess } from '@dxos/plugin-chess/types';
+import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
+import { CommentOperationHandlerSet } from '@dxos/plugin-comments/plugin';
 import { Game } from '@dxos/plugin-game/types';
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
-import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/operations';
+import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/plugin';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
-import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
+import { MapOperationHandlerSet } from '@dxos/plugin-map/plugin';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { ScriptBlueprint } from '@dxos/plugin-script/blueprints';
-import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';
+import { ScriptOperationHandlerSet } from '@dxos/plugin-script/plugin';
 import { TableBlueprint } from '@dxos/plugin-table/blueprints';
-import { TableOperationHandlerSet } from '@dxos/plugin-table/operations';
-import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
-import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/operations';
+import { TableOperationHandlerSet } from '@dxos/plugin-table/plugin';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
-import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
+import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/plugin';
 import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
@@ -48,22 +55,24 @@ import {
 
 import * as TestToolkit from './test-toolkit';
 
-export const blueprintRegistry = new Blueprint.Registry([
-  // Blueprints available to the chat.
-  AssistantBlueprint.make(),
-  DatabaseBlueprint.make(),
-  CalendarBlueprint.make(),
-  ChessBlueprint.make(),
-  InboxBlueprint.make(),
-  InboxSendBlueprint.make(),
-  KanbanBlueprint.make(),
-  MapBlueprint.make(),
-  MarkdownBlueprint.make(),
-  ScriptBlueprint.make(),
-  TableBlueprint.make(),
-  ThreadBlueprint.make(),
-  TranscriptionBlueprint.make(),
-]);
+export const blueprintRegistry = makeRegistry({
+  initial: [
+    // Blueprints available to the chat.
+    AssistantBlueprint.make(),
+    DatabaseBlueprint.make(),
+    CalendarBlueprint.make(),
+    ChessBlueprint.make(),
+    InboxBlueprint.make(),
+    InboxSendBlueprint.make(),
+    KanbanBlueprint.make(),
+    MapBlueprint.make(),
+    MarkdownBlueprint.make(),
+    ScriptBlueprint.make(),
+    TableBlueprint.make(),
+    CommentBlueprint.make(),
+    TranscriptionBlueprint.make(),
+  ],
+});
 
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
 //  But since CLI doesn't have this, we have to manually collect them and configure them here.
@@ -73,14 +82,14 @@ export const blueprintRegistry = new Blueprint.Registry([
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by blueprints above need to be added here.
   DatabaseHandlers,
-  ChessHandlers,
+  ChessOperationHandlerSet,
   InboxOperationHandlerSet,
   KanbanOperationHandlerSet,
   MapOperationHandlerSet,
   MarkdownOperationHandlerSet,
   ScriptOperationHandlerSet,
   TableOperationHandlerSet,
-  ThreadOperationHandlerSet,
+  CommentOperationHandlerSet,
   TranscriptionOperationHandlerSet,
 );
 

@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EID } from '@dxos/keys';
 
 import { EscapedPropPath } from '../utils';
 import type { Index, IndexerObject } from './interface';
@@ -15,16 +16,20 @@ import type { Index, IndexerObject } from './interface';
 /**
  * Extracts all outgoing references from an object's data.
  */
-const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDxn: string }[] => {
-  const refs: { path: string[]; targetDxn: string }[] = [];
+const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDXN: EID.EID }[] => {
+  const refs: { path: string[]; targetDXN: EID.EID }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const dxn = EncodedReference.toDXN(value);
-      const echoId = dxn.asEchoDXN()?.echoId;
-      if (!echoId) {
+      const uri = EncodedReference.toURI(value);
+      const parsedEchoUri = EID.tryParse(uri);
+      const echoUri = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
+      if (!echoUri || !parsedEchoUri) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDxn: dxn.toString() });
+      // Key by the local (space-less) form so a space-qualified ref and a bare ref to the same entity index
+      // under the same key. The index is scoped to one space (entity ids are unique within it), and lookups
+      // normalize the same way (see `query`).
+      refs.push({ path, targetDXN: EID.toLocal(parsedEchoUri) });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -41,7 +46,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
-  targetDxn: Schema.String,
+  targetDXN: EID.Schema,
   /**
    * Escaped property path within an object.
    *
@@ -56,7 +61,7 @@ export const ReverseRef = Schema.Struct({
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
 export interface ReverseRefQuery {
-  targetDxn: string;
+  targetDXN: EID.EID;
   // TODO: Add prop filter
 }
 
@@ -70,23 +75,26 @@ export class ReverseRefIndex implements Index {
 
     yield* sql`CREATE TABLE IF NOT EXISTS reverseRef (
       recordId INTEGER NOT NULL,
-      targetDxn TEXT NOT NULL,
+      targetDXN TEXT NOT NULL,
       propPath TEXT NOT NULL,
-      PRIMARY KEY (recordId, targetDxn, propPath)
+      PRIMARY KEY (recordId, targetDXN, propPath)
     )`;
 
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDxn)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDXN)`;
   });
 
   /**
    * Query all references pointing to a target DXN.
    */
   query = Effect.fn('ReverseRefIndex.query')(
-    ({ targetDxn }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
+    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        // Normalize to the local form to match how references are keyed on write (space-qualified and bare
+        // EIDs for the same entity collapse to one key).
+        const normalized = EID.toLocal(targetDXN);
         // TODO(mykola): Join objectMeta table here.
-        const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDxn = ${targetDxn}`;
+        const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${normalized}`;
         return rows as ReverseRef[];
       }),
   );
@@ -115,7 +123,7 @@ export class ReverseRefIndex implements Index {
               yield* Effect.forEach(
                 refs,
                 (ref) =>
-                  sql`INSERT INTO reverseRef (recordId, targetDxn, propPath) VALUES (${recordId}, ${ref.targetDxn}, ${EscapedPropPath.escape(ref.path)})`,
+                  sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
                 { discard: true },
               );
             }),

@@ -5,19 +5,19 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 
-import { OnSchemaAdded, Create } from './definitions';
+import { TableOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof OnSchemaAdded> = OnSchemaAdded.pipe(
+const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableOperation.OnTypeAdded.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, schema }) {
-      const { object } = yield* Operation.invoke(Create, {
+    Effect.fnUntraced(function* ({ db, type }) {
+      const { object } = yield* Operation.invoke(TableOperation.Create, {
         db,
-        typename: Type.getTypename(schema),
+        typename: Type.getTypename(type),
       });
-      const { subject } = yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
-      yield* Operation.invoke(LayoutOperation.Open, { subject });
+      const { subject } = yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object });
+      yield* Operation.invoke(LayoutOperation.Open, { subject, navigation: 'immediate' });
     }),
   ),
 );

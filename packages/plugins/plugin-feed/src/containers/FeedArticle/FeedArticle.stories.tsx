@@ -18,14 +18,14 @@ type FeedArticleStoryProps = {
   feedUrl?: string;
 };
 
-const useFeedData = (feedUrl?: string): { feed: Subscription.Feed; posts: Subscription.Post[] } | undefined => {
-  const [data, setData] = useState<{ feed: Subscription.Feed; posts: Subscription.Post[] }>();
+const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts: Subscription.Post[] } | undefined => {
+  const [data, setData] = useState<{ feed: Subscription.Subscription; posts: Subscription.Post[] }>();
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       if (feedUrl) {
-        const { fetchRss } = await import('../../util/fetch-rss');
+        const { fetchRss } = await import('../../operations/sources/rss');
         const result = await fetchRss(feedUrl, { corsProxy: '/api/rss?url=' });
         if (!cancelled) {
           setData(result);

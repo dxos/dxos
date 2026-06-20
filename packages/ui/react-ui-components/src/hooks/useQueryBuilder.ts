@@ -4,9 +4,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { Filter } from '@dxos/react-client/echo';
-
 /**
  * Creates a filter from a query string.
  */

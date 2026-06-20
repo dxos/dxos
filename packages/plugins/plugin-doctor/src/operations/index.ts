@@ -4,6 +4,4 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
-
-export const DoctorHandlers = OperationHandlerSet.lazy(() => import('./query-composer-logs'));
+export const DoctorOperationHandlerSet = OperationHandlerSet.lazy(() => import('./query-composer-logs'));

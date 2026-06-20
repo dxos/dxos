@@ -4,37 +4,33 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
 import { IntegrationDatabaseMissingError } from '../errors';
-import { SyncContacts } from './definitions';
+import { InboxOperation } from '../types';
 
 const dispatch = (integration: Integration.Integration) =>
   Effect.gen(function* () {
-    const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     const db = Obj.getDatabase(integration);
     invariant(db);
-    const runtime = computeRuntime.getRuntime(db.spaceId);
-    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/people'));
-    yield* Effect.tryPromise(() =>
-      runtime.runPromise(
-        Operation.invoke(ContactsFunctions.Sync, {
-          integration: Ref.make(integration),
-        }),
-      ),
+    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/contacts'));
+    yield* Operation.invoke(
+      ContactsFunctions.Sync,
+      {
+        integration: Ref.make(integration),
+      },
+      { spaceId: db.spaceId },
     );
   });
 
-const handler: Operation.WithHandler<typeof SyncContacts> = SyncContacts.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = InboxOperation.SyncContacts.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const target = input.integration.target;
@@ -48,21 +44,21 @@ const handler: Operation.WithHandler<typeof SyncContacts> = SyncContacts.pipe(
       yield* dispatch(integrationObj).pipe(
         Effect.tap(() =>
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/sync-contacts-success`,
+            id: `${meta.profile.key}/sync-contacts-success`,
             icon: 'ph--check--regular',
             duration: 3_000,
-            title: ['sync-contacts-success.title', { ns: meta.id }],
-            closeLabel: ['close.label', { ns: meta.id }],
+            title: ['sync-contacts-success.title', { ns: meta.profile.key }],
+            closeLabel: ['close.label', { ns: meta.profile.key }],
           }),
         ),
         Effect.catchAll((error) => {
           log.catch(error);
           return Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/sync-contacts-error`,
+            id: `${meta.profile.key}/sync-contacts-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync-contacts-error.title', { ns: meta.id }],
-            closeLabel: ['close.label', { ns: meta.id }],
+            title: ['sync-contacts-error.title', { ns: meta.profile.key }],
+            closeLabel: ['close.label', { ns: meta.profile.key }],
           });
         }),
       );

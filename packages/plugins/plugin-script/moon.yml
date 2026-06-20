@@ -10,12 +10,22 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/ScriptPlugin.tsx'
+      - '--entryPoint=src/ScriptPlugin.node.ts'
+      - '--entryPoint=src/ScriptPlugin.workerd.ts'
       - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/capabilities/node.ts'
+      - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/hooks/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/templates/index.ts'
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
-      - '--entryPoint=src/templates/index.ts'
+      - '--platform=neutral'
   e2e:
     command: vitest run -c vitest.config.ts --reporter=verbose --tagsFilter=functions-e2e src/e2e/*.test.ts
     deps:

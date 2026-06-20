@@ -16,6 +16,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -25,10 +26,10 @@
       "path": "../../common/crypto"
     },
     {
-      "path": "../../common/effect"
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -43,9 +44,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -58,25 +56,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"
@@ -85,10 +68,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-space"
+      "path": "../plugin-file"
     },
     {
       "path": "../plugin-testing"

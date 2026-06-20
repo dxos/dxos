@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
@@ -25,6 +25,7 @@
       "browser": "./dist/src/proto/index.js",
       "import": "./dist/src/proto/index.js"
     },
+    "./proto/dxos/*.proto": "./src/proto/dxos/*.proto",
     "./proto/*": {
       "browser": "./dist/src/proto/gen/*.js",
       "import": "./dist/src/proto/gen/*.js"
@@ -36,7 +37,8 @@
     "./buf/*": {
       "browser": "./dist/src/buf/proto/gen/*.js",
       "import": "./dist/src/buf/proto/gen/*.js"
-    }
+    },
+    "./lexicons/*": "./src/lexicons/*"
   },
   "types": "dist/src/index.d.ts",
   "files": [
@@ -50,8 +52,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/timeframe": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "catalog:",

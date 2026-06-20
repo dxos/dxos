@@ -14,18 +14,17 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
-import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
-import { type Database, Feed, type Key } from '@dxos/echo';
-import { type QueueService, credentialsLayerFromDatabase } from '@dxos/functions';
+import { type Credential, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
+import { type Database, type Key, Registry } from '@dxos/echo';
+import { registryLayer } from '@dxos/echo-client';
+import { credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
-  | Feed.FeedService
   | Operation.Service
-  | OperationRegistry.Service
-  | QueueService
+  | Registry.Service
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
@@ -78,12 +77,23 @@ export const chatLayer = ({
   );
 
   return operationServiceLayer.pipe(
-    Layer.provideMerge(OperationRegistry.layer),
+    Layer.provideMerge(
+      Layer.effect(
+        Registry.Service,
+        Effect.gen(function* () {
+          const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+          const registry = yield* Registry.Service;
+          const handlers = yield* handlerSet.handlers;
+          registry.add(handlers.map(Operation.serialize));
+          return registry;
+        }),
+      ),
+    ),
+    Layer.provideMerge(registryLayer()),
     Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(credentialsLayerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(Trace.writerLayerNoop),
-    Layer.provideMerge(Feed.notAvailable),
   );
 };

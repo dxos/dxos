@@ -35,7 +35,11 @@ describe('test', () => {
     //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
     const fn = space.db.add(
-      Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'HELLO' }),
+      Obj.make(Operation.PersistentOperation, {
+        [Obj.Meta]: { key: 'com.example.function.test', version: '0.0.1' },
+        name: 'test',
+        binding: 'HELLO',
+      }),
     );
     expect(fn).to.exist;
   });

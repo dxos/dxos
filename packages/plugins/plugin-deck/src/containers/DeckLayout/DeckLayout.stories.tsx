@@ -21,6 +21,7 @@ import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Position } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
@@ -48,7 +49,6 @@ const storyDeckSettings = Capability.makeModule(() =>
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableDeck: true,
-      enableStatusbar: false,
       enableNativeRedirect: false,
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
@@ -167,16 +167,15 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
-            id: 'story-navigation',
-            role: 'navigation',
-            filter: (data): data is { current: string } => typeof (data as any).current === 'string',
-            component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
+            id: 'storyNavigation',
+            filter: Surface.makeFilter(AppSurface.Navigation),
+            component: ({ data, ref }) => (
+              <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />
+            ),
           }),
           Surface.create({
-            id: 'story-article',
-            role: 'article',
-            filter: (data): data is Record<string, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo == null,
+            id: 'storyArticle',
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
@@ -202,10 +201,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             },
           }),
           Surface.create({
-            id: 'story-article-companion',
-            role: 'article',
-            filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
+            id: 'storyArticleCompanion',
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
             component: ({ data: { subject, companionTo, properties, variant } }) => {
               if (companionTo == null) {
                 return <Loading />;
@@ -235,12 +232,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     activate: Effect.fnUntraced(function* () {
       const extensions = yield* Effect.all([
         GraphBuilder.createExtension({
-          id: 'story-items',
+          id: 'storyItems',
           match: NodeMatcher.whenRoot,
           connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
         }),
         GraphBuilder.createExtension({
-          id: 'story-item-companions',
+          id: 'storyItemCompanions',
           match: NodeMatcher.whenNodeType('story-item'),
           connector: (node) =>
             Effect.succeed([
@@ -249,14 +246,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
-                position: 'hoist',
+                position: Position.first,
               }),
               AppNode.makeCompanion({
                 id: linkedSegment('beta'),
                 label: 'Companion Beta',
                 icon: 'ph--chat-circle--regular',
                 data: { variant: 'beta', parentId: node.id },
-                position: 'static',
               }),
             ]),
         }),
@@ -285,7 +281,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
         {items.map((node) => (
           <ListItem.Root
             key={node.id}
-            classNames={activeSet.has(node.id) ? 'bg-active-surface' : undefined}
+            classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
             onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
           >
             {node.properties.icon && (

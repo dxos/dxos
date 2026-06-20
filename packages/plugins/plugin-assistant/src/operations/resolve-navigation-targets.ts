@@ -7,10 +7,15 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+// Value-side `DXN` re-export keeps the inferred `default` export's `.d.ts` portable —
+// `AssistantOperation.ResolveNavigationTargets` references `DXN.Schema` and the emitter
+// would otherwise emit an unresolvable type-only reference.
+import { DXN as _DXNReference } from '@dxos/keys';
+export { _DXNReference };
 
-import { ResolveNavigationTargets } from './definitions';
+import { AssistantOperation } from '#types';
 
-export default ResolveNavigationTargets.pipe(
+export default AssistantOperation.ResolveNavigationTargets.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ query }) {
       const capabilities = yield* Capability.Service;

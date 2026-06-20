@@ -13,13 +13,14 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
     {
-      "path": "../../common/debug"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -34,13 +35,13 @@
       "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
     },
     {
       "path": "../../core/echo/echo"
@@ -65,12 +66,6 @@
     },
     {
       "path": "../../ui/react-ui-canvas-editor"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

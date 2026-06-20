@@ -2,18 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.chess',
-  name: 'Chess',
-  description: trim`
-    Full-featured chess game supporting multiplayer matches with friends or practice sessions against AI opponents.
-    Track game history and analyze moves in real-time.
-  `,
-  icon: 'ph--shield-chevron--regular',
-  iconHue: 'amber',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
-  screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

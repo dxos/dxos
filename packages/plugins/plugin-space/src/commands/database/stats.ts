@@ -11,8 +11,7 @@ import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
-import { Obj } from '@dxos/echo';
-import { Database, Filter, Query } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { printStats } from './util';
 
@@ -24,7 +23,7 @@ export const stats = Command.make(
   () =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
-      const objects = yield* Database.runQuery(Query.select(Filter.everything()));
+      const objects = yield* Database.query(Query.select(Filter.everything())).run;
       const stats = Function.pipe(
         objects,
         Array.groupBy((obj) => Obj.getTypename(obj) ?? '<empty>'),

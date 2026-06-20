@@ -8,10 +8,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { type Obj, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
-import { Serializer } from '@dxos/echo-db';
-import { type SpaceId } from '@dxos/keys';
+import { Filter, type Obj, Query, Scope, Type } from '@dxos/echo';
+import { Serializer } from '@dxos/echo-client';
+import { EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {
@@ -20,7 +19,7 @@ export type SpacesDump = {
    */
   [spaceId: string]: {
     /**
-     * ObjectIds mapped to JSON dump of the object.
+     * EntityIds mapped to JSON dump of the object.
      */
     [objectId: string]: Obj.JSON;
   };
@@ -81,16 +80,18 @@ export class SpacesDumper {
    */
   static checkIfSpacesMatchExpectedDataUsingQuery = async (client: Client, expected: SpacesDump): Promise<boolean> => {
     for (const space of client.spaces.get()) {
-      const schemas = await space.db.schemaRegistry.query({ location: ['database', 'runtime'] }).run();
-      for (const schema of schemas) {
-        const objects = await space.db.query(Filter.type(schema)).run();
-        const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, schema);
+      const types = await space.db
+        .query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
+        .run();
+      for (const type of types) {
+        const objects = await space.db.query(Filter.type(type)).run();
+        const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, type);
         const actualIds = objects.map((obj) => obj.id).sort();
         const expectedIds = expectedObjects.map((obj) => obj.id).sort();
         if (!isEqual(actualIds, expectedIds)) {
           log.warn('object ids mismatch', {
             spaceId: space.id,
-            schema: Type.getDXN(schema)?.toString(),
+            schema: Type.getURI(type)?.toString(),
             actualIds,
             expectedIds,
           });
@@ -112,17 +113,46 @@ export class SpacesDumper {
 
   static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.AnyEntity) => {
     const objects = expected[spaceId] ?? [];
-    return Record.values(objects).filter((obj) => obj['@type'] === Type.getDXN(schema)?.toString());
+    const schemaURI = Type.getURI(schema)?.toString();
+    return Record.values(objects).filter((obj) => {
+      const objType: string | undefined = obj['@type'];
+      if (!objType || !schemaURI) {
+        return false;
+      }
+      if (objType === schemaURI) {
+        return true;
+      }
+      // Echo type references compare by entity id (local `echo:/<id>` vs qualified
+      // `echo://<spaceId>/<id>` address the same object).
+      if (EID.isEID(objType) && EID.isEID(schemaURI)) {
+        return EID.getEntityId(EID.parse(objType)) === EID.getEntityId(EID.parse(schemaURI));
+      }
+      return false;
+    });
   };
 }
+
+/**
+ * EID-valued fields, compared semantically via `EID.parse` so the local (`echo:/<id>`) and
+ * qualified (`echo://<space>/<id>`) forms of the same reference compare equal.
+ */
+const ECHO_ID_FIELDS = new Set(['@uri', '@parent', '@source', '@target']);
 
 export const equals = (actual: Record<string, any>, expected: Record<string, any>): boolean => {
   for (const [key, value] of Object.entries(expected)) {
     if (key === '@timestamp') {
       continue;
     }
-    if (!isEqual(value, actual[key])) {
-      log.warn('value mismatch', { key, expected: value, actual: actual[key] });
+    const actualValue = actual[key];
+    if (ECHO_ID_FIELDS.has(key) && typeof value === 'string' && typeof actualValue === 'string') {
+      if (EID.parse(value) !== EID.parse(actualValue)) {
+        log.warn('value mismatch', { key, expected: value, actual: actualValue });
+        return false;
+      }
+      continue;
+    }
+    if (!isEqual(value, actualValue)) {
+      log.warn('value mismatch', { key, expected: value, actual: actualValue });
       return false;
     }
   }

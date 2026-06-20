@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { TranscriptOperation } from '#operations';
+import { TranscriptOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.transcription';
 

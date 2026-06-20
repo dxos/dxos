@@ -43,7 +43,7 @@ const InvitationActions = ({
                 : 'error status label',
           )}
         </InputLabel>
-        <div role='none' className='grow' />
+        <div className='grow' />
         <ActionBar>
           <Action
             disabled={!active}
@@ -59,7 +59,7 @@ const InvitationActions = ({
     return (
       <>
         <InputLabel classNames='text-description'>{t('connecting-status.label')}</InputLabel>
-        <div role='none' className='grow' />
+        <div className='grow' />
         <ActionBar>
           <Action disabled classNames='order-2' data-testid='next'>
             {t('next.label')}
@@ -81,7 +81,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
     <>
       {typeof invitationState === 'undefined' ? (
         <>
-          <div role='none' className='grow flex flex-col justify-center'>
+          <div className='grow flex flex-col justify-center'>
             <InputLabel classNames='text-description'>There was a problem joining the space</InputLabel>
           </div>
           <ActionBar>

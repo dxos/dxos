@@ -13,22 +13,14 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
     {
-      "path": "../../../vendor/quickjs"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
     },
     {
       "path": "../../common/effect"
@@ -76,10 +68,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-protocol"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-query"
@@ -115,9 +104,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-edge-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
@@ -139,13 +125,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -175,9 +155,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
-    },
-    {
       "path": "../plugin-explorer"
     },
     {
@@ -187,22 +164,13 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-integration"
-    },
-    {
       "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

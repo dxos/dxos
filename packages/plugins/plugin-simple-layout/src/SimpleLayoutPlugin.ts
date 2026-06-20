@@ -50,7 +50,7 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(UrlHandler),
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, SimpleLayoutEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, SimpleLayoutEvents.StateReady),
     activate: UrlHandler,
   }),
   Plugin.make,

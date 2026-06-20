@@ -4,9 +4,7 @@
 
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
-import { Format } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
-import { useQueue } from '@dxos/react-client/echo';
+import { Format } from '@dxos/echo/Format';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -18,9 +16,10 @@ import { PanelContainer, Searchbar } from '../../../components';
 
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
-  const [queueInput, setQueueInput] = useState('');
-  const queueDxn = DXN.tryParse(queueInput);
-  const queue = useQueue<any>(queueDxn);
+  const [_queueInput, setQueueInput] = useState('');
+  // TODO(dmaretskyi): DXN-driven feed lookup removed; this panel is stubbed
+  // pending a Feed.Feed-aware replacement.
+  const objects: any[] = [];
   const [selected, setSelected] = useState<any>();
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
@@ -33,12 +32,12 @@ export const QueuesPanel = () => {
   );
 
   const rows = useMemo(() => {
-    return (queue?.objects ?? []).map((item: any) => ({
+    return objects.map((item: any) => ({
       id: item.id,
       type: item['@type'],
       _original: item,
     }));
-  }, [queue?.objects]);
+  }, [objects]);
 
   const handleRowClicked = (row: any) => {
     if (!row) {
@@ -47,7 +46,7 @@ export const QueuesPanel = () => {
     }
 
     // Always pick the last item in the queue.
-    const lastItem = queue?.objects[queue?.objects.length - 1];
+    const lastItem = objects[objects.length - 1];
     if (lastItem) {
       setSelectedVersionObject(null);
       setSelected(lastItem);

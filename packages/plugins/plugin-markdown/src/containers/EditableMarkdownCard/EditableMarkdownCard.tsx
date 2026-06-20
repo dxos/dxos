@@ -19,24 +19,26 @@ export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text
  * Full-bleed editable variant of {@link MarkdownCard}. Activated by the host
  * passing `editable: true` on the card surface data (e.g. plugin-board cells).
  * Renders a plain editor (no app-graph toolbar / file upload / link queries)
- * so it stays self-contained inside the card; the regular MarkdownContainer
+ * so it stays self-contained inside the card; the regular MarkdownArticle
  * remains the canonical surface for full article views.
  */
 export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => {
-  const id = Obj.getDXN(subject).toString();
+  const id = Obj.getURI(subject);
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
   const initialValue = docContent ?? textContent;
 
   return (
     <Card.Section classNames='overflow-hidden'>
-      <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
-        {(editorRootProps) => (
-          <Editor.Root {...editorRootProps}>
-            <MarkdownEditor.Content compact initialValue={initialValue} />
-          </Editor.Root>
-        )}
-      </MarkdownEditorProvider>
+      <Card.Row fullWidth>
+        <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
+          {(editorRootProps) => (
+            <Editor.Root {...editorRootProps}>
+              <MarkdownEditor.Content compact initialValue={initialValue} />
+            </Editor.Root>
+          )}
+        </MarkdownEditorProvider>
+      </Card.Row>
     </Card.Section>
   );
 };

@@ -8,15 +8,14 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
-import { type ObjectNotFoundError } from '@dxos/echo/Err';
-import { FormInputAnnotation } from '@dxos/echo/internal';
-import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
+import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { EID, type EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import * as Chat from './Chat';
@@ -83,6 +82,12 @@ export const Agent = Schema.Struct({
   }),
 
   /**
+   * Input feed for subscriptions.
+   * @deprecated Subscriptions will write directly to the agent.
+   */
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
+
+  /**
    * Allow the agent to filter events.
    * Related events will be added to the input queue of the agent.
    * It is recommended to enable this.
@@ -92,25 +97,23 @@ export const Agent = Schema.Struct({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
   }),
-
-  /**
-   * Input feed for subscriptions.
-   * @deprecated Subscriptions will write directly to the agent.
-   */
-  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.agent',
-    version: '0.1.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--drone--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.agent', '0.1.0')),
 );
 
-export interface Agent extends Schema.Schema.Type<typeof Agent> {}
+export type Agent = Type.InstanceType<typeof Agent>;
+
+export type MakeProps = Omit<
+  Obj.MakeProps<typeof Agent>,
+  'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'
+> &
+  Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
+    instructions: string;
+    blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+    contextObjects?: Ref.Ref<Obj.Any>[];
+  };
 
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
@@ -120,28 +123,25 @@ export interface Agent extends Schema.Schema.Type<typeof Agent> {}
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
-    Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
-      instructions: string;
-      blueprints?: Ref.Ref<Blueprint.Blueprint>[];
-      contextObjects?: Ref.Ref<Obj.Any>[];
-    },
+  props: MakeProps,
+  // TODO(burdon): Reconcile with props.blueprints.
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Agent, never, QueueService | Feed.FeedService | Database.Service> =>
+): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
-    const agent = Obj.make(Agent, {
-      ...props,
-      instructions: Ref.make(Text.make({ content: props.instructions })),
-      plan: Ref.make(Plan.makePlan({ tasks: [] })),
-      artifacts: props.artifacts ?? [],
-      subscriptions: props.subscriptions ?? [],
-      filterEvents: props.filterEvents ?? true,
-      enabled: props.enabled ?? true,
-    });
-    yield* Database.add(agent);
+    const agent = yield* Database.add(
+      Obj.make(Agent, {
+        ...props,
+        instructions: Ref.make(Text.make({ content: props.instructions })),
+        plan: Ref.make(Plan.makePlan({ tasks: [] })),
+        artifacts: props.artifacts ?? [],
+        subscriptions: props.subscriptions ?? [],
+        filterEvents: props.filterEvents ?? true,
+        enabled: props.enabled ?? true,
+      }),
+    );
     const feed = yield* Database.add(Feed.make());
-    const runtime = yield* Effect.runtime<Feed.FeedService>();
-    const contextBinder = new AiContextBinder({ feed, runtime });
+    const runtime = yield* Effect.runtime<Database.Service>();
+    const contextBinder = new AiContext.Binder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
     const agentBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
@@ -150,6 +150,7 @@ export const makeInitialized = (
         objects: [Ref.make(agent), ...(props.contextObjects ?? [])],
       }),
     );
+
     const chat = yield* Database.add(
       Chat.make({
         [Obj.Parent]: agent,
@@ -164,11 +165,10 @@ export const makeInitialized = (
       }),
     );
 
-    const inputQueue = yield* QueueService.createQueue();
-
+    const inputFeed = yield* Database.add(Feed.make());
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.queue = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.make(inputFeed);
     });
 
     return agent;
@@ -181,9 +181,7 @@ export const makeInitialized = (
  * @param agent - The agent whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
  */
-export const resetChatHistory = (
-  agent: Agent,
-): Effect.Effect<void, ObjectNotFoundError, Feed.FeedService | Database.Service> =>
+export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     invariant(agent.chat, 'Agent must have an existing chat to reset.');
 
@@ -191,10 +189,10 @@ export const resetChatHistory = (
       Effect.map((_) => _.feed),
       Effect.flatMap(Database.load),
     );
-    const runtime = yield* Effect.runtime<Feed.FeedService>();
-    const existingContextBinder = yield* acquireReleaseResource(
+    const runtime = yield* Effect.runtime<Database.Service>();
+    const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
-        new AiContextBinder({
+        new AiContext.Binder({
           feed: existingFeed,
           runtime,
         }),
@@ -203,7 +201,7 @@ export const resetChatHistory = (
     const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = new AiContextBinder({ feed, runtime });
+    const contextBinder = new AiContext.Binder({ feed, runtime });
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints,
@@ -229,8 +227,8 @@ export const resetChatHistory = (
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Agent, Error, AiContextService> = Effect.gen(function* () {
-  const agents = yield* Function.pipe(AiContextService.findObjects(Agent));
+export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> = Effect.gen(function* () {
+  const agents = yield* Function.pipe(AiContext.Service.findObjects(Agent));
   if (agents.length !== 1) {
     return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
   }
@@ -238,3 +236,37 @@ export const getFromChatContext: Effect.Effect<Agent, Error, AiContextService> =
   const agent = agents[0];
   return agent;
 });
+
+/**
+ * Adds an object to the agent's artifacts (context), resolving it by id within the agent's space.
+ *
+ * Accepts whatever reference a tool returned — a bare entity id (e.g. `01J…`) or a full ECHO URI
+ * (`echo:/…`, `echo://…`). LLMs frequently strip a returned URI down to the bare id, which is not
+ * a resolvable URI on its own; resolving by entity id within the space tolerates both forms.
+ *
+ * Returns the fully-qualified {@link Ref.Ref} that was stored (also usable for an inline message
+ * reference block).
+ */
+export const addArtifact = (
+  agent: Agent,
+  { name, id }: { name: string; id: string },
+): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
+  Effect.gen(function* () {
+    // Untyped, LLM-provided reference: normalize to the entity id, falling back to the raw value
+    // (a bare id is already an entity id) — a genuine external-data boundary.
+    const parsed = EID.tryParse(id);
+    const entityId = ((parsed ? EID.getEntityId(parsed) : undefined) ?? id) as EntityId;
+
+    // Store a FULLY-QUALIFIED ref (`echo://<space>/<id>`), not a local `echo:/<id>` one: the artifact
+    // is created by a separate tool/process invocation, and a space-less local ref does not resolve
+    // when the agent is later read from a different db view (e.g. the UI). It is not resolved here —
+    // it resolves lazily when read, by which point the artifact is persisted.
+    const { db } = yield* Database.Service;
+    const ref = db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId }));
+
+    Obj.update(agent, (agent) => {
+      agent.artifacts.push({ name, data: ref });
+    });
+    yield* Database.flush();
+    return ref;
+  });

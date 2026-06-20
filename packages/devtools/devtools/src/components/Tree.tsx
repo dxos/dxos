@@ -9,20 +9,20 @@ import { mx } from '@dxos/ui-theme';
 
 export const Tree = ({ classNames, data }: ThemedClassName<{ data?: object }>) => {
   return (
-    <div role='none' className={mx('flex w-full py-2 overflow-auto', classNames)}>
+    <div className={mx('flex w-full py-2 overflow-auto', classNames)}>
       <Node data={data} root />
     </div>
   );
 };
 
-export const Node = ({ classNames, data }: ThemedClassName<{ data?: any; root?: boolean }>) => {
+export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) => {
   if (typeof data !== 'object' || data === undefined || data === null) {
     return <Scalar value={data} />;
   }
 
   if (Array.isArray(data)) {
     return (
-      <div className='flex flex-col space-y-2'>
+      <div className='flex flex-col space-y-1'>
         {data.map((value, index) => (
           <KeyValue key={index} label={String(index)} data={value} classNames='text-description font-thin' />
         ))}
@@ -31,7 +31,7 @@ export const Node = ({ classNames, data }: ThemedClassName<{ data?: any; root?: 
   }
 
   return (
-    <div className='flex flex-col space-y-2'>
+    <div className='flex flex-col space-y-1'>
       {Object.entries(data).map(([key, value]) => (
         <KeyValue key={key} label={key} data={value} classNames='bg-group-surface text-description font-thin' />
       ))}
@@ -48,8 +48,17 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
   return (
     <div className='flex'>
       <Box
-        className={mx('bg-input-surface text-sm select-none cursor-pointer', classNames)}
+        className={mx('flex py-0.5 select-none text-sm cursor-pointer', classNames)}
+        role='button'
+        tabIndex={0}
+        aria-expanded={open}
         onClick={() => setOpen((open) => !open)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setOpen((open) => !open);
+          }
+        }}
       >
         {label}
       </Box>
@@ -60,7 +69,7 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
 
 const Scalar = ({ classNames, value }: ThemedClassName<{ value: any }>) => {
   return (
-    <Box className={mx('text-sm bg-sky-surface text-sky-text rounded-r-sm', classNames)}>
+    <Box className={mx('dx-tag dx-tag--green text-xs items-center', classNames)}>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||

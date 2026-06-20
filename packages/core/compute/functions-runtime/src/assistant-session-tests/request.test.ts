@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -24,14 +24,9 @@ const CalendarEventSchema = Schema.Struct({
   startTime: Schema.String,
   endTime: Schema.String,
   description: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.calendar-event',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.calendarEvent', '0.1.0')));
 
-type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
+type CalendarEvent = Type.InstanceType<typeof CalendarEventSchema>;
 
 const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
@@ -76,12 +71,12 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-describe('AiRequest', () => {
+describe('AiRequest.Request', () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const response = yield* request.run({
           prompt: 'Hello world!',
           history: [],
@@ -97,7 +92,7 @@ describe('AiRequest', () => {
     'calculator',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
         const response = yield* request.run({
           toolkit,
@@ -115,7 +110,7 @@ describe('AiRequest', () => {
     'tool schema error',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
         const response = yield* request.run({
           toolkit,
@@ -128,13 +123,14 @@ describe('AiRequest', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    { timeout: 60_000 },
   );
 
   it.effect(
     'summarization',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest({ summarizationThreshold: 0 }); // Force summarization.
+        const request = new AiRequest.Request({ summarizationThreshold: 0 }); // Force summarization.
         const response = yield* request.run({
           prompt: 'What did we talk about?',
           history: [

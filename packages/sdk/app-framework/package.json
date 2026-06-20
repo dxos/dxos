@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
@@ -61,6 +61,11 @@
       "node": "./dist/lib/node-esm/url-loader/index.mjs",
       "types": "./dist/types/src/url-loader/index.d.ts"
     },
+    "./config": {
+      "browser": "./dist/lib/browser/config/index.mjs",
+      "node": "./dist/lib/node-esm/config/index.mjs",
+      "types": "./dist/types/src/config/index.d.ts"
+    },
     "./vite-plugin": {
       "import": "./dist/plugin/node-esm/index.mjs",
       "types": "./dist/types/src/vite-plugin/index.d.ts"
@@ -95,15 +100,18 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -114,12 +122,18 @@
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "@effect/platform": "catalog:",
+    "babel-preset-solid": "catalog:",
+    "cjs-module-lexer": "catalog:",
+    "esbuild": "catalog:",
+    "idb-keyval": "catalog:",
+    "solid-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
@@ -132,7 +146,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "typedoc": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",

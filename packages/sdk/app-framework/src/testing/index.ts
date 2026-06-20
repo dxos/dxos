@@ -3,5 +3,6 @@
 //
 
 export * from './harness';
+export * from './operationCapture';
 export * from './service';
 export * from './withPluginManager';

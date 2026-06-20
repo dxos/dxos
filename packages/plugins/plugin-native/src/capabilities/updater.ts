@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 import * as Updater from '@tauri-apps/plugin-updater';
@@ -16,114 +17,178 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
+import { NativeCapabilities, type Update } from '#types';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-/**
- * Safely check for updates with error logging.
- */
-const check = async (): Promise<Updater.Update | null> => {
+/** Safe wrapper around Updater.check(). Distinguishes "no update" (ok with null update) from a thrown error. */
+const safeCheck = async (): Promise<{ ok: true; update: Updater.Update | null } | { ok: false; error: string }> => {
   try {
-    return await Updater.check();
+    return { ok: true, update: await Updater.check() };
   } catch (error) {
     log.error('failed to check for updates', { error });
-    return null;
+    return { ok: false, error: formatError(error) };
   }
 };
 
-/**
- * Safely download and install update with error logging.
- */
-const downloadAndInstall = async (
+/** Safe wrapper around update.downloadAndInstall(). */
+const safeDownloadAndInstall = async (
   update: Updater.Update,
-  handleDownload: (event: Updater.DownloadEvent) => void,
-): Promise<boolean> => {
+  onEvent: (event: Updater.DownloadEvent) => void,
+): Promise<{ ok: true } | { ok: false; error: string }> => {
   try {
-    await update.downloadAndInstall(handleDownload);
-    return true;
+    await update.downloadAndInstall(onEvent);
+    return { ok: true };
   } catch (error) {
     log.error('failed to download and install update', { error });
-    return false;
+    return { ok: false, error: formatError(error) };
   }
+};
+
+/** Extract a user-readable error string from whatever the Tauri updater threw. */
+const formatError = (error: unknown): string => {
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Skip updates if not supported or in dev mode.
     const platform = type();
     const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
-    if (!SUPPORTS_OTA.includes(platform) || isDevServer) {
-      log.info('skipping updater', { platform, port: window.location.port });
-      return;
-    }
+    const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
 
-    // https://tauri.app/plugin/updater/#checking-for-updates
-    // Returns true to keep checking, false to stop.
-    const action = Effect.gen(function* () {
+    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
+      Atom.keepAlive,
+    );
+
+    // Updater.Update is a class with instance methods (downloadAndInstall) and can't live in an
+    // atom value; cache it here between check and install.
+    let pendingUpdate: Updater.Update | null = null;
+
+    // Core: check for an update and update the status atom. Returns the update if available.
+    const doCheck = async (): Promise<Updater.Update | null> => {
+      registry.set(statusAtom, { kind: 'checking' });
       log.info('checking for updates');
-      const update = yield* Effect.promise(() => check());
+      const result = await safeCheck();
+      if (!result.ok) {
+        pendingUpdate = null;
+        registry.set(statusAtom, { kind: 'failed', error: result.error });
+        return null;
+      }
+      const update = result.update;
+      if (!update?.available) {
+        pendingUpdate = null;
+        registry.set(statusAtom, { kind: 'up-to-date', checkedAt: Date.now() });
+        return null;
+      }
+      log.info('update available', { version: update.version });
+      pendingUpdate = update;
+      registry.set(statusAtom, { kind: 'available', version: update.version });
+      return update;
+    };
+
+    // Core: download + install the cached pending update, streaming progress to the status atom.
+    const doInstall = async (): Promise<boolean> => {
+      const update = pendingUpdate;
       if (!update) {
-        log.info('no update available');
+        return false;
+      }
+      let downloaded = 0;
+      let contentLength = 0;
+      registry.set(statusAtom, { kind: 'downloading', downloaded: 0, contentLength: 0 });
+      const onEvent = Match.type<Updater.DownloadEvent>().pipe(
+        Match.when({ event: 'Started' }, (event) => {
+          contentLength = event.data.contentLength ?? 0;
+          registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+        }),
+        Match.when({ event: 'Progress' }, (event) => {
+          downloaded += event.data.chunkLength;
+          registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+        }),
+        Match.when({ event: 'Finished' }, () => {
+          log.info('download completed');
+        }),
+        Match.exhaustive,
+      );
+      const result = await safeDownloadAndInstall(update, onEvent);
+      if (result.ok) {
+        registry.set(statusAtom, { kind: 'ready' });
         return true;
       }
-      log.info('update check complete', {
-        available: update.available,
-        currentVersion: update.currentVersion,
-        version: update.version,
-        date: update.date,
-        body: update.body,
-      });
-      if (update.available) {
-        log.info('update available, starting download', { version: update.version });
-        let downloaded = 0;
-        let contentLength = 0;
+      registry.set(statusAtom, { kind: 'failed', error: result.error });
+      return false;
+    };
 
-        const handleDownload = Match.type<Updater.DownloadEvent>().pipe(
-          Match.when({ event: 'Started' }, (event) => {
-            contentLength = event.data.contentLength ?? 0;
-            log.info('download started', { contentLength });
-          }),
-          Match.when({ event: 'Progress' }, (event) => {
-            downloaded += event.data.chunkLength;
-            log.verbose('download progress', { downloaded, contentLength });
-          }),
-          Match.when({ event: 'Finished' }, () => {
-            log.info('download completed');
-          }),
-          Match.exhaustive,
-        );
-
-        const downloadSuccess = yield* Effect.promise(() => downloadAndInstall(update, handleDownload));
-
-        if (downloadSuccess) {
-          yield* invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.update-ready`,
-            title: ['update-ready.label', { ns: meta.id }],
-            description: ['update-ready.description', { ns: meta.id }],
-            duration: Infinity,
-            actionLabel: ['update.label', { ns: meta.id }],
-            actionAlt: ['update.alt', { ns: meta.id }],
-            onAction: () => relaunch(),
-          });
-          return false;
+    const manager: Update.Manager = {
+      status: statusAtom,
+      check: async () => {
+        if (!enabled) {
+          return;
         }
+        await doCheck();
+      },
+      install: async () => {
+        if (!enabled) {
+          return;
+        }
+        await doInstall();
+      },
+      relaunch: async () => {
+        await relaunch();
+      },
+    };
+
+    const managerContribution = Capability.contributes(NativeCapabilities.UpdateManager, manager);
+
+    if (!enabled) {
+      log.info('updater disabled', { platform, port: window.location.port });
+      return [managerContribution];
+    }
+
+    // Background flow: periodic check + auto-install + toast when ready.
+    // The toast is the entry point for users who weren't watching the settings panel.
+    const backgroundAction = Effect.gen(function* () {
+      const update = yield* Effect.promise(() => doCheck());
+      if (!update) {
+        return true;
       }
-      return true;
+      const ok = yield* Effect.promise(() => doInstall());
+      if (!ok) {
+        return true;
+      }
+      yield* invoke(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}.update-ready`,
+        title: ['update-ready.label', { ns: meta.profile.key }],
+        description: ['update-ready.description', { ns: meta.profile.key }],
+        duration: Infinity,
+        actionLabel: ['update.label', { ns: meta.profile.key }],
+        actionAlt: ['update.alt', { ns: meta.profile.key }],
+        onAction: () => relaunch(),
+      });
+      return false;
     });
 
-    // Run immediately on startup, then repeat every hour. Stop once an update is found.
     const schedule = Schedule.fixed(Duration.hours(1)).pipe(
       Schedule.whileInput((keepChecking: boolean) => keepChecking),
     );
-    const fiber = yield* action.pipe(Effect.repeat(schedule), Effect.forkDaemon);
+    const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
-    return Capability.contributes(Capabilities.Null, null, () =>
-      Effect.sync(() => Effect.runSync(Fiber.interrupt(fiber))),
-    );
+    return [
+      managerContribution,
+      // Return the interruption effect directly; Fiber.interrupt is async and would throw
+      // AsyncFiberException if wrapped in Effect.runSync.
+      Capability.contributes(Capabilities.Null, null, () => Fiber.interrupt(fiber)),
+    ];
   }),
 );

@@ -7,15 +7,12 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import {
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
-import { TrelloOperation } from '../operations';
 import { TrelloApi } from '../services';
+import { TrelloOperation } from '../types';
 
 /**
  * Service-specific token-created hook for Trello.

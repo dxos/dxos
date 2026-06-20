@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-navtree",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,43 +8,92 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/NavTreePlugin.tsx",
-      "node": "./src/NavTreePlugin.node.ts",
-      "default": "./src/NavTreePlugin.tsx"
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
-    "#capabilities": "./src/capabilities/index.ts",
-    "#components": "./src/components/index.ts",
-    "#containers": "./src/containers/index.ts",
-    "#hooks": "./src/hooks/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
-    "#testing": "./src/testing/index.ts",
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/neutral/hooks/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "workerd": "./src/NavTreePlugin.workerd.ts",
+        "node": "./src/NavTreePlugin.node.ts",
+        "default": "./src/NavTreePlugin.tsx"
+      },
+      "types": "./dist/types/src/NavTreePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/NavTreePlugin.workerd.mjs",
+      "node": "./dist/lib/neutral/NavTreePlugin.node.mjs",
+      "default": "./dist/lib/neutral/NavTreePlugin.mjs"
+    },
+    "#testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
@@ -56,26 +105,20 @@
     "@dxos/compute": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-observability": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/react-client": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@radix-ui/react-dismissable-layer": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
-    "date-fns": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/plugin-attention": "workspace:*",
@@ -83,7 +126,6 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

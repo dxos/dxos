@@ -12,7 +12,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Spec } from '#types';
 
-import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
+import CHESS_1_MDL from '../../../../../reflect/deus/lang/examples/chess-1.mdl?raw';
 import { SpecArticle } from './SpecArticle';
 
 const DefaultStory = ({ content }: { content?: string }) => {

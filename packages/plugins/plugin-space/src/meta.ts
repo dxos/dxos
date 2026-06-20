@@ -2,16 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.space',
-  name: 'Spaces',
-  description: trim`
-    Core workspace container system for organizing and sharing collaborative environments.
-    Create, manage, and share spaces with granular access control and invitation management.
-  `,
-  icon: 'ph--planet--regular',
-  tags: ['system'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

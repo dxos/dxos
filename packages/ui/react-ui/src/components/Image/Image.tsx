@@ -14,6 +14,12 @@ export type ImageProps = ThemedClassName<
     src: string;
     alt?: string;
     fit?: 'contain' | 'cover';
+    /**
+     * Image CORS mode (sets the `<img crossorigin>` attribute). Omitted by default: cross-origin
+     * images load without a CORS request (no console errors), but the dominant-color sampler can't
+     * read their pixels off the canvas (the browser taints it). Opt in with `'anonymous'` when the
+     * image host sends CORS headers and you want the dominant-color gradient.
+     */
     crossOrigin?: 'anonymous' | 'use-credentials' | '';
   } & ColorOptions
 >;
@@ -23,7 +29,7 @@ export const Image = ({
   src,
   alt = '',
   fit = 'contain',
-  crossOrigin = 'anonymous',
+  crossOrigin,
   sampleSize = 64,
   contrast = 0.9,
 }: ImageProps) => {

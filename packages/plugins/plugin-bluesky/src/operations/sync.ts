@@ -11,9 +11,9 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { Subscription } from '@dxos/plugin-feed/types';
-import { type Integration } from '@dxos/plugin-integration/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { Subscription } from '@dxos/plugin-feed';
+import { type Integration } from '@dxos/plugin-integration';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { IntegrationDatabaseMissingError } from '../errors';
@@ -137,18 +137,16 @@ const syncTarget = ({
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Subscription.Feed missing backing ECHO feed');
-    const feedDxn = EchoFeed.getQueueDxn(echoFeed);
-    invariant(feedDxn, 'ECHO feed not stored in a space');
+    invariant(EchoFeed.getQueueUri(echoFeed), 'ECHO feed not stored in a space');
     const space = client.spaces.get(db.spaceId);
     invariant(space, 'space not found');
 
     const feedRef = Ref.make(subscriptionFeed);
     const postObjects = collected.map((item) => {
       const input = BlueskyApi.toSubscriptionPostInput(item);
-      return Subscription.makePost({ feed: feedRef, ...input });
+      return Subscription.makePost({ source: feedRef, ...input });
     });
-    const queue = space.queues.get(feedDxn);
-    yield* Effect.tryPromise(() => queue.append(postObjects));
+    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(Database.layer(space.db)));
 
     if (newestUri) {
       Obj.update(subscriptionFeed, (subscriptionFeed) => {
@@ -203,7 +201,7 @@ const resolveOrCreateLocalFeed = ({
     if (existing && Subscription.instanceOf(existing)) {
       return existing;
     }
-    const newFeed = Subscription.makeFeed({
+    const newFeed = Subscription.makeSubscription({
       name,
       url: remoteIdToFeedUrl(remoteId),
       type: 'atproto',

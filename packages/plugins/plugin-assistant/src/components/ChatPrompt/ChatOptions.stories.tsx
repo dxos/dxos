@@ -10,17 +10,17 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ChessPlugin } from '@dxos/plugin-chess/testing';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { MapPlugin } from '@dxos/plugin-map';
-import { TablePlugin } from '@dxos/plugin-table';
+import { MapPlugin } from '@dxos/plugin-map/testing';
+import { TablePlugin } from '@dxos/plugin-table/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { useBlueprintRegistry, useContextBinder } from '#hooks';
+import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
 
 import { ChatOptions, ObjectsPanel, type ChatOptionsProps } from './ChatOptions';
@@ -46,7 +46,7 @@ const DefaultStory = ({ presets }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const [feed] = useQuery(space?.db, Filter.type(Feed.Feed));
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
-  const blueprintRegistry = useBlueprintRegistry();
+  const registry = useRegistry();
   const binder = useContextBinder(space, feed);
   const [preset, setPreset] = useState(presets?.[0]?.id);
   if (!space || !binder || !chat) {
@@ -58,7 +58,7 @@ const DefaultStory = ({ presets }: DefaultStoryProps) => {
       chat={chat}
       db={space.db}
       context={binder}
-      blueprintRegistry={blueprintRegistry}
+      registry={registry}
       presets={presets}
       preset={preset}
       onPresetChange={setPreset}

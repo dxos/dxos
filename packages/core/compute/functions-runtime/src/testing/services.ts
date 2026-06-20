@@ -7,8 +7,8 @@ import type * as Context from 'effect/Context';
 import type { Space } from '@dxos/client/echo';
 import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { type QueueFactory } from '@dxos/echo-db';
-import { ConfiguredCredentialsService, QueueService } from '@dxos/functions';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { ConfiguredCredentialsService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
@@ -45,11 +45,11 @@ export type TestServiceOptions = {
   /**
    * Database configuration.
    */
-  db?: Database.Database;
+  db?: EchoDatabase;
 
   /**
-   * Gets database and queue services from the space.
-   * Exclusive with: `db`, `queues`
+   * Gets database service from the space.
+   * Exclusive with: `db`
    */
   space?: Space;
 
@@ -60,11 +60,6 @@ export type TestServiceOptions = {
     enabled?: boolean;
     trace?: Context.Tag.Service<Trace.TraceService>;
   };
-
-  /**
-   * Queue service configuration.
-   */
-  queues?: QueueFactory;
 };
 
 /**
@@ -75,17 +70,15 @@ export const createTestServices = ({
   credentials,
   db,
   logging,
-  queues,
   space,
 }: TestServiceOptions = {}): ServiceContainer => {
-  assertArgument(!(!!space && (!!db || !!queues)), 'space', 'space can be provided only if db and queues are not');
+  assertArgument(!(!!space && !!db), 'space', 'space can be provided only if db is not');
 
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
     trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
-    queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
   });
 };
 

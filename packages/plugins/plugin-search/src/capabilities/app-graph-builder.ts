@@ -5,32 +5,32 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { SearchOperation } from '#operations';
+import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'space-search',
+        id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
         connector: Effect.fnUntraced(function* (node, get) {
           const client = yield* Capability.get(ClientCapabilities.Client);
           const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
           const layout = layoutAtom ? get(layoutAtom) : undefined;
-          const spaceId = layout?.workspace ? getSpaceIdFromPath(layout.workspace) : undefined;
+          const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
           const space = spaceId ? client.spaces.get(spaceId) : null;
 
           return [
             AppNode.makeDeckCompanion({
               id: linkedSegment('search'),
-              label: ['search.label', { ns: meta.id }],
+              label: ['search.label', { ns: meta.profile.key }],
               icon: 'ph--magnifying-glass--regular',
               data: space,
             }),
@@ -49,7 +49,7 @@ export default Capability.makeModule(
                 return false;
               }),
               properties: {
-                label: ['search-action.label', { ns: meta.id }],
+                label: ['search-action.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
                   macos: 'shift+meta+f',

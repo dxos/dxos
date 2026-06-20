@@ -214,10 +214,12 @@ class ObservabilityImpl implements Observability {
 
   get feedback(): Feedback {
     return {
-      captureUserFeedback: (form) => {
+      captureUserFeedback: async (form) => {
+        let eventUuid: string | undefined;
         for (const extension of this._getExtensions('feedback')) {
-          extension.captureUserFeedback(form);
+          eventUuid = (await extension.captureUserFeedback(form)) ?? eventUuid;
         }
+        return eventUuid;
       },
     };
   }

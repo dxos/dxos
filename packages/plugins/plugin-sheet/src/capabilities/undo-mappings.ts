@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
+import { SheetOperation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
           axisMeta: output.axisMeta,
           values: output.values,
         }),
-        message: ['axis-dropped.label', { ns: meta.id }],
+        message: ['axis-dropped.label', { ns: meta.profile.key }],
       }),
     ]),
   ),

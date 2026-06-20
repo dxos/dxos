@@ -4,16 +4,16 @@
 
 import { describe, test } from 'vitest';
 
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SamplePlugin } from '#plugin';
 
 import { meta } from './meta';
-import { SampleOperation } from './operations';
+import { SampleOperation } from './types';
 import { SampleItem } from './types';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('SamplePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

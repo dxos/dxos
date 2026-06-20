@@ -11,9 +11,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 
-import { UpdateStatus } from './definitions';
+import { SampleOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof UpdateStatus> = UpdateStatus.pipe(
+const handler: Operation.WithHandler<typeof SampleOperation.UpdateStatus> = SampleOperation.UpdateStatus.pipe(
   Operation.withHandler(({ item, status }) =>
     // `Effect.sync` wraps a synchronous side-effect. For async work, use `Effect.promise`.
     // `Obj.update` provides a mutable draft for safe property assignment on ECHO objects.

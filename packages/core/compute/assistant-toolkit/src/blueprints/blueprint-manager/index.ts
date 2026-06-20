@@ -3,4 +3,4 @@
 //
 
 export { default as BlueprintManagerBlueprint } from './blueprint';
-export { QueryBlueprints, EnableBlueprints, BlueprintManagerHandlers } from './functions';
+export { BlueprintManagerHandlers, BlueprintManagerOperations } from './operations';

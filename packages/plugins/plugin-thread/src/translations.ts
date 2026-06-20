@@ -11,6 +11,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
+      // TODO(burdon): Thread.
       [Type.getTypename(Channel.Channel)]: {
         'typename.label': 'Channel',
         'typename.label_zero': 'Channels',
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete channel',
         'object-deleted.label': 'Channel deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Chat',
         'channel-title.label': 'Title',
         'message.placeholder': 'Reply…',

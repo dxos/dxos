@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
   const { invokePromise } = useOperationInvoker();
@@ -26,8 +26,8 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <div role='none' className='p-2 flex gap-2'>
-      <div role='none' className='flex-1'>
+    <div className='p-2 flex gap-2'>
+      <div className='flex-1'>
         <Input.Root>
           <Input.Label srOnly>{t('saved-filter-name.label')}</Input.Label>
           <Input.TextInput

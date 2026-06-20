@@ -6,69 +6,40 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, JsonSchema, Obj, Ref, Type, Format } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 import * as Blueprint from './Blueprint';
-import * as Template from './Template';
 
 /**
- * Executable instructions, which may use Blueprints.
- * May reference additional context.
+ * Prompt-based operation.
+ * May reference blueprints and additional context.
  */
-// TODO(burdon): Name?
 export const Routine = Schema.Struct({
-  /**
-   * Name of the routine.
-   */
   name: Schema.optional(Schema.String),
-
-  /**
-   * Description of the routine's purpose and functionality.
-   * Allows AI agents to execute routines automatically as tools.
-   */
   description: Schema.optional(Schema.String),
-
-  /**
-   * Input schema of the routine.
-   */
-  input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-
-  /**
-   * Output schema of the routine.
-   */
-  output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-
-  /**
-   * Natural language instructions for the routine.
-   * These should provide concrete course of action for the AI to follow.
-   */
-  // TODO(burdon): Form editor.
-  instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)),
-
-  /**
-   * Blueprints that the routine may utilize.
-   */
+  input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    description: 'Input schema',
+  }),
+  output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    description: 'Output schema',
+  }),
+  instructions: Ref.Ref(Text.Text).pipe(
+    Annotation.FormInputAnnotation.set(false),
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
+  ),
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
-
-  /**
-   * Additional context that the routine may utilize.
-   */
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.routine',
-    version: '0.1.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--scroll--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.routine', '0.1.0')),
 );
 
-export interface Routine extends Schema.Schema.Type<typeof Routine> {}
+export type Routine = Type.InstanceType<typeof Routine>;
 
-export const make = (params: {
+export type MakeProps = {
   name?: string;
   description?: string;
   input?: Schema.Schema.AnyNoContext;
@@ -76,13 +47,23 @@ export const make = (params: {
   instructions?: string;
   blueprints?: Ref.Ref<Blueprint.Blueprint>[];
   context?: any[];
-}): Routine =>
+};
+
+export const make = ({
+  name,
+  description,
+  input,
+  output,
+  instructions,
+  blueprints = [],
+  context = [],
+}: MakeProps): Routine =>
   Obj.make(Routine, {
-    name: params.name,
-    description: params.description,
-    input: JsonSchema.toJsonSchema(params.input ?? Schema.Void),
-    output: JsonSchema.toJsonSchema(params.output ?? Schema.Void),
-    instructions: Template.make({ source: params.instructions }),
-    blueprints: params.blueprints ?? [],
-    context: params.context ?? [],
+    name,
+    description,
+    input: JsonSchema.toJsonSchema(input ?? Schema.Void),
+    output: JsonSchema.toJsonSchema(output ?? Schema.Void),
+    instructions: Ref.make(Text.make({ content: instructions ?? '' })),
+    blueprints,
+    context,
   });

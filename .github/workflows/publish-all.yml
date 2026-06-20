@@ -61,6 +61,12 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          # Isolate the publish cache from PR caches to prevent cache-poisoning
+          # attacks (see: TanStack npm supply-chain postmortem).
+          cache-scope: publish
+          # Verify package checksums so a poisoned cache entry is detected.
+          verify-integrity: 'true'
 
       - name: Bump Versions
         run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
@@ -81,6 +87,8 @@ jobs:
         id: npm-publish
         run: .github/workflows/scripts/publish.sh
         if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+        env:
+          DISCORD_NPM_PUBLISH_WEBHOOK: ${{ secrets.DISCORD_NPM_PUBLISH_WEBHOOK }}
 
       - name: Bundle Apps
         run: .github/workflows/scripts/bundle-apps.sh

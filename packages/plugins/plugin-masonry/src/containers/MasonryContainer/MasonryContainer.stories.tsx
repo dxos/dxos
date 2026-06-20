@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { View } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Filter, Type, View } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -52,7 +52,7 @@ const meta = {
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({
                   db: space.db,
-                  typename: Organization.Organization.typename,
+                  typename: Type.getTypename(Organization.Organization),
                 }),
               );
               const masonry = Masonry.make({ view });

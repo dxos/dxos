@@ -16,6 +16,7 @@ const { yamlPlugin } = esbuildPluginYaml;
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
+import { BabelSolidTransformPlugin } from './babel-solid-transform-plugin.ts';
 import { bundleDepsPlugin } from './bundle-deps-plugin.ts';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin.ts';
 import { fixRequirePlugin } from './fix-require-plugin.ts';
@@ -57,6 +58,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
+  const packageDir = dirname(packagePath);
+
+  const entryPoints: (string | { in: string; out: string })[] = options.entryPoints;
+
   let tsConfig: any;
   try {
     const tsConfigPath = join(dirname(packagePath), 'tsconfig.json');
@@ -67,6 +72,18 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
     tsConfig = { compilerOptions: {} };
   }
   const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
+
+  // Solid packages need `babel-preset-solid` to compile JSX into reactive
+  // primitives. SWC's React JSX runtime would emit `_jsx(...)` calls plus
+  // `import { jsx } from 'solid-js/jsx-runtime'`, but solid-js doesn't export
+  // a JSX runtime at all — its `./jsx-runtime` subpath resolves to the main
+  // bundle which has no `jsx`/`jsxs` symbols. When `jsxImportSource: 'solid-js'`
+  // is set in tsconfig, we route `.tsx` files through Babel instead, keeping
+  // SWC for plain `.ts` (which has no JSX and is ~5x faster).
+  const isSolidPackage = jsxImportSource === 'solid-js';
+  const babelSolidTransformPlugin = isSolidPackage
+    ? new BabelSolidTransformPlugin({ isVerbose: options.verbose })
+    : undefined;
 
   // Log-meta injection (`__dxlog_file`, `{F,L,S,...}`) is also applied here on the
   // post-SWC output via `@dxos/vite-plugin-log`'s `transformLogMeta`. The Rolldown
@@ -122,7 +139,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
 
       const start = Date.now();
       const result = await build({
-        entryPoints: options.entryPoints,
+        entryPoints,
         outdir,
         outExtension: { '.js': extension },
         format: 'esm', // Output is later transpiled to CJS via plugin.
@@ -171,6 +188,9 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ignore: options.ignorePackages,
             alias: options.alias,
           }),
+          // Register babel before swc — esbuild's onLoad is first-match-wins,
+          // so babel claims `.tsx` for solid packages and swc handles `.ts`.
+          babelSolidTransformPlugin?.createPlugin(),
           swcTransformPlugin.createPlugin(),
           RawPlugin(),
           // Substitute '/*?url' imports with empty string.

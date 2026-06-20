@@ -18,9 +18,8 @@ export const createScript = (space: Space): Script.Script => {
   space.db.add(script);
   space.db.add(
     Obj.make(Operation.PersistentOperation, {
-      key: 'org.dxos.script.story-fn',
+      [Obj.Meta]: { key: 'org.dxos.script.story-fn', version: '0.1.0' },
       name: 'Test',
-      version: '0.1.0',
       source: Ref.make(script),
     }),
   );

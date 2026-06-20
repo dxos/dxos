@@ -12,14 +12,12 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
-    {
-      "path": "../../common/async"
-    },
     {
       "path": "../../common/effect"
     },
@@ -57,10 +55,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../sdk/app-framework"
@@ -90,9 +85,6 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -102,13 +94,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

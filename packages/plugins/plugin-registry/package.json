@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-registry",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Braneframe plugin gallery",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -18,55 +18,65 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
-    "#translations": "./src/translations.ts",
     "#plugin": {
-      "browser": "./src/RegistryPlugin.tsx",
-      "node": "./src/RegistryPlugin.node.ts",
-      "default": "./src/RegistryPlugin.tsx"
+      "source": {
+        "workerd": "./src/RegistryPlugin.workerd.ts",
+        "node": "./src/RegistryPlugin.node.ts",
+        "default": "./src/RegistryPlugin.tsx"
+      },
+      "types": "./dist/types/src/RegistryPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/RegistryPlugin.workerd.mjs",
+      "node": "./dist/lib/neutral/RegistryPlugin.node.mjs",
+      "default": "./dist/lib/neutral/RegistryPlugin.mjs"
     },
+    "#translations": "./src/translations.ts",
     "#types": "./src/types.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
     },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs",
-      "types": "./dist/types/src/cli/index.d.ts"
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/cli": "catalog:",

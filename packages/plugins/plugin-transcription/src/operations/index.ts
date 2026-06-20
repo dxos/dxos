@@ -4,10 +4,9 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as TranscriptOperation from './definitions';
-
 export const TranscriptionOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),
   () => import('./open'),
   () => import('./summarize'),
+  () => import('./enrich-message'),
 );

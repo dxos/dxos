@@ -5,19 +5,18 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
-import { ThreadCapabilities } from '@dxos/plugin-thread';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 
-import { Meeting, MeetingCapabilities } from '../types';
-import { SetActive } from './definitions';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof SetActive> = SetActive.pipe(
+const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = MeetingOperation.SetActive.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ object }) {
       const store = yield* Capability.get(MeetingCapabilities.State);
-      const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+      const callManager = yield* Capability.get(CallsCapabilities.Manager);
       store.updateState((current) => ({ ...current, activeMeeting: object }));
       callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-        meetingId: object ? Obj.getDXN(object).toString() : '',
+        meetingId: object ? Obj.getURI(object) : '',
       });
       return { object };
     }),

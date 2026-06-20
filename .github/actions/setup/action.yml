@@ -1,6 +1,19 @@
 name: Setup
 description: Setup the environment for the other workflows
 
+inputs:
+  cache-scope:
+    description: >
+      Prefix for the pnpm store cache key. Use a distinct value per trust boundary
+      (e.g. "publish") to prevent a PR-poisoned cache from being restored in release
+      workflows. Defaults to "ci" so all non-publish workflows share one pool.
+    default: 'ci'
+  verify-integrity:
+    description: >
+      Enable pnpm store integrity verification. Must be "true" for any workflow that
+      holds publish credentials (id-token: write) to guard against cache poisoning.
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
@@ -15,7 +28,8 @@ runs:
     - uses: moonrepo/setup-toolchain@v0
       with:
         # IMPORTANT: Keep in-sync with .prototools
-        moon-version: '2.2.3'
+        moon-version: '2.2.6'
+        proto-version: '0.57.3'
 
     - name: Log out debug info
       run: |
@@ -38,12 +52,16 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.pnpm-store.outputs.pnpm-store }}
-        key: ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        key: ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
+          ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
 
     - name: Install dependencies
       run: |
-        pnpm set verify-store-integrity false
+        if [ "${{ inputs.verify-integrity }}" = "true" ]; then
+          pnpm set verify-store-integrity true
+        else
+          pnpm set verify-store-integrity false
+        fi
         pnpm install --prefer-offline
       shell: bash

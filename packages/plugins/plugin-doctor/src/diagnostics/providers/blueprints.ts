@@ -5,7 +5,7 @@
 import { Capabilities } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -21,8 +21,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const blueprintToolsDiagnostic: DiagnosticProvider = {
   id: 'blueprint-tools',
-  label: ['diagnostic.blueprint-tools.label', { ns: meta.id }],
-  description: ['diagnostic.blueprint-tools.description', { ns: meta.id }],
+  label: ['diagnostic.blueprint-tools.label', { ns: meta.profile.key }],
+  description: ['diagnostic.blueprint-tools.description', { ns: meta.profile.key }],
   run: async ({ client, capabilities, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const knownTools = new Set<string>();
@@ -54,8 +54,9 @@ export const blueprintToolsDiagnostic: DiagnosticProvider = {
       }
       const persisted = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
       for (const op of persisted) {
-        if (op.key) {
-          knownTools.add(op.key);
+        const opKey = Obj.getMeta(op).key;
+        if (opKey) {
+          knownTools.add(opKey);
         }
       }
     }
@@ -73,12 +74,13 @@ export const blueprintToolsDiagnostic: DiagnosticProvider = {
         }
         const unknownTools = (blueprint.tools ?? []).filter((tool: string) => !knownTools.has(tool));
         if (unknownTools.length > 0) {
-          const label = blueprint.name || blueprint.key || blueprint.id;
+          const blueprintKey = Obj.getMeta(blueprint).key;
+          const label = blueprint.name || blueprintKey || blueprint.id;
           issues.push({
             id: `${space.id}:${blueprint.id}:unknown-tools`,
             severity: 'warning',
             message: `Blueprint "${label}" references unknown tool(s): ${unknownTools.join(', ')}.`,
-            subjectLabel: blueprint.key ?? blueprint.id,
+            subjectLabel: blueprintKey ?? blueprint.id,
             spaceId: space.id,
           });
         }

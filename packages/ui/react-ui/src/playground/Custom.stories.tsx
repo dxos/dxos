@@ -12,37 +12,30 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
     <Tooltip.Provider>
       <div className='flex flex-col gap-6'>
-        {/* Large */}
+        {/* Large (40px) */}
         <div className='grid grid-cols-3 gap-4'>
           <div className='flex justify-center'>
-            <Button {...args} density='coarse'>
+            <Button {...args} density='lg'>
               {children}
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--circle--regular' density='coarse' />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='lg' />
           </div>
           <div className='flex justify-center'>
-            <IconButton
-              {...args}
-              label='Test'
-              icon='ph--circle--regular'
-              iconOnly
-              density='coarse'
-              classNames='px-1.5'
-            />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' iconOnly density='lg' classNames='px-1.5' />
           </div>
         </div>
 
-        {/* Medium */}
+        {/* Medium (32px, default) */}
         <div className='grid grid-cols-3 gap-4'>
           <div className='flex justify-center'>
-            <Button {...args} density='fine'>
+            <Button {...args} density='md'>
               {children}
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--circle--regular' density='fine' classNames='px-2' />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='md' classNames='px-2' />
           </div>
           <div className='flex justify-center'>
             <IconButton
@@ -50,37 +43,24 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               label='Test'
               icon='ph--circle--regular'
               iconOnly
-              density='fine'
+              density='md'
               classNames='py-1 px-1.5'
             />
           </div>
         </div>
 
-        {/* Small */}
+        {/* Small (28px) */}
         <div className='grid grid-cols-3 gap-4'>
           <div className='flex justify-center'>
-            <Button {...args} density='fine' classNames={'!h-[24px] !text-[14px] p-0 px-1.5 min-h-0'}>
+            <Button {...args} density='sm'>
               {children}
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton
-              {...args}
-              label='Test'
-              icon='ph--circle--regular'
-              density='fine'
-              classNames={'!h-[24px] !text-[14px] p-1 min-h-0 gap-0.5'}
-            />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='sm' />
           </div>
           <div className='flex justify-center'>
-            <IconButton
-              {...args}
-              label='Test'
-              icon='ph--circle--regular'
-              iconOnly
-              density='fine'
-              classNames={'!h-[24px] !text-[14px] p-1 min-h-0'}
-            />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' iconOnly density='sm' />
           </div>
         </div>
 

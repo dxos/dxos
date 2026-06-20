@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -44,7 +44,7 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const extensions = useMemo(() => {
     return cell.source?.target
@@ -143,7 +143,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <>
           <TemplateEditor
             id={cell.id}
-            template={cell.prompt.target.instructions}
+            source={cell.prompt.target.instructions}
             lineNumbers={false}
             classNames={editorStyles}
           />
@@ -186,7 +186,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
     return null;
   }
 
-  const value = promptResults?.[cell.prompt.dxn.toString()];
+  const value = promptResults?.[cell.prompt.uri];
   if (value == null) {
     return null;
   }
@@ -203,7 +203,7 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [

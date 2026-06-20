@@ -4,10 +4,10 @@
 
 import React, { type FC } from 'react';
 
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import { type Markdown } from '@dxos/plugin-markdown';
 import { Panel } from '@dxos/react-ui';
 
-import { RevealPlayer } from '#components';
+import { PresentationShell, RevealPlayer } from '#components';
 
 import { useExitPresenter } from '../../useExitPresenter';
 
@@ -17,7 +17,9 @@ export const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = (
   return (
     <Panel.Root classNames='relative'>
       <Panel.Content asChild>
-        <RevealPlayer content={document.content.target?.content ?? ''} onExit={handleExit} />
+        <PresentationShell onExit={handleExit}>
+          <RevealPlayer content={document.content.target?.content ?? ''} />
+        </PresentationShell>
       </Panel.Content>
     </Panel.Root>
   );

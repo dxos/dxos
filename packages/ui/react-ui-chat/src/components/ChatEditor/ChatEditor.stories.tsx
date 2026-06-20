@@ -63,15 +63,15 @@ export const WithSuggestions: Story = {
 // TODO(burdon): Replace.
 const references: ReferenceData[] = [
   {
-    uri: 'dxn:echo:@:AAAAAAAA',
+    uri: 'echo:/AAAAAAAA',
     label: 'Meeting Notes',
   },
   {
-    uri: 'dxn:echo:@:BBBBBBBB',
+    uri: 'echo:/BBBBBBBB',
     label: 'Project Plan',
   },
   {
-    uri: 'dxn:echo:@:CCCCCCCC',
+    uri: 'echo:/CCCCCCCC',
     label: 'Meeting Plan',
   },
 ];

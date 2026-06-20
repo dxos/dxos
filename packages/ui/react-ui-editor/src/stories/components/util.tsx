@@ -206,7 +206,7 @@ export const links: Completion[] = [
 export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-xs text-base-surface-text text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-xs text-base-fg text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(

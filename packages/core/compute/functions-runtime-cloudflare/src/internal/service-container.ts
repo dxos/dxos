@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AnyEntity } from '@dxos/echo/internal';
-import { type DXN, type SpaceId } from '@dxos/keys';
+import { type AnyEntity } from '@dxos/echo/Type';
+import { EID, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DataServiceImpl } from './data-service-impl';
 import { QueryServiceImpl } from './query-service-impl';
@@ -53,19 +53,19 @@ export class ServiceContainer {
     };
   }
 
-  async queryQueue(queue: DXN): Promise<FeedProtocol.QueryResult> {
-    const parts = queue.asQueueDXN();
-    if (!parts) {
-      throw new Error('Invalid queue DXN');
+  async queryQueue(queue: EID.EID): Promise<FeedProtocol.QueryResult> {
+    const spaceId = EID.getSpaceId(queue);
+    const queueId = EID.getEntityId(queue);
+    if (!spaceId || !queueId) {
+      throw new Error('Invalid queue EID');
     }
-    const { subspaceTag, spaceId, queueId } = parts;
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
         spaceId,
-        queuesNamespace: subspaceTag,
         queueIds: [queueId],
       },
     });
+
     return {
       objects: structuredClone(result.objects),
       nextCursor: result.nextCursor ?? null,
@@ -73,14 +73,15 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
-    const parts = queue.asQueueDXN();
-    if (!parts) {
-      throw new Error('Invalid queue DXN');
+  async insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void> {
+    const spaceId = EID.getSpaceId(queue);
+    const queueId = EID.getEntityId(queue);
+    if (!spaceId || !queueId) {
+      throw new Error('Invalid queue EID');
     }
-    const { subspaceTag, spaceId, queueId } = parts;
+    // TODO(dmaretskyi): EID does not encode the subspaceTag — defaulting to 'data'.
     await this._queueService.insertIntoQueue(this._executionContext, {
-      subspaceTag,
+      subspaceTag: 'data',
       spaceId,
       queueId,
       objects: objects.map((obj) => JSON.stringify(obj)),

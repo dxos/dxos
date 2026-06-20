@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-chess",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Chess for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,92 +8,119 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": "./src/blueprints/index.ts",
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
     "#capabilities": {
-      "browser": "./src/capabilities/index.ts",
-      "node": "./src/capabilities/node.ts",
-      "default": "./src/capabilities/index.ts"
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
-    "#components": "./src/components/index.ts",
-    "#containers": "./src/containers/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
-    "#translations": "./src/translations.ts",
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
     "#plugin": {
-      "browser": "./src/ChessPlugin.tsx",
-      "node": "./src/ChessPlugin.node.ts",
-      "default": "./src/ChessPlugin.tsx"
+      "source": {
+        "workerd": "./src/ChessPlugin.workerd.ts",
+        "node": "./src/ChessPlugin.node.ts",
+        "default": "./src/ChessPlugin.tsx"
+      },
+      "types": "./dist/types/src/ChessPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ChessPlugin.workerd.mjs",
+      "node": "./dist/lib/neutral/ChessPlugin.node.mjs",
+      "default": "./dist/lib/neutral/ChessPlugin.mjs"
     },
-    "#types": "./src/types/index.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./blueprints": {
       "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts",
-      "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs"
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "browser": "./dist/lib/browser/operations/index.mjs",
-      "node": "./dist/lib/node-esm/operations/index.mjs"
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@automerge/automerge": "catalog:",
-    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "chess.js": "catalog:",

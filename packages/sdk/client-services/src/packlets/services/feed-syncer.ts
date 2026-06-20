@@ -7,17 +7,19 @@ import { Encoder, decode as cborXdecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AsyncTask, scheduleTask } from '@dxos/async';
+import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import type { GetSyncStateRequest, GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
@@ -27,9 +29,11 @@ const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
 const DEFAULT_POLLING_INTERVAL = 5_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
+const DEFAULT_PUSH_FAILURE_BACKOFF_MS = 250;
+const MAX_PUSH_FAILURE_BACKOFF_MS = 30_000;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
-interface FeedSyncerOptions {
+export type FeedSyncerOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   feedStore: FeedStore;
   edgeClient: EdgeConnection;
@@ -64,7 +68,20 @@ interface FeedSyncerOptions {
    * @default 250 ms
    */
   pollRequestThrottleMs?: number;
-}
+
+  /**
+   * When false, only wires the edge message handler; poll/push background tasks and
+   * `feedStore.onNewBlocks` auto-push are disabled. Use for tests that call `syncBlocking` explicitly.
+   * @default true
+   */
+  backgroundSync?: boolean;
+
+  /**
+   * Max time to wait for a feed sync RPC response from edge, in milliseconds.
+   * @default 30000 (see `DEFAULT_SYNC_RPC_TIMEOUT_MS` in `@dxos/feed`).
+   */
+  syncRpcTimeoutMs?: number;
+};
 
 export class FeedSyncer extends Resource {
   readonly #syncNamespaces: string[];
@@ -72,6 +89,7 @@ export class FeedSyncer extends Resource {
   readonly #syncConcurrency: number;
   readonly #pollingInterval: number;
   readonly #pollRequestThrottleMs: number;
+  readonly #backgroundSync: boolean;
 
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   readonly #feedStore: FeedStore;
@@ -84,6 +102,8 @@ export class FeedSyncer extends Resource {
   #lastFullPoll: number | null = null;
   #throttledPollScheduled = false;
   #lastRequestedPollAt: number | null = null;
+  readonly #feedStoreMutex = new Mutex();
+  #pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
 
   constructor(options: FeedSyncerOptions) {
     super();
@@ -94,6 +114,7 @@ export class FeedSyncer extends Resource {
       peerId: options.peerId,
       feedStore: options.feedStore,
       sendMessage: this.#sendMessage.bind(this),
+      rpcTimeoutMs: options.syncRpcTimeoutMs,
     });
     this.#getSpaceIds = options.getSpaceIds;
     this.#syncNamespaces = options.syncNamespaces;
@@ -101,6 +122,7 @@ export class FeedSyncer extends Resource {
     this.#syncConcurrency = options.syncConcurrency ?? DEFAULT_SYNC_CONCURRENCY;
     this.#pollingInterval = options.pollingInterval ?? DEFAULT_POLLING_INTERVAL;
     this.#pollRequestThrottleMs = options.pollRequestThrottleMs ?? DEFAULT_POLL_REQUEST_THROTTLE_MS;
+    this.#backgroundSync = options.backgroundSync ?? true;
   }
 
   protected override async _open(): Promise<void> {
@@ -113,6 +135,10 @@ export class FeedSyncer extends Resource {
         if (service !== EdgeService.QUEUE_REPLICATOR) {
           return;
         }
+        log('feed sync edge ingress', {
+          serviceId: msg.serviceId,
+          payloadByteLength: msg.payload?.value?.byteLength,
+        });
         const handleMessageEffect = Effect.gen(this, function* () {
           const decoded = yield* Effect.try({
             try: () => cborXdecode(msg.payload!.value),
@@ -120,37 +146,75 @@ export class FeedSyncer extends Resource {
           });
           const payload = yield* Schema.validate(FeedProtocol.ProtocolMessage)(decoded);
           yield* this.#syncClient.handleMessage(payload);
-        });
+        }).pipe(
+          Effect.tapError((cause) =>
+            Effect.sync(() =>
+              log('feed sync edge message handling failed', {
+                serviceId: msg.serviceId,
+                payloadByteLength: msg.payload?.value?.byteLength,
+                cause: cause instanceof Error ? cause.message : String(cause),
+              }),
+            ),
+          ),
+        );
 
-        void RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect);
+        void this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect));
       }),
     );
 
+    if (this.#backgroundSync) {
+      // Tasks must be opened before registering listeners that call `schedule()`:
+      //   * `onNewBlocks` can fire from any `feedStore.append` happening on a separate
+      //     microtask while `_open()` is still awaiting.
+      //   * The edge client invokes `onReconnected` as a microtask when already connected.
+      //   `AsyncTask.schedule()` throws if the task is not yet open.
+      await this.#pollTask.open();
+      await this.#pushTask.open();
+
+      this.#feedStore.onNewBlocks.on(this._ctx, () => {
+        this.#pushTask.schedule();
+      });
+    }
+
     this._ctx.onDispose(
-      // NOTE: This will fire immediately if the connection is already open.
-      this.#edgeClient.onReconnected(async () => {}),
+      // NOTE: Fires immediately (as a microtask) if the connection is already open, and again
+      // on every subsequent reconnect.
+      this.#edgeClient.onReconnected(async () => {
+        log('feed sync edge reconnected', {
+          peerKey: this.#edgeClient.peerKey,
+          identityKey: this.#edgeClient.identityKey,
+        });
+        if (this.#backgroundSync) {
+          this.#resetSpacesToPoll();
+          this.#pollTask.schedule();
+          this.#pushTask.schedule();
+        }
+      }),
     );
 
-    this.#feedStore.onNewBlocks.on(this._ctx, () => {
+    if (this.#backgroundSync) {
+      this.#resetSpacesToPoll();
+      this.#pollTask.schedule();
+      // Flush blocks written before the syncer opened: `onNewBlocks` only fires on append,
+      // so existing unpositioned blocks would otherwise never be pushed.
       this.#pushTask.schedule();
-    });
-
-    await this.#pollTask.open();
-    await this.#pushTask.open();
-
-    this.#resetSpacesToPoll();
-    this.#pollTask.schedule();
+    }
   }
 
   protected override async _close(): Promise<void> {
-    await this.#pollTask.close();
-    await this.#pushTask.close();
+    if (this.#backgroundSync) {
+      await this.#pollTask.close();
+      await this.#pushTask.close();
+    }
   }
 
   /**
    * Schedules a best-effort pull without blocking the caller.
    */
   schedulePoll(): void {
+    if (!this.#backgroundSync) {
+      return;
+    }
     this.#resetSpacesToPoll();
     if (this.#throttledPollScheduled) {
       return;
@@ -170,6 +234,63 @@ export class FeedSyncer extends Resource {
         this.#pollTask.schedule();
       },
       delay,
+    );
+  }
+
+  /**
+   * Returns per-namespace queue sync backlog for a space.
+   * `blocksToPull` and `blocksToPush` of 0 mean caught up for that namespace.
+   */
+  async getSyncState(ctx: Context, request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+    const spaceId = request.spaceId as SpaceId;
+    invariant(SpaceId.isValid(spaceId));
+    const namespaces =
+      request.namespaces != null && request.namespaces.length > 0 ? request.namespaces : this.#syncNamespaces;
+    for (const feedNamespace of namespaces) {
+      invariant(FeedProtocol.isWellKnownNamespace(feedNamespace));
+    }
+
+    return this.#runSerialized(() =>
+      RuntimeProvider.runPromise(this.#runtime)(
+        Effect.gen(this, function* () {
+          const namespaceStates = yield* Effect.forEach(
+            namespaces,
+            (feedNamespace) =>
+              Effect.gen(this, function* () {
+                const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
+                  spaceId,
+                  feedNamespace,
+                });
+                const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({
+                  spaceId,
+                  feedNamespace,
+                });
+                const { blocksToPull } = yield* this.#syncClient
+                  .peekPull(ctx, {
+                    spaceId,
+                    feedNamespace,
+                    limit: this.#messageBlocksLimit,
+                  })
+                  .pipe(
+                    Effect.catchAll((cause) =>
+                      Effect.gen(this, function* () {
+                        this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
+                        return { blocksToPull: 0 };
+                      }),
+                    ),
+                  );
+                return {
+                  namespace: feedNamespace,
+                  blocksToPull: String(blocksToPull),
+                  blocksToPush: String(blocksToPush),
+                  totalBlocks: String(totalBlocks),
+                };
+              }),
+            { concurrency: 'unbounded' },
+          );
+          return { namespaces: namespaceStates };
+        }),
+      ),
     );
   }
 
@@ -196,36 +317,59 @@ export class FeedSyncer extends Resource {
       return;
     }
 
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(this, function* () {
-        let done = false;
-        let iterations = 0;
-        while (!done) {
-          done = true;
-          if (shouldPull) {
-            const pullResult = yield* this.#syncClient.pull(ctx, {
-              spaceId,
-              feedNamespace: subspaceTag,
-              limit: this.#messageBlocksLimit,
-            });
-            done &&= pullResult.done;
-          }
+    await this.#runSerialized(() =>
+      RuntimeProvider.runPromise(this.#runtime)(
+        Effect.gen(this, function* () {
+          let done = false;
+          let iterations = 0;
+          while (!done) {
+            done = true;
+            if (shouldPull) {
+              const pullResult = yield* this.#syncClient.pull(ctx, {
+                spaceId,
+                feedNamespace: subspaceTag,
+                limit: this.#messageBlocksLimit,
+              });
+              done &&= pullResult.done;
+            }
 
-          if (shouldPush) {
-            const pushResult = yield* this.#syncClient.push(ctx, {
-              spaceId,
-              feedNamespace: subspaceTag,
-              limit: this.#messageBlocksLimit,
-            });
-            done &&= pushResult.done;
+            if (shouldPush) {
+              const pushResult = yield* this.#syncClient.push(ctx, {
+                spaceId,
+                feedNamespace: subspaceTag,
+                limit: this.#messageBlocksLimit,
+              });
+              done &&= pushResult.done;
+            }
+            iterations++;
+            if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
+              throw new Error('Blocking sync exceeded max iterations.');
+            }
           }
-          iterations++;
-          if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
-            throw new Error('Blocking sync exceeded max iterations.');
-          }
-        }
-      }),
+        }),
+      ),
     );
+  }
+
+  async #runSerialized<A>(run: () => Promise<A>): Promise<A> {
+    using _guard = await this.#feedStoreMutex.acquire('feed-sync');
+    return run();
+  }
+
+  #schedulePushRetry({ hadFailure, needsMore }: { hadFailure: boolean; needsMore: boolean }): void {
+    if (!needsMore) {
+      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+      return;
+    }
+    if (hadFailure) {
+      const delayMs = this.#pushFailureBackoffMs;
+      this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_PUSH_FAILURE_BACKOFF_MS);
+      log.info('feed sync push retry scheduled with backoff', { delayMs });
+      scheduleTask(this._ctx, () => this.#pushTask.schedule(), delayMs);
+      return;
+    }
+    this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+    this.#pushTask.schedule();
   }
 
   #resetSpacesToPoll(): void {
@@ -242,6 +386,16 @@ export class FeedSyncer extends Resource {
   ): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
+      const serviceId = this.#getTargetServiceId(message);
+      const rpcTag = 'blocks' in message ? 'AppendRequest' : 'QueryRequest';
+      log('feed sync edge rpc outgoing', {
+        tag: rpcTag,
+        serviceId,
+        payloadByteLength: encoded.byteLength,
+        spaceId: message.spaceId,
+        feedNamespace: message.feedNamespace,
+        requestId: message.requestId,
+      });
       yield* Effect.tryPromise(async () =>
         this.#edgeClient.send(
           ctx,
@@ -250,11 +404,34 @@ export class FeedSyncer extends Resource {
               identityKey: this.#edgeClient.identityKey,
               peerKey: this.#edgeClient.peerKey,
             },
-            serviceId: this.#getTargetServiceId(message),
+            serviceId,
             payload: { value: bufferToArray(encoded) },
           }),
         ),
+      ).pipe(
+        Effect.tapError((cause) =>
+          Effect.sync(() =>
+            log('feed sync edge send failed', {
+              serviceId,
+              tag: rpcTag,
+              cause: cause instanceof Error ? cause.message : String(cause),
+            }),
+          ),
+        ),
       );
+    });
+  }
+
+  #logSyncFailure(
+    operation: 'pull' | 'push' | 'peekPull',
+    { spaceId, feedNamespace, cause }: { spaceId: SpaceId; feedNamespace: string; cause: unknown },
+  ): void {
+    log('feed sync operation failed', {
+      operation,
+      spaceId,
+      feedNamespace,
+      cause: cause instanceof Error ? cause.message : String(cause),
+      errorTag: cause instanceof Error ? cause.name : undefined,
     });
   }
 
@@ -273,11 +450,20 @@ export class FeedSyncer extends Resource {
           Effect.gen(this, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
-              const { done } = yield* this.#syncClient.pull(this._ctx, {
-                spaceId,
-                feedNamespace,
-                limit: this.#messageBlocksLimit,
-              });
+              const { done } = yield* this.#syncClient
+                .pull(this._ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.catchAll((cause) =>
+                    Effect.gen(this, function* () {
+                      this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                      return { done: false };
+                    }),
+                  ),
+                );
               if (!done) {
                 doneForAllNamespaces = false;
               }
@@ -305,7 +491,7 @@ export class FeedSyncer extends Resource {
           Math.max(this.#pollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
         );
       }
-    }).pipe(RuntimeProvider.runPromise(this.#runtime)),
+    }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 
   readonly #pushTask = new AsyncTask(async () =>
@@ -314,24 +500,37 @@ export class FeedSyncer extends Resource {
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen(this, function* () {
-            let doneForAllNamespaces = true;
+            let needsMorePush = false;
+            let hadPushFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
-              const { done } = yield* this.#syncClient.push(this._ctx, {
-                spaceId,
-                feedNamespace,
-                limit: this.#messageBlocksLimit,
-              });
+              const { done } = yield* this.#syncClient
+                .push(this._ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.tap(() =>
+                    Effect.sync(() => {
+                      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+                    }),
+                  ),
+                  Effect.catchAll((cause) =>
+                    Effect.gen(this, function* () {
+                      this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
+                      hadPushFailure = true;
+                      return { done: false };
+                    }),
+                  ),
+                );
               if (!done) {
-                doneForAllNamespaces = false;
+                needsMorePush = true;
               }
             }
-            if (!doneForAllNamespaces) {
-              // Keep pushing until all blocks are pushed.
-              this.#pushTask.schedule();
-            }
+            this.#schedulePushRetry({ hadFailure: hadPushFailure, needsMore: needsMorePush });
           }),
         { concurrency: this.#syncConcurrency },
       );
-    }).pipe(RuntimeProvider.runPromise(this.#runtime)),
+    }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 }

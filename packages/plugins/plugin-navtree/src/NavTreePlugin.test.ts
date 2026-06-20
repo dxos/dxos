@@ -11,7 +11,7 @@ import { NavTreePlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('NavTreePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -21,7 +21,7 @@ describe('NavTreePlugin', () => {
 
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('AppGraphBuilder')]));
 
-    await harness.fire(ActivationEvents.SetupOperationHandler);
+    await harness.fire(ActivationEvents.SetupProcessManager);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

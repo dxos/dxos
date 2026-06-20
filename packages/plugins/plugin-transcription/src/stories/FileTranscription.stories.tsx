@@ -3,57 +3,50 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { scheduleTask } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo/internal';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
-import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { withLayout } from '@dxos/react-ui/testing';
-import { TestSchema } from '@dxos/schema/testing';
-import { type Actor, Message, Organization, Person } from '@dxos/types';
-import { seedTestData } from '@dxos/types/testing';
+import { useAudioFile } from '#hooks';
 
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '#hooks';
-import { TestItem } from '#testing';
-
-import { MessageNormalizer, getActorId } from '../normalization';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { renderByline } from '../util';
+import {
+  useIsSpeaking,
+  createStoryDecorators,
+  useStoryAppendSegments,
+  useStoryMessageModel,
+  useStoryTranscriber,
+} from './common';
 import { TranscriptionStory } from './TranscriptionStory';
-import { useIsSpeaking } from './useIsSpeaking';
 
-const AudioFile = ({
-  detectSpeaking,
-  audioUrl,
-  normalizeSentences,
-  transcriberConfig,
-  recorderConfig,
-  audioConstraints,
-}: {
+const DEFAULT_TRANSCRIBER_CONFIG = {
+  transcribeAfterChunksAmount: 100,
+  prefixBufferChunksAmount: 50,
+  normalizeSentences: true,
+};
+
+const DEFAULT_RECORDER_CONFIG = {
+  interval: 200,
+};
+
+type DefaultStoryProps = {
   detectSpeaking?: boolean;
   normalizeSentences?: boolean;
   audioUrl: string;
   transcriberConfig?: TranscriberProps['config'];
   recorderConfig?: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
-}) => {
-  const [running, setRunning] = useState(false);
-  const actor: Actor.Actor = useMemo(() => ({ name: 'You' }), []);
+};
 
-  // Optional uploaded file overrides the default URL.
-  // The useEffect below revokes the previous URL whenever it changes (and on unmount).
+const DefaultStory = ({
+  detectSpeaking,
+  audioUrl,
+  normalizeSentences,
+  transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
+  recorderConfig = DEFAULT_RECORDER_CONFIG,
+  audioConstraints,
+}: DefaultStoryProps) => {
+  const [running, setRunning] = useState(false);
+
+  // Optional uploaded file overrides the default URL; revoke the previous URL on change/unmount.
   const [uploadedUrl, setUploadedUrl] = useState<string>();
   useEffect(() => {
     return () => {
@@ -69,12 +62,10 @@ const AudioFile = ({
   }, []);
 
   const sourceUrl = uploadedUrl ?? audioUrl;
-
-  // Audio.
   const { audio, track, stream } = useAudioFile(sourceUrl, audioConstraints);
-
-  // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
+
+  // Pipe the decoded stream into the <audio> element so the user hears playback.
   const ref = useRef<HTMLAudioElement>(null);
   useEffect(() => {
     if (ref.current && stream) {
@@ -82,6 +73,7 @@ const AudioFile = ({
     }
   }, [stream]);
 
+  // Mirror the toolbar's running flag to the underlying HTMLAudioElement.
   useEffect(() => {
     if (!audio) {
       return;
@@ -94,176 +86,58 @@ const AudioFile = ({
     }
   }, [audio, running]);
 
-  // Transcriber.
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
+  const { model, appendMessage } = useStoryMessageModel();
+  const handleSegments = useStoryAppendSegments(appendMessage);
 
-  const model = useQueueModelAdapter(renderByline([]), queue);
-  const handleSegments = useCallback<TranscriberProps['onSegments']>(
-    async (blocks) => {
-      void queue?.append([
-        Obj.make(Message.Message, {
-          created: new Date().toISOString(),
-          sender: actor,
-          blocks,
-        }),
-      ]);
-    },
-    [queue],
-  );
-
-  const transcriber = useTranscriber({
+  useStoryTranscriber({
     audioStreamTrack: track,
-    onSegments: handleSegments,
+    running,
+    isSpeaking,
     transcriberConfig,
     recorderConfig,
+    onSegments: handleSegments,
   });
 
-  // Normalize sentences.
-  const normalizer = useMemo(() => {
-    if (!normalizeSentences) {
-      return;
-    }
-    const executor = new FunctionExecutor(
-      new ServiceContainer().setServices({
-        // ai: {
-        //   client: new Edge AiServiceClient({
-        //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-        //     defaultGenerationOptions: {
-        //       model: '@anthropic/claude-3-5-sonnet-20241022',
-        //     },
-        //   }),
-        // },
-      }),
-    );
-
-    return new MessageNormalizer({
-      functionExecutor: executor,
-      queue,
-      startingCursor: { actorId: getActorId(actor), timestamp: new Date().toISOString() },
-    });
-  }, [normalizeSentences, queue, actor]);
-
-  useEffect(() => {
-    if (!normalizer) {
-      return;
-    }
-    const ctx = new Context();
-    scheduleTask(ctx, async () => {
-      await normalizer.open();
-      ctx.onDispose(async () => {
-        await normalizer.close();
-      });
-    });
-    return () => {
-      void ctx.dispose();
-    };
-  }, [normalizer]);
-
-  const manageChunkRecording = () => {
-    if (running && isSpeaking && transcriber) {
-      log.info('starting transcription');
-      transcriber?.startChunksRecording();
-    } else if ((!isSpeaking || !running) && transcriber) {
-      log.info('stopping transcription');
-      transcriber?.stopChunksRecording();
-    }
-  };
-
-  useEffect(() => {
-    const ctx = new Context();
-    scheduleTask(ctx, async () => {
-      if (transcriber && running) {
-        await transcriber.open();
-      } else if (!running) {
-        await transcriber?.close();
-      }
-      manageChunkRecording();
-    });
-
-    return () => {
-      void ctx.dispose();
-    };
-  }, [transcriber, running]);
-
-  useEffect(() => {
-    manageChunkRecording();
-  }, [isSpeaking, stream]);
+  // TODO(burdon): Sentence normalization moved to require a real space-backed Feed + FeedService runtime.
+  //  Re-enable here once the story has access to one.
+  void normalizeSentences;
 
   return (
     <TranscriptionStory
+      audioRef={ref}
       disabled={!stream}
       model={model}
       running={running}
       onRunningChange={setRunning}
-      audioRef={ref}
       onUpload={handleUpload}
     />
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/components/FileTranscription',
-  decorators: [
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => seedTestData(personalSpace));
-            }),
-        }),
-
-        PreviewPlugin(),
-        TranscriptionPlugin(),
-      ],
-      fireEvents: [AppActivationEvents.SetupAppGraph],
-    }),
-  ],
-} satisfies Meta;
+  title: 'plugins/plugin-transcription/stories/FileTranscription',
+  render: DefaultStory,
+  decorators: createStoryDecorators(),
+} satisfies Meta<DefaultStoryProps>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const TRANSCRIBER_CONFIG = {
-  transcribeAfterChunksAmount: 100,
-  prefixBufferChunksAmount: 50,
-  normalizeSentences: true,
-};
-
-const RECORDER_CONFIG = {
-  interval: 200,
-};
-
-export const Default: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
+export const Default: Story = {
   args: {
     detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
     // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
   },
 };
 
 // TODO(mykola): Fix sentence normalization.
 // export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-//   render: AudioFile,
 //   args: {
 //     detectSpeaking: true,
 //     normalizeSentences: true,
-//     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
 //     audioUrl: 'https://dxos.network/audio-london.m4a',
-//     // textUrl: 'https://dxos.network/audio-london.txt',
-//     transcriberConfig: TRANSCRIBER_CONFIG,
-//     recorderConfig: RECORDER_CONFIG,
 //   },
 // };

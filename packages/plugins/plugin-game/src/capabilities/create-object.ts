@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateGamePanel } from '#components';
 
@@ -20,14 +20,14 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Game.typename,
+      id: Type.getTypename(Game),
       customPanel: CreateGamePanel,
       createObject: (
         { variantId, input }: { variantId: string; input?: Record<string, any> },
         options: CreateOptions,
       ) =>
         Effect.gen(function* () {
-          const variants = yield* Capability.getAll(GameCapabilities.Variant);
+          const variants = yield* Capability.getAll(GameCapabilities.VariantProvider);
           const variant = variants.find((v) => v.id === variantId);
           invariant(variant, `Unknown game variant: ${variantId}`);
 
@@ -41,7 +41,6 @@ export default Capability.makeModule(
           yield* Operation.invoke(SpaceOperation.AddObject, {
             object: stateObject,
             target: options.target,
-            hidden: true,
             targetNodeId: options.targetNodeId,
           });
 

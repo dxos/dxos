@@ -9,7 +9,7 @@ Two tests every plugin should ship: a **smoke test** (modules activate) and an *
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit/events';
 // IMPORTANT: use the CLI variant — the main ClientPlugin references browser-only capabilities.
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';

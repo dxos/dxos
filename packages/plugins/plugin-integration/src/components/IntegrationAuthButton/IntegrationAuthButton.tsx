@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { type Database, type Obj, type Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -33,7 +33,7 @@ export type IntegrationAuthButtonProps = {
  * (e.g. inbox / calendar) that detect a missing integration mid-flow.
  */
 export const IntegrationAuthButton = ({ providerId, db, existingTarget }: IntegrationAuthButtonProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const provider = manager.capabilities
     .getAll(IntegrationProvider)
@@ -42,7 +42,7 @@ export const IntegrationAuthButton = ({ providerId, db, existingTarget }: Integr
 
   const handleClick = useCallback(async () => {
     const coordinator = manager.capabilities.get(IntegrationCoordinator);
-    await runAndForwardErrors(
+    await EffectEx.runAndForwardErrors(
       coordinator.createIntegration({ db, spaceId: db.spaceId, providerId, existingTarget }),
     ).catch(() => {});
   }, [manager, db, providerId, existingTarget]);

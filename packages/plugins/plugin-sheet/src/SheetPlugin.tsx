@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AutomationEvents } from '@dxos/plugin-automation/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { ClientEvents } from '@dxos/plugin-client';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
   AnchorSort,
@@ -23,6 +22,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
@@ -36,7 +38,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({
@@ -47,6 +49,9 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): More relevant event?
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

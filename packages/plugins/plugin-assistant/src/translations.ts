@@ -18,7 +18,7 @@ export const translations: Resource[] = [
   ...formTranslations,
   {
     'en-US': {
-      [Blueprint.Blueprint.typename]: {
+      [Type.getTypename(Blueprint.Blueprint)]: {
         'typename.label': 'Blueprint',
         'typename.label_zero': 'Blueprints',
         'typename.label_one': 'Blueprint',
@@ -40,7 +40,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete routine',
         'object-deleted.label': 'Routine deleted',
       },
-      [Sequence.typename]: {
+      [Type.getTypename(Sequence.Sequence)]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
         'typename.label_one': 'Sequence',
@@ -51,21 +51,24 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete sequence',
         'object-deleted.label': 'Sequence deleted',
       },
-      [Chat.Chat.typename]: {
-        'typename.label': 'AI Chat',
-        'object-name.placeholder': 'New AI Chat',
-        'add-object.label': 'Add AI chat',
-        'rename-object.label': 'Rename AI Chat',
-        'delete-object.label': 'Delete AI Chat',
-        'object-deleted.label': 'AI Chat deleted',
+      [Type.getTypename(Chat.Chat)]: {
+        'typename.label': 'AI Conversation',
+        'typename.label_zero': 'AI Conversations',
+        'typename.label_one': 'AI Conversation',
+        'typename.label_other': 'AI Conversations',
+        'object-name.placeholder': 'New AI conversation',
+        'add-object.label': 'Add AI conversation',
+        'rename-object.label': 'Rename AI conversation',
+        'delete-object.label': 'Delete AI conversation',
+        'object-deleted.label': 'AI conversation deleted',
       },
-      [McpServer.McpServer.typename]: {
+      [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
         'typename.label_zero': 'MCP Servers',
         'typename.label_one': 'MCP Server',
         'typename.label_other': 'MCP Servers',
       },
-      [Agent.Agent.typename]: {
+      [Type.getTypename(Agent.Agent)]: {
         'typename.label': 'Agent',
         'typename.label_zero': 'Agents',
         'typename.label_one': 'Agent',
@@ -77,7 +80,7 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.id]: {
+      [meta.profile.key]: {
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -107,7 +110,8 @@ export const translations: Resource[] = [
 
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
-        'reset-blueprints.label': 'Reset blueprints',
+        'import-compute-operations.label': 'Import compute operations',
+        'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
 
         'no-results.message': 'No results',
 
@@ -117,6 +121,7 @@ export const translations: Resource[] = [
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
+        'create-chat.label': 'New AI Chat',
 
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
@@ -150,10 +155,13 @@ export const translations: Resource[] = [
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
+        'ai-service-error.label': 'AI service error',
+        'view-usage.label': 'View usage',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
         'run-prompt.label': 'Run prompt',
+        'routine-running.label': 'Running…',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
@@ -172,13 +180,20 @@ export const translations: Resource[] = [
         'project-empty-spec.message': 'Open the Properties companion to configure the agent.',
         'project-empty-spec.description': 'Open the Assistant companion to interact with the agent.',
         'artifacts.label': 'Artifacts',
-        'input-queue.label': 'Inputs',
+        'inputs.label': 'Inputs',
 
         // AgentProperties.
         'instructions.label': 'Instructions',
         'instructions.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
+
+        // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-draft-doc.label': 'Draft a new document',
+        'space-home.suggestion-data-type.label': 'Create a new data type',
+        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.prompt.placeholder': 'Ask the assistant anything…',
       },
     },
   },

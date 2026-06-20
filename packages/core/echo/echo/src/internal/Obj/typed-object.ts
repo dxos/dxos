@@ -12,7 +12,7 @@ import { type AnyEntity } from '../common/types';
  * Implements effect schema to define object properties.
  * Has a typename and version.
  *
- * In contrast to {@link EchoSchema} this definition is not recorded in the database.
+ * In contrast to a stored `Type.Type` entity, this definition is not recorded in the database.
  *
  * @deprecated Use `Type.AnyObj` from `@dxos/echo` instead.
  */

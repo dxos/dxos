@@ -6,8 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { Format, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Format } from '@dxos/echo/Format';
 import { AccessToken } from '@dxos/types';
 
 /** One sync target: chosen remote item (`remoteId`) plus optional local root (`object`). */
@@ -47,10 +48,7 @@ export const IntegrationV1 = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.integration',
-    version: '0.1.0',
-  }),
+  Type.makeObject(DXN.make('org.dxos.type.integration', '0.1.0')),
 );
 
 export interface IntegrationV1 extends Schema.Schema.Type<typeof IntegrationV1> {}
@@ -85,18 +83,12 @@ export const Integration = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.integration',
-    version: '0.2.0',
-  }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--plugs-connected--regular',
-    hue: 'cyan',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'indigo' }),
+  Type.makeObject(DXN.make('org.dxos.type.integration', '0.2.0')),
 );
 
-export interface Integration extends Schema.Schema.Type<typeof Integration> {}
+export type Integration = Type.InstanceType<typeof Integration>;
 
 export const instanceOf = (value: unknown): value is Integration => Obj.instanceOf(Integration, value);
 

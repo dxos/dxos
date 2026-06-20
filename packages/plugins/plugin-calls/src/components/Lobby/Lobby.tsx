@@ -1,0 +1,124 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { useAtomValue } from '@effect-atom/atom-react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
+
+import { useCapability } from '@dxos/app-framework/ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
+
+import { Toolbar, type ToolbarProps } from '../Call';
+import { VideoObject } from '../Media';
+import { ResponsivePanel } from '../ResponsiveGrid';
+
+// TODO(wittjosiah): Repurpose lobby for preview.
+
+const SWARM_PEEK_INTERVAL = 1_000;
+
+//
+// Root
+//
+
+type LobbyRootProps = PropsWithChildren<ThemedClassName>;
+
+// TODO(burdon): Make headless?
+const LobbyRoot = ({ children }: LobbyRootProps) => {
+  return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
+};
+
+LobbyRoot.displayName = 'LobbyRoot';
+
+//
+// Preview
+//
+
+type LobbyPreviewProps = {};
+
+const LobbyPreview = (_props: LobbyPreviewProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const call = useCapability(CallsCapabilities.Manager);
+  const videoEnabled = useAtomValue(call.videoEnabledAtom);
+  const videoStream = useAtomValue(call.localVideoStreamAtom);
+  const [classNames, setClassNames] = useState('');
+  useEffect(() => {
+    if (!videoEnabled) {
+      setClassNames('');
+      return;
+    }
+
+    // Video element will expand once the stream is available.
+    const timeout = setTimeout(() => {
+      setClassNames('outline-neutral-900 opacity-100');
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [videoEnabled]);
+
+  return (
+    <div className='grid grow p-4'>
+      <ResponsivePanel>
+        {(videoEnabled && (
+          <VideoObject
+            videoStream={videoStream}
+            flip
+            muted
+            classNames={mx(
+              'rounded-md outline outline-2 outline-transparent opacity-0 transition-all duration-500',
+              classNames,
+            )}
+          />
+        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
+      </ResponsivePanel>
+    </div>
+  );
+};
+
+LobbyPreview.displayName = 'LobbyPreview';
+
+//
+// Toolbar
+//
+
+type LobbyToolbarProps = ThemedClassName<
+  {
+    roomId: string;
+  } & Pick<ToolbarProps, 'onJoin'>
+>;
+
+const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
+  const call = useCapability(CallsCapabilities.Manager);
+  const [count, setCount] = useState<number>(0);
+
+  // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
+  useEffect(() => {
+    void call.peek(roomId).then((count) => setCount(count));
+    const interval = setInterval(() => {
+      void call.peek(roomId).then((count) => setCount(count));
+    }, SWARM_PEEK_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [call, roomId]);
+
+  return (
+    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+      <Toolbar participants={count} isInRoom={false} {...props} />
+    </div>
+  );
+};
+
+LobbyToolbar.displayName = 'LobbyToolbar';
+
+//
+// Export
+//
+
+export const Lobby = {
+  Root: LobbyRoot,
+  Preview: LobbyPreview,
+  Toolbar: LobbyToolbar,
+};

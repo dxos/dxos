@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as MarkdownOperation from './definitions';
-
 export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),
   () => import('./create-markdown'),

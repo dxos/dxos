@@ -1,0 +1,130 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "dx.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keyboard"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/observability"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}

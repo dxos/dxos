@@ -5,7 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
-import { type EchoHost } from '@dxos/echo-pipeline';
+import { type EchoHost } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -47,6 +47,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       const rootHandle = await context.echoHost.loadDoc(ctx, context.currentRoot as AutomergeUrl, {
         timeout: LOAD_DOC_TIMEOUT,
       });
+      invariant(rootHandle, 'Automerge root document must load for history prune migration.');
 
       const newRoot = await context.echoHost.createDoc(rootHandle.doc());
       await context.echoHost.flush(ctx);

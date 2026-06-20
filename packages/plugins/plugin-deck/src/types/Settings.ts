@@ -13,17 +13,11 @@ export const Settings = Schema.Struct({
       description: 'Display multiple panels side by side instead of one at a time.',
     }),
   ),
-  // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
+  // TODO(burdon): Rename layoutMode? (e.g., bento/encapsulated or floating/compact, etc.)
   encapsulatedPlanks: Schema.optional(
     Schema.Boolean.annotations({
       title: 'Encapsulated planks',
       description: 'Render each plank inside its own isolated container.',
-    }),
-  ),
-  enableStatusbar: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Show status bar',
-      description: 'Display a status bar at the bottom of the application.',
     }),
   ),
   showHints: Schema.optional(

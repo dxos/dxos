@@ -16,13 +16,13 @@ describe('build tests', () => {
         // NOTE: They also need to be added to package.json of this package.
         '@dxos/assistant-toolkit',
         '@dxos/assistant',
-        '@dxos/echo-db',
+        '@dxos/echo-client',
         '@dxos/echo',
         '@dxos/keys',
         '@dxos/log',
       ],
       conditions: ['workerd', 'worker', 'browser'],
-      external: ['*.wasm', 'node:async_hook'],
+      external: ['*.wasm', 'node:*'],
       forbid: [
         // Place patterns that must not appear in the bundle here, e.g. packages known to not be compatible with workerd.
         // NOTE: Patterns are matched against .pnpm store: ../../../node_modules/.pnpm/parjs@1.3.9/node_modules/parjs/dist/internal/parsers/string-len.js
@@ -36,7 +36,7 @@ describe('build tests', () => {
 
   test('prohibit vitest in dist builds', async () => {
     await runEnvTest({
-      imports: ['@dxos/echo-db', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/functions'],
+      imports: ['@dxos/echo-client', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/functions'],
       conditions: ['browser'],
       external: ['*.wasm', 'node:async_hook'],
       forbid: [/vitest/, /rollup/],

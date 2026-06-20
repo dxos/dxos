@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
+import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
+import type { SerializedError } from '../index';
 import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
 import { type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 
@@ -32,7 +33,7 @@ Expected to return `FunctionMetadata` in JSON:
 
 POST http://functions.dxos.internal/
 Content-Type: application/json
-X-Trace-Queue-Dxn: dxn:queue:trace:AAAAAA:BBBBBB
+X-Trace-Queue-Dxn: echo://AAAAAA/BBBBBB
 X-Invocation-Id: XXXXXXX
 X-Edge-Env: production
 
@@ -114,6 +115,42 @@ export interface FunctionsAiService {
   fetch(request: Request): Promise<RpcResult<Response>>;
 }
 
+export type FunctionInvokeOptions = {
+  spaceId?: SpaceId;
+  /**
+   * URI of the conversation feed (queue).
+   * Forwarded into the function context so nested operations can resolve
+   * `AiContext.Service` and related conversation-scoped services.
+   */
+  conversation?: URI.URI;
+  cpuTimeLimit?: number;
+  subrequestsLimit?: number;
+};
+
+export type FunctionInvokeResult =
+  | {
+      _kind: 'success';
+      data: unknown;
+    }
+  | {
+      _kind: 'error';
+      error: SerializedError;
+    };
+
+export interface FunctionsQuery {
+  spaceId?: SpaceId;
+}
+
+export interface FunctionsService {
+  query(query: FunctionsQuery): Promise<RpcResult<unknown[]>>; // TODO(dmaretskyi): The type is Operation.PersistentOperation[].
+
+  invoke(
+    deploymentId: string,
+    input: unknown,
+    options?: FunctionInvokeOptions,
+  ): Promise<RpcResult<FunctionInvokeResult>>;
+}
+
 export type ObjectDocumentJson = {
   type?: string;
   objectId: string;
@@ -135,7 +172,7 @@ export type ObjectSnapshot = {
   type?: string;
   documentId: string;
   objectId: string;
-  // TODO(mykola): Use ObjectStructure from @dxos/echo-protocol.
+  // TODO(mykola): Use EntityStructure from @dxos/echo-protocol.
   object: unknown;
 };
 

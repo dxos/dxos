@@ -32,7 +32,9 @@ export const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
 export const DirectAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiKey: Config.redacted('ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
+      // `DX_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`, which breaks Claude Code) — see the
+      // `regenerate-memoized-llm` skill.
+      apiKey: Config.redacted('DX_ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
       transformClient: tapHttpErrors,
     }),
   ),
@@ -99,16 +101,26 @@ export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer 
  * AiService for testing.
  * Refer to {@link MemoizedAiService} documentation for details on how memoization works.
  *
- * Defaults to the `edge-remote` preset so cache regeneration (`ALLOW_LLM_GENERATION=1`)
- * works without requiring `ANTHROPIC_API_KEY` — the DXOS edge worker proxies the request.
+ * Defaults to the `direct` preset, which talks to the Anthropic API directly using the
+ * `DX_ANTHROPIC_API_KEY` env var. Cache regeneration (`ALLOW_LLM_GENERATION=1`) therefore
+ * requires `DX_ANTHROPIC_API_KEY` to be set — see the `regenerate-memoized-llm` skill.
  */
 export const TestAiService = ({
   disableMemoization = false,
-  preset = 'edge-remote',
-}: { disableMemoization?: boolean; preset?: AiServicePreset } = {}) => {
+  preset = 'direct',
+  dynamicValuePatterns,
+}: {
+  disableMemoization?: boolean;
+  preset?: AiServicePreset;
+  /**
+   * Patterns matching run-specific identifiers (e.g. `MemoizedLanguageModel.SPACE_ID_PATTERN`) to
+   * canonicalize for memoized-conversation matching and substitute back on a cache hit. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
+} = {}) => {
   if (disableMemoization) {
     return AiServiceTestingPreset(preset);
   } else {
-    return MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset(preset)));
+    return MemoizedAiService.layerTest({ dynamicValuePatterns }).pipe(Layer.provide(AiServiceTestingPreset(preset)));
   }
 };

@@ -19,6 +19,7 @@ import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -33,10 +34,9 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
+import { SheetOperation } from '#types';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
@@ -75,7 +75,7 @@ const sheetRowDefault = {
 export type SheetContentProps = {};
 
 export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const {
     id,
     attendableId,

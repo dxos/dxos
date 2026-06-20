@@ -7,10 +7,10 @@ import React from 'react';
 import { type CustomPanelProps, Panel } from '../../Panel';
 import { SyncStatus, type SyncStatusProps } from './SyncStatus';
 
-export const SyncStatusPanel = ({ state, summary, debug, ...props }: CustomPanelProps<SyncStatusProps>) => {
+export const SyncStatusPanel = ({ state, summary, feedState, debug, ...props }: CustomPanelProps<SyncStatusProps>) => {
   return (
     <Panel {...props} icon='ph--git-diff--regular' title='Sync'>
-      <SyncStatus state={state} summary={summary} debug={debug} />
+      <SyncStatus state={state} summary={summary} feedState={feedState} debug={debug} />
     </Panel>
   );
 };

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Format, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { DXN, Filter, Format, JsonSchema, Query, Type, type View } from '@dxos/echo';
 
 import { ViewModel } from '../types';
 
@@ -37,19 +37,14 @@ export const Example = Schema.Struct({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.example',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
 
-export type Example = Schema.Schema.Type<typeof Example>;
+export type Example = Type.InstanceType<typeof Example>;
 
-export const testSchema = Obj.make(Type.PersistentType, {
+export const testSchema = Type.makeObjectFromJsonSchema({
   typename: 'com.example.type.test',
   version: '0.1.0',
-  jsonSchema: JsonSchema.toJsonSchema(Example),
+  jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(Example)),
 });
 
 export const testView: View.View = ViewModel.make({

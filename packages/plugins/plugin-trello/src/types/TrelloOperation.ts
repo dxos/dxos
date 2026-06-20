@@ -1,0 +1,73 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import { Operation } from '@dxos/compute';
+import { Obj, Ref, DXN } from '@dxos/echo';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
+
+import { meta } from '#meta';
+
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+
+/**
+ * Discovery only — list Trello boards reachable from the integration's token.
+ *
+ * Read-only: returns one descriptor per remote board, NEVER creates a local
+ * Kanban. Materialization happens lazily in `SyncTrelloBoard` on first sync
+ * of a target, so unselected boards leave no trace in the space.
+ */
+export const GetTrelloBoards = Operation.make({
+  meta: {
+    key: makeKey('getTrelloBoards'),
+    name: 'Get Trello Boards',
+    description: 'List Trello boards reachable from an integration without materializing local Kanbans.',
+    icon: 'ph--kanban--regular',
+  },
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
+  // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
+  //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
+  //   forces DynamicRuntime validation to fail before the handler runs because
+  //   the managed runtime doesn't carry per-space Database. The handler
+  //   provides `Database.layer(db)` itself.
+});
+
+/**
+ * Bidirectional reconcile of currently-selected Trello targets in an Integration.
+ *
+ * Does **not** discover boards or modify `integration.targets` membership. Pulls cards
+ * from Trello into local Expando cards (keyed by foreign id), pushes locally-created
+ * and locally-edited cards back to Trello, and updates per-target `lastSyncAt`/`lastError`.
+ */
+export const SyncTrelloBoard = Operation.make({
+  meta: {
+    key: makeKey('syncTrelloBoard'),
+    name: 'Sync Trello Board',
+    description: 'Reconcile cards for currently-selected Trello targets in an Integration.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+    /** Optional: narrow to a single target Kanban. */
+    kanban: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+  }),
+  output: Schema.Struct({
+    pulled: Schema.Struct({
+      added: Schema.Number,
+      updated: Schema.Number,
+      removed: Schema.Number,
+    }),
+    pushed: Schema.Struct({
+      created: Schema.Number,
+      updated: Schema.Number,
+    }),
+  }),
+  // TODO(wittjosiah): same as GetTrelloBoards above — declare
+  //   `services: [Database.Service]` once the OperationInvoker has a
+  //   `databaseResolver`. Handler provides the layer itself for now.
+});

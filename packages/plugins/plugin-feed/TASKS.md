@@ -40,7 +40,7 @@ Phase 3 extends this with authenticated AT Protocol support for richer functiona
 
 - [ ] **Cursor-based pagination**
   - Use AT Protocol cursor from `getAuthorFeed`/`getTimeline` responses for incremental sync.
-  - Store AT Protocol cursor in `Subscription.Feed.cursor` field.
+  - Store AT Protocol cursor in `Subscription.Subscription.cursor` field.
   - Handle cursor invalidation (feed may reset cursor on server side).
 
 - [ ] **Write operations (future)**

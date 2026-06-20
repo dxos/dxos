@@ -4,9 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const TrelloHandlers = OperationHandlerSet.lazy(
+export const TrelloOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./get-trello-boards'),
   () => import('./sync'),
 );
-
-export * as TrelloOperation from './definitions';

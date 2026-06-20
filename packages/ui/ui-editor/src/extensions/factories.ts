@@ -22,7 +22,7 @@ import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode'
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { generateName } from '@dxos/display-name';
-import { type DocAccessor } from '@dxos/echo-db';
+import { type DocAccessor } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
@@ -33,7 +33,7 @@ import { baseTheme, createFontTheme, editorGutter } from '../styles';
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
-import { scrollPastEnd } from './scroll-past-end';
+import { scrollPastEnd } from './scrolling';
 
 //
 // Basic

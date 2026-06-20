@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { IntegrationPlugin } from '@dxos/plugin-integration';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { ObservabilityPlugin } from '@dxos/plugin-observability';
-import { RegistryPlugin } from '@dxos/plugin-registry';
-import { SamplePlugin } from '@dxos/plugin-sample';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ChessPlugin } from '@dxos/plugin-chess/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { SamplePlugin } from '@dxos/plugin-sample/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
 
 export type PluginConfig = {
   config?: Config;
@@ -22,22 +22,11 @@ export type PluginConfig = {
   isStrict?: boolean;
 };
 
-export const getCore = (): string[] => [
-  AutomationPlugin.meta.id,
-  ClientPlugin.meta.id,
-  ObservabilityPlugin.meta.id,
-  OperationPlugin.meta.id,
-  RegistryPlugin.meta.id,
-  RuntimePlugin.meta.id,
-  SpacePlugin.meta.id,
-  IntegrationPlugin.meta.id,
-];
-
 export const getDefaults = (): string[] => [
-  ChessPlugin.meta.id,
-  SamplePlugin.meta.id,
-  InboxPlugin.meta.id,
-  MarkdownPlugin.meta.id,
+  ChessPlugin.meta.profile.key,
+  SamplePlugin.meta.profile.key,
+  InboxPlugin.meta.profile.key,
+  MarkdownPlugin.meta.profile.key,
 ];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
@@ -50,9 +39,8 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
     MarkdownPlugin(),
     // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
     ObservabilityPlugin({} as any),
-    OperationPlugin(),
+    ProcessManagerPlugin(),
     RegistryPlugin(),
-    RuntimePlugin(),
     SpacePlugin({}),
     IntegrationPlugin(),
   ];

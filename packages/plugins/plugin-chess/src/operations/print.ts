@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 
-import { Print } from './definitions';
+import { ChessOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Print> = Print.pipe(
+const handler: Operation.WithHandler<typeof ChessOperation.Print> = ChessOperation.Print.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ pgn, fen }) {
       try {

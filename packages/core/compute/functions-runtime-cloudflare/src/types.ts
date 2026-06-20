@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { JsonSchemaType } from '@dxos/echo/internal';
+import type { JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 
 /**
  * Is used for to route the request to the metadata handler instead of the main handler.

@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export const subtleHover = 'hover:bg-hover-overlay';
-
 export const ghostHover = 'hover:bg-hover-surface';
 export const ghostFocusWithin = 'focus-within:bg-hover-surface';
 

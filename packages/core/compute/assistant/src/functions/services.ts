@@ -14,25 +14,25 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { todo } from '@dxos/debug';
-import { Ref } from '@dxos/echo';
+import { DXN, Filter, Ref, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { RefFromLLM } from '../types';
+import { RefFromLLM } from '../util';
 
 export const makeToolResolverFromOperations = <R = never>({
   toolkit: extraToolkit = OpaqueToolkit.empty,
 }: { toolkit?: OpaqueToolkit.OpaqueToolkit<never, never, R> } = {}): Layer.Layer<
   ToolResolverService,
   never,
-  OpaqueToolkit.OpaqueToolkitProvider | OperationRegistry.Service | R
+  OpaqueToolkit.OpaqueToolkitProvider | Registry.Service | R
 > => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
       const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
-      const operationRegistry = yield* OperationRegistry.Service;
+      const registry = yield* Registry.Service;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
@@ -43,14 +43,15 @@ export const makeToolResolverFromOperations = <R = never>({
               return tool;
             }
 
-            return yield* operationRegistry.resolve(id).pipe(
-              Effect.flatMap(
-                Option.match({
-                  onSome: (_) => Effect.succeed(projectFunctionToTool(_)),
-                  onNone: () => Effect.fail(new AiToolNotFoundError(id)),
-                }),
-              ),
+            // Normalize to a full DXN key (tool IDs are plain NSIDs, stored keys are full DXNs).
+            const key = DXN.isDXN(id) ? id : `dxn:${id}`;
+            const results = yield* Effect.promise(() =>
+              registry.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
             );
+            if (results.length > 0) {
+              return projectFunctionToTool(Operation.deserialize(results[0]));
+            }
+            return yield* Effect.fail(new AiToolNotFoundError(id));
           }),
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),
@@ -133,6 +134,16 @@ export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.De
 const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
 
 /**
+ * Empty parameters schema annotated with an explicit JSON schema so that
+ * @effect/ai versions that call JSONSchema.fromAST directly (≥0.35.0) still
+ * produce a valid `{type: "object"}` for the Anthropic API instead of the
+ * constEmptyStruct `{anyOf: [{type:"object"},{type:"array"}]}`.
+ */
+const EMPTY_PARAMETERS_SCHEMA = Schema.Struct({}).annotations({
+  [SchemaAST.JSONSchemaAnnotationId]: { type: 'object', properties: {}, required: [], additionalProperties: false },
+});
+
+/**
  * Projects an `Operation.Definition` into an `AiTool`.
  */
 const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
@@ -140,11 +151,14 @@ const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
     return toolCache.get(fn)!;
   }
 
+  const fields = createStructFieldsFromSchema(fn.input);
+  const parametersSchema = Object.keys(fields).length === 0 ? EMPTY_PARAMETERS_SCHEMA : Schema.Struct(fields);
   const tool = Tool.make(makeToolName(fn.meta.name ?? fn.meta.key), {
     description: fn.meta.description,
-    parameters: createStructFieldsFromSchema(fn.input),
     failure: Schema.Any,
-  }).annotate(FunctionToolAnnotation, { definition: fn });
+  })
+    .setParameters(parametersSchema)
+    .annotate(FunctionToolAnnotation, { definition: fn });
   toolCache.set(fn, tool);
   return tool;
 };

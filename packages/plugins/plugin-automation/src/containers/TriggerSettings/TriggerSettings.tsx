@@ -13,7 +13,7 @@ import { Settings } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 
 export const TriggersSettings = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [properties, changeProperties] = useObject(space.properties);
   const selected = properties.computeEnvironment ?? 'local';
 

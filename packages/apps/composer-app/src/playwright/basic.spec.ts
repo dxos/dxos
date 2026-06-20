@@ -6,9 +6,9 @@ import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
-// import { StackPlugin } from '@dxos/plugin-stack';
+// import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
-import { AppManager, INITIAL_URL } from './app-manager';
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
@@ -31,17 +31,19 @@ test.describe('Basic tests', () => {
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
     const plank = host.deck.plank();
-    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
+    await expect(plank.locator.getByRole('heading', { name: 'Welcome to Composer' })).toBeVisible();
   });
 
   test('create space, which is displayed in tree', async () => {
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });
 
   test('create document', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
+    // Documents are collection items; the new object is revealed under the Collections section.
+    await expect(host.getObjectLinks()).toHaveCount(1);
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -58,7 +60,7 @@ test.describe('Basic tests', () => {
     }
 
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
     await host.changeStorageVersionInMetadata(9999);
     await expect(host.page.getByTestId('resetDialog').locator('p')).toContainText('9999');
@@ -66,7 +68,7 @@ test.describe('Basic tests', () => {
 
     await host.reset();
     // Wait for identity to be re-created.
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 10_000 });
   });
 
   // TODO(wittjosiah): Remove? The reset button was hidden from the app.
@@ -77,14 +79,14 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle(StackPlugin.meta.id).click();
-    await expect(host.getPluginToggle(StackPlugin.meta.id)).toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');
     await host.reset();
 
     await host.openPluginRegistry();
-    await expect(host.getPluginToggle(StackPlugin.meta.id)).not.toBeChecked();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {
@@ -99,7 +101,7 @@ test.describe('Basic tests', () => {
     }
 
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
     await host.openUserDevices();
     await host.resetDevice();
@@ -107,6 +109,7 @@ test.describe('Basic tests', () => {
     await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
     // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
     // 30s gives ~3x headroom over the observed worst case.
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 30_000 });
+    // After reset the exemplar space is re-seeded alongside the personal space.
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
   });
 });

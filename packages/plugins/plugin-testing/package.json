@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-testing",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,47 +8,77 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/StorybookPlugin.ts",
-    "#capabilities": "./src/capabilities/index.ts",
-    "#components": "./src/components/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
-    "#types": "./src/types/index.ts"
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
+    "#plugin": {
+      "source": "./src/StorybookPlugin.ts",
+      "types": "./dist/types/src/StorybookPlugin.d.ts",
+      "default": "./dist/lib/neutral/StorybookPlugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./harness": {
       "source": "./src/harness.ts",
       "types": "./dist/types/src/harness.d.ts",
-      "browser": "./dist/lib/browser/harness.mjs",
-      "node": "./dist/lib/node-esm/harness.mjs"
+      "default": "./dist/lib/neutral/harness.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {

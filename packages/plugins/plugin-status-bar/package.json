@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-status-bar",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Status bar plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,41 +8,68 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/StatusBarPlugin.ts",
-    "#capabilities": "./src/capabilities/index.ts",
-    "#components": "./src/components/index.ts",
-    "#containers": "./src/containers/index.ts",
-    "#meta": "./src/meta.ts",
-    "#translations": "./src/translations.ts"
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/StatusBarPlugin.ts",
+      "types": "./dist/types/src/StatusBarPlugin.d.ts",
+      "default": "./dist/lib/neutral/StatusBarPlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "browser": "./dist/lib/browser/components/index.mjs",
-      "node": "./dist/lib/node-esm/components/index.mjs"
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
@@ -50,17 +77,15 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "date-fns": "catalog:",
-    "effect": "catalog:",
-    "react-resize-detector": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

@@ -7,11 +7,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Column, Message, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions, Extension } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -33,7 +33,7 @@ export type EditMessageProps = {
 
 export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
   ({ message, extensions, onSend, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 
@@ -123,11 +123,10 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               )}
             </Form.Content>
           </Column.Center>
-
-          <Column.Center>
+          <Column.Center classNames='pbs-form-gap'>
             <Editor.Root>
               <Editor.View
-                classNames='dx-expander border border-subdued-separator'
+                classNames='dx-expander border border-separator'
                 extensions={extension}
                 initialValue={message.blocks?.find((b) => b._tag === 'text')?.text}
                 onChange={(value) => {
@@ -136,8 +135,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               />
             </Editor.Root>
           </Column.Center>
-
-          <Column.Center classNames='pb-form-gap'>
+          <Column.Center classNames='pb-form-padding'>
             <Form.Submit icon='ph--paper-plane-right--regular' label={t('send-email-button.label')} />
           </Column.Center>
         </Form.Root>

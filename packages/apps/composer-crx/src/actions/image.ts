@@ -4,6 +4,8 @@
 
 import browser from 'webextension-polyfill';
 
+import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { THUMBNAIL_PROP, getConfig } from '../config';
@@ -43,61 +45,60 @@ const getFilenameFromUrl = (url: string): string => {
  * Use EDGE image-service to store and create thumbnail.
  */
 export const createThumbnail = async (imageUrl: string) => {
-  const res = await fetch(imageUrl);
-  let blob = await res.blob();
-
-  // Ensure blob has correct content-type.
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-  const responseType = res.headers.get('content-type');
-  const inferredType = getContentTypeFromUrl(imageUrl);
-  const contentType =
-    responseType && allowedTypes.includes(responseType.split(';')[0]?.trim())
-      ? responseType.split(';')[0]?.trim()
-      : inferredType;
-
-  // Ensure blob has a valid content-type before posting.
-  if (!contentType) {
-    throw new Error('Unable to determine image content-type');
-  }
-
-  // Create blob with correct content-type if needed.
-  if (!blob.type || blob.type !== contentType) {
-    blob = new Blob([blob], { type: contentType });
-  }
-
-  // Post blob to image service with form data.
-  const formData = new FormData();
-  const filename = getFilenameFromUrl(imageUrl);
-  const field = 'file'; // TODO(burdon): Factor out to protocol def.
-  formData.append(field, blob, filename);
-  const config = await getConfig();
-  // NOTE: Don't set Content-Type header: let browser set multipart/form-data with boundary.
-  const uploadRes = await fetch(new URL('/thumbnail', config.imageServiceUrl).toString(), {
-    method: 'POST',
-    body: formData,
-  });
-
-  // Store result URL and open extension popup.
+  // The caller is a context-menu listener with no error handling, so the whole
+  // flow (fetch, decode, upload, persist) is wrapped to surface any failure via
+  // an error badge rather than an unhandled rejection.
   try {
-    // Store the result URL in storage so popup can access it.
-    const result = await uploadRes.json();
-    const resultUrl = result.url || '';
+    const res = await fetch(imageUrl);
+    let blob = await res.blob();
+
+    // Ensure blob has correct content-type.
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    const responseType = res.headers.get('content-type');
+    const inferredType = getContentTypeFromUrl(imageUrl);
+    const contentType =
+      responseType && allowedTypes.includes(responseType.split(';')[0]?.trim())
+        ? responseType.split(';')[0]?.trim()
+        : inferredType;
+
+    // Ensure blob has a valid content-type before posting.
+    if (!contentType) {
+      throw new Error('Unable to determine image content-type');
+    }
+
+    // Create blob with correct content-type if needed.
+    if (!blob.type || blob.type !== contentType) {
+      blob = new Blob([blob], { type: contentType });
+    }
+
+    // Post blob to the image service and store the hosted URL for the popup.
+    const config = await getConfig();
+    const client = new EdgeServiceClient({ baseUrl: config.imageServiceUrl });
+    const { url: resultUrl } = await EffectEx.runPromise(
+      Image.thumbnail(client, blob, { filename: getFilenameFromUrl(imageUrl) }),
+    );
     if (resultUrl) {
       await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
     }
-
-    // Open extension popup (only works in response to user action like context menu).
-    try {
-      await browser.action.openPopup();
-    } catch {
-      // If openPopup fails (e.g., popup already open), set badge to indicate result.
-      await browser.action.setBadgeText({ text: '✓' });
-      await browser.action.setBadgeBackgroundColor({ color: '#ff5500' });
-      setTimeout(() => {
-        void browser.action.setBadgeText({ text: '' });
-      }, 3_000);
-    }
   } catch (err) {
-    log.error('Failed to open popup', { err });
+    log.error('thumbnail creation failed', { err });
+    await browser.action.setBadgeText({ text: '!' });
+    await browser.action.setBadgeBackgroundColor({ color: '#cc0000' });
+    setTimeout(() => {
+      void browser.action.setBadgeText({ text: '' });
+    }, 3_000);
+    return;
+  }
+
+  // Open extension popup (only works in response to user action like context menu).
+  try {
+    await browser.action.openPopup();
+  } catch {
+    // If openPopup fails (e.g., popup already open), set badge to indicate result.
+    await browser.action.setBadgeText({ text: '✓' });
+    await browser.action.setBadgeBackgroundColor({ color: '#ff5500' });
+    setTimeout(() => {
+      void browser.action.setBadgeText({ text: '' });
+    }, 3_000);
   }
 };

@@ -8,6 +8,7 @@ import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { random } from '@dxos/random';
 import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
@@ -157,7 +158,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
       role='option'
       aria-selected={isSelected}
       data-selected={isSelected}
-      className={`p-2 border-b border-separator cursor-pointer ${isSelected ? 'bg-hover-overlay' : 'hover:bg-hover-overlay'}`}
+      className={mx('p-2 border-b border-separator cursor-pointer dx-hover', isSelected && 'bg-selected-surface')}
       onClick={onSelect}
     >
       <div className='font-medium'>{label}</div>

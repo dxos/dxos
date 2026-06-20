@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions-testing",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Functions tests",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "sideEffects": true,
   "type": "module",
@@ -30,6 +30,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -40,9 +41,12 @@
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:"
   },
   "publishConfig": {

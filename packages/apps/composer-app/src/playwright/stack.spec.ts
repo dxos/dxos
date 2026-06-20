@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 // TODO(wittjosiah): Importing this causes tests to fail.
-// import { StackPlugin } from '@dxos/plugin-stack';
+// import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
 import { AppManager } from './app-manager';
 import { Markdown, Stack, StackPlugin } from './plugins';
@@ -22,7 +22,7 @@ test.describe('Stack tests', () => {
     await host.page.waitForTimeout(500);
     await host.openPluginRegistry();
     await host.openRegistryCategory('recommended');
-    await host.enablePlugin(StackPlugin.meta.id);
+    await host.enablePlugin(StackPlugin.meta.profile.key);
   });
 
   test.afterEach(async () => {

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Obj, Query } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 
 import { InstallFunction } from './definitions';
@@ -19,7 +19,7 @@ export default InstallFunction.pipe(
       const functionsService = FunctionsServiceClient.fromClient(client);
       const deployed = yield* Effect.promise(() => functionsService.query(Context.default()));
 
-      const fn = deployed.findLast((entry) => entry.key === key);
+      const fn = deployed.findLast((entry) => Obj.getMeta(entry).key === key);
       if (!fn) {
         return yield* Effect.fail(new Error(`No deployed function found with key: ${key}`));
       }
@@ -32,7 +32,7 @@ export default InstallFunction.pipe(
       yield* Effect.promise(() => client.addTypes([Operation.PersistentOperation]));
 
       const existingFunctions = yield* Effect.promise(() =>
-        space.db.query(Query.type(Operation.PersistentOperation, { key })).run(),
+        space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
       );
 
       let installed: Operation.PersistentOperation;
@@ -47,9 +47,9 @@ export default InstallFunction.pipe(
       }
 
       return {
-        function: Obj.getDXN(installed).toString(),
+        function: Obj.getURI(installed),
         name: fn.name ?? 'Unnamed function',
-        version: fn.version ?? '0.0.0',
+        version: Obj.getMeta(fn).version ?? '0.0.0',
       };
     }),
   ),

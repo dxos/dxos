@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox-send';
 

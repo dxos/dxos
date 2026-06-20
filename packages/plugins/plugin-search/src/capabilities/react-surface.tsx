@@ -8,7 +8,7 @@ import React, { type ComponentProps } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { isSpace } from '@dxos/react-client/echo';
 
 import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
@@ -35,8 +35,8 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${SEARCH_DIALOG}.search-input`,
-        role: 'search-input',
+        id: `${SEARCH_DIALOG}.searchInput`,
+        filter: Surface.makeFilter(AppSurface.SearchInput),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -52,8 +52,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${SEARCH_DIALOG}.search`,
-        role: 'deck-companion--search',
-        filter: (data): data is { subject: Space } => isSpace(data.subject),
+        filter: AppSurface.subject(AppSurface.deckCompanion('search'), isSpace),
         component: ({ data }) => {
           const space = data.subject;
           if (!space) {

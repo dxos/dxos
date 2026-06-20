@@ -8,7 +8,6 @@ import React, { useContext, useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -73,8 +72,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
     const orderAtom = Atom.make<string[]>([]);
 
     // Source of truth for which columns exist; subscribed to ECHO query.
-    const columnsAtom =
-      space?.db != null ? AtomQuery.make(space.db, Filter.type(TestColumn)) : Atom.make<TestColumn[]>([]);
+    const columnsAtom = space?.db != null ? space.db.query(Filter.type(TestColumn)).atom : Atom.make<TestColumn[]>([]);
 
     // If orderAtom is empty, use Echo order as-is; else sort by orderAtom and append new columns.
     const orderedColumnsAtom = Atom.make((get) => {
@@ -93,10 +91,10 @@ const useTestBoardModel = (): TestBoardModelResult => {
       space?.db != null
         ? Atom.family((column: TestColumn) =>
             Atom.make((get) => {
-              const refs = get(AtomObj.makeProperty(column, 'items'));
+              const refs = get(Obj.atomProperty(column, 'items'));
               return (
                 refs
-                  ?.map((ref: Ref.Ref<TestItem>) => get(AtomObj.makeWithReactive(ref)))
+                  ?.map((ref: Ref.Ref<TestItem>) => get(Obj.atomReactive(ref)))
                   .filter((item): item is TestItem => item != null) ?? []
               );
             }),
@@ -175,7 +173,7 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryP
 
   return (
     <Mosaic.Root asChild debug={debug}>
-      <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
+      <div className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
           <Board.Content id='board' debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
         </Board.Root>

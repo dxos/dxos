@@ -19,14 +19,10 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { ServiceResolver, Trace, OperationHandlerSet } from '@dxos/compute';
+import { OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, type Key } from '@dxos/echo';
-import {
-  FunctionImplementationResolver,
-  ProcessManager,
-  TriggerDispatcher,
-  TriggerStateStore,
-} from '@dxos/functions-runtime';
+import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
 import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -86,7 +82,7 @@ export const triggerRuntimeLayer = ({
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
-        Layer.provide(ProcessManager.layer()),
+        Layer.provide(ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local })),
         Layer.provide(ServiceResolver.layerRequirements(Database.Service, OpaqueToolkit.OpaqueToolkitProvider)),
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),

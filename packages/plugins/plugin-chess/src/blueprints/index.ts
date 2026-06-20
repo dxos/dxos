@@ -3,4 +3,3 @@
 //
 
 export { default as ChessBlueprint } from './chess-blueprint';
-export * as ChessFunctions from '../operations';

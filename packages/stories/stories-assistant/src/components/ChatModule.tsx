@@ -4,61 +4,71 @@
 
 import React from 'react';
 
-import { Feed, Filter } from '@dxos/echo';
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { Agent } from '@dxos/assistant-toolkit';
+import { Filter, Obj } from '@dxos/echo';
+import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
-import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
-import { Assistant } from '@dxos/plugin-assistant/types';
-import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
-import { useQuery } from '@dxos/react-client/echo';
+import { useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
+import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ChatModule = ({ space }: ComponentProps) => {
+export const ChatModule = ({ space }: ModuleProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
 
-  const blueprintRegistry = useBlueprintRegistry();
-  const runtime = useComputeRuntime(space.id);
-  const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
+  // TODO(burdon): Better way to get the agent?
+  const parent = chat ? Obj.getParent(chat) : undefined;
+  const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
+  const [plan] = useObject(agent?.plan.target);
+  const hasPlan = (plan?.tasks?.length ?? 0) > 0;
+
+  const registry = useRegistry();
+  const runtime = useProcessManagerRuntime();
+  const processor = useChatProcessor({ runtime, space, chat, preset, registry });
 
   const feedTarget = chat?.feed?.target;
-  const feedDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
-  const feed = feedDxn ? space.queues.get(feedDxn) : undefined;
+
+  // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
+  // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
+  const [viewValue] = useObject(chat, 'viewType');
+  const view = Assistant.ChatViews.find((value) => value === viewValue);
 
   if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} feed={feed} processor={processor}>
-      <Panel.Root className='dx-document'>
-        {/* TODO(burdon): Chat.Toolbar => Menu.Root which doesn't handle slot. Need to audit Root components. */}
-        <Panel.Toolbar>
-          <Chat.Toolbar />
+    <Chat.Root chat={chat} feed={feedTarget} processor={processor}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Chat.Toolbar attendableId={chat.id} alwaysActive>
+            <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content>
+                  <ExecutionGraphModule space={space} />
+                  <Popover.Arrow />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          </Chat.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
-          {/* TODO(burdon): Remove relative. */}
-          <Chat.Content classNames='relative'>
-            <Toolbar.Root>
-              <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
-              <Popover.Root>
-                <Popover.Trigger asChild>
-                  <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content>
-                    <ExecutionGraphModule space={space} />
-                    <Popover.Arrow />
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
-            </Toolbar.Root>
-            <Chat.Thread />
+          <Chat.Content>
+            <Chat.Thread viewType={view} />
+            {hasPlan && (
+              <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
+            )}
             <Chat.Prompt
               {...chatProps}
               classNames='border-none rounded-none'

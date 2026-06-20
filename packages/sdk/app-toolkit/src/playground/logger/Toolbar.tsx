@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Button } from '@dxos/react-ui';
 
+import { PlaygroundRoles } from '../roles';
 import { LogOperation } from './schema';
 
 export const Logger = () => {
@@ -23,7 +24,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.logger.action',
-        role: 'toolbar',
+        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
         component: Logger,
       }),
     ),

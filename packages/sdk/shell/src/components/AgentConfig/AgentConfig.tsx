@@ -20,7 +20,7 @@ export const AgentConfig = ({
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
   const { t } = useTranslation(translationKey);
   return (
-    <div role='none' className='p-1'>
+    <div className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(textValence('error'), 'my-2')}>
@@ -97,14 +97,14 @@ export const AgentConfig = ({
             </span>
           </Button>
           {agentStatus === 'creatable' && (
-            <div role='none' className='space-y-2' id='devices-panel.create-agent.description'>
+            <div className='space-y-2' id='devices-panel.create-agent.description'>
               <p className='text-description'>
                 <Trans
                   {...{
                     t,
                     i18nKey: 'create-agent-clickwrap',
                     components: {
-                      tosLink: <Link target='_blank' rel='noreferrer' />,
+                      tosLink: <Link />,
                     },
                   }}
                 />

@@ -6,6 +6,7 @@ import {
   MosaicContainer,
   type MosaicContainerProps,
   type MosaicContainerState,
+  type MosaicScrollController,
   useMosaicContainerContext,
 } from './Container';
 import {
@@ -36,6 +37,7 @@ export type {
   MosaicRootProps,
   MosaicContainerProps,
   MosaicContainerState,
+  MosaicScrollController,
   MosaicTileProps,
   MosaicTileState,
   MosaicPlaceholderProps,

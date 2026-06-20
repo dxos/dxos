@@ -7,16 +7,12 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import {
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
-import { LinearOperation } from '../operations';
-import { SyncOptions } from '../operations/definitions';
 import { LinearApi } from '../services';
+import { LinearOperation } from '../types';
 
 /**
  * Service-specific token-created hook for Linear.
@@ -71,7 +67,7 @@ export default Capability.makeModule(
         },
         getSyncTargets: LinearOperation.GetLinearTeams,
         sync: LinearOperation.SyncLinearTeams,
-        optionsSchema: SyncOptions,
+        optionsSchema: LinearOperation.SyncOptions,
         onTokenCreated,
       },
     ]);

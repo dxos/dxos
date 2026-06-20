@@ -13,6 +13,7 @@ import { meta } from '#meta';
 
 import * as Settings from './Settings';
 
+export * from './surface';
 export * as Settings from './Settings';
 
 export type DebugPluginOptions = {
@@ -33,11 +34,11 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 });
 
 export namespace DebugCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
 }
 
 export namespace Devtools {
-  export const id = `${meta.id}.devtools`;
+  export const id = `${meta.profile.key}.devtools`;
 
   export const ToolsExplorer = `${Devtools.id}.tools-explorer`;
 
@@ -45,6 +46,7 @@ export namespace Devtools {
     export const id = `${Devtools.id}.client`;
     export const Config = `${Devtools.Client.id}.config`;
     export const Storage = `${Devtools.Client.id}.storage`;
+    export const Sqlite = `${Devtools.Client.id}.sqlite`;
     export const Logs = `${Devtools.Client.id}.logs`;
     export const Diagnostics = `${Devtools.Client.id}.diagnostics`;
   }
@@ -64,6 +66,7 @@ export namespace Devtools {
     export const Feeds = `${Devtools.Echo.id}.feeds`;
     export const Objects = `${Devtools.Echo.id}.objects`;
     export const Schema = `${Devtools.Echo.id}.schema`;
+    export const Registry = `${Devtools.Echo.id}.registry`;
     export const Automerge = `${Devtools.Echo.id}.automerge`;
     export const Queues = `${Devtools.Echo.id}.queues`;
     export const Members = `${Devtools.Echo.id}.members`;

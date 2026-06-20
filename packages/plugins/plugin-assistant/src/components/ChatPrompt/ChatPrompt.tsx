@@ -17,13 +17,13 @@ import { mx } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat/events';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
-import { type ChatPresetsProps } from './ChatPresets';
 import { ChatReferences } from './ChatReferences';
 import { ChatStatusIndicator } from './ChatStatusIndicator';
 
@@ -33,24 +33,23 @@ export type ChatPromptProps = ThemedClassName<
       outline?: boolean;
       settings?: boolean;
       expandable?: boolean;
-      chat?: Chat.Chat;
       db?: Database.Database;
+      chat?: Chat.Chat;
       processor: AiChatProcessor;
       event: Event<ChatEvent>;
       online?: boolean;
       placeholder?: ChatEditorProps['placeholder'];
       onOnlineChange?: (online: boolean) => void;
-      onPresetChange?: ChatPresetsProps['onChange'];
     },
-    Omit<ChatPresetsProps, 'onChange'>
+    ChatPresetProps
   >
 >;
 
 export const ChatPrompt = ({
   classNames,
   outline,
-  chat,
   db,
+  chat,
   processor,
   event,
   online,
@@ -61,7 +60,7 @@ export const ChatPrompt = ({
   presets,
   preset,
 }: ChatPromptProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -121,15 +120,15 @@ export const ChatPrompt = ({
     <div
       role='group'
       className={mx(
-        'flex flex-col w-full dx-density-fine',
+        'flex flex-col w-full dx-density-md',
         outline &&
-          'bg-group-surface rounded-sm! border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'bg-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
       )}
     >
       <ChatMcpErrors processor={processor} />
 
-      <div role='none' className='flex p-2 gap-2'>
+      <div className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
@@ -143,18 +142,18 @@ export const ChatPrompt = ({
       </div>
 
       {db && settings && (
-        <div role='none' className='flex items-center overflow-hidden p-1.5'>
+        <div className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
             chat={chat}
             db={db}
-            blueprintRegistry={processor.blueprintRegistry}
+            registry={processor.registry}
             context={processor.context}
             preset={preset}
             presets={presets}
             onPresetChange={onPresetChange}
           />
 
-          <div role='none' className='flex h-8 grow overflow-x-auto scrollbar-none'>
+          <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
             <ChatReferences db={db} context={processor.context} />
           </div>
 
@@ -165,7 +164,6 @@ export const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
-            {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>

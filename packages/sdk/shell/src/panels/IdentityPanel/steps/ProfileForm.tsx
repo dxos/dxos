@@ -52,7 +52,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   const copied = textValue === identityHex;
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div className='grow flex flex-col justify-center'>
         <TextInput
           {...{ validationMessage }}
           label={<InputLabel classNames='m-0'>{t('display-name-input.label')}</InputLabel>}
@@ -64,7 +64,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
         />
 
         <InputLabel classNames='mb-2'>{t('emoji-and-color.label')}</InputLabel>
-        <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
+        <div className='grid grid-cols-[1fr_min-content] gap-y-2'>
           <EmojiPickerBlock
             emoji={emoji}
             onChangeEmoji={setEmoji}

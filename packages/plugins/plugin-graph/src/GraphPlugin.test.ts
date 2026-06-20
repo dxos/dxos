@@ -4,20 +4,20 @@
 
 import { describe, test } from 'vitest';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 
 import { GraphPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('GraphPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Use createTestApp directly — createComposerTestApp already includes GraphPlugin.
     await using harness = await createTestApp({
-      plugins: [GraphPlugin(), OperationPlugin(), RuntimePlugin()],
+      plugins: [GraphPlugin(), ProcessManagerPlugin()],
     });
 
     // Graph activates on Startup; fires SetupAppGraph + SetupMetadata before, AppGraphReady after.

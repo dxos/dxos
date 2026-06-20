@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Obj, Relation, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
 
 /**
  * Relation linking a Profile Document to its subject (Person or Organization).
@@ -26,23 +26,17 @@ export const ProfileOf = Schema.Struct({
     Schema.String.pipe(Schema.annotations({ description: 'Short abstract of the profile (1-2 sentences).' })),
   ),
 })
+  .annotations({
+    description: 'Links a Profile Document to the Person or Organization it describes.',
+  })
   .pipe(
-    Type.relation({
-      typename: 'org.dxos.relation.plugin-crm.profile-of',
-      version: '0.1.0',
+    Type.makeRelation({
+      dxn: DXN.make('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
       source: Obj.Unknown,
       target: Obj.Unknown,
     }),
-  )
-  .annotations({
-    description: 'Links a Profile Document to the Person or Organization it describes.',
-  });
+  );
 
-export interface ProfileOf extends Schema.Schema.Type<typeof ProfileOf> {}
+export type ProfileOf = Type.InstanceType<typeof ProfileOf>;
 
-export const make = (
-  props: {
-    [Relation.Source]: Obj.Any;
-    [Relation.Target]: Obj.Any;
-  } & Entity.Properties<Schema.Schema.Type<typeof ProfileOf>>,
-) => Relation.make(ProfileOf, props);
+export const make = (props: Relation.MakeProps<typeof ProfileOf>) => Relation.make(ProfileOf, props);

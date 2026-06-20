@@ -20,9 +20,25 @@ import { FormatAnnotation, TypeFormat } from './types';
  * }
  * Note: optional third element for altitude.
  */
+/** Decimal places retained for stored coordinates (~1.1cm at the equator). */
+export const GEO_PRECISION = 7;
+
+const roundCoordinate = (value: number): number => {
+  const factor = 10 ** GEO_PRECISION;
+  return Math.round(value * factor) / factor;
+};
+
+/** Longitude/latitude clamped to range and rounded to {@link GEO_PRECISION} decimal places. */
+const Coordinate = (min: number, max: number, title: string) =>
+  Schema.transform(Schema.Number.pipe(Schema.clamp(min, max)), Schema.Number, {
+    strict: true,
+    decode: roundCoordinate,
+    encode: roundCoordinate,
+  }).annotations({ title });
+
 export const GeoPoint = Schema.Tuple(
-  Schema.Number.pipe(Schema.annotations({ title: 'Longitude' }), Schema.clamp(-180, 180), Schema.multipleOf(0.000001)),
-  Schema.Number.pipe(Schema.annotations({ title: 'Latitude' }), Schema.clamp(-90, 90), Schema.multipleOf(0.000001)),
+  Coordinate(-180, 180, 'Longitude'),
+  Coordinate(-90, 90, 'Latitude'),
   Schema.optionalElement(Schema.Number).annotations({
     title: 'Height ASL (m)',
   }),
@@ -52,8 +68,9 @@ export namespace GeoLocation {
    */
   export const toGeoPoint = ({ longitude, latitude, height }: GeoLocation): GeoPoint => {
     // TODO(ZaymonFC): Use schema validation instead of doing this manually.
-    const clampedLongitude = clamp(longitude, -180, 180);
-    const clampedLatitude = clamp(latitude, -90, 90);
+    // Clamp + round to match the `Format.GeoPoint` decode/encode path so both produce identical tuples.
+    const clampedLongitude = roundCoordinate(clamp(longitude, -180, 180));
+    const clampedLatitude = roundCoordinate(clamp(latitude, -90, 90));
     return height !== undefined ? [clampedLongitude, clampedLatitude, height] : [clampedLongitude, clampedLatitude];
   };
 

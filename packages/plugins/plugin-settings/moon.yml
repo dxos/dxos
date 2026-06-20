@@ -8,6 +8,8 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/SettingsPlugin.ts'
       - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'

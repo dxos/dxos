@@ -4,7 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export { type MapContainerProps, type MapControlType } from './MapContainer';
+export { type MapArticleProps, type MapControlType } from './MapArticle';
+export * from './MapSurface';
 
-export const MapContainer: ComponentType<any> = lazy(() => import('./MapContainer'));
+export const MapArticle: ComponentType<any> = lazy(() => import('./MapArticle'));
 export const MapViewEditor: ComponentType<any> = lazy(() => import('./MapViewEditor'));

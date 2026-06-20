@@ -4,18 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { scheduleTaskInterval } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo/internal';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Actor, Message } from '@dxos/types';
 
-import { MessageNormalizer } from './message-normalizer';
 import { type MessageWithRangeId, sentenceNormalization } from './normalization';
-import { getActorId } from './utils';
 
 const sender: Actor.Actor = {
   identityDid: 'did:key:123',
@@ -65,7 +59,7 @@ describe.skip('SentenceNormalization', () => {
         //     ? new Edge AiServiceClient({
         //         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
         //         defaultGenerationOptions: {
-        //           model: '@anthropic/claude-3-5-sonnet-20241022',
+        //           model: 'ai.claude.model.claude-3-5-sonnet-20241022',
         //         },
         //       })
         //     : new Ollama AiServiceClient({
@@ -104,35 +98,7 @@ describe.skip('SentenceNormalization', () => {
     throw new Error('test');
   });
 
-  test.only('queue', { timeout: 120_000 }, async () => {
-    // Create queue.
-    // TODO(dmaretskyi): Use space.queues.create() instead.
-    const queue = new MemoryQueue<Message.Message>(createQueueDXN());
-    const ctx = new Context();
-    let idx = 0;
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        if (idx >= messages.length) {
-          void ctx.dispose();
-          return;
-        }
-        await queue.append([messages[idx]]);
-        idx++;
-      },
-      2_000,
-    );
-
-    // Create normalizer.
-    const normalizer = new MessageNormalizer({
-      functionExecutor: getExecutor(),
-      queue,
-      startingCursor: { actorId: getActorId(sender), timestamp: '0' },
-    });
-
-    // Start normalizer.
-    await normalizer.open();
-
-    await new Promise(() => {});
-  });
+  // TODO(burdon): Restore a Feed-based version once `MessageNormalizer` has a
+  //   space-backed test fixture available; the previous `MemoryQueue`-based
+  //   test was incompatible with the `Feed.Feed` + `FeedService` refactor.
 });

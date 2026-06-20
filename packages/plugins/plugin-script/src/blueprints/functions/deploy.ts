@@ -39,12 +39,13 @@ export default Deploy.pipe(
       }
 
       const existingFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
+      const currentVersion = Obj.getMeta(loaded).version;
 
       const functionsService = FunctionsServiceClient.fromClient(client);
       const newFunction = yield* Effect.promise(() =>
         functionsService.deploy(Context.default(), {
           ownerPublicKey: space.key,
-          version: loaded.version ? incrementSemverPatch(loaded.version) : '0.0.1',
+          version: currentVersion ? incrementSemverPatch(currentVersion) : '0.0.1',
           functionId: existingFunctionId,
           entryPoint: buildResult.entryPoint,
           assets: buildResult.assets,
@@ -60,7 +61,7 @@ export default Deploy.pipe(
 
       const edgeFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
       return {
-        function: Obj.getDXN(loaded).toString(),
+        function: Obj.getURI(loaded),
         functionUrl: edgeFunctionId
           ? `${client.config.values.runtime?.services?.edge?.url ?? ''}/functions/${edgeFunctionId}`
           : undefined,

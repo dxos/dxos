@@ -16,8 +16,8 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Axis, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 import { useMosaicContainerContext } from './Container';
@@ -85,6 +85,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       orientation = orientationProp,
       dragging,
       currentId,
+      selectedIds,
       registerScrollTo,
     } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -130,6 +131,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
               location={index + 1}
               draggable={draggable}
               current={getId(item) === currentId}
+              selected={selectedIds?.has(getId(item))}
               debug={debug}
             />
             {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
@@ -178,7 +180,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging, currentId, registerScrollTo } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
+    const { id, dragging, currentId, selectedIds, registerScrollTo } =
+      useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
     // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
@@ -193,6 +196,10 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       count: draggable ? visibleItems.length * 2 + 1 : visibleItems.length,
       estimateSize: wrappedEstimateSize,
       gap,
+      // Inset the stack from both ends by `gap` (matching the inter-item spacing). The virtualizer
+      // folds this into item offsets, getTotalSize(), and scrollToIndex, so no manual compensation.
+      paddingStart: gap,
+      paddingEnd: gap,
       // Key measurements by stable item ID so the size cache survives scrolling;
       // without this, measurements are indexed by position and are lost when items reorder.
       getItemKey: draggable
@@ -213,10 +220,16 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
           }
 
           const virtualIndex = draggable ? itemIndex * 2 + 1 : itemIndex;
-          virtualizer.scrollToIndex(virtualIndex, { align: 'start', behavior: 'smooth' });
+          // Align to the item's start, but offset by the inter-item `gap` so the tile lands
+          // one gap below the viewport edge rather than flush against it (a plain
+          // `scrollToIndex({ align: 'start' })` scrolls the preceding gap out of view).
+          const [offset] = virtualizer.getOffsetForIndex(virtualIndex, 'start') ?? [];
+          if (offset != null) {
+            virtualizer.scrollToOffset(Math.max(0, offset - (gap ?? 0)), { behavior: 'smooth' });
+          }
         }
       },
-      [visibleItems, getId, draggable, virtualizer, scrollIntoView],
+      [visibleItems, getId, draggable, virtualizer, scrollIntoView, gap],
     );
 
     useEffect(() => {
@@ -293,6 +306,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                   location={location}
                   draggable={draggable}
                   current={getId(data) === currentId}
+                  selected={selectedIds?.has(getId(data))}
                   debug={debug}
                 />
               ) : (
@@ -311,6 +325,7 @@ MosaicVirtualStackInner.displayName = MOSAIC_VIRTUAL_STACK_NAME;
 const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
   props: MosaicVirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
+
 (MosaicVirtualStack as any)[Symbol.for('dxos.composable')] = true;
 
 //

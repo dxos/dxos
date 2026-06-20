@@ -119,6 +119,8 @@ const RawTreeItem = <T extends { id: string } = any>({
     iconHue,
     disabled,
     testId,
+    count,
+    modifiedCount,
   } = useAtomValue(itemPropsAtom(path));
   const childIds = useAtomValue(childIdsAtom(item.id));
   const open = useAtomValue(itemOpenAtom(path));
@@ -313,7 +315,9 @@ const RawTreeItem = <T extends { id: string } = any>({
         //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
         aria-current={current ? ('' as 'page') : undefined}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-active-surface',
+          'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-current-surface',
+          // Highlight the row while a descendant marks an open popover anchor (e.g. inline rename).
+          'has-[[data-popover-anchor]]:bg-current-surface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
@@ -326,11 +330,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         onMouseEnter={handleItemHover}
         onContextMenu={handleContextMenu}
       >
-        <div
-          role='none'
-          className='indent relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level)}
-        >
+        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
           <Treegrid.Cell classNames='flex items-center'>
             <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenToggle} />
             <TreeItemHeading
@@ -340,6 +340,8 @@ const RawTreeItem = <T extends { id: string } = any>({
               className={headingClassName}
               icon={icon}
               iconHue={iconHue}
+              count={count}
+              modifiedCount={modifiedCount}
               onSelect={handleSelect}
               ref={buttonRef}
             />

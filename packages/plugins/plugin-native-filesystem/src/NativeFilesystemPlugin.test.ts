@@ -10,7 +10,7 @@ import { NativeFilesystemPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('NativeFilesystemPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -19,7 +19,7 @@ describe('NativeFilesystemPlugin', () => {
     });
 
     // AppGraphBuilder and ReactSurface require StateReady (gated on ClientReady) and won't activate in headless tests.
-    // OperationHandler activates at startup when OperationPlugin fires SetupOperationHandler.
+    // OperationHandler activates at startup when ProcessManagerPlugin fires SetupProcessManager.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

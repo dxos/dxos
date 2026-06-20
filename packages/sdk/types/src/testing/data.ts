@@ -3,7 +3,7 @@
 //
 
 import type { Space } from '@dxos/client-protocol';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { TestSchema } from '@dxos/schema/testing';
 
@@ -527,15 +527,11 @@ export const createTestData = () => {
 
 export const seedTestData = async (space: Space) => {
   const schemas = [Person.Person, Organization.Organization, TestSchema.DocumentType];
-  for (const schema of schemas) {
-    if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
-      await space.db.graph.schemaRegistry.register([schema]);
-    }
-  }
+  space.db.graph.registry.add(schemas);
 
   // for (const document of TestData.documents) {
   //   const obj = space.db.add(Obj.make(Document, document));
-  //   const dxn = Ref.make(obj).dxn.toString();
+  //   const dxn = Ref.make(obj).uri;
   //   document.dxn = dxn;
   // }
 
@@ -548,7 +544,7 @@ export const seedTestData = async (space: Space) => {
   ];
 
   for (const object of objects) {
-    if (!space.db.getObjectById(object.id)) {
+    if (!space.db.query(Filter.id(object.id)).runSync()[0]) {
       space.db.add(object);
     }
   }

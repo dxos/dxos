@@ -4,9 +4,11 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
 
@@ -83,7 +85,7 @@ type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | '
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
   const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
-  const { t } = useTranslation(Subscription.Post.typename);
+  const { t } = useTranslation(Type.getTypename(Subscription.Post));
 
   const handleCurrentChange = useCallback(() => {
     if (post) {
@@ -101,36 +103,45 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef} fullWidth>
-          <Card.Toolbar>
-            <Card.IconBlock>
-              <Card.Icon icon='ph--dot-outline--regular' />
-            </Card.IconBlock>
+          <Card.Header>
+            <Card.Block>
+              <Icon icon='ph--dot-outline--regular' />
+            </Card.Block>
             <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
-              <Card.IconBlock>
+              <Card.Block end>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
                   <Icon icon='ph--arrow-square-out--regular' size={4} />
                 </a>
-              </Card.IconBlock>
+              </Card.Block>
             )}
-          </Card.Toolbar>
-          <Card.Content>
+          </Card.Header>
+          <Card.Body>
             {post.author && (
-              <Card.Row icon='ph--user--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--user--regular' />
+                </Card.Block>
                 <Card.Text variant='description'>{post.author}</Card.Text>
               </Card.Row>
             )}
-            {post.description && (
+            {(post.description || post.content) && (
               <Card.Row>
-                <Card.Html variant='description' html={post.description} />
+                <MarkdownView
+                  content={post.description ?? post.content}
+                  classNames='line-clamp-5 text-sm text-description'
+                />
               </Card.Row>
             )}
             {published && (
-              <Card.Row icon='ph--calendar--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--calendar--regular' />
+                </Card.Block>
                 <Card.Text variant='description'>{published}</Card.Text>
               </Card.Row>
             )}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import {} from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -17,24 +17,18 @@ import { LoggerPlugin } from './logger';
 
 const plugins = [
   // prettier-ignore
-  OperationPlugin(),
   LayoutPlugin(),
   DebugPlugin(),
   LoggerPlugin(),
   GeneratorPlugin(),
 ];
-const core = plugins.map((plugin) => plugin.meta.id);
-
-const Placeholder = () => {
-  return <div>Loading...</div>;
-};
+const defaults = plugins.map((plugin) => plugin.meta.profile.key);
 
 const DefaultStory = () => {
   const App = useApp({
     pluginLoader: (id: string) => Effect.sync(() => ({ plugin: createNumberPlugin(id) })),
     plugins,
-    core,
-    placeholder: Placeholder,
+    defaults,
   });
 
   return <App />;

@@ -8,4 +8,9 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/GraphPlugin.ts'
+      - '--entryPoint=src/hooks/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/testing.ts'
+      - '--platform=neutral'

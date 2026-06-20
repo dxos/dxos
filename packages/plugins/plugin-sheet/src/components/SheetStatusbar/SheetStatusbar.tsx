@@ -6,7 +6,8 @@ import React from 'react';
 
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Icon } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { mapFormulaIndicesToRefs } from '#types';
 

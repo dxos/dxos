@@ -21,7 +21,7 @@ type StoryStackItem = {
 
 const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div role='none' className='overflow-hidden'>
+    <div className='overflow-hidden'>
       <p className='place-content-center p-4'>{item.title}</p>
     </div>
   );

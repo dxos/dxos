@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Option from 'effect/Option';
 
-import { Process } from '@dxos/functions-runtime';
+import { Process } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -79,5 +79,12 @@ export const Default: Story = {
     onProcessTerminate: (process) => {
       log.info('terminate', process);
     },
+  },
+};
+
+export const WithNestedChildren: Story = {
+  args: {
+    ...Default.args,
+    depth: 2,
   },
 };

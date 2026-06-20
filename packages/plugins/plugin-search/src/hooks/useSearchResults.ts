@@ -5,7 +5,7 @@
 import { yieldOrContinue } from 'main-thread-scheduling';
 import { useEffect, useState } from 'react';
 
-import { type Entity } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
@@ -22,7 +22,7 @@ export const filterObjects = async <T extends Entity.Unknown>(
 
   await Promise.all(
     objects
-      .filter((object) => !(object instanceof Text.Text))
+      .filter((object) => !Obj.instanceOf(Text.Text, object))
       .map(async (object) => {
         await yieldOrContinue('interactive');
         const fields = mapObjectToTextFields<T>(object);

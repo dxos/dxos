@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Transcript } from '@dxos/types';
 
-import { TranscriptionContainer } from '#containers';
+import { TranscriptionArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Transcript.Transcript),
         ),
         component: ({ data, role }) => (
-          <TranscriptionContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <TranscriptionArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
     ]),

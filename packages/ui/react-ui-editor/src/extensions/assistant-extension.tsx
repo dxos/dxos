@@ -74,15 +74,15 @@ export const assistant = (options: AssistantOptions): Extension[] => {
       },
       /** @apply dx-button */
       '.cm-panel button': {
-        color: 'var(--color-base-surface-text) !important',
+        color: 'var(--color-base-fg) !important',
       },
       '.cm-panel.cm-panel-lint ul': {
-        color: 'var(--color-base-surface-text) !important',
+        color: 'var(--color-base-fg) !important',
         backgroundColor: 'var(--color-base-surface) !important',
         marginRight: '2rem !important',
       },
       '.cm-panel.cm-panel-lint ul [aria-selected]': {
-        color: 'var(--color-base-surface-text) !important',
+        color: 'var(--color-base-fg) !important',
         backgroundColor: 'var(--color-base-surface) !important',
       },
       '.cm-panel.cm-panel-lint ul li': {

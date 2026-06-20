@@ -7,6 +7,7 @@ import React from 'react';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { type Obj, Ref } from '@dxos/echo';
+import { IntegrationAuth } from '@dxos/plugin-integration';
 import { IconButton } from '@dxos/react-ui';
 
 import { useTargetSync } from './useTargetIntegration';
@@ -22,12 +23,14 @@ export type InitializeActionProps<T extends Obj.Any> = {
   operation: Operation.Definition<any, any>;
   /** Already-translated label for the sync action. */
   syncLabel: string;
+  /** Per-phase notifications shown for the sync invocation. */
+  notify?: Operation.NotifyOptions;
 };
 
 /**
  * Toolbar action for the "initialize / connect this thing" empty state.
  * When an `Integration` targets `target` we render an `IconButton` that
- * invokes `operation`; otherwise we render the `integration--auth` Surface
+ * invokes `operation`; otherwise we render the `IntegrationAuth` Surface
  * (if registered) so the user can connect a provider.
  *
  * Used by `InitializeMailboxAction` and `InitializeCalendarAction`.
@@ -38,9 +41,10 @@ export const InitializeAction = <T extends Obj.Any>({
   providerId,
   operation,
   syncLabel,
+  notify,
 }: InitializeActionProps<T>) => {
   const pluginManager = usePluginManager();
-  const { integration, sync, syncing } = useTargetSync(target, operation, targetKey);
+  const { integration, sync, syncing } = useTargetSync(target, operation, targetKey, notify);
 
   if (integration) {
     return (
@@ -56,7 +60,7 @@ export const InitializeAction = <T extends Obj.Any>({
   }
 
   const data = { providerId, existingTarget: Ref.make(target) };
-  return Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
-    <Surface.Surface role='integration--auth' data={data} limit={1} />
+  return Surface.isAvailable(pluginManager.capabilities, { type: IntegrationAuth, data }) ? (
+    <Surface.Surface type={IntegrationAuth} data={data} limit={1} />
   ) : null;
 };

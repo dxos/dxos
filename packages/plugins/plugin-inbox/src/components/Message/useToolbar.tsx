@@ -2,114 +2,164 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import { useMemo } from 'react';
-
-import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import { type Graph, type Node } from '@dxos/app-graph';
+import { MenuBuilder, graphActions, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ViewMode = 'plain' | 'enriched' | 'plain-only';
+import { deleteAction, openGroup } from '../Toolbar';
+import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { useExtractorActions } from './useExtractorActions';
+
+/** Contributed actions opt into the toolbar via `disposition: 'toolbar'` (vs context-menu-only). */
+const isToolbarAction = (action: Node.ActionLike) => action.properties.disposition === 'toolbar';
 
 export type UseMessageToolbarActionsProps = {
+  /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */
+  graph?: Graph.ReadableGraph;
+  /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
+  nodeId?: string;
+  message: Message.Message;
+  /** Whether remote images are currently loaded inline. */
+  loadRemoteImages: boolean;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  /** Toggle the remote-image loading setting. */
+  onToggleLoadImages: () => void;
   onOpen?: () => void;
+  onDelete?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
 };
 
 export const useMessageActions = ({
+  graph,
+  nodeId,
+  message,
+  loadRemoteImages,
   viewMode,
   setViewMode,
+  onToggleLoadImages,
   onOpen,
+  onDelete,
   onReply,
   onReplyAll,
   onForward,
 }: UseMessageToolbarActionsProps) => {
-  const creator = useMemo(
-    () =>
-      Atom.make(() => {
-        // TODO(burdon): Chainable builder pattern.
-        const nodes = [];
-        const edges = [];
+  const extractorActions = useExtractorActions(message);
 
-        {
-          nodes.push(
-            createMenuItemGroup('root', {
-              label: ['message-toolbar.label', { ns: meta.id }],
-            }),
-          );
-        }
+  // The enriched option is only offered when the message carries a non-empty enriched (second) block.
+  const enrichedAvailable = (() => {
+    const textBlocks = message.blocks.filter((block) => 'text' in block);
+    return textBlocks.length > 1 && !!textBlocks[1]?.text;
+  })();
 
-        if (onOpen) {
-          const action = createMenuAction('open', onOpen, {
-            label: ['message-toolbar-open.menu', { ns: meta.id }],
-            icon: 'ph--arrow-square-out--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        const gap = createGapSeparator();
-        nodes.push(gap.nodes[0]);
-        edges.push({ source: 'root', target: gap.nodes[0].id, relation: 'child' });
-
-        // Reply actions.
-        if (onReply) {
-          const action = createMenuAction('reply', onReply, {
-            label: ['message-toolbar-reply.menu', { ns: meta.id }],
-            icon: 'ph--arrow-bend-up-left--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        if (onReplyAll) {
-          const action = createMenuAction('replyAll', onReplyAll, {
-            label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
-            icon: 'ph--arrow-bend-double-up-left--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        if (onForward) {
-          const action = createMenuAction('forward', onForward, {
-            label: ['message-toolbar-forward.menu', { ns: meta.id }],
-            icon: 'ph--arrow-bend-up-right--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        {
-          const action = createMenuAction(
-            'viewMode',
-            () => {
-              setViewMode(viewMode === 'plain' ? 'enriched' : 'plain');
-            },
+  return useMenuBuilder(
+    (get) =>
+      MenuBuilder.make()
+        .root({ label: ['message-toolbar.label', { ns: meta.profile.key }] })
+        .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen }))
+        .subgraph(
+          viewModeGroup({
+            ns: meta.profile.key,
+            viewMode,
+            setViewMode,
+            modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
+          }),
+        )
+        .subgraph((b) =>
+          b.action(
+            'load-images',
             {
-              label: [
-                viewMode === 'plain'
-                  ? 'message toolbar show enriched message'
-                  : viewMode === 'enriched'
-                    ? 'message toolbar show plain message'
-                    : 'message toolbar enriched message not available',
-                { ns: meta.id },
-              ],
-              icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
+              label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
+              icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
+              iconOnly: true,
+              checked: loadRemoteImages,
             },
-          );
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
+            onToggleLoadImages,
+          ),
+        )
+        .separator('gap')
+        .subgraph(
+          onReply &&
+            ((b) =>
+              b.action(
+                'reply',
+                {
+                  label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-bend-up-left--regular',
+                },
+                onReply,
+              )),
+        )
+        .subgraph(
+          onReplyAll &&
+            ((b) =>
+              b.action(
+                'replyAll',
+                {
+                  label: ['message-toolbar-reply-all.menu', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-bend-double-up-left--regular',
+                },
+                onReplyAll,
+              )),
+        )
+        .subgraph(
+          onForward &&
+            ((b) =>
+              b.action(
+                'forward',
+                {
+                  label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-bend-up-right--regular',
+                },
+                onForward,
+              )),
+        )
+        .separator()
+        .subgraph((b) => {
+          if (extractorActions.length > 0) {
+            return b.group(
+              'extract',
+              {
+                label: ['message-toolbar-extract.menu', { ns: meta.profile.key }],
+                icon: 'ph--magic-wand--regular',
+                iconOnly: true,
+                variant: 'dropdownMenu',
+              },
+              (group) => {
+                for (const item of extractorActions) {
+                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                }
+              },
+            );
+          }
+        })
+        .menu('more', (b) => {
+          // Actions contributed by other plugins.
+          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
 
-        return { nodes, edges };
-      }),
-    [viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward],
+          if (onDelete) {
+            deleteAction(b, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
+          }
+        })
+        .build(),
+    [
+      graph,
+      nodeId,
+      viewMode,
+      setViewMode,
+      loadRemoteImages,
+      enrichedAvailable,
+      extractorActions,
+      onToggleLoadImages,
+      onOpen,
+      onReply,
+      onReplyAll,
+      onForward,
+      onDelete,
+    ],
   );
-
-  return useMenuActions(creator);
 };

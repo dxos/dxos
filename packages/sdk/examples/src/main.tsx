@@ -8,15 +8,16 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type Type } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { random } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
-import { defaultTx, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';

@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
-import { Integration } from '@dxos/plugin-integration/types';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { Integration } from '@dxos/plugin-integration';
 import { AccessToken, Project, Task } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
@@ -50,7 +50,7 @@ describe('plugin-linear sync', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([AccessToken.AccessToken, Integration.Integration, Project.Project, Task.Task]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Project.Project, Task.Task]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
     const integration = db.add(Obj.make(Integration.Integration, { accessTokens: [Ref.make(token)], targets: [] }));
     return { db, integration };
@@ -62,7 +62,7 @@ describe('plugin-linear sync', () => {
 
     const result = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.created).toBe(true);
     const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
@@ -78,11 +78,11 @@ describe('plugin-linear sync', () => {
 
     await Effect.gen(function* () {
       yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(second.created).toBe(false);
     // Title still correct, no field flipping.
@@ -95,7 +95,7 @@ describe('plugin-linear sync', () => {
 
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
       task.description = 'edited locally';
@@ -104,7 +104,7 @@ describe('plugin-linear sync', () => {
     // Pull again with unchanged remote — local edit must survive.
     await Effect.gen(function* () {
       yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(first.task.description).toBe('edited locally');
   });
@@ -115,11 +115,11 @@ describe('plugin-linear sync', () => {
 
     await Effect.gen(function* () {
       yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue({ title: 'Renamed remotely' }), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(second.task.title).toBe('Renamed remotely');
     const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
@@ -132,7 +132,7 @@ describe('plugin-linear sync', () => {
 
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue({ description: 'orig' }), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
       task.description = 'local edit';
@@ -140,7 +140,7 @@ describe('plugin-linear sync', () => {
 
     await Effect.gen(function* () {
       yield* upsertTask(integration, issue({ description: 'remote edit' }), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(first.task.description).toBe('remote edit');
   });
@@ -151,7 +151,7 @@ describe('plugin-linear sync', () => {
 
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
       task.title = 'Edited locally';
@@ -167,7 +167,7 @@ describe('plugin-linear sync', () => {
         updateProject: () => Effect.succeed(undefined),
         resolveStateId: () => undefined,
       });
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.tasks).toBe(1);
     expect(issueUpdateInput).toEqual({ title: 'Edited locally' });
@@ -182,7 +182,7 @@ describe('plugin-linear sync', () => {
 
     await Effect.gen(function* () {
       yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     let calls = 0;
     const result = await Effect.gen(function* () {
@@ -194,7 +194,7 @@ describe('plugin-linear sync', () => {
         updateProject: () => Effect.succeed(undefined),
         resolveStateId: () => undefined,
       });
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.tasks).toBe(0);
     expect(calls).toBe(0);
@@ -206,7 +206,7 @@ describe('plugin-linear sync', () => {
 
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
       task.status = 'done';
@@ -222,7 +222,7 @@ describe('plugin-linear sync', () => {
         updateProject: () => Effect.succeed(undefined),
         resolveStateId: (_iss, status) => (status === 'done' ? 'state-completed-id' : undefined),
       });
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(issueUpdateInput?.stateId).toBe('state-completed-id');
   });
@@ -236,7 +236,7 @@ describe('plugin-linear sync', () => {
 
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue({ priority: 0 }), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // Sanity check: the seeded snapshot really does say "no priority".
     const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
@@ -256,7 +256,7 @@ describe('plugin-linear sync', () => {
         updateProject: () => Effect.succeed(undefined),
         resolveStateId: () => undefined,
       });
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // Linear maps medium → 3.
     expect(issueUpdateInput?.priority).toBe(3);
@@ -268,7 +268,7 @@ describe('plugin-linear sync', () => {
 
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue(), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(first.task, (task) => {
       task.priority = undefined;
@@ -284,7 +284,7 @@ describe('plugin-linear sync', () => {
         updateProject: () => Effect.succeed(undefined),
         resolveStateId: () => undefined,
       });
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(issueUpdateInput?.priority).toBeNull();
   });
@@ -301,7 +301,7 @@ describe('plugin-linear sync', () => {
     // First pull: Linear says "no priority" (0 → undefined via the mapper).
     const first = await Effect.gen(function* () {
       return yield* upsertTask(integration, issue({ priority: 0 }), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // User assigns priority locally.
     Obj.update(first.task, (task) => {
@@ -313,7 +313,7 @@ describe('plugin-linear sync', () => {
     // must survive.
     await Effect.gen(function* () {
       yield* upsertTask(integration, issue({ priority: 0 }), undefined);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(first.task.priority).toBe('medium');
   });
@@ -324,7 +324,7 @@ describe('plugin-linear sync', () => {
 
     const { project: local } = await Effect.gen(function* () {
       return yield* upsertProject(integration, project());
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     Obj.update(local, (local) => {
       local.description = 'rewritten';
@@ -340,7 +340,7 @@ describe('plugin-linear sync', () => {
         },
         resolveStateId: () => undefined,
       });
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.projects).toBe(1);
     expect(projectInput).toEqual({ description: 'rewritten' });

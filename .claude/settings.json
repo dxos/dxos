@@ -5,5 +5,22 @@
     "linear@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "playwright@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": ["mcp__Trunk__search-test", "mcp__Trunk__investigate-ci-failure", "mcp__Trunk__detect-frameworks"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-worktree.sh\"",
+            "statusMessage": "Checking worktree boundary"
+          }
+        ]
+      }
+    ]
   }
 }

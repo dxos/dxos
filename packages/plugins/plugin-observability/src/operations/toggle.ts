@@ -11,10 +11,9 @@ import { Observability } from '@dxos/observability';
 
 import { meta } from '#meta';
 
-import { ObservabilityCapabilities, type Settings } from '../types';
-import { Toggle } from './definitions';
+import { ObservabilityCapabilities, ObservabilityOperation, type Settings } from '../types';
 
-const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
+const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = ObservabilityOperation.Toggle.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
@@ -22,7 +21,7 @@ const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
       const capabilities = yield* Capability.Service;
       const registry = capabilities.get(Capabilities.AtomRegistry);
       const allSettings = capabilities.getAll(AppCapabilities.Settings);
-      const settingsObj = allSettings.find((s: AppCapabilities.Settings) => s.prefix === meta.id);
+      const settingsObj = allSettings.find((s: AppCapabilities.Settings) => s.prefix === meta.profile.key);
       if (!settingsObj) {
         return false;
       }

@@ -8,7 +8,7 @@ import { For, Match, Switch, createEffect, createMemo, createSignal, useContext 
 
 import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/compute';
+import { Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
@@ -32,7 +32,7 @@ import { StatusBar } from './StatusBar';
 export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
-  conversation: AiSession;
+  conversation: AiSession.Session;
   model: ModelName;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;
@@ -52,10 +52,16 @@ export const Chat = (props: ChatProps) => {
   const contextBlueprints = useAtomValue(() => props.conversation.context.blueprints);
   const objects = useAtomValue(() => props.conversation.context.objects);
 
+  // All blueprint entities in the registry, typed. Memoized so the query runs once per registry change.
+  const allRegistryBlueprints = createMemo(() => blueprintRegistry.query(Filter.type(Blueprint.Blueprint)).runSync());
+
   // Transform blueprints to full blueprint definitions from registry.
   const blueprints = createMemo(() =>
     contextBlueprints()
-      .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
+      .map((blueprint) => {
+        const key = Obj.getMeta(blueprint).key;
+        return key !== undefined ? allRegistryBlueprints().find((b) => Obj.getMeta(b).key === key) : undefined;
+      })
       .filter(isTruthy),
   );
 
@@ -165,7 +171,10 @@ export const Chat = (props: ChatProps) => {
           </Match>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
-              selected={props.conversation.context.getBlueprints().map((blueprint) => blueprint.key)}
+              selected={props.conversation.context
+                .getBlueprints()
+                .map((blueprint) => Obj.getMeta(blueprint).key)
+                .filter((key): key is string => key !== undefined)}
               onSave={(blueprints) => {
                 props.onChatCreate?.({ blueprints });
                 setPopup(undefined);
@@ -242,14 +251,22 @@ const Artifacts = (props: { objects: Obj.Unknown[] }) => {
 };
 
 const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>) => {
+  const items = createMemo(() =>
+    blueprintRegistry
+      .query(Filter.type(Blueprint.Blueprint))
+      .runSync()
+      .map((blueprint) => {
+        const key = Obj.getMeta(blueprint).key;
+        return key !== undefined ? { id: key, label: blueprint.name } : undefined;
+      })
+      .filter((item): item is { id: string; label: string } => item !== undefined),
+  );
+
   return (
     <Picker
       multi
       title='Select Blueprints'
-      items={blueprintRegistry.blueprints.map((blueprint) => ({
-        id: blueprint.key,
-        label: blueprint.name,
-      }))}
+      items={items()}
       selected={props.selected}
       onSave={(ids) => props.onSave?.(ids)}
       onCancel={() => props.onCancel?.()}

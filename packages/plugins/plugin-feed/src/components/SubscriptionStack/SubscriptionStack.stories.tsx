@@ -14,9 +14,9 @@ import { Subscription } from '#types';
 
 import { SubscriptionStack, type SubscriptionStackAction } from './SubscriptionStack';
 
-const generateFeeds = (count: number): Subscription.Feed[] =>
+const generateFeeds = (count: number): Subscription.Subscription[] =>
   Array.from({ length: count }, () =>
-    Subscription.makeFeed({
+    Subscription.makeSubscription({
       name: random.company.name() + ' Blog',
       url: random.internet.url(),
       description: random.lorem.sentence(),

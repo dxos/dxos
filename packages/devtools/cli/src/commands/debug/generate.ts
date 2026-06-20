@@ -91,7 +91,7 @@ export const handler = Effect.fn(function* ({
   }
 
   // Query objects and mutate them
-  const queriedObjects = yield* Database.runQuery(Filter.type(TestSchema.Expando, { type }));
+  const queriedObjects = yield* Database.query(Filter.type(TestSchema.Expando, { type })).run;
 
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {

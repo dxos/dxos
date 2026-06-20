@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
 
 import { TicTacToeArticle, TicTacToeCard } from '#containers';
@@ -39,10 +40,10 @@ const CreateTicTacToeInput = Schema.Struct({
 });
 
 const variant: GameVariant = {
-  id: TicTacToe.State.typename,
+  id: Type.getTypename(TicTacToe.State),
   label: 'Tic-Tac-Toe',
   icon: 'ph--hash-straight--regular',
-  variantSchema: TicTacToe.State,
+  variantType: TicTacToe.State,
   inputSchema: CreateTicTacToeInput,
   roles: ['x', 'o'] as const,
   createVariant: (input) =>
@@ -57,4 +58,6 @@ const variant: GameVariant = {
   article: TicTacToeArticle,
 };
 
-export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.Variant, variant)));
+export default Capability.makeModule(() =>
+  Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)),
+);

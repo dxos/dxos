@@ -62,7 +62,9 @@ const PluginImportSource = ({
           return null; // Skip to next resolver.
         }
 
-        // Filter by package name pattern before resolving.
+        // Filter by package name pattern before resolving. nocomment: minimatch
+        // treats '#'-prefixed patterns as comments by default, which breaks
+        // subpath-import patterns like '#*'.
         const match =
           include.some((pattern) => Minimatch(source, pattern, globOptions)) &&
           !exclude.some((pattern) => Minimatch(source, pattern, globOptions));
@@ -73,6 +75,17 @@ const PluginImportSource = ({
         }
 
         if (!importer) {
+          return null;
+        }
+
+        // Don't re-route `#*` subpath imports to source when the importer
+        // is already in a compiled `dist/` tree. Compiled packages expect
+        // their own subpath imports to stay on the dist→dist chain;
+        // jumping back to source would pull in TypeScript that may not be
+        // browser-safe (e.g. raw `node:path` in `random-access-storage`'s
+        // src). Non-subpath `@dxos/*` imports from dist are unaffected —
+        // they still benefit from source resolution.
+        if (source.startsWith('#') && importer.includes('/dist/')) {
           return null;
         }
 

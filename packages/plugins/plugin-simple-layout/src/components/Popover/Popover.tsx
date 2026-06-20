@@ -55,7 +55,7 @@ export const PopoverRoot = ({ children }: PropsWithChildren) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, updateState } = useSimpleLayoutState();
   const { setOpen } = useLayoutPopoverContext('PopoverContent');
   const handleClose = useCallback(() => {
@@ -84,6 +84,7 @@ export const PopoverContent = () => {
     [handleClose],
   );
 
+  /* TODO(thure): Make this a constant and document it. */
   const collisionBoundaries: HTMLElement[] = useMemo(() => {
     const closest = state.popoverAnchor?.closest('[data-popover-collision-boundary]') as HTMLElement | null | undefined;
     return closest ? [closest] : [];
@@ -96,23 +97,26 @@ export const PopoverContent = () => {
         sticky='always'
         hideWhenDetached
         collisionBoundary={collisionBoundaries}
+        onOpenAutoFocus={(event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
-            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
-          )}
+          {(state.popoverKind === 'base' || state.popoverKind === 'rename') &&
+            state.popoverContent &&
+            'component' in state.popoverContent && (
+              <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
+            )}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='dx-card-popover'>
-              <Card.Toolbar>
-                {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                <span />
+              <Card.Header>
+                {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
+                <Card.DragHandle />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.CloseIconButton onClick={handleClose} />
-              </Card.Toolbar>
+                <Card.ActionIconButton action='close' onClick={handleClose} />
+              </Card.Header>
               {state.popoverContent && 'subject' in state.popoverContent && (
-                <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={state.popoverContent} limit={1} />
               )}
             </Card.Root>
           )}

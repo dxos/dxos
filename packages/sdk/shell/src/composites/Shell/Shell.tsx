@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import {
@@ -13,7 +14,7 @@ import {
   ShellLayout,
   type ShellRuntime,
 } from '@dxos/react-client';
-import { type SpaceId, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { IdentityDialog } from '../IdentityDialog';

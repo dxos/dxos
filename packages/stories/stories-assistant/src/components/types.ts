@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 
-export type ComponentProps = {
+export type ModuleProps = {
   space: Space;
   debug?: boolean;
   onEvent?: (event: string) => void;

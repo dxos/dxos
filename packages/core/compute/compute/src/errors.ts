@@ -25,7 +25,7 @@ export class NoHandlerError extends BaseError.extend('NoHandlerError', 'No handl
 
 export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvailable', 'Service not available') {
   constructor(service: string, options?: Omit<BaseErrorOptions, 'context'>) {
-    super({ context: { service }, ...options, message: `Service not available: ${service}` });
+    super({ context: { service }, message: `Service not available: ${service}`, ...options });
   }
 }
 
@@ -48,3 +48,24 @@ export class InvalidOperationOutputError extends BaseError.extend(
 ) {}
 
 export class TriggerStateNotFoundError extends BaseError.extend('TriggerStateNotFound', 'Trigger state not found') {}
+
+/**
+ * Raised when the upstream AI gateway responds with a structured JSON error envelope
+ * (`{ "type": "error", "error": { "type": ..., "message": ... } }`). Surfaces as a typed
+ * defect from `FunctionsAiHttpClient`, bypassing `@effect/ai`'s generic `HttpResponseError`
+ * wrapping so callers can match on the error class directly.
+ */
+export class FunctionsAiUpstreamError extends BaseError.extend(
+  'FunctionsAiUpstreamError',
+  'Upstream AI service returned an error',
+) {}
+
+/**
+ * Specialized `FunctionsAiUpstreamError` for the memoization layer: the recorded fixture for a
+ * given cache key was not found and `ALLOW_LLM_GENERATION` is unset. The `cacheKey` is exposed
+ * via `context.cacheKey` to make regeneration straightforward.
+ */
+export class FunctionsAiMemoizationMissError extends BaseError.extend(
+  'FunctionsAiMemoizationMissError',
+  'No memoized AI conversation found for the given cache key',
+) {}

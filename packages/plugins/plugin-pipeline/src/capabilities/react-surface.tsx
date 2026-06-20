@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
-import { PipelineContainer, PipelineProperties } from '#containers';
+import { PipelineArticle, PipelineProperties } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         id: 'root',
         filter: AppSurface.object(AppSurface.Article, Pipeline.Pipeline),
         component: ({ data, role }) => (
-          <PipelineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <PipelineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
@@ -44,9 +44,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
-        component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
+        component: ({ data }) => <PipelineProperties subject={data.subject} />,
       }),
     ]),
   ),

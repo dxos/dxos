@@ -52,7 +52,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     const objects = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
       createGraph(
-        objects.filter((object: Obj.Unknown) => types.some((type) => type.typename === Obj.getTypename(object))),
+        objects.filter((object: Obj.Unknown) =>
+          types.some((type) => Type.getTypename(type) === Obj.getTypename(object)),
+        ),
       ),
     );
     setGraph(model);
@@ -112,22 +114,26 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }, { args: { spec, registerSchema } }) => {
         if (spec) {
+          const resolveType = (t: any) => (typeof t === 'function' ? t() : t);
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
-            const registeredSchema = await space.db.schemaRegistry.register([
-              ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Type.AnyEntity[]);
+            const registeredTypes = await Promise.all(
+              [...new Set(spec.map((schema: any) => resolveType(schema.type)))].map((type) =>
+                space.db.addType(type as Type.AnyEntity),
+              ),
+            );
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(schema.type)),
+              type: registeredTypes.find((s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type))),
             }));
           } else {
-            await space.db.graph.schemaRegistry.register(types);
+            space.db.graph.registry.add(types);
           }
 
           const createObjects = createObjectFactory(space.db, generator);
-          await createObjects(spec as TypeSpec[]);
+          const resolvedSpec: TypeSpec[] = spec.map((s: any) => ({ ...s, type: resolveType(s.type) }));
+          await createObjects(resolvedSpec);
           await space.db.flush({ indexes: true });
         }
       },
@@ -146,7 +152,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: TestSchema.Organization, count: 1 }],
+    spec: [{ type: () => TestSchema.Organization, count: 1 }],
   },
 };
 
@@ -164,9 +170,9 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: TestSchema.Organization, count: 4 },
-      { type: TestSchema.Project, count: 0 },
-      { type: TestSchema.Person, count: 16 },
+      { type: () => TestSchema.Organization, count: 4 },
+      { type: () => TestSchema.Project, count: 0 },
+      { type: () => TestSchema.Person, count: 16 },
     ],
   },
 };

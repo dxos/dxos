@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { EffectEx } from '@dxos/effect';
+import { IdentityDid } from '@dxos/keys';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { ClientEvents } from '../types';
 import { ClientCapabilities } from '../types';
@@ -19,9 +21,15 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       const manager = yield* Capability.get(Capabilities.PluginManager);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
-      yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
+      const spaceKey = data.spaceKey;
+      const spaceId = spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(spaceKey)) : undefined;
+      yield* Effect.promise(() => EffectEx.runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
-      return data;
+      return {
+        identityDid: IdentityDid.make(data.did),
+        ...(spaceId !== undefined && { spaceId }),
+        ...(data.profile !== undefined && { profile: data.profile }),
+      };
     }),
   ),
 );

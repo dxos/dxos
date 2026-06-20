@@ -4,5 +4,5 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const KanbanContainer: ComponentType<any> = lazy(() => import('./KanbanContainer'));
+export const KanbanArticle: ComponentType<any> = lazy(() => import('./KanbanArticle'));
 export const KanbanSettings: ComponentType<any> = lazy(() => import('./KanbanSettings'));

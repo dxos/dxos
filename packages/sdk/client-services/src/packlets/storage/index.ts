@@ -5,3 +5,4 @@
 export * from './storage';
 export * from './level';
 export * from './profile-archive';
+export * from './profile-archive-sqlite';

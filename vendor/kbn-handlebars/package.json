@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/vendor-kbn-handlebars",
+  "version": "0.9.0",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "catalog:",
+    "handlebars": "catalog:",
+    "kbn-handlebars": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

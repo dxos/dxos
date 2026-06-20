@@ -41,5 +41,4 @@ export { Client } from './client';
 export * from './client';
 export * from './edge';
 export * from './services';
-export * from './util';
 export * from './version';

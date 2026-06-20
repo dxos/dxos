@@ -8,24 +8,23 @@ import * as Effect from 'effect/Effect';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { EntityId } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { WithProperties } from '#testing';
 
 import MarkdownBlueprint from '../blueprints/markdown-blueprint';
-import { Update } from './definitions';
+import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -53,12 +52,12 @@ describe('update', () => {
         });
         yield* Database.add(doc);
 
-        yield* Operation.invoke(Update, {
+        yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });
 
-        const updatedDoc = yield* Database.resolve(Obj.getDXN(doc), Markdown.Document);
+        const updatedDoc = yield* Database.resolve(Obj.getURI(doc), Markdown.Document);
         expect(updatedDoc.name).toBe(doc.name);
         const text = yield* Database.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');
@@ -80,7 +79,7 @@ describe('update', () => {
         yield* agent.submitPrompt('Create a document with a cookie recipe.');
         yield* agent.waitForCompletion();
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -96,7 +95,7 @@ describe('update', () => {
         yield* agent.submitPrompt('Add a section with a holiday-themed variation.');
         yield* agent.waitForCompletion();
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -141,7 +140,7 @@ describe('update', () => {
         yield* agent.waitForCompletion();
 
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -188,7 +187,7 @@ describe('update', () => {
         yield* agent.waitForCompletion();
 
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }

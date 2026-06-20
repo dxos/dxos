@@ -7,6 +7,7 @@ import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
@@ -27,6 +28,7 @@ import {
   formattingListener,
   processEditorPayload,
   editorClassNames,
+  scrollbarAutohide,
 } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
@@ -71,7 +73,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const registry = useContext(RegistryContext);
 
@@ -94,7 +96,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       focusAttributes,
     } = useTextEditor(
       () => ({
-        ...(role !== 'section' && {
+        ...(role !== AppSurface.Section.role && {
           id,
           scrollTo,
           selection,
@@ -114,8 +116,9 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
+          scrollbarAutohide(),
           toolbarState && formattingListener(updateToolbarState),
-          role !== 'section' &&
+          role !== AppSurface.Section.role &&
             onFileUpload &&
             dropFile({
               // TODO(wittjosiah): Factor out to file uploader plugin.
@@ -149,7 +152,6 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       <div
         {...focusAttributes}
         className={mx(editorClassNames(role), classNames)}
-        role='none'
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         ref={parentRef}

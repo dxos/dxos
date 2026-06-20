@@ -1,0 +1,84 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { useCallback, useEffect } from 'react';
+
+import { Capabilities } from '@dxos/app-framework';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppSurface,
+  OBJECT_ACTIONS_CONTRIBUTION_ID,
+  OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+  useObjectMenuItems,
+} from '@dxos/app-toolkit/ui';
+import { Panel } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
+import { useMenu } from '@dxos/react-ui-menu';
+import { type Pipeline } from '@dxos/types';
+
+import { type ItemProps, PipelineComponent } from '#components';
+import { usePipelineBoardModel } from '#hooks';
+
+const PIPELINE_ITEM = 'PipelineItem';
+
+export type PipelineArticleProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
+
+export const PipelineArticle = ({ role, subject: pipeline, attendableId }: PipelineArticleProps) => {
+  const registry = useCapability(Capabilities.AtomRegistry);
+  const model = usePipelineBoardModel(pipeline, registry);
+  const { invokePromise } = useOperationInvoker();
+  const { hasAttention } = useAttention(attendableId);
+
+  const handleColumnAdd = useCallback(
+    () =>
+      invokePromise(LayoutOperation.UpdateCompanion, {
+        subject: linkedSegment('settings'),
+      }),
+    [invokePromise],
+  );
+
+  return (
+    <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <PipelineComponent.Toolbar disabled={!hasAttention} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <PipelineComponent.Content asChild model={model}>
+            <PipelineComponent.Columns pipeline={pipeline} />
+          </PipelineComponent.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </PipelineComponent.Root>
+  );
+};
+
+const PipelineItem = ({ item, projectionModel }: ItemProps) => {
+  const menu = useMenu(PIPELINE_ITEM);
+  const items = useObjectMenuItems(item);
+
+  useEffect(() => {
+    menu.addMenuItems({
+      id: OBJECT_ACTIONS_CONTRIBUTION_ID,
+      mode: 'additive',
+      priority: OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+      items,
+    });
+
+    return () => menu.removeMenuItems(OBJECT_ACTIONS_CONTRIBUTION_ID);
+  }, [menu, items]);
+
+  return (
+    <Surface.Surface
+      type={AppSurface.CardContent}
+      data={{
+        subject: item,
+        projection: projectionModel,
+      }}
+      limit={1}
+    />
+  );
+};

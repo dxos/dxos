@@ -7,17 +7,16 @@ import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
-import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
+import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import React from 'react';
 
 import { raise } from '@dxos/debug';
-import { Annotation, type Database, Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TREEGRID_PARENT_OF_SEPARATOR, DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
@@ -74,7 +73,7 @@ const ObjectsTreeRow = ({
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
   const handleCopyDXN = useCallback(() => {
-    void navigator.clipboard.writeText(Entity.getDXN(node.entity)?.toString() ?? '');
+    void navigator.clipboard.writeText(Entity.getURI(node.entity) ?? '');
   }, [node.entity]);
   const handleCopyJSON = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(node.entity, null, 2));
@@ -105,11 +104,7 @@ const ObjectsTreeRow = ({
         classNames='grid grid-cols-subgrid col-[tree-row] cursor-pointer hover:bg-hover-surface'
         onClick={() => model.onSelect(node.entity)}
       >
-        <div
-          role='none'
-          className='indent relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level)}
-        >
+        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
           <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
             <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
             {node.type === 'outgoing-relation' && (
@@ -118,8 +113,9 @@ const ObjectsTreeRow = ({
             {node.type === 'incoming-relation' && (
               <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
             )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.surfaceText]} />
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
+            {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
           </Treegrid.Cell>
           <Treegrid.Cell classNames='contents'>
             <DropdownMenu.Root>
@@ -183,6 +179,10 @@ export type ObjectsTreeItem = {
   label: string;
   icon: string;
   iconHue?: string;
+  /**
+   * For children that are also referenced by parents, this is set to the key of the parent.
+   */
+  role?: string;
   entity: Entity.Snapshot;
 };
 
@@ -194,21 +194,12 @@ const ExpandedKeySchema = Schema.TemplateLiteralParser(
   Schema.Number,
 );
 
-const AUTO_EXPAND_LEVEL = 3;
-
 class ObjectsTreeModel {
   #onSelect: (entity: Entity.Snapshot) => void;
   #database: Database.Database;
   #root: Entity.Unknown | null;
   #atoms = Atom.family((anchor: string | null) => this.#makeNodeAtom(anchor));
-  #expandedState = Atom.family((key: string) => {
-    const [id, _, level] = Schema.decodeUnknownSync(ExpandedKeySchema)(key);
-    if (level <= AUTO_EXPAND_LEVEL) {
-      return Atom.make(true);
-    } else {
-      return Atom.make(false);
-    }
-  });
+  #expandedState = Atom.family((_key: string) => Atom.make(false));
 
   constructor(database: Database.Database, root: Entity.Unknown | null, onSelect: (entity: Entity.Snapshot) => void) {
     this.#database = database;
@@ -243,44 +234,42 @@ class ObjectsTreeModel {
   #makeNodeAtom(anchor: string | null): Atom.Atom<ObjectsTreeItem[]> {
     log('makeNodeAtom', { anchor });
     if (typeof anchor === 'string') {
-      invariant(ObjectId.isValid(anchor));
+      invariant(EntityId.isValid(anchor));
 
-      const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
-        this.#database.query(
-          Query.all(
-            Query.select(Filter.id(anchor)).children(),
-            Query.select(Filter.id(anchor)).sourceOf(),
-            Query.select(Filter.id(anchor)).targetOf(),
-            Query.select(Filter.id(anchor)).source(),
-            Query.select(Filter.id(anchor)).target(),
-          )
-            .options({
-              deleted: 'include',
-            })
-            .from(this.#database),
-        ),
-      );
+      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
+        Query.all(
+          Query.select(Filter.id(anchor)).children(),
+          Query.select(Filter.id(anchor)).sourceOf(),
+          Query.select(Filter.id(anchor)).targetOf(),
+          Query.select(Filter.id(anchor)).source(),
+          Query.select(Filter.id(anchor)).target(),
+        )
+          .options({
+            deleted: 'include',
+          })
+          .from(this.#database),
+      ).atom;
 
       return Atom.make((get) =>
         pipe(
           get(entities),
-          Array.map((entity) => AtomObj.make(entity).pipe(get)),
+          Array.map((entity) => Entity.atom(entity).pipe(get)),
           Array.map((entity) => this.#mapEntityToTreeItems(entity, anchor)),
           Array.sortBy(itemOrder),
         ),
       );
     } else if (this.#root !== null) {
-      return AtomObj.make(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
+      return Entity.atom(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
     } else {
-      const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
-        this.#database.query(Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database)),
-      );
+      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
+        Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database),
+      ).atom;
 
       return Atom.make((get) =>
         pipe(
           get(entities),
           Array.filter(Obj.isObject),
-          Array.map((entity) => AtomObj.make(entity).pipe(get)),
+          Array.map((entity) => Obj.atom(entity).pipe(get)),
           Array.map((entity) => this.#mapEntityToTreeItems(entity, null)),
           Array.sortBy(itemOrder),
         ),
@@ -289,17 +278,14 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Option.fromNullable(Entity.getSchema(entity)).pipe(
-      Option.flatMap(Annotation.IconAnnotation.get),
-      Option.getOrElse(() => ({
-        icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,
-        hue: undefined,
-      })),
-    );
+    const { icon, hue } = Entity.getIcon(entity) ?? {
+      icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,
+      hue: undefined,
+    };
     return {
       id: entity.id,
       type: Relation.isSnapshot(entity)
-        ? Relation.getSource(entity).id === anchor
+        ? EID.getEntityId(Relation.getSourceURI(entity)) === anchor
           ? 'outgoing-relation'
           : 'incoming-relation'
         : 'object',
@@ -310,6 +296,7 @@ class ObjectsTreeModel {
         `${Obj.isObject(entity) ? 'Object' : 'Relation'}-${entity.id.slice(-4)}`,
       icon,
       iconHue: hue,
+      role: computeRole(entity),
       entity,
     };
   }
@@ -327,3 +314,21 @@ const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
     Match.exhaustive,
   ),
 );
+
+const computeRole = (entity: Entity.Snapshot): string | undefined => {
+  if (!Obj.isSnapshot(entity)) {
+    log.info('not an object');
+    return undefined;
+  }
+  const parent = Obj.getParent(entity);
+  if (parent === undefined) {
+    log.info('no parent');
+    return undefined;
+  }
+  for (const key of Record.keys(parent)) {
+    if (Ref.isRef(parent[key]) && parent[key].target?.id === entity.id) {
+      return `$.${key}`;
+    }
+  }
+  return undefined;
+};

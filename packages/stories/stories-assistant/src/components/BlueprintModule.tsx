@@ -9,25 +9,29 @@ import { Filter, Obj } from '@dxos/echo';
 import { meta } from '@dxos/plugin-assistant';
 import { TemplateEditor } from '@dxos/plugin-assistant/components';
 import { useQuery } from '@dxos/react-client/echo';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const BlueprintModule = ({ space }: ComponentProps) => {
+export const BlueprintModule = ({ space }: ModuleProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const [blueprint] = useQuery(space.db, Filter.type(Blueprint.Blueprint));
-  const { t } = useTranslation(meta.id);
+  if (!blueprint?.instructions) {
+    return <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no-blueprint.message')}</p>;
+  }
 
-  return !blueprint?.instructions ? (
-    <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no-blueprint.message')}</p>
-  ) : (
-    <div className='flex flex-col h-full'>
-      <Toolbar.Root classNames='border-b border-subdued-separator'>
-        <h2>{Obj.getLabel(blueprint)}</h2>
-        <div className='flex-1' />
-        <Toolbar.IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' />
-      </Toolbar.Root>
-      <TemplateEditor id={blueprint.id} template={blueprint.instructions} />
-    </div>
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root classNames='border-b border-subdued-separator'>
+          <Toolbar.Text>{Obj.getLabel(blueprint)}</Toolbar.Text>
+          <Toolbar.IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <TemplateEditor id={blueprint.id} source={blueprint.instructions.source} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

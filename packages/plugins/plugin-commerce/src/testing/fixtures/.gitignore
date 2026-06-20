@@ -1,0 +1,8 @@
+# Raw "Save Page As — Complete" captures: multi-MB and contain third-party assets.
+# Kept locally to regenerate the small cleaned/sampled fixtures; never committed.
+autotrader-results.html
+autotrader-search.html
+rightmove.html
+autotrader-results_files/
+autotrader-search_files/
+*_files/

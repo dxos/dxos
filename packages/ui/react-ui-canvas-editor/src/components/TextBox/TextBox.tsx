@@ -136,7 +136,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
 export const ReadonlyTextBox = ({ classNames, value = '' }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
   const lines = value.split('\n');
   return (
-    <div role='none' className={mx('w-full overflow-hidden', classNames)}>
+    <div className={mx('w-full overflow-hidden', classNames)}>
       {lines.map((line, i) => (
         <div key={i} className='w-full text-center overflow-hidden'>
           {line}

@@ -2,20 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-// TODO(wittjosiah): Needs screenshots.
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.thread',
-  name: 'Chat',
-  description: trim`
-    Multi-modal communication platform supporting text chat, voice, and video conferencing.
-    Create threaded conversations and add contextual comments directly on any workspace object.
-  `,
-  icon: 'ph--video-conference--regular',
-  iconHue: 'rose',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
-};
+import config from '../dx.config';
 
-export const THREAD_ITEM = `${meta.id}.item`;
+export const meta = Plugin.getMetaFromConfig(config);
+
+export const THREAD_ITEM = `${meta.profile.key}.item`;

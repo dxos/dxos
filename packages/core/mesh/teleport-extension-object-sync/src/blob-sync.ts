@@ -11,11 +11,11 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { BitField, ComplexMap } from '@dxos/util';
 
-import { type BlobStore } from './blob-store';
+import { type BlobStoreApi } from './blob-store';
 import { BlobSyncExtension } from './blob-sync-extension';
 
 export type BlobSyncProps = {
-  blobStore: BlobStore;
+  blobStore: BlobStoreApi;
 };
 
 type DownloadRequest = {

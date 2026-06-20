@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -19,6 +20,9 @@
   "references": [
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/random"
@@ -54,25 +58,13 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../ui/react-ui-search"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"
@@ -82,9 +74,6 @@
     },
     {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

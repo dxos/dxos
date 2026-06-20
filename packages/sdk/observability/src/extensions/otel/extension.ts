@@ -15,7 +15,7 @@ import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
-import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
+import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
 
 export type ExtensionsOptions = {
@@ -58,12 +58,19 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
   const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);
+  const storedLogLevel = yield* Effect.promise(() => getOtelLogLevel(serviceName));
+  const resolvedLogLevel =
+    storedLogLevel != null ? (LogLevel[storedLogLevel.toUpperCase() as keyof typeof LogLevel] ?? logLevel) : logLevel;
   const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
-  const endpoint = isNode()
+  const rawEndpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
-    : config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT;
+    : (config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT ?? _endpoint);
+  // The OTLP exporter (>= 0.203) validates URLs and rejects relative paths.
+  // In the browser/worker, resolve relative endpoints against the current origin
+  // so callers can keep using paths like `/api/otel` for proxied deployments.
+  const endpoint = !isNode() && rawEndpoint?.startsWith('/') ? resolveRelativeEndpoint(rawEndpoint) : rawEndpoint;
   const headers =
     _headers ??
     Match.value(isNode()).pipe(
@@ -74,10 +81,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       Option.getOrElse(() => undefined),
     );
 
-  if (!endpoint || !headers) {
-    log.info('Missing OTEL_ENDPOINT or OTEL_HEADERS');
+  if (!endpoint) {
+    log.info('Missing OTEL_ENDPOINT');
     return stubExtension;
   }
+  // Headers are optional when using a proxy that injects auth server-side.
+  const resolvedHeaders = headers ?? {};
+  // OTLP HTTP exporters require an absolute URL. Resolve relative paths using the current origin.
+  // globalThis.location is defined in all browser contexts (main thread, dedicated/service workers).
+  const resolvedEndpoint =
+    !isNode() && endpoint.startsWith('/') ? `${globalThis.location.origin}${endpoint}` : endpoint;
 
   // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
   // when it reads the `X-DXOS-Client-Tag` header, see
@@ -109,18 +122,18 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const logs = logsEnabled
     ? new OtelLogs({
-        endpoint,
-        headers,
+        endpoint: resolvedEndpoint,
+        headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
-        logLevel,
+        logLevel: resolvedLogLevel,
       })
     : undefined;
 
   const metrics = metricsEnabled
     ? new OtelMetrics({
-        endpoint,
-        headers,
+        endpoint: resolvedEndpoint,
+        headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
       })
@@ -128,8 +141,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const traces = tracesEnabled
     ? new OtelTraces({
-        endpoint,
-        headers,
+        endpoint: resolvedEndpoint,
+        headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
       })
@@ -244,6 +257,17 @@ const detectProcessType = (): string => {
     return 'shared-worker';
   }
   return 'dedicated-worker';
+};
+
+/**
+ * Resolves a relative OTLP endpoint path against the current global origin.
+ * Workers expose the same `globalThis.location` as the page that spawned them;
+ * if neither is available we fall back to the original path and let the OTLP
+ * exporter surface the configuration error.
+ */
+const resolveRelativeEndpoint = (path: string): string => {
+  const origin = (globalThis as { location?: { origin?: string } }).location?.origin;
+  return origin ? `${origin}${path}` : path;
 };
 
 const parseHeaders = (unparsedHeaders: string): Record<string, string> => {

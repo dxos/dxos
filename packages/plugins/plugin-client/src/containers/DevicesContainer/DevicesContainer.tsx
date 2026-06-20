@@ -25,7 +25,7 @@ export type DevicesContainerProps = {
 };
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
@@ -46,12 +46,12 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
     <Clipboard.Provider>
       <Settings.Viewport>
         <Settings.Section
-          title={t('devices-verbose.label', { ns: meta.id })}
-          description={t('devices.description', { ns: meta.id })}
+          title={t('devices-verbose.label', { ns: meta.profile.key })}
+          description={t('devices.description', { ns: meta.profile.key })}
         >
           <Settings.Panel>
             <div role='group' className='min-w-0'>
-              <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.id })}</h3>
+              <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
               <List>
                 {devices.map((device: Device) => (
                   <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
@@ -67,17 +67,20 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
           </Settings.Panel>
         </Settings.Section>
         <Settings.Section
-          title={t('danger-zone.title', { ns: meta.id })}
-          description={t('danger-zone.description', { ns: meta.id })}
+          title={t('danger-zone.title', { ns: meta.profile.key })}
+          description={t('danger-zone.description', { ns: meta.profile.key })}
         >
-          <Settings.Item title={t('reset-device.label')} description={t('reset-device.description', { ns: meta.id })}>
+          <Settings.Item
+            title={t('reset-device.label')}
+            description={t('reset-device.description', { ns: meta.profile.key })}
+          >
             <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
               {t('reset-device.label')}
             </Button>
           </Settings.Item>
           <Settings.Item
             title={t('recover-identity.label')}
-            description={t('recover-identity.description', { ns: meta.id })}
+            description={t('recover-identity.description', { ns: meta.profile.key })}
           >
             <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
               {t('recover-identity.label')}
@@ -85,7 +88,7 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
           </Settings.Item>
           <Settings.Item
             title={t('join-new-identity.label')}
-            description={t('join-new-identity.description', { ns: meta.id })}
+            description={t('join-new-identity.description', { ns: meta.profile.key })}
           >
             <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
               {t('join-new-identity.label')}
@@ -167,7 +170,7 @@ const InvitationSection = ({
   onInvitationDone = () => {},
   onInvitationCreate = () => {},
 }: InvitationComponentProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const activeView =
     state < 0
       ? 'init'
@@ -215,10 +218,10 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <div className='flex justify-center py-4'>
-          <div role='none' className='w-full md:max-w-80 aspect-square relative text-description'>
+          <div className='w-full md:max-w-80 aspect-square relative text-description'>
             <QR
               rounding={100}
               backgroundColor='transparent'

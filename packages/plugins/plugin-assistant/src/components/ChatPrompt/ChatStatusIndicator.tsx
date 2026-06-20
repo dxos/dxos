@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
-import { Spinner, type SpinnerProps } from '@dxos/react-ui-sfx';
+import { Spinner, type SpinnerProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/ui-theme';
 
 const period = 3_000;
@@ -30,7 +30,7 @@ export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...
   );
 
   return (
-    <div role='none' className={mx('relative flex', classNames)}>
+    <div className={mx('relative flex', classNames)}>
       <Spinner duration={period} state={!init ? 'flash' : error ? 'error' : processing ? 'spin' : 'pulse'} {...props} />
       {error && (
         <Tooltip.Trigger asChild content={error.message}>

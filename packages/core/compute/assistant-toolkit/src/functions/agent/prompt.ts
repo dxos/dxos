@@ -4,10 +4,8 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -21,7 +19,7 @@ import {
 } from '@dxos/assistant';
 import { Template, Trace, Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
@@ -30,7 +28,7 @@ import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 
-const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
+const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
@@ -48,21 +46,25 @@ export default AgentPrompt.pipe(
 
         log.info('starting agent', { prompt: prompt.id, input });
 
-        const blueprints = yield* Function.pipe(
-          prompt.blueprints,
-          Effect.forEach(Database.loadOption),
-          Effect.map(Array.filter(Option.isSome)),
-          Effect.map(Array.map((option) => option.value)),
+        // Bind the routine's own refs, dropping any that no longer resolve. The refs must be
+        // bound as-is (not re-wrapped via `Ref.make`) to preserve their registry DXN: bindings
+        // are persisted to the conversation feed, and registry-only blueprints have no space-DB
+        // identity, so an EID ref would not resolve when the binding is re-read.
+        const blueprintRefs = yield* Effect.filter(prompt.blueprints, (ref) =>
+          Database.load(ref).pipe(
+            Effect.as(true),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+          ),
         );
 
-        const objects = yield* Function.pipe(
-          prompt.context,
-          Effect.forEach(Database.loadOption),
-          Effect.map(Array.filter(Option.isSome)),
-          Effect.map(Array.map((option) => option.value)),
+        const objectRefs = yield* Effect.filter(prompt.context, (ref) =>
+          Database.load(ref).pipe(
+            Effect.as(true),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+          ),
         );
 
-        const promptInstructions = yield* Database.load(prompt.instructions.source);
+        const promptInstructions = yield* Database.load(prompt.instructions);
         let promptText = Template.process(promptInstructions.content, input);
 
         if (input !== undefined) {
@@ -79,7 +81,7 @@ export default AgentPrompt.pipe(
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
-          systemText += `\n\n${data.systemInstructions}`;
+          systemText += `\n${data.systemInstructions}`;
         }
 
         const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
@@ -99,13 +101,13 @@ export default AgentPrompt.pipe(
           resultSink,
         });
 
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+        const runtime = yield* Effect.runtime<Database.Service>();
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>
           session.context.bind({
-            blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
-            objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
+            blueprints: blueprintRefs,
+            objects: objectRefs,
           }),
         );
 
@@ -149,8 +151,11 @@ export default AgentPrompt.pipe(
           ),
         );
       },
+      Effect.tapBoth({
+        onSuccess: () => Database.flush(),
+        onFailure: () => Database.flush(),
+      }),
       Effect.scoped,
-      Effect.provide(Trace.writerLayerNoop),
     ),
   ),
   Operation.opaqueHandler,
@@ -210,7 +215,7 @@ const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
             log('invoking operation', { operationDef, input });
             const result = yield* operationInvoker
               .invoke(operationDef, input, {
-                conversation: Obj.getDXN(feed).toString(),
+                conversation: Obj.getURI(feed),
               })
               .pipe(Effect.orDie);
             log('result', { result });

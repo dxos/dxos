@@ -20,13 +20,13 @@ import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { mainPaddingTransitions } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitions, mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
-import { getMode } from '#types';
+import { DeckOperation, getMode, Keyshortcuts } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
@@ -57,7 +57,6 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
 
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   return (
     <Main.Content
@@ -66,7 +65,6 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',
-        hoistStatusbar && 'lg:bottom-(--dx-statusbar-size)',
       ]}
       style={
         {
@@ -105,12 +103,8 @@ export const DeckContentEmpty = () => {
   const layoutMode = getMode(deck);
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
-    <div
-      role='none'
-      className='grid place-items-center p-8 relative bg-deck-surface'
-      data-testid='layoutPlugin.firstRunMessage'
-    >
-      <Surface.Surface role='keyshortcuts' />
+    <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
+      <Surface.Surface type={Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );
@@ -149,7 +143,7 @@ export const DeckSoloMode = () => {
   }, [fullscreen, onLayoutChange]);
 
   return (
-    <div role='none' className='relative overflow-hidden bg-deck-surface'>
+    <div className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
       <StackContext.Provider
@@ -233,7 +227,7 @@ export const DeckMultiMode = () => {
   }, [active, lastPlankCompanions.length]);
 
   return (
-    <div role='none' className='relative bg-deck-surface overflow-hidden'>
+    <div className='relative bg-deck-surface overflow-hidden'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <Stack
         classNames={[
@@ -278,10 +272,9 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div
-      role='none'
       className={mx(
         'fixed top-2 right-2 z-[1]',
         hoverableControls,

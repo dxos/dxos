@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ObjectId } from '@dxos/keys';
+import { type EntityId } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { type AnyEntity } from '../common/types';
@@ -29,8 +29,8 @@ export const RefArray = Object.freeze({
   /**
    * Removes the ref with the given id.
    */
-  removeById: (refs: Ref<AnyEntity>[], id: ObjectId) => {
-    const index = refs.findIndex(Ref.hasObjectId(id));
+  removeById: (refs: Ref<AnyEntity>[], id: EntityId) => {
+    const index = refs.findIndex(Ref.hasEntityId(id));
     if (index >= 0) {
       refs.splice(index, 1);
     }

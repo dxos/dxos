@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { type JsonSchema, Obj } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
 import { random } from '@dxos/random';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useType } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
@@ -132,13 +132,13 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientStory();
-    const schema = useSchema(space?.db, TestSchema.Person.typename);
-    const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
-    if (!schema) {
+    const type = useType(space?.db, Type.getURI(TestSchema.Person));
+    const objects = useQuery(space?.db, type ? Filter.type(type) : Filter.nothing());
+    if (!type) {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable schema={schema} rows={objects} />;
+    return <DynamicTable type={type} rows={objects} />;
   },
   decorators: [
     withClientProvider({

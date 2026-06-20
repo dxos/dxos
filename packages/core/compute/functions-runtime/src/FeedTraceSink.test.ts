@@ -8,14 +8,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Trace } from '@dxos/compute';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 
 import * as FeedTraceSink from './FeedTraceSink';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-  Layer.provideMerge(FeedTraceSink.layerLive),
+  Layer.provideMerge(FeedTraceSink.layerLiveWithDirectSink),
   Layer.provideMerge(TestDatabaseLayer()),
 );
 
@@ -30,7 +30,7 @@ describe('FeedTraceSink', () => {
       yield* FeedTraceSink.flush();
       yield* Database.flush();
       const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
-      const messages = yield* Database.runQuery(Query.select(Filter.type(Trace.Message)).from(feed));
+      const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
       expect(messages).toHaveLength(2);
       expect(messages[0].meta.processName).toBe('test');
       expect(messages[0].events[0].data).toBe('foo');
@@ -54,7 +54,7 @@ describe('FeedTraceSink', () => {
       ]);
       yield* Database.flush();
 
-      const objs = yield* Database.runQuery(Query.select(Filter.everything()).from(feed));
+      const objs = yield* Database.query(Query.select(Filter.everything()).from(feed)).run;
       console.log(objs);
     }, Effect.provide(TestLayer)),
   );

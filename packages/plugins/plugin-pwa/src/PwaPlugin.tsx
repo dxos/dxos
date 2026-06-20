@@ -16,27 +16,27 @@ export const PwaPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
-    activatesOn: ActivationEvents.OperationInvokerReady,
+    activatesOn: ActivationEvents.ProcessManagerReady,
     activate: Effect.fnUntraced(function* () {
       const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
       const updateSW = registerSW({
         onNeedRefresh: () => {
           void invokePromise(LayoutOperation.AddToast, {
-            id: `${meta.id}.need-refresh`,
-            title: ['need-refresh.label', { ns: meta.id }],
-            description: ['need-refresh.description', { ns: meta.id }],
+            id: `${meta.profile.key}.need-refresh`,
+            title: ['need-refresh.label', { ns: meta.profile.key }],
+            description: ['need-refresh.description', { ns: meta.profile.key }],
             duration: 4 * 60 * 1000, // 4m
-            actionLabel: ['refresh.label', { ns: meta.id }],
-            actionAlt: ['refresh.alt', { ns: meta.id }],
+            actionLabel: ['refresh.label', { ns: meta.profile.key }],
+            actionAlt: ['refresh.alt', { ns: meta.profile.key }],
             onAction: () => updateSW(true),
           });
         },
         onOfflineReady: () => {
           void invokePromise(LayoutOperation.AddToast, {
-            id: `${meta.id}.offline-ready`,
-            title: ['offline-ready.label', { ns: meta.id }],
-            closeLabel: ['confirm.label', { ns: meta.id }],
+            id: `${meta.profile.key}.offline-ready`,
+            title: ['offline-ready.label', { ns: meta.profile.key }],
+            closeLabel: ['confirm.label', { ns: meta.profile.key }],
           });
         },
         onRegisterError: (err) => {

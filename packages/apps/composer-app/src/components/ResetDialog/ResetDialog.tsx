@@ -4,10 +4,11 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { FeedbackForm } from '@dxos/plugin-observability/components';
-import { type UserFeedback } from '@dxos/plugin-observability/operations';
+import { type SupportOperation } from '@dxos/plugin-support';
+import { FeedbackForm } from '@dxos/plugin-support/components';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -20,8 +21,9 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
-import { setSafeModeUrl } from '../../config';
+import { RECOVERY_PATH, setSafeModeUrl } from '../../util';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -55,7 +57,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 };
 
 export const ResetDialog = ({
-  error: propsError,
+  error: errorProp,
   logStore,
   observability: observabilityProp,
   needRefresh,
@@ -67,7 +69,7 @@ export const ResetDialog = ({
 }: ResetDialogProps) => {
   const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const [isNotMobile] = useMediaQuery('md');
-  const error = propsError && parseError(t, propsError);
+  const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -81,6 +83,15 @@ export const ResetDialog = ({
     return () => clearTimeout(timeout);
   }, [feedbackSent]);
 
+  // Tag any error that surfaces the fatal dialog so alerts can key off `fatal_dialog: true`.
+  // Logging routes through all processors (PostHog + OTEL/SigNoz) unlike captureException.
+  useEffect(() => {
+    if (!errorProp) {
+      return;
+    }
+    log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
+  }, [errorProp]);
+
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
@@ -93,13 +104,26 @@ export const ResetDialog = ({
   }, [download, logStore]);
 
   const handleSaveFeedback = useCallback(
-    async (values: UserFeedback) => {
+    async (values: SupportOperation.SupportRequest) => {
       if (!observabilityProp) {
         return;
       }
 
+      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
+      // shape consumed by Observability. Triage metadata (type/severity/area/version)
+      // is embedded as a Markdown trailer so it travels with the message.
+      const trailer = [
+        `**Type:** ${values.type}`,
+        `**Severity:** ${values.severity}`,
+        values.area && `**Area:** ${values.area}`,
+        values.version && `**Version:** ${values.version}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
+
       const observability = await observabilityProp;
-      observability.feedback.captureUserFeedback(values);
+      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
@@ -118,6 +142,10 @@ export const ResetDialog = ({
     window.location.href = setSafeModeUrl(true);
   }, []);
 
+  const handleRecovery = useCallback(() => {
+    window.location.href = RECOVERY_PATH;
+  }, []);
+
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -133,7 +161,7 @@ export const ResetDialog = ({
             <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
             {error && (
               <>
-                <div role='none'>
+                <div>
                   <div className='flex items-center justify-between py-3'>
                     <IconButton
                       icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
@@ -143,7 +171,7 @@ export const ResetDialog = ({
                       onClick={() => setShowStack((showStack) => !showStack)}
                       data-testid='resetDialog.showStackTrace'
                     />
-                    <div role='none' className='flex items-center gap-1'>
+                    <div className='flex items-center gap-1'>
                       <IconButton
                         icon='ph--clipboard--duotone'
                         iconOnly
@@ -171,10 +199,17 @@ export const ResetDialog = ({
           <AlertDialog.ActionBar>
             <IconButton
               variant='primary'
-              icon='ph--stethoscope--regular'
+              icon='ph--barricade--regular'
               iconOnly={!isNotMobile}
               label={t('safe-mode.label')}
               onClick={handleSafeMode}
+            />
+            <IconButton
+              icon='ph--stethoscope--regular'
+              iconOnly={!isNotMobile}
+              label={t('recovery.label')}
+              onClick={handleRecovery}
+              data-testid='resetDialog.recovery'
             />
             {onReset && (
               <DropdownMenu.Root>
@@ -196,7 +231,7 @@ export const ResetDialog = ({
               </DropdownMenu.Root>
             )}
 
-            <div role='none' className='flex-grow' />
+            <div className='flex-grow' />
             {observabilityProp &&
               isNotMobile &&
               (feedbackSent ? (
@@ -209,7 +244,14 @@ export const ResetDialog = ({
                   <Popover.Portal>
                     <Popover.Content>
                       <Popover.Viewport>
-                        <FeedbackForm onSave={handleSaveFeedback} />
+                        <FeedbackForm.Root>
+                          <Form.Viewport>
+                            <Form.Content>
+                              <Form.FieldSet />
+                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
+                            </Form.Content>
+                          </Form.Viewport>
+                        </FeedbackForm.Root>
                       </Popover.Viewport>
                       <Popover.Arrow />
                     </Popover.Content>

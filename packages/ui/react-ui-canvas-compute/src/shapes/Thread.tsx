@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect, useRef } from 'react';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
@@ -14,8 +15,8 @@ import { mx } from '@dxos/ui-theme';
 import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-const InputSchema = createInputSchema(Message.Message);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Message.Message)));
+const InputSchema = createInputSchema(Type.getSchema(Message.Message));
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSchema(Message.Message))));
 
 export const ThreadShape = Schema.extend(
   ComputeShape,
@@ -55,11 +56,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
 export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
-    return (
-      <div role='none' className={mx(classNames)}>
-        {item}
-      </div>
-    );
+    return <div className={mx(classNames)}>{item}</div>;
   }
 
   // TODO(burdon): Hack; introspect type.

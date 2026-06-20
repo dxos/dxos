@@ -23,11 +23,10 @@ export const CellValidationMessage = ({
   }
 
   const bgClass = variant === 'error' ? 'bg-error-surface' : 'bg-warning-surface';
-  const textClass = variant === 'error' ? 'text-error-surface-text' : 'text-warning-surface-text';
+  const textClass = variant === 'error' ? 'text-error-fg' : 'text-warning-fg';
 
   return (
     <div
-      role='none'
       className={`absolute ${bgClass} ${textClass} rounded-h-sm text-xs p-1`}
       style={{
         ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },

@@ -52,7 +52,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
     <Editor.Root extensions={extensions} viewMode={viewMode}>
       <Editor.Content>
         <Editor.Toolbar classNames='dx-document' />
-        <div role='none' className='dx-container dx-document bg-base-surface'>
+        <div className='dx-container dx-document bg-base-surface'>
           <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
         </div>
       </Editor.Content>

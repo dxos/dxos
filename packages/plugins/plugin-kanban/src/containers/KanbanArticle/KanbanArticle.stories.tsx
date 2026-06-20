@@ -1,0 +1,277 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { RegistryContext } from '@effect-atom/atom-react';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React, { useCallback, useContext, useMemo } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
+
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/Obj';
+import { invariant } from '@dxos/invariant';
+// `/plugin` entrypoints used here for the same reason as `corePlugins()` —
+// see `@dxos/plugin-testing/src/core.ts` for the rationale.
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
+import { type Space, useQuery, useType, useSpaces } from '@dxos/react-client/echo';
+import { ViewEditor } from '@dxos/react-ui-form';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout } from '@dxos/react-ui/testing';
+import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
+// TODO(wittjosiah): Replace with echo/testing.
+import { Organization, Person } from '@dxos/types';
+
+import { useProjectionModel } from '#hooks';
+import { translations } from '#translations';
+import { Kanban } from '#types';
+
+import { KanbanPlugin } from '../../KanbanPlugin';
+
+random.seed(0);
+
+const createOrg = (status?: Organization.Organization['status']) => ({
+  name: random.commerce.productName(),
+  description: random.lorem.paragraph(),
+  image: random.image.url(),
+  website: random.internet.url(),
+  status: (status ?? random.helpers.arrayElement(Organization.StatusOptions).id) as Organization.Organization['status'],
+});
+
+//
+// Story setup helpers.
+//
+
+type ClientSetupOptions = {
+  types?: Type.AnyEntity[];
+  onSpaceCreated?: (space: Space) => Promise<void>;
+};
+
+/**
+ * Creates the standard plugin manager decorator with client configuration.
+ * Includes KanbanPlugin so the Surface resolves to KanbanArticle.
+ */
+const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): Decorator =>
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      ClientPlugin({
+        types: [...types, View.View, Kanban.Kanban],
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            yield* initializeIdentity(client);
+            const space = yield* Effect.promise(() => client.spaces.create());
+            yield* Effect.promise(() => space.waitUntilReady());
+            yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
+          }),
+      }),
+      PreviewPlugin(),
+      SpacePlugin({}),
+      StorybookPlugin({}),
+      KanbanPlugin(),
+    ],
+  });
+
+/**
+ * Renders the first Kanban in the space via Surface (resolves to KanbanArticle),
+ * with a sidebar containing ViewEditor and Json filter.
+ */
+const DefaultComponent = () => {
+  const registry = useContext(RegistryContext);
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
+  const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
+  const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
+  const view = viewRef?.target;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const type = useType(space?.db, typeUri);
+  const projection = useProjectionModel(type, kanban, registry);
+
+  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
+
+  const handleUpdateQuery = useCallback(
+    (newQuery: QueryAST.Query) => {
+      invariant(type);
+      invariant(view);
+      // NOTE: persisted Type.Type typename is immutable; only the view's
+      // query is updated here.
+      Obj.update(view, (view) => {
+        view.query.ast = newQuery as Mutable<QueryAST.Query>;
+      });
+    },
+    [view, type],
+  );
+
+  const handleDeleteField = useCallback(
+    (fieldId: string) => {
+      if (type && Type.getDatabase(type) != null && projection) {
+        projection.deleteFieldProjection(fieldId);
+      }
+    },
+    [type, projection],
+  );
+
+  if (!type || !view) {
+    return null;
+  }
+
+  return (
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+      <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
+        <ViewEditor
+          registry={space?.db.graph.registry}
+          type={type}
+          view={view}
+          onQueryChanged={handleUpdateQuery}
+          onDelete={type && Type.getDatabase(type) != null ? handleDeleteField : undefined}
+        />
+        <Syntax.Root data={{ view, schema: Type.getSchema(type) }}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
+      </div>
+    </div>
+  );
+};
+
+//
+// Story definitions.
+//
+
+const meta = {
+  title: 'plugins/plugin-kanban/containers/Kanban',
+  component: DefaultComponent,
+  render: () => <DefaultComponent />,
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultComponent>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/**
+ * Default story using static runtime schema (immutable).
+ * Schema mutations are not allowed.
+ */
+export const Default: Story = {
+  decorators: [
+    withKanbanPlugins({
+      types: [Organization.Organization, Person.Person],
+      onSpaceCreated: async (space) => {
+        const { view } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(Organization.Organization),
+          pivotFieldName: 'status',
+        });
+        const kanban = Kanban.make({ view });
+        space.db.add(kanban);
+
+        Array.from({ length: 10 }).map(() => {
+          return space.db.add(Obj.make(Organization.Organization, createOrg()));
+        });
+      },
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Wait for the kanban columns to render by finding the status tags.
+    // Organization.StatusOptions: prospect, qualified, active, commit, reject.
+    const activeTag = await canvas.findByText('Active', undefined, { timeout: 12_000 });
+    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 12_000 });
+    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 12_000 });
+
+    // Verify all expected columns are rendered.
+    await expect(activeTag).toBeTruthy();
+    await expect(prospectTag).toBeTruthy();
+    await expect(commitTag).toBeTruthy();
+
+    // Find the column containers (Board uses data-testid="board-column").
+    const activeColumn = activeTag.closest('[data-testid="board-column"]') as HTMLElement;
+    const prospectColumn = prospectTag.closest('[data-testid="board-column"]') as HTMLElement;
+    await expect(activeColumn).toBeTruthy();
+    await expect(prospectColumn).toBeTruthy();
+
+    // Wait for cards to render in the columns (Board items use data-testid="board-item").
+    const getColumnCards = (column: HTMLElement) =>
+      Array.from(column.querySelectorAll('[data-testid="board-item"]')) as HTMLElement[];
+
+    await waitFor(() => expect(getColumnCards(activeColumn).length).toBeGreaterThan(0));
+
+    // Verify cards are distributed across columns.
+    const activeCards = getColumnCards(activeColumn);
+    const prospectCards = getColumnCards(prospectColumn);
+    await expect(activeCards.length).toBeGreaterThan(0);
+    await expect(prospectCards.length).toBeGreaterThan(0);
+
+    // Verify cards have drag handles (Card.Header includes drag handle).
+    const firstActiveCard = activeCards[0];
+    const buttons = firstActiveCard.querySelectorAll('button');
+    await expect(buttons.length).toBeGreaterThan(0);
+
+    // Verify add-card action exists in columns (optional footer).
+    const activeAddItem = activeColumn.querySelector('[data-testid="board-column-add-item"]');
+    const prospectAddItem = prospectColumn.querySelector('[data-testid="board-column-add-item"]');
+    await expect(activeAddItem).toBeTruthy();
+    await expect(prospectAddItem).toBeTruthy();
+
+    // TODO(wittjosiah): Get drag & drop tests working.
+    //   See packages/apps/composer-app/src/playwright/stack.spec.ts for reference.
+  },
+};
+
+/**
+ * Story variant that uses a database-stored Type.Type entity (mutable schema).
+ * This allows testing schema mutations like adding/removing fields.
+ */
+// TODO(wittjosiah): Card previews (e.g., OrganizationCard) are type-specific and hard-coded.
+//   They don't use the projection to determine which fields to display, so deleting a field
+//   from the schema won't remove it from the card preview. To fix this, the type-specific
+//   cards in PreviewPlugin would need to accept and respect the projection prop.
+export const MutableSchema: Story = {
+  decorators: [
+    withKanbanPlugins({
+      onSpaceCreated: async (space) => {
+        // Persist the schema in the database to make it mutable (stored Type.Type).
+        const type = await space.db.addType(Organization.Organization);
+
+        const { view } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the
+          // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
+          typename: Type.getTypename(type),
+          pivotFieldName: 'status',
+        });
+        const kanban = Kanban.make({ view });
+        space.db.add(kanban);
+
+        // Create test data using the registered schema.
+        const requiredOrgs = [
+          ...Array.from({ length: 2 }, () => createOrg('prospect')),
+          ...Array.from({ length: 5 }, () => createOrg('qualified')),
+          ...Array.from({ length: 1 }, () => createOrg('active')),
+          ...Array.from({ length: 1 }, () => createOrg('commit')),
+          ...Array.from({ length: 1 }, () => createOrg('reject')),
+        ];
+        requiredOrgs.forEach((org) => space.db.add(Obj.make(type, org)));
+      },
+    }),
+  ],
+};

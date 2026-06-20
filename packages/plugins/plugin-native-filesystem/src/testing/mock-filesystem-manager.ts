@@ -29,7 +29,7 @@ export class MockFilesystemManager implements FilesystemManager.FilesystemManage
     return this._documents.get(fileId);
   }
 
-  getWriteTargetByDxn(_dxn: string): { path: string; fileId: string } | undefined {
+  getWriteTargetByDXN(_dxn: string): { path: string; fileId: string } | undefined {
     return undefined;
   }
 

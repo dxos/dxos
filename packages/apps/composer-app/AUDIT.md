@@ -474,7 +474,7 @@ synchronously to `WelcomeCapabilities.Onboarding`; identity creation, agent
 provisioning, and credential queries run as a background side-effect.
 
 **Why it works:** the `welcome.onboarding` module activates on
-`allOf(AppGraphReady, OperationInvokerReady, LayoutReady, ClientReady)` and was
+`allOf(AppGraphReady, ProcessManagerReady, LayoutReady, ClientReady)` and was
 the largest single child of the `Startup` activation cascade (5,948 ms cold).
 With `initialize()` no longer awaited, the module activates as soon as the
 manager is constructed (microseconds), and `Startup` completes ~4 s sooner.

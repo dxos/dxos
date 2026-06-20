@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Filter, Query } from '@dxos/echo';
-import { Tag, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { Filter, Query, Tag, Type } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -20,16 +19,16 @@ import { QueryForm, type QueryFormProps } from './QueryForm';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Organization.Organization.typename, label: 'Organization' },
-  { value: Person.Person.typename, label: 'Person' },
-  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
-  { value: Employer.Employer.typename, label: 'Employer' },
+  { value: Type.getURI(Organization.Organization), label: 'Organization' },
+  { value: Type.getURI(Person.Person), label: 'Person' },
+  { value: Type.getURI(Pipeline.Pipeline), label: 'Project' },
+  { value: Type.getURI(Employer.Employer), label: 'Employer' },
 ];
 
 const tags = Tag.createTagList({
-  [ObjectId.random().toString()]: Tag.make({ label: 'Important' }),
-  [ObjectId.random().toString()]: Tag.make({ label: 'Investor' }),
-  [ObjectId.random().toString()]: Tag.make({ label: 'New' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'Important' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'Investor' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'New' }),
 });
 
 const meta = {

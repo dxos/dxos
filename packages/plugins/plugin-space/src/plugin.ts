@@ -1,7 +1,11 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-// Eager re-export of `SpacePlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale.
-export * from './SpacePlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const SpacePlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { SpaceOperationHandlerSet } from './operations';

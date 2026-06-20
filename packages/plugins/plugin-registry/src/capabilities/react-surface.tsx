@@ -3,13 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useMemo } from 'react';
+import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { DisableDependentsAlert } from '#components';
 import {
   LOAD_PLUGIN_DIALOG,
   LoadPluginDialog,
@@ -18,44 +18,27 @@ import {
   RegistryArticle,
   RegistrySettingsContainer,
 } from '#containers';
-import { meta, registryCategoryId } from '#meta';
+import { DISABLE_DEPENDENTS_DIALOG, meta, registryCategoryId } from '#meta';
 
+import { type PluginPredicate, getCategoryPredicate } from '../categories';
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'official',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('official')),
+        id: 'bundled',
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('bundled')),
         component: () => {
-          const manager = usePluginManager();
-          const remoteIds = useRemotePluginIds();
-          const core = useMemo(() => manager.getCore(), [manager]);
-          const predicate = useMemo<PluginPredicate>(
-            () =>
-              ({ meta }) =>
-                !core.includes(meta.id) && !remoteIds.has(meta.id),
-            [core, remoteIds],
-          );
-
-          return <FilteredRegistryArticle id={registryCategoryId('official')} filter={predicate} />;
+          const predicate = useCategoryPredicate(registryCategoryId('bundled'));
+          return <FilteredRegistryArticle id={registryCategoryId('bundled')} filter={predicate} />;
         },
       }),
       Surface.create({
         id: 'installed',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('installed')),
         component: () => {
-          const manager = usePluginManager();
-          const core = useMemo(() => manager.getCore(), [manager]);
-          const enabled = useMemo(() => manager.getEnabled(), [manager]);
-          const predicate = useMemo<PluginPredicate>(
-            () =>
-              ({ meta }) =>
-                !core.includes(meta.id) && enabled.includes(meta.id),
-            [core, enabled],
-          );
-
+          const predicate = useCategoryPredicate(registryCategoryId('installed'));
           return <FilteredRegistryArticle id={registryCategoryId('installed')} filter={predicate} />;
         },
       }),
@@ -63,16 +46,7 @@ export default Capability.makeModule(() =>
         id: 'recommended',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('recommended')),
         component: () => {
-          const manager = usePluginManager();
-          const remoteIds = useRemotePluginIds();
-          const core = useMemo(() => manager.getCore(), [manager]);
-          const predicate = useMemo<PluginPredicate>(
-            () =>
-              ({ meta }) =>
-                !core.includes(meta.id) && !remoteIds.has(meta.id) && !meta.tags?.includes('labs'),
-            [core, remoteIds],
-          );
-
+          const predicate = useCategoryPredicate(registryCategoryId('recommended'));
           return <FilteredRegistryArticle id={registryCategoryId('recommended')} filter={predicate} />;
         },
       }),
@@ -80,13 +54,7 @@ export default Capability.makeModule(() =>
         id: 'labs',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
         component: () => {
-          const predicate = useMemo<PluginPredicate>(
-            () =>
-              ({ meta }) =>
-                meta.tags?.includes('labs') ?? false,
-            [],
-          );
-
+          const predicate = useCategoryPredicate(registryCategoryId('labs'));
           return <FilteredRegistryArticle id={registryCategoryId('labs')} filter={predicate} />;
         },
       }),
@@ -96,7 +64,7 @@ export default Capability.makeModule(() =>
         component: () => <PublicRegistryArticle id={registryCategoryId('registry')} />,
       }),
       Surface.create({
-        id: 'plugin-details',
+        id: 'pluginDetails',
         filter: AppSurface.subject(AppSurface.Article, Plugin.isPlugin),
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
@@ -108,17 +76,36 @@ export default Capability.makeModule(() =>
         component: () => <LoadPluginDialog />,
       }),
       Surface.create({
-        id: 'plugin-settings',
-        role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        id: DISABLE_DEPENDENTS_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof DisableDependentsAlert>>(
+          AppSurface.Dialog,
+          DISABLE_DEPENDENTS_DIALOG,
+        ),
+        component: ({ data }) => <DisableDependentsAlert {...data.props} />,
+      }),
+      Surface.create({
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
       }),
     ]),
   ),
 );
 
-type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
+/**
+ * Resolves the {@link PluginPredicate} for a registry category against the live plugin list.
+ * Shared with the graph builder via {@link getCategoryPredicate} so the category lists and their counts agree.
+ */
+const useCategoryPredicate = (category: string): PluginPredicate => {
+  const manager = usePluginManager();
+  const remoteIds = useRemotePluginIds();
+  const core = useMemo(() => manager.getCore(), [manager]);
+  const enabled = useMemo(() => manager.getEnabled(), [manager]);
+  return useMemo(
+    () => getCategoryPredicate(category, { core, enabled, remoteIds }),
+    [category, core, enabled, remoteIds],
+  );
+};
 
 /**
  * Renders the {@link RegistryArticle} surface filtered by an arbitrary

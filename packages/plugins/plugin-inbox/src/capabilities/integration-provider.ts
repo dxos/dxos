@@ -17,7 +17,7 @@ import {
   Integration as IntegrationType,
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+} from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
@@ -29,16 +29,7 @@ import {
   IMAP_INTEGRATION_SOURCE_PREFIX,
   IMAP_PROVIDER_ID,
 } from '../constants';
-import {
-  GetGoogleCalendars,
-  GetGoogleContactGroups,
-  GmailSend,
-  SmtpSend,
-  SyncCalendar,
-  SyncContacts,
-  SyncMailbox,
-} from '../operations/definitions';
-import { CalendarSyncOptions, ImapAccountOptions, Mailbox, SyncOptions } from '../types';
+import { CalendarSyncOptions, ImapAccountOptions, InboxOperation, Mailbox, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -243,12 +234,14 @@ export default Capability.makeModule(
           scopes: [
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/gmail.send',
+            // `gmail.modify` is required to move messages to the trash (delete).
+            'https://www.googleapis.com/auth/gmail.modify',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
         optionsSchema: SyncOptions,
-        sync: SyncMailbox,
-        send: GmailSend,
+        sync: InboxOperation.GoogleMailSync,
+        send: InboxOperation.GmailSend,
         onTokenCreated: gmailOnTokenCreated,
       },
       {
@@ -258,13 +251,16 @@ export default Capability.makeModule(
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [
+            // `calendar.readonly` is required to list the user's calendars (GetGoogleCalendars);
+            // `calendar.events` adds read/write on events so draft events can be created remotely.
             'https://www.googleapis.com/auth/calendar.readonly',
+            'https://www.googleapis.com/auth/calendar.events',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
         optionsSchema: CalendarSyncOptions,
-        getSyncTargets: GetGoogleCalendars,
-        sync: SyncCalendar,
+        getSyncTargets: InboxOperation.GetGoogleCalendars,
+        sync: InboxOperation.GoogleCalendarSync,
         onTokenCreated: calendarOnTokenCreated,
       },
       {
@@ -278,8 +274,8 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        getSyncTargets: GetGoogleContactGroups,
-        sync: SyncContacts,
+        getSyncTargets: InboxOperation.GetGoogleContactGroups,
+        sync: InboxOperation.SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
       {
@@ -288,8 +284,8 @@ export default Capability.makeModule(
         label: 'IMAP',
         credentialForm: imapCredentialForm,
         optionsSchema: ImapAccountOptions,
-        sync: SyncMailbox,
-        send: SmtpSend,
+        sync: InboxOperation.ImapSync,
+        send: InboxOperation.SmtpSend,
         onTokenCreated: imapOnTokenCreated,
       },
     ]);

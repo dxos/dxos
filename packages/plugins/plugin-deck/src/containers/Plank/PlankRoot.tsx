@@ -7,7 +7,7 @@ import React, { PropsWithChildren } from 'react';
 
 import { type Graph } from '@dxos/plugin-graph';
 
-import { type DeckOperation } from '#operations';
+import { type DeckOperation } from '#types';
 import { type LayoutMode, type PlankSizing, type ResolvedPart, type Settings } from '#types';
 
 const PLANK_NAME = 'Plank';

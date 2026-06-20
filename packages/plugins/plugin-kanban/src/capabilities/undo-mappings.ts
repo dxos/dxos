@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 
 import { meta } from '#meta';
-import { KanbanOperation } from '#operations';
+import { KanbanOperation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
           props: output.props,
           index: output.index,
         }),
-        message: ['card-field-deleted.label', { ns: meta.id }],
+        message: ['card-field-deleted.label', { ns: meta.profile.key }],
       }),
       UndoMapping.make({
         operation: KanbanOperation.DeleteCard,
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
         deriveContext: (_input, output) => ({
           card: output.card,
         }),
-        message: ['card-deleted.label', { ns: meta.id }],
+        message: ['card-deleted.label', { ns: meta.profile.key }],
       }),
     ]),
   ),

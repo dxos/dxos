@@ -4,33 +4,28 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { JsonSchema, Obj } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
-import { DeleteCardField } from './definitions';
+import { KanbanOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof DeleteCardField> = DeleteCardField.pipe(
+const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = KanbanOperation.DeleteCardField.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ view, fieldId }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');
-      const schema = yield* Effect.promise(() =>
-        db.schemaRegistry
-          .query({
-            typename: getTypenameFromQuery(view.query.ast)!,
-            location: ['database', 'runtime'],
-          })
-          .first(),
-      );
+      const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
+      const schema = types.find((t) => Type.getURI(t) === getTypeURIFromQuery(view.query.ast));
+      invariant(schema, 'Schema not found');
 
+      invariant(Type.isType(schema), 'expected stored Type.Type for card schema');
       const projection = new ProjectionModel({
         registry,
         view,
-        baseSchema: JsonSchema.toJsonSchema(schema),
-        change: createEchoChangeCallback(view, schema as EchoSchema),
+        baseSchema: schema.jsonSchema,
+        change: createEchoChangeCallback(view, schema),
       });
 
       const result = projection.deleteFieldProjection(fieldId);

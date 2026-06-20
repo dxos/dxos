@@ -76,7 +76,7 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div className='grow flex flex-col justify-center'>
         <TextInput
           {...{ validationMessage }}
           label={<InputLabel>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</InputLabel>}

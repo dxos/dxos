@@ -16,7 +16,6 @@ External packages importing fragment definitions from `ui-theme/src/fragments`.
 | `focus.ts`    | `focusRing`                           | 2        | 5        |
 | `focus.ts`    | `subduedFocus`                        | -        | 2        |
 | `focus.ts`    | `staticFocusRing`                     | -        | 1        |
-| `hover.ts`    | `subtleHover`                         | 4        | -        |
 | `hover.ts`    | `ghostHover`                          | 8        | 2        |
 | `hover.ts`    | `ghostFocusWithin`                    | 1        | -        |
 | `hover.ts`    | `hoverableControls`                   | 9        | -        |
@@ -53,5 +52,4 @@ External packages importing fragment definitions from `ui-theme/src/fragments`.
 
 **Completely unused:** 7 fragments
 
-- `subtleHover` from `hover.ts`
 - `hoverableOpenControlItem`, `groupHoverControlItemWithTransition` from `hover.ts` (only 2-3 uses)

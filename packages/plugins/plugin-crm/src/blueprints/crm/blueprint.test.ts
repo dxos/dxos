@@ -11,8 +11,8 @@ import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { EntityId } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { ProfileOf } from '#types';
@@ -20,7 +20,7 @@ import { ProfileOf } from '#types';
 import { EMAIL_FIXTURES, makeEmailMessage } from '../../testing';
 import CrmBlueprint from './blueprint';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 /**
  * Tuning playground for the CRM blueprint. Runs each reference email fixture
@@ -57,7 +57,7 @@ describe('CRM Blueprint', () => {
           });
           const msg = makeEmailMessage(fixture);
           yield* agent.submitPrompt(
-            `Research the contact from this email and produce a Profile document. Message DXN: ${Obj.getDXN(msg).toString()}`,
+            `Research the contact from this email and produce a Profile document. Message DXN: ${Obj.getURI(msg)}`,
           );
           yield* agent.waitForCompletion();
         },

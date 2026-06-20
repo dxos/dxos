@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
 
-import { Update } from './definitions';
+import { MarkdownOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Update> = Update.pipe(
+const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = MarkdownOperation.Update.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc, edits }) {
       const content = yield* doc.pipe(

@@ -6,17 +6,17 @@ import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
+import { Paths } from '../../app';
 import { LayoutOperation } from '../../operations';
-import { getObjectPathFromObject } from '../../paths';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
-/** True when subject is an Echo object and its schema does not have the system annotation. */
+/** True when subject is an Echo object and its schema does not have the hidden annotation. */
 const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
   if (!subject || !Obj.isObject(subject)) {
     return false;
@@ -26,13 +26,13 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
     return false;
   }
 
-  const schema = Obj.getSchema(subject);
-  return !(schema != null && Option.getOrElse(Annotation.SystemTypeAnnotation.get(schema), () => false));
+  const type = Obj.getType(subject);
+  return !(type != null && Option.getOrElse(Annotation.HiddenAnnotation.get(Type.getSchema(type)), () => false));
 };
 
 /**
  * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
- * (e.g. not an Echo object or has system annotation). Use with Card.Title for object cards.
+ * (e.g. not an Echo object or has hidden annotation). Use with Card.Title for object cards.
  */
 export const useObjectNavigate = (subject: unknown): (() => void) | undefined => {
   const { invokePromise } = useOperationInvoker();
@@ -42,7 +42,7 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
       return;
     }
 
-    const subjectPath = getObjectPathFromObject(subject);
+    const subjectPath = Paths.getObjectPathFromObject(subject);
     return () => {
       void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
     };
@@ -63,7 +63,7 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
       return [];
     }
 
-    const subjectPath = getObjectPathFromObject(subject);
+    const subjectPath = Paths.getObjectPathFromObject(subject);
     return [
       createMenuAction(
         'navigate',

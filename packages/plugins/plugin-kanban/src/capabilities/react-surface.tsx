@@ -3,19 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, JsonSchema, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
-import { findAnnotation } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { Database, Obj, Type } from '@dxos/echo';
+import { SchemaEx } from '@dxos/effect';
+import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { Position } from '@dxos/util';
 
-import { KanbanContainer, KanbanSettings } from '#containers';
+import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
@@ -28,53 +26,55 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Kanban.Kanban),
           AppSurface.object(AppSurface.Section, Kanban.Kanban),
         ),
-        component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
+        component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'object-properties',
-        position: 'hoist',
+        id: 'objectProperties',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: 'create-initial-schema-form-[pivot-column]',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
-          prop: string;
-          schema: Schema.Schema<any>;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
-          return !!annotation;
-        },
-        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        id: 'createInitialSchemaForm',
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId)),
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
+          const target = data.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
           if (!db) {
             return null;
           }
 
           const { typename } = useFormValues('KanbanForm');
           const [selectedSchema] = useMemo(
-            () => db.schemaRegistry.query({ location: ['database', 'runtime'], typename }).runSync(),
+            () =>
+              db.graph.registry
+                .list()
+                .filter(Type.isType)
+                .filter((t) => Type.getTypename(t) === typename),
             [db, typename],
           );
           const singleSelectColumns = useMemo(() => {
-            const properties = JsonSchema.toJsonSchema(selectedSchema).properties;
+            if (!selectedSchema) {
+              return [];
+            }
+            const jsonSchema = selectedSchema.jsonSchema;
+            const properties = jsonSchema.properties;
             if (!properties) {
               return [];
             }
 
             const columns = Object.entries(properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === 'single-select') {
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                (value as { format?: string }).format === 'single-select'
+              ) {
                 acc.push(key);
               }
               return acc;

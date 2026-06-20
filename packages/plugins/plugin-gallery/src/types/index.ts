@@ -3,3 +3,4 @@
 //
 
 export * as Gallery from './Gallery';
+export * as GalleryOperation from './GalleryOperation';

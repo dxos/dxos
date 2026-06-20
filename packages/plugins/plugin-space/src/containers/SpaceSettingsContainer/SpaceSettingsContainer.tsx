@@ -6,24 +6,14 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSpace, Paths, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { SpaceState } from '@dxos/react-client/echo';
-import {
-  Button,
-  DropdownMenu,
-  Icon,
-  IconButton,
-  Input,
-  useFileDownload,
-  useMulticastObservable,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -31,20 +21,13 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities, SpaceForm } from '#types';
 
-const SpaceFormSchema = SpaceForm.pipe(
-  Schema.extend(
-    Schema.Struct({
-      archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
-    }),
-  ),
-);
+const SpaceFormSchema = SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
-  const archived = useMulticastObservable(space.state) === SpaceState.SPACE_INACTIVE;
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
   );
@@ -81,22 +64,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           }
         });
       }
-
-      if (changed['archived']) {
-        if (newValues.archived && !archived) {
-          void invokePromise(SpaceOperation.Close, { space });
-          const personalSpace = getPersonalSpace(client);
-          if (personalSpace) {
-            void invokePromise(LayoutOperation.SwitchWorkspace, {
-              subject: getSpacePath(personalSpace.id),
-            });
-          }
-        } else if (!newValues.archived && archived) {
-          void invokePromise(SpaceOperation.Open, { space });
-        }
-      }
     },
-    [space, client, archived, invokePromise, toggleEdgeReplication],
+    [space, toggleEdgeReplication],
   );
 
   const defaultValues = useMemo(
@@ -105,12 +74,11 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       icon: space.properties.icon,
       hue: space.properties.hue,
       edgeReplication,
-      archived,
     }),
-    [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication, archived],
+    [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication],
   );
 
-  const personal = isPersonalSpace(space);
+  const personal = AppSpace.isPersonalSpace(space);
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
@@ -165,42 +133,48 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </Settings.Item>
         );
       },
-      archived: personal
-        ? () => null
-        : ({ type, label, getValue, onValueChange }) => {
-            const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
-            return (
-              <Settings.Item title={label} description={t('archive-space.description')}>
-                <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
-                  {getValue() ? t('unarchive-space.label') : t('archive-space.label')}
-                </Button>
-              </Settings.Item>
-            );
-          },
     }),
     [t, space, personal],
   );
 
-  const download = useFileDownload();
   const handleBackupBinary = useCallback(async () => {
-    const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
-    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
-  }, [space, download]);
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+  }, [space, invokePromise]);
   const handleBackupJson = useCallback(async () => {
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
-    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
-  }, [space, download]);
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+  }, [space, invokePromise]);
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: AppSpace.isPersonalSpace(space) })));
   }, [space, repairs]);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
+  const handleDelete = useCallback(async () => {
+    try {
+      await invokePromise(SpaceOperation.Delete, { space });
+      setDeleteConfirmOpen(false);
+      const personalSpace = AppSpace.getPersonalSpace(client);
+      if (personalSpace) {
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
+      }
+    } catch (err) {
+      log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });
+      setDeleteConfirmOpen(false);
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${space.id}-delete-failed`,
+        title: t('delete-space-failed.message'),
+        icon: 'ph--warning--regular',
+      });
+    }
+  }, [space, client, invokePromise, t]);
 
   return (
     <Settings.Viewport>
       <Settings.Section
         title={t('space-properties-settings-verbose.label')}
-        description={t('space-properties-settings.description', { ns: meta.id })}
+        description={t('space-properties-settings.description', { ns: meta.profile.key })}
       >
         <Form.Root
           key={space.id}
@@ -248,6 +222,44 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
           <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
         </Settings.Item>
+      </Settings.Section>
+
+      <Settings.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
+        {!personal && (
+          <Settings.Item title={t('delete-space.title')} description={t('delete-space.description')}>
+            <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+              <Dialog.Trigger asChild>
+                <Button variant='destructive' data-testid='spaceSettings.deleteSpace'>
+                  {t('delete-space.label')}
+                </Button>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay>
+                  <Dialog.Content>
+                    <Dialog.Header>
+                      <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
+                    </Dialog.Header>
+                    <Dialog.Body>
+                      <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
+                      <div className='flex justify-end gap-2 mbs-4'>
+                        <Dialog.Close asChild>
+                          <Button>{t('cancel.label')}</Button>
+                        </Dialog.Close>
+                        <Button
+                          variant='destructive'
+                          onClick={handleDelete}
+                          data-testid='spaceSettings.deleteSpaceConfirm'
+                        >
+                          {t('delete-space.label')}
+                        </Button>
+                      </div>
+                    </Dialog.Body>
+                  </Dialog.Content>
+                </Dialog.Overlay>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Settings.Item>
+        )}
       </Settings.Section>
     </Settings.Viewport>
   );

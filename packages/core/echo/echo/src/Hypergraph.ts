@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
 import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
-import type * as SchemaRegistry from './SchemaRegistry';
+import type * as Registry from './Registry';
 
 /**
  * Resolution context.
@@ -22,10 +22,10 @@ export interface RefResolutionContext {
   space?: Key.SpaceId;
 
   /**
-   * Queue that the resolution is happening from.
-   * This queue will be searched first, and then the space it belongs to.
+   * Feed that the resolution is happening from.
+   * This feed will be searched first, and then the space it belongs to.
    */
-  queue?: DXN;
+  feed?: URI.URI;
 }
 
 export interface RefResolverOptions {
@@ -46,7 +46,12 @@ export interface RefResolverOptions {
  * Manages cross-space database interactions.
  */
 export interface Hypergraph extends Database.Queryable {
-  get schemaRegistry(): SchemaRegistry.SchemaRegistry;
+  /**
+   * In-process registry of keyed objects and static schema types.
+   * Populated at startup via `registry.add(objects)` / `registry.add(schemas)`.
+   * Queries that include no explicit from() clause will fan out to this registry automatically.
+   */
+  get registry(): Registry.Registry;
 
   /**
    * Query objects.
@@ -57,11 +62,11 @@ export interface Hypergraph extends Database.Queryable {
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
-   * NOTE: Difference from `Ref.fromDXN`
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * NOTE: Difference from `Ref.fromURI`
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T>;
 
   /**
    * @param hostDb Host database for reference resolution.

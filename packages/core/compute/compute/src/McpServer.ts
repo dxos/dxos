@@ -41,4 +41,4 @@ export const McpServer = Schema.Struct({
   }),
 });
 
-export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
+export type McpServer = Schema.Schema.Type<typeof McpServer>;

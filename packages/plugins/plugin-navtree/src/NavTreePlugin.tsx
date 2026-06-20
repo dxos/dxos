@@ -13,6 +13,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { NavTreeEvents } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const NavTreePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -27,7 +30,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'expose',
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       AppActivationEvents.LayoutReady,
       NavTreeEvents.StateReady,
@@ -49,8 +52,11 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'keyboard',
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.OperationInvokerReady),
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.ProcessManagerReady),
     activate: Keyboard,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

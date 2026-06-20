@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as DeckOperation from './definitions';
-
 export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-toast'),
   () => import('./adjust'),
@@ -15,7 +13,6 @@ export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./scroll-into-view'),
   () => import('./set'),
   () => import('./set-layout-mode'),
-  () => import('./show-undo'),
   () => import('./switch-workspace'),
   () => import('./update-companion'),
   () => import('./update-complementary'),

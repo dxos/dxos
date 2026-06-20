@@ -110,14 +110,26 @@ export type CredentialForm<Values = any> = {
   schema: Schema.Schema<Values, any>;
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
-  /** Build the next step of the integration flow from form values. */
+  /**
+   * Optional async pre-submit validation. Runs before the dialog closes so
+   * errors are shown inline. On failure the dialog stays open with the error
+   * message; on success `onSubmit` proceeds normally.
+   */
+  onValidate?: (input: { values: Values; provider: IntegrationProviderEntry }) => Effect.Effect<void, Error>;
+  /**
+   * Build the next step of the integration flow from form values.
+   *
+   * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's
+   * `Effect.catchAll` — use these for user-visible validation messages. Do NOT `Effect.orDie`
+   * validation errors; defects bypass the dialog's failure handler and crash the request.
+   */
   onSubmit: (input: {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
     /** Existing target object the user is connecting from (e.g. an empty Mailbox). When set, providers should wire it as the new Integration's first target instead of creating a fresh placeholder. */
     existingTarget?: Ref.Ref<Obj.Unknown>;
-  }) => Effect.Effect<CredentialFormResult>;
+  }) => Effect.Effect<CredentialFormResult, Error>;
 };
 
 /**
@@ -155,5 +167,5 @@ export type IntegrationProviderEntry = {
  * Capability registry token for IntegrationProvider contributions (sync + OAuth wiring).
  */
 export const IntegrationProvider = Capability.make<IntegrationProviderEntry[]>(
-  'org.dxos.plugin.integration.capability.integration-provider',
+  'org.dxos.plugin.integration.capability.integrationProvider',
 );

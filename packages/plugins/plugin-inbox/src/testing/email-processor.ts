@@ -50,7 +50,7 @@ export const processEmail = async ({ email, context }: ProcessEmailProps): Promi
   const messages: Message.Message[] = [];
   // const messages = await new MixedStreamParser().parse(
   //   await aiClient.execStream({
-  //     model: '@anthropic/claude-3-5-sonnet-20241022',
+  //     model: 'ai.claude.model.claude-3-5-sonnet-20241022',
   //     systemPrompt,
   //     history: [
   //       Obj.make(Message.Message, {

@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, Filter, Query, Type } from '@dxos/echo';
+import { Resolver } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
-
-import { Resolver } from './resolver';
 
 export type HasEmail = { email: string };
 
@@ -67,7 +66,7 @@ export const Mock = (data: { people?: Person.Person[]; organizations?: Organizat
 
 const createOrganizationResolver = Effect.gen(function* () {
   // Cache.
-  const organizations = yield* Database.runQuery(Query.select(Filter.type(Organization.Organization)));
+  const organizations = yield* Database.query(Query.select(Filter.type(Organization.Organization))).run;
   const resolver: InboxResolverFunction<Organization.Organization> = ({ email }: HasEmail) => {
     const domain = extractDomain(email);
     return Effect.succeed(
@@ -82,7 +81,7 @@ const createOrganizationResolver = Effect.gen(function* () {
 
 const createPersonResolver = Effect.gen(function* () {
   // Cache.
-  const contacts = yield* Database.runQuery(Query.select(Filter.type(Person.Person)));
+  const contacts = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
   const resolver: InboxResolverFunction<Person.Person> = ({ email }: HasEmail) => {
     return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
   };

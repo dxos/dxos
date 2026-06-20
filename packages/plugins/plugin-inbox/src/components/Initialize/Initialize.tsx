@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { Icon } from '@dxos/react-ui';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { InitializeEmpty } from './InitializeEmpty';
 import { useTargetIntegration } from './useTargetIntegration';

@@ -21,7 +21,7 @@ const pathJoin = (...parts: string[]): string => parts.join('/').replace(/\/+/g,
 //
 
 /** Read the DXN stored as an extended attribute on a file. */
-export const getFileXattrDxn = (filePath: string): Effect.Effect<string | undefined> => {
+export const getFileXattrDXN = (filePath: string): Effect.Effect<string | undefined> => {
   if (!isTauri()) {
     return Effect.succeed(undefined);
   }
@@ -41,7 +41,7 @@ export const getFileXattrDxn = (filePath: string): Effect.Effect<string | undefi
 };
 
 /** Write a DXN as an extended attribute on a file. */
-export const setFileXattrDxn = (filePath: string, dxn: string): Effect.Effect<void> => {
+export const setFileXattrDXN = (filePath: string, dxn: string): Effect.Effect<void> => {
   if (!isTauri()) {
     return Effect.void;
   }
@@ -62,7 +62,7 @@ export const setFileXattrDxn = (filePath: string, dxn: string): Effect.Effect<vo
 // filemap.json helpers
 //
 
-export type FileMapEntry = { relativePath: string; objectDxn: string };
+export type FileMapEntry = { relativePath: string; objectDXN: string };
 export type FileMap = { files: FileMapEntry[] };
 
 /** Ensure the `.composer` directory exists within a workspace. */

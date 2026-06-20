@@ -10,5 +10,12 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/PreviewPlugin.tsx'
+      - '--entryPoint=src/PreviewPlugin.node.ts'
+      - '--entryPoint=src/PreviewPlugin.workerd.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
+      - '--platform=neutral'

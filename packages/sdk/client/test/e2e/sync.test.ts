@@ -8,11 +8,10 @@ import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Obj, Database } from '@dxos/echo';
-import type { SpaceSyncState } from '@dxos/echo-db';
+import type { SpaceSyncState } from '@dxos/echo-client';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 // pnpm vitest run --tagsFilter=sync-e2e sync.test.ts
@@ -67,12 +66,12 @@ describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () =>
 
     console.log('\n### Creating object');
     const obj = space.db.add(Obj.make(TestSchema.Expando, { counter: 1 }));
-    const dxn = Obj.getDXN(obj);
+    const uri = Obj.getURI(obj);
     await waitForSync(space.db);
 
     for (let i = 0; i < ITERATIONS; i++) {
       console.log('\n### Iteration', i);
-      const obj = await space.db.makeRef(dxn).load();
+      const obj = await space.db.makeRef(uri).load();
       for (let j = 0; j < BURST_SIZE; j++) {
         obj.counter++;
         await sleep(20);
@@ -140,6 +139,3 @@ const waitForSync = async (db: Database.Database) => {
   const duration = performance.now() - start;
   console.log('Synced in', duration.toFixed(0), 'ms');
 };
-
-const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
-  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);

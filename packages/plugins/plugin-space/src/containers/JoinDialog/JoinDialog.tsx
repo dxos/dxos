@@ -5,11 +5,11 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -19,7 +19,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const JOIN_DIALOG = `${meta.id}.JoinDialog`;
+export const JOIN_DIALOG = `${meta.profile.key}.JoinDialog`;
 
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
@@ -29,7 +29,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const { graph } = useAppGraph();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -40,10 +40,10 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await Promise.all([
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.join-success`,
+          id: `${meta.profile.key}.join-success`,
           duration: 5_000,
-          title: ['join-success.label', { ns: meta.id }],
-          closeLabel: ['dismiss.label', { ns: meta.id }],
+          title: ['join-success.label', { ns: meta.profile.key }],
+          closeLabel: ['dismiss.label', { ns: meta.profile.key }],
         }),
         invokePromise(LayoutOperation.UpdateDialog, { state: false }),
       ]);
@@ -61,12 +61,9 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
 
-      // TODO(wittjosiah): If navigableCollections is false and there's no target,
-      //   should try to navigate to the first object of the space replicates.
-      //   Potentially this could also be done on the inviters side to ensure there's always a target.
-      const target = result?.target || (navigableCollections ? space?.id : undefined);
+      const target = result?.target;
       if (target) {
         // Wait before navigating to the target node.
         // If the target has not yet replicated, this will trigger a loading toast.
@@ -75,6 +72,11 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
           invokePromise(LayoutOperation.Open, { subject: [target] }),
           invokePromise(LayoutOperation.Expose, { subject: target }),
         ]);
+      } else {
+        await invokePromise(LayoutOperation.Open, {
+          subject: [Paths.getSpaceHomePath(space.id)],
+          workspace: Paths.getSpacePath(space.id),
+        });
       }
 
       onDone?.(result);

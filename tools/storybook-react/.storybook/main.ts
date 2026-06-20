@@ -126,7 +126,7 @@ export const createConfig = ({
           assetsInlineLimit: 0,
           // Target modern browsers that support top-level await natively.
           target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
-          rollupOptions: {
+          rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
             },
@@ -255,6 +255,13 @@ export const createConfig = ({
 
           !isFastBundle &&
             importSource({
+              // Include `#*` so Node subpath imports (e.g. `#translations`, `#meta`)
+              // resolve to the `source` condition (`./src/...`) instead of falling
+              // through to `default` (`./dist/lib/neutral/...`). Without this, a
+              // package's own `test-storybook` task fails when its `compile` task
+              // hasn't been triggered as an upstream dep — manifests as
+              // `[vite] Failed to resolve import "#translations"`.
+              include: ['@dxos/**', '#*'],
               exclude: [
                 '@dxos/random-access-storage',
                 '@dxos/lock-file',

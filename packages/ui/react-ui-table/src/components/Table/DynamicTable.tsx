@@ -6,8 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Type } from '@dxos/echo';
-import { type JsonSchema } from '@dxos/echo';
+import { type JsonSchema, type Type } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -19,7 +18,7 @@ import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '.
 import { Table, type TableController } from './Table';
 
 export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
-  schema?: T;
+  type?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
@@ -37,7 +36,7 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
 export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
-  schema,
+  type: typeProp,
   name = 'com.example.dynamicTable', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
@@ -51,14 +50,14 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   const [dynamicTable, setDynamicTable] = useState<{ object: TableType.Table; projection: ProjectionModel }>();
 
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
-  const { jsonSchema } = useMemo(
-    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, schema }),
-    [name, properties, jsonSchemaProp, schema],
+  const { type } = useMemo(
+    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, type: typeProp }),
+    [name, properties, jsonSchemaProp, typeProp],
   );
 
   useEffect(() => {
-    setDynamicTable(makeDynamicTable({ registry, jsonSchema, properties }));
-  }, [registry, jsonSchema, properties]);
+    setDynamicTable(makeDynamicTable({ registry, type, properties }));
+  }, [registry, type, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -96,8 +95,8 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   }, [registry, model]);
 
   return (
-    <div role='none' className={mx('dx-expander grid', classNames)}>
-      <div role='none' className='grid min-h-0 overflow-hidden'>
+    <div className={mx('dx-expander grid', classNames)}>
+      <div className='grid min-h-0 overflow-hidden'>
         <Table.Root ref={tableRef}>
           <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
         </Table.Root>

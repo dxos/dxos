@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -29,7 +29,7 @@ type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' |
 const DefaultStory = (props: DefaultStoryProps) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
-  const id = doc && Obj.getDXN(doc).toString();
+  const id = doc && Obj.getURI(doc);
   if (!id) {
     return <Loading data={{ id }} />;
   }

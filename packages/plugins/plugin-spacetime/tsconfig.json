@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -19,6 +20,9 @@
   "references": [
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -42,9 +46,6 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-graph"
-    },
-    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -64,9 +65,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"

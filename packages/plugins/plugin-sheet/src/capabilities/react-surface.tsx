@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { RangeList, SheetContainer } from '#containers';
+import { RangeList, SheetArticle } from '#containers';
 import { Sheet, SheetCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
@@ -20,16 +20,15 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
-          typeof data.attendableId === 'string' &&
-          Obj.instanceOf(Sheet.Sheet, data.subject) &&
-          !!getSpace(data.subject),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
+          AppSurface.object(AppSurface.Section, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
+        ),
         component: ({ data, role }) => {
           const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
           return (
-            <SheetContainer
+            <SheetArticle
               role={role}
               subject={data.subject}
               attendableId={data.attendableId}
@@ -40,7 +39,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),

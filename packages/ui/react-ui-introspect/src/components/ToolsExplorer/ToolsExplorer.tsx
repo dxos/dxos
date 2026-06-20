@@ -8,7 +8,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { MAX_LIST_LIMIT, TOOL_METADATA, type PickerKind } from '@dxos/introspect-tools';
 import { Message, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -136,10 +137,7 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
         {...composableProps(props, { classNames: 'dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' })}
         ref={forwardedRef}
       >
-        <div
-          role='none'
-          className={mx('dx-container grid divide-y divide-separator', selectedTool && 'grid-rows-[2fr_3fr]')}
-        >
+        <div className={mx('dx-container grid divide-y divide-separator', selectedTool && 'grid-rows-[2fr_3fr]')}>
           <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} />
           {selectedTool && <ToolForm tool={selectedTool} onSubmit={handleSubmit} pickerOptions={pickerOptions} />}
         </div>

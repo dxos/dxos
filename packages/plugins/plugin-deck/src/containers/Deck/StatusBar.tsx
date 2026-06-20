@@ -7,6 +7,8 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useLandmarkMover } from '@dxos/react-ui';
 
+import { Hints, StatusBar as StatusBarRole } from '#types';
+
 export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
   const mover = useLandmarkMover(undefined, '3');
   return (
@@ -15,8 +17,8 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
       className='fixed bottom-0 inset-x-0 h-(--dx-statusbar-size) border-y border-separator z-[2] flex text-description'
       {...mover}
     >
-      {showHints && <Surface.Surface role='hints' limit={1} />}
-      <Surface.Surface role='status-bar' limit={1} />
+      {showHints && <Surface.Surface type={Hints} limit={1} />}
+      <Surface.Surface type={StatusBarRole} limit={1} />
     </div>
   );
 };

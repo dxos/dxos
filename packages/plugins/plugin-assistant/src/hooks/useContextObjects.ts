@@ -5,17 +5,18 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback } from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
-import { type DXN, type Database, type Obj } from '@dxos/echo';
+import { type AiContext } from '@dxos/assistant';
+import { type Database, type Obj } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 
 export type UseContextObjectsProps = {
   db?: Database.Database;
-  context?: AiContextBinder;
+  context?: AiContext.Binder;
 };
 
 export type UseContextObjects = {
   objects: Obj.Unknown[];
-  onUpdateObject: (dxn: DXN, checked: boolean) => Promise<void>;
+  onUpdateObject: (dxn: URI.URI, checked: boolean) => Promise<void>;
 };
 
 const emptyObjectsAtom = Atom.make<Obj.Unknown[]>([]);
@@ -27,7 +28,7 @@ export const useContextObjects = ({ db, context }: UseContextObjectsProps): UseC
   const objects = useAtomValue(context?.objects ?? emptyObjectsAtom);
 
   const handleUpdateObject = useCallback<UseContextObjects['onUpdateObject']>(
-    async (dxn: DXN, checked: boolean) => {
+    async (dxn: URI.URI, checked: boolean) => {
       if (!db || !context) {
         return;
       }

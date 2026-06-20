@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
+import { Ref, DXN } from '@dxos/echo';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const BLUESKY_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Discovery — list the available Bluesky sync targets for the integration's
@@ -23,9 +23,10 @@ const BLUESKY_OPERATION = `${meta.id}.operation`;
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
-    key: `${BLUESKY_OPERATION}.get-bluesky-targets`,
+    key: makeKey('getBlueskyTargets'),
     name: 'Get Bluesky Targets',
-    description: 'List the user’s Bluesky timeline / likes / bookmarks plus saved custom feeds.',
+    description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
+    icon: 'ph--butterfly--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
@@ -42,9 +43,10 @@ export const GetBlueskyTargets = Operation.make({
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
-    key: `${BLUESKY_OPERATION}.sync-bluesky-targets`,
+    key: makeKey('syncBlueskyTargets'),
     name: 'Sync Bluesky',
     description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],

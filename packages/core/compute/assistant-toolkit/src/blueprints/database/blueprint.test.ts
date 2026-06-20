@@ -6,19 +6,19 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import DatabaseBlueprint from './blueprint';
-import { DatabaseHandlers } from './functions';
-import { Query as DatabaseQueryOperation } from './functions/definitions';
+import { DatabaseHandlers } from './operations';
+import { Query as DatabaseQueryOperation } from './operations/definitions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DatabaseHandlers,
@@ -60,10 +60,10 @@ describe('Database Blueprint', () => {
           'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
         );
         yield* agent.waitForCompletion();
-        const schemas = yield* Database.runSchemaQuery({
-          typename: 'com.example.type.project',
-          location: ['database', 'runtime'],
-        });
+        const allTypes = yield* Database.query(
+          Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+        ).run;
+        const schemas = allTypes.filter((t) => Type.getTypename(t) === 'com.example.type.project');
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
@@ -85,7 +85,7 @@ describe('Database Blueprint', () => {
         });
         yield* agent.submitPrompt('Create a new organization called "Cyberdyne Systems".');
         yield* agent.waitForCompletion();
-        const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
+        const orgs = yield* Database.query(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' })).run;
         expect(orgs).toHaveLength(1);
       },
       Effect.provide(TestLayer),
@@ -105,8 +105,8 @@ describe('Database Blueprint', () => {
           'Create a preson fullName="John Doe" with a reference to the organization "Cyberdyne Systems".',
         );
         yield* agent.waitForCompletion();
-        const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
-        const persons = yield* Database.runQuery(Query.type(Person.Person, { fullName: 'John Doe' }));
+        const orgs = yield* Database.query(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' })).run;
+        const persons = yield* Database.query(Query.type(Person.Person, { fullName: 'John Doe' })).run;
         expect(orgs).toHaveLength(1);
         expect(persons).toHaveLength(1);
         expect(persons[0].organization?.target).toBe(orgs[0]);
@@ -185,8 +185,8 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(
           Obj.make(Organization.Organization, { name: 'Detail Corp', description: 'A detailed organization.' }),
         );
-        const dxn = Obj.getDXN(org).toString();
-        yield* agent.submitPrompt(`Load the full details of object ${dxn}. What is its description?`);
+        const uri = Obj.getURI(org);
+        yield* agent.submitPrompt(`Load the full details of object ${uri}. What is its description?`);
         yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
@@ -212,7 +212,7 @@ describe('Database Blueprint', () => {
           `Create an Employer relation from person "John Connor" to organization "Cyberdyne Systems" with role "Engineer". List schemas first to find the relation typename.`,
         );
         yield* agent.waitForCompletion();
-        const relations = yield* Database.runQuery(Query.type(Employer.Employer));
+        const relations = yield* Database.query(Query.type(Employer.Employer)).run;
         expect(relations.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
@@ -237,8 +237,8 @@ describe('Database Blueprint', () => {
             role: 'Director',
           }),
         );
-        const relationDxn = Relation.getDXN(relation).toString();
-        yield* agent.submitPrompt(`Delete the relation ${relationDxn}.`);
+        const relationUri = Relation.getURI(relation);
+        yield* agent.submitPrompt(`Delete the relation ${relationUri}.`);
         yield* agent.waitForCompletion();
         expect(Relation.isDeleted(relation)).toBe(true);
       },
@@ -263,9 +263,10 @@ describe('Database Blueprint', () => {
         const tag = yield* Database.add(Tag.make({ label: 'important' }));
         yield* agent.submitPrompt(`Add tag "important" to the organization "Tagged Corp".`);
         yield* agent.waitForCompletion();
-        const tags = Obj.getMeta(org).tags ?? [];
-        // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).toContain(Obj.getDXN(tag).toString());
+        // Compare by entity id: a same-space ref stores a local EID (`echo:/<id>`) while
+        // `Obj.getURI` returns the fully-qualified form (`echo://<space>/<id>`).
+        const taggedIds = Obj.getMeta(org).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
+        expect(taggedIds).toContain(tag.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -282,14 +283,13 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        const tagDxn = Obj.getDXN(tag).toString();
-        Entity.update(org, (org) => Entity.addTag(org, tagDxn));
-        expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
+        // Compare by entity id (local vs fully-qualified EID forms refer to the same object).
+        const taggedIds = () => Obj.getMeta(org).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
+        Entity.update(org, (org) => Entity.addTag(org, Ref.make(tag)));
+        expect(taggedIds()).toContain(tag.id);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
-        const tags = Obj.getMeta(org).tags ?? [];
-        // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).not.toContain(tagDxn);
+        expect(taggedIds()).not.toContain(tag.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -329,13 +329,13 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(Obj.getDXN(org)) as Ref.Ref<any>;
+        const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
         yield* agent.addContext([ref]);
-        const dxn = Obj.getDXN(org).toString();
+        const uri = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);
         yield* agent.waitForCompletion();
         const contextRefs = yield* agent.getContext();
-        const found = contextRefs.find((contextRef) => contextRef.dxn.toString() === dxn);
+        const found = contextRefs.find((contextRef) => contextRef.uri === uri);
         expect(found).toBeUndefined();
       },
       Effect.provide(TestLayer),
@@ -371,16 +371,16 @@ describe('Database Blueprint', () => {
         yield* agent.waitForCompletion();
 
         const { db } = yield* Database.Service;
-        const spaceOnly = yield* Database.runQuery(
+        const spaceOnly = yield* Database.query(
           Query.select(Filter.text('reservation', { type: 'full-text' })).limit(20),
-        );
+        ).run;
         expect(spaceOnly).toHaveLength(0);
 
-        const withFeeds = yield* Database.runQuery(
+        const withFeeds = yield* Database.query(
           Query.select(Filter.text('reservation', { type: 'full-text' }))
             .from(db, { includeFeeds: true })
             .limit(20),
-        );
+        ).run;
         expect(withFeeds.length).toBeGreaterThanOrEqual(1);
         expect(
           withFeeds.some(
@@ -390,9 +390,9 @@ describe('Database Blueprint', () => {
           ),
         ).toBe(true);
 
-        const byTypename = yield* Database.runQuery(
+        const byTypename = yield* Database.query(
           Query.type(Organization.Organization).from(db, { includeFeeds: true }).limit(20),
-        );
+        ).run;
         expect(byTypename.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
@@ -517,8 +517,8 @@ describe('Database Blueprint', () => {
           `Call query tool with precisely ${JSON.stringify({
             includeContent: false,
             limit: 10,
-            typename: Organization.Organization.typename,
-            in: [Obj.getDXN(feed1).toString()],
+            typename: Type.getTypename(Organization.Organization),
+            in: [Obj.getURI(feed1)],
           })}`,
         );
         yield* agent.waitForCompletion();

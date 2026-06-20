@@ -4,9 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof ...Schema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ViewAnnotation } from '@dxos/schema';
 
 /**
@@ -34,26 +37,10 @@ export const Arrangement = Schema.Struct({
 
 export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
-/**
- * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
- */
-export const KanbanV1 = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
-  arrangement: Arrangement,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.kanban',
-    version: '0.1.0',
-  }),
-);
-
-//
-// v2 — `spec` is a discriminated union of how items are sourced.
 //
 // Mirrors the canonical DXOS pattern (see `Trigger.Spec` in
 // `@dxos/functions/src/types/Trigger.ts` and `Sequence.Source` in
-// `@dxos/plugin-zen`): the `Type.object` schema is a flat `Schema.Struct`,
+// `@dxos/plugin-zen`): the `Type.makeObject` schema is a flat `Schema.Struct`,
 // and the discriminated union lives one level down as a single field whose
 // variants are tagged with a `kind` literal.
 //
@@ -85,20 +72,16 @@ export const Kanban = Schema.Struct({
   /** How this kanban sources its items. Discriminated by `spec.kind`. */
   spec: KanbanSpec,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.kanban',
-    version: '0.2.0',
-  }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['spec', 'view']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--kanban--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
+  Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
 );
 
-/** Instance type; narrow on `kanban.spec.kind` (or use the guards below). */
-export interface Kanban extends Schema.Schema.Type<typeof Kanban> {}
+/**
+ * Instance type; narrow on `kanban.spec.kind` (or use the guards below).
+ */
+export interface Kanban extends Type.InstanceType<typeof Kanban> {}
 
 /** Narrowed view-variant kanban. */
 export type KanbanView = Kanban & { spec: KanbanViewSpec };

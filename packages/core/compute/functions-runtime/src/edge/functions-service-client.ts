@@ -6,10 +6,10 @@ import { type Client } from '@dxos/client';
 import { FunctionError, Operation } from '@dxos/compute';
 import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, type TriggersDispatcherStatus } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
@@ -111,10 +111,10 @@ export class FunctionsServiceClient {
       return Obj.make(Operation.PersistentOperation, {
         [Obj.Meta]: {
           keys: [{ source: FUNCTIONS_META_KEY, id: response.functionId }],
+          key: response.meta.key,
+          version: response.version,
         },
-        key: response.meta.key,
         name: response.meta.name ?? 'Unnamed function',
-        version: response.version,
         description: response.meta.description,
         inputSchema: response.meta.inputSchema,
         outputSchema: response.meta.outputSchema,
@@ -140,10 +140,10 @@ export class FunctionsServiceClient {
         const fn = Obj.make(Operation.PersistentOperation, {
           [Obj.Meta]: {
             keys: [{ source: FUNCTIONS_META_KEY, id: record.id }],
+            key: versionMeta.key,
+            version: latest?.version ?? '0.0.0',
           },
-          key: versionMeta.key,
           name: versionMeta.name ?? versionMeta.key ?? record.id,
-          version: latest?.version ?? '0.0.0',
           updated: record?.updated !== undefined ? new Date(record.updated).toISOString() : undefined,
           description: versionMeta.description,
           inputSchema: versionMeta.inputSchema,
@@ -179,7 +179,11 @@ export class FunctionsServiceClient {
     }
   }
 
-  async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
+  async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: EntityId): Promise<InvokeResult> {
     return (await this.#edgeClient.forceRunCronTrigger(ctx, spaceId, triggerId)) as InvokeResult;
+  }
+
+  async getTriggersDispatcherStatus(ctx: Context, spaceId: SpaceId): Promise<TriggersDispatcherStatus> {
+    return this.#edgeClient.getTriggersDispatcherStatus(ctx, spaceId);
   }
 }

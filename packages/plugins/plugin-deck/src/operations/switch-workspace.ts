@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, isPinnedWorkspace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
         //   Ideally this should be worked into the data model in a generic way.
-        const shouldUpdatePrevious = !isPinnedWorkspace(state.activeDeck);
+        const shouldUpdatePrevious = !Paths.isPinnedWorkspace(state.activeDeck);
 
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newDecks = state.decks[input.subject]
@@ -49,7 +49,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
             (node) => !Node.isActionLike(node) && !node.properties.disposition,
           );
           if (item) {
-            yield* Operation.schedule(LayoutOperation.Open, { subject: [item.id] });
+            // Use `invoke` (synchronous) rather than `schedule` (fire-and-forget) so
+            // that the implicit "open first child" finishes BEFORE this handler
+            // returns. Otherwise, a caller that follows `SwitchWorkspace` with its
+            // own `SetLayoutMode`/`Open` (e.g. WelcomePlugin DefaultContent) has
+            // its `solo`/`active` clobbered by this scheduled Open when it later
+            // races behind the caller's state writes.
+            yield* Operation.invoke(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       }

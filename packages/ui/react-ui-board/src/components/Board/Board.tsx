@@ -30,7 +30,8 @@ import {
   usePx,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -251,11 +252,7 @@ const BOARD_CONTENT_NAME = 'Board.Content';
 type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => {
-  return (
-    <div role='none' className={mx(classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx(classNames)}>{children}</div>;
 };
 
 BoardContent.displayName = BOARD_CONTENT_NAME;
@@ -334,7 +331,7 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
       style={rect}
       className={mx(
         'group/cell absolute flex items-center justify-center border rounded-sm opacity-50',
-        active ? 'border-transparent ring ring-accent-surface' : 'border-separator border-dashed',
+        active ? 'border-transparent ring ring-accent-bg' : 'border-separator border-dashed',
       )}
     >
       {onAddClick && (

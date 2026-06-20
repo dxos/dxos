@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
@@ -10,20 +11,22 @@ import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credenti
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
+  EchoEdgeSubductionReplicator,
   EchoHost,
+  type EdgeAutomergeReplicator,
   MeshEchoReplicator,
-  MetadataStore,
+  runSqliteHealthCheck,
+  SqliteMetadataStore,
   SpaceManager,
   valueEncoding,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
-import { type RuntimeProvider } from '@dxos/effect';
+import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { Keyring } from '@dxos/keyring';
+import { SqliteKeyring } from '@dxos/keyring';
 import { type SpaceId } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
@@ -33,11 +36,13 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type Storage } from '@dxos/random-access-storage';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { SqlTransaction } from '@dxos/sql-sqlite';
+import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
+
+// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
+type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 import { EdgeAgentManager } from '../agents';
 import {
@@ -58,6 +63,7 @@ import {
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 import { FeedSyncer } from './feed-syncer';
+import { SqliteStorage } from './sqlite-storage';
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -79,10 +85,10 @@ export class ServiceContext extends Resource {
   private readonly _edgeIdentityUpdateMutex = new Mutex();
 
   public readonly initialized = new Trigger();
-  public readonly metadataStore: MetadataStore;
-  public readonly blobStore: BlobStore;
+  public readonly metadataStore: SqliteMetadataStore;
+  public readonly blobStore: SqliteBlobStore;
   public readonly feedStore: FeedStore<FeedMessage>;
-  public readonly keyring: Keyring;
+  public readonly keyring: SqliteKeyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly recoveryManager: EdgeIdentityRecoveryManager;
@@ -90,8 +96,9 @@ export class ServiceContext extends Resource {
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
-  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _feedSyncer?: FeedSyncer = undefined;
+  private readonly _feedStorage: SqliteStorage;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -105,13 +112,11 @@ export class ServiceContext extends Resource {
   private _deviceSpaceSync?: CredentialProcessor;
 
   constructor(
-    public readonly storage: Storage,
-    public readonly level: LevelDB,
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
-    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
+    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>,
     public readonly _runtimeProps?: ServiceContextRuntimeProps,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
@@ -120,14 +125,14 @@ export class ServiceContext extends Resource {
     log('runtimeProps', this._runtimeProps);
     log('edgeFeatures', this._edgeFeatures);
 
-    // TODO(burdon): Move strings to constants.
-    this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    this.blobStore = new BlobStore(storage.createDirectory('blobs'));
-
-    this.keyring = new Keyring(storage.createDirectory('keyring'));
+    this.metadataStore = new SqliteMetadataStore({ runtime: this._runtime });
+    this.blobStore = new SqliteBlobStore({ runtime: this._runtime });
+    this.keyring = new SqliteKeyring({ runtime: this._runtime });
+    this._feedStorage = new SqliteStorage({ runtime: this._runtime });
+    const feedStorage = this._feedStorage;
     this.feedStore = new FeedStore<FeedMessage>({
       factory: new FeedFactory<FeedMessage>({
-        root: storage.createDirectory('feeds'),
+        root: feedStorage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
           valueEncoding,
@@ -163,7 +168,6 @@ export class ServiceContext extends Resource {
     );
 
     this.echoHost = new EchoHost({
-      kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
@@ -175,6 +179,15 @@ export class ServiceContext extends Resource {
           shouldPush: request.shouldPush,
           shouldPull: request.shouldPull,
         });
+      },
+      getSyncState: async (ctx, request) => {
+        // Mirror `syncQueue` above: in non-edge / partially-initialised modes the
+        // feed syncer is absent. Return an empty state instead of throwing so
+        // callers (e.g. devtools sync panel) keep working.
+        if (!this._feedSyncer) {
+          return { namespaces: [] };
+        }
+        return this._feedSyncer.getSyncState(ctx, request);
       },
     });
 
@@ -204,11 +217,18 @@ export class ServiceContext extends Resource {
     if (!this._runtimeProps?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
-    if (this._edgeConnection && this._edgeFeatures?.echoReplicator && this._edgeHttpClient) {
-      this._echoEdgeReplicator = new EchoEdgeReplicator({
-        edgeConnection: this._edgeConnection,
-        edgeHttpClient: this._edgeHttpClient,
-      });
+    if (this._edgeConnection && this._edgeHttpClient) {
+      if (this._edgeFeatures?.subductionReplicator) {
+        this._echoEdgeReplicator = new EchoEdgeSubductionReplicator({
+          edgeConnection: this._edgeConnection,
+          edgeHttpClient: this._edgeHttpClient,
+        });
+      } else if (this._edgeFeatures?.echoReplicator) {
+        this._echoEdgeReplicator = new EchoEdgeReplicator({
+          edgeConnection: this._edgeConnection,
+          edgeHttpClient: this._edgeHttpClient,
+        });
+      }
     }
 
     if (this.echoHost.feedStore && this._edgeConnection) {
@@ -225,7 +245,15 @@ export class ServiceContext extends Resource {
 
   @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
+    );
+
     await this._checkStorageVersion();
+
+    log('running sqlite health check...');
+    await runSqliteHealthCheck(this._runtime);
+    log('sqlite health check passed');
 
     log('opening...');
 
@@ -418,6 +446,27 @@ export class ServiceContext extends Resource {
     this._deviceSpaceSync = {
       processCredential: async (credential: Credential) => {
         const assertion = getCredentialAssertion(credential);
+
+        // A space was tombstoned on another device: replicate the deletion locally.
+        if (assertion['@type'] === 'dxos.halo.credentials.SpaceDeleted') {
+          if (assertion.spaceKey.equals(identity.space.key)) {
+            // ignore halo space
+            return;
+          }
+          if (!this.dataSpaceManager) {
+            log('dataSpaceManager not initialized yet, ignoring space deletion', { details: assertion });
+            return;
+          }
+
+          try {
+            log('tombstoning space recorded in halo', { details: assertion });
+            await this.dataSpaceManager.handleRemoteSpaceDeleted(this._ctx, assertion.spaceKey);
+          } catch (err) {
+            log.catch(err);
+          }
+          return;
+        }
+
         if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
@@ -427,6 +476,11 @@ export class ServiceContext extends Resource {
         }
         if (!this.dataSpaceManager) {
           log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion });
+          return;
+        }
+        // Do not re-accept a space that has been tombstoned (handles out-of-order credential replay).
+        if (this.dataSpaceManager.isSpaceDeleted(assertion.spaceKey)) {
+          log('space is deleted, ignoring space admission', { details: assertion });
           return;
         }
         if (this.dataSpaceManager.spaces.has(assertion.spaceKey)) {

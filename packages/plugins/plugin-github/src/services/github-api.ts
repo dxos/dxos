@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
@@ -14,7 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 
 import { GITHUB_API_BASE } from '../constants';
 

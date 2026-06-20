@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Graph } from '@dxos/app-graph';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -103,8 +104,8 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
 const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
-    id: 'story-article',
-    role: 'article',
+    id: 'storyArticle',
+    filter: Surface.makeFilter(AppSurface.Article),
     component: ({ data: { subject } }) => {
       if (!subject) {
         return <Loading />;

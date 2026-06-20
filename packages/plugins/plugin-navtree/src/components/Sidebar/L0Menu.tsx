@@ -106,7 +106,7 @@ const l0Breakpoints: Record<string, string> = {
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
-      const { t } = useTranslation(meta.id);
+      const { t } = useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
@@ -142,9 +142,8 @@ const L0ItemRoot = memo(
 
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
   <div
-    role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-surface rounded-sm',
+      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-bg rounded-sm',
       classNames,
     )}
   />
@@ -152,7 +151,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
@@ -218,14 +217,13 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   return (
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
       <div
-        role='none'
         data-frame={true}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
-            ? 'p-2 group-hover/l0item:bg-active-surface'
-            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-active-surface',
+            ? 'p-2 group-hover/l0item:bg-current-surface'
+            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-current-surface',
         )}
       >
         <ItemAvatar item={item} />
@@ -240,12 +238,12 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 });
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Actions.
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-surface-text)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
@@ -282,7 +280,7 @@ export const L0Menu = ({
   path,
   onItemHover,
 }: L0MenuProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const runAction = useActionRunner();
   const handleAction = useCallback(
     (action: Node.Action, params: Node.InvokeProps) => {
@@ -320,7 +318,7 @@ export const L0Menu = ({
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
-        'w-(--dx-l0-size) bg-toolbar-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        'w-(--dx-l0-size) bg-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
         '[body[data-platform="macos"]_&]:pt-[30px]',
         '[body[data-platform="ios"]_&]:pt-[max(env(safe-area-inset-top),0.25rem)]',
       ]}
@@ -328,8 +326,16 @@ export const L0Menu = ({
       {/* TODO(wittjosiah): Use L0Item trigger. */}
       <Menu.Root onAction={handleAction}>
         <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
-          <div role='none' className='grid place-items-center'>
-            <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app-menu.label')} />
+          <div className='grid place-items-center'>
+            <IconButton
+              density='lg'
+              variant='ghost'
+              size={5}
+              icon='ph--list--regular'
+              iconOnly
+              square
+              label={t('app-menu.label')}
+            />
           </div>
         </Menu.Trigger>
         <Menu.Content group={parent} items={menuActions} />
@@ -352,14 +358,14 @@ export const L0Menu = ({
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
+      <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
         {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}
       </div>
 
       {userAccountItem && (
-        <div role='none' className='grid dx-app-no-drag'>
+        <div className='grid dx-app-no-drag'>
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}

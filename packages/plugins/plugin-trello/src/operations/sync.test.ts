@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { Integration } from '@dxos/plugin-integration';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
@@ -34,12 +34,7 @@ describe('reconcileBoardCards (pull)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -99,7 +94,7 @@ describe('reconcileBoardCards (pull)', () => {
 
     const result = await Effect.gen(function* () {
       return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.added).toBe(2);
     expect(result.updated).toBe(0);
@@ -138,7 +133,7 @@ describe('reconcileBoardCards (pull)', () => {
 
     await Effect.gen(function* () {
       return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(kanban.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden).toBe(false);
   });
@@ -154,11 +149,11 @@ describe('reconcileBoardCards (pull)', () => {
 
     await Effect.gen(function* () {
       return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
       return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(second.added).toBe(0);
     expect(second.updated).toBe(0);
@@ -183,7 +178,7 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'Task A')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // Remote rename — local untouched.
     const result = await Effect.gen(function* () {
@@ -194,7 +189,7 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'Task A renamed')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.updated).toBe(1);
     const item = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as
@@ -220,7 +215,7 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'Task A', 'remote desc')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // User edits the description locally.
     const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
@@ -237,7 +232,7 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'Task A', 'remote desc')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.updated).toBe(0);
     const item = localItem as unknown as Record<string, unknown>;
@@ -260,7 +255,7 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'Task A', 'original')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
     Obj.update(localItem, (localItem) => {
@@ -276,7 +271,7 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'Task A', 'remote edit')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const item = localItem as unknown as Record<string, unknown>;
     expect(item.description).toBe('remote edit');
@@ -298,11 +293,11 @@ describe('reconcileBoardCards (pull)', () => {
         [makeRemoteCard('card1', 'list1', 'A'), makeRemoteCard('card2', 'list1', 'B')],
         lists,
       );
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const result = await Effect.gen(function* () {
       return yield* reconcileBoardCards(integration, kanban, board, [makeRemoteCard('card1', 'list1', 'A')], lists);
-    }).pipe(Effect.provide(layer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.removed).toBe(1);
     // Closed-on-Trello (or missing) → soft-deleted in ECHO. The ref stays
@@ -328,12 +323,7 @@ describe('pushBoardCards (push)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -372,7 +362,7 @@ describe('pushBoardCards (push)', () => {
         create: stubCreate,
         update: stubUpdate,
       });
-    }).pipe(runAndForwardErrors);
+    }).pipe(EffectEx.runAndForwardErrors);
 
     expect(result.created).toBe(1);
     expect(createCalled).toBe(1);
@@ -420,7 +410,7 @@ describe('pushBoardCards (push)', () => {
           return Effect.succeed(undefined);
         },
       });
-    }).pipe(runAndForwardErrors);
+    }).pipe(EffectEx.runAndForwardErrors);
 
     expect(result.updated).toBe(1);
     expect(updatePayload).toEqual({ desc: 'edited locally' });
@@ -465,7 +455,7 @@ describe('pushBoardCards (push)', () => {
           return Effect.succeed(undefined);
         },
       });
-    }).pipe(runAndForwardErrors);
+    }).pipe(EffectEx.runAndForwardErrors);
 
     expect(result.created + result.updated).toBe(0);
     expect(updateCalled).toBe(0);
@@ -485,7 +475,7 @@ describe('findOrCreateKanbanForBoard', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
+    graph.registry.add([Kanban.Kanban, Expando.Expando]);
     return { db };
   };
 
@@ -504,7 +494,7 @@ describe('findOrCreateKanbanForBoard', () => {
 
     const kanban = await Effect.gen(function* () {
       return yield* findOrCreateKanbanForBoard(board('board1', 'Board One'));
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
     expect(kanban.spec.kind).toBe('items');
     expect(kanban.name).toBe('Board One');
@@ -521,13 +511,13 @@ describe('findOrCreateKanbanForBoard', () => {
 
     const first = await Effect.gen(function* () {
       return yield* findOrCreateKanbanForBoard(board('board1'));
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
       return yield* findOrCreateKanbanForBoard(board('board1'));
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-    expect(Obj.getDXN(first).toString()).toBe(Obj.getDXN(second).toString());
+    expect(Obj.getURI(first)).toBe(Obj.getURI(second));
   });
 
   test('creates distinct Kanbans for distinct boards', async ({ expect }) => {
@@ -536,13 +526,13 @@ describe('findOrCreateKanbanForBoard', () => {
 
     const a = await Effect.gen(function* () {
       return yield* findOrCreateKanbanForBoard(board('boardA', 'A'));
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
     const b = await Effect.gen(function* () {
       return yield* findOrCreateKanbanForBoard(board('boardB', 'B'));
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-    expect(Obj.getDXN(a).toString()).not.toBe(Obj.getDXN(b).toString());
+    expect(Obj.getURI(a)).not.toBe(Obj.getURI(b));
     expect(a.name).toBe('A');
     expect(b.name).toBe('B');
   });

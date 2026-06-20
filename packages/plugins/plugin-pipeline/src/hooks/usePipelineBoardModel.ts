@@ -8,7 +8,6 @@ import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';
 import { Obj, Query } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { getSpace, isSpace } from '@dxos/react-client/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';
@@ -23,11 +22,11 @@ export const usePipelineBoardModel = (
     }
 
     const space = getSpace(pipeline);
-    const columnsAtom = AtomObj.makeProperty(pipeline, 'columns');
+    const columnsAtom = Obj.atomProperty(pipeline, 'columns');
     const columnAtomFamily = Atom.family<string, Atom.Atom<Pipeline.Column | undefined>>((viewKey: string) =>
       Atom.make((get) => {
         const columns = get(columnsAtom);
-        return columns.find((c) => c.view.dxn.toString() === viewKey);
+        return columns.find((c) => c.view.uri === viewKey);
       }),
     );
 
@@ -37,7 +36,7 @@ export const usePipelineBoardModel = (
         if (column == null) {
           return [];
         }
-        const viewSnapshot = get(AtomObj.make(column.view));
+        const viewSnapshot = get(Obj.atom(column.view));
         if (!viewSnapshot?.query?.ast) {
           return [];
         }
@@ -46,20 +45,20 @@ export const usePipelineBoardModel = (
         if (!queryTarget) {
           return [];
         }
-        const raw = get(AtomQuery.make(queryTarget, query));
+        const raw = get(queryTarget.query(query).atom);
         return isSpace(queryTarget) ? raw : [...raw].reverse();
       }),
     );
 
     return {
-      getColumnId: (data) => (data as Pipeline.Column).view.dxn.toString(),
+      getColumnId: (data) => (data as Pipeline.Column).view.uri,
       getItemId: (data) => (data as Obj.Unknown).id,
       isColumn: (obj: unknown): obj is Pipeline.Column => Schema.is(Pipeline.Column)(obj),
       isItem: (obj: unknown): obj is Obj.Unknown => Obj.isObject(obj),
       columns: columnsAtom,
-      items: (column) => itemsAtomFamily(column.view.dxn.toString()),
+      items: (column) => itemsAtomFamily(column.view.uri),
       getColumns: () => [...registry.get(columnsAtom)],
-      getItems: (column) => registry.get(itemsAtomFamily(column.view.dxn.toString())) ?? [],
+      getItems: (column) => registry.get(itemsAtomFamily(column.view.uri)) ?? [],
     };
   }, [pipeline, registry]);
 
@@ -68,7 +67,7 @@ const emptyColumnsAtom = Atom.make(() => [] as Pipeline.Column[]);
 const emptyItemsAtom = Atom.make(() => [] as Obj.Unknown[]);
 
 const emptyPipelineModel: BoardModel<Pipeline.Column, Obj.Unknown> = {
-  getColumnId: (data) => (data as Pipeline.Column).view.dxn.toString(),
+  getColumnId: (data) => (data as Pipeline.Column).view.uri,
   getItemId: (data) => (data as Obj.Unknown).id,
   isColumn: (obj: unknown): obj is Pipeline.Column => Schema.is(Pipeline.Column)(obj),
   isItem: (obj): obj is Obj.Unknown => Obj.isObject(obj),

@@ -6,7 +6,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.assistant';
 

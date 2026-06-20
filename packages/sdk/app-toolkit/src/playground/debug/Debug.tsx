@@ -10,6 +10,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
+import { PlaygroundRoles } from '../roles';
+
 export const Debug = () => {
   const manager = usePluginManager();
   const core = useAtomValue(manager.core);
@@ -35,7 +37,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.debug.main',
-        role: 'secondary',
+        filter: Surface.makeFilter(PlaygroundRoles.Secondary),
         component: Debug,
       }),
     ),

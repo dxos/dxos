@@ -65,7 +65,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   }, []);
 
   return (
-    <div role='none' className='contents'>
+    <div className='contents'>
       <Grid.Root id='story' editing={editing} onEditingChange={handleEditingChange}>
         {/* TODO(burdon): Why is this property not just "cells" or "values" */}
         <Grid.Content {...props} initialCells={cells} onClick={handleClick} />
@@ -126,6 +126,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Single focusable cell — for verifying focus-ring alignment with grid lines.
+ */
+export const SingleCell: Story = {
+  args: {
+    id: 'story',
+    limitColumns: 1,
+    limitRows: 1,
+    columnDefault: { grid: { size: 200, resizeable: false } },
+    rowDefault: { grid: { size: 32, resizeable: false } },
+    initialCells: {
+      grid: {
+        '0,0': { value: 'Focus me' },
+      },
+    },
+  },
+  render: (args) => (
+    <div className='h-full grid place-items-center'>
+      <GridStory {...args} />
+    </div>
+  ),
+};
 
 export const Basic: Story = {
   args: {

@@ -4,7 +4,6 @@
 
 export * from './annotations';
 export * from './autocomplete';
-export * from './auto-scroll';
 export * from './automerge';
 export * from './awareness';
 export * from './blast';
@@ -26,9 +25,9 @@ export * from './modes';
 export * from './outliner';
 export * from './preview';
 export * from './replacer';
-export * from './scroll-past-end';
-export * from './scroller';
+export * from './scrolling';
 export * from './selection';
+export * from './spacing';
 export * from './snippets';
 export * from './state';
 export * from './submit';

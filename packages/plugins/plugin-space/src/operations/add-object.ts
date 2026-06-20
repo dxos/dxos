@@ -3,13 +3,12 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
+import { AppNode, CollectionModel, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
-import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
+import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
 
@@ -24,7 +23,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       yield* CollectionModel.add({
         object,
         target: Database.isDatabase(target) ? undefined : target,
-        hidden: input.hidden,
       }).pipe(Effect.provide(Database.layer(db)));
 
       const typename = Obj.getTypename(object)!;
@@ -37,21 +35,38 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const [runtimeSchema] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
+      const types = yield* Effect.promise(() =>
+        db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run(),
+      );
+      const [runtimeSchema] = types.filter((t) => !Type.isTypeKind(t) && Type.getTypename(t) === typename);
       const echoViewPath =
-        runtimeSchema !== undefined ? ViewAnnotation.get(runtimeSchema).pipe(Option.getOrElse(() => [])) : [];
+        runtimeSchema !== undefined
+          ? ViewAnnotation.get(Type.getSchema(runtimeSchema)).pipe(Option.getOrElse(() => []))
+          : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
-      const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
+      const viewTargetUri = view ? getTypeURIFromQuery(view.query.ast) : undefined;
+      // A view holder filed under a target type its view query can't resolve would be invisible in
+      // the navigation tree. Fail loudly rather than silently dropping it under its own typename.
+      invariant(
+        !view || viewTargetUri != null,
+        `View object ${typename} (${object.id}) has no resolvable target type — its view query must filter by a known type.`,
+      );
+      // Graph type nodes are keyed by a slash-free slug (entity id for stored types, typename for
+      // static); resolve the object's own type slug rather than filing it under its (human) typename.
+      const objectType = Obj.getType(object);
+      const typeSlug = objectType ? Paths.getTypeSlug(objectType) : typename;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,
         objectId: object.id,
         nodeId: input.targetNodeId,
+        object,
         typename,
-        viewTargetTypename,
+        typeSlug,
+        viewTargetSlug: viewTargetUri ? Paths.getTypeSlugFromUri(viewTargetUri) : undefined,
       });
 
       return {
-        id: Obj.getDXN(object).toString(),
+        id: Obj.getURI(object),
         subject: [subject],
         object,
       };
@@ -64,18 +79,22 @@ const getSubjectPathForNewObject = (props: {
   spaceId: string;
   objectId: string;
   nodeId?: string;
+  object: Obj.Unknown;
   typename: string;
-  viewTargetTypename?: string;
+  /** Slug of the object's own type ({@link getTypeSlug}) — keys the `types/<slug>` node it files under. */
+  typeSlug: string;
+  /** Slug of the view holder's target type, when the object is a view holder. */
+  viewTargetSlug?: string;
 }): string => {
-  const { nodeId, typename, viewTargetTypename, spaceId, objectId } = props;
+  const { nodeId, object, typeSlug, viewTargetSlug, spaceId, objectId } = props;
   if (typeof nodeId === 'string') {
-    return `${nodeId}/${objectId}`;
+    return Paths.getCollectionObjectPath(nodeId, objectId);
   }
-  if (typename === Collection.Collection.typename) {
-    return getCollectionsPath(spaceId, objectId);
+  if (AppNode.isCollectionItem(object)) {
+    return Paths.getCollectionsPath(spaceId, objectId);
   }
-  if (viewTargetTypename) {
-    return getTypePath(spaceId, viewTargetTypename, objectId);
+  if (viewTargetSlug) {
+    return Paths.getTypePath(spaceId, viewTargetSlug, objectId);
   }
-  return getObjectPath(spaceId, typename, objectId);
+  return Paths.getObjectPath(spaceId, typeSlug, objectId);
 };

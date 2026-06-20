@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import { useCallback, useContext, useMemo } from 'react';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
 
@@ -43,4 +43,18 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   );
 
   return { items };
+};
+
+/**
+ * Convenience wrapper around `useMenuActions` that creates the backing atom inline.
+ * Pass a builder thunk and a dependency list — the hook memoizes `Atom.make(build)` and threads
+ * it through `useMenuActions`. Saves the `useMemo(() => Atom.make(...), deps)` boilerplate when
+ * the action graph is composed from local state (e.g. a toolbar driven by component state).
+ *
+ * Read reactive state via `get` inside the builder; `deps` should hold only stable references.
+ */
+export const useMenuBuilder = (build: (get: Atom.Context) => ActionGraphProps, deps: DependencyList): MenuActions => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const atom = useMemo(() => Atom.make(build), deps);
+  return useMenuActions(atom);
 };

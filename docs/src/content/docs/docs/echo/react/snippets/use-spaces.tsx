@@ -5,14 +5,10 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { Filter } from '@dxos/echo';
+import { parseId } from '@dxos/keys';
 import { ClientProvider } from '@dxos/react-client';
-import {
-  Filter,
-  parseId,
-  useDatabase,
-  useQuery,
-  useSpaces,
-} from '@dxos/react-client/echo';
+import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 
 export const App = () => {
   // Usually space IDs are in the URL like in params.spaceId.

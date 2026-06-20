@@ -13,12 +13,12 @@ import { Operation } from '@dxos/compute';
 
 import { SampleItem } from '#types';
 
-import { CreateSampleItem } from './definitions';
+import { SampleOperation } from '../types';
 
 // `Operation.withHandler` wraps the operation definition with an implementation.
 // The callback receives the validated input fields and must return an Effect
 // that produces the output matching the operation's output schema.
-const handler: Operation.WithHandler<typeof CreateSampleItem> = CreateSampleItem.pipe(
+const handler: Operation.WithHandler<typeof SampleOperation.CreateSampleItem> = SampleOperation.CreateSampleItem.pipe(
   Operation.withHandler(({ name }) =>
     Effect.sync(() => {
       const object = SampleItem.make({ name });

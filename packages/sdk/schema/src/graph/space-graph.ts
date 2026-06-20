@@ -4,9 +4,9 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { type Queue, type QueueImpl } from '@dxos/echo-db';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
 
@@ -44,13 +44,11 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
-  private _queue?: Queue;
-  private _schema?: Type.RuntimeType[];
+  private _schema?: Type.AnyEntity[];
   private _objects?: Entity.Unknown[];
-  private _queueItems?: Entity.Unknown[];
+  private _extraItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
-  private _queueSubscription?: CleanupFn;
   private _timeout?: NodeJS.Timeout;
 
   override get builder() {
@@ -63,10 +61,6 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   get objects(): Entity.Unknown[] {
     return this._objects ?? [];
-  }
-
-  get queue(): Queue | undefined {
-    return this._queue;
   }
 
   isOpen() {
@@ -91,18 +85,32 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     return this;
   }
 
-  async open(db: Database.Database, queue?: Queue): Promise<this> {
-    log('open', { db, queue });
+  /**
+   * Supplement the DB graph with items sourced externally (e.g. from a Feed).
+   * Callers drive this from a reactive snapshot (e.g. `useQuery(db, Query.select(...).from(feed))`).
+   */
+  setItems(items: readonly Entity.Unknown[] | undefined): this {
+    this._extraItems = items ? [...items] : undefined;
+    if (this.isOpen()) {
+      this.invalidate();
+    }
+
+    return this;
+  }
+
+  async open(db: Database.Database): Promise<this> {
+    log('open', { db });
     if (this.isOpen()) {
       await this.close();
     }
 
     this._db = db;
-    this._queue = queue;
 
-    const schemaaQuery = db.schemaRegistry.query({});
-    this._schemaSubscription = schemaaQuery.subscribe(
-      ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results),
+    this._schemaSubscription = db.query(Filter.type(Type.Type)).subscribe(
+      (query) => {
+        this._schema = [...query.results];
+        this.invalidate();
+      },
       { fire: true },
     );
 
@@ -141,7 +149,6 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   private _subscribeObjects() {
     this._objectSubscription?.();
-    this._queueSubscription?.();
 
     invariant(this._db);
     this._objectSubscription = this._db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
@@ -152,35 +159,6 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
       },
       { fire: true },
     );
-
-    if (this._queue) {
-      // Cast to QueueImpl to access updated event and getObjectsSync().
-      const queueImpl = this._queue as QueueImpl;
-
-      // Subscribe to queue updates via Event.
-      const unsubscribeUpdated = queueImpl.updated.on(() => {
-        const items = queueImpl.getObjectsSync();
-        if (items) {
-          this._queueItems = [...items];
-        }
-        this.invalidate();
-      });
-
-      // Initialize with current items.
-      const initialItems = queueImpl.getObjectsSync();
-      if (initialItems) {
-        this._queueItems = [...initialItems];
-      }
-
-      const pollingTask = setInterval(() => {
-        void this._queue?.refresh();
-      }, 1000);
-
-      this._queueSubscription = () => {
-        unsubscribeUpdated();
-        clearInterval(pollingTask);
-      };
-    }
   }
 
   private _update() {
@@ -188,7 +166,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
       nodes: this._graph.nodes.length,
       edges: this._graph.edges.length,
       objects: this._objects?.length,
-      queueItems: this._queueItems?.length,
+      extraItems: this._extraItems?.length,
     });
 
     // TOOD(burdon): Merge edges also?
@@ -201,7 +179,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     // Schema nodes.
     if (this._options?.showSchema) {
       this._schema?.forEach((schema) => {
-        const typename = Type.getDXN(schema)?.typename;
+        const typename = Type.getTypename(schema);
         if (typename) {
           let node = currentNodes.find((node) => node.id === typename);
           if (!node) {
@@ -223,20 +201,21 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     const objects = [
       // ECHO Graph.
       ...(this._objects ?? []),
-      // ECHO Queue.
-      ...(this._queueItems ?? []),
+      // Externally-supplied items (e.g. Feed contents).
+      ...(this._extraItems ?? []),
     ];
 
     objects.forEach((object) => {
-      const schema = Entity.getSchema(object);
+      const type = Entity.getType(object);
+      const schema = type != null ? Type.getSchema(type) : undefined;
 
       // Relations.
       if (Relation.isRelation(object)) {
         const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
-          source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
-          target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
+          source: EID.getEntityId(EID.parse(Relation.getSourceURI(object)))!,
+          target: EID.getEntityId(EID.parse(Relation.getTargetURI(object)))!,
           data: {
             object,
           },
@@ -285,18 +264,21 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
           // Link to refs.
           const refs = getOutgoingReferences(object);
-          for (const ref of refs) {
+          for (const { ref, property } of refs) {
             if (!Obj.isObject(ref.target)) {
               continue;
             }
 
             newEdges.push({
-              id: `${object.id}-${ref.dxn.toString()}`,
+              id: `${object.id}-${ref.uri}`,
               type: 'ref',
               source: object.id,
               target: ref.target.id,
               data: {
                 force: true,
+                // Originating top-level property name (when known) — used by the plexus
+                // projector to group/label outgoing references by property.
+                property,
               },
             });
           }
@@ -309,16 +291,22 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   }
 }
 
-const getOutgoingReferences = (object: Obj.Unknown): Ref.Unknown[] => {
-  const refs: Ref.Unknown[] = [];
-  const go = (value: unknown) => {
-    if (Ref.isRef(value)) {
-      refs.push(value);
-    } else {
-      visitValues(value, go);
-    }
-  };
+const getOutgoingReferences = (object: Obj.Unknown): Array<{ ref: Ref.Unknown; property?: string }> => {
+  const refs: Array<{ ref: Ref.Unknown; property?: string }> = [];
+  // Walk top-level properties first so each ref can be tagged with the originating
+  // top-level property name; recurse into nested values keeping that same property name.
+  visitValues(object, (value, key) => {
+    const property = typeof key === 'string' ? key : undefined;
+    const go = (inner: unknown) => {
+      if (Ref.isRef(inner)) {
+        refs.push({ ref: inner, property });
+      } else {
+        visitValues(inner, go);
+      }
+    };
 
-  visitValues(object, go);
+    go(value);
+  });
+
   return refs;
 };

@@ -13,8 +13,9 @@ import { log } from '@dxos/log';
 // import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
+import { Expando } from '@dxos/schema';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { AppContainer, Error, Main } from './components';
 import { SyncBench } from './components/SyncBench';
@@ -74,14 +75,6 @@ const App = () => {
 
 const main = async () => {
   const config = await getConfig();
-  const createWorker = config.values.runtime?.app?.env?.DX_HOST
-    ? undefined
-    : () =>
-        new SharedWorker(new URL('./shared-worker', import.meta.url), {
-          type: 'module',
-          name: 'dxos-client-worker',
-        });
-
   log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
 
   const handleInitialized = async (client: Client) => {
@@ -114,12 +107,7 @@ const main = async () => {
   root.render(
     // NOTE: StrictMode will cause the entire stack to render twice.
     <StrictMode>
-      <ClientProvider
-        config={config}
-        createWorker={createWorker}
-        shell='./shell.html'
-        onInitialized={handleInitialized}
-      >
+      <ClientProvider config={config} onInitialized={handleInitialized} types={[Expando.Expando]}>
         <App />
       </ClientProvider>
     </StrictMode>,

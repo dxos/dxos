@@ -2,27 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
-import { ThreadSettings } from '#components';
-import {
-  CallDebugPanel,
-  CallSidebar,
-  ChannelChat,
-  ChannelContainer,
-  ThreadCompanion,
-  ThreadContainer,
-} from '#containers';
-import { meta } from '#meta';
-import { ThreadCapabilities, type Settings } from '#types';
+import { ChannelArticle, ThreadArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -31,24 +20,18 @@ export default Capability.makeModule(() =>
         id: 'channel',
         filter: AppSurface.object(AppSurface.Article, Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
-          <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
+          <ChannelArticle role={role} subject={subject} attendableId={attendableId} />
         ),
       }),
       Surface.create({
-        id: 'chat-companion',
+        id: 'chatCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
         ),
-        component: ({ data: { companionTo: channel } }) => {
-          const space = getSpace(channel);
-          if (!space) {
-            return null;
-          }
-
-          return <ChannelChat channel={channel} space={space} />;
-        },
+        component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} chatOnly />,
       }),
+      // TODO(burdon): Disambiguate with Channel.
       Surface.create({
         id: 'thread',
         filter: AppSurface.object(AppSurface.Article, Thread.Thread),
@@ -58,38 +41,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ThreadContainer thread={subject} space={space} />;
-        },
-      }),
-      Surface.create({
-        id: 'comments',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'comments'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        // TODO(wittjosiah): This isn't scrolling properly in a plank.
-        component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
-      }),
-      Surface.create({
-        id: 'plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
-      }),
-      Surface.create({
-        id: 'assistant',
-        role: 'deck-companion--active-call',
-        component: () => <CallSidebar />,
-      }),
-      Surface.create({
-        id: 'devtools-overview',
-        role: 'devtools-overview',
-        component: () => {
-          const call = useCapability(ThreadCapabilities.CallManager);
-          const state = useAtomValue(call.stateAtom);
-          return <CallDebugPanel state={state} />;
+          return <ThreadArticle space={space} thread={subject} />;
         },
       }),
     ]),

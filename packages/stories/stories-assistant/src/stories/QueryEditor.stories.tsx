@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Obj, Tag } from '@dxos/echo';
+import { Obj, Ref, Tag } from '@dxos/echo';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
@@ -28,10 +28,10 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const [query, setQuery] = useState<string | undefined>(valueProp);
   const filter = useQueryBuilder(query);
   const objects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-  const model = useGraphModel(space, filter);
+  const model = useGraphModel(space?.db, filter);
 
   return (
-    <div role='none' className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
+    <div className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
         <QueryEditor classNames='p-2 w-full border-b border-subdued-separator' db={space?.db} onChange={setQuery} />
         <ScrollArea.Root orientation='vertical'>
@@ -55,12 +55,6 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   );
 };
 
-const tags: Tag.Map = {
-  tag_1: Tag.make({ label: 'Red' }),
-  tag_2: Tag.make({ label: 'Green' }),
-  tag_3: Tag.make({ label: 'Blue' }),
-};
-
 const meta: Meta<typeof QueryEditor> = {
   title: 'stories/stories-assistant/QueryEditor',
   component: QueryEditor,
@@ -69,10 +63,16 @@ const meta: Meta<typeof QueryEditor> = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer, Tag.Tag],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
+        // Persist real Tag objects so the seeded `meta.tags` refs resolve like production data.
+        const tags = [
+          space.db.add(Tag.make({ label: 'Red' })),
+          space.db.add(Tag.make({ label: 'Green' })),
+          space.db.add(Tag.make({ label: 'Blue' })),
+        ];
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },
@@ -81,7 +81,7 @@ const meta: Meta<typeof QueryEditor> = {
         ]);
         objects.forEach((obj) => {
           Obj.update(obj, (obj) => {
-            Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
+            Obj.getMeta(obj).tags = random.helpers.uniqueArray(tags, random.number.int(3)).map((tag) => Ref.make(tag));
           });
         });
       },

@@ -228,8 +228,8 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
     useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
 
     return (
-      <div role='none' className={mx('relative overflow-hidden', className, classNames)}>
-        <div role='none' ref={containerRef} className={mx('flex flex-col')}>
+      <div className={mx('relative overflow-hidden', className, classNames)}>
+        <div ref={containerRef} className={mx('flex flex-col')}>
           {lines.map((line, i) => (
             <Line
               key={i}
@@ -264,7 +264,6 @@ const Line = ({
 }: ThemedClassName<{ line: string; active: boolean; transition: number; reducedMotion: boolean }>) => {
   return (
     <div
-      role='none'
       style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
       className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >

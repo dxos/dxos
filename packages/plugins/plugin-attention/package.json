@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-attention",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,64 +8,83 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/AttentionPlugin.ts",
-    "#capabilities": "./src/capabilities/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
-    "#types": "./src/types/index.ts"
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
+    "#plugin": {
+      "source": "./src/AttentionPlugin.ts",
+      "types": "./dist/types/src/AttentionPlugin.d.ts",
+      "default": "./dist/lib/neutral/AttentionPlugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "browser": "./dist/lib/browser/operations/index.mjs",
-      "node": "./dist/lib/node-esm/operations/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "browser": "./dist/lib/browser/plugin.mjs",
-      "node": "./dist/lib/node-esm/plugin.mjs"
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:",

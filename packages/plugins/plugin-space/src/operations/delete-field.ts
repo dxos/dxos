@@ -4,9 +4,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
 
@@ -17,15 +17,16 @@ const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceO
       const view = input.view as any;
       const db = Obj.getDatabase(view);
       invariant(db);
-      const typename = getTypenameFromQuery(view.query.ast);
-      invariant(typename);
-      const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+      const typeUri = getTypeURIFromQuery(view.query.ast);
+      invariant(typeUri);
+      const types = yield* Effect.promise(() => db.query(Filter.type(Type.Type)).run());
+      const schema = types.find((t) => Type.getURI(t) === typeUri);
       invariant(schema);
 
       const projection = new ProjectionModel({
         registry,
         view,
-        baseSchema: schema.jsonSchema,
+        baseSchema: JsonSchema.toJsonSchema(schema),
         change: createEchoChangeCallback(view, schema),
       });
 

@@ -1,15 +1,17 @@
-import { type Resource } from '@dxos/react-ui';
-import { Pipeline } from '@dxos/types';
 //
 // Copyright 2023 DXOS.org
 //
+
+import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
 export const translations = [
   {
     'en-US': {
-      [Pipeline.Pipeline.typename]: {
+      [Type.getTypename(Pipeline.Pipeline)]: {
         'typename.label': 'Pipeline',
         'typename.label_zero': 'Pipelines',
         'typename.label_one': 'Pipeline',
@@ -20,19 +22,18 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Pipelines',
         'add-column.label': 'Add column',
         'add-card.label': 'Add object',
-        'untitled-view.title': 'New view',
+        'untitled-column.title': 'New column',
         'enumerating-tab.label': 'List',
         'editing-tab.label': 'Edit',
-        'views.label': 'Views',
+        'columns.label': 'Columns',
         'pipeline-invocations.label': 'Invocations',
         'pipeline-automation.label': 'Automations',
         'toggle-expand.label': 'Toggle expand',
-        'delete-view.label': 'Delete view',
-        'add-view.label': 'Add view',
+        'delete-column.label': 'Delete column',
       },
     },
   },

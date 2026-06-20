@@ -156,7 +156,7 @@ const decorations = () => [
       },
 
       '.cm-list-item-focused': {
-        borderColor: 'var(--color-neutral-focus-indicator)',
+        borderColor: 'var(--color-focus-ring-subtle)',
       },
       '&:focus-within .cm-list-item-selected': {
         borderColor: 'var(--color-separator)',

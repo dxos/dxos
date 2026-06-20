@@ -16,8 +16,9 @@ import {
 } from '@dxos/ai';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Trace, Operation } from '@dxos/compute';
+import { Database, Type } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
@@ -32,7 +33,7 @@ export const getMeetingContent = async (
 ) => {
   const notes = await meeting.notes.load();
   const transcript = await meeting.transcript.load();
-  const textContent = textContentCapabilities.find(({ id }) => id === Transcript.Transcript.typename);
+  const textContent = textContentCapabilities.find(({ id }) => id === Type.getTypename(Transcript.Transcript));
   const content = `${await textContent?.getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };
@@ -46,7 +47,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   function* (content) {
     log.info('summarizing meeting', { contentLength: content.length });
 
-    const output = yield* new AiRequest().run({
+    const output = yield* new AiRequest.Request().run({
       system: SUMMARIZE_PROMPT,
       prompt: content,
     });
@@ -57,7 +58,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   },
   Effect.provide(
     Layer.mergeAll(
-      AiService.model('@anthropic/claude-3-5-haiku-latest'),
+      AiService.model('ai.claude.model.claude-haiku-4-5'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       Trace.writerLayerNoop,
@@ -67,7 +68,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
         schedule: () => Effect.die('Not available.'),
         invokePromise: async () => ({ error: new Error('Not available.') }),
       } as any),
-      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+      registryLayerNoop,
     ),
   ),
 );

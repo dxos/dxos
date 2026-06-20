@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
-
 import { Event } from '@dxos/async';
-import { Filter, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -16,6 +14,7 @@ import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
 
+import type { SpaceComputeRuntime } from './compute-graph-registry';
 import { ComputeNode } from './compute-node';
 import {
   EDGE_FUNCTION_NAME,
@@ -68,7 +67,7 @@ export class ComputeGraph extends Resource {
 
   constructor(
     private readonly _hf: HyperFormula,
-    private readonly _runtime: ManagedRuntime.ManagedRuntime<Operation.Service, never>,
+    private readonly _runtime: SpaceComputeRuntime,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
@@ -126,7 +125,7 @@ export class ComputeGraph extends Resource {
   // TODO(burdon): Async (open node).
   //  The graph should be an extensible factory that plugins extend with model constructors.
   //  This would enable on-the-fly instantiation of new models when then are referenced.
-  //  E.g., Cross-object reference would be stored as "ObjectId!A1"
+  //  E.g., Cross-object reference would be stored as "EntityId!A1"
   //  The graph would then load the object and create a ComputeNode (model) of the appropriate type.
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);
@@ -162,7 +161,7 @@ export class ComputeGraph extends Resource {
               .getSheetNames()
               .map((name) => {
                 const { type, id } = parseSheetName(name);
-                return type && id ? this._space?.db.getObjectById(id) : undefined;
+                return type && id ? this._space?.db.query(Filter.id(id)).runSync()[0] : undefined;
               })
               .filter(isNonNullable);
 
@@ -197,8 +196,8 @@ export class ComputeGraph extends Resource {
   }
 
   /**
-   * Map from binding to fully qualified ECHO DXN (to store).
-   * E.g., HELLO() => dxn:echo:spaceId:objectId()
+   * Map from binding to fully qualified ECHO URI (to store).
+   * E.g., HELLO() => echo://spaceId/objectId()
    */
   mapFunctionBindingToId(formula: string): string {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
@@ -208,8 +207,8 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = Obj.getDXN(fn).toString();
-        return `${id}(${args})`;
+        const uri = Obj.getURI(fn);
+        return `${uri}(${args})`;
       } else {
         return match;
       }
@@ -217,21 +216,20 @@ export class ComputeGraph extends Resource {
   }
 
   /**
-   * Map from fully qualified ECHO DXN to binding (from store).
-   * E.g., dxn:echo:spaceId:objectId() => HELLO()
+   * Map from fully qualified ECHO URI to binding (from store).
+   * E.g., echo://spaceId/objectId() => HELLO()
    */
   mapFunctionBindingFromId(formula: string): string | undefined {
-    const binding = formula.replace(
-      /dxn:([^:]+):([^:(]+):([a-zA-Z0-9]+)\((.*)\)/g,
-      (_match, kind, spaceTag, objectId, args) => {
-        const dxn = `dxn:${kind}:${spaceTag}:${objectId}`;
-        const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === dxn);
-        if (fn?.binding) {
-          return `${fn.binding}(${args})`;
-        } else {
-          return UNKNOWN_BINDING;
-        }
-      },
+    const replaceMatch = (uri: string, args: string) => {
+      const fn = this._remoteFunctions.find((fn) => Obj.getURI(fn) === uri);
+      if (fn?.binding) {
+        return `${fn.binding}(${args})`;
+      }
+      return UNKNOWN_BINDING;
+    };
+
+    const binding = formula.replace(/echo:\/\/([^/(]+)\/([a-zA-Z0-9]+)\((.*)\)/g, (_match, spaceId, objectId, args) =>
+      replaceMatch(`echo://${spaceId}/${objectId}`, args),
     );
 
     if (binding.startsWith(`=${UNKNOWN_BINDING}`)) {

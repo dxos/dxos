@@ -8,7 +8,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
-import { MarkdownBlock } from '@dxos/react-ui-markdown';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -81,20 +81,22 @@ const DefaultStory = (props: TogglePanelRootProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <TogglePanel.Root classNames='border border-separator' {...props}>
-          <TogglePanel.Header
-            icon={
-              running ? (
-                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
-              ) : undefined
-            }
-          >
-            Test
-          </TogglePanel.Header>
+        <TogglePanel.Root {...props}>
           <TogglePanel.Content>
-            <TogglePanel.Viewport>
-              <MarkdownBlock classNames='p-2 text-sm' content={text.join('\n\n')} />
-            </TogglePanel.Viewport>
+            <TogglePanel.Header
+              icon={
+                running ? (
+                  <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
+                ) : undefined
+              }
+            >
+              Test
+            </TogglePanel.Header>
+            <TogglePanel.Body>
+              <TogglePanel.Viewport>
+                <MarkdownView classNames='p-2 text-sm' content={text.join('\n\n')} />
+              </TogglePanel.Viewport>
+            </TogglePanel.Body>
           </TogglePanel.Content>
         </TogglePanel.Root>
       </Panel.Content>

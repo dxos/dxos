@@ -2,66 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
-import { type SpaceSyncState } from '@dxos/echo-db';
-import { type ObjectId, type SpaceId } from '@dxos/keys';
-
-import { SpaceProxy } from './space-proxy';
-
-/**
- * @deprecated Prefer Obj.getDatabase.
- */
-// TODO(wittjosiah): Can we remove the need for this?
-export const getSpace = (object?: any): Space | undefined => {
-  if (!object) {
-    return undefined;
-  }
-
-  const db = Obj.getDatabase(object);
-  const id = db?.spaceId;
-  if (id && '_getOwningObject' in db.graph) {
-    const owner = (db.graph as { _getOwningObject: (id: SpaceId) => unknown })._getOwningObject(id);
-    if (owner instanceof SpaceProxy) {
-      return owner;
-    }
-  }
-
-  return undefined;
-};
-
-// TODO(burdon): Don't export.
-export const SPACE_ID_LENGTH = 33;
-export const OBJECT_ID_LENGTH = 26;
-export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
-
-export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId } => {
-  if (!id) {
-    return {};
-  } else if (id.length === SPACE_ID_LENGTH) {
-    return {
-      spaceId: id as SpaceId,
-    };
-  } else if (id.length === OBJECT_ID_LENGTH) {
-    return {
-      objectId: id as ObjectId,
-    };
-  } else if (id.length === FQ_ID_LENGTH && id.indexOf(':') === SPACE_ID_LENGTH) {
-    const [spaceId, objectId] = id.split(':');
-    return {
-      spaceId: spaceId as SpaceId,
-      objectId: objectId as ObjectId,
-    };
-  } else {
-    return {};
-  }
-};
-
-//
-// EDGE Sync State
-//
-
-export type Progress = { count: number; total: number };
+import { type SpaceSyncState } from '@dxos/echo-client';
+import { type SpaceId } from '@dxos/keys';
 
 export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
 

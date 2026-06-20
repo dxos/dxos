@@ -7,16 +7,12 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import {
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
-import { GitHubOperation } from '../operations';
-import { SyncOptions } from '../operations/definitions';
 import { GitHubApi } from '../services';
+import { GitHubOperation } from '../types';
 
 /**
  * Service-specific token-created hook for GitHub.
@@ -66,7 +62,7 @@ export default Capability.makeModule(
         },
         getSyncTargets: GitHubOperation.GetGitHubRepositories,
         sync: GitHubOperation.SyncGitHubRepositories,
-        optionsSchema: SyncOptions,
+        optionsSchema: GitHubOperation.SyncOptions,
         onTokenCreated,
       },
     ]);

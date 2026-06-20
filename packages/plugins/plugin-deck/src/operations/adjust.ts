@@ -9,17 +9,16 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, PLANK_COMPANION_TYPE } from '../types';
+import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
 import { computeActiveUpdates } from '../util';
-import { Adjust } from './definitions';
 import { updateActiveDeck } from './helpers';
 
-const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
+const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const _state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -67,7 +66,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
           Option.map((node) =>
             Graph.getConnections(graph, node.id, 'child')
               .filter((n) => n.type === PLANK_COMPANION_TYPE)
-              .toSorted((a, b) => byPosition(a.properties, b.properties)),
+              .toSorted((a, b) => Position.compare(a.properties, b.properties)),
           ),
           Option.flatMap((companions) => (companions.length > 0 ? Option.some(companions[0]) : Option.none())),
         );

@@ -10,9 +10,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
-import { Database, Feed, Query } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
-import { FunctionInvocationService, type FunctionServices, Imap, QueueService, Smtp } from '@dxos/functions';
+import { Database, Filter, Query } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
+import { FunctionInvocationService, type FunctionServices, Imap, Smtp } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
@@ -29,8 +29,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const ai = yield* AiService.AiService;
       const credentials = yield* Credential.CredentialsService;
       const database = yield* Database.Service;
-      const queues = yield* QueueService;
-      const feedService = yield* Feed.FeedService;
       const functionInvocationService = yield* FunctionInvocationService;
       const imap = yield* Imap;
       const smtp = yield* Smtp;
@@ -46,9 +44,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               Effect.provideService(Credential.CredentialsService, credentials),
               Effect.provideService(Database.Service, database),
               Effect.provideService(Imap, imap),
-              Effect.provideService(QueueService, queues),
               Effect.provideService(Smtp, smtp),
-              Effect.provideService(Feed.FeedService, feedService),
               Effect.provideService(FunctionInvocationService, functionInvocationService),
               Effect.provideService(Operation.Service, {
                 invoke: (op: any, ...args: any[]) => functionInvocationService.invokeFunction(op, args[0]),
@@ -56,7 +52,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
                   functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
                 invokePromise: async (op: any, ...args: any[]) => {
                   try {
-                    const data = await runAndForwardErrors(
+                    const data = await EffectEx.runAndForwardErrors(
                       functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
                     );
                     return { data };
@@ -72,7 +68,9 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
         resolveFunction: (key: string) =>
           Effect.gen(function* () {
             // Try to resolve operation from database.
-            const [dbRecord] = yield* Database.runQuery(Query.type(Operation.PersistentOperation, { key }));
+            const [dbRecord] = yield* Database.query(
+              Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))),
+            ).run;
             const operationDef = dbRecord ? Operation.deserialize(dbRecord) : null;
             if (operationDef) {
               return operationDef;
@@ -130,7 +128,7 @@ const invokeOperation = (
         functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
       invokePromise: async (op: any, ...args: any[]) => {
         try {
-          const data = await runAndForwardErrors(
+          const data = await EffectEx.runAndForwardErrors(
             functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
           );
           return { data };
@@ -181,6 +179,9 @@ const invokeOperation = (
     return data;
   }).pipe(Effect.withSpan('invokeOperation', { attributes: { name: operationDef.meta.name } }));
 
+/**
+ * @deprecated
+ */
 export class FunctionImplementationResolver extends Context.Tag('@dxos/functions/FunctionImplementationResolver')<
   FunctionImplementationResolver,
   {

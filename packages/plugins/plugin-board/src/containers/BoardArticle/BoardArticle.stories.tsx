@@ -1,0 +1,122 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React, { useEffect, useState } from 'react';
+
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
+import { withLayout } from '@dxos/react-ui/testing';
+import { Organization, Person } from '@dxos/types';
+
+import { translations } from '#translations';
+import { Board } from '#types';
+
+import { BoardArticle } from './BoardArticle';
+
+random.seed(0);
+
+const createBoard = () =>
+  Obj.make(Board.Board, {
+    name: 'Test Board',
+    items: [],
+    layout: {
+      size: { width: 7, height: 5 },
+      cells: {},
+    },
+  });
+
+const createOrg = () =>
+  Obj.make(Organization.Organization, {
+    name: random.commerce.productName(),
+    description: random.lorem.paragraph(),
+    image: random.image.url(),
+    website: random.internet.url(),
+    // TODO(burdon): Fix.
+    // status: random.helpers.arrayElement(Organization.StatusOptions).id,
+  });
+
+const DefaultStory = () => {
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
+  const boards = useQuery(space?.db, Filter.type(Board.Board));
+  const [board, setBoard] = useState<Board.Board>();
+
+  useEffect(() => {
+    if (boards.length && !board) {
+      const board = boards[0];
+      setBoard(board);
+    }
+  }, [boards]);
+
+  if (!board) {
+    return null;
+  }
+
+  return <BoardArticle role='board' subject={board} attendableId='test' />;
+};
+
+//
+// Story definitions
+//
+
+const meta = {
+  title: 'plugins/plugin-board/containers/BoardArticle',
+  render: DefaultStory,
+  decorators: [
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Organization.Organization, Person.Person, Board.Board],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
+              const board = space.db.add(createBoard());
+
+              Obj.update(board, (board) => {
+                // Add some sample items
+                Array.from({ length: 10 }).map(() => {
+                  const org = createOrg();
+                  space.db.add(org);
+                  board.items.push(Ref.make(org));
+                  board.layout.cells[org.id] = {
+                    x: Math.floor(Math.random() * 5) - 2,
+                    y: Math.floor(Math.random() * 5) - 2,
+                    width: 1,
+                    height: 1,
+                  };
+                  return org;
+                });
+              });
+            }),
+        }),
+
+        StorybookPlugin({}),
+        PreviewPlugin(),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...stackTranslations],
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -13,11 +13,13 @@ import { type MessageThreadContext } from '../sync';
 export const FallbackWidget = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   return (
     <TogglePanel.Root>
-      <TogglePanel.Header classNames='bg-group-surface'>{_tag}</TogglePanel.Header>
-      <TogglePanel.Content classNames='bg-modal-surface'>
-        <TogglePanel.Viewport>
-          <JsonHighlighter classNames='p-2! text-sm' data={props} />
-        </TogglePanel.Viewport>
+      <TogglePanel.Content>
+        <TogglePanel.Header classNames='bg-group-surface'>{_tag}</TogglePanel.Header>
+        <TogglePanel.Body classNames='bg-modal-surface'>
+          <TogglePanel.Viewport>
+            <JsonHighlighter classNames='p-2! text-sm' data={props} />
+          </TogglePanel.Viewport>
+        </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>
   );

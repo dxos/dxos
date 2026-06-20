@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { JsonPath } from '@dxos/effect';
-import { PublicKey } from '@dxos/keys';
+import { SchemaEx } from '@dxos/effect';
+import { DXN, PublicKey } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Filter from './Filter';
@@ -22,11 +22,11 @@ import * as Type from './Type';
  */
 export const FieldSchema = Schema.Struct({
   id: Schema.String,
-  path: JsonPath,
+  path: SchemaEx.JsonPath,
   visible: Schema.optional(Schema.Boolean),
 
   // TODO(wittjosiah): Presentation-specific?
-  referencePath: Schema.optional(JsonPath),
+  referencePath: Schema.optional(SchemaEx.JsonPath),
 });
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
@@ -44,7 +44,7 @@ export const Projection = Schema.Struct({
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
-  // TODO(wittjosiah): Should this just be an array of JsonPath?
+  // TODO(wittjosiah): Should this just be an array of SchemaEx.JsonPath?
   fields: Schema.Array(FieldSchema),
 
   /**
@@ -75,27 +75,18 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.view',
-    version: '0.1.0',
-  }),
-  internal.SystemTypeAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--funnel--regular',
-    hue: 'green',
-  }),
+  internal.HiddenAnnotation.set(true),
+  Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
+  Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 
-export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
-
-/**
- * View instance type.
- */
-// NOTE: This interface is explicitly defined rather than derived from the schema to avoid
-//   TypeScript "cannot be named" portability errors. The schema contains QueryAST.Query which
-//   references internal @dxos/echo-protocol module paths. Without this explicit interface,
-//   any schema using Ref.Ref(View) would inherit the non-portable type and fail to compile.
+// NOTE: Declared as a named interface and the `View` const is annotated `Type.Obj<View>` so
+//   downstream consumers see a named `View` type instead of the inlined `QueryAST.Query` union.
+//   Without the named interface, embedding `Type.getSchema(View.View)` in a downstream
+//   `Schema.Struct` triggers TS2742 portability errors (e.g. plugin-kanban, plugin-table).
 // TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
+export interface View extends Type.InstanceType<typeof ViewSchema> {}
+
 export const View: Type.Obj<View> = ViewSchema as any;
 
 export const make = (props: Partial<Obj.MakeProps<typeof View>>): View => {

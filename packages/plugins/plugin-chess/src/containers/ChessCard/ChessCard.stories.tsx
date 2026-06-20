@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { make as makeGame } from '@dxos/plugin-game/types';
+import { make as makeGame } from '@dxos/plugin-game';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -24,7 +24,7 @@ const CardStory = () => {
     return { game, state };
   }, []);
   return (
-    <CardContainer role='popover' icon={pluginMeta.icon}>
+    <CardContainer role='popover' icon={pluginMeta.profile.icon?.key}>
       <ChessCard role='card--content' game={game} variant={state} />
     </CardContainer>
   );

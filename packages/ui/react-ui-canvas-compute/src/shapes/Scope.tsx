@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
+import { useAudioStream } from '@dxos/react-ui-audio';
 import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
-import { Chaos, shaderPresets, useAudioStream } from '@dxos/react-ui-sfx';
+import { Chaos, shaderPresets } from '@dxos/react-ui-experimental';
 
 import { useComputeNodeState } from '../hooks';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';

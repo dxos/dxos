@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 
 import { SourceFile } from '#types';
 
-import { ScaffoldProject } from './definitions';
+import { CodeOperation } from '../types';
 
 type ScaffoldFile = { path: string; content: string };
 
@@ -62,7 +62,7 @@ const buildScaffold = (packageName: string): ScaffoldFile[] => [
   },
 ];
 
-const handler: Operation.WithHandler<typeof ScaffoldProject> = ScaffoldProject.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ScaffoldProject> = CodeOperation.ScaffoldProject.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project, name }) {
       const code = yield* Database.load(project);

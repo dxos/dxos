@@ -12,13 +12,12 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { DeckCapabilities, PLANK_COMPANION_TYPE, type StoredDeckState } from '@dxos/plugin-deck/types';
+import { DeckCapabilities, PLANK_COMPANION_TYPE, type StoredDeckState } from '@dxos/plugin-deck';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-import { AssistantOperation } from '#operations';
-import { AssistantCapabilities } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
@@ -65,14 +64,15 @@ export default Capability.makeModule(
       }
 
       const object = node.data;
-      const companionDxn = Obj.getDXN(object).toString();
+      const companionUri = Obj.getURI(object);
       const cache = registry.get(cacheAtom);
-      if (cache[companionDxn]) {
+      if (cache[companionUri]) {
         return true;
       }
 
       const db = Obj.getDatabase(object);
       if (!db) {
+        log.warn('No db for object', { plankId, companionUri });
         return false;
       }
 
@@ -147,7 +147,7 @@ const resolveEffectiveVariant = (
 ): string | undefined => {
   const companions = Graph.getConnections(graph, plankId, 'child')
     .filter((node) => node.type === PLANK_COMPANION_TYPE)
-    .toSorted((a, b) => byPosition(a.properties, b.properties));
+    .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   if (companions.length === 0) {
     return undefined;

@@ -41,7 +41,7 @@ const defaultActions = {
   noopAction: {
     label: 'No-op',
     description: '',
-    icon: 'ph--placeholder--regular',
+    icon: 'ph--circle-dashed--regular',
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;
@@ -84,7 +84,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = useTranslation(translationKey);
 
   return (
-    <div role='none' className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
+    <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
       <Button
         {...rest}
         classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
@@ -99,10 +99,11 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <IconButton
-            icon='ph--caret-down--regular'
             size={4}
             label={t('invite-options.label')}
+            icon='ph--caret-down--regular'
             iconOnly
+            variant={variant}
             classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
@@ -123,7 +124,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     data-testid={action.testId}
                   >
                     {action.icon && <Icon icon={action.icon} />}
-                    <div role='none' className='flex-1 min-w-0 space-b-1'>
+                    <div className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
                         <p id={`${id}__description`} className='text-description'>

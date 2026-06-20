@@ -6,9 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { Filter, Ref } from '@dxos/client/echo';
-import { JsonSchema, Obj, Query } from '@dxos/echo';
-import { Collection, View } from '@dxos/echo';
+import { Collection, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -26,7 +24,7 @@ import { translations } from '#translations';
 import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
-  const personSchema = useMemo(() => omitId(Person.Person), []);
+  const personSchema = useMemo(() => omitId(Type.getSchema(Person.Person)), []);
 
   if (Obj.instanceOf(Person.Person, item)) {
     const contact = item as Obj.OfShape<Person.Person>;

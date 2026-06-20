@@ -10,10 +10,20 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/ChessPlugin.tsx'
+      - '--entryPoint=src/ChessPlugin.node.ts'
+      - '--entryPoint=src/ChessPlugin.workerd.ts'
       - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/components/index.ts'
+      - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'
   deploy-functions:
     command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-chess/src/operations/commentary.ts
     preset: server

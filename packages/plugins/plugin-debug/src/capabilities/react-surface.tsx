@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
@@ -30,20 +31,21 @@ import {
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
+  SqlitePanel,
   StoragePanel,
   SwarmPanel,
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Feed, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Annotation, Collection, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
-import { ScriptOperation } from '@dxos/plugin-script/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ScriptOperation } from '@dxos/plugin-script';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
+import { Position } from '@dxos/util';
 
 import { DebugSettings } from '#components';
 import {
@@ -52,6 +54,7 @@ import {
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
+  RegistryPanel,
   SpaceGenerator,
   Wireframe,
 } from '#containers';
@@ -71,7 +74,8 @@ type GraphDebug = {
   root: string;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}.space` && isSpace(data.space);
+const isSpaceDebug = (data: any): data is SpaceDebug =>
+  data?.type === `${meta.profile.key}.space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => {
   const graph = data?.graph;
   return (
@@ -92,8 +96,8 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return (
@@ -108,8 +112,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        role: 'article',
-        filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
         component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
@@ -121,7 +124,9 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                data.subject.space.properties[Collection.Collection.typename]?.target;
+                Annotation.get(data.subject.space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
@@ -140,31 +145,40 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'app-graph',
-        role: 'article',
-        filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+        id: 'appGraph',
+        filter: AppSurface.subject(AppSurface.Article, isGraphDebug),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
-        id: 'tools-explorer',
+        id: 'toolsExplorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
       }),
       Surface.create({
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Registry),
+        component: () => <RegistryPanel />,
+      }),
+      Surface.create({
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        position: 'hoist',
-        filter: (data): data is { subject: Obj.Unknown } => {
-          const settings = registry.get(settingsAtom);
-          return Obj.isObject(data.subject) && !!settings.wireframe;
-        },
+        filter: AppSurface.oneOf(
+          AppSurface.subject(AppSurface.Article, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+          AppSurface.subject(AppSurface.Section, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+        ),
+        position: Position.first,
         component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
       }),
       Surface.create({
-        id: 'object-debug',
+        id: 'objectDebug',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
@@ -172,16 +186,13 @@ export default Capability.makeModule(
         component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: 'devtools-overview',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
+        id: 'devtoolsOverview',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('devtools')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
-        id: 'space-objects',
-        filter: AppSurface.literal(
-          Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
-          'space-objects',
-        ),
+        id: 'spaceObjects',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -193,9 +204,9 @@ export default Capability.makeModule(
       }),
 
       Surface.create({
-        id: 'status',
-        role: 'status-indicator',
-        position: 'hoist',
+        id: 'debugStatus',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        position: Position.first,
         component: () => <DebugStatus />,
       }),
 
@@ -212,6 +223,11 @@ export default Capability.makeModule(
         id: 'client.storage',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Storage),
         component: () => <StoragePanel />,
+      }),
+      Surface.create({
+        id: 'client.sqlite',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Sqlite),
+        component: () => <SqlitePanel />,
       }),
       Surface.create({
         id: 'client.logs',
@@ -398,8 +414,8 @@ export default Capability.makeModule(
           }
 
           const feed = space.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
-          return <InvocationTraceContainer db={space.db} queueDxn={queueDxn} detailAxis='block' />;
+          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
         },
       }),
       Surface.create({
@@ -425,7 +441,7 @@ export default Capability.makeModule(
               log.info('script created', { result: createResult });
               if (createResult.data?.object) {
                 await invokePromise(LayoutOperation.Open, {
-                  subject: [getObjectPathFromObject(createResult.data.object)],
+                  subject: [Paths.getObjectPathFromObject(createResult.data.object)],
                 });
               }
             },

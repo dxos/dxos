@@ -4,47 +4,40 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { distinctBy } from '@dxos/util';
 
-/**
- * Provide a registry of blueprints from plugins.
- */
-// TODO(burdon): Reconcile with eventual public registry.
-// TODO(dmaretskyi): Reconcile with blueprint registry in compute runtime.
-export const useBlueprintRegistry = () => {
-  const blueprintDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  return useMemo(
-    () => new Blueprint.Registry(blueprintDefinitions.map((blueprint) => blueprint.make())),
-    [blueprintDefinitions],
+export const useBlueprints = ({ registry, db }: { registry?: Registry.Registry; db?: Database.Database }) => {
+  const [registryBlueprints, setRegistryBlueprints] = useState<Blueprint.Blueprint[]>(
+    () => registry?.query(Filter.type(Blueprint.Blueprint)).runSync() ?? [],
   );
-};
 
-export const useBlueprints = ({
-  blueprintRegistry,
-  db,
-}: {
-  blueprintRegistry?: Blueprint.Registry;
-  db?: Database.Database;
-}) => {
-  const staticBlueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
+  useEffect(() => {
+    if (!registry) {
+      setRegistryBlueprints([]);
+      return;
+    }
+    setRegistryBlueprints(registry.query(Filter.type(Blueprint.Blueprint)).runSync());
+    return registry.changed.on(() => {
+      setRegistryBlueprints(registry.query(Filter.type(Blueprint.Blueprint)).runSync());
+    });
+  }, [registry]);
+
   const spaceBlueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
   return useMemo(() => {
-    const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => b.key);
+    const blueprints = distinctBy([...registryBlueprints, ...spaceBlueprints], (b) => Obj.getMeta(b).key);
     blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
     return blueprints;
-  }, [staticBlueprints, spaceBlueprints]);
+  }, [registryBlueprints, spaceBlueprints]);
 };
 
 /**
  * Create reactive map of active blueprints (by key).
  */
-export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
+export const useActiveBlueprints = ({ context }: { context?: AiContext.Binder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
 
   useEffect(() => {
@@ -55,7 +48,13 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
 
     const updateActive = () => {
       const blueprints = context.getBlueprints();
-      setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
+      setActive(
+        new Map(
+          blueprints
+            .map((blueprint) => [Obj.getMeta(blueprint).key, blueprint] as const)
+            .filter((entry): entry is readonly [string, Blueprint.Blueprint] => entry[0] !== undefined),
+        ),
+      );
     };
 
     // Set initial value.
@@ -72,37 +71,54 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
 export const useBlueprintHandlers = ({
   db,
   context,
-  blueprintRegistry,
+  registry,
 }: {
   db: Database.Database;
-  context?: AiContextBinder;
-  blueprintRegistry?: Blueprint.Registry;
+  context?: AiContext.Binder;
+  registry?: Registry.Registry;
 }) => {
   const onUpdateBlueprint = useCallback(
     async (key: string, checked: boolean) => {
-      if (!context || !blueprintRegistry) {
+      if (!context) {
         return;
       }
 
-      // Find existing cloned blueprint.
-      const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
-      let storedBlueprint = objects.find((blueprint) => blueprint.key === key);
       if (checked) {
-        if (!storedBlueprint) {
-          const blueprint = blueprintRegistry.getByKey(key);
-          if (!blueprint) {
-            return;
-          }
+        // Check if the blueprint is in the registry — if so, bind via its key URI directly
+        // (no DB clone needed). Fall back to an existing DB copy for user-forked blueprints.
+        const registryBlueprint = registry
+          ?.query(Filter.type(Blueprint.Blueprint))
+          .runSync()
+          .find((b) => Obj.getMeta(b).key === key);
 
-          // NOTE: Possible race condition with other peers.
-          storedBlueprint = db.add(Obj.clone(blueprint));
+        if (registryBlueprint) {
+          await context.bind({ blueprints: [Ref.fromURI(Blueprint.registryURI(key))] });
+        } else {
+          // User-forked blueprint (in DB but not in registry): bind via DB ref.
+          const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
+          const storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
+          if (storedBlueprint) {
+            await context.bind({ blueprints: [Ref.make(storedBlueprint)] });
+          }
         }
-        await context.bind({ blueprints: [Ref.make(storedBlueprint)] });
-      } else if (storedBlueprint) {
-        await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
+      } else {
+        // Unbind: try registry ref first, then DB ref.
+        const registryBlueprint = registry
+          ?.query(Filter.type(Blueprint.Blueprint))
+          .runSync()
+          .find((b) => Obj.getMeta(b).key === key);
+        if (registryBlueprint) {
+          await context.unbind({ blueprints: [Ref.fromURI(Blueprint.registryURI(key))] });
+        } else {
+          const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
+          const storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
+          if (storedBlueprint) {
+            await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
+          }
+        }
       }
     },
-    [db, context, blueprintRegistry],
+    [db, context, registry],
   );
 
   return { onUpdateBlueprint };

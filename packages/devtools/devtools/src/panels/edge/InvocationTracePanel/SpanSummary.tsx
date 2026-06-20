@@ -5,9 +5,9 @@
 import { formatDate } from 'date-fns/format';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
+import { type Database } from '@dxos/echo';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
-import { type Database } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
 import { useFunctionNameResolver } from './hooks';
@@ -44,9 +44,9 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
+  const targetDXN = useMemo(() => span.invocationTarget?.uri, [span.invocationTarget]);
   const resolver = useFunctionNameResolver({ db });
-  const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
+  const targetName = useMemo(() => resolver(targetDXN), [targetDXN, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);
   const outcomeColor = useMemo(() => InvocationColor[span.outcome] ?? 'neutral', [span.outcome]);
@@ -67,7 +67,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
 
         {span.trigger && (
           <div className='mt-2 text-sm' role='none'>
-            Trigger ID: <span className='font-mono'>{span.trigger.dxn?.toString().split(':').pop()}</span>
+            Trigger ID: <span className='font-mono'>{span.trigger.uri?.toString().split(':').pop()}</span>
           </div>
         )}
       </div>

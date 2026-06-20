@@ -63,9 +63,11 @@ export const rowToA1Notation = (row: number): string => {
 };
 
 /**
- * The size in pixels of the gap between cells
+ * The size in pixels of the gap between cells.
+ * Must match `--dx-grid-gap` / `--dx-plane-gap` in `dx-grid.pcss`. Cells
+ * paint their own borders edge-to-edge, so this is 0.
  */
-export const gap = 1;
+export const gap = 0;
 
 /**
  * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.

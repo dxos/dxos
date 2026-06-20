@@ -3,7 +3,7 @@
 //
 
 import { BaseError } from '@dxos/errors';
-import { DXN } from '@dxos/keys';
+import { type EID } from '@dxos/keys';
 
 /**
  * Agent could not execute prompt.
@@ -13,8 +13,8 @@ export class PromptError extends BaseError.extend('PromptError') {
     message: string,
     context: {
       description?: string;
-      prompt?: DXN.String;
-      chat?: DXN.String;
+      prompt?: EID.EID;
+      chat?: EID.EID;
     },
   ) {
     super({

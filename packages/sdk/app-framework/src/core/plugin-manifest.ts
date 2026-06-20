@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
-import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
+import { PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
 
 /**
  * Default port the Vite plugin (`composerPlugin`) binds the dev server to.
@@ -48,11 +48,16 @@ export class PluginManifestError extends BaseError.extend('PluginManifestError',
  * the dev server on demand.
  */
 export const Manifest = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  version: Schema.String,
+  // Reuse the build manifest field definitions from `@dxos/protocols` (the shape `composerPlugin`
+  // emits), minus `assets` which we relax below, plus the dev-only `devEntry`.
+  ...PluginManifestSchema.omit('assets').fields,
+  /**
+   * Relative asset paths. Relaxed vs the build `PluginManifestSchema` (which requires >= 1) because
+   * dev-server manifests list no assets — chunks/styles flow through the dev server on demand.
+   */
   assets: Schema.Array(Schema.String),
-  devEntry: Schema.String.pipe(Schema.optional),
+  /** Present only for dev-server manifests; points at the unbundled source entry. */
+  devEntry: Schema.optional(Schema.String),
 });
 
 export type Manifest = Schema.Schema.Type<typeof Manifest>;
@@ -64,10 +69,7 @@ export type Manifest = Schema.Schema.Type<typeof Manifest>;
  * on this to skip offline caching and stylesheet injection — both are no-ops (or
  * actively wrong) when the plugin is being served by a Vite dev server.
  */
-export type ResolvedManifest = {
-  id: string;
-  name: string;
-  version: string;
+export type ResolvedManifest = Pick<Manifest, 'key' | 'name' | 'version' | 'dependencies'> & {
   entryUrl: string;
   assetUrls: readonly string[];
   dev: boolean;
@@ -81,12 +83,13 @@ export type ResolvedManifest = {
 const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => {
   const dev = manifest.devEntry !== undefined;
   return {
-    id: manifest.id,
+    key: manifest.key,
     name: manifest.name,
     version: manifest.version,
     entryUrl: new URL(dev ? manifest.devEntry! : PLUGIN_ENTRY_FILENAME, manifestUrl).toString(),
     assetUrls: manifest.assets.map((asset) => new URL(asset, manifestUrl).toString()),
     dev,
+    ...(manifest.dependencies !== undefined ? { dependencies: manifest.dependencies } : {}),
   };
 };
 

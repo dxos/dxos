@@ -9,9 +9,9 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -21,13 +21,13 @@ import { Organization } from '@dxos/types';
  * Production-style click → popover demo.
  *
  * Wires up the same chain Composer uses:
- * - `<DxAnchor dxn=…>label</DxAnchor>` fires `DxAnchorActivate` on click.
+ * - `<DxAnchor uri=…>label</DxAnchor>` fires `DxAnchorActivate` on click.
  * - `PreviewPlugin`'s `preview-popover` capability listens for the event, resolves the DXN
- *   to a real ECHO object via `space.db.makeRef(dxn).load()`, then invokes
+ *   to a real ECHO object via `space.db.makeRef(uri).load()`, then invokes
  *   `LayoutOperation.UpdatePopover`.
  * - `StorybookPlugin` provides both the `LayoutOperation.UpdatePopover` handler (mutating
  *   the layout-state atom) and the `<Layout>` shell that renders the popover via
- *   `<Surface.Surface type={AppSurface.Card} data={popoverContent}>`.
+ *   `<Surface.Surface type={AppSurface.CardContent} data={popoverContent}>`.
  * - `PreviewPlugin` also registers Card-role surfaces (Organization, Person, Task, …); the
  *   Surface system picks the matching one based on the resolved object's type.
  *
@@ -41,12 +41,12 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  const dxn = Obj.getDXN(organization).toString();
+  const uri = Obj.getURI(organization);
   return (
-    <div role='none' className='flex flex-col gap-2 p-4'>
+    <div className='flex flex-col gap-2 p-4'>
       <p>
         Click{' '}
-        <DxAnchor className='dx-tag--anchor' dxn={dxn}>
+        <DxAnchor className='dx-tag--anchor' dxn={uri}>
           {organization.name}
         </DxAnchor>{' '}
         to open the popover.

@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 
-import { VerifySpec } from './definitions';
+import { CodeOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof VerifySpec> = VerifySpec.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.VerifySpec> = CodeOperation.VerifySpec.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
       return { ok: true, messages: [] as string[] };

@@ -80,6 +80,7 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
     // External controller.
     const [controller, setController] = useState<EditorController>(noopController);
     useImperativeHandle(forwardedRef, () => controller, [controller]);
+    const getView = useCallback(() => controller?.view ?? null, [controller]);
 
     return (
       <EditorContextProvider
@@ -88,7 +89,7 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
         extensions={extensions}
         state={state}
       >
-        <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
+        <EditorMenuProvider getView={getView} groups={groupsRef.current} numItems={numItems} {...menuProps}>
           {children}
         </EditorMenuProvider>
       </EditorContextProvider>
@@ -110,11 +111,7 @@ type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
  * Content component that wraps the toolbar and editor view area.
  */
 const EditorContent = ({ classNames, children }: EditorContentProps) => {
-  return (
-    <div role='none' className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>{children}</div>;
 };
 
 EditorContent.displayName = EDITOR_CONTENT_NAME;

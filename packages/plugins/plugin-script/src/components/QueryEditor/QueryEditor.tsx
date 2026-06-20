@@ -3,7 +3,7 @@
 //
 
 import React, { useState } from 'react';
-import { ScriptTarget } from 'typescript';
+import { ModuleResolutionKind, ScriptTarget } from 'typescript';
 
 import queryApi from '@dxos/echo-query/api.d.ts?raw';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -34,6 +34,8 @@ export const QueryEditor = (props: QueryEditorProps) => {
     const compiler = new Compiler({
       lib: ['ES5'],
       target: ScriptTarget.ES2022,
+      // Avoid `@typescript/vfs`'s deprecated `node10` default (rejected by TS 6).
+      moduleResolution: ModuleResolutionKind.Bundler,
     });
     await compiler.initialize(GLOBALS);
     setCompiler(compiler);

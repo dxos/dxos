@@ -5,16 +5,16 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { Markdown } from '#types';
-
-import { Create, Open, Update } from '../operations/definitions';
+import { Markdown, MarkdownOperation } from '#types';
 
 const make = () =>
   Blueprint.make({
     key: Markdown.BLUEPRINT_KEY,
     name: 'Markdown',
     description: 'Work with markdown documents. Preferred over raw database operations.',
-    tools: Blueprint.toolDefinitions({ operations: [Create, Open, Update] }),
+    tools: Blueprint.toolDefinitions({
+      operations: [MarkdownOperation.Create, MarkdownOperation.Open, MarkdownOperation.Update],
+    }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.
       source: trim`

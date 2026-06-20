@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "A canvas component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {
@@ -29,6 +29,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",

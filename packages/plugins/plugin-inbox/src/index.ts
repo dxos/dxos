@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-
-import { meta } from './meta';
-
+export * from './blueprints';
 export * from './meta';
+export * from './types';
 
-export const InboxPlugin = Plugin.lazy(meta, () => import('#plugin'));
+// TODO(burdon): Remove export! Pass range via operation.
+export { getCalendarRangeSelectionId } from './paths';

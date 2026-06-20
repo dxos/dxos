@@ -46,18 +46,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Selectors use the descendant combinator (`[&_X]`) — the mesh / hexagon / border elements
+// live inside the SVG inside the div, so direct-child (`>`) selectors don't match.
 export const Default: Story = {
   args: {
     classNames: [
-      '[&>.mesh]:fill-none',
-      '[&>.hexagon>path.fill]:fill-blue-800 [&>.hexagon]:stroke-blue-700',
-      '[&>.border]:fill-none [&>.border]:stroke-blue-500 [&>.border]:stroke-2',
+      '[&_.mesh]:fill-none',
+      '[&_.hexagon>path.fill]:fill-blue-800 [&_.hexagon]:stroke-blue-700',
+      '[&_.border]:fill-none [&_.border]:stroke-blue-500 [&_.border]:stroke-2',
     ],
   },
 };
 
 export const Outline: Story = {
   args: {
-    classNames: ['[&>.mesh]:fill-none', '[&>.border]:fill-none [&>.border]:stroke-red-500 [&>.border]:stroke-2'],
+    classNames: ['[&_.mesh]:fill-none', '[&_.border]:fill-none [&_.border]:stroke-red-500 [&_.border]:stroke-2'],
   },
 };

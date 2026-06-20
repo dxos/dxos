@@ -28,7 +28,7 @@ export type NavBranchProps = {
  * spaces, collection sections, type sections, and schema nodes.
  */
 export const NavBranch = ({ id }: NavBranchProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
 
   useExpandPath(id);
@@ -66,7 +66,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
 const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
@@ -102,10 +102,10 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-hover-overlay')}
+      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface')}
       onClick={handleSelect}
     >
-      <Card.Toolbar>
+      <Card.Header>
         <Avatar.Root>
           <Avatar.Content
             hue={data.properties.hue}
@@ -118,7 +118,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
           <Avatar.Label>{name}</Avatar.Label>
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
-      </Card.Toolbar>
+      </Card.Header>
     </Card.Root>
   );
 };

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -11,7 +12,7 @@ import { Integration } from './types';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Integration',
         'space-panel.name': 'Integrations',
         'integrations-verbose.label': 'Manage integrations',
@@ -49,7 +50,7 @@ export const translations = [
         'provider-form-dialog.title': 'Connect {{label}}',
         'provider-form-dialog.no-form.message': 'Provider has no credential form configured.',
       },
-      [Integration.Integration.typename]: {
+      [Type.getTypename(Integration.Integration)]: {
         'typename.label': 'Integration',
         'typename.label_zero': 'Integrations',
         'typename.label_one': 'Integration',

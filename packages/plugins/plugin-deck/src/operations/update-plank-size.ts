@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { DeckCapabilities } from '../types';
-import { UpdatePlankSize } from './definitions';
+import { DeckCapabilities, DeckOperation } from '../types';
 import { updateActiveDeck } from './helpers';
 
-const handler: Operation.WithHandler<typeof UpdatePlankSize> = UpdatePlankSize.pipe(
+const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSize> = DeckOperation.UpdatePlankSize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>

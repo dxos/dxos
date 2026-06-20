@@ -48,7 +48,7 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center gap-4'>
+      <div className='grow flex flex-col justify-center gap-4'>
         <Input.Root
           {...(failed && {
             validationValence: 'error',
@@ -63,14 +63,14 @@ export const InvitationAuthenticator = ({
               <Input.Label>
                 <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
               </Input.Label>
-              <div role='none' className='grow' />
+              <div className='grow' />
             </>
           )}
           {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
             <Input.PinInput
               {...{
                 disabled,
-                density: 'coarse',
+                density: 'lg',
                 length: pinLength,
                 inputMode: 'numeric',
                 autoComplete: 'off',

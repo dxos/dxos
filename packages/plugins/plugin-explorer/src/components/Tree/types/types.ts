@@ -2,40 +2,49 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type GraphModel } from '@dxos/graph';
+import { type Key } from '@dxos/echo';
 
-export type TreeNode = {
+import { type TreeType } from './tree';
+
+/**
+ * In-memory tree shape used by the d3 layouts.
+ * `data` carries through to layout callbacks (e.g. hover/inspect) — typically an ECHO object on leaves.
+ */
+export type TreeNode<TData = unknown> = {
   id: string;
   label?: string;
-  children?: TreeNode[];
+  data?: TData;
+  children?: TreeNode<TData>[];
 };
 
-export const mapGraphToTreeData = (model: GraphModel.GraphModel, maxDepth = 8): TreeNode | undefined => {
-  // TODO(burdon): Convert to common/graph.
-  // const mapNode = (node: N, depth = 0): TreeNode => {
-  //   const treeNode: TreeNode = {
-  //     id: model.idAccessor(node),
-  //     label: model.idAccessor(node).slice(0, 8),
-  //   };
+/**
+ * Convert an ECHO `TreeType` (id-keyed node map) into a nested `TreeNode` hierarchy.
+ * Returns `undefined` if the root id is missing — the tree is then incomplete and shouldn't render.
+ */
+export const treeTypeToTreeNode = (
+  tree: TreeType,
+  rootId: Key.EntityId = tree.root,
+  visited: Set<string> = new Set(),
+): TreeNode | undefined => {
+  const node = tree.nodes[rootId];
+  if (!node) {
+    return undefined;
+  }
+  if (visited.has(rootId)) {
+    return { id: rootId, label: labelOf(node), data: node.data };
+  }
+  visited.add(rootId);
 
-  //   const links = model.graph.links.filter((link) => link.source === treeNode.id);
-  //   if (depth < maxDepth) {
-  //     treeNode.children = links.map((link) =>
-  //       mapNode(model.graph.nodes.find((node) => model.idAccessor(node) === link.target)!, depth + 1),
-  //     );
-  //   }
+  return {
+    id: rootId,
+    label: labelOf(node),
+    data: node.data,
+    children: node.children
+      .map((childId) => treeTypeToTreeNode(tree, childId, visited))
+      .filter((c): c is TreeNode => Boolean(c)),
+  };
+};
 
-  //   return treeNode;
-  // };
-
-  let data: TreeNode | undefined;
-  // TODO(burdon): Selection model.
-  // if (model.selected) {
-  //   const node = model.graph.nodes.find((node) => model.idAccessor(node) === model.selected);
-  //   if (node) {
-  //     data = mapNode(node);
-  //   }
-  // }
-
-  return data;
+const labelOf = (node: { data: Record<string, any> }): string | undefined => {
+  return typeof node.data?.text === 'string' ? node.data.text : undefined;
 };

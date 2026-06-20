@@ -13,12 +13,14 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useClient, useConfig } from '@dxos/react-client';
-import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
+import { type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Expando } from '@dxos/schema';
 
 const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
 
@@ -95,13 +97,19 @@ export const SyncBench = () => {
     }
   }, []);
 
+  const createSpace = async () => {
+    const space = await client.spaces.create();
+    setSpaceId(space.id);
+  };
+
   const createObjects = async (count: number) => {
     if (!space) {
+      log.warn('No space');
       return;
     }
     for (let i = 0; i < count; i++) {
       space.db.add(
-        Obj.make(TestSchema.Expando, {
+        Obj.make(Expando.Expando, {
           data: crypto.randomUUID(),
         }),
       );
@@ -125,6 +133,7 @@ export const SyncBench = () => {
     <div className='grid grid-rows-[auto_1fr] gap-2 '>
       <div className='flex flex-col gap-2'>
         <ButtonGroup>
+          <Button onClick={createSpace}>Create space</Button>
           <Button onClick={() => setShowConfig(!showConfig)}>Show config ({showConfig ? 'on' : 'off'})</Button>
           <Button onClick={refreshSyncState}>Refresh sync state</Button>
           <Button onClick={handleInvite}>Invite</Button>

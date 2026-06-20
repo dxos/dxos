@@ -28,6 +28,17 @@ const sendMessage = <T>(
       if (typeof navigator === 'undefined' || !navigator.serviceWorker) {
         throw new Error('Service worker unavailable');
       }
+      // `navigator.serviceWorker.ready` never settles when no service worker is
+      // registered (e.g. vite dev server). Fail fast so the user gets a clear
+      // error instead of "Installing…" hanging indefinitely.
+      const existing = await navigator.serviceWorker.getRegistration();
+      if (!existing) {
+        throw new Error(
+          'No service worker is registered. Plugin install requires a production build of Composer ' +
+            '(run `moon run composer-app:build && moon run composer-app:preview`). ' +
+            'In dev mode, set DX_PWA=false in dx-local.yml to skip the service worker.',
+        );
+      }
       const registration = await navigator.serviceWorker.ready;
       const target = navigator.serviceWorker.controller ?? registration.active;
       if (!target) {

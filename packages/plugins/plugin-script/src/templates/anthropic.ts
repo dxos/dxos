@@ -10,10 +10,11 @@ import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 const Anthropic = Operation.make({
   meta: {
-    key: 'org.dxos.script.anthropic',
+    key: DXN.make('org.dxos.script.anthropic'),
     name: 'Anthropic Chat',
     description: 'Chat with Anthropic',
   },
@@ -27,7 +28,7 @@ const Anthropic = Operation.make({
 export default Anthropic.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ message }) {
-      const model = (yield* AiService.AiService).model('@anthropic/claude-sonnet-4-5');
+      const model = (yield* AiService.AiService).model('ai.claude.model.claude-sonnet-4-5');
 
       //
       // Basic example.

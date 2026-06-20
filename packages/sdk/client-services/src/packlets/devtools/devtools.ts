@@ -11,6 +11,7 @@ import {
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
+  type ExportSqliteDatabaseResponse,
   type GetBlobsResponse,
   type GetConfigResponse,
   type GetNetworkPeersRequest,
@@ -19,6 +20,8 @@ import {
   type GetSpaceSnapshotRequest,
   type GetSpaceSnapshotResponse,
   type ResetStorageRequest,
+  type RunSqliteQueryRequest,
+  type RunSqliteQueryResponse,
   type SaveSpaceSnapshotRequest,
   type SaveSpaceSnapshotResponse,
   type SignalResponse,
@@ -56,6 +59,8 @@ export type DevtoolsServiceProps = {
   events: DevtoolsHostEvents;
   config: Config;
   context: ServiceContext;
+  exportSqliteDatabase: () => Promise<Uint8Array>;
+  runSqliteQuery: (query: string, params?: unknown[]) => Promise<readonly Record<string, unknown>[]>;
 };
 
 /**
@@ -77,13 +82,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
   }
 
   async getStorageInfo(): Promise<StorageInfo> {
-    const storageUsage = (await this.params.context.storage.getDiskInfo?.()) ?? { used: 0 };
-
     const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
 
     return {
-      type: this.params.context.storage.type,
-      storageUsage: storageUsage.used,
+      type: 'sqlite',
+      storageUsage: navigatorInfo?.usage ?? 0,
       originUsage: navigatorInfo?.usage ?? 0,
       usageQuota: navigatorInfo?.quota ?? 0,
     };
@@ -173,5 +176,24 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
     return subscribeToMetadata({ context: this.params.context });
+  }
+
+  async exportSqliteDatabase(): Promise<ExportSqliteDatabaseResponse> {
+    return {
+      data: await this.params.exportSqliteDatabase(),
+    };
+  }
+
+  async runSqliteQuery(request: RunSqliteQueryRequest): Promise<RunSqliteQueryResponse> {
+    try {
+      const parsedParams = request.params ? JSON.parse(request.params) : undefined;
+      if (parsedParams !== undefined && !Array.isArray(parsedParams)) {
+        throw new Error('Query params must be a JSON array.');
+      }
+      const rows = await this.params.runSqliteQuery(request.query, parsedParams);
+      return { rows: JSON.stringify(rows) };
+    } catch (err) {
+      return { rows: '[]', error: err instanceof Error ? err.message : String(err) };
+    }
   }
 }

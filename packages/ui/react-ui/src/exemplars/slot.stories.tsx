@@ -7,9 +7,10 @@ import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
-import { composable, composableProps, mx, slottable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { withTheme } from '../testing';
+import { composable, composableProps, slottable } from '../util';
 import { ThemedClassName } from '../util';
 
 /**
@@ -59,9 +60,7 @@ const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef
 
 /** This isn't a valid child for a `slottable` component. */
 const Simple = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => (
-  <div role='none' className={mx(classNames)}>
-    {children}
-  </div>
+  <div className={mx(classNames)}>{children}</div>
 );
 
 const meta = {
@@ -99,7 +98,7 @@ export const Inner: Story = {
     <Outer asChild role='article' classNames='border-orange-500'>
       <Middle asChild>
         <Leaf>
-          <div role='none'>Leaf</div>
+          <div>Leaf</div>
         </Leaf>
       </Middle>
     </Outer>
@@ -108,7 +107,7 @@ export const Inner: Story = {
 
 export const Error: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+    <Outer asChild classNames='p-2 border border-green-500 rounded'>
       <Middle asChild>
         <Simple>Simple</Simple>
       </Middle>

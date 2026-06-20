@@ -3,3 +3,4 @@
 //
 
 export * from './ScrollArea';
+export * from './scrollbar';

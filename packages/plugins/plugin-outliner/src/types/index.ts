@@ -6,3 +6,4 @@ export * from './util';
 
 export * as Journal from './Journal';
 export * as Outline from './Outline';
+export * as OutlineOperation from './OutlineOperation';

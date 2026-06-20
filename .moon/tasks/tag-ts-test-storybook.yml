@@ -26,6 +26,13 @@ tasks:
       - /coverage/$project/storybook/**
       - /test-results/$project/storybook/**
     options:
+      # Storybook test sessions occasionally die mid-run with "Browser
+      # connection was closed", which fails entire suites at the file-collection
+      # phase (vitest's project-level `retry` only retries individual tests).
+      # A whole-task retry reruns vitest from scratch with a fresh chromium.
+      # 2 retries (3 total attempts) — the chromium issue has been observed to
+      # persist across an immediate single retry in CI.
+      retryCount: 2
       timeout: 600
 
 inheritedBy:

@@ -12,16 +12,17 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/storybook-utils"
@@ -36,25 +37,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -64,9 +50,6 @@
     },
     {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-stack"

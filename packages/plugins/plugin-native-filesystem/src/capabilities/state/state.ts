@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
 

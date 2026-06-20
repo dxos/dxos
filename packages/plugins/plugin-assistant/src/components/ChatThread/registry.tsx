@@ -115,7 +115,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   toolCall: {
     block: true,
     Component: (props) => (
-      <div role='none' className='py-2'>
+      <div className='py-2'>
         <ToolWidget {...props} />
       </div>
     ),
@@ -212,7 +212,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       if (block.pending) {
         return;
       }
-      const dxn = block.reference.dxn;
+      const dxn = block.reference.uri;
       return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
     }
 

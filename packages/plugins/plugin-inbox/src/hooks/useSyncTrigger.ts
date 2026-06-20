@@ -7,10 +7,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Query, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 
 import { Calendar } from '#types';
 
@@ -24,12 +24,14 @@ const ensureFunction = async (
   functionKey: string,
 ): Promise<Operation.PersistentOperation | undefined> => {
   const deployed = await getDeployedFunctions(Context.default(), client, true);
-  const match = deployed.find((fn) => fn.key === functionKey);
+  const match = deployed.find((fn) => Obj.getMeta(fn).key === functionKey);
   if (!match) {
     return undefined;
   }
 
-  const existing = await db.query(Query.type(Operation.PersistentOperation, { key: functionKey })).run();
+  const existing = await db
+    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(functionKey)))
+    .run();
   const [existingFunc] = existing;
   if (existingFunc) {
     Operation.setFrom(existingFunc, match);
@@ -54,12 +56,17 @@ export const useSyncTrigger = ({
   functionKey: string;
   /** Additional input fields merged into the trigger input alongside the subject ref. */
   input?: Record<string, unknown>;
-}) => {
+}): {
+  syncEnabled: boolean | undefined;
+  syncTrigger: Trigger.Trigger | undefined;
+  pending: boolean;
+  handleToggleSync: () => Promise<void>;
+} => {
   const client = useClient();
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
-  const subjectDxn = Obj.getDXN(subject);
+  const subjectUri = Obj.getURI(subject);
   const syncTrigger = useMemo(
     () =>
       triggers.find((trigger) => {
@@ -69,9 +76,9 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDxn);
+        return ref?.uri && ref.uri === subjectUri;
       }),
-    [triggers, subjectDxn],
+    [triggers, subjectUri],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
@@ -93,12 +100,12 @@ export const useSyncTrigger = ({
         return;
       }
 
-      const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
+      const inputKey = Obj.getTypename(subject) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
         function: Ref.make(fn),
-        input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
+        input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
       });
 
       db.add(trigger);

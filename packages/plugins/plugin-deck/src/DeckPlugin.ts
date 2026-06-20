@@ -13,6 +13,7 @@ import {
   CheckAppScheme,
   DeckSettings,
   DeckState,
+  NotificationTracker,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -21,6 +22,9 @@ import {
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { DeckEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
@@ -38,7 +42,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.OperationInvokerReady),
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.ProcessManagerReady),
     activate: CheckAppScheme,
   }),
   Plugin.addModule({
@@ -58,8 +62,15 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   //   activate: Tools,
   // }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, DeckEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
     activate: UrlHandler,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
+    activate: NotificationTracker,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -49,13 +49,8 @@ export const CompoundButton = ({
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
-      {before && (
-        <div role='none' className='grow-0'>
-          {before}
-        </div>
-      )}
+      {before && <div className='grow-0'>{before}</div>}
       <div
-        role='none'
         {...slots.middle}
         className={mx('grow whitespace-normal flex flex-col gap-1 text-left', slots.middle?.className)}
       >
@@ -68,7 +63,7 @@ export const CompoundButton = ({
             {...slots.description}
             className={mx(
               'text-xs mb-1 font-normal',
-              variant === 'primary' ? 'text-sm font-normal text-base-surface-text' : 'text-description',
+              variant === 'primary' ? 'text-sm font-normal text-base-fg' : 'text-description',
               slots.description?.className,
             )}
           >
@@ -76,11 +71,7 @@ export const CompoundButton = ({
           </p>
         )}
       </div>
-      {after && (
-        <div role='none' className='grow-0'>
-          {after}
-        </div>
-      )}
+      {after && <div className='grow-0'>{after}</div>}
     </button>
   );
 };

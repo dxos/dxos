@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -30,9 +30,8 @@ const withDevtoolsContext: Decorator = (Story) => (
 const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
-  Type.relation({
-    typename: 'com.example.story.worksAt',
-    version: '0.1.0',
+  Type.makeRelation({
+    dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
     source: TestSchema.Person,
     target: TestSchema.Organization,
   }),
@@ -97,8 +96,8 @@ const meta = {
         const functions = Array.from({ length: 3 }, (_, index) =>
           space.db.add(
             Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { version: '0.1.0' },
               name: `function-${index}`,
-              version: '0.1.0',
               description: random.lorem.sentence(),
             }),
           ),
@@ -162,7 +161,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-surface-text'>
+      <div className='text-base-fg'>
         <ObjectsTree db={space.db} />
       </div>
     );

@@ -65,11 +65,56 @@ svg {
 
     g.dx-nodes {
       g.dx-node {
+        /* Hover feedback — every variant (force / lattice / cluster / bundle) wraps its
+           consumer-drawn shape in `g.dx-node`, so a single rule covers all four. Dim the
+           whole node group on hover; the `transition` smooths the in/out. */
+        cursor: pointer;
+        transition: opacity 150ms ease-out;
+        &:hover {
+          opacity: 0.65;
+        }
+        /* Cluster collapse: hidden leaves stay in the layout (so they tween to/from their
+           parent), but the d3 hide-transition fades their opacity attribute to 0 and we
+           drop pointer events so they don't catch clicks during the fade. */
+        &.dx-hidden {
+          pointer-events: none;
+        }
         circle {
           @apply fill-neutral-300 stroke-neutral-800;
 
           .dark & {
             @apply fill-neutral-600 stroke-none;
+          }
+        }
+        /* Radial cluster labels — small, neutral, no fill swatch since these are SVG
+           text nodes (not HTML). Stroke + paint-order halos the text for legibility against
+           edges or color-coded nodes drawn beneath it. */
+        text.dx-cluster-label {
+          @apply fill-neutral-700 text-[10px];
+          paint-order: stroke;
+          stroke: var(--surface-bg, white);
+          stroke-width: 3px;
+          stroke-linejoin: round;
+
+          .dark & {
+            @apply fill-neutral-300;
+          }
+        }
+        /* Group label sits inward of the ring — slightly stronger so the typename labels
+           the cluster of leaves they introduce. */
+        text.dx-cluster-label-group {
+          @apply fill-neutral-500 text-[11px] font-medium;
+
+          .dark & {
+            @apply fill-neutral-400;
+          }
+        }
+        /* Root label is a centered caption — larger, slightly bolder. */
+        text.dx-cluster-label-root {
+          @apply fill-neutral-600 text-xs font-semibold;
+
+          .dark & {
+            @apply fill-neutral-300;
           }
         }
         &.dx-selected {
@@ -228,7 +273,7 @@ svg {
             @apply stroke-1 stroke-neutral-500 fill-inverse-surface;
           }
           text {
-            @apply fill-inverse-surface-text;
+            @apply fill-inverse-fg;
           }
         }
       }
@@ -238,7 +283,11 @@ svg {
       g.dx-edge {
         path {
           /** NOTE: Set text- so that current color is picked up by marker. */
-          @apply stroke-1 stroke-neutral-700;
+          @apply stroke-1 stroke-neutral-700 fill-none;
+          /* Force higher-quality tessellation. Some browsers' default `auto` shape-rendering
+             produces visible gaps in stroked bezier curves at certain curvature / stroke-width
+             combinations — geometricPrecision avoids the heuristic and uses precise math. */
+          shape-rendering: geometricPrecision;
 
           .dark & {
             @apply stroke-neutral-700;

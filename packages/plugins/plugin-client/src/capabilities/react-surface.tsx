@@ -10,12 +10,15 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import {
+  AccountContainer,
   DevicesContainer,
+  InvitationsContainer,
   JoinDialog,
   ProfileContainer,
   RecoveryCodeDialog,
   RecoveryCredentialsContainer,
   ResetDialog,
+  UsageContainer,
 } from '#containers';
 import { Account, type ClientPluginOptions } from '#types';
 
@@ -44,6 +47,21 @@ export default Capability.makeModule(
         id: Account.Security,
         filter: AppSurface.literal(AppSurface.Article, Account.Security),
         component: () => <RecoveryCredentialsContainer />,
+      }),
+      Surface.create({
+        id: Account.Account,
+        filter: AppSurface.literal(AppSurface.Article, Account.Account),
+        component: () => <AccountContainer />,
+      }),
+      Surface.create({
+        id: Account.Invitations,
+        filter: AppSurface.literal(AppSurface.Article, Account.Invitations),
+        component: () => <InvitationsContainer />,
+      }),
+      Surface.create({
+        id: Account.Usage,
+        filter: AppSurface.literal(AppSurface.Article, Account.Usage),
+        component: () => <UsageContainer />,
       }),
       Surface.create({
         id: JOIN_DIALOG,

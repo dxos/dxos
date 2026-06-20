@@ -5,7 +5,7 @@
 import type { TLRecord } from '@tldraw/tldraw';
 import { isShape } from '@tldraw/tlschema';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 
 import type { Sketch } from '#types';
 

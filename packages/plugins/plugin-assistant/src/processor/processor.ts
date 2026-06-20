@@ -2,16 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
+import * as AiError from '@effect/ai/AiError';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
+import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry, type OpaqueToolkit } from '@dxos/ai';
+import { Capabilities } from '@dxos/app-framework';
 import {
-  AiContextService,
-  type AiSession,
+  AiContext,
+  AiSession,
   createSystemPrompt,
   formatSystemPrompt,
   McpServerError,
@@ -19,16 +24,16 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint, type Credential, Trace, Operation } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type QueueService } from '@dxos/functions';
-import { AgentService } from '@dxos/functions-runtime';
+import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
+import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { UsageQuotaExceededError } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
-import { UpdateChatName } from '../operations/definitions';
+import { AssistantOperation } from '#types';
+
+import { findInCause } from '../util/error-cause';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -37,38 +42,113 @@ import { UpdateChatName } from '../operations/definitions';
 export type AiChatServices =
   | Credential.CredentialsService
   | Database.Service
-  | QueueService
   | AiService.AiService
   | Trace.TraceService;
+
+/**
+ * Space-scoped services materialised by the layer passed into
+ * {@link AiChatProcessor}. Mirrors the tag list that
+ * {@link useChatProcessor} passes to {@link ServiceResolver.provide}.
+ */
+export type SpaceServices =
+  | Database.Service
+  | Credential.CredentialsService
+  | AiService.AiService
+  | AgentService.AgentService
+  | Registry.Service
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
-  blueprintRegistry?: Blueprint.Registry;
-  observableRegistry?: Registry.Registry;
+  registry?: Registry.Registry;
+  observableRegistry?: AtomRegistry.Registry;
   /**
    * For tracing.
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
-  /**
-   * Probability of automatically updating chat name after each request.
-   * Chat name is always updated if it has no name.
-   * @default 0.1 (10%)
-   */
-  autoUpdateNameChance?: number;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  autoUpdateNameChance: 0.1,
 };
 
-export type AiRequestOptions = {};
+export type ProcessorRequestOptions = {};
 
-export type AiRequest = {
+export type ProcessorRequest = {
   message: string;
-  options?: AiRequestOptions;
+  options?: ProcessorRequestOptions;
+};
+
+/** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
+const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
+
+/** An actionable next-step a chat error surfaces in its toast; the label key is resolved by the chat UI. */
+export type ChatErrorAction = { readonly labelKey: string };
+
+/**
+ * Display error for an over-quota (HTTP 429) rejection. Declares an {@link action} so the chat toast can
+ * offer a usage-dashboard link declaratively — the UI renders whatever action an error declares rather
+ * than branching on the error type.
+ */
+export class AiUsageQuotaError extends Error {
+  readonly action: ChatErrorAction = { labelKey: 'view-usage.label' };
+}
+
+/**
+ * Matches an over-quota rejection (EDGE responds 429) in error text. The typed
+ * {@link UsageQuotaExceededError} is wrapped deep in the cause chain and does not survive the
+ * agent-process boundary — the failure is rendered to a string via `Cause.pretty`, which drops
+ * nested causes — so detection also relies on the HTTP 429 that `@effect/ai`'s
+ * {@link AiError.HttpResponseError} embeds in its message (e.g. "... (429 POST ...").
+ */
+const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota exceeded/i;
+
+/** Whether an error denotes an over-quota (HTTP 429) rejection, detected by typed status or message text. */
+const isQuotaError = (err: unknown): boolean => {
+  if (AiError.isAiError(err)) {
+    if (err._tag === 'HttpResponseError' && err.response.status === 429) {
+      return true;
+    }
+    return QUOTA_PATTERN.test(err.description ?? err.message);
+  }
+  return typeof err === 'string' && QUOTA_PATTERN.test(err);
+};
+
+/**
+ * Maps a failure from the agent fiber to an error suitable for display.
+ * An over-quota (HTTP 429) rejection is surfaced as an actionable usage-limit message; the typed
+ * {@link UsageQuotaExceededError} only survives on the direct path, so {@link isQuotaError} also
+ * recognizes the stringified 429 the chat receives across the agent-process boundary.
+ * Other {@link AiError}s originate from the AI service and are actionable by the user
+ * (e.g., "model 'x' not found", "Connection refused"), so their detail is propagated.
+ * Any other failure is treated as an internal/unexpected error and reported generically
+ * to avoid leaking implementation detail.
+ */
+export const parseError = (err: unknown): Error => {
+  const quotaError = findInCause(err, UsageQuotaExceededError.is);
+  if (quotaError || isQuotaError(err)) {
+    return new AiUsageQuotaError(quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, { cause: err });
+  }
+
+  let message: string | undefined;
+  if (AiError.isAiError(err)) {
+    message = err.description?.trim() || err.message;
+  } else if (typeof err === 'string') {
+    // TODO(burdon): This is brittle.
+    // UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found
+    const [, model] = err.match(/model\s+'([^']+)'\s+not\s+found/i) || [];
+    if (model) {
+      message = `The model is not available: ${model}`;
+    }
+  }
+
+  if (!message) {
+    message = 'An unexpected error occurred.';
+  }
+
+  return new Error(message, { cause: err });
 };
 
 /**
@@ -76,7 +156,7 @@ export type AiRequest = {
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
 export class AiChatProcessor {
-  readonly #registry: Registry.Registry;
+  readonly #registry: AtomRegistry.Registry;
 
   /** Pending messages (finalized, non-streaming). */
   readonly #pending = Atom.make<Message.Message[]>([]);
@@ -91,7 +171,7 @@ export class AiChatProcessor {
   #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
-  #lastRequest: AiRequest | undefined;
+  #lastRequest: ProcessorRequest | undefined;
 
   /** Streaming state. */
   public readonly streaming = Atom.make<boolean>((get) => get(this.#streaming).length > 0);
@@ -113,12 +193,21 @@ export class AiChatProcessor {
   public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
 
   constructor(
-    private readonly _conversation: AiSession,
-    private readonly _runtime: AutomationCapabilities.ComputeRuntime,
+    private readonly _conversation: AiSession.Session,
+    private readonly _runtime: Capabilities.ProcessManagerRuntime,
     private readonly _feed: Feed.Feed,
+    /**
+     * Pre-built layer that materialises {@link SpaceServices}. Built via
+     * {@link ServiceResolver.provide} with the {@link ServiceResolver} already
+     * supplied (hence `RIn = never`); the {@link ServiceNotAvailableError}
+     * error channel surfaces when a tag is not available for the space.
+     * Provided to every effect run by the processor so the underlying
+     * {@link ProcessManagerRuntime} has access to space-affinity services.
+     */
+    private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    this.#registry = this._options.observableRegistry ?? Registry.make();
+    this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -133,8 +222,8 @@ export class AiChatProcessor {
     return this._conversation;
   }
 
-  get blueprintRegistry() {
-    return this._options.blueprintRegistry;
+  get registry() {
+    return this._options.registry;
   }
 
   get system(): string {
@@ -142,7 +231,9 @@ export class AiChatProcessor {
   }
 
   async getTools(): Promise<Record<string, any>> {
-    return this._runtime.runPromise(Effect.provide(this._conversation.getTools(), ToolExecutionServices));
+    return this._runtime.runPromise(
+      Effect.provide(this._conversation.getTools(), ToolExecutionServices).pipe(Effect.provide(this._spaceLayer)),
+    );
   }
 
   async getSystemPrompt(): Promise<string> {
@@ -151,14 +242,18 @@ export class AiChatProcessor {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
+      }).pipe(
+        Effect.provideService(AiContext.Service, { binder: this.context }),
+        Effect.provide(this._spaceLayer),
+        Effect.orDie,
+      ),
     );
   }
 
   /**
    * Initiates a new request via AgentService.
    */
-  async request(requestProp: AiRequest): Promise<void> {
+  async request(requestProp: ProcessorRequest): Promise<void> {
     if (this.#requestFiber) {
       await this.cancel();
     }
@@ -171,7 +266,7 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        log.info('init agent session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
+        log.info('init agent session', { feed: Obj.getURI(this._feed), model: this._options.model });
         const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
@@ -192,31 +287,41 @@ export class AiChatProcessor {
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(requestProp.message);
         log('chat processor submitPrompt returned, waiting for agent', {});
+
+        // On the first message (no name yet), schedule rename immediately so it
+        // runs concurrently with the AI response rather than waiting for completion.
+        if (!this._options.chat?.target?.name) {
+          yield* this.#updateChatName(requestProp.message);
+        }
+
         yield* session.waitForCompletion();
         log.info('session complete');
 
         this.#flushStreaming();
-
-        yield* this.#maybeUpdateChatName();
       });
 
-      this.#requestFiber = this._runtime.runFork(effect);
+      this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
 
-      try {
-        await this._runtime.runPromise(Fiber.join(this.#requestFiber));
-      } catch (err: any) {
-        if (err._tag === 'InterruptedException' || err.message?.includes('interrupted')) {
+      // Inspect the fiber's exit so the underlying failure (e.g. "model 'x' not found") is
+      // preserved as a clean Error rather than an opaque FiberFailure.
+      const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
+      if (Exit.isFailure(exit)) {
+        if (Cause.isInterruptedOnly(exit.cause)) {
+          this.#discardStreaming();
           return;
         }
-        throw err;
+
+        throw EffectEx.causeToError(exit.cause);
       }
 
       this.#registry.set(this.error, Option.none());
       this.#lastRequest = undefined;
       this.#requestFiber = undefined;
     } catch (err) {
+      // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
+      // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
-      this.#registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+      this.#registry.set(this.error, Option.some(parseError(err)));
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
@@ -228,15 +333,19 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await runAndForwardErrors(
+    await EffectEx.runAndForwardErrors(
       Effect.gen(this, function* () {
+        log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-      }),
+        const session = yield* AgentService.getSession(this._feed);
+        yield* session.terminate();
+      }).pipe(Effect.provide(this._spaceLayer)),
     );
 
     this.#requestFiber = undefined;
+    this.#discardStreaming();
     this.#registry.set(this.active, false);
   }
 
@@ -260,7 +369,17 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return;
+    }
+    EffectEx.unwrapExit(
+      await this._runtime.runPromiseExit(
+        Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
+          Effect.provide(this._spaceLayer),
+        ),
+      ),
+    );
   }
 
   /**
@@ -318,6 +437,14 @@ export class AiChatProcessor {
   }
 
   /**
+   * Drop in-flight streaming messages (cancel/interrupt — partial blocks are discarded).
+   */
+  #discardStreaming() {
+    this.#registry.set(this.#streaming, []);
+    this.#finalizedIds.clear();
+  }
+
+  /**
    * Move remaining streaming messages to pending (called when agent completes).
    */
   #flushStreaming() {
@@ -330,23 +457,21 @@ export class AiChatProcessor {
   }
 
   /**
-   * Conditionally schedule chat name update in detached fork mode.
-   * Updates if chat has no name OR based on random chance (default 10%).
+   * Schedule a chat name update as a detached (fire-and-forget) operation.
+   * Called automatically on the first message; can also be invoked manually via the toolbar.
    */
-  #maybeUpdateChatName(): Effect.Effect<void, never, Operation.Service> {
+  #updateChatName(prompt?: string): Effect.Effect<void, never, Operation.Service> {
     const chat = this._options.chat?.target;
     if (!chat) {
       return Effect.void;
     }
 
-    const chance = this._options.autoUpdateNameChance ?? defaultOptions.autoUpdateNameChance ?? 0.1;
-    const shouldUpdate = !chat.name || Math.random() < chance;
-    if (!shouldUpdate) {
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
       return Effect.void;
     }
 
-    // TODO(dmaretskyi): Operation.schedule didn't work.
-    log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(UpdateChatName, { chat });
+    log.info('scheduling chat name update');
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
   }
 }

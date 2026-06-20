@@ -7,9 +7,9 @@ import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
@@ -21,7 +21,7 @@ export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(contact);
-  const workspace = db ? getSpacePath(db.spaceId) : undefined;
+  const workspace = db ? Paths.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
 
@@ -32,14 +32,14 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   useObject(mailbox);
   useObject(calendar);
 
-  const mailboxFeed = mailbox?.feed?.target as Feed.Feed | undefined;
-  const calendarFeed = calendar?.feed?.target as Feed.Feed | undefined;
-  // TODO(wittjosiah): Way to structure this query that does not require type assertions?
-  const messages: Message.Message[] = useQuery(
+  const mailboxFeed = mailbox?.feed?.target;
+  const calendarFeed = calendar?.feed?.target;
+  // The conditional query has a union type that loses inference; reassert the element type.
+  const messages = useQuery(
     db,
     mailboxFeed ? Query.select(Filter.type(Message.Message)).from(mailboxFeed) : Query.select(Filter.nothing()),
   ) as Message.Message[];
-  const events: Event.Event[] = useQuery(
+  const events = useQuery(
     db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
   ) as Event.Event[];
@@ -76,7 +76,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         return;
       }
 
-      const mailboxPath = getObjectPathFromObject(mailbox);
+      const mailboxPath = Paths.getObjectPathFromObject(mailbox);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, { subject: [mailboxPath], workspace });
       await invokePromise(LayoutOperation.Select, {
@@ -93,7 +93,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         return;
       }
 
-      const calendarPath = getObjectPathFromObject(calendar);
+      const calendarPath = Paths.getObjectPathFromObject(calendar);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, { subject: [calendarPath], workspace });
       await invokePromise(LayoutOperation.Select, {

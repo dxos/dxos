@@ -3,14 +3,16 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentType, type PropsWithChildren, type ReactNode, useMemo } from 'react';
+import React, { type ComponentType, type PropsWithChildren, type ReactNode, useEffect, useMemo } from 'react';
 
+import { type Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { File } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Gallery } from '#types';
 
 import { GalleryImage } from '../GalleryImage';
 
@@ -22,7 +24,7 @@ const LIGHTBOX_NAME = 'Lightbox';
  * a plain object (storybook) or a `Snapshot<Gallery>` from `useObject`
  * without an unsafe cast.
  */
-type GalleryLike = { images?: ReadonlyArray<Gallery.Image> };
+type GalleryLike = { images?: ReadonlyArray<Ref.Ref<File.File>> };
 
 type ContextValue = {
   gallery: GalleryLike | undefined;
@@ -38,15 +40,13 @@ const [Provider, useLightboxContext] = createContext<ContextValue>(LIGHTBOX_NAME
 //
 
 type LightboxTileProps = {
-  image: Gallery.Image;
+  file: File.File | undefined;
   index: number;
   onDelete?: () => void;
 };
 
-/** Default Lightbox tile: renders a `GalleryImage` using `image.url` directly. */
-const LightboxTile = ({ image, onDelete }: LightboxTileProps) => (
-  <GalleryImage image={image} url={image.url} onDelete={onDelete} />
-);
+/** Default Lightbox tile: renders a `GalleryImage` from the loaded `File.File`. */
+const LightboxTile = ({ file, onDelete }: LightboxTileProps) => <GalleryImage file={file} onDelete={onDelete} />;
 
 LightboxTile.displayName = `${LIGHTBOX_NAME}.Tile`;
 
@@ -57,7 +57,7 @@ LightboxTile.displayName = `${LIGHTBOX_NAME}.Tile`;
 type LightboxRootProps = PropsWithChildren<{
   gallery: GalleryLike | undefined;
   onDelete?: (index: number) => void;
-  /** Render a single tile. Defaults to `Lightbox.Tile` (`GalleryImage` with `image.url` as src). */
+  /** Render a single tile. Defaults to `Lightbox.Tile` (`GalleryImage` from the loaded `File.File`). */
   Tile?: ComponentType<LightboxTileProps>;
   /** Custom empty-state node. Defaults to a translated message. */
   emptyMessage?: ReactNode;
@@ -87,28 +87,34 @@ type LightboxViewportProps = ThemedClassName<{}>;
  * over it. Owns the `ScrollArea.Root` (via `Masonry.Content`).
  */
 const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((props, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { gallery, onDelete, Tile, emptyMessage } = useLightboxContext(`${LIGHTBOX_NAME}.Viewport`);
-  const images = gallery?.images ?? [];
-  const items = useMemo(
-    () => images.map((image, index) => ({ image, index })),
+  const refs = gallery?.images ?? [];
+
+  // Kick off loads for unresolved refs so `ref.target` populates reactively.
+  useEffect(() => {
+    for (const ref of refs) {
+      if (!ref.target) {
+        void ref.load().catch((err) => log.catch(err));
+      }
+    }
     // Length tracks ECHO-array mutations even when the underlying reference is stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [images, images.length],
+  }, [refs, refs.length]);
+
+  const items = useMemo(
+    () => refs.map((ref, index) => ({ ref, index })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [refs, refs.length],
   );
 
-  // Memoised so the masonry's internal `TileAdapter` (memoised on `[Tile, gutter]`)
-  // doesn't recreate on every render and remount every visible tile.
-  // `data` may be undefined for an instant during a delete transition (the
-  // masonry can call `ItemContent` with a stale index before the items array
-  // change has propagated) — guard rather than throw.
   const MasonryTile = useMemo(
     () =>
-      ({ data }: { data?: { image: Gallery.Image; index: number } }) => {
+      ({ data }: { data?: { ref: Ref.Ref<File.File>; index: number } }) => {
         if (!data) {
           return null;
         }
-        return <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />;
+        return <Tile file={data.ref.target} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />;
       },
     [Tile, onDelete],
   );
@@ -130,9 +136,9 @@ const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((prop
       <Masonry.Content {...composableProps(props)} ref={forwardedRef} centered>
         <Masonry.Viewport
           items={items}
-          // Use the URL as the stable per-tile key — index-based keys would
+          // Use the ref DXN as the stable per-tile key — index-based keys would
           // shift after a deletion and force unrelated tiles to remount.
-          getId={(data?: { image: Gallery.Image; index: number }) => data?.image?.url ?? String(data?.index ?? '')}
+          getId={(data?: { ref: Ref.Ref<File.File>; index: number }) => data?.ref.uri ?? String(data?.index ?? '')}
         />
       </Masonry.Content>
     </Masonry.Root>

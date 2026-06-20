@@ -1,0 +1,73 @@
+---
+id: org.dxos.plugin.sandbox
+name: SandboxPlugin
+version: 0.1.0
+---
+
+Sandbox plugin for DXOS Composer providing isolated shell environments.
+
+## Types
+
+```mdl
+type Sandbox
+  fields:
+    name?: string
+    baseImage?: string
+    createdAt?: string
+    expiresAt?: string
+```
+
+## Operations
+
+```mdl
+op createSandbox
+  desc: Creates a new sandbox environment persisted as an ECHO object in the space.
+  input:
+    name?: string
+    baseImage?: string
+  output:
+    sandboxId: string    # ECHO object URI of the created sandbox
+  effects: [echo:write, sandbox:create]
+```
+
+```mdl
+op exec
+  desc: Runs a shell command in the sandbox.
+  input:
+    sandbox: Ref<Sandbox>
+    command: string
+    cwd?: string
+    env?: Record<string, string>
+    timeout?: number
+    stdin?: string
+  output:
+    stdout: string
+    stderr: string
+    exitCode: number
+    success: boolean
+  effects: [sandbox:exec]
+```
+
+```mdl
+op uploadFile
+  desc: Uploads a file from ECHO into the sandbox filesystem.
+  input:
+    sandbox: Ref<Sandbox>
+    file: Ref<File>
+    path: string         # absolute path in sandbox
+  output:
+    path: string
+  effects: [echo:read, sandbox:write]
+```
+
+```mdl
+op downloadFile
+  desc: Downloads a file from the sandbox filesystem into ECHO.
+  input:
+    sandbox: Ref<Sandbox>
+    path: string
+    dest?: Ref<File>     # optional existing File to overwrite
+  output:
+    objectId: string     # ECHO object URI of the File
+  effects: [sandbox:read, echo:write]
+```

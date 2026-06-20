@@ -12,10 +12,10 @@
       }
 
       &:focus-visible {
-        @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-neutral-focus-indicator)];
+        @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)];
 
         &[data-variant='primary'] {
-          @apply ring-[var(--color-accent-focus-indicator)];
+          @apply ring-[var(--color-focus-ring)];
         }
 
         &:hover {
@@ -45,10 +45,10 @@
       }
 
       &:focus {
-        @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-neutral-focus-indicator)];
+        @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)];
 
         &[data-variant='primary'] {
-          @apply ring-[var(--color-accent-focus-indicator)];
+          @apply ring-[var(--color-focus-ring)];
         }
 
         &:hover {
@@ -79,10 +79,10 @@
   .dx-focus-ring-group:focus-visible .dx-focus-ring-group-indicator,
   .dx-focus-ring-group-x:focus-visible .dx-focus-ring-group-x-indicator,
   .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
-    @apply ring-focus-line ring-offset-focus-offset ring-[var(--color-neutral-focus-indicator)];
+    @apply ring-focus-line ring-offset-focus-offset ring-[var(--color-focus-ring-subtle)];
 
     &[data-variant='primary'] {
-      @apply ring-[var(--color-accent-focus-indicator)];
+      @apply ring-[var(--color-focus-ring)];
     }
 
     &:hover {
@@ -97,10 +97,10 @@
   .dx-focus-ring-group-always:focus .dx-focus-ring-group-indicator,
   .dx-focus-ring-group-x-always:focus .dx-focus-ring-group-x-indicator,
   .dx-focus-ring-group-y-always:focus .dx-focus-ring-group-y-indicator {
-    @apply ring-focus-line ring-offset-focus-offset ring-[var(--color-neutral-focus-indicator)];
+    @apply ring-focus-line ring-offset-focus-offset ring-[var(--color-focus-ring-subtle)];
 
     &[data-variant='primary'] {
-      @apply ring-[var(--color-accent-focus-indicator)];
+      @apply ring-[var(--color-focus-ring)];
     }
 
     &:hover {
@@ -145,11 +145,11 @@
 
       &:focus-visible {
         &::after {
-          @apply ring-focus-line ring-offset-focus-offset ring-inset z-[1] ring-[var(--color-neutral-focus-indicator)];
+          @apply ring-focus-line ring-offset-focus-offset ring-inset z-[1] ring-[var(--color-focus-ring-subtle)];
         }
 
         &[data-variant='primary']::after {
-          @apply ring-[var(--color-accent-focus-indicator)];
+          @apply ring-[var(--color-focus-ring)];
         }
 
         &:hover {
@@ -178,11 +178,11 @@
 
       &:focus {
         &::after {
-          @apply ring-focus-line ring-offset-focus-offset ring-inset z-[1] ring-[var(--color-neutral-focus-indicator)];
+          @apply ring-focus-line ring-offset-focus-offset ring-inset z-[1] ring-[var(--color-focus-ring-subtle)];
         }
 
         &[data-variant='primary']::after {
-          @apply ring-[var(--color-accent-focus-indicator)];
+          @apply ring-[var(--color-focus-ring)];
         }
 
         &:hover {

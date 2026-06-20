@@ -14,15 +14,16 @@ import React, {
   type CSSProperties,
   type PropsWithChildren,
   type ReactNode,
+  type Ref,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { type AllowedAxis } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { type AllowedAxis, composable, composableProps } from '@dxos/react-ui';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
@@ -60,6 +61,11 @@ type MosaicContainerContextValue<TData = any, Location = LocationType> = {
   /** Set the current item by ID. */
   setCurrentId: (id: string | undefined) => void;
 
+  /** IDs of selected (aria-selected) items. */
+  selectedIds?: ReadonlySet<string>;
+  /** Request to set or unset selection on an item by ID. */
+  setSelected: (id: string, selected: boolean) => void;
+
   /** Register a scroll-to-item callback (provided by Stack/VirtualStack). */
   registerScrollTo: (fn: ((id: string) => void) | undefined) => void;
 };
@@ -76,20 +82,34 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
+/** Imperative handle for scrolling a stack to an item without changing the current/selected item. */
+export type MosaicScrollController = {
+  scrollToItem: (id: string) => void;
+};
+
 type MosaicContainerProps = PropsWithChildren<
   Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
     asChild?: boolean;
     /** Support autoscrolling container when dragging. */
     autoScroll?: HTMLElement | null;
     withFocus?: boolean;
+    /** Imperative handle to scroll the stack to an item (decoupled from selection). */
+    controllerRef?: Ref<MosaicScrollController>;
     /** Controlled current-item ID. */
     currentId?: string;
     /** Called when a tile requests to become current. */
     onCurrentChange?: (id: string | undefined) => void;
+    /** Controlled set of selected item IDs. */
+    selectedIds?: ReadonlySet<string>;
+    /** Called when a tile requests to toggle selection. */
+    onSelectionChange?: (id: string, selected: boolean) => void;
     debug?: () => ReactNode;
   }
 >;
 
+/**
+ * Container for a Mosaic layout.
+ */
 // TODO(burdon): Make generic.
 const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
   (
@@ -100,8 +120,11 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       asChild,
       autoScroll: autoscrollElement,
       withFocus,
+      controllerRef,
       currentId,
       onCurrentChange,
+      selectedIds,
+      onSelectionChange,
       debug,
       ...props
     },
@@ -126,12 +149,19 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
     const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
+    const setSelected = useCallback(
+      (id: string, selected: boolean) => onSelectionChange?.(id, selected),
+      [onSelectionChange],
+    );
 
     // Scroll-to-item: Stack/VirtualStack registers its implementation.
     const scrollToRef = useRef<((id: string) => void) | undefined>(undefined);
     const registerScrollTo = useCallback((fn: ((id: string) => void) | undefined) => {
       scrollToRef.current = fn;
     }, []);
+
+    // Imperative scroll-to-item, decoupled from selection (e.g. a calendar scrolling the stack to a day).
+    useImperativeHandle(controllerRef, () => ({ scrollToItem: (id: string) => scrollToRef.current?.(id) }), []);
 
     // When currentId changes, scroll the matching item into view.
     useEffect(() => {
@@ -283,6 +313,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
         currentId={currentId}
         setCurrentId={setCurrentId}
+        selectedIds={selectedIds}
+        setSelected={setSelected}
         registerScrollTo={registerScrollTo}
       >
         <Comp

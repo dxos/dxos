@@ -8,10 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
-import { NativeFilesystemCapabilities } from '../types';
-import { RefreshDirectory } from './definitions';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '../types';
 
-export default RefreshDirectory.pipe(
+export default NativeFilesystemOperation.RefreshDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

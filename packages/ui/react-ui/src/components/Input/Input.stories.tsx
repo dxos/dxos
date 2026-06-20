@@ -10,17 +10,23 @@ import { type MessageValence } from '@dxos/ui-types';
 import { withLayoutVariants, withTheme } from '../../testing';
 import {
   type CheckboxProps,
+  type DateInputProps,
+  type DateTimeInputProps,
   Input,
   type PinInputProps,
   type SwitchProps,
   type TextAreaProps,
   type TextInputProps,
+  type TimeProps,
 } from './Input';
 
 type VariantMap = {
   text: TextInputProps;
   pin: PinInputProps;
   textarea: TextAreaProps;
+  time: TimeProps;
+  date: DateInputProps;
+  datetime: DateTimeInputProps;
   checkbox: CheckboxProps;
   switch: SwitchProps;
 };
@@ -54,6 +60,9 @@ const DefaultStory = ({
       {kind === 'text' && <Input.TextInput {...props} />}
       {kind === 'pin' && <Input.PinInput {...props} />}
       {kind === 'textarea' && <Input.TextArea {...props} />}
+      {kind === 'time' && <Input.Time {...props} />}
+      {kind === 'date' && <Input.Date {...props} />}
+      {kind === 'datetime' && <Input.DateTime {...props} />}
       {kind === 'checkbox' && <Input.Checkbox {...props} />}
       {kind === 'switch' && <Input.Switch {...props} />}
 
@@ -76,34 +85,17 @@ export default meta;
 
 type Story = StoryObj<DefaultStoryProps & Variant>;
 
-export const DensityCoarse: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is an input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'coarse',
-  },
-};
-
-export const DensityFine: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is a density:fine input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'fine',
-  },
+export const Density: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4'>
+      {(['lg', 'md', 'sm', 'xs'] as const).map((density) => (
+        <Input.Root key={density}>
+          <Input.Label>{`density="${density}"`}</Input.Label>
+          <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
 };
 
 export const Subdued: Story = {
@@ -186,8 +178,84 @@ export const PinInput: Story = {
     length: 6,
     description: 'Type in secret you received',
     pattern: '\\d*',
-    density: 'coarse',
+    density: 'lg',
   },
+};
+
+export const Time: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time',
+    defaultValue: '09:30',
+  },
+};
+
+export const TimeUncontrolled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (uncontrolled)',
+    defaultValue: '14:00',
+  },
+};
+
+export const TimeAmPm: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (12-hour, AM/PM)',
+    defaultValue: '14:00',
+    hourCycle: 12,
+  } as any,
+};
+
+export const TimeDisabled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (disabled)',
+    defaultValue: '12:00',
+    disabled: true,
+  },
+};
+
+export const Date: Story = {
+  args: {
+    kind: 'date',
+    label: 'Date',
+    defaultValue: '1990-05-12',
+  },
+};
+
+export const DateTime: Story = {
+  args: {
+    kind: 'datetime',
+    label: 'Date & time',
+    defaultValue: '2026-06-01T15:30',
+  },
+};
+
+export const DateWithPicker: Story = {
+  render: () => (
+    <Input.Root>
+      <Input.Label>Date (with picker)</Input.Label>
+      <div className='flex items-center gap-1'>
+        <Input.Date defaultValue='2026-06-01' />
+        <Input.TriggerIcon />
+      </div>
+      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
+    </Input.Root>
+  ),
+};
+
+export const DateTimeWithPicker: Story = {
+  render: () => (
+    <Input.Root>
+      <Input.Label>Date & time (with picker)</Input.Label>
+      <div className='flex items-center gap-1'>
+        <Input.DateTime defaultValue='2026-06-01T15:30' />
+        <Input.TriggerIcon />
+      </div>
+      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
+    </Input.Root>
+  ),
 };
 
 export const Checkbox: Story = {
@@ -205,4 +273,39 @@ export const Switch: Story = {
     label: 'This is a switch',
     description: 'On or off',
   },
+};
+
+/**
+ * Native HTML input types. `Input.TextInput` accepts every standard
+ * `<input type="…">` value via its `type` prop; this story exercises the most
+ * commonly used ones so the rendering across themes/browsers can be
+ * inspected at a glance.
+ */
+const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
+  { type: 'text', placeholder: 'Plain text' },
+  { type: 'email', placeholder: 'name@example.com' },
+  { type: 'password', placeholder: '••••••••' },
+  { type: 'search', placeholder: 'Search…' },
+  { type: 'tel', placeholder: '+1 (555) 555-5555' },
+  { type: 'url', placeholder: 'https://example.com' },
+  { type: 'number', placeholder: '42' },
+  { type: 'date', placeholder: '' },
+  { type: 'time', placeholder: '' },
+  { type: 'datetime-local', placeholder: '' },
+  { type: 'month', placeholder: '' },
+  { type: 'week', placeholder: '' },
+  { type: 'color', placeholder: '' },
+];
+
+export const TextInputTypes: Story = {
+  render: () => (
+    <div className='flex flex-col gap-3 min-w-[24rem]'>
+      {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
+        <Input.Root key={type}>
+          <Input.Label>{`type="${type}"`}</Input.Label>
+          <Input.TextInput type={type} placeholder={placeholder} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
 };

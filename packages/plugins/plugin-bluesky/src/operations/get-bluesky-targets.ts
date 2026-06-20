@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { BLUESKY_TARGET } from '../constants';
 import { IntegrationDatabaseMissingError } from '../errors';

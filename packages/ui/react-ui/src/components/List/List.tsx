@@ -24,12 +24,12 @@ import {
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
+import { DensityProvider } from '../../primitives';
+import { composable, composableProps } from '../../util';
 import { type ThemedClassName } from '../../util';
-import { DensityProvider } from '../DensityProvider';
 import { Icon } from '../Icon';
 import { ListDropIndicator } from './ListDropIndicator';
 
@@ -75,7 +75,7 @@ const MockListItemOpenTrigger = ({
 }: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
   const density = useDensityContext();
   const { tx } = useThemeContext();
-  return <div role='none' {...props} className={tx('list.item.openTrigger', { density }, classNames)} />;
+  return <div {...props} className={tx('list.item.openTrigger', { density }, classNames)} />;
 };
 
 type ListItemHeadingProps = ThemedClassName<ListPrimitiveItemHeadingProps>;

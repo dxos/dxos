@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-markdown",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,77 +8,117 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": "./src/blueprints/index.ts",
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
     "#capabilities": {
-      "browser": "./src/capabilities/index.ts",
-      "node": "./src/capabilities/node.ts",
-      "default": "./src/capabilities/index.ts"
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/neutral/capabilities/node.mjs",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
-    "#components": "./src/components/index.ts",
-    "#containers": "./src/containers/index.ts",
-    "#hooks": "./src/hooks/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/neutral/hooks/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
     "#plugin": {
-      "browser": "./src/MarkdownPlugin.tsx",
-      "node": "./src/MarkdownPlugin.node.ts",
-      "default": "./src/MarkdownPlugin.tsx"
+      "source": {
+        "workerd": "./src/MarkdownPlugin.workerd.ts",
+        "node": "./src/MarkdownPlugin.node.ts",
+        "default": "./src/MarkdownPlugin.tsx"
+      },
+      "types": "./dist/types/src/MarkdownPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/MarkdownPlugin.workerd.mjs",
+      "node": "./dist/lib/neutral/MarkdownPlugin.node.mjs",
+      "default": "./dist/lib/neutral/MarkdownPlugin.mjs"
     },
-    "#testing": "./src/testing.ts",
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./blueprints": {
       "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts",
-      "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs"
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "browser": "./dist/lib/browser/operations/index.mjs",
-      "node": "./dist/lib/node-esm/operations/index.mjs"
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
-      "browser": "./dist/lib/browser/testing.mjs",
-      "node": "./dist/lib/node-esm/testing.mjs"
+      "default": "./dist/lib/neutral/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
-    "@codemirror/search": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
@@ -86,37 +126,31 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",

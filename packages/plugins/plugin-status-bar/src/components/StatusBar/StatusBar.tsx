@@ -73,7 +73,7 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 type StartContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
-  <div role='none' className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+  <div className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
     {children}
   </div>
 ));
@@ -85,7 +85,7 @@ const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames
 type EndContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
-  <div role='none' className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+  <div className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
     {children}
   </div>
 ));

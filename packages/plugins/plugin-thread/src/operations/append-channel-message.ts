@@ -6,31 +6,26 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Obj } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Message } from '@dxos/types';
 
-import { AppendChannelMessage } from './definitions';
+import { ThreadCapabilities, ThreadOperation, resolveProvider } from '../types';
 
-const handler: Operation.WithHandler<typeof AppendChannelMessage> = AppendChannelMessage.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* ({ channel, sender, text }) {
-      const db = Obj.getDatabase(channel);
-      invariant(db, 'Database not found');
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.get(db.spaceId);
-      invariant(space, 'Space not found');
+const handler: Operation.WithHandler<typeof ThreadOperation.AppendChannelMessage> =
+  ThreadOperation.AppendChannelMessage.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ channel, sender, text }) {
+        const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
+        const provider = resolveProvider(providers, channel.backend.kind);
+        invariant(provider, `No channel backend for kind: ${channel.backend.kind}`);
 
-      const feed = yield* Database.load(channel.feed);
-      const message = Message.make({
-        sender,
-        blocks: [{ _tag: 'text', text }],
-      });
-      yield* Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
-    }),
-  ),
-);
+        const message = Message.make({
+          sender,
+          blocks: [{ _tag: 'text', text }],
+        });
+        yield* provider.send(channel, message);
+      }),
+    ),
+  );
 
 export default handler;

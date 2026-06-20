@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
@@ -25,7 +25,7 @@ const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
  */
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
@@ -61,24 +61,26 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         >
           <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Menu.Trigger asChild disabled={!menuItems?.length}>
-                  <Toolbar.IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    label={t('action-menu.label')}
-                  />
-                </Menu.Trigger>
-                <Menu.Content items={menuItems} />
-              </Card.Toolbar>
-              <Card.Content>
+                <Card.Block end>
+                  <Menu.Trigger asChild disabled={!menuItems?.length}>
+                    <IconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--dots-three-vertical--regular'
+                      label={t('action-menu.label')}
+                    />
+                  </Menu.Trigger>
+                  <Menu.Content items={menuItems} />
+                </Card.Block>
+              </Card.Header>
+              <Card.Body>
                 {projection && (
                   <Surface.Surface
-                    type={AppSurface.Card}
+                    type={AppSurface.CardContent}
                     limit={1}
                     data={{
                       subject: data,
@@ -89,7 +91,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
                     }}
                   />
                 )}
-              </Card.Content>
+              </Card.Body>
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

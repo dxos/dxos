@@ -7,10 +7,10 @@ import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Obj, Query, Type } from '@dxos/echo';
-import { type View } from '@dxos/echo';
-import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { ObjectId } from '@dxos/keys';
+import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { Format, FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { EntityId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Kanban } from '#types';
@@ -36,14 +36,9 @@ const KanbanTaskSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.kanban-task',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0')));
 
-type KanbanTask = Schema.Schema.Type<typeof KanbanTaskSchema>;
+type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
 
 describe('useKanbanBoardModel', () => {
   let registry: Registry.Registry;
@@ -160,15 +155,15 @@ describe('useKanbanBoardModel', () => {
 
   test('getItems returns items in column ordered by arrangement ids', ({ expect }) => {
     const item1 = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const item2 = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const item3 = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const items: KanbanTask[] = [item1, item2, item3];
@@ -201,11 +196,11 @@ describe('useKanbanBoardModel', () => {
 
   test('subscribing to one column items atom does not fire when another column changes', ({ expect }) => {
     const itemA = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const itemB = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'b',
     });
     const items: KanbanTask[] = [itemA, itemB];

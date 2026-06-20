@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 
 import { FormBuilder } from '@dxos/cli-util';
 import { Operation } from '@dxos/compute';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 
@@ -20,11 +20,12 @@ export const getFunctionStatus = (
   fn: Operation.PersistentOperation,
   functions: Operation.PersistentOperation[],
 ): FunctionStatus => {
-  const dbFunction = functions.find((f) => f.key === fn.key);
+  const fnKey = Obj.getMeta(fn).key;
+  const dbFunction = functions.find((f) => Obj.getMeta(f).key === fnKey);
   if (!dbFunction) {
     return 'not imported';
   }
-  if (dbFunction.version === fn.version && dbFunction.updated === fn.updated) {
+  if (Obj.getMeta(dbFunction).version === Obj.getMeta(fn).version && dbFunction.updated === fn.updated) {
     return 'up-to-date';
   }
 
@@ -36,9 +37,9 @@ export const getFunctionStatus = (
  */
 export const printFunction = (fn: Operation.PersistentOperation, status?: FunctionStatus) => {
   return FormBuilder.make({ title: fn.id }).pipe(
-    FormBuilder.set('key', fn.key),
+    FormBuilder.set('key', Obj.getMeta(fn).key),
     FormBuilder.set('name', fn.name),
-    FormBuilder.set('version', fn.version),
+    FormBuilder.set('version', Obj.getMeta(fn).version),
     FormBuilder.set('uploaded', fn.updated),
     FormBuilder.when(
       status != null,
@@ -90,7 +91,7 @@ export const printInvokeResult = (result: unknown) => {
  */
 export const selectDeployedFunction = Effect.fn(function* (fns: Operation.PersistentOperation[]) {
   // Query database for existing functions to determine status
-  const dbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+  const dbFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
 
   // Filter out functions that are already up-to-date
   const importableFunctions = fns.filter((fn) => {
@@ -106,12 +107,13 @@ export const selectDeployedFunction = Effect.fn(function* (fns: Operation.Persis
     message: 'Select a function to import:',
     choices: importableFunctions.map((fn) => {
       const status = getFunctionStatus(fn, dbFunctions);
-      const title = `${fn.name ?? fn.key}${status === 'update available' ? ' (update)' : ''}`;
-      const description = `${fn.key} (v${fn.version})${fn.description ? `: ${fn.description}` : ''}`;
+      const meta = Obj.getMeta(fn);
+      const title = `${fn.name ?? meta.key}${status === 'update available' ? ' (update)' : ''}`;
+      const description = `${meta.key} (v${meta.version})${fn.description ? `: ${fn.description}` : ''}`;
 
       return {
         title,
-        value: fn.key,
+        value: meta.key ?? fn.id,
         description,
       };
     }),

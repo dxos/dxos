@@ -3,14 +3,14 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { View } from '@dxos/echo';
-import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
+import { Type, View } from '@dxos/echo';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { ProjectionModel } from '@dxos/schema';
 
-import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
 
@@ -19,7 +19,7 @@ const { Default } = composeStories(stories);
 const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
-  expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
+  expect(Type.isType(debugObjects.type)).toBe(true);
   expect(isInstanceOf(View.View, debugObjects.view)).toBeTruthy();
   expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   return debugObjects;
@@ -35,8 +35,12 @@ const waitForViewEditor = async () => {
 };
 
 describe('ViewEditor', () => {
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    // Wrap cleanup in async act() so React fully drains the scheduler
+    // (including setImmediate callbacks) before happy-dom tears down window.
+    await act(async () => {
+      cleanup();
+    });
   });
 
   test('renders view editor', async () => {
@@ -68,7 +72,7 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check schema contains new_property.
-    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    const schemaProperties = debugObjects.type.jsonSchema.properties;
     expect(schemaProperties).toBeDefined();
     expect(schemaProperties!.new_property).toBeDefined();
     expect(schemaProperties!.name).toBeUndefined();
@@ -116,7 +120,7 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check schema contains added_property.
-    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    const schemaProperties = debugObjects.type.jsonSchema.properties;
     expect(schemaProperties).toBeDefined();
     expect(schemaProperties!.added_property).toBeDefined();
 
@@ -160,7 +164,7 @@ describe('ViewEditor', () => {
     const debugObjects = getViewEditorDebugObjects();
 
     // Check schema no longer contains the name property.
-    const schemaProperties = debugObjects.schema.jsonSchema.properties;
+    const schemaProperties = debugObjects.type.jsonSchema.properties;
     expect(schemaProperties).toBeDefined();
     expect(schemaProperties!.name).toBeUndefined();
 

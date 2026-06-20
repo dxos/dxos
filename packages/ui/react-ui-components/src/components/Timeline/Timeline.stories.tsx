@@ -3,13 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { LogLevel, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Panel, ScrollContainer, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
@@ -250,27 +249,25 @@ export const ExecutionGraph: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
   render: () => {
     const slice = 0;
-    const [space] = useSpaces();
-    const queue = useMemo(() => space?.queues.create(), [space]);
+    const [items, setItems] = useState<Obj.Unknown[]>([]);
     useAsyncEffect(async () => {
-      const objects = await Promise.all(research.map((obj) => Obj.fromJSON(obj)));
+      const objects = (await Promise.all(research.map((obj) => Obj.fromJSON(obj)))) as Obj.Unknown[];
       if (slice > 0) {
-        await queue?.append(objects.slice(0, slice));
+        setItems(objects.slice(0, slice));
         return;
       }
 
       let i = 0;
-      const interval = setInterval(async () => {
-        const obj = objects[i];
-        await queue?.append([obj]);
+      const interval = setInterval(() => {
+        setItems((prev) => [...prev, objects[i]]);
         if (++i >= objects.length) {
           clearInterval(interval);
         }
       }, 1000);
 
       return () => clearInterval(interval);
-    }, [queue]);
-    const { branches, commits } = useExecutionGraph(queue);
+    }, []);
+    const { branches, commits } = useExecutionGraph(items);
     log.info('execution graph', { branches, commits });
     return <Timeline branches={branches} commits={commits} showTimestamp />;
   },
@@ -363,7 +360,7 @@ const toolCalls = [
         toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
         name: 'dxos_org_function_create_research_note',
         input:
-          '{"target":"01K616WQVB7MJJPYXFKCAND1KC","name":"DXOS Organization Research Summary","content":"Based on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\\n\\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\\n\\nKey contact identified: @dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T\\n\\n<object><dxn>dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T</dxn></object>"}',
+          '{"target":"01K616WQVB7MJJPYXFKCAND1KC","name":"DXOS Organization Research Summary","content":"Based on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\\n\\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\\n\\nKey contact identified: @echo://BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP/01K616X0C5ZK6NMRDSAHX1VD7T\\n\\n<object><dxn>echo://BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP/01K616X0C5ZK6NMRDSAHX1VD7T</dxn></object>"}',
         providerExecuted: false,
       },
       {
@@ -479,7 +476,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01Diussd9i7CVjeaq8hc1AbU',
         name: 'dxos_org_function_research',
         result:
-          '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:org.dxos.type.person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
+          '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: echo://BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP/01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:org.dxos.type.person:0.1.0","@uri":"echo://BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP/01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
         providerExecuted: false,
       },
     ],
@@ -539,12 +536,12 @@ const testExecutionGraph = [
     blocks: [
       {
         _tag: 'text',
-        text: "I apologize for the error. It seems there's an issue with creating the research note for the provided organization ID. The research was conducted successfully, and here's what I found about DXOS:\n\nBased on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\n\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\n\nA test contact was identified during the research: @dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T\n\n",
+        text: "I apologize for the error. It seems there's an issue with creating the research note for the provided organization ID. The research was conducted successfully, and here's what I found about DXOS:\n\nBased on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\n\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\n\nA test contact was identified during the research: @echo://BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP/01K616X0C5ZK6NMRDSAHX1VD7T\n\n",
       },
       // {
       //   _tag: 'reference',
       //   reference: {
-      //     '/': 'dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T',
+      //     '/': 'echo://BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP/01K616X0C5ZK6NMRDSAHX1VD7T',
       //   },
       // },
       {

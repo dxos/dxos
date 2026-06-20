@@ -21,7 +21,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor, type UseTextEditor } from '@dxos/react-ui-editor';
 import {
@@ -37,7 +37,7 @@ import {
   navigatePreviousEffect,
   preview,
   scroller,
-  scrollerLineEffect,
+  crawlerLineEffect,
   fader,
   typewriter,
   typewriterBypass,
@@ -45,10 +45,10 @@ import {
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
-  autoScroll,
   documentSlots,
   xmlFormatting,
   xmlBlockDecoration,
+  lineSpacing,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -213,14 +213,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div role='none' className={mx('dx-container', classNames)} ref={parentRef} />
+        <div className={mx('dx-container', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id} role='none'>
-              {createPortal(<Component view={view} {...props} />, root)}
-            </div>
+            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
           {footerRoot && footerVisible && createPortal(footer, footerRoot)}
         </ErrorBoundary>
@@ -272,12 +270,16 @@ const useMarkdownStreamTextEditor = (
           [
             extendedMarkdown({ registry }),
             decorateMarkdown({
-              // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
+              // `echo:`/`dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
               // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
               // non-functional `LinkButton` anchor on top of the same node — e.g. for
-              // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
-              skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+              // `[DXOS](echo://BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ/01KQ889PZBRNHAEECV0ANFAYX7)`.
+              skip: (node) =>
+                (node.name === 'Link' || node.name === 'Image') &&
+                (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
+            // TODO(burdon): Make optional; Removes need for '\n\n'.
+            lineSpacing(),
             preview(),
             // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
             // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
@@ -285,12 +287,11 @@ const useMarkdownStreamTextEditor = (
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass: 'cm-prompt-line my-8',
-              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
+              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 box-decoration-clone rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            scroller({ overScroll: 80 }),
-            options?.autoScroll && autoScroll(),
+            scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
               typewriter({
                 cursor: options?.cursor,
@@ -358,7 +359,7 @@ const useMarkdownStreamQueue = (
     );
 
     return () => {
-      void runAndForwardErrors(Fiber.interrupt(fork));
+      void EffectEx.runAndForwardErrors(Fiber.interrupt(fork));
     };
   }, [view, queue, chunkSize, delayMs]);
 };
@@ -392,7 +393,7 @@ const createMarkdownStreamController = ({
     /** Scroll to bottom. */
     scrollToBottom: (behavior?: ScrollBehavior) => {
       viewRef.current?.dispatch({
-        effects: scrollerLineEffect.of({ line: -1, behavior }),
+        effects: crawlerLineEffect.of({ line: -1, behavior }),
       });
     },
 
@@ -431,7 +432,7 @@ const createMarkdownStreamController = ({
         // collected several streaming partials before React rendered.
         const queue = queueRef.current;
         if (queue) {
-          await runAndForwardErrors(Queue.offer(queue, text));
+          await EffectEx.runAndForwardErrors(Queue.offer(queue, text));
         }
       }
     },

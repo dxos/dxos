@@ -4,15 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { ClientPlugin } from '@dxos/plugin-client';
-import { IntegrationPlugin } from '@dxos/plugin-integration';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SlackPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('SlackPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -21,8 +21,8 @@ describe('SlackPlugin', () => {
     });
 
     // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupOperationHandler fires from
-    // OperationPlugin — both reach the SlackPlugin's modules.
+    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // ProcessManagerPlugin — both reach the SlackPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('SlackIntegrationProvider'), moduleId('OperationHandler')]),
     );

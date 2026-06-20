@@ -9,6 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/OpfsPool.ts'
       - '--entryPoint=src/SqliteClient.ts'
       - '--entryPoint=src/OpfsWorker.ts'
       - '--entryPoint=src/SqliteMigrator.ts'

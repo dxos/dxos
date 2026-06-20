@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '#containers';
+import { JournalArticle, OutlineCard, OutlineArticle, QuickEntryDialog } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal, Outline } from '#types';
 
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Journal.Journal),
         ),
         component: ({ role, data }) => (
-          <JournalContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <JournalArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
@@ -35,12 +35,12 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Outline.Outline),
         ),
         component: ({ role, data }) => (
-          <OutlineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <OutlineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'card.outline',
-        filter: AppSurface.object(AppSurface.Card, Outline.Outline),
+        filter: AppSurface.object(AppSurface.CardContent, Outline.Outline),
         component: ({ data }) => <OutlineCard subject={data.subject} />,
       }),
       Surface.create({

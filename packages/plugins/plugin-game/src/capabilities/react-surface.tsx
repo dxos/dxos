@@ -27,8 +27,8 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'game-card',
-        filter: AppSurface.object(AppSurface.Card, Game),
+        id: 'gameCard',
+        filter: AppSurface.object(AppSurface.CardContent, Game),
         component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
       }),
     ]),

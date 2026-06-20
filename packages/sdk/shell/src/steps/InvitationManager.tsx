@@ -57,7 +57,7 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
             </p>
-            <div role='none' className={mx('text-description', 'w-full max-w-[14rem] relative')}>
+            <div className={mx('text-description', 'w-full max-w-[14rem] relative')}>
               <QR
                 rounding={100}
                 backgroundColor='transparent'

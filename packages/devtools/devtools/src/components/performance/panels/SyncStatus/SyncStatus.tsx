@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type PeerSyncState, type SpaceId, type SpaceSyncStateMap } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/keys';
+import { type FeedSyncStateMap, type PeerSyncState, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -13,14 +14,15 @@ import { SpaceRowContainer } from './Space';
 export type SyncStatusProps = ThemedClassName<{
   state: SpaceSyncStateMap;
   summary: PeerSyncState;
+  feedState?: FeedSyncStateMap;
   debug?: boolean;
 }>;
 
-export const SyncStatus = ({ classNames, state }: SyncStatusProps) => {
+export const SyncStatus = ({ classNames, state, feedState }: SyncStatusProps) => {
   const entries = Object.entries(state);
 
   const handleCopyRaw = () => {
-    void navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+    void navigator.clipboard.writeText(JSON.stringify({ automerge: state, feed: feedState }, null, 2));
   };
 
   return (
@@ -28,9 +30,14 @@ export const SyncStatus = ({ classNames, state }: SyncStatusProps) => {
       <div className='flex items-center gap-2'>
         <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
       </div>
-      <div>
+      <div className='flex flex-col divide-y divide-separator'>
         {entries.map(([spaceId, state]) => (
-          <SpaceRowContainer key={spaceId} spaceId={spaceId as SpaceId} state={state} />
+          <SpaceRowContainer
+            key={spaceId}
+            spaceId={spaceId as SpaceId}
+            state={state}
+            feedState={feedState?.[spaceId as SpaceId]}
+          />
         ))}
       </div>
     </div>

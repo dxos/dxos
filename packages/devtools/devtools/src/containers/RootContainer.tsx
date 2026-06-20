@@ -15,7 +15,7 @@ export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div role='none' className='dx-container flex'>
+    <div className='dx-container flex'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
         <ErrorBoundary key={pathname} name='devtools.root'>
@@ -39,7 +39,7 @@ const Sidebar = () => {
             <div className='flex text-sm ps-4 py-1'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, icon }) => (
-                <div key={id} className={mx('flex items-center ps-4 gap-2', id === pathname && 'bg-active-surface')}>
+                <div key={id} className={mx('flex items-center ps-4 gap-2', id === pathname && 'bg-current-surface')}>
                   <Icon icon={icon} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
