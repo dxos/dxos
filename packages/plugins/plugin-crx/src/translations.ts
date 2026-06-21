@@ -12,6 +12,8 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Browser Extension',
         'settings.title': 'Browser extension',
+        'settings.description':
+          'Install the extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/composer/ahkmmpagcinoehpnmdhoiohmmbikhnmj?pli=1).',
         'test.title': 'Connection',
         'test.button.label': 'Test connection',
         'test.pending.message': 'Contacting extension…',

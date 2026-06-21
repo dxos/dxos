@@ -6,6 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type Label, ScrollArea, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -59,6 +60,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <h2 className='px-trim-md mt-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
+      {description && <MarkdownView content={toLocalizedString(description, t)} />}
       {description && <p className='px-trim-md text-description'>{toLocalizedString(description, t)}</p>}
       <div className='w-full pt-trim-md space-y-trim-md'>{children}</div>
     </>

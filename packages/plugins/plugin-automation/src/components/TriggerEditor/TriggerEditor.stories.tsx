@@ -112,8 +112,5 @@ export const CreateFeedTrigger: Story = createKindStory('feed', /^Feed/);
 /** Create a Query (subscription) trigger via the picker. */
 export const CreateQueryTrigger: Story = createKindStory('subscription', /^Query/);
 
-/** Create a Webhook trigger via the picker. */
-export const CreateWebhookTrigger: Story = createKindStory('webhook', /^Webhook/);
-
-/** Create an Email trigger via the picker. */
-export const CreateEmailTrigger: Story = createKindStory('email', /^Email/);
+// Webhook and Email kinds are gated off in `TriggerKindSelector` (disabled options), so they cannot be
+// created via the picker; their create-stories are omitted until those kinds are enabled.

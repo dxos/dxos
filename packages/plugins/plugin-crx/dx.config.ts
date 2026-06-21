@@ -18,6 +18,8 @@ export default Config2.make({
 
       Saved items land in your active space alongside everything else you're working on,
       complete with a link back to the original page.
+
+      Install the extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/composer/ahkmmpagcinoehpnmdhoiohmmbikhnmj?pli=1).
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crx',
     icon: { key: 'ph--browser--regular', hue: 'orange' },
