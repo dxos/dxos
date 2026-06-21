@@ -157,14 +157,14 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const { variant = 'default' } = useFormContext(FORM_FIELD_WRAPPER_NAME);
   const styles = formTheme.styles({ variant });
   const { showDescription } = formTheme.behavior[variant];
-  const resolved = presentationFor(presentation);
-  const { status, error } = getStatus();
+
   const value = getValue();
-  // Omit an entirely-absent value in static presentation — a labelled row with no value is just noise.
-  // Fields with richer "empty" semantics (e.g. a present-but-unresolved ref) handle that in `renderStatic`.
+  const resolved = presentationFor(presentation);
   if (resolved.isStatic && value == null) {
     return null;
   }
+
+  const { status, error } = getStatus();
 
   return (
     <Input.Root validationValence={status}>
