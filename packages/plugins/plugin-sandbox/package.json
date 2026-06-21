@@ -79,8 +79,10 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

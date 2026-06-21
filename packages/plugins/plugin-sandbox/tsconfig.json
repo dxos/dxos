@@ -50,10 +50,16 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-testing"
