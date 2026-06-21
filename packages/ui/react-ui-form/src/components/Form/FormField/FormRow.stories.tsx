@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type FormFieldRendererProps } from '#types';
 
 import { Form } from '../Form';
-import { FormFieldWrapper } from './FormFieldWrapper';
+import { FormRow } from './FormRow';
 
 const DefaultStory = ({
   type,
@@ -30,7 +30,7 @@ const DefaultStory = ({
     <Form.Root>
       <Form.Viewport>
         <Form.Content>
-          <FormFieldWrapper<string> {...props}>
+          <FormRow<string> {...props}>
             {({ value = '' }) => (
               <Input.TextInput
                 disabled={!!readonly}
@@ -41,7 +41,7 @@ const DefaultStory = ({
                 onBlur={onBlur}
               />
             )}
-          </FormFieldWrapper>
+          </FormRow>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
@@ -49,7 +49,7 @@ const DefaultStory = ({
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-form/FormFieldWrapper',
+  title: 'ui/react-ui-form/FormRow',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

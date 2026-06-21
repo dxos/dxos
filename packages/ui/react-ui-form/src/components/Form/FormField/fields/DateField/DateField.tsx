@@ -10,7 +10,7 @@ import { Input } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldWrapper } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 /**
  * Stored value shapes:
@@ -66,7 +66,7 @@ export const DateField = ({
   );
 
   return (
-    <FormFieldWrapper<string> {...props} readonly={readonly} format={format}>
+    <FormRow<string> {...props} readonly={readonly} format={format}>
       {({ value }) => {
         switch (format) {
           case Format.TypeFormat.Date:
@@ -98,6 +98,6 @@ export const DateField = ({
             );
         }
       }}
-    </FormFieldWrapper>
+    </FormRow>
   );
 };

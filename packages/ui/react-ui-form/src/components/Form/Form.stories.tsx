@@ -20,18 +20,18 @@ import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
 
-type DefaultStoryProps<T extends AnyProperties> = {
-  schema?: Schema.Schema<T>;
-} & FormRootProps<T>;
+type DefaultStoryProps<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
+  json = true,
   ...props
 }: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
+
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);
@@ -48,7 +48,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   return (
     <Tooltip.Provider>
-      <TestLayout json={{ values, schema: schema?.ast }}>
+      <TestLayout json={json ? { values, schema: schema?.ast } : undefined}>
         <Form.Root
           schema={schema}
           defaultValues={values}
@@ -97,8 +97,6 @@ const meta = {
 
 export default meta;
 
-type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
-
 const PersonSchema = Type.getSchema(Person);
 
 const values: Partial<Person> = {
@@ -109,6 +107,8 @@ const values: Partial<Person> = {
   meetingAt: '2026-06-01T15:30:00.000Z',
   reminderAt: '09:00:00',
 };
+
+type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
 /**
  * Build a data-entry surface by handing an Effect schema to `Form.Root` — the form derives its fields,
@@ -147,10 +147,6 @@ export const Static: Story<ExcludeId<typeof PersonSchema>> = {
   },
 };
 
-export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
-  args: {},
-};
-
 const SettingsSchema = Schema.mutable(
   Schema.Struct({
     viewMode: Schema.Literal('preview', 'readonly', 'source').annotations({
@@ -169,15 +165,24 @@ const SettingsSchema = Schema.mutable(
   }),
 );
 
-/**
- * The bordered, two-column "settings panel" look, achieved with the `settings` form variant:
- * each field becomes a card whose title spans the top, with its description in the left column and the
- * control right-aligned in the right column.
- */
-export const SettingsPresentation: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
+export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
+  render: (args) => (
+    <div className='grid grid-cols-2'>
+      <DefaultStory {...args} />
+      <DefaultStory {...args} variant='settings' />
+    </div>
+  ),
   args: {
+    json: false,
     schema: SettingsSchema,
-    values: { viewMode: 'preview', toolbar: true, fontSize: 14 },
-    variant: 'settings',
+    values: {
+      viewMode: 'preview',
+      toolbar: true,
+      fontSize: 14,
+    },
   },
+};
+
+export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
+  args: {},
 };

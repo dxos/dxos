@@ -20,6 +20,7 @@ import {
   withColumn,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type Merge } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -40,8 +41,8 @@ import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './Fo
 // Root
 //
 
-export type FormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
-  {
+export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
+  PropsWithChildren<{
     /**
      * Called when the form is submitted and passes validation.
      */
@@ -51,9 +52,10 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = PropsWithCh
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } & Omit<FormContextValue<T>, 'form'> &
-    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'> &
-    Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
+  }>,
+  Omit<FormContextValue<T>, 'form'>,
+  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
+  Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
 // `variant` (from FormContextValue) flows through `...props` into the context for all parts to read.

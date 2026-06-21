@@ -136,7 +136,7 @@ export const FormField = (props: FormFieldProps) => {
 
   // Omit empty fields entirely in read-only mode -- an empty value has nothing
   // to display, so a labelled row with a blank input is just noise. This
-  // mirrors what `FormFieldWrapper` already does for `presentation === 'static'`, but
+  // mirrors what `FormRow` already does for `presentation === 'static'`, but
   // covers every field type (including those that bypass the wrapper:
   // RefField, SelectField, MarkdownField, ...). Container fields
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own

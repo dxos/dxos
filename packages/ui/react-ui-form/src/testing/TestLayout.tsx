@@ -7,23 +7,26 @@ import React, { type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composableProps, slottable } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
 
 type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 
 export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
+    <div className={mx('dx-container grid grid-cols-1 p-4 gap-4', json && 'grid-cols-[1fr_1fr]')}>
       <TestPanel>{children}</TestPanel>
-      <TestPanel>
-        <Syntax.Root data={json}>
-          <Syntax.Content>
-            <Syntax.Filter />
-            <Syntax.Viewport>
-              <Syntax.Code testId='debug' classNames='text-sm' />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
-      </TestPanel>
+      {json && (
+        <TestPanel>
+          <Syntax.Root data={json}>
+            <Syntax.Content>
+              <Syntax.Filter />
+              <Syntax.Viewport>
+                <Syntax.Code testId='debug' classNames='text-sm' />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        </TestPanel>
+      )}
     </div>
   );
 };

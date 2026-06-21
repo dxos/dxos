@@ -3,7 +3,7 @@
 //
 
 import { format as formatDate } from 'date-fns';
-import React, { Component, type PropsWithChildren, type ReactNode } from 'react';
+import React, { Component, type PropsWithChildren, type ReactNode, type Ref } from 'react';
 
 import { Format } from '@dxos/echo';
 import { inputTextLabel, Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
@@ -92,7 +92,7 @@ export const FormFieldLabel = ({
 FormFieldLabel.displayName = 'Form.FieldLabel';
 
 //
-// FormFieldWrapper
+// FormRow
 //
 
 /**
@@ -121,93 +121,138 @@ const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string =
   }
 };
 
-export type FormFieldWrapperProps<T = any> = Pick<
-  FormFieldRendererProps<T>,
-  'readonly' | 'label' | 'description' | 'presentation' | 'getStatus' | 'getValue' | 'jsonPath' | 'format' | 'required'
-> & {
-  // `value` is `T | undefined` because `getValue()` returns no value when the field is unset (optional
-  // schema properties, freshly-added array items); renderers default it (e.g. `{ value = '' }`).
-  children?: (props: { value: T | undefined; presentation: FieldPresentation }) => ReactNode;
-  /**
-   * Render the label as a standalone `<span>` (group/multi-input fields with no single associated control).
-   */
-  standalone?: boolean;
-  /**
-   * Override the read-only/`static` rendering of the value. Fields whose value is not plain text
-   * (refs, selects, markdown) supply this; the default formats scalars/dates via `formatStaticValue`.
-   * Return `null` to render nothing (e.g. an empty/unresolved value).
-   */
-  renderStatic?: (value: T | undefined) => ReactNode;
-};
+export type FormRowProps<T = any> = ThemedClassName<
+  Pick<FormFieldRendererProps<T>, 'readonly' | 'label' | 'description' | 'presentation' | 'required'> &
+    Partial<Pick<FormFieldRendererProps<T>, 'getStatus' | 'getValue' | 'jsonPath' | 'format'>> & {
+      /**
+       * Ref to the row's outer element. Enables measurement/positioning (e.g. a future virtualized
+       * field set) without forwarding through the generic component.
+       */
+      rootRef?: Ref<HTMLDivElement>;
+      /**
+       * Render the label as a standalone `<span>` (group/multi-input fields with no single associated control).
+       */
+      standalone?: boolean;
+      /**
+       * Override the read-only/`static` rendering of the value. Fields whose value is not plain text
+       * (refs, selects, markdown) supply this; the default formats scalars/dates via `formatStaticValue`.
+       * Return `null` to render nothing (e.g. an empty/unresolved value).
+       */
+      renderStatic?: (value: T | undefined) => ReactNode;
+      /**
+       * Validation/error content rendered in the validation slot. Supplied directly in action mode; in
+       * field mode it is derived from `getStatus`.
+       */
+      validation?: ReactNode;
+      /**
+       * The control. A render-prop binds to the form value (field mode: `Input.Root` validation, static
+       * rendering, value via `getValue`). Plain nodes render an arbitrary control with no value wiring
+       * (action mode, e.g. a button) — the labeled-card escape hatch that replaces `Settings.Item`.
+       *
+       * `value` is `T | undefined` because `getValue()` returns no value when the field is unset (optional
+       * schema properties, freshly-added array items); renderers default it (e.g. `{ value = '' }`).
+       */
+      children?: ReactNode | ((props: { value: T | undefined; presentation: FieldPresentation }) => ReactNode);
+    }
+>;
 
-const FORM_FIELD_WRAPPER_NAME = 'Form.FieldWrapper';
+const FORM_ROW_NAME = 'Form.Row';
 
-export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
-  const {
-    children,
-    readonly,
-    presentation,
-    label,
-    description,
-    jsonPath,
-    format,
-    required,
-    standalone,
-    renderStatic,
-    getStatus,
-    getValue,
-  } = props;
-  const { variant = 'default' } = useFormContext(FORM_FIELD_WRAPPER_NAME);
+/**
+ * A labeled card row — the single shell behind both schema fields and free-form "action" rows. Field
+ * renderers pass a render-prop `children` (field mode: bound to the form value, with validation and
+ * static rendering); consumers pass plain `children` for an arbitrary control (action mode), the
+ * affordance that replaces the deprecated `Settings.Item`.
+ */
+export const FormRow = <T,>({
+  classNames,
+  children,
+  readonly,
+  presentation,
+  label,
+  description,
+  jsonPath,
+  format,
+  required,
+  standalone,
+  renderStatic,
+  validation,
+  getStatus,
+  getValue,
+  rootRef,
+}: FormRowProps<T>) => {
+  const { variant = 'default' } = useFormContext(FORM_ROW_NAME);
   const styles = formTheme.styles({ variant });
   const { showDescription } = formTheme.behavior[variant];
-
-  const value: T | undefined = getValue();
   const resolved = presentationFor(presentation);
-  if (resolved.isStatic && value == null) {
-    return null;
+
+  //
+  // Field mode: a render-prop control bound to the form value.
+  //
+  if (typeof children === 'function' && getStatus && getValue) {
+    const { status, error } = getStatus();
+    const value: T | undefined = getValue();
+    if (resolved.isStatic && value == null) {
+      return null;
+    }
+
+    const control = resolved.isStatic
+      ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{formatStaticValue(value, format)}</p>)
+      : children({ value, presentation: resolved });
+
+    return (
+      <Input.Root validationValence={status}>
+        <div ref={rootRef} className={styles.field({ class: classNames })}>
+          {resolved.showLabel && (
+            <FormFieldLabel
+              variant={variant}
+              error={error}
+              readonly={readonly}
+              required={required}
+              standalone={standalone}
+              label={label}
+              path={jsonPath}
+            />
+          )}
+          {showDescription && description && (
+            <Input.Description classNames={styles.fieldDescription()}>{description}</Input.Description>
+          )}
+          <div className={styles.fieldControl()}>{control}</div>
+          {resolved.showError && error && (
+            <div className={styles.fieldValidation()}>
+              <Input.DescriptionAndValidation>
+                <Input.Validation>{error}</Input.Validation>
+              </Input.DescriptionAndValidation>
+            </div>
+          )}
+        </div>
+      </Input.Root>
+    );
   }
 
-  const { status, error } = getStatus();
-
+  //
+  // Action mode: an arbitrary control with a standalone label; no value/`Input.Root` wiring.
+  //
   return (
-    <Input.Root validationValence={status}>
-      <div className={styles.field()}>
-        {/* Label */}
-        {resolved.showLabel && (
-          <FormFieldLabel
-            variant={variant}
-            error={error}
-            readonly={readonly}
-            required={required}
-            standalone={standalone}
-            label={label}
-            path={jsonPath}
-          />
-        )}
-        {/* Description */}
-        {showDescription && description && (
-          <Input.Description classNames={styles.fieldDescription()}>{description}</Input.Description>
-        )}
-        {/* Control */}
-        <div className={styles.fieldControl()}>
-          {resolved.isStatic
-            ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{formatStaticValue(value, format)}</p>)
-            : children
-              ? children({ value, presentation: resolved })
-              : null}
-        </div>
-        {/* Error */}
-        {resolved.showError && error && (
-          <div className={styles.fieldValidation()}>
-            <Input.DescriptionAndValidation>
-              <Input.Validation>{error}</Input.Validation>
-            </Input.DescriptionAndValidation>
-          </div>
-        )}
-      </div>
-    </Input.Root>
+    <div ref={rootRef} className={styles.field({ class: classNames })}>
+      {resolved.showLabel && label && (
+        <FormFieldLabel
+          variant={variant}
+          readonly={readonly}
+          required={required}
+          standalone
+          label={label}
+          path={jsonPath}
+        />
+      )}
+      {showDescription && description && <p className={styles.fieldDescription()}>{description}</p>}
+      <div className={styles.fieldControl()}>{typeof children === 'function' ? null : children}</div>
+      {validation && <div className={styles.fieldValidation()}>{validation}</div>}
+    </div>
   );
 };
+
+FormRow.displayName = FORM_ROW_NAME;
 
 //
 // FormFieldErrorBoundary
