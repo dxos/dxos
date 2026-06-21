@@ -19,6 +19,7 @@ import { configPreset, type ConfigPresetOptions } from '@dxos/config';
 import { Database, Feed, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
+import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
@@ -138,6 +139,9 @@ const seedPrompt = (prompt: Routine.Routine) =>
     yield* Database.flush();
   });
 
+const spaceServices = (spaceId: SpaceId) =>
+  ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService);
+
 const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.gen(function* () {
@@ -152,8 +156,16 @@ const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: Mo
         },
         { spaceId },
       );
-    }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService))),
+    }).pipe(Effect.provide(spaceServices(spaceId))),
   );
+
+const logTraceEvents = <A>(harness: TestHarness, spaceId: SpaceId) =>
+  Effect.gen(function* () {
+    const unsubscribe = yield* Effect.promise(() =>
+      harness.runPromise(traceFeedPrettyPrintSubscription.pipe(Effect.provide(spaceServices(spaceId)))),
+    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+  });
 
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
@@ -185,24 +197,22 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         const { personalSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
+        yield* logTraceEvents(harness, personalSpace.id);
 
-        // TODO(dmaretskyi): Subscribe to trace feed and log ai messages.
-        // Effect.gen(function* () {
-        // }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService)));
+        const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
+          runAgentPrompt(harness, prompt, model, personalSpace.id).then(
+            (value): Exit.Exit<unknown, unknown> => Exit.succeed(value),
+            (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
+          ),
+        );
 
         if (options.expect === 'failure') {
-          const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
-            runAgentPrompt(harness, prompt, model, personalSpace.id).then(
-              (value): Exit.Exit<unknown, unknown> => Exit.succeed(value),
-              (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
-            ),
-          );
           console.log('exit', exit);
           if (!Exit.isFailure(exit)) {
             return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
           }
-        } else {
-          yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id));
+        } else if (Exit.isFailure(exit)) {
+          return yield* Effect.fail(exit.cause);
         }
       }),
     );
