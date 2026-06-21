@@ -20,7 +20,7 @@ import { meta } from '#meta';
  * Article view for collections.
  */
 export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { items, handleSearch } = useCollectionItems(subject, attendableId);
 
   return (
@@ -51,7 +51,7 @@ type ObjectItem = {
 };
 
 const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';

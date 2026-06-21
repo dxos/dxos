@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel, Paths } from '@dxos/app-toolkit';
+import { CollectionModel } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
+import { getMailboxAllMailPath } from '../paths';
 import { InboxOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
@@ -23,7 +24,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       yield* CollectionModel.add({
         object,
         target: Database.isDatabase(target) ? undefined : target,
-        hidden: true,
       }).pipe(Effect.provide(Database.layer(db)));
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
 
       return {
         id: Obj.getURI(object),
-        subject: [`${Paths.getSpacePath(db.spaceId)}/mailboxes/${object.id}/all-mail`],
+        subject: [getMailboxAllMailPath(db.spaceId, object.id)],
         object,
       };
     }),

@@ -10,8 +10,6 @@ import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  AppGraphBuilder,
-  NavigationResolver,
   BlueprintDefinition,
   CommentConfig,
   CreateObject,
@@ -25,8 +23,6 @@ import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),

@@ -7,14 +7,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import {
-  AppGraphBuilder,
-  BlueprintDefinition,
-  CreateObject,
-  NavigationResolver,
-  OperationHandler,
-  ReactSurface,
-} from '#capabilities';
+import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
@@ -27,7 +20,6 @@ export const FeedPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -44,7 +36,7 @@ export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

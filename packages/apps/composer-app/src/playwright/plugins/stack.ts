@@ -8,7 +8,9 @@ import { StackManager } from '@dxos/react-ui-stack/playwright';
 
 export const StackPlugin = {
   meta: {
-    id: 'org.dxos.plugin.stack',
+    profile: {
+      key: 'org.dxos.plugin.stack',
+    },
   },
 };
 

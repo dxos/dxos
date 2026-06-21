@@ -6,7 +6,6 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -18,11 +17,11 @@ import {
   BlueprintManagerBlueprint,
   DatabaseBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { AgentService, Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
+import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -37,7 +36,7 @@ import { meta } from './meta';
 
 EntityId.dangerouslyDisableRandomness();
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -129,12 +128,6 @@ describe('AssistantPlugin', () => {
             name: 'capital-test',
             instructions:
               'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
-            input: Schema.Struct({
-              country: Schema.String,
-            }),
-            output: Schema.Struct({
-              capital: Schema.String,
-            }),
           }),
         );
         yield* Database.flush();
@@ -151,7 +144,7 @@ describe('AssistantPlugin', () => {
           { spaceId: personalSpace.id },
         );
         expect(result).toEqual({ capital: 'paris' });
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
     );
   });
 
@@ -180,7 +173,7 @@ describe('AssistantPlugin', () => {
           (_) => Blueprint.resolve(_.key),
         );
 
-        const agent = yield* AgentService.createSession({
+        const agent = yield* AgentServiceRuntime.createSession({
           blueprints,
         });
         yield* agent.submitPrompt('Hello');
@@ -190,7 +183,6 @@ describe('AssistantPlugin', () => {
           ServiceResolver.provide(
             { space: personalSpace.id },
             Database.Service,
-            Feed.FeedService,
             AgentService.AgentService,
             Registry.Service,
           ),

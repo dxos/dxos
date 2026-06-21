@@ -4,8 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -19,6 +17,7 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
+import { Position } from '@dxos/util';
 
 import { SpaceSettings } from '#components';
 import {
@@ -31,17 +30,16 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
-  EntityRenamePopover,
   ObjectCardStack,
   ObjectProperties,
   RecordArticle,
   RelatedArticle,
+  RenamePopover,
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
   SpaceHomeRecent,
   SpacePresence,
-  SpaceRenamePopover,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
@@ -63,8 +61,7 @@ import {
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
-  ENTITY_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
+  RENAME_POPOVER,
 } from '../constants';
 
 type ReactSurfaceOptions = {
@@ -88,19 +85,19 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'collectionFallback',
-        position: 'last',
+        position: Position.last,
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
         id: 'recordArticle',
-        position: 'last',
+        position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: () => {
           const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
@@ -130,7 +127,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsProperties',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.general`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -142,8 +139,8 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsMembers',
-        position: 'first',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
+        position: Position.first,
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -155,7 +152,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsSchema',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.schema`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.schema`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -167,19 +164,10 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'selectedObjects',
-        role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: 'selected-objects' } => {
-          if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
-            return false;
-          }
-
-          const type = Obj.getType(data.companionTo);
-          const path = type
-            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
-            : [];
-          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
-          return !!viewTarget;
-        },
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'selected-objects'),
+          AppSurface.companion(AppSurface.Article, Obj.isObject),
+        ),
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
           const type = Obj.getType(data.companionTo);
@@ -226,11 +214,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'createInitialSpaceFormHue',
-        role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = SchemaEx.findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
-          return !!annotation;
-        },
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, HueAnnotationId)),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {
@@ -250,11 +234,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'createInitialSpaceFormIcon',
-        role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = SchemaEx.findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
-          return !!annotation;
-        },
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, IconAnnotationId)),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {
@@ -279,34 +259,20 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'typenameFormInput',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
-          prop: string;
-          schema: Schema.Schema.Any;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          if (data.prop !== 'typename') {
-            return false;
-          }
-
-          const annotation = SchemaEx.findAnnotation(
-            (data.schema as Schema.Schema.All).ast,
-            TypeInputOptionsAnnotationId,
-          );
-          return !!annotation;
-        },
-        component: ({ data: { schema, target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        filter: AppSurface.formInput(
+          (data) =>
+            data.prop === 'typename' && !!SchemaEx.findAnnotation(data.schema.ast, TypeInputOptionsAnnotationId),
+        ),
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
           const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-          const annotation = SchemaEx.findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
+          const target = data.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
+          const annotation = SchemaEx.findAnnotation<TypeInputOptions>(data.schema.ast, TypeInputOptionsAnnotationId)!;
           const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;
@@ -314,19 +280,17 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'objectProperties',
-        role: 'object-properties',
-        filter: (data): data is { subject: Obj.Unknown } => {
+        filter: Surface.makeFilter(AppSurface.ObjectProperties, (data) => {
           if (!Obj.isObject(data.subject)) {
             return false;
           }
-
           const type = Obj.getType(data.subject);
           const path = type
             ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
             : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
           return !!viewTarget;
-        },
+        }),
         component: ({ data }) => {
           const type = Obj.getType(data.subject);
           const path = type
@@ -341,17 +305,9 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: SPACE_RENAME_POPOVER,
-        role: 'popover',
-        filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
-        component: ({ data }) => <SpaceRenamePopover space={data.props} />,
-      }),
-      Surface.create({
-        id: ENTITY_RENAME_POPOVER,
-        role: 'popover',
-        filter: (data): data is { props: Entity.Unknown } =>
-          data.component === ENTITY_RENAME_POPOVER && Entity.isEntity(data.props),
-        component: ({ data }) => <EntityRenamePopover entity={data.props} />,
+        id: RENAME_POPOVER,
+        filter: AppSurface.component<Space | Entity.Unknown>(AppSurface.Popover, RENAME_POPOVER),
+        component: ({ data }) => <RenamePopover subject={data.props} />,
       }),
       Surface.create({
         id: 'menuFooter',
@@ -360,9 +316,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'navtreePresence',
-        role: 'navtree-item-end',
-        filter: (data): data is { id: string; subject: Obj.Unknown; open?: boolean } =>
-          typeof data.id === 'string' && Obj.isObject(data.subject),
+        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, Obj.isObject),
         component: ({ data }) => {
           const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
           return <SmallPresenceLive id={data.id} open={data.open} viewers={ephemeral.viewersByObject[data.id]} />;
@@ -371,23 +325,23 @@ export default Capability.makeModule(
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
         id: 'navtreePresenceFallback',
-        role: 'navtree-item-end',
-        position: 'last',
-        filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
+        position: Position.last,
+        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
       // TODO(wittjosiah): Broken?
       Surface.create({
         id: 'navtreeSyncStatus',
-        role: 'navtree-item-end',
-        filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
+        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, isSpace),
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
       Surface.create({
         id: 'navbarPresence',
-        role: 'navbar-end',
-        position: 'first',
-        filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
+        position: Position.first,
+        filter: AppSurface.subject(
+          AppSurface.NavbarEnd,
+          (value): value is Space | Obj.Unknown => isSpace(value) || Obj.isObject(value),
+        ),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
@@ -408,7 +362,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'syncStatus',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => <SyncStatus />,
       }),
     ]);

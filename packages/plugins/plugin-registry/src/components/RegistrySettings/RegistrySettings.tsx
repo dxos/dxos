@@ -37,7 +37,7 @@ export const RegistrySettings = ({
   onEnableDev,
   onDisableDev,
 }: RegistrySettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
   const url = settings.devPluginUrl ?? '';

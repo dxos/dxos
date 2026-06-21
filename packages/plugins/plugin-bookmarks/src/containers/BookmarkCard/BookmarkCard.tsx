@@ -16,7 +16,7 @@ export type BookmarkCardProps = AppSurface.ObjectCardProps<Bookmark.Bookmark>;
 
 /**
  * Compact preview of a {@link Bookmark.Bookmark}. Rendered into the
- * `AppSurface.Card` slot — Card.Root is supplied by the surface host
+ * `AppSurface.CardContent` slot — Card.Root is supplied by the surface host
  * (popovers, sections, related-objects), so the body emits Card.Body only.
  */
 export const BookmarkCard = ({ subject }: BookmarkCardProps) => {

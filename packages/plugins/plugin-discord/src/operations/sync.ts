@@ -10,7 +10,6 @@ import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -447,19 +446,15 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               pulled = { added: pulled.added + result.added };
             }
             return { pulled };
-          }).pipe(
-            Effect.provide(Database.layer(db)),
-            Effect.provide(createFeedServiceLayer(space.db)),
-            Effect.provide(makeDiscordLayer(integration)),
-          ),
+          }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayer(integration))),
         );
 
         if (outcome._tag === 'Right') {
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.id}.sync-success.${toastIdSuffix}`,
+              id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
               icon: 'ph--check--regular',
-              title: ['sync-toast.success.label', { ns: meta.id }],
+              title: ['sync-toast.success.label', { ns: meta.profile.key }],
             }),
           );
           return outcome.right;
@@ -467,9 +462,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           const message = formatDiscordSyncFailure(outcome.left);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.id}.sync-error.${toastIdSuffix}`,
+              id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
               icon: 'ph--warning--regular',
-              title: ['sync-toast.error.label', { ns: meta.id }],
+              title: ['sync-toast.error.label', { ns: meta.profile.key }],
               description: message,
             }),
           );

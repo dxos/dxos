@@ -11,7 +11,7 @@ import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/pl
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Discovery — list the available Bluesky sync targets for the integration's

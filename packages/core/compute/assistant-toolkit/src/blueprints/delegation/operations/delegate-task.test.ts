@@ -26,6 +26,11 @@ const TestLayer = AssistantTestLayer({
   disableLlmMemoization: true,
 });
 
+const invokeDelegateTask = (input: { id?: Plan.TaskId; title?: string }, chatFeed: Feed.Feed) =>
+  Operation.invoke(DelegateTask, input).pipe(
+    Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })),
+  );
+
 describe('DelegateTask', () => {
   it.scoped(
     'adds an in-progress task to the agent plan for delegated work',
@@ -40,13 +45,72 @@ describe('DelegateTask', () => {
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
-        yield* Operation.invoke(DelegateTask, { title: 'Research widgets' }).pipe(
-          Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })),
-        );
+        yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
         const plan = yield* Database.load(agent.plan);
         expect(plan.tasks).toHaveLength(1);
-        expect(plan.tasks[0]).toMatchObject({ title: 'Research widgets', status: 'in-progress' });
+        expect(plan.tasks[0]).toMatchObject({
+          title: 'Research widgets',
+          status: 'in-progress',
+          delegated: true,
+        });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.scoped(
+    'delegates an existing plan task by id without duplicating',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          { name: 'Supervisor', instructions: 'Test.' },
+          DelegationBlueprint.make(),
+        );
+        const plan = yield* Database.load(agent.plan);
+        const taskId = Plan.TaskId.make('1-ab');
+        Obj.update(plan, (plan) => {
+          plan.tasks.push({ id: taskId, title: 'Research widgets', status: 'todo' });
+        });
+        yield* Database.flush();
+
+        const chatFeed = agent.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
+
+        yield* invokeDelegateTask({ id: taskId }, chatFeed);
+
+        const updated = yield* Database.load(agent.plan);
+        expect(updated.tasks).toHaveLength(1);
+        expect(updated.tasks[0]).toMatchObject({
+          id: taskId,
+          title: 'Research widgets',
+          status: 'in-progress',
+          delegated: true,
+        });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.scoped(
+    'fails when both id and title are provided',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          { name: 'Supervisor', instructions: 'Test.' },
+          DelegationBlueprint.make(),
+        );
+        yield* Database.flush();
+
+        const chatFeed = agent.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
+
+        const exit = yield* invokeDelegateTask({ id: Plan.TaskId.make('1-ab'), title: 'New task' }, chatFeed).pipe(
+          Effect.exit,
+        );
+        expect(exit._tag).toBe('Failure');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

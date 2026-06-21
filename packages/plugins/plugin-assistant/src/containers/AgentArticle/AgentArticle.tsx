@@ -26,7 +26,7 @@ type Tab = 'artifacts' | 'inputs';
 export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -34,7 +34,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
-    [Feed.FeedService, Database.Service] as const,
+    [Database.Service] as const,
     Effect.fnUntraced(function* () {
       yield* Agent.resetChatHistory(agent);
       if (!agent.feed) {
@@ -160,7 +160,7 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
       </Card.Header>
       <Card.Body>
         <Surface.Surface
-          type={AppSurface.Card}
+          type={AppSurface.CardContent}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />

@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Position } from '@dxos/util';
 
 import { GalleryArticle, GalleryShow } from '#containers';
 import { meta } from '#meta';
@@ -26,15 +27,15 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'show',
-        position: 'first',
+        position: Position.first,
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Gallery.Gallery }> =>
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Gallery.Gallery }> =>
             !!data.subject &&
             typeof data.subject === 'object' &&
             'type' in data.subject &&
             'object' in data.subject &&
-            data.subject.type === meta.id &&
+            data.subject.type === meta.profile.key &&
             Obj.instanceOf(Gallery.Gallery, data.subject.object),
         ),
         component: ({ data }) => <GalleryShow gallery={data.subject.object} />,

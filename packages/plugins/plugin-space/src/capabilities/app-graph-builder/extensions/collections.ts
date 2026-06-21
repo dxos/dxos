@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
@@ -23,7 +23,6 @@ import {
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
-  REMOVE_FROM_COLLECTION_LABEL,
 } from './shared';
 
 //
@@ -67,11 +66,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
-              label: ['collections-section.label', { ns: meta.id }],
+              label: ['collections-section.label', { ns: meta.profile.key }],
               icon: 'ph--folder--regular',
               iconHue: 'amber',
               role: 'branch',
-              position: 'first',
+              position: 200,
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
               droppable: false,
@@ -120,7 +119,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 db: space.db,
                 object,
                 navigable: ephemeralState.navigableCollections,
-                parentCollection: collectionRef?.target,
+                canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
+                onRearrange: collectionRef?.target
+                  ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
+                  : undefined,
               }),
             )
             .filter(isNonNullable),
@@ -157,7 +159,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   object,
                   db,
                   navigable: ephemeralState.navigableCollections,
-                  parentCollection: collection,
+                  canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
+                  onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
                 }),
             )
             .filter(isNonNullable),
@@ -207,7 +210,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Action on the collections section header to create a new collection.
+    // Action on the collections section header to add an object to the space's root collection.
     GraphBuilder.createExtension({
       id: 'collectionsSectionActions',
       match: (node) => {
@@ -217,16 +220,26 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       actions: (space) =>
         Effect.succeed([
           Node.makeAction({
-            id: 'create-collection',
+            id: SpaceOperation.OpenCreateObject.meta.key,
             data: () =>
-              Operation.invoke(SpaceOperation.OpenCreateObject, {
-                target: space.db,
-                typename: Type.getTypename(Collection.Collection),
+              Effect.gen(function* () {
+                // Target the root collection so the create dialog offers collection-eligible types, like
+                // any other collection; fall back to the space db if it hasn't been created yet.
+                const rootCollection = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
+                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  // Qualified id of the collections section node (root/<spaceId>/collections), so the new
+                  // object's navigation path resolves under the section — the bare segment would not.
+                  target: rootCollection ?? space.db,
+                  targetNodeId: Paths.getCollectionsPath(space.id),
+                });
               }),
             properties: {
-              label: ['add-object.label', { ns: Type.getTypename(Collection.Collection) }],
+              label: CREATE_OBJECT_IN_COLLECTION_LABEL,
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
+              testId: 'spacePlugin.createObject',
             },
           }),
         ]),
@@ -285,37 +298,6 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    ...(parentCollection && !Obj.instanceOf(Collection.Collection, object)
-      ? [
-          Node.makeAction({
-            id: 'removeFromCollection',
-            data: () =>
-              Effect.gen(function* () {
-                const index = parentCollection.objects.findIndex((ref: any) => ref.target === object);
-                if (index !== -1) {
-                  const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
-                  const isActive = layout.active.includes(nodeId);
-
-                  Obj.update(parentCollection, (parentCollection) => {
-                    parentCollection.objects.splice(index, 1);
-                  });
-
-                  if (isActive) {
-                    yield* Operation.invoke(LayoutOperation.Open, {
-                      subject: [Paths.getObjectPathFromObject(object)],
-                    });
-                  }
-                }
-              }),
-            properties: {
-              label: REMOVE_FROM_COLLECTION_LABEL,
-              icon: 'ph--minus-circle--regular',
-              disposition: 'list-item',
-              testId: 'spacePlugin.removeFromCollection',
-            },
-          }),
-        ]
-      : []),
     Node.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>

@@ -5,11 +5,11 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { AssistantOperation } from '#types';
 
 /** Starter prompts shown on the Home page. Always rendered — they surface quick actions alongside
  * the recent-objects masonry rather than only as an empty-state fallback. */
@@ -29,7 +29,7 @@ type SpaceScopedProps = {
  * quick entry points regardless of whether recent objects exist.
  */
 export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleRunPrompt = useCallback(
@@ -37,7 +37,7 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
       if (!space) {
         return;
       }
-      void invokePromise(AssistantOperation.RunPromptInNewChat, { db: space.db, prompt });
+      void invokePromise(AutomationOperation.RunPromptInNewChat, { db: space.db, prompt });
     },
     [invokePromise, space],
   );

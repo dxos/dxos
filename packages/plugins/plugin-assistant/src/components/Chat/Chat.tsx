@@ -9,17 +9,19 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
+import { getSpace } from '@dxos/client/echo';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 
+import { AiUsageQuotaError } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -212,15 +214,20 @@ ChatContent.displayName = CHAT_CONTENT_NAME;
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'> & {
+  /** Invoked from the over-quota error toast to open the usage dashboard. */
+  onViewUsage?: () => void;
+};
 
-const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
-  const { t } = useTranslation(meta.id);
+const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatThreadProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
+  // The toast renders whatever action the error declares (data-driven) rather than branching on type.
+  const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
   const debugView = viewType === 'debug';
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
@@ -279,6 +286,20 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
           {t('ai-service-error.label')}
         </Toast.Title>
         <Toast.Description>{toastError?.message}</Toast.Description>
+        {toastAction && onViewUsage && (
+          <Toast.Actions>
+            <Toast.Action altText={t(toastAction.labelKey)} asChild>
+              <Button
+                onClick={() => {
+                  setToastError(undefined);
+                  onViewUsage();
+                }}
+              >
+                {t(toastAction.labelKey)}
+              </Button>
+            </Toast.Action>
+          </Toast.Actions>
+        )}
       </Toast.Root>
     </>
   );
@@ -316,11 +337,23 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: plan
   const parent = chat ? Obj.getParent(chat) : undefined;
   const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
   const plan = planProp ?? agent?.plan.target;
+  const space = chat ? getSpace(chat) : undefined;
+  const traceMessages = useTraceMessages(space);
+  const conversationId = chat?.feed?.target?.id;
   if (!plan) {
     return null;
   }
 
-  return <TaskList {...props} plan={plan} ref={forwardedRef} />;
+  return (
+    <TaskList
+      {...props}
+      plan={plan}
+      space={space}
+      traceMessages={traceMessages}
+      conversationId={conversationId}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;

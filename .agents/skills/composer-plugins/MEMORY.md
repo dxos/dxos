@@ -4,6 +4,23 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-19 — plugin-automation / plugin-assistant (move Routine/Blueprint/Template UI down)
+
+- Moving UI DOWN the dep graph: plugin-assistant already deps plugin-automation, so Routine/Blueprint/Template containers+components moved INTO automation; assistant re-imports nothing (surfaces moved too). Check the existing edge direction first (`node -e` on package.json) before deciding which way code can move.
+- An operation's DEFINITION and its HANDLER can live in different plugins. `RunPromptInNewChat` def moved to `automation/types` (AutomationOperation), handler stays in plugin-assistant importing it via `@dxos/plugin-automation/types`. This is the only non-cyclic way for a lower plugin's UI (RoutineList) to dispatch a higher plugin's chat op. The op KEY namespace changes (`automation.operation.*`) — acceptable in a restructure.
+- **plugin-automation `tsconfig.json` does NOT exclude `*.stories.tsx`** (unlike plugin-assistant which does) → `plugin-automation:build` TYPECHECKS stories. Moved stories must only import packages automation deps; had to add `@dxos/assistant` devDep (story used `createSystemPrompt`) and strip `AssistantPlugin`/`TracePanel` (assistant-only, can't move down) from RoutineArticle/RoutineList stories.
+- When moving a publicly-imported component, add the matching subpath EXPORT to the destination (`./components`, `./types`) AND repoint every external consumer in the same change (plugin-script, plugin-feed, stories-assistant imported `TemplateEditor` from `@dxos/plugin-assistant/components`; plugin-trip imported `AssistantOperation` from `@dxos/plugin-assistant` root). Add the new `@dxos/plugin-automation` dep to consumers that lacked it (plugin-feed, plugin-trip).
+- `createSystemPrompt` lives only in `@dxos/assistant`, not re-exported by `@dxos/assistant-toolkit`.
+- moon `compile` entryPoints for `src/components/index.ts` / `src/containers/index.ts` / `src/types/index.ts` were already present in automation's moon.yml — only package.json `exports` needed the new `./components` + `./types` subpaths.
+
+## 2026-06-18 — plugin-assistant (chat failure / error-toast story)
+
+- To DEMO an error toast, prefer a PRESENTATIONAL story: render `Toast.Provider`/`Toast.Viewport`/`Toast.Root` directly and feed `Toast.Description` from the real `parseError(rawError)`, title via `useTranslation(meta.id)('ai-service-error.label')`. Deterministic + screenshotable + zero console noise.
+- AVOID the full-harness route for an error-toast demo (ChatArticle-style `withPluginManager` + `useChatProcessor`, then seed `registry.set(processor.error, Option.some(parseError(...)))` via `useContext(RegistryContext)`): it renders, but the toast is transient (20s auto-dismiss), StrictMode resets `toastError` state, it is portal-positioned at the clipped viewport bottom → flaky to view, plus REMOTE-edge 401/favicon console errors.
+- `Toast.Root` needs `Toast.Provider` + `Toast.Viewport` wrappers in a story (testing decorators don't supply them). Mirror `ui/react-ui/.../Toast.stories.tsx`.
+- Toast `duration` must be a 32-bit-safe ms int to stay open for review; `Number.MAX_SAFE_INTEGER`/`Infinity` overflow `setTimeout` → the toast auto-dismisses IMMEDIATELY. Use e.g. `24 * 60 * 60 * 1000`.
+- plugin-assistant `tsconfig.json` EXCLUDES `*.stories.tsx` → `compile` does NOT typecheck stories. Stories are exercised by `test-storybook` (vitest browser, smoke-mounts each story); scope it: `moon run plugin-assistant:test-storybook -- Chat.stories`.
+
 ## 2026-06-16 — plugin-presenter (presenter mode UX)
 
 - Toggle/exit deck-layout flows must run sequentially in ONE operation handler (`yield*` Adjust then Open). Firing `Adjust` + `Open` as two concurrent `invokePromise` calls (the old `useExitPresenter`) races: `Open` reads stale deck state and clobbers `Adjust`'s `fullscreen:false` back to true → stuck fullscreen. Route exit through the op (`TogglePresentation` with `state:false`).

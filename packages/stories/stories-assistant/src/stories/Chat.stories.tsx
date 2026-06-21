@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
@@ -178,7 +177,7 @@ export const WithPlanning: Story = {
     },
   }),
   args: {
-    modules: [[ChatModule]],
+    modules: [[ChatModule], [TraceModule, ContextModule]],
     blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
   },
 };
@@ -206,6 +205,26 @@ export const WithSubAgents: Story = {
   args: {
     modules: [[ChatModule], [TraceModule, ContextModule]],
     blueprints: [DelegationBlueprint.key, PlanningBlueprint.key, MarkdownBlueprint.key],
+  },
+};
+
+/**
+ * Two surfaces over a shared space: ChatModule (left) and TracePanel (right).
+ * Agent tool invocations populate the execution-graph timeline in the companion panel.
+ */
+export const WithExecutionGraph: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TraceModule]],
+    blueprints: [MarkdownBlueprint.key],
   },
 };
 
@@ -819,10 +838,6 @@ export const WithResearchQueue: Story = {
         Routine.make({
           name: 'Research',
           description: 'Research organization',
-          input: Schema.Struct({
-            org: Schema.Any,
-          }),
-          output: Schema.Any,
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(WebSearchBlueprint.make())],
@@ -947,10 +962,6 @@ export const WithProject: Story = {
         Routine.make({
           name: 'Research',
           description: 'Research organization',
-          input: Schema.Struct({
-            organization: Schema.Any,
-          }),
-          output: Schema.Any,
           instructions: trim`
             Research the organization provided as input.
             Absolutely, in all cases, create a research note for it at the end.
@@ -1103,10 +1114,6 @@ export const WithPrompt: Story = {
         Routine.make({
           name: 'Research',
           description: 'Research organization',
-          input: Schema.Struct({
-            org: Schema.Any,
-          }),
-          output: Schema.Any,
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(WebSearchBlueprint.make())],

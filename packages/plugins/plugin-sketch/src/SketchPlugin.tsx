@@ -5,15 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import {
-  AppGraphBuilder,
-  NavigationResolver,
-  CommentConfig,
-  CreateObject,
-  OperationHandler,
-  ReactSurface,
-  SketchSettings,
-} from '#capabilities';
+import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sketch } from '#types';
@@ -22,8 +14,6 @@ import { Sketch } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -32,7 +22,7 @@ export const SketchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

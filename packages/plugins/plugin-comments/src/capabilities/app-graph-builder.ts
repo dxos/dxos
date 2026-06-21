@@ -14,6 +14,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
@@ -72,10 +73,10 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('comments'),
-              label: ['comments.label', { ns: meta.id }],
+              label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'first',
+              position: Position.first,
             }),
           ]),
       }),
@@ -120,7 +121,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['add-comment.label', { ns: meta.id }],
+                label: ['add-comment.label', { ns: meta.profile.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 disabled,

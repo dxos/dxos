@@ -9,7 +9,7 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Operation, Trace } from '@dxos/compute';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -42,13 +42,7 @@ const TestLayer = Layer.mergeAll(
   registryLayerNoop,
 ).pipe(
   Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer(),
-      configuredCredentialsLayer([]),
-      Feed.notAvailable,
-      Trace.writerLayerNoop,
-    ),
+    Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]), Trace.writerLayerNoop),
   ),
 );
 

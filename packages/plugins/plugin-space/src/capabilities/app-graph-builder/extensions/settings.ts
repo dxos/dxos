@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
@@ -17,7 +18,7 @@ import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
 /**
  * Settings section attached directly under each Space node, plus its children.
  *
- * The virtual `settings` section is pinned to the top via `position: 'first'`
+ * The virtual `settings` section is pinned to the top via `position: Position.first`
  * so it sits above the un-positioned middle band (collections, mailboxes,
  * automations, integrations, etc.). It groups the panels contributed by this
  * plugin (general, members) and by other plugins (automation, functions).
@@ -31,11 +32,11 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
         AppNode.makeSection({
           id: SETTINGS_SECTION_ID,
           type: SETTINGS_SECTION_TYPE,
-          label: ['settings-section.label', { ns: meta.id }],
+          label: ['settings-section.label', { ns: meta.profile.key }],
           icon: 'ph--sliders--regular',
           iconHue: 'indigo',
           space,
-          position: 'first',
+          position: Position.first,
           testId: 'spacePlugin.settings',
         }),
       ]),
@@ -49,10 +50,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
       return Effect.succeed([
         Node.make({
           id: 'general',
-          type: `${meta.id}.general`,
-          data: `${meta.id}.general`,
+          type: `${meta.profile.key}.general`,
+          data: `${meta.profile.key}.general`,
           properties: {
-            label: ['space-settings-properties.label', { ns: meta.id }],
+            label: ['space-settings-properties.label', { ns: meta.profile.key }],
             icon: 'ph--brackets-curly--regular',
             iconHue: 'indigo',
             space,
@@ -63,10 +64,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           ? [
               Node.make({
                 id: 'members',
-                type: `${meta.id}.members`,
-                data: `${meta.id}.members`,
+                type: `${meta.profile.key}.members`,
+                data: `${meta.profile.key}.members`,
                 properties: {
-                  label: ['members-panel.label', { ns: meta.id }],
+                  label: ['members-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--users--regular',
                   iconHue: 'indigo',
                   space,

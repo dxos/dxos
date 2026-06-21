@@ -25,7 +25,7 @@ export default Capability.makeModule(
             id: 'openUserAccount',
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
-              label: ['open-user-account.label', { ns: meta.id }],
+              label: ['open-user-account.label', { ns: meta.profile.key }],
               icon: 'ph--user--regular',
               disposition: 'menu',
               keyBinding: {
@@ -45,9 +45,9 @@ export default Capability.makeModule(
         return [
           Node.make({
             id: Account.id,
-            type: meta.id,
+            type: meta.profile.key,
             properties: {
-              label: ['account.label', { ns: meta.id }],
+              label: ['account.label', { ns: meta.profile.key }],
               icon: 'ph--user--regular',
               disposition: 'user-account',
               testId: 'clientPlugin.account',
@@ -61,27 +61,27 @@ export default Capability.makeModule(
               Node.make({
                 id: Account.Profile,
                 data: Account.Profile,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['profile.label', { ns: meta.id }],
+                  label: ['profile.label', { ns: meta.profile.key }],
                   icon: 'ph--user--regular',
                 },
               }),
               Node.make({
                 id: Account.Account,
                 data: Account.Account,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['account-panel.label', { ns: meta.id }],
+                  label: ['account-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--identification-card--regular',
                 },
               }),
               Node.make({
                 id: Account.Devices,
                 data: Account.Devices,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['devices.label', { ns: meta.id }],
+                  label: ['devices.label', { ns: meta.profile.key }],
                   icon: 'ph--devices--regular',
                   testId: 'clientPlugin.devices',
                 },
@@ -89,27 +89,27 @@ export default Capability.makeModule(
               Node.make({
                 id: Account.Security,
                 data: Account.Security,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['security.label', { ns: meta.id }],
+                  label: ['security.label', { ns: meta.profile.key }],
                   icon: 'ph--key--regular',
                 },
               }),
               Node.make({
                 id: Account.Invitations,
                 data: Account.Invitations,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['invitations-panel.label', { ns: meta.id }],
+                  label: ['invitations-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--ticket--regular',
                 },
               }),
               Node.make({
                 id: Account.Usage,
                 data: Account.Usage,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['usage-panel.label', { ns: meta.id }],
+                  label: ['usage-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--chart-bar--regular',
                 },
               }),

@@ -18,7 +18,7 @@ import { Mailbox } from '#types';
 export type MailboxPropertiesProps = AppSurface.ObjectPropertiesProps<Mailbox.Mailbox>;
 
 export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
@@ -35,7 +35,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [`${Paths.getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
+      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.automation.automations')],
       workspace: Paths.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);

@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
-import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
+import { SETTINGS_ID, getPluginRegistrySectionPath } from '../types';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> =
   SettingsOperation.OpenPluginRegistry.pipe(
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry
         // Await (don't fork): SwitchWorkspace selects the workspace's first child, so a forked Open
         // races/drops before its deck update applies. Awaiting guarantees the registry is selected.
         yield* invoke(LayoutOperation.Open, {
-          subject: [`${Paths.getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:plugins`],
+          subject: [getPluginRegistrySectionPath()],
         });
       }),
     ),

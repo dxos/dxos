@@ -10,8 +10,7 @@ import * as Option from 'effect/Option';
 import { AppSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Database, Feed, type Key } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -39,7 +38,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
 export const spaceLayer = (
   spaceId$: Option.Option<Key.SpaceId>,
   fallbackToPersonalSpace = false,
-): Layer.Layer<Database.Service | Feed.FeedService, never, ClientService> => {
+): Layer.Layer<Database.Service, never, ClientService> => {
   const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
 
@@ -93,17 +92,7 @@ export const spaceLayer = (
     ),
   );
 
-  const feed = Layer.unwrapEffect(
-    Effect.gen(function* () {
-      const space = yield* getSpace();
-      if (!space) {
-        return Feed.notAvailable;
-      }
-      return createFeedServiceLayer(space.internal.db);
-    }),
-  );
-
-  return Layer.merge(db, feed);
+  return db;
 };
 
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.

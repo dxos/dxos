@@ -17,7 +17,7 @@ export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 
 /**
  * Compact preview of a {@link Subscription.Post}. Rendered into the
- * `AppSurface.Card` slot — Card.Root is supplied by the surface host
+ * `AppSurface.CardContent` slot — Card.Root is supplied by the surface host
  * (popovers, sections, related-objects), so the body emits Card.Body only.
  */
 export const PostCard = ({ subject }: PostCardProps) => {

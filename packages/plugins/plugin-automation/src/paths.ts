@@ -4,10 +4,8 @@
 
 import { Paths } from '@dxos/app-toolkit';
 
-import { Automation } from '#types';
+import { meta } from '#meta';
 
-const { getSectionPath: getAutomationsPath, getObjectPath: getAutomationPath } = Paths.createTypeSectionPaths(
-  Automation.Automation,
-);
-
-export { getAutomationsPath, getAutomationPath };
+/** Path to the automations settings section for a given space. */
+export const getAutomationsSettingsPath = (spaceId: string): string =>
+  Paths.getSpacePath(spaceId, 'settings', `${meta.profile.key}.automations`);

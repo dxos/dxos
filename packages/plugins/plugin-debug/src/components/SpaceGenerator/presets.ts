@@ -146,10 +146,6 @@ export const generator = () => ({
             Routine.make({
               name: 'Research',
               description: 'Research organization',
-              input: Schema.Struct({
-                org: Schema.Any,
-              }),
-              output: Schema.Any,
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.

@@ -9,7 +9,9 @@ import { type ThemeExtensionsOptions } from './extensions';
 export const editorClassNames = (role?: string) =>
   mx(
     'dx-attention-surface data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
-    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'dx-container overflow-hidden',
+    role === 'org.dxos.role.section'
+      ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24'
+      : 'dx-container overflow-hidden',
   );
 
 export const documentSlots: ThemeExtensionsOptions['slots'] = {

@@ -2,5 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { AutomationArticle as default } from './AutomationArticle';
-export * from './AutomationArticle';
+export { AutomationArticle as default, type AutomationArticleProps } from './AutomationArticle';

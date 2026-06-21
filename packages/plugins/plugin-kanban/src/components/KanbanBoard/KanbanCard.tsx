@@ -25,7 +25,7 @@ const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
  */
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
@@ -80,7 +80,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
               <Card.Body>
                 {projection && (
                   <Surface.Surface
-                    type={AppSurface.Card}
+                    type={AppSurface.CardContent}
                     limit={1}
                     data={{
                       subject: data,

@@ -8,6 +8,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
+  PropsWithChildren,
   forwardRef,
   useCallback,
   useEffect,
@@ -37,7 +38,6 @@ import {
   type ValidationProps as ValidationPrimitiveProps,
   useInputContext,
 } from '@dxos/react-input';
-import { mx } from '@dxos/ui-theme';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -262,7 +262,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           ...props,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        className={tx('input.inputWithSegments', { disabled: props.disabled }, classNames) || ''}
+        className={tx('input.pin', { disabled: props.disabled }, classNames) || ''}
         segmentClassName={tx('input.segment', { disabled: props.disabled, density, elevation }) || ''}
         ref={forwardedRef}
       />
@@ -435,6 +435,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     },
     forwardedRef,
   ) => {
+    const { tx } = useThemeContext();
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
       defaultProp: propsDefaultChecked ?? false,
@@ -446,7 +447,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     return (
       <input
         type='checkbox'
-        className={mx('dx-checkbox--switch dx-focus-ring', classNames)}
+        className={tx('input.switch', { disabled: props.disabled }, classNames)}
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);
@@ -465,6 +466,21 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
 );
 
 Switch.displayName = 'Input.Switch';
+
+//
+// Wrapper for Switch/Checkbox to center them within the input row height.
+//
+
+const Block = forwardRef<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <div {...props} className={tx('input.block')} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
+
+Block.displayName = 'Input.Block';
 
 //
 // Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
@@ -499,6 +515,7 @@ export const Input = {
   DateTime,
   Checkbox,
   Switch,
+  Block,
   Label,
   Description,
   Validation,

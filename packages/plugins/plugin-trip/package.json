@@ -92,6 +92,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -110,6 +111,7 @@
     "@dxos/markdown": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",

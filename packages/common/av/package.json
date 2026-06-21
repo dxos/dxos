@@ -1,7 +1,6 @@
 {
   "name": "@dxos/av",
   "version": "0.8.3",
-  "private": true,
   "description": "Audio/video runtime primitives (voice-activity detection, audio level monitoring).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

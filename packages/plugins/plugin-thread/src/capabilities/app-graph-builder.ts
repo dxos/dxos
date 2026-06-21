@@ -14,6 +14,7 @@ import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -26,7 +27,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      TypeSection.createTypeSectionExtension(Channel.Channel),
+      TypeSection.createTypeSectionExtension(Channel.Channel, { position: 300 }),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
@@ -45,10 +46,10 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: 'chat',
-              label: ['channel-companion.label', { ns: meta.id }],
+              label: ['channel-companion.label', { ns: meta.profile.key }],
               icon: 'ph--hash--regular',
               data: 'chat',
-              position: 'first',
+              position: Position.first,
             }),
           ]);
         },

@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Feed } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -32,8 +31,6 @@ export const initializeMailbox = async (space: Space, count = 0): Promise<Mailbo
   }
 
   const { messages } = new Builder().createMessages(count, { links: { space }, threads: 10 }).build();
-  await EffectEx.runAndForwardErrors(
-    Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.db))),
-  );
+  await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(space.db))));
   return mailbox;
 };

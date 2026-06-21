@@ -9,7 +9,20 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
+import {
+  Database,
+  Entity,
+  Feed,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  QueryAST,
+  QueryResult,
+  Ref,
+  type Registry,
+  Type,
+} from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -133,21 +146,23 @@ export interface EchoDatabase extends Database.Database {
 
   /**
    * Removes feed entities by id.
-   * @internal Backs {@link Feed.FeedService.remove}.
    */
-  _deleteFromFeedByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
 
   /**
    * Syncs a feed with the server.
-   * @internal Backs {@link Feed.FeedService.sync}.
    */
-  _syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
+  syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
 
   /**
    * Returns the replication backlog for a feed's namespace.
-   * @internal Backs {@link Feed.FeedService.getSyncState}.
    */
-  _getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+  getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Queries items in a feed associated with this database.
+   */
+  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
 }
 
 export type EchoDatabaseProps = {
@@ -497,22 +512,31 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
-    await this._deleteFromFeedByIds(
+    await this.removeFeedItemsByIds(
       feed,
       entities.map((entity) => entity.id),
     );
   }
 
-  async _deleteFromFeedByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
+  async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
     await this.#getFeedHandle(feed).delete(ids);
   }
 
-  async _syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {
+  async syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {
     await this.#getFeedHandle(feed).sync(options);
   }
 
-  async _getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState> {
+  async getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState> {
     return this.#getFeedHandle(feed).getSyncState();
+  }
+
+  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
+    const feedUri = Feed.getQueueUri(feed);
+    if (!feedUri) {
+      throw new Error('Unable to query feed: make sure feed is stored in the database');
+    }
+    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    return this._queryFeed(feedUri, query);
   }
 
   /**

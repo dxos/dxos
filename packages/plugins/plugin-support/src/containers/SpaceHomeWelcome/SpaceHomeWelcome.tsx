@@ -59,6 +59,7 @@ export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) =
     (value: boolean) => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, value)),
     [updateProperties],
   );
+
   return [dismissed, setDismissed];
 };
 
@@ -70,23 +71,24 @@ export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) =
  * assistant chat) never re-render the carousel or its cross-origin Cloudflare Stream iframe.
  */
 const WelcomePanel = memo(() => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
 
   const slides = useMemo(() => {
     const seen = new Set<string>();
     const result: Array<{ key: string; src: string; description: string }> = [{ key: 'welcome', ...WELCOME_SLIDE }];
     for (const plugin of manager.getPlugins()) {
-      for (const [index, src] of (plugin.meta.screenshots ?? []).entries()) {
-        if (seen.has(src)) {
+      for (const [index, screenshot] of (plugin.meta.profile.screenshots ?? []).entries()) {
+        const src = screenshot.light ?? screenshot.dark;
+        if (!src || seen.has(src)) {
           continue;
         }
         seen.add(src);
         result.push({
-          key: `${plugin.meta.id}:${index}`,
+          key: `${plugin.meta.profile.key}:${index}`,
           src,
           // Use the short plugin name — meta.description can be multi-kB and stalls caption/layout.
-          description: plugin.meta.name ?? plugin.meta.id,
+          description: plugin.meta.profile.name ?? plugin.meta.profile.key,
         });
       }
     }
@@ -94,7 +96,7 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <div className='flex flex-col items-center gap-4 pbe-2 border-be border-separator'>
+    <div className='flex flex-col items-center gap-4 pbe-2'>
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
       <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (

@@ -17,7 +17,7 @@ export const ToggleSidebarButton = ({
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
   const { updateState } = useDeckState();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleClick = useCallback(() => {
     updateState((state) => ({
@@ -41,7 +41,7 @@ export const ToggleSidebarButton = ({
 
 export const CloseSidebarButton = () => {
   const { updateState } = useDeckState();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleClick = useCallback(() => {
     updateState((state) => ({ ...state, sidebarState: 'collapsed' }));
@@ -67,7 +67,7 @@ export const ToggleComplementarySidebarButton = ({
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
   const { invokePromise } = useOperationInvoker();
   const { state, updateState } = useDeckState();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const companions = useDeckCompanions();
   const handleClick = useCallback(() => {

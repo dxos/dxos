@@ -24,7 +24,7 @@ export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
 
 // TODO(burdon): Virtualize.
 export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const date = new Date();
 
   // Subscribe to the journal object reactively so we pick up new entries.
@@ -83,7 +83,7 @@ type JournalEntryProps = ThemedClassName<
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [entry] = useObject(entryRef);
   // Subscribe to the content ref to trigger a re-render when the Text object loads.
   useObject(entry?.content);

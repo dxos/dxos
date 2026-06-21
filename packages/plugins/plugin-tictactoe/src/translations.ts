@@ -21,7 +21,7 @@ export const translations = [
         'rename-object.label': 'Rename tic-tac-toe game',
         'delete-object.label': 'Delete tic-tac-toe game',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Tic-Tac-Toe',
         'new-game.button': 'New Game',
         'x-turn.label': "X's turn",

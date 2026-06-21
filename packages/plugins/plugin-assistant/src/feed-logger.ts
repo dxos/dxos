@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { createFeedServiceLayer, type Space, getSpace } from '@dxos/client/echo';
+import { type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
@@ -18,7 +18,7 @@ import { type EntityId } from '@dxos/keys';
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceFeed: Feed.Feed;
-  private _feedServiceLayer: Layer.Layer<Feed.FeedService>;
+  private _feedServiceLayer: Layer.Layer<Database.Service>;
   /** Per-invocation trace feeds, keyed by invocationId. Created on `begin` and looked up for subsequent events. */
   private _invocationFeeds = new Map<EntityId, Feed.Feed>();
 
@@ -26,7 +26,7 @@ export class QueueLogger implements SequenceLogger {
     const space = getSpace(sequence);
     invariant(space, 'Space not found');
     this._space = space;
-    this._feedServiceLayer = createFeedServiceLayer(space.db);
+    this._feedServiceLayer = Database.layer(space.db);
 
     const existingFeedRef = this._space.properties.invocationTraceFeed;
 

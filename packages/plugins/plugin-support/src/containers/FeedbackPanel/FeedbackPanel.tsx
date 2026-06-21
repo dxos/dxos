@@ -36,7 +36,7 @@ export const FeedbackPanel = () => {
     () =>
       manager
         .getPlugins()
-        .map((plugin) => ({ id: plugin.meta.id, name: plugin.meta.name ?? plugin.meta.id }))
+        .map((plugin) => ({ id: plugin.meta.profile.key, name: plugin.meta.profile.name ?? plugin.meta.profile.key }))
         .sort(({ name: a }, { name: b }) => a.localeCompare(b)),
     [manager],
   );
@@ -64,7 +64,7 @@ export const FeedbackPanel = () => {
         <FeedbackForm.Root hidden={hidden} plugins={plugins}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet exclude={excludeImage ? (props) => props.filter((p) => p.name !== 'image') : undefined} />
+              <Form.FieldSet filter={excludeImage ? (props) => props.filter((p) => p.name !== 'image') : undefined} />
               <DownloadLogsAction />
               {/* GH only opens a prefilled URL — independent of PostHog feedback availability. */}
               {/* PostHog + Discord both call `CaptureUserFeedback`, so they share the gate. */}

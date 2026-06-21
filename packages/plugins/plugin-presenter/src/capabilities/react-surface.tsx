@@ -10,6 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Position } from '@dxos/util';
 
 import { PresenterSettings } from '#components';
 import { CollectionPresenterArticle, DocumentPresenterContainer, MarkdownSlide } from '#containers';
@@ -21,30 +22,30 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'document',
-        position: 'first',
+        position: Position.first,
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Markdown.Document }> =>
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Markdown.Document }> =>
             !!data.subject &&
             typeof data.subject === 'object' &&
             'type' in data.subject &&
             'object' in data.subject &&
-            data.subject.type === meta.id &&
+            data.subject.type === meta.profile.key &&
             Obj.instanceOf(Markdown.Document, data.subject.object),
         ),
         component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
       }),
       Surface.create({
         id: 'collection',
-        position: 'first',
+        position: Position.first,
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Collection.Collection }> =>
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Collection.Collection }> =>
             !!data.subject &&
             typeof data.subject === 'object' &&
             'type' in data.subject &&
             'object' in data.subject &&
-            data.subject.type === meta.id &&
+            data.subject.type === meta.profile.key &&
             Obj.instanceOf(Collection.Collection, data.subject.object),
         ),
         component: ({ role, data }) => <CollectionPresenterArticle role={role} subject={data.subject.object} />,
@@ -56,7 +57,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;

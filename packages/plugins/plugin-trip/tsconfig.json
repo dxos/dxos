@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -97,6 +98,9 @@
     },
     {
       "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-automation"
     },
     {
       "path": "../plugin-client"

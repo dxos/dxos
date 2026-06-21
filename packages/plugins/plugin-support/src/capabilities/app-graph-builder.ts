@@ -13,6 +13,7 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
 import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
@@ -25,13 +26,13 @@ import { SHORTCUTS_DIALOG } from '../constants';
 // rebuilt inline on every evaluation always compares unequal, so the graph re-emits the node, remounting
 // the node's surface (and any cross-origin iframe it hosts) and freezing the app.
 type LabelTuple = [string, { ns: string }];
-const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.id }];
-const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.id }];
-const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.id }];
-const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.id }];
-const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.id }];
-const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.id }];
-const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.id }];
+const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.profile.key }];
+const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.profile.key }];
+const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.profile.key }];
+const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.profile.key }];
+const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.profile.key }];
+const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.profile.key }];
+const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.profile.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -94,7 +95,7 @@ export default Capability.makeModule(
               label: HELP_COMPANION_LABEL,
               icon: 'ph--info--regular',
               data: 'help',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -111,7 +112,7 @@ export default Capability.makeModule(
               label: HELP_LABEL,
               icon: 'ph--megaphone--regular',
               data: null,
-              position: 'first',
+              position: Position.first,
               joyride: 'welcome/feedback',
             }),
           ]),
@@ -134,7 +135,7 @@ export default Capability.makeModule(
               label: DISCORD_LABEL,
               icon: 'ph--discord-logo--regular',
               data: null,
-              position: 'first',
+              position: Position.first,
             }),
           ]);
         },

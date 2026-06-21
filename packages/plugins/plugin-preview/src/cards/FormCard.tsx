@@ -29,7 +29,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the
   // `compact` form layout. Callers can override either via the explicit `layout` prop.

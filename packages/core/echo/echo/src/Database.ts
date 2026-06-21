@@ -185,6 +185,26 @@ export interface Database extends Queryable {
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Removes feed items by ID.
+   */
+  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+
+  /**
+   * Queries items in a feed associated with this database.
+   */
+  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
+
+  /**
+   * Syncs a feed with the server.
+   */
+  syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
+
+  /**
+   * Returns queue replication backlog for the feed's namespace.
+   */
+  getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {

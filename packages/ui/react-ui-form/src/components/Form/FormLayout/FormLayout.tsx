@@ -16,8 +16,14 @@ import { Input } from '@dxos/react-ui';
 import { type FormPresentation } from '#types';
 
 import { useFormFieldState } from '../../../hooks';
-import { FormField, type FormFieldProps } from '../FormField';
-import { FormFieldErrorBoundary, FormFieldLabel } from '../FormField';
+import {
+  FormFieldErrorBoundary,
+  FormFieldLabel,
+  FieldRow,
+  FormField,
+  type FormFieldProps,
+  presentationFor,
+} from '../FormField';
 import { LayoutParseError, type LayoutNode, parseLayout } from './parser';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
@@ -115,7 +121,7 @@ const RenderNode = ({ node, schema, basePath, ...props }: RenderNodeProps) => {
     throw new LayoutParseError(`field "${node.name}" not found on schema`);
   }
 
-  const { type, segments, leafName, title, labelType } = resolved;
+  const { type, segments, leafName, title, labelType, required } = resolved;
   const path = [...basePath, ...segments];
   const span = node.span ? { gridColumn: `span ${node.span} / span ${node.span}` } : undefined;
 
@@ -130,7 +136,7 @@ const RenderNode = ({ node, schema, basePath, ...props }: RenderNodeProps) => {
             layout={props.layout}
           />
         ) : (
-          <FormField type={type} name={leafName} path={path} {...props} />
+          <FormField type={type} name={leafName} path={path} required={required} {...props} />
         )}
       </FormFieldErrorBoundary>
     </div>
@@ -152,6 +158,8 @@ export type ResolvedLayoutField = {
    * sub-fields. Undefined for ordinary (non-auto-labelled) fields.
    */
   labelType?: SchemaAST.AST;
+  /** Whether the resolved property is required (non-optional). */
+  required: boolean;
 };
 
 /**
@@ -216,6 +224,7 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
     leafName: segments[segments.length - 1],
     title,
     labelType: labelled ? labelType : undefined,
+    required: !prop.isOptional,
   };
 };
 
@@ -239,14 +248,15 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
     return null;
   }
 
+  const presentation = presentationFor(layout);
   return (
-    <div className='contents'>
+    <FieldRow presentation={presentation}>
       <Input.Root>
-        {layout !== 'inline' && <FormFieldLabel readonly label={label} path={SchemaEx.createJsonPath(path)} />}
+        {presentation.showLabel && <FormFieldLabel readonly label={label} path={SchemaEx.createJsonPath(path)} />}
         <p className='truncate min-w-0' title={text}>
           {text}
         </p>
       </Input.Root>
-    </div>
+    </FieldRow>
   );
 };

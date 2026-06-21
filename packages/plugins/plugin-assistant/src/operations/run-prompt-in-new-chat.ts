@@ -9,10 +9,10 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
@@ -20,8 +20,8 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatPath } from '../paths';
 
-const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewChat> =
-  AssistantOperation.RunPromptInNewChat.pipe(
+const handler: Operation.WithHandler<typeof AutomationOperation.RunPromptInNewChat> =
+  AutomationOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
         function* ({ db, prompt, objects, blueprints, background }) {
@@ -34,8 +34,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');
-            const feedServiceLayer = createFeedServiceLayer(space.db);
-            const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+            const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
               binder.use(async (b: AiContext.Binder) => {
@@ -68,7 +67,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                     Routine.make({
                       instructions: prompt,
                       blueprints: [],
-                      context: [],
                     }),
                   )
                 : prompt;

@@ -21,17 +21,17 @@ import { meta } from '#meta';
 // Virtual Node Types
 //
 
-export const TYPES_SECTION_TYPE = `${meta.id}.types`;
-export const COLLECTIONS_SECTION_TYPE = `${meta.id}.collections`;
-export const TYPE_COLLECTION_TYPE = `${meta.id}.type-collection`;
-export const STATIC_SCHEMA_TYPE = `${meta.id}.static-schema`;
+export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
+export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
+export const TYPE_COLLECTION_TYPE = `${meta.profile.key}.type-collection`;
+export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
 
 //
 // Constants
 //
 
 /** Shared translation namespace descriptor. */
-export const META_NS: { ns: string } = { ns: meta.id };
+export const META_NS: { ns: string } = { ns: meta.profile.key };
 
 //
 // Stable Callbacks
@@ -66,7 +66,6 @@ export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create-object-in-space.labe
 export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];
 export const MIGRATE_SPACE_LABEL: Label = ['migrate-space.label', META_NS];
 export const NEW_TYPE_LABEL: Label = ['new-type.label', META_NS];
-export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove-from-collection.label', META_NS];
 export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
 export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
 export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];

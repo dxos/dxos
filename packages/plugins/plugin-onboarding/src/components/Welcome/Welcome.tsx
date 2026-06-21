@@ -69,7 +69,7 @@ export const Welcome = ({
   onSpaceInvitation,
   onGoToLogin,
 }: WelcomeScreenProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Default primary login method: prefer passkey when supported, otherwise email.
   const defaultLoginPrimary: LoginMethod = supportsPasskeys && onPasskey ? 'passkey' : 'email';
@@ -536,7 +536,7 @@ const LoginTab = ({
   onRecoverIdentity,
   onRecoverWithOAuth,
 }: LoginTabProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const atmosphereRef = useRef<HTMLInputElement>(null);
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const pendingPrimaryFocus = useRef<LoginMethod | null>(null);

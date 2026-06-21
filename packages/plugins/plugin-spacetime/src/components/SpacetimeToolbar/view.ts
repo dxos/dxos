@@ -18,7 +18,7 @@ export const createViewActions =
     builder.group(
       'view',
       {
-        label: ['view.label', { ns: meta.id }],
+        label: ['view.label', { ns: meta.profile.key }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'multiple',
@@ -30,7 +30,7 @@ export const createViewActions =
         group.action(
           'showGrid',
           {
-            label: ['view.grid.label', { ns: meta.id }],
+            label: ['view.grid.label', { ns: meta.profile.key }],
             checked: editorState.showGrid,
             icon: 'ph--grid-four--regular',
           },
@@ -39,7 +39,7 @@ export const createViewActions =
         group.action(
           'showDebug',
           {
-            label: ['view.debug.label', { ns: meta.id }],
+            label: ['view.debug.label', { ns: meta.profile.key }],
             checked: editorState.showDebug,
             icon: 'ph--bug--regular',
           },

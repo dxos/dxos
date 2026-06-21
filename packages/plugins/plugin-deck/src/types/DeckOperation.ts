@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),

@@ -61,7 +61,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     activate: SupportSettings,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

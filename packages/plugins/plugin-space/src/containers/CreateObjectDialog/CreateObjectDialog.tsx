@@ -18,7 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { ViewAnnotation } from '@dxos/schema';
+import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
@@ -27,7 +27,7 @@ import { SpaceCapabilities } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
-export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
+export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'initialFormValues'> & {
   views?: boolean;
@@ -45,7 +45,7 @@ export const CreateObjectDialog = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: CreateObjectDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
@@ -89,7 +89,7 @@ export const CreateObjectDialog = ({
       for (const entry of contributions) {
         entries.push(entry);
         if (owningPlugin) {
-          pluginByEntryId.set(entry.id, owningPlugin.meta.name);
+          pluginByEntryId.set(entry.id, owningPlugin.meta.profile.name);
         }
       }
     }
@@ -126,10 +126,35 @@ export const CreateObjectDialog = ({
     return set;
   }, [typeByTypename]);
 
+  // Types eligible to live inside a collection: collections themselves, plus types carrying
+  // CollectionItemAnnotation. Used to filter the create dialog when targeting a collection.
+  const collectionItemTypenames = useMemo(() => {
+    const set = new Set<string>();
+    const collectionTypename = Type.getTypename(Collection.Collection);
+    for (const [name, type] of typeByTypename) {
+      if (
+        name === collectionTypename ||
+        CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
+      ) {
+        set.add(name);
+      }
+    }
+    return set;
+  }, [typeByTypename]);
+
+  // When creating into a collection, offer only collection-eligible types (mirrors the `views` filter).
+  const collectionTarget = Collection.isCollection(target);
+
   const options = useMemo<CreateObjectOption[]>(
     () =>
       createObjectEntries
-        .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
+        .filter((entry) =>
+          views === true
+            ? viewTypenames.has(entry.id)
+            : collectionTarget
+              ? collectionItemTypenames.has(entry.id)
+              : true,
+        )
         .map((entry) => {
           const type = typeByTypename.get(entry.id);
           const schema = type && Type.getSchema(type);
@@ -146,7 +171,17 @@ export const CreateObjectDialog = ({
             description: isDatabase ? spaceLabel : undefined,
           };
         }),
-    [createObjectEntries, views, viewTypenames, typeByTypename, t, pluginNameByEntryId, spaceLabel],
+    [
+      createObjectEntries,
+      views,
+      viewTypenames,
+      collectionTarget,
+      collectionItemTypenames,
+      typeByTypename,
+      t,
+      pluginNameByEntryId,
+      spaceLabel,
+    ],
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(

@@ -13,7 +13,7 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver, type Blueprint } from '@dxos/compute';
-import { Database, Feed, Ref, Tag } from '@dxos/echo';
+import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -88,7 +88,7 @@ const runAgentPrompt = <I>(
         },
         { spaceId },
       );
-    }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService))),
+    }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
   );
 
 export interface CreateEvalRunnerOptions<I, O> {
@@ -123,8 +123,6 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
     const prompt = Routine.make({
       instructions: options.instructions,
       blueprints: options.blueprints ?? [],
-      input: options.input,
-      output: options.output,
     });
 
     return EffectEx.runAndForwardErrors(

@@ -19,8 +19,8 @@ import {
   Trace,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { createFeedServiceLayer, EchoClient, type DatabaseImpl, makeRegistry } from '@dxos/echo-client';
+import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { EchoClient, type DatabaseImpl, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -68,7 +68,7 @@ export const wrapFunctionHandler = (
     },
     handler: async ({ data, context }) => {
       if (
-        (serviceTags.includes(Database.Service.key) || serviceTags.includes(Feed.FeedService.key)) &&
+        serviceTags.includes(Database.Service.key) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -192,7 +192,6 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    const feedLayer = this.db ? createFeedServiceLayer(this.db) : Feed.notAvailable;
     const credentials = dbLayer
       ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : configuredCredentialsLayer([]);
@@ -225,7 +224,6 @@ class FunctionContext extends Resource {
 
     return Layer.mergeAll(
       dbLayer,
-      feedLayer,
       credentials,
       operationServiceLayer,
       aiLayer,

@@ -7,7 +7,7 @@ import React from 'react';
 import { Blueprint } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { meta } from '@dxos/plugin-assistant';
-import { TemplateEditor } from '@dxos/plugin-assistant/components';
+import { TemplateEditor } from '@dxos/plugin-automation/components';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
@@ -15,7 +15,7 @@ import { descriptionMessage, mx } from '@dxos/ui-theme';
 import { type ModuleProps } from './types';
 
 export const BlueprintModule = ({ space }: ModuleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [blueprint] = useQuery(space.db, Filter.type(Blueprint.Blueprint));
   if (!blueprint?.instructions) {
     return <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no-blueprint.message')}</p>;

@@ -8,14 +8,14 @@ import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const NATIVE_REDIRECT_DIALOG = `${meta.id}.component.native-redirect-dialog`;
+export const NATIVE_REDIRECT_DIALOG = `${meta.profile.key}.component.native-redirect-dialog`;
 
 /**
  * Shown after the native app has been successfully opened via custom scheme.
  * Gives the user the option to stay in the browser instead.
  */
 export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className='flex flex-col items-center justify-center h-full gap-8'>

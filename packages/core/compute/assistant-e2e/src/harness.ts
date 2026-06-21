@@ -16,7 +16,7 @@ import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos
 import { type ClientOptions } from '@dxos/client';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
-import { Database, Feed, Ref, Tag, Type } from '@dxos/echo';
+import { Database, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
@@ -49,7 +49,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints' | 'input' | 'output'> {
+interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
@@ -176,8 +176,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     name: options.name,
     instructions: formatInstructions(options.instructions, options.completionCriteria),
     blueprints: options.blueprints ?? getDefaultBlueprints(),
-    input: options.input,
-    output: options.output,
   });
 
   return Effect.fnUntraced(function* (ctx) {

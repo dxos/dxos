@@ -21,7 +21,14 @@ export const AgentPrompt = Operation.make({
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
+    // TODO(burdon): Rename routine.
     prompt: Ref.Ref(Routine.Routine),
+
+    /**
+     * Input object or data.
+     * References get auto-resolved.
+     */
+    input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
 
     /**
      * When set, runs in this chat (history, queue, and bound context). Routine blueprints and context objects are merged into the conversation for this request.
@@ -32,12 +39,6 @@ export const AgentPrompt = Operation.make({
      * @default ai.claude.model.claude-opus-4-8
      */
     model: Schema.optional(ModelName),
-
-    /**
-     * Input object or data.
-     * References get auto-resolved.
-     */
-    input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
 
     systemInstructions: Schema.optional(Schema.String).annotations({
       description: 'Additional system instructions to add to the system prompt.',
@@ -50,7 +51,6 @@ export const AgentPrompt = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    Feed.FeedService,
     OpaqueToolkit.OpaqueToolkitProvider,
     Registry.Service,
     Trace.TraceService,

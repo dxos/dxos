@@ -57,13 +57,6 @@ export default AgentPrompt.pipe(
           ),
         );
 
-        const objectRefs = yield* Effect.filter(prompt.context, (ref) =>
-          Database.load(ref).pipe(
-            Effect.as(true),
-            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
-          ),
-        );
-
         const promptInstructions = yield* Database.load(prompt.instructions);
         let promptText = Template.process(promptInstructions.content, input);
 
@@ -101,13 +94,12 @@ export default AgentPrompt.pipe(
           resultSink,
         });
 
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>
           session.context.bind({
             blueprints: blueprintRefs,
-            objects: objectRefs,
           }),
         );
 

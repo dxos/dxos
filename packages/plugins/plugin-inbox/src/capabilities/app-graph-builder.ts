@@ -153,11 +153,11 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: getMailboxesSectionId(),
               type: MAILBOXES_SECTION_TYPE,
-              label: ['mailboxes-section.label', { ns: meta.id }],
+              label: ['mailboxes-section.label', { ns: meta.profile.key }],
               icon: 'ph--tray--regular',
               iconHue: 'rose',
               space,
-              position: 'first',
+              position: 301,
             }),
           ]);
         },
@@ -199,7 +199,7 @@ export default Capability.makeModule(
                     type: MAILBOX_ALL_MAIL_TYPE,
                     data: mailbox,
                     properties: {
-                      label: ['all-mail.label', { ns: meta.id }],
+                      label: ['all-mail.label', { ns: meta.profile.key }],
                       icon: 'ph--envelope--regular',
                       iconHue: 'rose',
                       filter: null,
@@ -210,7 +210,7 @@ export default Capability.makeModule(
                     type: MAILBOX_DRAFTS_TYPE,
                     data: MAILBOX_DRAFTS_NODE_DATA,
                     properties: {
-                      label: ['drafts.label', { ns: meta.id }],
+                      label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
                       mailbox,
@@ -240,7 +240,7 @@ export default Capability.makeModule(
                               });
                             }),
                           properties: {
-                            label: ['delete-filter.label', { ns: meta.id }],
+                            label: ['delete-filter.label', { ns: meta.profile.key }],
                             icon: 'ph--trash--regular',
                             disposition: 'list-item',
                           },
@@ -272,7 +272,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
-              label: ['message.label', { ns: meta.id }],
+              label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: draft ?? 'message',
             }),
@@ -290,7 +290,7 @@ export default Capability.makeModule(
               id: 'createDraft',
               data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
               properties: {
-                label: ['create-draft.label', { ns: meta.id }],
+                label: ['create-draft.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
@@ -318,7 +318,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
-              label: ['message.label', { ns: meta.id }],
+              label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: message ?? 'message',
             }),
@@ -337,7 +337,7 @@ export default Capability.makeModule(
         // the type guard itself is the runtime proof.
         isDbChild: (mailbox, obj): obj is Message.Message =>
           DraftMessage.belongsTo(obj as Message.Message, Obj.getURI(mailbox)),
-        getNodeLabel: (message) => message.properties?.subject ?? ['message.label', { ns: meta.id }],
+        getNodeLabel: (message) => message.properties?.subject ?? ['message.label', { ns: meta.profile.key }],
         nodeIcon: 'ph--envelope-open--regular',
       }),
 
@@ -366,7 +366,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      TypeSection.createTypeSectionExtension(Calendar.Calendar),
+      TypeSection.createTypeSectionExtension(Calendar.Calendar, { position: 302 }),
 
       GraphBuilder.createExtension({
         id: 'calendarsSectionActions',
@@ -416,7 +416,7 @@ export default Capability.makeModule(
           const nodes = [
             AppNode.makeCompanion({
               id: linkedSegment('event'),
-              label: ['event.label', { ns: meta.id }],
+              label: ['event.label', { ns: meta.profile.key }],
               icon: 'ph--calendar-dot--regular',
               data: event ?? 'event',
             }),
@@ -431,7 +431,7 @@ export default Capability.makeModule(
                 type: Type.getTypename(Event.Event),
                 data: event,
                 properties: {
-                  label: event.title ?? ['event.label', { ns: meta.id }],
+                  label: event.title ?? ['event.label', { ns: meta.profile.key }],
                   icon: 'ph--calendar-dot--regular',
                   disposition: 'hidden',
                 },
@@ -496,7 +496,7 @@ export default Capability.makeModule(
               type: Type.getTypename(Event.Event),
               data: event,
               properties: {
-                label: event.title ?? ['event.label', { ns: meta.id }],
+                label: event.title ?? ['event.label', { ns: meta.profile.key }],
                 icon: 'ph--calendar-dot--regular',
                 disposition: 'hidden',
               },
@@ -510,7 +510,7 @@ export default Capability.makeModule(
         childType: Event.Event,
         getFeed: (calendar, get) => (calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined),
         isDbChild: (_, obj): obj is Event.Event => Obj.instanceOf(Event.Event, obj),
-        getNodeLabel: (event) => event.title ?? ['event.label', { ns: meta.id }],
+        getNodeLabel: (event) => event.title ?? ['event.label', { ns: meta.profile.key }],
         nodeIcon: 'ph--calendar-dot--regular',
       }),
 
@@ -544,13 +544,13 @@ export default Capability.makeModule(
                   {
                     spaceId: db.spaceId,
                     notify: {
-                      success: ['sync-mailbox-success.title', { ns: meta.id }],
-                      error: ['sync-mailbox-error.title', { ns: meta.id }],
+                      success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
+                      error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
                     },
                   },
                 ),
               properties: {
-                label: ['sync-mailbox.label', { ns: meta.id }],
+                label: ['sync-mailbox.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
@@ -589,13 +589,13 @@ export default Capability.makeModule(
                   {
                     spaceId: db.spaceId,
                     notify: {
-                      success: ['sync-calendar-success.title', { ns: meta.id }],
-                      error: ['sync-calendar-error.title', { ns: meta.id }],
+                      success: ['sync-calendar-success.title', { ns: meta.profile.key }],
+                      error: ['sync-calendar-error.title', { ns: meta.profile.key }],
                     },
                   },
                 ),
               properties: {
-                label: ['sync-calendar.label', { ns: meta.id }],
+                label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

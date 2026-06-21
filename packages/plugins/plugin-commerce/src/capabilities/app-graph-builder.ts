@@ -11,6 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
+import { Position } from '@dxos/util';
 
 import { meta } from '../meta';
 import { Provider, Search, SearchOperation } from '../types';
@@ -35,10 +36,10 @@ export default Capability.makeModule(
               type: 'providers', // TODO(burdon): Const.
               data: 'providers-root', // TODO(burdon): Const.
               properties: {
-                label: ['providers.label', { ns: meta.id }],
+                label: ['providers.label', { ns: meta.profile.key }],
                 icon: 'ph--globe--regular',
                 role: 'branch',
-                position: 'first',
+                position: Position.first,
               },
               nodes: providers
                 .map((provider: Provider.Provider) =>
@@ -69,7 +70,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(search)?.spaceId },
                 ),
               properties: {
-                label: ['run-search.label', { ns: meta.id }],
+                label: ['run-search.label', { ns: meta.profile.key }],
                 icon: 'ph--shopping-cart--regular',
                 disposition: 'list-item',
               },
@@ -101,7 +102,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(provider)?.spaceId },
                 ),
               properties: {
-                label: ['regenerate.label', { ns: meta.id }],
+                label: ['regenerate.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 disposition: 'toolbar',
               },

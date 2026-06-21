@@ -19,6 +19,7 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
+import { Position } from '@dxos/util';
 
 import { MarkdownSettings } from '#components';
 import { MarkdownCard, EditableMarkdownCard, MarkdownArticle, type MarkdownArticleProps } from '#containers';
@@ -31,9 +32,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Markdown.Document, (data) => !data.variant),
+          AppSurface.object(AppSurface.Section, Markdown.Document),
+          AppSurface.object(AppSurface.Tabpanel, Markdown.Document, (data) => !data.variant),
+        ),
         component: ({ data, role, ref }) => {
           return (
             <Container
@@ -41,7 +44,7 @@ export default Capability.makeModule(() =>
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
-              ref={ref}
+              ref={ref as React.Ref<HTMLDivElement>}
             />
           );
         },
@@ -62,14 +65,14 @@ export default Capability.makeModule(() =>
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
-              ref={ref}
+              ref={ref as React.Ref<HTMLDivElement>}
             />
           );
         },
       }),
       Surface.create({
         id: 'surface.pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -77,13 +80,21 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.editable',
-        position: 'first',
-        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
+        position: Position.first,
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          [Markdown.Document, Text.Text],
+          (data) => data.editable === true,
+        ),
         component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
       }),
       Surface.create({
         id: 'surface.preview',
-        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable !== true),
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          [Markdown.Document, Text.Text],
+          (data) => data.editable !== true,
+        ),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),

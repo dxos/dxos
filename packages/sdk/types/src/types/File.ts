@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 /**
  * Discriminated `data` field on {@link File}: either the bytes live on the
@@ -59,6 +60,7 @@ export const File = Schema.Struct({
   timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' }),
+  CollectionItemAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.file', '0.1.0')),
 );
 

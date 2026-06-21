@@ -11,9 +11,11 @@ import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framew
 import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
+import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
 import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
+import { Position } from '@dxos/util';
 
 import { SupportSettings } from '#components';
 import {
@@ -49,23 +51,23 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceHomeWelcome',
         filter: Surface.makeFilter(SpaceHomeContent),
-        position: 'first',
+        position: Position.first,
         component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',
-        role: 'deck-companion--help',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
         id: 'discord',
-        role: 'deck-companion--discord',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
         component: () => <DiscordPanel />,
       }),
       Surface.create({
         id: 'helpMenu',
-        role: 'status-indicator',
-        position: 'last',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        position: Position.last,
         component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that
@@ -82,12 +84,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        role: 'hints',
+        filter: Surface.makeFilter(Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        role: 'keyshortcuts',
+        filter: Surface.makeFilter(Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({
@@ -97,7 +99,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const client = useClient();
           const { invokePromise } = useOperationInvoker();

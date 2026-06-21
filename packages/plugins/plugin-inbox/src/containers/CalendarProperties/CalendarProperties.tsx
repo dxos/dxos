@@ -18,7 +18,7 @@ import { Calendar } from '#types';
 export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
 
 export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
@@ -33,7 +33,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [`${Paths.getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
+      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.automation.automations')],
       workspace: Paths.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);

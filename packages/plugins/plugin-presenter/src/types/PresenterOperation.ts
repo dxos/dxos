@@ -13,7 +13,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const TogglePresentation = Operation.make({
   meta: {

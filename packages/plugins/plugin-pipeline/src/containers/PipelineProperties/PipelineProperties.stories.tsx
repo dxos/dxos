@@ -4,12 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -128,9 +126,7 @@ const meta = {
               // Generate sample Contacts.
               const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
-            }).pipe(
-              Effect.provide(Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db))),
-            );
+            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
           }),
         }),
         PreviewPlugin(),

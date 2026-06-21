@@ -111,7 +111,7 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spaces',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
@@ -299,7 +299,7 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
-        'types-section.label': 'Database',
+        'database-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-all.label': 'All',
 

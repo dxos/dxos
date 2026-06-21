@@ -121,7 +121,7 @@ type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' |
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
   const { event, starred, onAction } = data;
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { setCurrentId, setSelected } = useMosaicContainer('EventTile');
 
   // Click / Enter commit both current and selection. Arrow keys only move focus.

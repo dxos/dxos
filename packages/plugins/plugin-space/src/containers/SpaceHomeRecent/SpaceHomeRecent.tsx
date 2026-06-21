@@ -31,7 +31,7 @@ type SpaceScopedProps = {
  * contributor (plugin-assistant) fills the empty state instead.
  */
 export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const schemas = useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
@@ -52,12 +52,13 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
         .limit(RECENT_LIMIT),
     [filter],
   );
-  const recent = useQuery(filter && space ? space.db : undefined, query);
 
+  const recent = useQuery(filter && space ? space.db : undefined, query);
   if (recent.length === 0) {
     return null;
   }
 
+  // TODO(burdon): Should this be a Masonry or just flow? Do we expect this to scroll?
   return (
     <>
       <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
@@ -72,7 +73,7 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
   const label = toLocalizedString(
     Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
@@ -87,7 +88,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   }, [invokePromise, data]);
 
   return (
-    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
         <Card.Block>
           <Icon icon={icon} classNames={iconStyles?.text} />

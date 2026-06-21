@@ -13,7 +13,7 @@ import { meta } from '../meta';
 import { OnboardingOperation } from '../operations';
 
 export const ExemplarSettings = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [busy, setBusy] = useState(false);
 

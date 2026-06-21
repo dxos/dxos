@@ -13,7 +13,7 @@ import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for `GetSlackChannels.output`. */
 const RemoteTarget = Schema.Struct({
@@ -38,9 +38,8 @@ export const GetSlackChannels = Operation.make({
     description: 'List Slack conversations reachable from an integration without materializing local Channels.',
     icon: 'ph--slack-logo--regular',
   },
-  // Database.Service / Feed.FeedService are provided inside the handler from
-  // the integration's database and the resolved space's queues — same pattern
-  // as plugin-thread's `AppendChannelMessage`.
+  // Database.Service is provided inside the handler from the integration's
+  // database and the resolved space's queues — same pattern as plugin-thread's `AppendChannelMessage`.
   services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

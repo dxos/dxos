@@ -51,7 +51,6 @@ describe('Agent prompt (composer plugin harness)', () => {
               name: 'chat-mode-test',
               instructions: 'Reply with a single word: ack.',
               blueprints: [],
-              context: [],
             }),
           );
           yield* Database.flush();
@@ -72,9 +71,7 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
           expect(result).toBe('ack');
-        }).pipe(
-          Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService)),
-        ),
+        }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
         { timeout: 30_000 },
       );
     },

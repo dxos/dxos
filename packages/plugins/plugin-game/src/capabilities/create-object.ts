@@ -41,7 +41,6 @@ export default Capability.makeModule(
           yield* Operation.invoke(SpaceOperation.AddObject, {
             object: stateObject,
             target: options.target,
-            hidden: true,
             targetNodeId: options.targetNodeId,
           });
 

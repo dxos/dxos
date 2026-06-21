@@ -4,6 +4,7 @@
 
 export * from './errors';
 
+export * as AgentService from './AgentService';
 export * as Blueprint from './Blueprint';
 export * as Credential from './Credential';
 export * as Header from './Header';

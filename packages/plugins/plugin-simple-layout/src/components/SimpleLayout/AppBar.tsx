@@ -36,7 +36,7 @@ export type AppBarProps = {
  */
 export const AppBar = composable<HTMLDivElement, AppBarProps>(
   ({ classNames, title, actions, showBackButton, popoverAnchorId, onAction, onBack, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const menuActions = useMenuActions(actions);
     const actionsValue = useAtomValue(actions);
     const hasActions = actionsValue.nodes.length > 0;
@@ -73,7 +73,7 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
           <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
           {hasActions ? (
             <AnchorRoot>
-              <Menu.Root {...menuActions} caller={meta.id} onAction={onAction}>
+              <Menu.Root {...menuActions} caller={meta.profile.key} onAction={onAction}>
                 <Menu.Trigger asChild>
                   <IconButton
                     variant='ghost'

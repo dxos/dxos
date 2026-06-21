@@ -31,7 +31,7 @@ type KeyItemProps = {
 };
 
 const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleDelete = useCallback(() => {
     onDelete?.(forignKey);
