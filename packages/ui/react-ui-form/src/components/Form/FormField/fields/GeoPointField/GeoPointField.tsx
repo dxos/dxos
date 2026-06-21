@@ -11,7 +11,7 @@ import { safeParseFloat } from '@dxos/util';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldWrapper } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 export const GeoPointField = ({
   type,
@@ -52,7 +52,7 @@ export const GeoPointField = ({
   );
 
   return (
-    <FormFieldWrapper<GeoPoint>
+    <FormRow<GeoPoint>
       readonly={readonly}
       getValue={getValue}
       standalone
@@ -99,7 +99,7 @@ export const GeoPointField = ({
           </div>
         </div>
       )}
-    </FormFieldWrapper>
+    </FormRow>
   );
 };
 

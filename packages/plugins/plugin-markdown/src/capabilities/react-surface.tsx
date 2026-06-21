@@ -21,8 +21,13 @@ import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Position } from '@dxos/util';
 
-import { MarkdownSettings } from '#components';
-import { MarkdownCard, EditableMarkdownCard, MarkdownArticle, type MarkdownArticleProps } from '#containers';
+import {
+  MarkdownCard,
+  EditableMarkdownCard,
+  MarkdownArticle,
+  MarkdownSettings,
+  type MarkdownArticleProps,
+} from '#containers';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 

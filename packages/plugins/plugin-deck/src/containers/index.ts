@@ -9,3 +9,4 @@ export * from './Plank';
 export * from './Sidebar';
 
 export const DeckLayout: ComponentType<any> = lazy(() => import('./DeckLayout'));
+export const DeckSettings: ComponentType<any> = lazy(() => import('./DeckSettings'));

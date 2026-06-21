@@ -25,6 +25,7 @@ export const SmallPresenceLive: ComponentType<any> = lazy(() => import('./SmallP
 export const SpacePresence: ComponentType<any> = lazy(() => import('./SpacePresence'));
 export const SpaceHomeArticle: ComponentType<any> = lazy(() => import('./SpaceHomeArticle'));
 export const SpaceHomeRecent: ComponentType<any> = lazy(() => import('./SpaceHomeRecent'));
+export const SpaceSettings: ComponentType<any> = lazy(() => import('./SpaceSettings'));
 export const SpaceSettingsContainer: ComponentType<any> = lazy(() => import('./SpaceSettingsContainer'));
 export const SyncStatus: ComponentType<any> = lazy(() => import('./SyncStatus'));
 export const ViewEditor: ComponentType<any> = lazy(() => import('./ViewEditor'));

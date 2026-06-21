@@ -612,6 +612,7 @@ catalog:
   tabster: ^8.5.5
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
+  tailwind-variants: ^3.2.2
   tailwindcss: ^4.3.0
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
