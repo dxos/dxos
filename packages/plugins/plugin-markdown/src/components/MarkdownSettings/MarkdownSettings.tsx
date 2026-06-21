@@ -39,14 +39,8 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
 };
 
 /** Multi-line snippet editor; replaces the single-line text input the schema would otherwise render. */
-const SnippetsField = ({
-  type,
-  readonly,
-  onValueChange,
-  onBlur,
-  ...props
-}: FormFieldRendererProps<string | undefined>) => (
-  <FormFieldWrapper<string | undefined> readonly={readonly} {...props}>
+const SnippetsField = ({ type, readonly, onValueChange, onBlur, ...props }: FormFieldRendererProps<string>) => (
+  <FormFieldWrapper<string> readonly={readonly} {...props}>
     {({ value }) => (
       <Input.TextArea
         disabled={!!readonly}

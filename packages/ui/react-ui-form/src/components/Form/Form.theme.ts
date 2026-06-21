@@ -33,10 +33,13 @@ const formStyles = tv({
         sectionDescription: 'px-trim-md',
         fieldSet: 'flex flex-col gap-trim-md pt-trim-md',
         field: mx(
-          `grid grid-cols-2 [grid-template-areas:'header_control''description_description'] gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm`,
+          'grid',
+          'grid-cols-1 [grid-template-areas:"header""description""control"]',
+          'md:grid-cols-2 md:[grid-template-areas:"header_control""description_description"]',
+          'gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm',
         ),
         description: '[grid-area:description] text-base text-description',
-        control: '[grid-area:control] flex items-center justify-end',
+        control: '[grid-area:control] flex items-center md:justify-end pt-3 md:pt-0',
         // The error block is outside the named areas; span it full-width so `layout='full'` settings forms don't misplace it.
         validation: 'col-span-full',
       },
