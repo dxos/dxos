@@ -17,7 +17,7 @@ export type ProfileSummaryProps = {
 export const ProfileSummary = ({ summary, onOpen }: ProfileSummaryProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Form.Section label={t('user-profile.title')}>
+    <Form.Section title={t('user-profile.title')}>
       {summary ? (
         <button type='button' onClick={onOpen} className='text-left w-full'>
           <p className='text-sm text-description whitespace-pre-wrap line-clamp-4'>{summary}</p>
