@@ -68,7 +68,6 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         <Panel.Root role={role} ref={forwardedRef}>
           {!readOnly && (
             <Panel.Toolbar classNames='bg-toolbar-surface'>
-              {/* TODO(burdon): Custom toolbar. */}
               <Editor.Toolbar role={role} attendableId={attendableId} />
             </Panel.Toolbar>
           )}
