@@ -280,7 +280,7 @@ FormField.displayName = 'Form.FormField';
 //
 
 export const CompactIconButton = (props: IconButtonProps) => {
-  return <IconButton variant='ghost' density='xs' square iconOnly {...props} />;
+  return <IconButton variant='ghost' iconOnly {...props} />;
 };
 
 /**
