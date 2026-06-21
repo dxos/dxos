@@ -55,6 +55,7 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = PropsWithCh
     Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
+// `variant` (from FormContextValue) flows through `...props` into the context for all parts to read.
 export const FormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   schema,
@@ -238,17 +239,24 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SECTION_NAME = 'Form.Section';
 
-export type FormSectionProps = ThemedClassName<{ label?: string; description?: string }>;
+export type FormSectionProps = ThemedClassName<{
+  title?: string;
+  description?: string;
+  /** Class on the section title element, overriding the default size/spacing. */
+  titleClassName?: string;
+  /** Class on the section description element, overriding the default color/spacing. */
+  descriptionClassName?: string;
+}>;
 
 export const FormSection = composable<HTMLDivElement, FormSectionProps>(
-  ({ children, label, description, ...props }, forwardedRef) => {
+  ({ children, title, description, titleClassName, descriptionClassName, ...props }, forwardedRef) => {
     return (
       <div
         {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
         ref={forwardedRef}
       >
-        {label && <h2 className='text-lg'>{label}</h2>}
-        {description && <p className='text-description'>{description}</p>}
+        {title && <h2 className={mx('text-lg', titleClassName)}>{title}</h2>}
+        {description && <p className={mx('text-description', descriptionClassName)}>{description}</p>}
         {children}
       </div>
     );
