@@ -23,6 +23,12 @@ export const Routine = Schema.Struct({
     Schema.annotations({ description: 'Describe what the agent should do in each session.' }),
   ),
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
+  /**
+   * Context objects bound to the agent's session when this routine runs (sibling of `blueprints`).
+   * Generic `Ref.Ref(Obj.Unknown)` so any space object qualifies. Honored on every run path that
+   * executes a routine through the agent prompt, not only triggered automations.
+   */
+  objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Schema.annotations({ title: 'Objects' }), Schema.optional),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
@@ -36,12 +42,14 @@ export type MakeProps = {
   description?: string;
   instructions?: string;
   blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+  objects?: Ref.Ref<Obj.Unknown>[];
 };
 
-export const make = ({ name, description, instructions, blueprints = [] }: MakeProps): Routine =>
+export const make = ({ name, description, instructions, blueprints = [], objects }: MakeProps): Routine =>
   Obj.make(Routine, {
     name,
     description,
     instructions: Ref.make(Text.make({ content: instructions ?? '' })),
     blueprints,
+    objects,
   });

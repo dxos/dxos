@@ -27,10 +27,8 @@ const types = [Automation.Automation, Automation.AppliesTo, Routine.Routine, Blu
 const seed = (space: Space) => {
   const subject = space.db.add(Text.make({ content: 'Meeting notes' }));
 
-  const routine = space.db.add(Routine.make({ name: 'Summarize notes' }));
-  const automation = space.db.add(
-    Automation.make({ name: 'Summarize Notes', triggers: [], objects: [Ref.make(subject)] }),
-  );
+  const routine = space.db.add(Routine.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }));
+  const automation = space.db.add(Automation.make({ name: 'Summarize Notes', triggers: [] }));
   Obj.setParent(routine, automation);
   space.db.add(Automation.makeAppliesTo({ [Relation.Source]: automation, [Relation.Target]: subject }));
 };

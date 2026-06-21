@@ -33,12 +33,6 @@ export const Automation = Schema.Struct({
    * conflate triggers. MVP enforces length <= 1.
    */
   triggers: Schema.Array(Ref.Ref(Trigger.Trigger)),
-
-  /**
-   * Context objects bound to the routine's chat when the automation runs, giving the agent access to the
-   * referenced objects. Kept as generic `Ref.Ref(Obj.Unknown)` so the field stays untyped (any space object).
-   */
-  objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Schema.annotations({ title: 'Objects' }), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),

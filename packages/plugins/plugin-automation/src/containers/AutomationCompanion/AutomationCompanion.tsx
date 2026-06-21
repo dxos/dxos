@@ -63,8 +63,8 @@ export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) =>
     // Pre-fill: bind the object as routine context and attach the object type's blueprints. The routine
     // and automation are added to the db now (the instructions editor needs a db-attached object); the
     // anchoring relation is deferred to save.
-    const routine = db.add(Routine.make({ blueprints: blueprintRefsForObject(object) }));
-    const automation = db.add(Automation.make({ triggers: [], objects: [Ref.make(object)] }));
+    const routine = db.add(Routine.make({ blueprints: blueprintRefsForObject(object), objects: [Ref.make(object)] }));
+    const automation = db.add(Automation.make({ triggers: [] }));
     Obj.setParent(routine, automation);
     setSelectedId(undefined);
     setDraft({ automation, routine });

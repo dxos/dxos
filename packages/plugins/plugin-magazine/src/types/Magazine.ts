@@ -158,6 +158,8 @@ export const ensureRoutine = (
         name: magazine.name ? `${magazine.name} curation` : 'Magazine curation',
         instructions: composeInstructions(magazine.topic),
         blueprints,
+        // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
+        objects: [Ref.make(magazine)],
       }),
     );
     // Cascade-delete the Routine (and its instructions Text) with the magazine.
@@ -168,8 +170,6 @@ export const ensureRoutine = (
     Obj.update(magazine, (magazine) => {
       magazine.routine = Ref.make(routine);
     });
-    // TODO(burdon): Add the magazine to the Routine's context (`Routine.objects`) once that field
-    //   lands, so the agent sees the magazine as bound context, not only the candidate JSON input.
     return routine;
   });
 
