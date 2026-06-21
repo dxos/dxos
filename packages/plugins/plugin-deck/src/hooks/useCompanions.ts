@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { PLANK_COMPANION_TYPE } from '#types';
 
@@ -14,5 +14,5 @@ export const useCompanions = (id?: string) => {
   const { graph } = useAppGraph();
   const nodes = useConnections(graph, id, 'child');
   const companions = nodes.filter((node) => node.type === PLANK_COMPANION_TYPE);
-  return useMemo(() => companions.toSorted((a, b) => byPosition(a.properties, b.properties)), [companions]);
+  return useMemo(() => companions.toSorted((a, b) => Position.compare(a.properties, b.properties)), [companions]);
 };

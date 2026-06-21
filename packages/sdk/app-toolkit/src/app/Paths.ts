@@ -28,7 +28,7 @@ export const getPinnedWorkspacePath = (name: string): string => `${Node.RootId}/
  * Well-known local segment names for the canonical graph tree structure.
  */
 export const Segments = {
-  types: 'types',
+  database: 'database',
   collections: 'collections',
 } as const;
 
@@ -59,11 +59,11 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
 };
 
 /**
- * Canonical qualified path to the types section of a space.
+ * Canonical qualified path to the database section of a space.
  * Optional additional segments are appended.
  */
-export const getTypesPath = (spaceId: string, ...segments: string[]): string => {
-  const base = getSpacePath(spaceId, Segments.types);
+export const getDatabasePath = (spaceId: string, ...segments: string[]): string => {
+  const base = getSpacePath(spaceId, Segments.database);
   return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
 };
 
@@ -94,14 +94,14 @@ export const getTypeSlugFromUri = (uri: URI.URI): string => {
  * Optional additional segments are appended (e.g. an object id for a view under that type).
  */
 export const getTypePath = (spaceId: string, typename: string, ...segments: string[]): string =>
-  getTypesPath(spaceId, typename, ...segments);
+  getDatabasePath(spaceId, typename, ...segments);
 
 /**
  * Canonical qualified path to a specific object node within a type's subtree.
  * Uses the ECHO-local object ID, not the full DXN.
  */
 export const getObjectPath = (spaceId: string, typename: string, objectId: string): string =>
-  getTypesPath(spaceId, typename, 'all', objectId);
+  getDatabasePath(spaceId, typename, 'all', objectId);
 
 /**
  * Derive the canonical graph path for a reactive ECHO object.
@@ -186,10 +186,8 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  * export { getChatsPath, getChatPath };
  * ```
  *
- * @idiom org.dxos.app-toolkit.typeSectionPath
- *   applies: Navigating to or linking to objects of a plugin-specific ECHO type
- *   instead-of: Building path strings with template literals at the call site
- *   uses: {@link createTypeSectionPaths}
+ * @deprecated Moving away from the generic type-section pattern; top-level sections will all be
+ * custom going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel.
  */
 export const createTypeSectionPaths = (type: Type.AnyEntity) => {
   const typename = Type.getTypename(type);

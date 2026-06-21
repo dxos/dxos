@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/i18n"
+    },
+    {
       "path": "../../common/keys"
     },
     {

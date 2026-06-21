@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
-import { TemplateEditor } from '@dxos/plugin-assistant/components';
+import { TemplateEditor } from '@dxos/plugin-automation/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';

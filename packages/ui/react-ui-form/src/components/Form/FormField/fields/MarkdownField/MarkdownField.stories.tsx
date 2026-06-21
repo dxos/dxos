@@ -61,7 +61,7 @@ const RefStory = () => {
   return (
     <TestLayout>
       <Panel.Root>
-        <Panel.Content asChild>
+        <Panel.Content>
           <Form.Root schema={TextNoteHolder} values={values as any} db={space.db}>
             <Form.Viewport>
               <Form.Content>
@@ -96,7 +96,7 @@ const EmptyRefStory = () => {
   return (
     <TestLayout>
       <Panel.Root>
-        <Panel.Content asChild>
+        <Panel.Content>
           <Form.Root schema={EmptyRefSchema} defaultValues={{}} db={space.db}>
             <Form.Viewport>
               <Form.Content>

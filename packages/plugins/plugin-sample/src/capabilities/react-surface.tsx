@@ -14,6 +14,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Position } from '@dxos/util';
 
 import { SampleStatusIndicator } from '#components';
 import {
@@ -50,7 +51,7 @@ export default Capability.makeModule(() =>
       // `AppSurface.object(AppSurface.ObjectProperties, Schema)` matches when viewing properties for this type.
       Surface.create({
         id: 'objectProperties',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, SampleItem.SampleItem),
         component: ({ data }) => <SampleProperties subject={data.subject} />,
       }),

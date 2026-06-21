@@ -57,7 +57,6 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
         yield* Operation.invoke(SpaceOperation.AddObject, {
           object: trigger,
           target: db,
-          hidden: true,
         });
         yield* Operation.invoke(LayoutOperation.Open, {
           subject: [`${Paths.getSpacePath(db.spaceId)}/settings/${meta.profile.key}.automations`],

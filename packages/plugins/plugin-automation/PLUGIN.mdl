@@ -147,6 +147,34 @@ component FunctionsPanel
     handleDelete(fn: PersistentOperation)      # remove function via SpaceOperation
 ```
 
+```mdl
+component TemplateEditor
+  desc: |
+    Markdown + Handlebars source editor backed by a Ref<Text>. Decorates
+    Handlebars tags, DXN/URL tokens, and XML nodes. Reused by Routine and
+    Blueprint article surfaces and by downstream plugins (plugin-script,
+    plugin-feed) via the `@dxos/plugin-automation/components` export.
+  props:
+    id: string
+    source?: Ref<Text>
+    lineNumbers?: boolean
+```
+
+```mdl
+component RoutineProperties
+  desc: Object-properties form for a Routine, rendered via ObjectProperties.
+  props:
+    routine: Routine
+```
+
+## Surfaces
+
+```mdl
+surface blueprint     -> BlueprintArticle    # article for Blueprint objects
+surface prompt        -> RoutineArticle      # article for Routine objects (template editor + run)
+surface prompts       -> RoutineList         # space-home prompt list; dispatches RunPromptInNewChat
+```
+
 ## Operations
 
 ```mdl
@@ -170,6 +198,25 @@ op CreateTriggerFromTemplate
       timer → Trigger.specTimer(cron)
       feed  → Trigger.specFeed(feed)
     Trigger is added as a hidden object so it does not appear in the main graph.
+```
+
+```mdl
+op RunPromptInNewChat
+  desc: Creates a new chat, binds context objects and blueprints, then runs a prompt.
+  input:
+    db: Database
+    objects?: Obj[]
+    blueprints?: string[]
+    prompt: string | RoutineRef
+    background?: boolean
+  output: Chat
+  effects: [echo:write, ai:infer]
+  note: |
+    Defined here so Routine UI (RoutineList, RoutineArticle) and downstream
+    plugins can dispatch it without depending on plugin-assistant. The handler
+    is contributed by plugin-assistant (chat creation + AiContext binding).
+    When background is true, the prompt runs via the compute runtime without
+    opening the chat UI. The returned Chat can be used to track progress.
 ```
 
 ## Features

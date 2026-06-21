@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Text } from '@dxos/schema';
+import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
@@ -30,6 +30,7 @@ export const Document = Schema.Struct({
   Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
   AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
+  CollectionItemAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),
 );
 

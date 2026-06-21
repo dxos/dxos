@@ -10,7 +10,6 @@ import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { getAutomationsPath } from '../paths';
 import { AutomationCapabilities, AutomationOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation> =
@@ -28,8 +27,6 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation
         return yield* Operation.invoke(SpaceOperation.AddObject, {
           object,
           target: db,
-          hidden: true,
-          targetNodeId: getAutomationsPath(db.spaceId),
         });
       }),
     ),

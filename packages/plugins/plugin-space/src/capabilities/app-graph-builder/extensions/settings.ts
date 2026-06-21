@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
@@ -17,7 +18,7 @@ import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
 /**
  * Settings section attached directly under each Space node, plus its children.
  *
- * The virtual `settings` section is pinned to the top via `position: 'first'`
+ * The virtual `settings` section is pinned to the top via `position: Position.first`
  * so it sits above the un-positioned middle band (collections, mailboxes,
  * automations, integrations, etc.). It groups the panels contributed by this
  * plugin (general, members) and by other plugins (automation, functions).
@@ -35,7 +36,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           icon: 'ph--sliders--regular',
           iconHue: 'indigo',
           space,
-          position: 'first',
+          position: Position.first,
           testId: 'spacePlugin.settings',
         }),
       ]),

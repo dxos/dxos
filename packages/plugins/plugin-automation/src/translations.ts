@@ -4,11 +4,15 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
 
-export const translations = [
+export const translations: Resource[] = [
+  ...componentsTranslations,
+  ...formTranslations,
   {
     'en-US': {
       [Type.getTypename(Automation.Automation)]: {
@@ -26,20 +30,55 @@ export const translations = [
         'automation-panel.label': 'Automations',
         'create-panel.template.placeholder': 'Search templates...',
 
+        'schedule.kind.once.label': 'Once',
+        'schedule.kind.hourly.label': 'Hourly',
+        'schedule.kind.daily.label': 'Daily',
+        'schedule.kind.weekly.label': 'Weekly',
+        'schedule.kind.monthly.label': 'Monthly',
+        'schedule.kind.custom.label': 'Custom',
+        'schedule.at.label': 'At',
+        'schedule.on.label': 'On',
+        'schedule.minute.label': 'At minute',
+        'schedule.day.label': 'Day of month',
+        'schedule.cron.label': 'Cron',
+        'schedule.close.label': 'Close',
+        'schedule.note.message': 'Runs are staggered by a few minutes to spread server load.',
+
+        'command.placeholder': 'Enter slash command...',
+        'template.placeholder': 'Enter template...',
+        'run-prompt.label': 'Run prompt',
+        'routine-running.label': 'Running…',
+
         'automation-name.label': 'Name',
         'general.title': 'General',
-        'general.description': 'Name and status.',
-        'action.title': 'Action',
-        'action.description': 'What this automation runs.',
+        'general.description': 'Name and description.',
+
+        'actions.title': 'Actions',
+        'actions.description': 'What this automation runs.',
         'action.placeholder': 'Select an operation or routine',
         'action-input.label': 'Input',
         'action-kind.operation.label': 'Operation',
         'action-kind.routine.label': 'Routine',
-        'trigger-picker.title': 'Trigger',
-        'trigger-picker.description': 'When this automation runs.',
+
+        'triggers.title': 'Triggers',
+        'triggers.description': 'When this automation runs.',
         'trigger-kind.placeholder': 'Select trigger type',
         'trigger-kind.timer.label': 'Schedule',
+        'trigger-kind.timer.description': 'Run on a recurring schedule or once at a future time.',
+        'trigger-kind.subscription.label': 'Query',
+        'trigger-kind.subscription.description': 'Run when objects matching a query change.',
+        'trigger-kind.webhook.label': 'Webhook',
+        'trigger-kind.webhook.description': 'Trigger from a POST request.',
         'trigger-kind.feed.label': 'Feed',
+        'trigger-kind.feed.description': 'Run when a new item arrives in a feed.',
+        'trigger-kind.email.label': 'Email',
+        'trigger-kind.email.description': 'Run when an email is received.',
+        'trigger-kind.clear.label': 'Clear',
+        'trigger-kind.query-stub.message': 'Query editing is not yet available.',
+        'trigger-kind.email-note.message': 'Runs whenever a new email is received.',
+
+        'method.label': 'Method',
+        'port.label': 'Port',
         'cron.placeholder': '0 0 * * *',
         'feed.placeholder': 'Select a feed',
         'enabled.label': 'Enabled',

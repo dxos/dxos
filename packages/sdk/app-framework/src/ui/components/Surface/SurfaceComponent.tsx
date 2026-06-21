@@ -20,7 +20,7 @@ import React, {
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
@@ -270,7 +270,7 @@ const findCandidates = (surfaces: Definition[], { role, data }: { role: string; 
       Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
     )
     .filter(({ filter }) => (filter ? filter(data ?? {}, role) : true))
-    .toSorted(byPosition);
+    .toSorted(Position.compare);
 };
 
 /**

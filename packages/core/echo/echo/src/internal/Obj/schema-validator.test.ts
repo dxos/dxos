@@ -3,8 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
+import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
@@ -128,6 +129,25 @@ describe('schema-validator', () => {
         path: ['field', 'nested'],
         valueToAssign: { any: 'value' },
       });
+    });
+
+    test('walking into an Unknown-typed value does not warn', ({ expect }) => {
+      // Mirrors the annotation Dictionary (Record<string, Unknown>): nested keys/indices under an
+      // Unknown slot are all valid, so the validator must not log "unknown property" while walking them.
+      const schema = Schema.Struct({ dict: Schema.Record({ key: Schema.String, value: Schema.Unknown }) });
+      const warn = vi.spyOn(log, 'warn');
+      try {
+        for (const path of [
+          ['dict', 'someType'],
+          ['dict', 'someType', 'nested'],
+          ['dict', 'someType', '0'],
+        ]) {
+          SchemaValidator.getPropertySchema(schema, path);
+        }
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
     test('index signatures', () => {
       for (const value of [42, '42']) {

@@ -19,10 +19,9 @@ export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFi
   return (
     <FormFieldWrapper<boolean> readonly={readonly} {...props}>
       {({ value }) => (
-        // TODO(burdon) Push down to react-ui components (e.g., Input.Root).
-        <div className='flex items-center px-0.5 h-8'>
+        <Input.Block>
           <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
-        </div>
+        </Input.Block>
       )}
     </FormFieldWrapper>
   );

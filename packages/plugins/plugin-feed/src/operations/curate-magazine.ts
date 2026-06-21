@@ -63,22 +63,6 @@ export default FeedOperation.CurateMagazine.pipe(
 
 // -- Schemas --
 
-/** Lightweight summary of a candidate Post handed to the curation agent. */
-const Candidate = Schema.Struct({
-  id: Obj.ID,
-  feedName: Schema.optional(Schema.String),
-  title: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  author: Schema.optional(Schema.String),
-  published: Schema.optional(Schema.String),
-  link: Schema.optional(Schema.String),
-});
-
-/** Input schema of the curation routine: the candidate Posts to choose from. */
-const CurationInput = Schema.Struct({
-  candidates: Schema.Array(Candidate),
-});
-
 /** Output schema of the curation routine: the selected Posts with agent-generated display values. */
 const CurationOutput = Schema.Struct({
   posts: Schema.Array(
@@ -156,8 +140,6 @@ const selectPostIds = (
     // resolve it ("Resolver is not set") — so we resolve to the object and let `Ref.make` carry it.
     const blueprint = yield* Blueprint.resolve(Magazine.BLUEPRINT_KEY).pipe(Effect.option);
     const routine = Routine.make({
-      input: CurationInput,
-      output: CurationOutput,
       instructions: topic,
       blueprints: Option.toArray(blueprint).map((value) => Ref.make(value)),
     });

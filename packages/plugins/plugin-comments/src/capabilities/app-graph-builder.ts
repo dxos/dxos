@@ -14,6 +14,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
@@ -75,7 +76,7 @@ export default Capability.makeModule(
               label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'first',
+              position: Position.first,
             }),
           ]),
       }),

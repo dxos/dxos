@@ -10,26 +10,23 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
-import { Prompts } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
+import { Position } from '@dxos/util';
 
 import { AssistantSettings } from '#components';
 import {
-  BlueprintArticle,
   ChatCompanion,
   ChatArticle,
   ChatDialog,
   AgentArticle,
   AgentProperties,
   PlanArticle,
-  RoutineArticle,
-  RoutineList,
   SpaceHomePrompt,
   SpaceHomeSuggestions,
   TracePanel,
@@ -57,7 +54,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceHomeContent),
-        position: 'last',
+        position: Position.last,
         component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
       }),
       Surface.create({
@@ -126,20 +123,6 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'blueprint',
-        filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
-        component: ({ data, role }) => (
-          <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
-      Surface.create({
-        id: 'prompt',
-        filter: AppSurface.object(AppSurface.Article, Routine.Routine),
-        component: ({ data, role }) => (
-          <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
-      Surface.create({
         id: 'plan',
         filter: AppSurface.object(AppSurface.Article, Plan.Plan),
         component: ({ data, role }) => (
@@ -178,11 +161,6 @@ export default Capability.makeModule(() =>
 
           return <TriggerStatus role='status-indicator' space={space} />;
         },
-      }),
-      Surface.create({
-        id: 'prompts',
-        filter: AppSurface.subject(Prompts, Obj.isObject),
-        component: ({ data }) => <RoutineList subject={data.subject} />,
       }),
     ]),
   ),

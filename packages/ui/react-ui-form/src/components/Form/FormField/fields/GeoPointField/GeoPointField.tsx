@@ -11,21 +11,17 @@ import { safeParseFloat } from '@dxos/util';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldWrapper } from '../../FormFieldWrapper';
 
 export const GeoPointField = ({
   type,
-  label,
-  jsonPath,
   readonly,
-  layout,
-  getStatus,
   getValue,
   onValueChange,
   onBlur,
+  ...props
 }: FormFieldRendererProps<GeoPoint>) => {
   const { t } = useTranslation(translationKey);
-  const { status, error } = getStatus();
   const geoPoint = useMemo<GeoPoint>(() => getValue() ?? [0, 0], [getValue]);
   const value = useMemo(() => GeoLocation.fromGeoPoint(geoPoint), [geoPoint]);
 
@@ -55,22 +51,23 @@ export const GeoPointField = ({
     [type, getValue, onValueChange],
   );
 
-  if ((readonly || layout === 'static') && !value?.latitude && !value?.longitude) {
-    return null;
-  }
-
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && (
-        <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} standalone />
-      )}
-      {layout === 'static' ? (
-        <LatLng {...value} />
-      ) : (
+    <FormFieldWrapper<GeoPoint>
+      readonly={readonly}
+      getValue={getValue}
+      standalone
+      renderStatic={(point) => {
+        const location = GeoLocation.fromGeoPoint(point ?? [0, 0]);
+        // Treat a zero coordinate pair as empty (no meaningful location to display).
+        return !location.latitude && !location.longitude ? null : <LatLng {...location} />;
+      }}
+      {...props}
+    >
+      {({ presentation }) => (
         <div className='grid grid-cols-2 gap-form-gap'>
           <div>
             <Input.Root>
-              {layout !== 'inline' && <Input.Label>{t('latitude.label')}</Input.Label>}
+              {presentation.showLabel && <Input.Label>{t('latitude.label')}</Input.Label>}
               <Input.TextInput
                 type='number'
                 step='0.00001'
@@ -86,7 +83,7 @@ export const GeoPointField = ({
           </div>
           <div>
             <Input.Root>
-              {layout !== 'inline' && <Input.Label>{t('longitude.label')}</Input.Label>}
+              {presentation.showLabel && <Input.Label>{t('longitude.label')}</Input.Label>}
               <Input.TextInput
                 type='number'
                 step='0.00001'
@@ -102,7 +99,7 @@ export const GeoPointField = ({
           </div>
         </div>
       )}
-    </Input.Root>
+    </FormFieldWrapper>
   );
 };
 

@@ -9,6 +9,7 @@ import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-t
 import { Operation } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
@@ -82,7 +83,7 @@ export default Capability.makeModule(
                 label: ['plugin-registry.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
-                position: 'first',
+                position: Position.first,
                 testId: 'treeView.pluginRegistry',
               },
               nodes: [

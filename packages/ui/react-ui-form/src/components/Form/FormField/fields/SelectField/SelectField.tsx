@@ -4,47 +4,34 @@
 
 import React, { useCallback } from 'react';
 
-import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { Icon, Select, type SelectRootProps } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldWrapper } from '../../FormFieldWrapper';
 
 export type SelectFieldOptions = FormFieldRendererProps & {
   options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;
 };
 
-export const SelectField = ({
-  type,
-  readonly,
-  label,
-  jsonPath,
-  layout,
-  placeholder,
-  options,
-  getStatus,
-  getValue,
-  onValueChange,
-}: SelectFieldOptions) => {
-  const { status, error } = getStatus();
-  const value = getValue() as string | undefined;
-
+export const SelectField = ({ type, readonly, placeholder, options, onValueChange, ...props }: SelectFieldOptions) => {
   const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
     (value) => onValueChange(type, value),
     [type, onValueChange],
   );
 
-  if ((readonly || layout === 'static') && value == null) {
-    return null;
-  }
-
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-      {layout === 'static' ? (
-        <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
-      ) : (
+    <FormFieldWrapper<string>
+      readonly={readonly}
+      renderStatic={(value) => (
+        <p className='truncate min-w-0'>
+          {options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}
+        </p>
+      )}
+      {...props}
+    >
+      {({ value }) => (
         <Select.Root value={value} onValueChange={handleValueChange}>
           {/* TODO(burdon): Placeholder not working? */}
           <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
@@ -67,8 +54,7 @@ export const SelectField = ({
           </Select.Portal>
         </Select.Root>
       )}
-      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+    </FormFieldWrapper>
   );
 };
 

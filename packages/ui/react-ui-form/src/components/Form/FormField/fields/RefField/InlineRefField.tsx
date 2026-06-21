@@ -15,8 +15,9 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 
 import { omitId } from '../../../../../util';
-import { FormContent, FormFieldSet, FormRoot } from '../../../FormControls';
+import { FormContent, FormFieldSetController, FormRoot } from '../../../FormControls';
 import { FormFieldLabel } from '../../FormFieldWrapper';
+import { presentationFor } from '../../presentation';
 import { type RefFieldProps } from './RefField';
 
 /**
@@ -34,7 +35,8 @@ export const InlineRefField = (props: RefFieldProps) => {
     readonly,
     label,
     jsonPath,
-    layout,
+    presentation,
+    required,
     db,
     getValue,
     onValueChange,
@@ -42,6 +44,7 @@ export const InlineRefField = (props: RefFieldProps) => {
     useType = defaultUseType,
   } = props;
   const { t } = useTranslation(translationKey);
+  const resolved = presentationFor(presentation);
 
   const reference = getValue() as Ref.Ref<any> | undefined;
   const typename = useMemo(
@@ -67,7 +70,7 @@ export const InlineRefField = (props: RefFieldProps) => {
 
   return (
     <Input.Root>
-      {layout !== 'inline' && <FormFieldLabel readonly={readonly} label={label} path={jsonPath} />}
+      {resolved.showLabel && <FormFieldLabel readonly={readonly} required={required} label={label} path={jsonPath} />}
       {reference ? (
         <InlineForm reference={reference} db={db} readonly={readonly} useType={useType} />
       ) : (
@@ -132,7 +135,7 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
   return (
     <FormRoot db={db} schema={formSchema} defaultValues={defaultValues as any} onValuesChanged={handleChange}>
       <FormContent>
-        <FormFieldSet collapsible readonly={readonly} />
+        <FormFieldSetController collapsible readonly={readonly} />
       </FormContent>
     </FormRoot>
   );

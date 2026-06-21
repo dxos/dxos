@@ -11,6 +11,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -34,7 +35,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
               label: ['object-properties.label', { ns: meta.profile.key }],
               icon: 'ph--sliders--regular',
               data: 'settings', // TODO(burdon): Change to 'object-properties'.
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -50,7 +51,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
               label: ['companion-related.label', { ns: meta.profile.key }],
               icon: 'ph--graph--regular',
               data: 'related',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),

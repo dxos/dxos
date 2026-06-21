@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
@@ -54,12 +53,7 @@ export const crm: AutomationCapabilities.Template = {
         Routine.make({
           name: routineName,
           instructions: DEFAULT_INSTRUCTIONS,
-          // The feed trigger forwards the raw event item (the new Message) as AgentPrompt's top-level input
-          // (`input: '{{event.item}}'`), so the routine input is the message itself, not a `{ message }` wrapper.
-          input: Schema.Unknown,
-          output: Schema.Void,
           blueprints: blueprintRefs,
-          context: [],
         }),
       );
 

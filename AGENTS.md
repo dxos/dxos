@@ -3,6 +3,7 @@
 ## IMPORTANT
 
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
+- You must disclose your current worktree as soon as it is created.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
 - DO NOT EVER ASK a-or-b questions without numbering them.

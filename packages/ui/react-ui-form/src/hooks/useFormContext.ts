@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 
-import { type CreateOptions, type FormFieldOptions, type FormFieldStateProps } from '#types';
+import { type FieldContext, type FormFieldStateProps } from '#types';
 
 import { type FormHandler } from './useFormHandler';
 
@@ -27,8 +27,7 @@ export type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & FormFieldOptions &
-  Pick<CreateOptions, 'createFieldMap'>;
+} & FieldContext;
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
