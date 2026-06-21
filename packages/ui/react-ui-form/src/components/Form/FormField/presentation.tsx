@@ -2,14 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
-
 import { type FormPresentation } from '#types';
 
 /**
- * Resolved presentation strategy for a field. Centralizes the questions every field's chrome asks
- * about a {@link FormPresentation} so the answers live in one place rather than scattered
- * `layout === 'inline' | 'full' | 'static'` checks across each field component.
+ * Resolved presentation strategy for a field — which parts render, derived from {@link FormPresentation}.
+ * Visual chrome (borders, grid, spacing) is owned by the Form theme recipe, not here.
  */
 export type FieldPresentation = {
   layout?: FormPresentation;
@@ -19,8 +16,6 @@ export type FieldPresentation = {
   showLabel: boolean;
   /** Render the inline validation/error block beneath the control. */
   showError: boolean;
-  /** Class applied to the field's outer wrapper element (the customization seam for the field row). */
-  fieldClassName?: string;
 };
 
 /**
@@ -35,13 +30,3 @@ export const presentationFor = (layout?: FormPresentation): FieldPresentation =>
   showLabel: layout !== 'inline',
   showError: layout === 'full',
 });
-
-export type FieldRowProps = PropsWithChildren<{ presentation: FieldPresentation }>;
-
-/**
- * Outer row element shared by every field's chrome. The single place the wrapping element and its
- * class are decided, so presentation variants don't fork the wrapper in each field component.
- */
-export const FieldRow = ({ presentation, children }: FieldRowProps) => (
-  <div className={presentation.fieldClassName}>{children}</div>
-);

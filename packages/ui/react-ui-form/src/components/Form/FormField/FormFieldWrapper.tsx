@@ -11,7 +11,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { type FieldPresentation, FieldRow, presentationFor } from './presentation';
+import { type FieldPresentation, presentationFor } from './presentation';
+import { formTheme } from '../Form.theme';
+import { useFormContext } from '../../../hooks';
 
 //
 // FormFieldLabel
@@ -21,6 +23,8 @@ export type FormFieldLabelProps = ThemedClassName<
   {
     /** Render a plain `<span>` instead of an input-associated `Input.Label`, for labels used outside an `Input.Root` (e.g. section/group headers). */
     standalone?: boolean;
+    /** Class applied to the inner label text node, overriding the default size/color (e.g. `text-lg`). */
+    labelClassName?: string;
     error?: string;
     /**
      * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
@@ -38,6 +42,7 @@ export type FormFieldLabelProps = ThemedClassName<
 
 export const FormFieldLabel = ({
   classNames,
+  labelClassName,
   label,
   error,
   readonly,
@@ -49,10 +54,12 @@ export const FormFieldLabel = ({
   // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
   // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
   // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
+  // `labelClassName` is appended last so a caller-supplied size/color (e.g. `text-lg`) wins over the
+  // `text-sm`/`text-description` baked into `inputTextLabel`.
   const labelClassNames = mx(
     inputTextLabel,
-    'text-sm',
     required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
+    labelClassName,
   );
   // `Input.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
   // plain `span` used for read-only/standalone labels reads `className`.
@@ -115,7 +122,15 @@ const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string =
 
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldRendererProps,
-  'readonly' | 'label' | 'presentation' | 'getStatus' | 'getValue' | 'jsonPath' | 'format' | 'required'
+  | 'readonly'
+  | 'label'
+  | 'description'
+  | 'presentation'
+  | 'getStatus'
+  | 'getValue'
+  | 'jsonPath'
+  | 'format'
+  | 'required'
 > & {
   children?: (props: { value: T; presentation: FieldPresentation }) => ReactNode;
   /** Render the label as a standalone `<span>` (group/multi-input fields with no single associated control). */
@@ -128,12 +143,15 @@ export type FormFieldWrapperProps<T = any> = Pick<
   renderStatic?: (value: T | undefined) => ReactNode;
 };
 
+const FORM_FIELD_WRAPPER_NAME = 'Form.FieldWrapper';
+
 export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const {
     children,
     readonly,
     presentation,
     label,
+    description,
     jsonPath,
     format,
     required,
@@ -142,8 +160,11 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
     getStatus,
     getValue,
   } = props;
-  const { status, error } = getStatus();
+  const { variant = 'default' } = useFormContext(FORM_FIELD_WRAPPER_NAME);
+  const styles = formTheme.styles({ variant });
+  const { showDescription } = formTheme.behavior[variant];
   const resolved = presentationFor(presentation);
+  const { status, error } = getStatus();
   const value = getValue();
   // Omit an entirely-absent value in static presentation — a labelled row with no value is just noise.
   // Fields with richer "empty" semantics (e.g. a present-but-unresolved ref) handle that in `renderStatic`.
@@ -152,12 +173,20 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   }
 
   const str = formatStaticValue(value, format);
+  const control = resolved.isStatic
+    ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{str}</p>)
+    : children
+      ? children({ value, presentation: resolved })
+      : null;
+  const controlClass = styles.control();
 
   return (
-    <FieldRow presentation={resolved}>
+    <div className={styles.field()}>
       <Input.Root validationValence={status}>
         {resolved.showLabel && (
           <FormFieldLabel
+            classNames={styles.labelContainer()}
+            labelClassName={styles.labelText()}
             error={error}
             readonly={readonly}
             required={required}
@@ -166,18 +195,17 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
             path={jsonPath}
           />
         )}
-        {resolved.isStatic
-          ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{str}</p>)
-          : children
-            ? children({ value, presentation: resolved })
-            : null}
+        {showDescription && description && (
+          <Input.Description classNames={styles.description()}>{description}</Input.Description>
+        )}
+        {controlClass ? <div className={controlClass}>{control}</div> : control}
         {resolved.showError && error && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>
           </Input.DescriptionAndValidation>
         )}
       </Input.Root>
-    </FieldRow>
+    </div>
   );
 };
 
