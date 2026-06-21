@@ -8,6 +8,8 @@ import { type ClassNameArray, type ClassNameValue, type Theme } from '@dxos/ui-t
 
 import { twMergeConfig } from './tw-merge-config';
 
+export type { VariantProps } from 'tailwind-variants';
+
 /**
  * Shared tailwind-variants instance bound to the dxos tailwind-merge config (see {@link twMergeConfig}),
  * so recipes resolve class conflicts identically to {@link mx}. All component theme recipes import this,
