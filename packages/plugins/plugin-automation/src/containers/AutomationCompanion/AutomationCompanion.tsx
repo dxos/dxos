@@ -49,10 +49,10 @@ export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) =>
 
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [draft, setDraft] = useState<Draft | undefined>();
-  const selected = useMemo(() => automations.find((automation) => automation.id === selectedId), [
-    automations,
-    selectedId,
-  ]);
+  const selected = useMemo(
+    () => automations.find((automation) => automation.id === selectedId),
+    [automations, selectedId],
+  );
 
   const handleSelect = useCallback((id: string | undefined) => {
     setDraft(undefined);
@@ -161,8 +161,6 @@ const blueprintRefsForObject = (object: Obj.Unknown): Ref.Ref<Blueprint.Blueprin
   if (!type) {
     return [];
   }
-  const keys = Option.getOrElse(() => [] as string[])(
-    AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(type)),
-  );
+  const keys = Option.getOrElse(() => [] as string[])(AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(type)));
   return keys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
 };

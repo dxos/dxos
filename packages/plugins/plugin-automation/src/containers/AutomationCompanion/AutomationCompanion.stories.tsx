@@ -13,8 +13,8 @@ import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Text } from '@dxos/schema';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 import { Automation } from '#types';
