@@ -6,30 +6,55 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Input } from '@dxos/react-ui';
-import { Settings as SettingsForm, type SettingsFieldProps } from '@dxos/react-ui-form';
+import { Form, FormFieldWrapper, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
 export type MarkdownSettingsProps = AppSurface.SettingsArticleProps<Markdown.Settings>;
 
-const SnippetsField = ({ value, onChange, readonly }: SettingsFieldProps<string | undefined>) => (
-  <Input.TextArea disabled={readonly} rows={5} value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
-);
-
 export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsProps) => {
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={meta.profile.name ?? 'Editor'}>
-        <SettingsForm.FieldSet
-          readonly={!onSettingsChange}
-          schema={Markdown.Settings}
-          visible={(path, values) => path !== 'snippets' || !!values.debug}
-          fieldMap={{ snippets: SnippetsField }}
-          values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
-        />
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+    <Form.Root
+      variant='settings'
+      schema={Markdown.Settings}
+      readonly={!onSettingsChange}
+      values={settings}
+      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+    >
+      <Form.Viewport classNames='py-8' scroll>
+        <Form.Content classNames='dx-document'>
+          <Form.Section title={meta.profile.name}>
+            <Form.FieldSet
+              fieldMap={{ snippets: SnippetsField }}
+              filter={(properties) =>
+                settings.debug ? properties : properties.filter((property) => property.name !== 'snippets')
+              }
+            />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
+
+/** Multi-line snippet editor; replaces the single-line text input the schema would otherwise render. */
+const SnippetsField = ({
+  type,
+  readonly,
+  onValueChange,
+  onBlur,
+  ...props
+}: FormFieldRendererProps<string | undefined>) => (
+  <FormFieldWrapper<string | undefined> readonly={readonly} {...props}>
+    {({ value }) => (
+      <Input.TextArea
+        disabled={!!readonly}
+        rows={5}
+        value={value ?? ''}
+        onBlur={onBlur}
+        onChange={(event) => onValueChange(type, event.target.value)}
+      />
+    )}
+  </FormFieldWrapper>
+);
