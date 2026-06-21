@@ -78,19 +78,27 @@ type Post
 type Magazine
   desc: >
     An agent-curated collection of articles drawn from one or more Feeds.
-    The user describes what content the Magazine should gather via a
-    long-form instructions Text. The agent reads the instructions, selects
-    matching Posts from the referenced Feeds, enriches them with snippet
-    and hero image, and appends their refs to `posts`.
+    Curation is driven by a Routine (see MagazineBlueprint): the Routine's
+    editorial instructions describe what content this Magazine should gather,
+    and it references the MagazineBlueprint (the HOW — tools and output
+    contract). The Routine is created lazily on first curation, its
+    instructions seeded with the default editorial methodology and the user's
+    `topic`. The agent selects matching Posts from the referenced Feeds,
+    enriches them with snippet and hero image, and their refs are appended to
+    `posts`.
   fields:
     name?: string
     feeds: Ref<Feed>[]              # Feeds to pull from
-    instructions: Ref<Text>         # long-form curation brief (not rendered as form input)
+    topic?: string                  # create-dialog editorial seed; woven into the Routine's instructions on first curate
+    routine?: Ref<Routine>          # editorial Routine (lazy; created by the curate op); not rendered as form input
     posts: Ref<Post>[]              # curated Post refs (insertion order; UI displays newest-last reversed)
   annotations:
-    icon: ph--newspaper-clipping--regular
+    icon: ph--book-open-text--regular
     hue: indigo
     label: name
+  note: >
+    The Routine is added to its own `objects` (context) so the agent sees the
+    Magazine as bound context, not only the candidate JSON `input`.
 ```
 
 ## Components
@@ -179,21 +187,23 @@ component PostArticle
 ```mdl
 service MagazineBlueprint
   desc: |
-    Agent blueprint invoked by the MagazineArticle Curate button.
-    Registered as a BlueprintDefinition capability. The agent reads the
-    Magazine's instructions Text and referenced feeds, selects matching
-    Posts, and enriches them.
+    Agent blueprint referenced by each Magazine's Routine. Registered as a
+    BlueprintDefinition capability. The blueprint instructions are limited to
+    HOW to operate: how to call the FetchArticleContent tool and the
+    completeJob output contract. The editorial methodology (what to select,
+    dedup, snippet style, hero-image choice) and the magazine's topic live on
+    the Routine's instructions, not here.
   key: org.dxos.blueprint.magazine
   ops:
-    # All operations are exposed as tools:
-    # - ListCandidatePosts
+    # Agent-facing tools exposed by the blueprint:
     # - FetchArticleContent
-    # - AddPostToMagazine
+    # (completeJob is provided by the agent runtime; SyncFeed / CurateMagazine /
+    #  ClearMagazine / LoadPostContent are orchestration/UI, not agent tools.)
   note: >
-    Uses Template.make() for its prompt. The prompt instructs the agent to
-    call ListCandidatePosts, then for each selected Post call
-    FetchArticleContent and AddPostToMagazine. Dedup is enforced by the tools,
-    not the prompt.
+    The curate op resolves this blueprint from the registry and references it
+    from the Magazine's Routine. The agent reads candidate summaries from the
+    `input`, MAY call FetchArticleContent to read full text, then calls
+    completeJob with the structured selection.
 ```
 
 ## Operations
@@ -292,7 +302,7 @@ feat F-1: Magazine Type
   req F-1.1: User can create a Magazine object via the plugin's create menu.
   req F-1.2: Magazine.name is optional; magazine is labeled by name when set.
   req F-1.3: Magazine.feeds is an array of Ref<Feed>; empty by default.
-  req F-1.4: Magazine.instructions is a Ref<Text>; hidden from the standard form input.
+  req F-1.4: Magazine.routine is an optional Ref<Routine>, created lazily on first curate; hidden from the standard form input. Magazine.topic holds the create-dialog editorial seed until the Routine exists.
   req F-1.5: Magazine.posts is an array of Ref<Post>; empty by default; insertion order preserved.
 ```
 
@@ -523,6 +533,32 @@ test T-10: Tile metadata
 ---
 
 ## Design Notes
+
+### Curation via Routine (this revision)
+
+Curation runs a persisted **Routine** rather than an ephemeral one. The Magazine
+no longer carries an `instructions` Template; it carries an optional
+`routine: Ref<Routine>` plus a `topic` seed string.
+
+- **Lazy creation.** `Magazine.ensureRoutine(magazine, blueprintRef)` is called
+  only by the curate op. On first curate it creates a `Routine` whose
+  `instructions` Text is seeded with the default editorial methodology and the
+  magazine's `topic` woven into a `## Topic` section, references the
+  MagazineBlueprint, parents the Routine to the magazine (cascade-delete), sets
+  `magazine.routine`, and adds the magazine to the Routine's `objects` (context).
+- **Run.** The curate op invokes `AgentPrompt` (Run Routine) with
+  `prompt: magazine.routine` and the candidate JSON `input`; it decodes the
+  `completeJob` structured output and applies selections mechanically (keep-bound,
+  per-post snippet/imageUrl). No ephemeral routine is constructed.
+- **Instruction split.** Blueprint = HOW (FetchArticleContent + completeJob
+  contract). Routine = editorial (selection criteria, dedup, snippet style,
+  hero-image choice) + topic. This removes the prior overlap where the blueprint
+  held both.
+- **Properties editing.** `MagazineProperties` edits `routine.instructions` once
+  the Routine exists; before first curate it edits the `topic` seed string.
+- **Template.** `Template` is retained (it is the type of `Blueprint.instructions`
+  and is used across the codebase). The Magazine simply stops using it; the
+  Routine's `instructions` is a plain `Ref<Text>`.
 
 ### Content Flow
 
