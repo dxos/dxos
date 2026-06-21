@@ -19,5 +19,4 @@ export const getSandboxServiceUrl = (client: Client): string => {
 };
 
 /** Builds a {@link SandboxClient} from the DXOS client config. */
-export const createSandboxClient = (client: Client): SandboxClient =>
-  new SandboxClient(getSandboxServiceUrl(client));
+export const createSandboxClient = (client: Client): SandboxClient => new SandboxClient(getSandboxServiceUrl(client));

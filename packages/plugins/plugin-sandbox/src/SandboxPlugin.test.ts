@@ -24,53 +24,47 @@ import { CreateSandbox, Exec } from './blueprints/functions';
  * KV does not reject the same sandboxId under a new space from a prior run.
  */
 describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => {
-  test(
-    'creates a sandbox and runs a shell command via operations',
-    { timeout: 60_000 },
-    async ({ expect }) => {
-      await using harness = await createComposerTestApp({
-        plugins: [
-          ClientPlugin({
-            config: configPreset({ sandbox: 'local' }),
-          }),
-          SandboxPlugin(),
-        ],
-      });
+  test('creates a sandbox and runs a shell command via operations', { timeout: 60_000 }, async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [
+        ClientPlugin({
+          config: configPreset({ sandbox: 'local' }),
+        }),
+        SandboxPlugin(),
+      ],
+    });
 
-      const { personalSpace } = await EffectEx.runAndForwardErrors(
-        initializeIdentity(harness.get(ClientCapabilities.Client)),
-      );
-      await harness.waitForEvent(ClientEvents.SpacesReady);
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
+    await harness.waitForEvent(ClientEvents.SpacesReady);
 
-      await harness.runPromise(
-        Effect.gen(function* () {
-          const { sandboxId } = yield* Operation.invoke(
-            CreateSandbox,
-            { name: 'composer-harness-test' },
-            { spaceId: personalSpace.id },
-          );
-          expect(sandboxId).toBeTruthy();
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const { sandboxId } = yield* Operation.invoke(
+          CreateSandbox,
+          { name: 'composer-harness-test' },
+          { spaceId: personalSpace.id },
+        );
+        expect(sandboxId).toBeTruthy();
 
-          const [sandbox] = yield* Database.query(Filter.type(Sandbox.Sandbox)).run;
-          expect(sandbox).toBeDefined();
+        const [sandbox] = yield* Database.query(Filter.type(Sandbox.Sandbox)).run;
+        expect(sandbox).toBeDefined();
 
-          const result = yield* Operation.invoke(
-            Exec,
-            {
-              sandbox: Ref.make(sandbox),
-              command: 'echo hello world',
-            },
-            { spaceId: personalSpace.id },
-          );
+        const result = yield* Operation.invoke(
+          Exec,
+          {
+            sandbox: Ref.make(sandbox),
+            command: 'echo hello world',
+          },
+          { spaceId: personalSpace.id },
+        );
 
-          expect(result.exitCode).toBe(0);
-          expect(result.success).toBe(true);
-          expect(result.stdout.trim()).toBe('hello world');
-        }).pipe(
-          Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService)),
-        ),
-        { timeout: 30_000 },
-      );
-    },
-  );
+        expect(result.exitCode).toBe(0);
+        expect(result.success).toBe(true);
+        expect(result.stdout.trim()).toBe('hello world');
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+      { timeout: 30_000 },
+    );
+  });
 });
