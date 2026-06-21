@@ -15,16 +15,16 @@ import { getTypeURIFromQuery } from '@dxos/schema';
 import { useProjectionModel } from '#hooks';
 import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema, UNCATEGORIZED_VALUE } from '#types';
 
-export type KanbanSettingsProps = AppSurface.ObjectPropertiesProps<Kanban.Kanban>;
+export type KanbanPropertiesProps = AppSurface.ObjectPropertiesProps<Kanban.Kanban>;
 
 /**
- * Settings panel for a Kanban. Renders fields common to every kanban
+ * Object-properties panel for a Kanban. Renders fields common to every kanban
  * (currently the "Hide uncategorized column" toggle); for view-variant
  * kanbans an additional "Column field" picker drives the View's pivot
  * field. Items-variant kanbans use a hardcoded `spec.pivotField`, so that
  * field is omitted there.
  */
-export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
+export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => {
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(object);
   const isView = object.spec.kind === 'view';
