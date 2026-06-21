@@ -13,8 +13,8 @@ import { SupportSettings } from './SupportSettings';
 const meta = {
   title: 'plugins/plugin-support/components/SupportSettings',
   component: SupportSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: { translations },
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof SupportSettings>;
 
 export default meta;
