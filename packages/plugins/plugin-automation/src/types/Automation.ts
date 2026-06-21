@@ -15,7 +15,6 @@ import * as Runnable from './Runnable';
 /**
  * User-facing automation: a thin aggregate of an action (`runnable`) and the triggers that fire it.
  * App-level only — EDGE stays unaware of it (triggers point directly at the runnable).
- * @deprecated
  */
 export const Automation = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),

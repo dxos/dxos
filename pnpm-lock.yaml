@@ -20108,6 +20108,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../react-ui-markdown
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers

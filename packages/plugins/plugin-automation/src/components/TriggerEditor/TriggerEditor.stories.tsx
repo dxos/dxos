@@ -112,8 +112,11 @@ export const CreateFeedTrigger: Story = createKindStory('feed', /^Feed/);
 /** Create a Query (subscription) trigger via the picker. */
 export const CreateQueryTrigger: Story = createKindStory('subscription', /^Query/);
 
+// Webhook and Email kinds are gated off in `TriggerKindSelector` (disabled options), so the picker cannot
+// create them; these stories are excluded from the CI test run (`tags: ['!test']`) until the kinds are enabled.
+
 /** Create a Webhook trigger via the picker. */
-export const CreateWebhookTrigger: Story = createKindStory('webhook', /^Webhook/);
+export const CreateWebhookTrigger: Story = { ...createKindStory('webhook', /^Webhook/), tags: ['!test'] };
 
 /** Create an Email trigger via the picker. */
-export const CreateEmailTrigger: Story = createKindStory('email', /^Email/);
+export const CreateEmailTrigger: Story = { ...createKindStory('email', /^Email/), tags: ['!test'] };

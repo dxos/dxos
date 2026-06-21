@@ -32,7 +32,7 @@ export type InputMetaStyleProps = Partial<{
 }>;
 
 const textInputSurfaceFocus =
-  'transition-colors bg-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
+  'transition-colors bg-input-surface focus:bg-focus-surface border border-input-separator focus:border-separator';
 
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
@@ -115,7 +115,7 @@ const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 
 const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
-    'flex items-center justify-center font-mono',
+    'flex items-center justify-center tabular-nums',
     props.density === 'lg'
       ? 'size-12 rounded-xs'
       : props.density === 'sm'

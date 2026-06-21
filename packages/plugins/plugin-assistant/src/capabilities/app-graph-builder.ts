@@ -175,7 +175,7 @@ export default Capability.makeModule(
 
       // Section node: standalone Chat.Chat objects per space (companions are excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        position: 100,
+        position: 101,
         // Exclude chats that are the source of a CompanionTo relation; those belong to
         // their primary object's companion panel and should not appear in the top-level list.
         query: Query.without(

@@ -48,6 +48,8 @@ export const translations: Resource[] = [
         'template.placeholder': 'Enter template...',
         'run-prompt.label': 'Run prompt',
         'routine-running.label': 'Running…',
+        'run.label': 'Run',
+        'run-error.message': 'Failed to run automation.',
 
         'automation-name.label': 'Name',
         'general.title': 'General',

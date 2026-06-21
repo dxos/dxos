@@ -44,7 +44,6 @@ export const FieldHeader = ({
     required={required}
     readonly={readonly}
     path={path}
-    onClick={onClick}
     button={
       (!readonly && add) || actions ? (
         <>
@@ -64,5 +63,6 @@ export const FieldHeader = ({
         </>
       ) : undefined
     }
+    onClick={onClick}
   />
 );

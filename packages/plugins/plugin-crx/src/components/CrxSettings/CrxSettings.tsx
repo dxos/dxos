@@ -41,7 +41,7 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title')}>
+      <SettingsForm.Section title={t('settings.title')} description={t('settings.description')}>
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Settings.Settings}

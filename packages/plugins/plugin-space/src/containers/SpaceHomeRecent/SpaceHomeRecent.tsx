@@ -52,12 +52,13 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
         .limit(RECENT_LIMIT),
     [filter],
   );
-  const recent = useQuery(filter && space ? space.db : undefined, query);
 
+  const recent = useQuery(filter && space ? space.db : undefined, query);
   if (recent.length === 0) {
     return null;
   }
 
+  // TODO(burdon): Should this be a Masonry or just flow? Do we expect this to scroll?
   return (
     <>
       <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
@@ -87,7 +88,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   }, [invokePromise, data]);
 
   return (
-    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
         <Card.Block>
           <Icon icon={icon} classNames={iconStyles?.text} />

@@ -15,15 +15,33 @@ export type TriggerKind = 'timer' | 'feed' | 'subscription' | 'webhook' | 'email
 type TriggerKindOption = {
   kind: TriggerKind;
   icon: string;
+  disabled?: boolean;
 };
 
 // Ordered as presented; labels and descriptions are resolved from translations keyed by `kind`.
 const OPTIONS: readonly TriggerKindOption[] = [
-  { kind: 'timer', icon: 'ph--clock-countdown--regular' },
-  { kind: 'feed', icon: 'ph--cards-three--regular' },
-  { kind: 'subscription', icon: 'ph--funnel--regular' },
-  { kind: 'webhook', icon: 'ph--webhooks-logo--regular' },
-  { kind: 'email', icon: 'ph--envelope--regular' },
+  {
+    kind: 'timer',
+    icon: 'ph--clock-countdown--regular',
+  },
+  {
+    kind: 'feed',
+    icon: 'ph--cards-three--regular',
+  },
+  {
+    kind: 'subscription',
+    icon: 'ph--funnel--regular',
+  },
+  {
+    kind: 'webhook',
+    icon: 'ph--webhooks-logo--regular',
+    disabled: true,
+  },
+  {
+    kind: 'email',
+    icon: 'ph--envelope--regular',
+    disabled: true,
+  },
 ];
 
 /** Icon for a trigger kind, shared by the picker rows and the selected-variant editor header. */
@@ -54,8 +72,13 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
   return (
     <Listbox.Root onValueChange={handleValueChange}>
       <Listbox.Content aria-label={t('trigger-kind.placeholder')} classNames='gap-1'>
-        {OPTIONS.map(({ kind, icon }) => (
-          <Listbox.Item key={kind} id={kind} classNames='items-start gap-1 rounded-sm bg-input-surface'>
+        {OPTIONS.map(({ kind, icon, disabled }) => (
+          <Listbox.Item
+            key={kind}
+            id={kind}
+            disabled={disabled}
+            classNames='items-start gap-1 rounded-sm bg-input-surface'
+          >
             <IconBlock classNames='h-6 pt-0.5'>
               <Icon icon={icon} size={5} classNames='text-description' />
             </IconBlock>
