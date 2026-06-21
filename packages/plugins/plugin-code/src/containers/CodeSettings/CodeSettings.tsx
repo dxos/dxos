@@ -20,6 +20,10 @@ export type CodeSettingsProps = {
   onSettingsChange: (settings: SettingsType.Settings) => void;
 };
 
+/**
+ * Settings panel for the Code plugin: manages the Anthropic API key (stored as
+ * an ECHO `AccessToken`) and the schema-driven build-service `endpoint`.
+ */
 export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const spaces = useSpaces();
