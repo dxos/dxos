@@ -60,8 +60,9 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <h2 className='px-trim-md mt-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
-      {description && <MarkdownView content={toLocalizedString(description, t)} />}
-      {description && <p className='px-trim-md text-description'>{toLocalizedString(description, t)}</p>}
+      {description && (
+        <MarkdownView classNames='px-trim-md text-description' content={toLocalizedString(description, t)} />
+      )}
       <div className='w-full pt-trim-md space-y-trim-md'>{children}</div>
     </>
   );
