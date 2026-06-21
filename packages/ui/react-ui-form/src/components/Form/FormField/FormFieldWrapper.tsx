@@ -85,7 +85,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const styles = formTheme.styles({ variant });
   const { showDescription } = formTheme.behavior[variant];
 
-  const value = getValue();
+  const value: T | undefined = getValue();
   const resolved = presentationFor(presentation);
   if (resolved.isStatic && value == null) {
     return null;
