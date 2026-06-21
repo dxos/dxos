@@ -5,12 +5,13 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { NativeCapabilities, type Settings, type Update } from '#types';
@@ -53,13 +54,17 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
   });
 
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title')}>
-        <SettingsForm.Item title={t('settings.updates.label')} description={description}>
-          {button}
-        </SettingsForm.Item>
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+    <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('settings.title')}>
+            <Form.Row label={t('settings.updates.label')} description={description}>
+              {button}
+            </Form.Row>
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
