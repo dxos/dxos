@@ -6,7 +6,7 @@ import React from 'react';
 
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 export type DefaultSettingsProps = {
   subject: AppCapabilities.Settings;
@@ -28,14 +28,19 @@ export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
   const title = manager.getPlugins().find((plugin) => plugin.meta.profile.key === subject.prefix)?.meta.profile.name;
 
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={title ?? subject.prefix}>
-        <SettingsForm.FieldSet
-          schema={subject.schema}
-          values={settings}
-          onValuesChanged={(values) => updateSettings(() => values)}
-        />
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+    <Form.Root
+      schema={subject.schema}
+      variant='settings'
+      values={settings}
+      onValuesChanged={(values) => updateSettings(() => values)}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={title ?? subject.prefix}>
+            <Form.FieldSet />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
