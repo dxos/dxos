@@ -12,9 +12,10 @@ describe('labelTheme', () => {
     expect(styles.text()).toBeFalsy();
   });
 
-  test('settings variant gives the label prominent text', ({ expect }) => {
+  test('settings variant gives the label prominent text and places it in the field grid', ({ expect }) => {
     const styles = labelTheme({ variant: 'settings' });
     expect(styles.text()).toContain('text-lg');
+    expect(styles.root()).toContain('[grid-area:header]');
   });
 
   test('per-slot override wins', ({ expect }) => {

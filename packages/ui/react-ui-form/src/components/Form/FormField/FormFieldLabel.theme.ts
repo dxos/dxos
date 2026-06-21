@@ -23,5 +23,7 @@ export const labelTheme = tv({
       },
     },
   },
-  defaultVariants: { variant: 'default' },
+  defaultVariants: {
+    variant: 'default',
+  },
 });
