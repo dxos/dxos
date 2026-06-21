@@ -11,9 +11,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { type FieldPresentation, presentationFor } from './presentation';
-import { formTheme } from '../Form.theme';
 import { useFormContext } from '../../../hooks';
+import { formTheme } from '../Form.theme';
+import { type FieldPresentation, presentationFor } from './presentation';
 
 //
 // FormFieldLabel
@@ -122,18 +122,12 @@ const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string =
 
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldRendererProps,
-  | 'readonly'
-  | 'label'
-  | 'description'
-  | 'presentation'
-  | 'getStatus'
-  | 'getValue'
-  | 'jsonPath'
-  | 'format'
-  | 'required'
+  'readonly' | 'label' | 'description' | 'presentation' | 'getStatus' | 'getValue' | 'jsonPath' | 'format' | 'required'
 > & {
   children?: (props: { value: T; presentation: FieldPresentation }) => ReactNode;
-  /** Render the label as a standalone `<span>` (group/multi-input fields with no single associated control). */
+  /**
+   * Render the label as a standalone `<span>` (group/multi-input fields with no single associated control).
+   */
   standalone?: boolean;
   /**
    * Override the read-only/`static` rendering of the value. Fields whose value is not plain text
@@ -178,7 +172,6 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
     : children
       ? children({ value, presentation: resolved })
       : null;
-  const controlClass = styles.control();
 
   return (
     <div className={styles.field()}>
@@ -198,7 +191,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
         {showDescription && description && (
           <Input.Description classNames={styles.description()}>{description}</Input.Description>
         )}
-        {controlClass ? <div className={controlClass}>{control}</div> : control}
+        <div className={styles.control()}>{control}</div>
         {resolved.showError && error && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>
