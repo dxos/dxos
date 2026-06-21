@@ -15,9 +15,9 @@ import { IconButton } from '@dxos/react-ui';
 
 import { AutomationOperation } from '#types';
 
-export type RoutineListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
+export type RoutineSuggestionsProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 
-export const RoutineList = ({ subject }: RoutineListProps) => {
+export const RoutineSuggestions = ({ subject }: RoutineSuggestionsProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const prompts = useQuery(db, Filter.type(Routine.Routine));

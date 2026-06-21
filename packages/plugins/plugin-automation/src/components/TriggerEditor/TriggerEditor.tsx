@@ -179,13 +179,15 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
       defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.Content classNames={mx(kind && 'bg-card-surface px-2 pb-2 border border-separator rounded-xs', classNames)}>
+      <Form.Content classNames={mx(kind && 'bg-card-surface pl-2 pb-2 border border-separator rounded-xs', classNames)}>
         {kind && (
           <div className='flex items-center'>
             <div className='grow truncate'>{t(`trigger-kind.${kind}.label`)}</div>
             <IconButton
               iconOnly
               variant='ghost'
+              density='xs'
+              square
               icon='ph--x--regular'
               label={t('trigger-kind.clear.label')}
               onClick={handleClose}

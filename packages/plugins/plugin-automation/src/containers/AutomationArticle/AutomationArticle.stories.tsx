@@ -3,12 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Blueprint, Routine, Trigger } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -44,8 +48,48 @@ const seedBlueprints = (space: Space) => {
   );
 };
 
+/** Empty automation — no trigger or action yet. */
+const seedDefault = (space: Space) => {
+  seedBlueprints(space);
+  space.db.add(Automation.make({ name: 'Morning Report', triggers: [] }));
+};
+
+/** Automation with a timer trigger pre-configured for a daily 9 AM schedule. */
+const seedWithTimerTrigger = (space: Space) => {
+  seedBlueprints(space);
+  const trigger = space.db.add(Trigger.make({ enabled: false, spec: { kind: 'timer', cron: '0 9 * * *' } }));
+  const automation = space.db.add(Automation.make({ name: 'Daily Digest', triggers: [] }));
+  // Wire the trigger into the automation after both are in the db.
+  Obj.update(automation, (automation) => {
+    automation.triggers = [...automation.triggers, Ref.make(trigger)];
+  });
+};
+
+/**
+ * `withPluginManager` (rather than `withClientProvider`) so the article's `useOperationInvoker` resolves
+ * the `OperationInvoker` capability the Run toolbar action depends on.
+ */
+const withAutomation = (seed: (space: Space) => void) =>
+  withPluginManager({
+    plugins: [
+      ...corePlugins(),
+      ClientPlugin({
+        types,
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            yield* Effect.promise(() => client.halo.createIdentity());
+            const space = yield* Effect.promise(() => client.spaces.create());
+            yield* Effect.promise(() => space.waitUntilReady());
+            seed(space);
+          }),
+      }),
+      AutomationPlugin(),
+    ],
+  });
+
 const DefaultStory = () => {
-  const { space } = useClientStory();
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
   const [automation] = useQuery(space?.db, Filter.type(Automation.Automation));
   if (!automation) {
     return <Loading />;
@@ -55,7 +99,8 @@ const DefaultStory = () => {
 
 /** Two-column layout: the composite AutomationArticle on the left, raw object properties on the right. */
 const TwoColumnStory = () => {
-  const { space } = useClientStory();
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
   const [automation] = useQuery(space?.db, Filter.type(Automation.Automation));
   if (!automation) {
     return <Loading />;
@@ -73,19 +118,7 @@ const TwoColumnStory = () => {
 const meta = {
   title: 'plugins/plugin-automation/containers/AutomationArticle',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types,
-      onCreateSpace: async ({ space }) => {
-        seedBlueprints(space);
-        space.db.add(Automation.make({ name: 'Morning Report', triggers: [] }));
-      },
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -96,30 +129,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Empty automation — no trigger or action yet. Exercises the disabled enabled-switch message. */
-export const Empty: Story = {};
+/** Empty automation — no trigger or action yet. The Run action is disabled until a runnable is set. */
+export const Empty: Story = {
+  decorators: [withAutomation(seedDefault)],
+};
 
 /** Side-by-side: the composite editor alongside the underlying object's raw properties. */
 export const TwoColumn: Story = {
   render: TwoColumnStory,
+  decorators: [withAutomation(seedDefault)],
 };
 
 /** Automation with a timer trigger pre-configured for a daily 9 AM schedule. */
 export const WithTimerTrigger: Story = {
-  decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types,
-      onCreateSpace: async ({ space }) => {
-        seedBlueprints(space);
-        const trigger = space.db.add(Trigger.make({ enabled: false, spec: { kind: 'timer', cron: '0 9 * * *' } }));
-        const automation = space.db.add(Automation.make({ name: 'Daily Digest', triggers: [] }));
-        // Wire the trigger into the automation after both are in the db.
-        Obj.update(automation, (automation) => {
-          automation.triggers = [...automation.triggers, Ref.make(trigger)];
-        });
-      },
-    }),
-  ],
+  decorators: [withAutomation(seedWithTimerTrigger)],
 };

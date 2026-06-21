@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
@@ -205,6 +205,18 @@ const OperationEditor = ({
   );
 };
 
+// Blueprint picker options: surface each blueprint's registry key as the secondary line and sort by
+// name — mirroring `getOperationOptions` so the two action editors present refs consistently.
+const getBlueprintOptions = (results: Entity.Any[]): { id: string; label: string; description?: string }[] =>
+  results
+    .map((blueprint) => {
+      const id = Entity.getURI(blueprint, { prefer: 'named' });
+      const label = Entity.getLabel(blueprint) ?? id;
+      const key = Obj.instanceOf(Blueprint.Blueprint, blueprint) ? Obj.getMeta(blueprint).key : undefined;
+      return { id, label, description: key };
+    })
+    .sort((left, right) => left.label.localeCompare(right.label));
+
 const ROUTINE_SCHEMA = Type.getSchema(Routine.Routine);
 
 // Owned-routine action fields surfaced for editing.
@@ -242,6 +254,7 @@ const RoutineEditor = ({ routine }: { routine: Routine.Routine }) => {
       schema={ROUTINE_SCHEMA}
       db={db}
       defaultValues={defaultValues}
+      getOptions={getBlueprintOptions}
       onValuesChanged={handleValuesChanged}
     >
       <Form.FieldSet filter={(props) => props.filter((prop) => ROUTINE_FIELDS.has(prop.name.toString()))} />
