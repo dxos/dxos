@@ -44,7 +44,12 @@ export default Capability.makeModule(() =>
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <CodeSettings settings={settings} onSettingsChange={updateSettings} />;
+          return (
+            <CodeSettings
+              settings={settings}
+              onSettingsChange={(next: Settings.Settings) => updateSettings(() => next)}
+            />
+          );
         },
       }),
       Surface.create({
