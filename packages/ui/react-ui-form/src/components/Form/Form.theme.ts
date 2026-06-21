@@ -29,16 +29,16 @@ const formStyles = tv({
     variant: {
       default: {},
       settings: {
-        viewport: 'py-8',
         content: 'dx-document',
+        section: 'my-8',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
-        fieldSet: 'flex flex-col gap-trim-md pt-trim-md',
+        fieldSet: 'flex flex-col gap-trim-md pt-trim-md mb-8',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
           'md:grid-cols-2 md:[grid-template-areas:"header_control""description_description""validation_validation"]',
-          'gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm',
+          'gap-x-trim-lg gap-y-0 p-trim-md border border-input-separator rounded-md',
         ),
         fieldLabel: '[grid-area:header]',
         fieldLabelText: 'pb-trim-md text-base-fg text-lg',
