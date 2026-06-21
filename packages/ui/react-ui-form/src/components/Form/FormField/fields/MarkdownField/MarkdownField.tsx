@@ -15,7 +15,7 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldWrapper } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 const editorClassNames =
   'min-h-[6lh] transition-colors bg-input-surface focus-within:bg-focus-surface border border-input-separator rounded-xs p-1 px-2';
@@ -74,9 +74,9 @@ export const MarkdownField = ({
   };
 
   return (
-    <FormFieldWrapper readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
+    <FormRow readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
       {({ value }) => renderEditor(value)}
-    </FormFieldWrapper>
+    </FormRow>
   );
 };
 

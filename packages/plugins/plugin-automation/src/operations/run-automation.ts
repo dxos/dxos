@@ -32,9 +32,16 @@ const handler: Operation.WithHandler<typeof AutomationOperation.RunAutomation> =
       const routine = routines.find((candidate) => Obj.getParent(candidate)?.id === automationObj.id);
       invariant(routine, 'Automation has no action to run.');
 
+      // Bind the automation's context objects to the new chat so the routine's agent can access them.
+      const objects =
+        automationObj.objects && automationObj.objects.length > 0
+          ? yield* Effect.forEach(automationObj.objects, (ref) => Database.load(ref))
+          : undefined;
+
       yield* Operation.invoke(AutomationOperation.RunPromptInNewChat, {
         db,
         prompt: Ref.make(routine),
+        objects,
         background: true,
       });
     }),

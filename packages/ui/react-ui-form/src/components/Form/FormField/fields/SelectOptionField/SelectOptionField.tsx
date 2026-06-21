@@ -14,7 +14,7 @@ import { hues, osTranslations } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldLabel } from '../../FormRow';
 
 export const SelectOptionField = ({
   type,

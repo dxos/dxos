@@ -19,8 +19,8 @@ import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
-import { AssistantSettings } from '#components';
 import {
+  AssistantSettings,
   ChatCompanion,
   ChatArticle,
   ChatDialog,

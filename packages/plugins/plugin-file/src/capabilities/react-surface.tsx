@@ -11,8 +11,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 
-import { FileInput, FileSettings } from '#components';
-import { FileArticle } from '#containers';
+import { FileInput } from '#components';
+import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
 import { FileAction, File, type Settings } from '#types';
 
