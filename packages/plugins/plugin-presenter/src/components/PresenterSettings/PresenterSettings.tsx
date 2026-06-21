@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -17,15 +17,20 @@ export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSetti
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
-        <SettingsForm.FieldSet
-          readonly={!onSettingsChange}
-          schema={Settings.Settings}
-          values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
-        />
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+    <Form.Root
+      variant='settings'
+      schema={Settings.Settings}
+      values={settings}
+      readonly={!onSettingsChange}
+      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+            <Form.FieldSet />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
