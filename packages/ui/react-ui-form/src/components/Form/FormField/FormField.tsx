@@ -111,7 +111,7 @@ export const FormField = (props: FormFieldProps) => {
   );
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label],
+    [examples, description, label, t],
   );
 
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
@@ -125,6 +125,7 @@ export const FormField = (props: FormFieldProps) => {
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
+    description,
     jsonPath,
     placeholder,
     presentation: layout,

@@ -32,6 +32,7 @@ import {
   useFormHandler,
   useKeyHandler,
 } from '../../hooks';
+import { formTheme } from './Form.theme';
 import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
 import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
 
@@ -150,10 +151,12 @@ const FORM_FIELDSET_NAME = 'Form.FieldSet';
 export type FormFieldSetControllerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
 
 /** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
-export const FormFieldSetController = (props: FormFieldSetControllerProps) => {
-  const { form, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
-
-  return <FormFieldSet schema={form.schema} {...contextProps} {...props} />;
+export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetControllerProps) => {
+  const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
+  const styles = formTheme.styles({ variant });
+  return (
+    <FormFieldSet schema={form.schema} classNames={styles.fieldSet({ class: classNames })} {...contextProps} {...props} />
+  );
 };
 
 FormFieldSetController.displayName = FORM_FIELDSET_NAME;
@@ -239,24 +242,16 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SECTION_NAME = 'Form.Section';
 
-export type FormSectionProps = ThemedClassName<{
-  title?: string;
-  description?: string;
-  /** Class on the section title element, overriding the default size/spacing. */
-  titleClassName?: string;
-  /** Class on the section description element, overriding the default color/spacing. */
-  descriptionClassName?: string;
-}>;
+export type FormSectionProps = ThemedClassName<{ title?: string; description?: string }>;
 
 export const FormSection = composable<HTMLDivElement, FormSectionProps>(
-  ({ children, title, description, titleClassName, descriptionClassName, ...props }, forwardedRef) => {
+  ({ children, title, description, ...props }, forwardedRef) => {
+    const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
+    const styles = formTheme.styles({ variant });
     return (
-      <div
-        {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
-        ref={forwardedRef}
-      >
-        {title && <h2 className={mx('text-lg', titleClassName)}>{title}</h2>}
-        {description && <p className={mx('text-description', descriptionClassName)}>{description}</p>}
+      <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
+        {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
+        {description && <p className={styles.sectionDescription()}>{description}</p>}
         {children}
       </div>
     );

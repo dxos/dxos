@@ -53,6 +53,11 @@ export type FormFieldRendererProps<T = any> = {
   readonly?: boolean;
   label: string;
   /**
+   * Human-readable description (from the schema's description annotation). Rendered as visible text
+   * only when the resolved presentation opts in; otherwise it falls back to the input placeholder.
+   */
+  description?: string;
+  /**
    * Dotted JSON path of this field within the form values (e.g. `runtime.client.storage.persistent`).
    */
   jsonPath?: string;
