@@ -7,11 +7,11 @@ import React, { useCallback, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-import { type RegistrySettings as RegistrySettingsType } from '../../types';
+import { type RegistrySettings as RegistrySettingsType, RegistrySettingsSchema } from '../../types';
 
 export type RegistrySettingsProps = AppSurface.SettingsArticleProps<
   RegistrySettingsType,
@@ -29,6 +29,10 @@ export type RegistrySettingsProps = AppSurface.SettingsArticleProps<
  * re-attach it on the next reload, surviving HMR-triggered reloads. If the
  * dev server is offline at boot, the toggle stays on and a warning is logged
  * (the manager's `failed` atom also surfaces a badge on the plugin list).
+ *
+ * The URL input and toggle are rendered as `Form.Row` action rows (not schema
+ * fields): the input needs a dynamic disabled state and the toggle runs async
+ * enable/disable side effects, neither of which a plain schema field expresses.
  */
 export const RegistrySettings = ({
   settings,
@@ -87,34 +91,41 @@ export const RegistrySettings = ({
       : t('dev-plugin.enable.label');
 
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('dev-plugin.section.title')}>
-        <Message.Root valence='neutral'>
-          <Message.Content>{t('dev-plugin.description')}</Message.Content>
-        </Message.Root>
-        <SettingsForm.Item title={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-          <Input.TextInput
-            classNames='ms-2'
-            disabled={!onSettingsChange || enabled || busy}
-            value={url}
-            onChange={(event) => onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))}
-          />
-        </SettingsForm.Item>
-        <SettingsForm.Item title={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
-          <Button
-            variant={enabled ? undefined : 'primary'}
-            disabled={busy || (!enabled && !trimmedUrl)}
-            onClick={() => void handleToggle()}
-          >
-            {buttonLabel}
-          </Button>
-        </SettingsForm.Item>
-        {enabled && !loadedDevId && !busy && (
-          <Message.Root valence='warning'>
-            <Message.Content>{t('dev-plugin.not-loaded.message')}</Message.Content>
-          </Message.Root>
-        )}
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+    <Form.Root schema={RegistrySettingsSchema} values={settings} variant='settings' readonly={!onSettingsChange}>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('dev-plugin.section.title')}>
+            <Message.Root valence='neutral'>
+              <Message.Content>{t('dev-plugin.description')}</Message.Content>
+            </Message.Root>
+            <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
+              <Input.Root>
+                <Input.TextInput
+                  disabled={!onSettingsChange || enabled || busy}
+                  value={url}
+                  onChange={(event) =>
+                    onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
+                  }
+                />
+              </Input.Root>
+            </Form.Row>
+            <Form.Row label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
+              <Button
+                variant={enabled ? undefined : 'primary'}
+                disabled={busy || (!enabled && !trimmedUrl)}
+                onClick={() => void handleToggle()}
+              >
+                {buttonLabel}
+              </Button>
+            </Form.Row>
+            {enabled && !loadedDevId && !busy && (
+              <Message.Root valence='warning'>
+                <Message.Content>{t('dev-plugin.not-loaded.message')}</Message.Content>
+              </Message.Root>
+            )}
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
