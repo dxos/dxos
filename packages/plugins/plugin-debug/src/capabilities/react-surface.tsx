@@ -47,10 +47,10 @@ import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 import { Position } from '@dxos/util';
 
-import { DebugSettings } from '#components';
 import {
   DebugGraph,
   DebugObjectPanel,
+  DebugSettings,
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,

@@ -74,6 +74,11 @@ SettingsSection.displayName = SETTINGS_SECTION_NAME;
 // Settings
 //
 
+/**
+ * @deprecated Use {@link Form} with `variant='settings'` instead. `Settings`
+ * duplicates the schema-driven rendering that `Form` now provides; see `plugin-markdown`'s `MarkdownSettings`
+ * for the migration exemplar.
+ */
 export const Settings = {
   Root: SettingsRoot,
   Viewport: SettingsViewport,

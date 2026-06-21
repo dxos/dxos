@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { NotFound } from '@dxos/app-toolkit';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
-import { DeckSettings } from '#components';
+import { DeckSettings } from '#containers';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 

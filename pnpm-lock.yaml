@@ -1653,6 +1653,9 @@ catalogs:
     tailwind-scrollbar:
       specifier: ^4.0.0
       version: 4.0.2
+    tailwind-variants:
+      specifier: ^3.2.2
+      version: 3.2.2
     tailwindcss:
       specifier: ^4.3.0
       version: 4.3.0
@@ -6973,7 +6976,7 @@ importers:
         version: 0.96.1(effect@3.21.3)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.3))(effect@3.21.3)
@@ -7106,7 +7109,7 @@ importers:
         version: 0.96.1(effect@3.21.3)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.3))(effect@3.21.3)
@@ -11244,7 +11247,7 @@ importers:
         version: 0.75.2(@effect/platform@0.96.1(effect@3.21.3))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.3))(effect@3.21.3))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.0
@@ -22108,6 +22111,9 @@ importers:
       tailwind-scrollbar:
         specifier: 'catalog:'
         version: 4.0.2(react@19.2.6)(tailwindcss@4.3.0)
+      tailwind-variants:
+        specifier: 'catalog:'
+        version: 3.2.2(tailwind-merge@3.5.0)(tailwindcss@4.3.0)
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
@@ -39518,6 +39524,16 @@ packages:
     peerDependencies:
       tailwindcss: 4.x
 
+  tailwind-variants@3.2.2:
+    resolution: {integrity: sha512-Mi4kHeMTLvKlM98XPnK+7HoBPmf4gygdFmqQPaDivc3DpYS6aIY6KiG/PgThrGvii5YZJqRsPz0aPyhoFzmZgg==}
+    engines: {node: '>=16.x', pnpm: '>=7.x'}
+    peerDependencies:
+      tailwind-merge: '>=3.0.0'
+      tailwindcss: '*'
+    peerDependenciesMeta:
+      tailwind-merge:
+        optional: true
+
   tailwindcss-radix@4.0.2:
     resolution: {integrity: sha512-Uoa2BUCfWKGCjQPXbj4X4Q4EWAeCsvhj0udn0IupeNcvuLbqRXvC5+bKAqsngIne5mrRUPTy/IqMXGh81YyrCA==}
     engines: {node: '>=20'}
@@ -43940,7 +43956,7 @@ snapshots:
       effect: 3.21.3
       multipasta: 0.2.7
 
-  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)':
+  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)':
     dependencies:
       '@effect/cluster': 0.59.0(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/sql@0.51.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/workflow@0.18.2(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       '@effect/platform': 0.96.1(effect@3.21.3)
@@ -61716,6 +61732,12 @@ snapshots:
       tailwindcss: 4.3.0
     transitivePeerDependencies:
       - react
+
+  tailwind-variants@3.2.2(tailwind-merge@3.5.0)(tailwindcss@4.3.0):
+    dependencies:
+      tailwindcss: 4.3.0
+    optionalDependencies:
+      tailwind-merge: 3.5.0
 
   tailwindcss-radix@4.0.2(tailwindcss@4.3.0):
     dependencies:

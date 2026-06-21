@@ -95,7 +95,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
   return (
     <div className='flex flex-col'>
-      <Form.Section label={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
+      <Form.Section title={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
 
       {!githubToken && (
         <div className='flex flex-col py-form-gap'>

@@ -4,6 +4,20 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-21 — plugin-automation (Automation.objects context picker)
+
+- A `Schema.Array(Ref.Ref(Obj.Unknown))` field needs NO custom `fieldMap`: the default `RefField` resolves `Obj.Unknown` to `ANY_OBJECT_TYPENAME` and renders an any-space-object picker per slot (`react-ui-form/.../RefField.tsx` `defaultUseResults` → `Filter.everything()`). Just render it via a `Form.Root` sub-form with `db` set + `Form.FieldSet` (mirrors `RoutineEditor`).
+- Customize the any-object picker via a `getOptions` passed to `Form.Root`: sort by label, set `description` to `Entity.getTypename(obj)` (the secondary line), fall back to the type placeholder then URI for unlabelled objects (mirror `defaultGetOptions`'s `getTypePlaceholder`). Filter system objects with `HiddenAnnotation.get(Type.getSchema(Obj.getType(obj)))` (`@dxos/echo/Annotation`) — SpaceProperties etc. carry it; pattern from plugin-space `useRelatedObjects`.
+- The `objects` picker belongs WITH the routine's Blueprints field (objects bind to the routine's chat context), NOT in a separate "Context" section — render `ObjectsEditor` inside `ActionEditor`'s routine branch after `RoutineEditor`, no section label (user corrected).
+
+## 2026-06-21 — plugin-automation (AutomationCompanion rewrite: relation-anchored master-detail)
+
+- Per-object companions associate via an ECHO **Relation**, not a data field: define `Automation.AppliesTo` (`Type.makeRelation({ dxn, source: Automation, target: Obj.Unknown })`, mirror `Chat.CompanionTo`), register it in `addSchemaModule`, create with `Relation.make(AppliesTo, { [Relation.Source]: a, [Relation.Target]: o })` + `db.add`, list with `useQuery(db, Query.select(Filter.id(object.id)).targetOf(AppliesTo))` then `Relation.getSource(r)`. Delete = remove the relation AND the source object.
+- A type's required blueprints come from `AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(Obj.getType(object)))` (Option<string[]>); attach as registry refs `Ref.fromURI(Blueprint.registryURI(key))` (NOT space objects). Same source the Chat companion uses (`plugin-assistant/.../ChatCompanion.tsx`).
+- **A pure in-memory draft for an Automation form is INFEASIBLE**: the routine's `instructions` (`Ref<Text>` + Markdown) renders via `RefMarkdownEditor`→`createDocAccessor`, which throws `object is not an EchoObjectSchema` for an unattached object. Workable "draft" = `db.add` the automation+routine on create (form works), defer the **AppliesTo relation** to Save (relation-driven list hides un-saved drafts), Cancel `db.remove`s the draft (owned routine cascade-deletes). Storybook only verifies the FIXED module after a full reload — stale HMR shows `ReferenceError`/old errors that aren't real.
+- `OrderedList` (`@dxos/react-ui-list`) is the master-detail primitive: `Root`/`Content`/`Item`(+`hover`,`selected`,`onClick`,`canDrag=false`)/`DeleteButton`(`autoHide`); `DetailItem` is the inline-expand row variant. For a separate detail pane below the list, compose `Item` + your own detail slot (prototyped as `components/MasterDetail`).
+- `AutomationOperation.RunPromptInNewChat` already accepts `objects: Schema.optional(Schema.Array(Obj.Unknown))` (actual objects, not refs — handler does `Ref.make(obj)`) and binds them to the new chat via `AiContext.Binder`. To forward an Automation's `objects` refs in `run-automation.ts`, load them with `Effect.forEach(automationObj.objects, (ref) => Database.load(ref))` and pass as `objects`.
+
 ## 2026-06-19 — plugin-automation / plugin-assistant (move Routine/Blueprint/Template UI down)
 
 - Moving UI DOWN the dep graph: plugin-assistant already deps plugin-automation, so Routine/Blueprint/Template containers+components moved INTO automation; assistant re-imports nothing (surfaces moved too). Check the existing edge direction first (`node -e` on package.json) before deciding which way code can move.

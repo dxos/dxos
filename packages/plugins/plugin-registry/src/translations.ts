@@ -34,9 +34,9 @@ export const translations = [
         'registry.loading.label': 'Loading registry plugins…',
         'registry.error.label': 'Failed to load registry plugins: {{message}}',
         'registry.empty.label': 'No registry plugins available.',
-        'dev-plugin.section.title': 'Dev plugin',
+        'dev-plugin.section.title': 'Dev Server',
         'dev-plugin.description':
-          'Load a plugin from a local Vite dev server (the `composerPlugin` defaults to port 3967). Composer reattaches it on every reload, surviving HMR — useful when iterating on a community plugin against a live registry version.',
+          'Load a plugin from a local Vite dev server (the `composerPlugin` defaults to port 3967). Composer re-attaches it on every reload, surviving HMR — useful when iterating on a community plugin against a live registry version.',
         'dev-plugin.url.label': 'Manifest URL',
         'dev-plugin.url.description':
           'Defaults to the local dev server. Edit if your dev server runs on a different port.',
