@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
@@ -17,18 +17,14 @@ import { Sketch } from '#types';
 
 import { getSketchesPath } from '../paths';
 
-const sketchTypename = Type.getTypename(Sketch.Sketch);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Sketch.Sketch),
-
       GraphBuilder.createExtension({
         id: 'sketchesSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === sketchTypename && space ? Option.some(space) : Option.none();
+          return node.type === Type.getTypename(Sketch.Sketch) && space ? Option.some(space) : Option.none();
         },
         actions: (space) =>
           Effect.succeed([
@@ -49,7 +45,7 @@ export default Capability.makeModule(
                   );
                 }),
               properties: {
-                label: ['add-object.label', { ns: sketchTypename }],
+                label: ['add-object.label', { ns: Type.getTypename(Sketch.Sketch) }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },

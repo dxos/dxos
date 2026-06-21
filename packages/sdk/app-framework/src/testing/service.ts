@@ -22,7 +22,7 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
 
       const pluginLoader = (id: string) =>
         Effect.sync(() => {
-          const plugin = plugins.find((plugin) => plugin.meta.id === id);
+          const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
           invariant(plugin, `Plugin not found: ${id}`);
           return { plugin };
         });
@@ -30,7 +30,7 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
       const manager = PluginManager.make({
         pluginLoader,
         plugins,
-        enabled: plugins.map((plugin) => plugin.meta.id),
+        enabled: plugins.map((plugin) => plugin.meta.profile.key),
       });
 
       manager.capabilities.contribute({

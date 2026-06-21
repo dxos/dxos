@@ -20,7 +20,7 @@ export type ChatMcpErrorsProps = ThemedClassName<{
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
 export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const errors = useAtomValue(processor.mcpErrors);
 
   const handleDismiss = useCallback(() => {

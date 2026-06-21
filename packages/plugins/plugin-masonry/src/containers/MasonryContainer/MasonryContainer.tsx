@@ -115,7 +115,7 @@ const Item = ({ data }: { data: any }) => {
           </Card.Block>
         </Card.Header>
         <Surface.Surface
-          type={AppSurface.Card}
+          type={AppSurface.CardContent}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />

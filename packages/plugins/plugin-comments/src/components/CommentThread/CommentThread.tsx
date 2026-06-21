@@ -10,7 +10,7 @@ import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Message as MessageComponent, type ThreadComponents, Thread } from '@dxos/react-ui-thread';
-import { type AnchoredTo, type Message, type Thread as ThreadType } from '@dxos/types';
+import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
 import { useStatus } from '#hooks';
@@ -31,6 +31,17 @@ export type CommentThreadProps = {
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 };
 
+// TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
+// relation changes. The try/catch should not be necessary — Relation.getSource should
+// return undefined rather than throw when the source is transiently unavailable.
+const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.SourceOf<T> | undefined => {
+  try {
+    return Relation.getSource(relation);
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
@@ -46,13 +57,14 @@ export const CommentThread = ({
   onThreadDelete,
   onAcceptProposal,
 }: CommentThreadProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const identity = useIdentity();
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = Relation.getSource(anchor) as ThreadType.Thread;
-  const threadUri = Obj.getURI(thread);
+  const source = useRelationSource(anchor);
+  const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
+  const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, threadUri);
 
@@ -67,7 +79,10 @@ export const CommentThread = ({
     },
     [members],
   );
-  const textboxMetadata = useMemo(() => getMessageMetadata(threadUri, identity ?? undefined), [threadUri, identity]);
+  const textboxMetadata = useMemo(
+    () => getMessageMetadata(threadUri ?? '', identity ?? undefined),
+    [threadUri, identity],
+  );
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
     [messages],
@@ -96,6 +111,10 @@ export const CommentThread = ({
     },
     [anchor, onComment],
   );
+
+  if (!thread || !threadUri) {
+    return null;
+  }
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>

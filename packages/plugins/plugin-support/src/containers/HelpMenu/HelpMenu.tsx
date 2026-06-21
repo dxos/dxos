@@ -26,7 +26,7 @@ const GITHUB_URL = 'https://github.com/dxos/dxos';
 const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
 export const HelpMenu = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};

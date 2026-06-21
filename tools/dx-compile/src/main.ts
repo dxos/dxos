@@ -58,6 +58,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
+  const packageDir = dirname(packagePath);
+
+  const entryPoints: (string | { in: string; out: string })[] = options.entryPoints;
+
   let tsConfig: any;
   try {
     const tsConfigPath = join(dirname(packagePath), 'tsconfig.json');
@@ -135,7 +139,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
 
       const start = Date.now();
       const result = await build({
-        entryPoints: options.entryPoints,
+        entryPoints,
         outdir,
         outExtension: { '.js': extension },
         format: 'esm', // Output is later transpiled to CJS via plugin.

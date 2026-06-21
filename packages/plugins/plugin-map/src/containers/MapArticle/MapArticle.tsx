@@ -4,7 +4,7 @@
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
@@ -57,7 +57,7 @@ export type MapArticleProps = AppSurface.ObjectArticleProps<
  * surface and passed in, keeping this container free of plugin-context hooks.
  */
 export const MapArticle = ({ role, subject, provider, ...props }: MapArticleProps) => {
-  const Root = role === 'section' ? Container : Fragment;
+  const Root = role === AppSurface.Section.role ? Container : Fragment;
   return (
     <Root>
       <Panel.Root>

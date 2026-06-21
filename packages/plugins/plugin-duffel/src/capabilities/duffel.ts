@@ -17,7 +17,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({ apiKey: undefined }),
     });
@@ -27,7 +27,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(DuffelCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.id,
+        prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

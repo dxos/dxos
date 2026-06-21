@@ -14,6 +14,7 @@ type PanelContainerProps = ThemedClassName<
   }>
 >;
 
+// TODO(burdon): Replace with Panel.Root.
 export const PanelContainer = ({ classNames, children, toolbar, footer }: PanelContainerProps) => {
   return (
     <div className='flex flex-col h-full overflow-hidden divide-y divide-separator'>

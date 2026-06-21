@@ -18,15 +18,18 @@ export const DelegateTask = Operation.make({
     key: DXN.make('org.dxos.function.delegation.delegateTask'),
     name: 'Delegate task',
     description: trim`
-      Delegate a unit of work to a sub-agent. 
-      Records the work as an in-progress task on the plan and returns the updated plan. 
-      Use this to hand off work that can proceed in the background while you continue the conversation.
+      Delegate a unit of work to a sub-agent.
+      Provide either \`id\` (an existing plan task from update-tasks) or \`title\` (to create a new task).
+      Marks the task in-progress and delegated so the supervisor spawns a background sub-agent.
     `,
     icon: 'ph--share-network--regular',
   },
   input: Schema.Struct({
-    title: Schema.String.annotations({
-      description: 'Short title describing the work to delegate to a sub-agent.',
+    id: Schema.optional(Plan.TaskId).annotations({
+      description: 'Id of an existing plan task to delegate (from update-tasks).',
+    }),
+    title: Schema.optional(Schema.String).annotations({
+      description: 'Title for a new task to create and delegate. Omit when delegating by id.',
     }),
   }),
   output: Schema.Any,
@@ -38,14 +41,47 @@ export const DelegateTask = Operation.make({
  */
 export default DelegateTask.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ title }) {
+    Effect.fn(function* ({ id, title }) {
+      const hasId = id !== undefined;
+      const hasTitle = title !== undefined && title.length > 0;
+      if (hasId === hasTitle) {
+        return yield* Effect.fail(
+          new Error('Provide exactly one of `id` (existing plan task) or `title` (new task to create).'),
+        );
+      }
+
       const agent = yield* Agent.getFromChatContext;
       const plan = yield* Database.load(agent.plan);
-      Obj.update(plan, (plan) => {
-        // Mark as delegated so the supervisor's reconcile loop picks it up (and ordinary
-        // `update-tasks` tasks are NOT spawned as sub-agents).
-        Plan.addTasks(plan, [{ title, status: 'in-progress', delegated: true }]);
-      });
+
+      if (hasId) {
+        const existing = plan.tasks.find((task) => task.id === id);
+        if (!existing) {
+          return yield* Effect.fail(new Error(`Plan task not found: ${id}`));
+        }
+        if (existing.status === 'done' || existing.status === 'failed') {
+          return yield* Effect.fail(
+            new Error(`Plan task "${id}" is already ${existing.status} and cannot be delegated.`),
+          );
+        }
+
+        Obj.update(plan, (plan) => {
+          const task = plan.tasks.find((task) => task.id === id);
+          if (task) {
+            task.delegated = true;
+            task.status = 'in-progress';
+          }
+        });
+      } else {
+        if (title === undefined) {
+          return yield* Effect.fail(
+            new Error('Provide exactly one of `id` (existing plan task) or `title` (new task to create).'),
+          );
+        }
+        Obj.update(plan, (plan) => {
+          Plan.addTasks(plan, [{ title, status: 'in-progress', delegated: true }]);
+        });
+      }
+
       return trim`
         Delegated work as an in-progress task. Current plan:
         <plan>

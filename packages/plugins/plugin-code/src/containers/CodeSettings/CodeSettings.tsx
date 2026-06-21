@@ -20,7 +20,7 @@ export type CodeSettingsProps = {
 };
 
 export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));

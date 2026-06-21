@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Annotation, DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -60,7 +60,7 @@ export class Bindings {
 
 export type BinderOptions = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Feed.FeedService>;
+  runtime: Runtime.Runtime<Database.Service>;
   /** @effect-atom/atom-react Registry for reactive state management. */
   registry?: AtomRegistry.Registry;
 };
@@ -74,7 +74,7 @@ export class Binder extends Resource {
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: AtomRegistry.Registry;
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 

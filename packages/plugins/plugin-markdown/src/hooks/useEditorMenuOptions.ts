@@ -28,7 +28,7 @@ export const useEditorMenuOptions = ({
   slashCommandGroups,
   onLinkQuery,
 }: UseEditorMenuOptionsProps): UseEditorMenuProps => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {

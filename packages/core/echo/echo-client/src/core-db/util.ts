@@ -8,7 +8,7 @@ import { isValidAutomergeUrl } from '@automerge/automerge-repo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 
 import { type ChangeEvent } from '../automerge';
-import { type DocumentChanges } from './automerge-doc-loader';
+import { type DocumentChanges } from './types';
 
 export const getInlineAndLinkChanges = (event: ChangeEvent<DatabaseDirectory>) => {
   const inlineChangedObjectIds = new Set<string>();

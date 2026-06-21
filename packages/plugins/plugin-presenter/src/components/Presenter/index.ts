@@ -4,3 +4,4 @@
 
 export * from './Layout';
 export * from './Pager';
+export * from './PresentationShell';

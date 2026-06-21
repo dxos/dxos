@@ -33,7 +33,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
       await EffectEx.runAndForwardErrors(
         Effect.gen(function* () {
           const plugin = yield* manager.add(url);
-          yield* manager.enable(plugin.meta.id);
+          yield* manager.enable(plugin.meta.profile.key);
         }),
       );
     },

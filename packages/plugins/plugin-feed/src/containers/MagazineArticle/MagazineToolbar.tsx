@@ -55,7 +55,7 @@ export const MagazineToolbar = ({
           .group(
             'view',
             {
-              label: ['view-filter.label', { ns: meta.id }],
+              label: ['view-filter.label', { ns: meta.profile.key }],
               variant: 'toggleGroup',
               selectCardinality: 'single',
               value: view,
@@ -64,7 +64,7 @@ export const MagazineToolbar = ({
               group.action(
                 'starred',
                 {
-                  label: ['only-starred.label', { ns: meta.id }],
+                  label: ['only-starred.label', { ns: meta.profile.key }],
                   icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
                 },
                 () => setView(view === 'starred' ? 'default' : 'starred'),
@@ -72,7 +72,7 @@ export const MagazineToolbar = ({
               group.action(
                 'archived',
                 {
-                  label: ['show-archived.label', { ns: meta.id }],
+                  label: ['show-archived.label', { ns: meta.profile.key }],
                   icon: 'ph--archive--regular',
                 },
                 () => setView(view === 'archived' ? 'default' : 'archived'),
@@ -84,7 +84,7 @@ export const MagazineToolbar = ({
           .action(
             'clear',
             {
-              label: ['clear-magazine.label', { ns: meta.id }],
+              label: ['clear-magazine.label', { ns: meta.profile.key }],
               icon: 'ph--broom--regular',
               iconOnly: true,
               disabled: busy,
@@ -94,7 +94,7 @@ export const MagazineToolbar = ({
           .action(
             'curate',
             {
-              label: [curateLabel, { ns: meta.id }],
+              label: [curateLabel, { ns: meta.profile.key }],
               icon: busy ? 'ph--circle-notch--regular' : 'ph--sparkle--regular',
               iconClassNames: busy ? 'animate-spin' : undefined,
               iconOnly: true,

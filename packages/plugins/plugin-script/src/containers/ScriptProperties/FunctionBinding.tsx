@@ -19,7 +19,7 @@ import { meta } from '#meta';
 export type FunctionBindingProps = { object: Script.Script };
 
 export const FunctionBinding = ({ object }: FunctionBindingProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const db = Obj.getDatabase(object);
 

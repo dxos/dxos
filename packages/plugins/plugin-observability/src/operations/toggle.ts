@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = Obs
       const capabilities = yield* Capability.Service;
       const registry = capabilities.get(Capabilities.AtomRegistry);
       const allSettings = capabilities.getAll(AppCapabilities.Settings);
-      const settingsObj = allSettings.find((s: AppCapabilities.Settings) => s.prefix === meta.id);
+      const settingsObj = allSettings.find((s: AppCapabilities.Settings) => s.prefix === meta.profile.key);
       if (!settingsObj) {
         return false;
       }

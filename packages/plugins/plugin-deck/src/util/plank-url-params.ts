@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { fromUrlPath, toUrlPath } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 
 const PLANK_PARAM = 'plank';
 
@@ -14,7 +14,7 @@ export const serializePlanks = (active: readonly string[], existingSearch: strin
   const params = new URLSearchParams(existingSearch);
   params.delete(PLANK_PARAM);
   for (const id of active) {
-    params.append(PLANK_PARAM, toUrlPath(id));
+    params.append(PLANK_PARAM, Paths.toUrlPath(id));
   }
   return params.size > 0 ? `?${params.toString()}` : '';
 };
@@ -23,7 +23,7 @@ export const serializePlanks = (active: readonly string[], existingSearch: strin
  * Deserialize plank query params from a URL back to qualified graph IDs.
  */
 export const deserializePlanks = (url: URL): string[] => {
-  return url.searchParams.getAll(PLANK_PARAM).map(fromUrlPath);
+  return url.searchParams.getAll(PLANK_PARAM).map(Paths.fromUrlPath);
 };
 
 /**

@@ -14,7 +14,7 @@ import { meta } from '#meta';
 
 import * as BookingSearch from './BookingSearch';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Searches for bookings (flights, …) across the enabled `BookingService`s. The handler resolves

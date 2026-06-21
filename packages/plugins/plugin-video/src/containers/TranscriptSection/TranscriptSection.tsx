@@ -25,7 +25,7 @@ export type TranscriptSectionProps = {
  * the transcript is generated. The transcript is generated on demand when missing.
  */
 export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
@@ -59,7 +59,7 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
       { video: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['transcribe-error.message', { ns: meta.id }] },
+        notify: { error: ['transcribe-error.message', { ns: meta.profile.key }] },
       },
     )
       .then(({ error }) => {

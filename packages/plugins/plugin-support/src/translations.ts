@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete ticket',
         'object-deleted.label': 'Ticket deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Support',
         'title.label': 'Title',
         'body.label': 'Description',
@@ -69,15 +69,6 @@ export const translations = [
         'open-help-tour.message': 'Show welcome tour',
         'open-shortcuts.label': 'Show shortcuts',
         'shortcuts-dialog.title': 'Shortcuts',
-        // Per-space Home node + Welcome content.
-        'space-home-node.label': 'Home',
-        'space-home.recent.heading': 'Recent',
-        'space-home.suggestions.heading': 'Get started',
-        'space-home.suggestion-draft-doc.label': 'Draft a new document',
-        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
-        'space-home.suggestion-data-type.label': 'Create a new data type',
-        'space-home.prompt.placeholder': 'Ask the assistant anything…',
-        'space-home.empty.label': 'Create an object to get started.',
         'welcome.title': 'Welcome to Composer',
         'welcome.description':
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',

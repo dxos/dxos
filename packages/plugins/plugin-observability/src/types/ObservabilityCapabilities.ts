@@ -13,9 +13,11 @@ import { type Observability as ObservabilityNs } from '@dxos/observability';
 
 import { meta } from '#meta';
 
-export const Namespace = Capability.make<string>(`${meta.id}.capability.namespace`);
+export const Namespace = Capability.make<string>(`${meta.profile.key}.capability.namespace`);
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 export const StateSchema = Schema.mutable(
   Schema.Struct({
@@ -26,16 +28,18 @@ export const StateSchema = Schema.mutable(
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
+export const State = Capability.make<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
 
-export const Observability = Capability.make<ObservabilityNs.Observability>(`${meta.id}.capability.observability`);
+export const Observability = Capability.make<ObservabilityNs.Observability>(
+  `${meta.profile.key}.capability.observability`,
+);
 
 /**
  * Optional capability — when contributed, the help/feedback UI exposes a "Download logs" action.
  * The callback is responsible for the entire download (read store, encode, save file).
  */
 export type LogDownloader = () => void | Promise<void>;
-export const LogDownloader = Capability.make<LogDownloader>(`${meta.id}.capability.log-downloader`);
+export const LogDownloader = Capability.make<LogDownloader>(`${meta.profile.key}.capability.log-downloader`);
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
 // TODO(burdon): Figure out how to share defs.

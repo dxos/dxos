@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -13,8 +14,7 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
-import { QueueFactory } from '../queue';
-import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
 
 export type EchoClientProps = {};
 
@@ -59,13 +59,16 @@ export class EchoClient extends Resource {
 
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
-  private readonly _queues = new Map<SpaceId, QueueFactory>();
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
   private _queuesService: FeedProtocol.QueueService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
+
+  /** Aggregated local object-update signal across all databases, consumed by index query sources. */
+  private readonly _objectsUpdated = new Event<ObjectUpdate>();
+  private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
   constructor(_: EchoClientProps = {}) {
     super();
@@ -105,6 +108,7 @@ export class EchoClient extends Resource {
       service: this._queryService,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
+        updateEvent: this._objectsUpdated,
       },
       graph: this._graph,
     });
@@ -115,16 +119,15 @@ export class EchoClient extends Resource {
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
+    for (const unsubscribe of this._dbUpdateSubscriptions.values()) {
+      unsubscribe();
+    }
+    this._dbUpdateSubscriptions.clear();
     for (const db of this._databases.values()) {
       this._graph._unregisterDatabase(db.spaceId);
       await db.close();
     }
-    for (const [spaceId, queueFactory] of this._queues.entries()) {
-      this._graph._unregisterQueueFactory(spaceId);
-      await queueFactory.close();
-    }
     this._databases.clear();
-    this._queues.clear();
   }
 
   // TODO(dmaretskyi): Make async?
@@ -140,6 +143,7 @@ export class EchoClient extends Resource {
     const db = new DatabaseImpl({
       dataService: this._dataService!,
       queryService: this._queryService!,
+      queueService: this._queuesService,
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
@@ -148,18 +152,17 @@ export class EchoClient extends Resource {
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
+
+    // Forward this database's local object updates to the aggregated signal so reactive index
+    // sources can re-hydrate index hits once their documents become available locally.
+    this._dbUpdateSubscriptions.set(
+      spaceId,
+      db._entityManager._updateEvent.on((event) => {
+        this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
+      }),
+    );
+
     return db;
-  }
-
-  constructQueueFactory(spaceId: SpaceId): QueueFactory {
-    const queueFactory = new QueueFactory(spaceId, this._graph);
-    this._queues.set(spaceId, queueFactory);
-    this._graph._registerQueueFactory(spaceId, queueFactory);
-    if (this._queuesService) {
-      queueFactory.setService(this._queuesService);
-    }
-
-    return queueFactory;
   }
 
   /**
@@ -187,6 +190,7 @@ export class EchoClient extends Resource {
         service: this._queryService,
         objectLoader: {
           loadObject: this._loadObjectFromDocument.bind(this),
+          updateEvent: this._objectsUpdated,
         },
         graph: this._graph,
       });
@@ -195,14 +199,7 @@ export class EchoClient extends Resource {
 
     // Update all databases with new services.
     for (const db of this._databases.values()) {
-      db._updateServices({ dataService, queryService });
-    }
-
-    // Update all queue factories with new service.
-    if (queueService) {
-      for (const queueFactory of this._queues.values()) {
-        queueFactory.setService(queueService);
-      }
+      db._updateServices({ dataService, queryService, queueService });
     }
   }
 
@@ -230,7 +227,7 @@ export class EchoClient extends Resource {
     // Waiting for the database to open since the query can run before the database is ready.
     // TODO(dmaretskyi): Refactor this.
     try {
-      await db.coreDatabase.opened.wait();
+      await db.opened.wait();
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return undefined;
@@ -238,7 +235,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+    const objectDocId = db.getObjectDocumentId(objectId);
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;

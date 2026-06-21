@@ -3,18 +3,22 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Graph } from '@dxos/plugin-graph';
 import { useQuery } from '@dxos/react-client/echo';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetIntegration } from '#components';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
+
+import { getCalendarEventPath, getEventNodeId } from '../../paths';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);
@@ -53,7 +57,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   const handleOpenObject = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
+      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
     },
     [invokePromise],
   );
@@ -67,10 +71,29 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     [db, invokePromise],
   );
 
+  // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
+  const eventSegment = linkedSegment(event.id);
+  const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
+  const nodeId = isEventNode ? attendableId : attendableId ? getEventNodeId(attendableId, eventSegment) : undefined;
+
+  useEffect(() => {
+    if (isEventNode || !nodeId) {
+      return;
+    }
+    // The event-specific node is produced by the `calendarEvent` connector which does not
+    // trigger automatic action expansion (unlike resolver-created nodes in primary mode).
+    // Explicitly expand here so extensions — e.g. plugin-meeting's "Create meeting" — attach
+    // to this node's toolbar for the one event whose companion is currently open.
+    void Graph.expand(graph, nodeId, 'action');
+  }, [graph, isEventNode, nodeId]);
+
   // Promote the event from a companion to the main view (mirrors MessageArticle).
   const handleOpen = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(event)] });
-  }, [invokePromise, event]);
+    if (!db) {
+      return;
+    }
+    void invokePromise(LayoutOperation.Open, { subject: [getCalendarEventPath(db.spaceId, calendar.id, event.id)] });
+  }, [invokePromise, db, calendar, event.id]);
 
   // Push this draft event to Google Calendar.
   // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
@@ -89,7 +112,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   }, [invokePromise, calendar, event, db]);
 
   return (
-    <Event.Root event={event} attendableId={attendableId}>
+    <Event.Root event={event} attendableId={attendableId} nodeId={nodeId}>
       <ObjectArticle
         role={role}
         toolbar={

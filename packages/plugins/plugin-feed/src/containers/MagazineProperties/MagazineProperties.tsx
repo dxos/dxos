@@ -16,7 +16,7 @@ import { Magazine } from '#types';
 export type MagazinePropertiesProps = AppSurface.ObjectPropertiesProps<Magazine.Magazine>;
 
 export const MagazineProperties = ({ subject }: MagazinePropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Form.Section>
       <FormFieldLabel standalone label={t('topic-instructions.label')} />

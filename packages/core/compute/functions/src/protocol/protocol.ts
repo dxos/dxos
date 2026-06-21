@@ -19,14 +19,8 @@ import {
   Trace,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import {
-  createFeedServiceLayer,
-  EchoClient,
-  type DatabaseImpl,
-  makeRegistry,
-  type QueueFactory,
-} from '@dxos/echo-client';
+import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { EchoClient, type DatabaseImpl, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -74,7 +68,7 @@ export const wrapFunctionHandler = (
     },
     handler: async ({ data, context }) => {
       if (
-        (serviceTags.includes(Database.Service.key) || serviceTags.includes(Feed.FeedService.key)) &&
+        serviceTags.includes(Database.Service.key) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -158,7 +152,6 @@ class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
-  queues: QueueFactory | undefined;
   readonly opts: FunctionWrappingOptions;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
@@ -188,8 +181,6 @@ class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
-    this.queues =
-      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
   }
 
   override async _close() {
@@ -201,7 +192,6 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
       ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : configuredCredentialsLayer([]);
@@ -234,7 +224,6 @@ class FunctionContext extends Resource {
 
     return Layer.mergeAll(
       dbLayer,
-      feedLayer,
       credentials,
       operationServiceLayer,
       aiLayer,

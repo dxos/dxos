@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Event, Message } from '@dxos/types';
 
@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
 const RemoteTarget = Schema.Struct({
@@ -168,7 +168,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Capability.Service, Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
+  services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
 });
 
 export const GoogleCalendarSync = Operation.make({
@@ -197,7 +197,7 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService],
 });
 
 /**
@@ -246,7 +246,7 @@ export const SyncDraftEvents = Operation.make({
   output: Schema.Struct({
     synced: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService],
 });
 
 /**
@@ -265,7 +265,7 @@ export const DeleteEvent = Operation.make({
     event: Schema.Any,
   }),
   output: Schema.Struct({ deleted: Schema.Boolean }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService],
 });
 
 /**
@@ -284,7 +284,7 @@ export const DeleteEmail = Operation.make({
     message: Schema.Any,
   }),
   output: Schema.Struct({ deleted: Schema.Boolean }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService],
 });
 
 export const GetGoogleContactGroups = Operation.make({
@@ -366,7 +366,7 @@ export const ReadEmail = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-  services: [Database.Service, Feed.FeedService],
+  services: [Database.Service],
 });
 export const ClassifyEmail = Operation.make({
   meta: {
@@ -392,7 +392,7 @@ export const ClassifyEmail = Operation.make({
     }),
     Schema.Void,
   ),
-  services: [AiService.AiService, Database.Service, Feed.FeedService],
+  services: [AiService.AiService, Database.Service],
 });
 
 export const ExtractContact = Operation.make({

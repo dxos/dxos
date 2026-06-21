@@ -15,7 +15,7 @@ import { AttentionCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactContext, {
-      id: meta.id,
+      id: meta.profile.key,
       context: (props: PropsWithChildren) => {
         const attention = useCapability(AttentionCapabilities.Attention);
         const viewState = useCapability(AttentionCapabilities.ViewState);

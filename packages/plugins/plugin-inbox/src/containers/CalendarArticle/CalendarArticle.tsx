@@ -6,7 +6,7 @@ import { addHours, isSameDay, startOfHour } from 'date-fns';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ import { EventStack, type EventStackActionHandler, useTargetIntegration } from '
 import { meta } from '#meta';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
-import { getCalendarRangeSelectionId } from '../../paths';
+import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
 
 const byDate =
@@ -32,7 +32,7 @@ const byDate =
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
@@ -109,16 +109,15 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   const handleNavigate = useCallback(
     (eventId: string) => {
-      const event = events.find((entry) => entry.id === eventId);
       // Setting the current item updates `activeEvent`, which selects + scrolls the grid (effect below).
       void showItem({
         contextId: id,
         selectionId: eventId,
         companion: linkedSegment('event'),
-        path: event ? getObjectPathFromObject(event) : undefined,
+        path: db ? getCalendarEventPath(db.spaceId, calendar.id, eventId) : undefined,
       });
     },
-    [events, id, showItem],
+    [db, id, calendar.id, showItem],
   );
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes
@@ -178,17 +177,17 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   const menuActions = useMenuBuilder(() => {
     let builder = MenuBuilder.make()
-      .root({ label: ['calendar-toolbar.menu', { ns: meta.id }] })
+      .root({ label: ['calendar-toolbar.menu', { ns: meta.profile.key }] })
       .action(
         'create-event',
-        { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--pen--regular' },
+        { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
         handleCreate,
       );
     if (draftEvents.length > 0) {
       builder = builder.action(
         'sync-draft',
         {
-          label: ['calendar-toolbar-sync.menu', { ns: meta.id }],
+          label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
           icon: 'ph--cloud-arrow-up--regular',
           // Pushing drafts to Google Calendar requires an integration targeting this calendar.
           disabled: !integration,

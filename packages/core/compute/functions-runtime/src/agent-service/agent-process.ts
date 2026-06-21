@@ -30,9 +30,10 @@ import * as StorageService from '@dxos/compute/StorageService';
 import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { ContentBlock } from '@dxos/types';
+import { Message, ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
@@ -60,6 +61,12 @@ interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * When provided, inspects agent-attached plan state before `ctx.succeed()` and may run an ephemeral
+   * stop/continue check when open tasks remain.
+   */
+  completionGuard?: CompletionGuard;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -80,7 +87,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Operation.Service,
         Registry.Service,
         StorageService.StorageService,
-        Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
         // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
@@ -94,7 +100,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
@@ -120,7 +126,30 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // into the conversation on completion. Absent (the default), the process behaves as a plain
         // conversational agent.
         const strategy = Option.fromNullable(options.delegationStrategy);
+        const completionGuard = Option.fromNullable(options.completionGuard);
         let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
+
+        const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
+
+        const maybeComplete = Effect.gen(function* () {
+          if (isAgentWorkPending({ inputQueue, alarmManager, delegations, toolCallManager })) {
+            return;
+          }
+
+          if (Option.isSome(completionGuard)) {
+            const planSummary = yield* completionGuard.value.getIncompletePlanSummary(feed);
+            if (planSummary != null) {
+              log('agent scheduling plan completion check', { planLength: planSummary.length });
+              inputQueue.push({ _tag: 'completion_check', planSummary });
+              yield* AgentEventsKey.set(inputQueue);
+              alarmManager.reconcile(true);
+              return;
+            }
+          }
+
+          log('agent work complete, succeeding');
+          ctx.succeed();
+        });
 
         return {
           onInput: Effect.fnUntraced(function* (prompt: string) {
@@ -160,10 +189,38 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 log('agent onAlarm empty queue', {});
                 alarmManager.reconcile(false);
                 yield* AgentEventsKey.set(inputQueue);
+                yield* maybeComplete;
                 return;
               }
 
               log('agent onAlarm handling', { tag: item._tag });
+
+              if (item._tag === 'completion_check') {
+                log('agent running plan completion check', { planLength: item.planSummary.length });
+                const messages = yield* session
+                  .createRequest({
+                    prompt: [
+                      ContentBlock.Text.make({
+                        text: planCompletionCheckPrompt(item.planSummary),
+                        disposition: 'synthetic',
+                      }),
+                    ],
+                    system: planCompletionCheckSystem,
+                    persist: false,
+                  })
+                  .pipe(Effect.orDie);
+                const reply = messages.map(Message.extractText).join(' ').toLowerCase();
+                if (parseContinueDecision(reply)) {
+                  inputQueue.push({ _tag: 'plan_continue_reminder', planSummary: item.planSummary });
+                  yield* AgentEventsKey.set(inputQueue);
+                  alarmManager.reconcile(true);
+                  log('agent plan completion check: continue');
+                  return;
+                }
+                log('agent plan completion check: stop');
+                ctx.succeed();
+                return;
+              }
 
               const prompt: ContentBlock.Any[] = Match.value(item).pipe(
                 Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
@@ -184,6 +241,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 ),
                 Match.tag('alarm', (item) => [
                   ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt), disposition: 'synthetic' }),
+                ]),
+                Match.tag('plan_continue_reminder', (item) => [
+                  ContentBlock.Text.make({
+                    text: planContinueReminderPrompt(item.planSummary),
+                    disposition: 'synthetic',
+                  }),
                 ]),
                 Match.exhaustive,
               );
@@ -228,6 +291,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               // Reconcile so a pending agent self-wake (or remaining queue work) is rescheduled.
               alarmManager.reconcile(inputQueue.length > 0);
+              yield* maybeComplete;
             },
             Effect.orDie,
             Effect.provide(
@@ -239,7 +303,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   enableBackgrounding: options.enableToolBackgrounding ?? false,
                 }),
                 AsynchronousExectionToolkitLayer,
-                AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
+                requestModelLayer,
               ).pipe(Layer.orDie),
             ),
           ),
@@ -260,7 +324,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   yield* strategy.value.onComplete(feed, delegation.id, exit);
                 }
                 log('delegated work completed', { pid: event.pid, id: delegation.id, success: Exit.isSuccess(exit) });
-                // alarmManager.reconcile(true);
+                yield* maybeComplete;
               } else if (toolCallManager.isToolCall(event.pid)) {
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
@@ -341,6 +405,12 @@ const AgentEvent = Schema.Union(
   Schema.TaggedStruct('alarm', {
     firedAt: Schema.Number,
   }),
+  Schema.TaggedStruct('completion_check', {
+    planSummary: Schema.String,
+  }),
+  Schema.TaggedStruct('plan_continue_reminder', {
+    planSummary: Schema.String,
+  }),
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
@@ -417,6 +487,11 @@ class ToolCallManager {
     return this.#state.activeCalls.some((call) => call.pid === pid && call.reported);
   }
 
+  /** True while a tool-call result has not yet been delivered back to the agent turn. */
+  hasPendingToolResults(): boolean {
+    return this.#state.activeCalls.some((call) => !call.reported);
+  }
+
   /**
    * Clears reported flags for tool calls that still have a pending queue entry.
    * After reload the in-flight createRequest is gone, so those results must be redelivered via onAlarm.
@@ -441,6 +516,63 @@ class ToolCallManager {
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 }
+
+export type AgentIdleSnapshot = {
+  inputQueue: readonly AgentEvent[];
+  alarmManager: AlarmManager;
+  delegations: readonly Delegation[];
+  // Only the pending-results check is consulted, so the predicate stays decoupled from the rest of
+  // the ToolCallManager surface (and is trivially stubbable in tests).
+  toolCallManager: Pick<ToolCallManager, 'hasPendingToolResults'>;
+};
+
+/** True while the agent still has queued work, a self-wake, subprocesses, or undelivered tool results. */
+export const isAgentWorkPending = ({
+  inputQueue,
+  alarmManager,
+  delegations,
+  toolCallManager,
+}: AgentIdleSnapshot): boolean =>
+  inputQueue.length > 0 ||
+  alarmManager.wakeAt != null ||
+  delegations.length > 0 ||
+  toolCallManager.hasPendingToolResults();
+
+const planCompletionCheckSystem = trim`
+  You decide whether an agent should stop or continue working.
+  Reply with exactly one word: "stop" or "continue".
+  Do not use tools. Do not add explanation.
+`;
+
+const planCompletionCheckPrompt = (planSummary: string): string => trim`
+  The agent is about to finish, but its plan still has incomplete tasks:
+
+  <plan>
+  ${planSummary}
+  </plan>
+
+  Should the agent STOP now (no more work needed) or CONTINUE working on the plan?
+  Reply with exactly one word: "stop" or "continue".
+`;
+
+const planContinueReminderPrompt = (planSummary: string): string => trim`
+  Your plan still has incomplete tasks — continue working before finishing:
+
+  <plan>
+  ${planSummary}
+  </plan>
+`;
+
+/** Prefer an explicit "continue"; treat ambiguous replies as continue so open plan work is not dropped. */
+export const parseContinueDecision = (reply: string): boolean => {
+  if (/\bcontinue\b/.test(reply)) {
+    return true;
+  }
+  if (/\bstop\b/.test(reply)) {
+    return false;
+  }
+  return true;
+};
 
 //
 // Alarms.

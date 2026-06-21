@@ -11,11 +11,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
-import { Call } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph } from '@dxos/plugin-graph';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -50,7 +48,6 @@ const DefaultStory = (_: StoryProps) => {
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
   );
   const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
-  const [call] = useQuery(db, Filter.type(Call.Call));
 
   // The selected feed event (first by chronological order from the builder).
   const event = events[0];
@@ -68,7 +65,7 @@ const DefaultStory = (_: StoryProps) => {
   }, [graph, eventUri]);
 
   if (!db || !calendar || !event) {
-    return <Loading data={{ db: !!db, calendar, event, call, meeting }} />;
+    return <Loading data={{ db: !!db, calendar, event, meeting }} />;
   }
 
   return (
@@ -108,9 +105,6 @@ const meta = {
             Calendar.Calendar,
             Event.Event,
             Transcript.Transcript,
-            Call.Call,
-            // The Meeting links a Cloudflare-transport Call; register its config schema so `db.add` succeeds.
-            Call.CloudflareTransportConfig,
             Meeting.Meeting,
             AnchoredTo.AnchoredTo,
             Text.Text,
@@ -166,12 +160,13 @@ const meta = {
                   endDate: new Date(now.getTime() + 3 * hour).toISOString(),
                 }),
               ];
-              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+              yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(space.db)));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
-              // Re-read via the queue query: these objects carry their queue URI, so `Ref.make` produces a
-              // ref the Meeting can hold (a plain `db.query(...).from(feed)` snapshot would not).
+              // Re-read via the feed query so the event objects have their full echo URI set (via
+              // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
+              // space-qualified ref that findMeetingForEvent can match.
               const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
-                Effect.provide(createFeedServiceLayer(space.queues)),
+                Effect.provide(Database.layer(space.db)),
               );
               const event = synced[0];
 
@@ -191,18 +186,8 @@ const meta = {
               const meetingSummary = space.db.add(
                 Text.make({ content: '## Summary\n\n- Roadmap reviewed.\n- Owners assigned.\n- Follow-up scheduled.' }),
               );
-
-              // Slim Call (room/transport) the Meeting optionally links to.
-              // The transport config is produced by the Cloudflare transport provider.
-              const transportConfig = space.db.add(Obj.make(Call.CloudflareTransportConfig, { roomId: 'room-1' }));
-              const call = space.db.add(
-                Call.make({
-                  name: 'Standup',
-                  transport: { kind: Call.CLOUDFLARE_TRANSPORT_KIND, config: Ref.make(transportConfig) },
-                }),
-              );
-
-              // `event` is a Ref to the feed event (works for queue objects); EventDetails reverse-matches it.
+              // Use Ref.fromURI with the full space-qualified URI so findMeetingForEvent can match
+              // the stored ref against Obj.getURI(event) (both return the full echo://SPACEID/ENTITYID form).
               const meeting = space.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
@@ -210,8 +195,7 @@ const meta = {
                   transcript: Ref.make(transcript),
                   notes: Ref.make(meetingNotes),
                   summary: Ref.make(meetingSummary),
-                  call: Ref.make(call),
-                  ...(event ? { event: Ref.make(event) } : {}),
+                  ...(event ? { event: Ref.fromURI(Obj.getURI(event)) } : {}),
                 }),
               );
 

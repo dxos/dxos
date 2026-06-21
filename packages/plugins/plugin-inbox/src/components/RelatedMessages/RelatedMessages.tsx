@@ -16,7 +16,7 @@ export type RelatedMessagesProps = {
 };
 
 export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   if (!messages.length) {
     return null;
   }

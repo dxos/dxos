@@ -22,7 +22,7 @@ import { useHubHttpClient } from '../../state/use-hub-http';
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
 export const AccountContainer = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const identity = useIdentity();
   const { invokePromise } = useOperationInvoker();
   const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);

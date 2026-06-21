@@ -31,7 +31,7 @@ export type TemplateFormProps = {
 };
 
 export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   usePromptInputs(template, onChange);
 
   const handleInputKindChange = useCallback(

@@ -54,8 +54,8 @@ export type ChatProps = ThemedClassName<{
  * `ChannelArticle` and `ThreadArticle`.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
-  ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+  ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
+    const { t } = useTranslation(meta.profile.key);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
 
@@ -80,7 +80,7 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
 
     return (
       <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
-        <Thread.Content id={id} current={current} classNames='dx-container' ref={forwardedRef}>
+        <Thread.Content id={id} current={current} classNames={['dx-container', classNames]} ref={forwardedRef}>
           <Thread.Messages messages={messages} />
           {!readOnly && (
             <>
@@ -109,7 +109,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
   return (
     <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface
-        type={AppSurface.Card}
+        type={AppSurface.CardContent}
         limit={1}
         data={{ subject } satisfies AppSurface.ObjectCardData}
         fallback={Fallback}

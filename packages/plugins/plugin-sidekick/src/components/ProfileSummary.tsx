@@ -15,7 +15,7 @@ export type ProfileSummaryProps = {
 };
 
 export const ProfileSummary = ({ summary, onOpen }: ProfileSummaryProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Form.Section label={t('user-profile.title')}>
       {summary ? (

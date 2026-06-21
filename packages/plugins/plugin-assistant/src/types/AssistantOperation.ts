@@ -10,12 +10,12 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Routine, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChat = Operation.make({
   meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular' },
@@ -37,7 +37,7 @@ export const UpdateChatName = Operation.make({
     name: 'Update Chat Name',
     icon: 'ph--pencil--regular',
   },
-  services: [Database.Service, Feed.FeedService, AiService.AiService],
+  services: [Database.Service, AiService.AiService],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
     /** Initial user message text; used when the feed has no history yet (e.g. auto-rename on first send). */

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { FeedOperation, Subscription } from '#types';
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
 export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
@@ -68,8 +68,8 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
-      workspace: getSpacePath(db.spaceId),
+      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.automation.automations')],
+      workspace: Paths.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 

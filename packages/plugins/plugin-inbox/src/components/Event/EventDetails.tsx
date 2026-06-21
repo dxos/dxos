@@ -56,7 +56,7 @@ export const EventDetails = ({
   starred,
   onToggleStar,
 }: EventDetailsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly — `useObject`
   // requires a live object and throws on a snapshot. Inline draft editing is handled by EventEditor below.
   const data = event;

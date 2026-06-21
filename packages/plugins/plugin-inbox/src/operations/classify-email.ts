@@ -124,7 +124,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
           Database.notAvailable,
-          Feed.notAvailable,
           Layer.succeed(Operation.Service, {
             invoke: () => Effect.die('Not available.'),
             schedule: () => Effect.die('Not available.'),

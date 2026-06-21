@@ -3,12 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
 import { withLayout } from '@dxos/react-ui/testing';
-
-import { Call } from '#types';
 
 import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing';
 import { CallArticle } from './CallArticle';
@@ -18,19 +15,7 @@ const state = makeCallState(self, [self, makeUser('bob', 'Bob'), makeUser('carol
 
 const DefaultStory = () => {
   useSeedCallManager(state);
-  // CallArticle reads only the CallManager; the subject merely satisfies the article surface contract.
-  const subject = useMemo(
-    () =>
-      Call.make({
-        name: 'Standup',
-        transport: {
-          kind: Call.CLOUDFLARE_TRANSPORT_KIND,
-          config: Ref.make(Obj.make(Call.CloudflareTransportConfig, { roomId: 'story-room' })),
-        },
-      }),
-    [],
-  );
-  return <CallArticle subject={subject} attendableId={Obj.getURI(subject)} />;
+  return <CallArticle roomId='story-room' />;
 };
 
 const meta = {

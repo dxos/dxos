@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Icon, Panel, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -16,13 +16,14 @@ import { Automation, AutomationCapabilities, AutomationOperation } from '#types'
 import { AutomationInlineForm } from '../../containers/AutomationArticle';
 import { connectedAutomationsQuery } from '../../util/automations-for-object';
 
+/** Association state of a row relative to the companion's object. */
+type Status = 'associated' | 'pending' | 'detached';
+
+// TODO(burdon): Use type.
 export type AutomationCompanionProps = {
   db: Database.Database;
   object: Obj.Unknown;
 };
-
-/** Association state of a row relative to the companion's object. */
-type Status = 'associated' | 'pending' | 'detached';
 
 /**
  * Renders the automations connected to an object as an accordion (see `useConnectedAutomations` for the
@@ -30,7 +31,7 @@ type Status = 'associated' | 'pending' | 'detached';
  * created from a template dropdown (no dialog).
  */
 export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const templates = useCapabilities(AutomationCapabilities.Template);
   // Only offer templates applicable to this companion's subject (e.g. a CRM template needs a Mailbox).
   const applicableTemplates = useMemo(
@@ -40,73 +41,79 @@ export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) =>
   const { items, statusFor, open, setOpen, handleCreate } = useConnectedAutomations(db, object);
 
   return (
-    <div className='flex flex-col'>
-      {items.length === 0 ? (
-        <p className='text-sm text-description p-2'>{t('no-automations.message')}</p>
-      ) : (
-        <Accordion.Root<Automation.Automation> items={items} value={open} onValueChange={setOpen}>
-          {({ items }) => (
-            <div className='flex flex-col divide-y divide-separator'>
-              {items.map((automation) => {
-                const status = statusFor(automation.id);
-                return (
-                  <Accordion.Item key={automation.id} item={automation}>
-                    <Accordion.ItemHeader>
-                      <Icon icon='ph--lightning--regular' size={4} classNames='mr-2 shrink-0' />
-                      <span className='flex-1 truncate'>
-                        {Obj.getLabel(automation) ??
-                          t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}
-                      </span>
-                      {status !== 'associated' && (
-                        <Tooltip.Trigger
-                          asChild
-                          side='bottom'
-                          content={t(
-                            status === 'pending' ? 'automation-not-associated.message' : 'automation-detached.message',
-                          )}
-                        >
-                          <Icon icon='ph--warning--regular' size={4} classNames='text-warning-text shrink-0 mr-2' />
-                        </Tooltip.Trigger>
-                      )}
-                    </Accordion.ItemHeader>
-                    <Accordion.ItemBody>
-                      <AutomationInlineForm automation={automation} db={db} />
-                    </Accordion.ItemBody>
-                  </Accordion.Item>
-                );
-              })}
-            </div>
-          )}
-        </Accordion.Root>
-      )}
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
+      <Panel.Content>
+        {items.length === 0 ? (
+          <p className='text-sm text-description p-2'>{t('no-automations.message')}</p>
+        ) : (
+          <Accordion.Root<Automation.Automation> items={items} value={open} onValueChange={setOpen}>
+            {({ items }) => (
+              <div className='flex flex-col divide-y divide-separator'>
+                {items.map((automation) => {
+                  const status = statusFor(automation.id);
+                  return (
+                    <Accordion.Item key={automation.id} item={automation}>
+                      <Accordion.ItemHeader icon='ph--lightning--regular'>
+                        <span className='flex-1 truncate'>
+                          {Obj.getLabel(automation) ??
+                            t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}
+                        </span>
+                        {status !== 'associated' && (
+                          <Tooltip.Trigger
+                            asChild
+                            side='bottom'
+                            content={t(
+                              status === 'pending'
+                                ? 'automation-not-associated.message'
+                                : 'automation-detached.message',
+                            )}
+                          >
+                            <Icon icon='ph--warning--regular' size={4} classNames='text-warning-text shrink-0 mr-2' />
+                          </Tooltip.Trigger>
+                        )}
+                      </Accordion.ItemHeader>
+                      <Accordion.ItemBody>
+                        <AutomationInlineForm automation={automation} db={db} />
+                      </Accordion.ItemBody>
+                    </Accordion.Item>
+                  );
+                })}
+              </div>
+            )}
+          </Accordion.Root>
+        )}
 
-      <div className='border-t border-separator'>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
-            <button type='button' className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
-              <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
-              <span className='flex-1 truncate'>
-                {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
-              </span>
-            </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                {applicableTemplates.map((template) => (
-                  <DropdownMenu.Item key={template.id} onClick={() => void handleCreate(template.id)}>
-                    <Icon icon={template.icon ?? 'ph--lightning--regular'} size={4} />
-                    <span>{template.label}</span>
-                  </DropdownMenu.Item>
-                ))}
-              </DropdownMenu.Viewport>
-              <DropdownMenu.Arrow />
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
-      </div>
-    </div>
+        <div className='border-t border-separator'>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
+              <button type='button' className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
+                <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
+                <span className='flex-1 truncate'>
+                  {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
+                </span>
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content>
+                <DropdownMenu.Viewport>
+                  {applicableTemplates.map((template) => (
+                    <DropdownMenu.Item key={template.id} onClick={() => void handleCreate(template.id)}>
+                      <Icon icon={template.icon ?? 'ph--lightning--regular'} size={4} />
+                      <span>{template.label}</span>
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

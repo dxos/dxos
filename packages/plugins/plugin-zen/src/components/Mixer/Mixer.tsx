@@ -212,7 +212,7 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <OrderedList.Item
       id={item.id}

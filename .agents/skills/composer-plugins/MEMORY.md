@@ -4,6 +4,22 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-18 — plugin-assistant (chat failure / error-toast story)
+
+- To DEMO an error toast, prefer a PRESENTATIONAL story: render `Toast.Provider`/`Toast.Viewport`/`Toast.Root` directly and feed `Toast.Description` from the real `parseError(rawError)`, title via `useTranslation(meta.id)('ai-service-error.label')`. Deterministic + screenshotable + zero console noise.
+- AVOID the full-harness route for an error-toast demo (ChatArticle-style `withPluginManager` + `useChatProcessor`, then seed `registry.set(processor.error, Option.some(parseError(...)))` via `useContext(RegistryContext)`): it renders, but the toast is transient (20s auto-dismiss), StrictMode resets `toastError` state, it is portal-positioned at the clipped viewport bottom → flaky to view, plus REMOTE-edge 401/favicon console errors.
+- `Toast.Root` needs `Toast.Provider` + `Toast.Viewport` wrappers in a story (testing decorators don't supply them). Mirror `ui/react-ui/.../Toast.stories.tsx`.
+- Toast `duration` must be a 32-bit-safe ms int to stay open for review; `Number.MAX_SAFE_INTEGER`/`Infinity` overflow `setTimeout` → the toast auto-dismisses IMMEDIATELY. Use e.g. `24 * 60 * 60 * 1000`.
+- plugin-assistant `tsconfig.json` EXCLUDES `*.stories.tsx` → `compile` does NOT typecheck stories. Stories are exercised by `test-storybook` (vitest browser, smoke-mounts each story); scope it: `moon run plugin-assistant:test-storybook -- Chat.stories`.
+
+## 2026-06-16 — plugin-presenter (presenter mode UX)
+
+- Toggle/exit deck-layout flows must run sequentially in ONE operation handler (`yield*` Adjust then Open). Firing `Adjust` + `Open` as two concurrent `invokePromise` calls (the old `useExitPresenter`) races: `Open` reads stale deck state and clobbers `Adjust`'s `fullscreen:false` back to true → stuck fullscreen. Route exit through the op (`TogglePresentation` with `state:false`).
+- NEVER put side effects (`setTimeout`, sibling `setState`) inside a `setState(updater)` callback in plugin components. React dev StrictMode double-invokes updaters, so a fade-then-exit scheduled inside the updater fires twice → double exit/toggle. Guard one-shot transitions with a `useRef` boolean and keep side effects outside the updater (see `PresentationShell.handleExit`).
+- An operation that reads deck state (`Capabilities.getAtomValue(DeckCapabilities.State)`) or invokes deck ops must declare `services: [Capability.Service]` in `Operation.make` (handler context is `OperationService` only otherwise). Mirror `DeckOperation.Adjust`.
+- To make a keyboard shortcut work inside the markdown editor, contribute a `MarkdownCapabilities.ExtensionProvider` returning `Prec.highest(keymap.of([{ key:'Shift-Mod-p', preventDefault:true, stopPropagation:true, run }]))` (register via `Plugin.addModule({ activatesOn: MarkdownEvents.SetupExtensions })`). The global navtree `Keyboard` context (attention id) does not match the editor, so action `keyBinding` alone never fires while editing.
+- A fullscreen presenter must own ESC itself: a document **capture-phase** listener that `stopImmediatePropagation()` + exits, so the deck's `DeckSoloMode` bubble ESC handler never runs (that handler only drops fullscreen → caused the "second ESC" bug). Don't also wire `onExit` into a child (RevealPlayer/Pager) — single owner only.
+
 ## 2026-06-15 — plugin-calls (component/container stories, CallManager harness)
 
 ### Story harness for capability-backed components (CallsCapabilities.Manager)

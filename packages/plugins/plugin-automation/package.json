@@ -102,6 +102,7 @@
   "files": [
     "assets",
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -139,7 +140,8 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
-    "@effect/printer-ansi": "catalog:"
+    "@effect/printer-ansi": "catalog:",
+    "cronstrue": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

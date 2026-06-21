@@ -48,7 +48,7 @@ const SEVERITY_PALETTE: Record<DiagnosticSeverity, 'neutral' | 'amber' | 'rose'>
 };
 
 export const DiagnosticsPanel = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const manager = usePluginManager();
   const providers = useCapabilities(DoctorCapabilities.DiagnosticProvider);

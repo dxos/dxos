@@ -2,30 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Call } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Call.Call)]: {
-        'typename.label': 'Call',
-        'typename.label_zero': 'Calls',
-        'typename.label_one': 'Call',
-        'typename.label_other': 'Calls',
-        'object-name.placeholder': 'New call',
-        'add-object.label': 'Add call',
-        'rename-object.label': 'Rename call',
-        'delete-object.label': 'Delete call',
-        'object-deleted.label': 'Call deleted',
-      },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Calls',
 
-        'channel-companion.label': 'Channel',
         'call-panel.label': 'Active Call',
 
         'display-name.label': 'Display name',
@@ -54,9 +40,6 @@ export const translations = [
         'lower-hand.button': 'Lower hand',
         'screenshare-on.button': 'Share screen',
         'screenshare-off.button': 'Stop streaming',
-
-        'channel-toolbar.title': 'Channel actions',
-        'start-video-call.menu': 'Start video call',
       },
     },
   },

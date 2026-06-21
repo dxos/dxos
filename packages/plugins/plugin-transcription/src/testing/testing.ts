@@ -4,20 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
-import { scheduleTaskInterval } from '@dxos/async';
-import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
-import { DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { TestSchema } from '@dxos/schema/testing';
-import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
-import { seedTestData } from '@dxos/types/testing';
+import { type ContentBlock, Message } from '@dxos/types';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
@@ -91,47 +85,6 @@ export class MessageBuilder extends AbstractMessageBuilder {
   }
 }
 
-// TODO(burdon): Reconcile with BlockBuilder.
-class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  space: Space | undefined;
-  currentMessage: number = 0;
-  transcriptMessages: Message.Message[] = [];
-
-  async connect(space: Space): Promise<void> {
-    this.space = space;
-    const { transcriptMessages } = await seedTestData(space);
-    this.transcriptMessages = transcriptMessages;
-  }
-
-  override async createMessage(): Promise<Message.Message> {
-    if (!this.space) {
-      throw new Error('Space not connected');
-    }
-
-    const objects = await this.space.db
-      .query(
-        Filter.or(
-          Filter.type(Person.Person),
-          Filter.type(Organization.Organization),
-          Filter.type(TestSchema.DocumentType),
-        ),
-      )
-      .run();
-
-    log.info('context', { objects });
-    const message = this.transcriptMessages[this.currentMessage];
-    this.currentMessage++;
-    this.currentMessage = this.currentMessage % this.transcriptMessages.length;
-
-    const { message: enhancedMessage } = await processTranscriptMessage({
-      input: { message },
-      function: extractionAnthropicFunction,
-    });
-
-    return enhancedMessage;
-  }
-}
-
 type UseTestTranscriptionQueue = (
   space: Space | undefined,
   running?: boolean,
@@ -153,52 +106,12 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
     if (!space || !feed || !running) {
       return;
     }
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
-
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
+        await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
-  }, [space, feed, running, interval]);
-
-  return feed;
-};
-
-/**
- * Test transcription feed with entity extraction.
- */
-// TODO(burdon): Reconcile with useTestTranscriptionQueue.
-export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
-  space: Space | undefined,
-  running = true,
-  interval = 1_000,
-) => {
-  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
-  const [builder] = useState(() => new EntityExtractionMessageBuilder());
-
-  useEffect(() => {
-    if (!space || !feed || !running) {
-      return;
-    }
-
-    void builder.connect(space);
-
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const ctx = new Context();
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        const message = await builder.createMessage();
-        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
-      },
-      interval,
-    );
-
-    return () => {
-      void ctx.dispose();
-    };
   }, [space, feed, running, interval]);
 
   return feed;

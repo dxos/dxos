@@ -25,7 +25,7 @@ type ViewMode = 'form' | 'search';
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;
 
 export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const type = Obj.getType(segment);
   const echoSchema = type && Type.getSchema(type);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);

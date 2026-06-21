@@ -21,7 +21,7 @@ export const translations = [
         'rename-object.label': 'Rename chess game',
         'delete-object.label': 'Delete chess game',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Chess',
         'new-game.button': 'New game',
         'delete-game.label': 'Delete',

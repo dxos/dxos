@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Database, Feed, type Key } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -27,7 +26,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const personal = getPersonalSpace(client);
+      const personal = AppSpace.getPersonalSpace(client);
       if (!personal) {
         throw new Error('No space ID provided and no personal space found.');
       }
@@ -39,7 +38,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
 export const spaceLayer = (
   spaceId$: Option.Option<Key.SpaceId>,
   fallbackToPersonalSpace = false,
-): Layer.Layer<Database.Service | Feed.FeedService, never, ClientService> => {
+): Layer.Layer<Database.Service, never, ClientService> => {
   const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
 
@@ -56,7 +55,7 @@ export const spaceLayer = (
       }
       return spaceId$.pipe(
         Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(getPersonalSpace(client))),
+        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
         Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
       );
     };
@@ -93,17 +92,7 @@ export const spaceLayer = (
     ),
   );
 
-  const feed = Layer.unwrapEffect(
-    Effect.gen(function* () {
-      const space = yield* getSpace();
-      if (!space) {
-        return Feed.notAvailable;
-      }
-      return createFeedServiceLayer(space.queues);
-    }),
-  );
-
-  return Layer.merge(db, feed);
+  return db;
 };
 
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.

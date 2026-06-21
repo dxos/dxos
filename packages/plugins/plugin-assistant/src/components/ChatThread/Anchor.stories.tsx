@@ -27,7 +27,7 @@ import { Organization } from '@dxos/types';
  *   `LayoutOperation.UpdatePopover`.
  * - `StorybookPlugin` provides both the `LayoutOperation.UpdatePopover` handler (mutating
  *   the layout-state atom) and the `<Layout>` shell that renders the popover via
- *   `<Surface.Surface type={AppSurface.Card} data={popoverContent}>`.
+ *   `<Surface.Surface type={AppSurface.CardContent} data={popoverContent}>`.
  * - `PreviewPlugin` also registers Card-role surfaces (Organization, Person, Task, …); the
  *   Surface system picks the matching one based on the resolved object's type.
  *

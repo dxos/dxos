@@ -33,6 +33,11 @@
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/neutral/meta.mjs"
     },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
     "#plugin": {
       "source": {
         "workerd": "./src/PresenterPlugin.workerd.ts",
@@ -77,10 +82,12 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@codemirror/state": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -94,6 +101,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "hastscript": "catalog:",

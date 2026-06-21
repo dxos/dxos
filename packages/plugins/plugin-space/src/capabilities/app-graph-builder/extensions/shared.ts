@@ -17,36 +17,21 @@ import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 
-export {
-  ACCEPT_ECHO_CLASS,
-  CACHEABLE_PROPS,
-  CAN_DROP_OBJECT,
-  blockInstructionCache,
-  buildCollectionPartials,
-  collectionPartialsCache,
-  createFactory,
-  createObjectNode,
-  getAcceptPersistenceKey,
-  getCollectionGraphNodePartials,
-  getDynamicLabel,
-  rearrangeCache,
-} from '@dxos/app-toolkit';
-
 //
 // Virtual Node Types
 //
 
-export const TYPES_SECTION_TYPE = `${meta.id}.types`;
-export const COLLECTIONS_SECTION_TYPE = `${meta.id}.collections`;
-export const TYPE_COLLECTION_TYPE = `${meta.id}.type-collection`;
-export const STATIC_SCHEMA_TYPE = `${meta.id}.static-schema`;
+export const TYPES_SECTION_TYPE = `${meta.profile.key}.types`;
+export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
+export const TYPE_COLLECTION_TYPE = `${meta.profile.key}.type-collection`;
+export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
 
 //
 // Constants
 //
 
 /** Shared translation namespace descriptor. */
-export const META_NS: { ns: string } = { ns: meta.id };
+export const META_NS: { ns: string } = { ns: meta.profile.key };
 
 //
 // Stable Callbacks

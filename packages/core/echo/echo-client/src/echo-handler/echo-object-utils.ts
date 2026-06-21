@@ -14,12 +14,11 @@ import { type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from '
  * Gets the ObjectCore from an ECHO object.
  */
 export const getObjectCore = <T extends AnyProperties>(obj: T): ObjectCore => {
-  if (!(obj as any as ProxyTarget)[symbolInternals]) {
+  const target = (obj as any as ProxyTarget)[symbolInternals];
+  if (!target) {
     throw new Error('object is not an EchoObjectSchema');
   }
-
-  const { core } = (obj as any as ProxyTarget)[symbolInternals];
-  return core;
+  return target;
 };
 
 /**
@@ -43,9 +42,8 @@ export const isEchoObject = (value: any): value is Obj.Unknown => {
     return false;
   }
 
-  // Check if the target has the ECHO object structure (symbolInternals with a core).
   const target = getProxyTarget(value) as ProxyTarget | undefined;
-  if (!target || !target[symbolInternals] || !target[symbolInternals].core) {
+  if (!target || !target[symbolInternals]) {
     return false;
   }
 

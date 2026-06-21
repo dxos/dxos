@@ -13,7 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
-import { Call, CallsCapabilities } from '@dxos/plugin-calls/types';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -36,18 +36,16 @@ const DefaultStory = (_: StoryProps) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0]?.id);
   const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
-  const [call] = useQuery(db, Filter.type(Call.Call));
   const transcript = meeting?.transcript?.target;
 
-  if (!db || !meeting || !call || !transcript) {
-    return <Loading data={{ db: !!db, meeting: !!meeting, call: !!call, transcript: !!transcript }} />;
+  if (!db || !meeting || !transcript) {
+    return <Loading data={{ db: !!db, meeting: !!meeting, transcript: !!transcript }} />;
   }
 
-  return <CallTranscriptionView call={call} meeting={meeting} transcript={transcript} />;
+  return <CallTranscriptionView meeting={meeting} transcript={transcript} />;
 };
 
 type CallTranscriptionViewProps = {
-  call: Call.Call;
   meeting: Meeting.Meeting;
   transcript: Transcript.Transcript;
 };
@@ -56,23 +54,19 @@ type CallTranscriptionViewProps = {
  * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript
  * tab reflects the live transcript feed. A story-local toolbar joins the call and toggles recording.
  */
-const CallTranscriptionView = ({ call, meeting, transcript }: CallTranscriptionViewProps) => {
-  // Optional: present only when plugin-calls is registered. No-op gracefully otherwise.
+const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
   const callManager = useCapabilities(CallsCapabilities.Manager)[0];
+  const roomId = Obj.getURI(meeting);
 
-  // Drive the mic -> transcriber -> transcript feed lifecycle. The hook tolerates a missing
-  // mic/Whisper endpoint (clears `recording` on failure), so it is safe headlessly.
   const { recording, toggleRecording } = useTranscriptionRecording(transcript);
 
-  // Provision the live room then join. Live peers require the Cloudflare SFU; headless the join
-  // fails to connect but the grid UI still renders.
   const handleStartCall = useCallback(async () => {
     if (!callManager) {
       return;
     }
-    callManager.setRoomId(Obj.getURI(call));
+    callManager.setRoomId(roomId);
     await callManager.join().catch((err) => log.catch(err));
-  }, [callManager, call]);
+  }, [callManager, roomId]);
 
   return (
     <div className='dx-container flex flex-col gap-2'>
@@ -91,11 +85,7 @@ const CallTranscriptionView = ({ call, meeting, transcript }: CallTranscriptionV
       </Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 grow min-bs-0'>
         <div className='dx-expander'>
-          <Surface.Surface
-            type={AppSurface.Article}
-            data={{ subject: call, attendableId: Obj.getURI(call) }}
-            limit={1}
-          />
+          <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId }, attendableId: roomId }} limit={1} />
         </div>
         <div className='dx-expander'>
           <Surface.Surface
@@ -119,7 +109,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Transcript.Transcript, Call.Call, Meeting.Meeting, Text.Text],
+          types: [Feed.Feed, Transcript.Transcript, Meeting.Meeting, Text.Text],
           // CallManager requires the edge service config to construct (it throws otherwise).
           config: new Config({
             runtime: {
@@ -139,17 +129,6 @@ const meta = {
               const meetingNotes = personalSpace.db.add(Text.make({ content: '' }));
               const meetingSummary = personalSpace.db.add(Text.make({ content: '' }));
 
-              // Slim Call (room/transport) the Meeting links to. The transport config is
-              // produced by the Cloudflare transport provider.
-              const transportConfig = personalSpace.db.add(
-                Obj.make(Call.CloudflareTransportConfig, { roomId: 'room-1' }),
-              );
-              const call = personalSpace.db.add(
-                Call.make({
-                  name: 'Standup',
-                  transport: { kind: Call.CLOUDFLARE_TRANSPORT_KIND, config: Ref.make(transportConfig) },
-                }),
-              );
               personalSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
@@ -157,7 +136,6 @@ const meta = {
                   transcript: Ref.make(transcript),
                   notes: Ref.make(meetingNotes),
                   summary: Ref.make(meetingSummary),
-                  call: Ref.make(call),
                 }),
               );
 

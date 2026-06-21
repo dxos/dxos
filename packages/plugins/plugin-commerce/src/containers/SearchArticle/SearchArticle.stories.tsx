@@ -8,8 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
-import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Feed, Filter } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -47,7 +46,7 @@ const seedSpace = ({ client }: { client: Client }) =>
     // Results are immutable feed entries.
     const feed = search.feed?.target;
     if (feed) {
-      yield* Feed.append(feed, makeSampleResults(provider)).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+      yield* Feed.append(feed, makeSampleResults(provider)).pipe(Effect.provide(Database.layer(space.db)));
     }
   });
 

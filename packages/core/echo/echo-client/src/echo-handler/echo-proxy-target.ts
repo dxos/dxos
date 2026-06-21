@@ -2,112 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Brand from 'effect/Brand';
 import type * as Schema from 'effect/Schema';
 
-import type { CleanupFn, Event } from '@dxos/async';
-import { inspectCustom } from '@dxos/debug';
-import type { Entity, Type } from '@dxos/echo';
+import type { Event } from '@dxos/async';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
-import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 
-export const symbolPath = Symbol('path');
-export const symbolNamespace = Symbol('namespace');
-export const symbolHandler = Symbol('handler');
-export const symbolInternals = Symbol('internals');
+/** Global symbols so proxy targets work across Vite bundle chunks (host vs import-map plugin). */
+export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
+export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
+export const symbolHandler = Symbol.for('@dxos/echo/internal/ProxyHandler');
+export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
 
-/**
- * For tracking proxy targets in the `targetsMap`.
- */
-type TargetKey = {
-  path: KeyPath;
-  namespace: string;
-  type: 'record' | 'array';
-} & Brand.Brand<'TargetKey'>;
-
-export const TargetKey = {
-  /**
-   * Constructor function forces the order of the fields.
-   */
-  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
-    ({
-      path,
-      namespace,
-      type,
-    }) as TargetKey,
-  hash: (key: TargetKey): string => JSON.stringify(key),
-};
-
-/**
- * Internal state for the proxy ECHO object.
- * Shared for the entire ECHO object in the database (maybe be composed of multiple proxies for each subrecord).
- */
-export class ObjectInternals {
-  /**
-   * Backing ECHO object core.
-   */
-  core: ObjectCore;
-
-  /**
-   * Database.
-   * Is set on object adding to database.
-   */
-  database: EchoDatabase | undefined;
-
-  /**
-   * Caching targets based on key path.
-   * Only used for records and arrays.
-   */
-  targetsMap = new ComplexMap<TargetKey, ProxyTarget>((key) => JSON.stringify(key));
-
-  /**
-   * Until object is persisted in the database, the linked object references are stored in this cache.
-   * Set only when the object is not bound to a database.
-   */
-  linkCache: Map<string, Entity.Unknown> | undefined = new Map<string, Entity.Unknown>();
-
-  subscriptions: CleanupFn[] = [];
-
-  /**
-   * `Type.AnyEntity` of the root object. Populated when a Type entity is
-   * available (e.g. created via `Obj.make(SomeType, ...)`); left undefined for
-   * objects created without a typed schema. Only used if this is not bound to a
-   * database. {@link EchoReactiveHandler.getTypeEntity} returns this directly.
-   */
-  rootSchema?: Type.AnyEntity = undefined;
-
-  /**
-   * Memoized rebuilt Effect Schema for persisted `Type.Type` entities. Reading
-   * `[StaticTypeSchemaSlot]` off a persisted type entity goes through this
-   * cache so repeated reads share the same Schema instance.
-   *
-   * Lazily populated by the proxy's `get` trap when the slot is requested;
-   * invalidated when the entity's `jsonSchema` changes.
-   */
-  cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
-
-  constructor(core: ObjectCore, database?: EchoDatabase) {
-    this.core = core;
-    this.database = database;
-  }
-
-  [inspectCustom] = () => `ObjectInternals(${this.core.id}${this.database ? ' bound' : ''})`;
-}
+// Re-export TargetKey from core-db so echo-handler callers only need this module.
+export { TargetKey } from '../core-db';
 
 /**
  * Generic proxy target type for ECHO proxy objects.
- * Targets can either be objects or arrays (instances of `EchoArrayTwoPointO`).
+ * `[symbolInternals]` points directly at the `ObjectCore` (entity-core),
+ * which now holds all fields previously in `ObjectInternals`.
  * @internal
  */
 export type ProxyTarget = {
-  [symbolInternals]: ObjectInternals;
+  [symbolInternals]: ObjectCore;
 
   /**
    * `data` or `meta` namespace.
@@ -138,3 +60,26 @@ export type ProxyTarget = {
    */
   [EventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);
+
+/**
+ * Returns a string label for an ObjectCore used in inspection output.
+ * @internal
+ */
+export const coreInspectLabel = (core: ObjectCore): string =>
+  `ObjectCore(${core.id}${core.entityManager ? ' bound' : ''})`;
+
+// ---------------------------------------------------------------------------
+// EchoDatabase accessor — the database field on ObjectCore is `unknown` to
+// avoid a circular dep between core-db ← proxy-db. This module bridges the
+// two layers: it imports EchoDatabase and exposes a typed getter.
+// ---------------------------------------------------------------------------
+
+import type { EchoDatabase } from '../proxy-db';
+
+/**
+ * Typed accessor for the EchoDatabase stored on an ObjectCore.
+ * The field is `unknown` on ObjectCore to avoid a circular dep; this module
+ * bridges the two layers.
+ */
+export const getEchoDatabase = (core: ObjectCore): EchoDatabase | undefined =>
+  core.database as EchoDatabase | undefined;

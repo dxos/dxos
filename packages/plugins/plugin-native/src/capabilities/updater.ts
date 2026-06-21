@@ -167,12 +167,12 @@ export default Capability.makeModule(
         return true;
       }
       yield* invoke(LayoutOperation.AddToast, {
-        id: `${meta.id}.update-ready`,
-        title: ['update-ready.label', { ns: meta.id }],
-        description: ['update-ready.description', { ns: meta.id }],
+        id: `${meta.profile.key}.update-ready`,
+        title: ['update-ready.label', { ns: meta.profile.key }],
+        description: ['update-ready.description', { ns: meta.profile.key }],
         duration: Infinity,
-        actionLabel: ['update.label', { ns: meta.id }],
-        actionAlt: ['update.alt', { ns: meta.id }],
+        actionLabel: ['update.label', { ns: meta.profile.key }],
+        actionAlt: ['update.alt', { ns: meta.profile.key }],
         onAction: () => relaunch(),
       });
       return false;

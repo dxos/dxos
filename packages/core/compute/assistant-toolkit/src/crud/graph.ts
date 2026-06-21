@@ -89,7 +89,7 @@ export const LocalSearchToolkit = Toolkit.make(
     },
     success: Schema.Unknown,
     failure: Schema.Never,
-    dependencies: [Database.Service, Feed.FeedService],
+    dependencies: [Database.Service],
   }),
 );
 
@@ -133,7 +133,7 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Type.AnyEntity[] })
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
       failure: Schema.Never,
-      dependencies: [Database.Service, Feed.ContextFeedService, Feed.FeedService],
+      dependencies: [Database.Service, Feed.ContextFeedService],
     }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
@@ -192,7 +192,7 @@ export const sanitizeObjects = (
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
   feed?: Feed.Feed,
-): Effect.Effect<Entity.Unknown[], never, Feed.FeedService> =>
+): Effect.Effect<Entity.Unknown[], never, Database.Service> =>
   Effect.gen(function* () {
     const entries = types
       .map(

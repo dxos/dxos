@@ -339,6 +339,9 @@ export enum OAuthProvider {
   TRELLO = 'trello',
 }
 
+/** atproto OAuth scopes for the Atmosphere integration and account-recovery flows. */
+export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
+
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enums(OAuthProvider),
   spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
@@ -760,6 +763,65 @@ export const RequestAccessRequestSchema = Schema.Struct({
 });
 export type RequestAccessRequest = Schema.Schema.Type<typeof RequestAccessRequestSchema>;
 export type RequestAccessResponse = { received: boolean };
+
+//
+// Metering (VP auth)
+//
+
+/** Structured usage key aligned with {@link MeteringLimitSchema} (without cap/window fields). */
+export const MeteringUsageKeySchema = Schema.Struct({
+  /** Event type (e.g. `ai`). */
+  eventType: Schema.String,
+  /** Value key being metered (e.g. `outputTokens`). */
+  valueKey: Schema.String,
+  /**
+   * Positional match against the event's subtype segments (e.g. model); `*` matches any
+   * segment, and positions beyond the pattern are unconstrained.
+   */
+  subtypePattern: Schema.Array(Schema.String),
+});
+export type MeteringUsageKey = Schema.Schema.Type<typeof MeteringUsageKeySchema>;
+
+/** Rolling-window usage total for a structured key. */
+export const MeteringUsageItemSchema = Schema.Struct({
+  ...MeteringUsageKeySchema.fields,
+  amount: Schema.Number,
+});
+export type MeteringUsageItem = Schema.Schema.Type<typeof MeteringUsageItemSchema>;
+
+/** A single raw usage bucket (1h resolution) for a structured key. */
+export const MeteringUsageBucketSchema = Schema.Struct({
+  ...MeteringUsageKeySchema.fields,
+  /** Bucket start timestamp (epoch ms, floored to the hour). */
+  bucketStart: Schema.Number,
+  amount: Schema.Number,
+});
+export type MeteringUsageBucket = Schema.Schema.Type<typeof MeteringUsageBucketSchema>;
+
+export const MeteringLimitSchema = Schema.Struct({
+  /** Event type the limit applies to (e.g. `ai`). */
+  eventType: Schema.String,
+  /** Value key being limited (e.g. `outputTokens`). */
+  valueKey: Schema.String,
+  /**
+   * Positional match against the event's subtype segments (e.g. model); `*` matches any
+   * segment, and positions beyond the pattern are unconstrained.
+   */
+  subtypePattern: Schema.Array(Schema.String),
+  /** Rolling-window cap; `null` means unlimited. */
+  limit: Schema.NullOr(Schema.Number),
+  /** Window duration in seconds. */
+  windowDuration: Schema.Number,
+});
+export type MeteringLimit = Schema.Schema.Type<typeof MeteringLimitSchema>;
+
+export const GetProfileUsageResponseSchema = Schema.Struct({
+  profileId: Schema.String,
+  usage: Schema.Array(MeteringUsageItemSchema),
+  limits: Schema.Array(MeteringLimitSchema),
+  buckets: Schema.Array(MeteringUsageBucketSchema),
+});
+export type GetProfileUsageResponse = Schema.Schema.Type<typeof GetProfileUsageResponseSchema>;
 
 //
 // Admin (X-API-KEY)

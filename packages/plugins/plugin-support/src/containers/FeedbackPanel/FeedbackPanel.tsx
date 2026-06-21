@@ -36,7 +36,7 @@ export const FeedbackPanel = () => {
     () =>
       manager
         .getPlugins()
-        .map((plugin) => ({ id: plugin.meta.id, name: plugin.meta.name ?? plugin.meta.id }))
+        .map((plugin) => ({ id: plugin.meta.profile.key, name: plugin.meta.profile.name ?? plugin.meta.profile.key }))
         .sort(({ name: a }, { name: b }) => a.localeCompare(b)),
     [manager],
   );

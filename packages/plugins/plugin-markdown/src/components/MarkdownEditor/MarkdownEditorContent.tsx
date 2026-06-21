@@ -7,6 +7,7 @@ import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
@@ -72,7 +73,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const registry = useContext(RegistryContext);
 
@@ -95,7 +96,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       focusAttributes,
     } = useTextEditor(
       () => ({
-        ...(role !== 'section' && {
+        ...(role !== AppSurface.Section.role && {
           id,
           scrollTo,
           selection,
@@ -117,7 +118,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           createMarkdownExtensions(),
           scrollbarAutohide(),
           toolbarState && formattingListener(updateToolbarState),
-          role !== 'section' &&
+          role !== AppSurface.Section.role &&
             onFileUpload &&
             dropFile({
               // TODO(wittjosiah): Factor out to file uploader plugin.

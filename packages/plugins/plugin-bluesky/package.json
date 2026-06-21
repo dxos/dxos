@@ -66,6 +66,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -75,6 +76,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

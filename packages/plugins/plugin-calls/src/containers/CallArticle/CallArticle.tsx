@@ -5,34 +5,45 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 
-import { type Call as CallType, CallsCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
 
-import { Call } from '../../components';
+import { Call, Lobby } from '../../components';
 
-export type CallArticleProps = AppSurface.ObjectArticleProps<CallType.Call>;
+export type CallArticleProps = {
+  role?: string;
+  /** Room to join — the call anchor's URI (e.g. the meeting's). */
+  roomId: string;
+  attendableId?: string;
+};
 
 /**
- * Live video/participant grid for a `Call`. The persistent `Call` selects the
- * room; live peer/media state is owned by `CallManager`.
+ * Video/participant grid for a call room. Shows the live grid only when joined to *this* `roomId`;
+ * otherwise the lobby (join), even while another call is in progress.
  */
-export const CallArticle = (_props: CallArticleProps) => {
+export const CallArticle = ({ roomId }: CallArticleProps) => {
   const callManager = useCapability(CallsCapabilities.Manager);
-  const _roomId = useAtomValue(callManager.roomIdAtom);
+  const provider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
+  const joined = useAtomValue(callManager.joinedAtom);
+  const currentRoomId = useAtomValue(callManager.roomIdAtom);
+  const inThisRoom = joined && currentRoomId === roomId;
   const leaveSound = useSoundEffect('LeaveCall');
+
+  const handleJoin = useCallback(() => {
+    void provider?.join(roomId);
+  }, [provider, roomId]);
 
   const handleLeave = useCallback(() => {
     leaveSound.play().catch((err) => log.catch(err));
     void callManager.turnAudioOff();
     void callManager.turnVideoOff();
     void callManager.turnScreenshareOff();
-    void callManager.leave();
-  }, [callManager, leaveSound]);
+    void provider?.leave();
+  }, [provider, callManager, leaveSound]);
 
   return (
     <Call.Root>
@@ -42,8 +53,17 @@ export const CallArticle = (_props: CallArticleProps) => {
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Call.Viewport>
-            <Call.Grid />
-            <Call.Toolbar onLeave={handleLeave} />
+            {inThisRoom ? (
+              <>
+                <Call.Grid />
+                <Call.Toolbar onLeave={handleLeave} />
+              </>
+            ) : (
+              <>
+                <Lobby.Preview />
+                <Lobby.Toolbar roomId={roomId} onJoin={handleJoin} />
+              </>
+            )}
           </Call.Viewport>
         </Panel.Content>
       </Panel.Root>

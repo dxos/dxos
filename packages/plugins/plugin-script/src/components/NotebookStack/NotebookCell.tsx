@@ -44,7 +44,7 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const extensions = useMemo(() => {
     return cell.source?.target
@@ -203,7 +203,7 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [

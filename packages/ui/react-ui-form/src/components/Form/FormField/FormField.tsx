@@ -269,7 +269,15 @@ export const CompactIconButton = (props: IconButtonProps) => {
 /**
  * Get property input component.
  */
-const getFormField = ({ type, format }: FormFieldRendererProps): FormFieldRenderer | undefined => {
+const getFormField = ({
+  type,
+  format,
+}: Pick<FormFieldRendererProps, 'type' | 'format'>): FormFieldRenderer | undefined => {
+  // Unwrap refinements (e.g. Schema.Number.pipe(Schema.between(...))) to their base type.
+  if (SchemaAST.isRefinement(type)) {
+    return getFormField({ type: type.from, format });
+  }
+
   //
   // Standard formats.
   //

@@ -15,7 +15,7 @@ export default Capability.makeModule(() =>
     // Typed array so the contribution is checked against CrxCapabilities.PageAction's value type.
     const actions: PageAction.PageAction[] = [
       {
-        id: `${meta.id}/page-action/add-bookmark`,
+        id: `${meta.profile.key}/page-action/add-bookmark`,
         label: 'Add bookmark',
         icon: 'ph--bookmark-simple--regular',
         urlPatterns: ['http://*/*', 'https://*/*'],

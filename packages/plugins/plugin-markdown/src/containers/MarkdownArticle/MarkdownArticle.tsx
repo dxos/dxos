@@ -115,7 +115,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         id={id}
         attendableId={attendableId}
         object={object}
-        compact={role !== 'article'}
+        compact={role !== AppSurface.Article.role}
         extensions={extensions}
         settings={settings}
         viewMode={viewMode}

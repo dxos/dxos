@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete file',
         'object-deleted.label': 'File deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'File',
         'file-input.placeholder': 'Drop a file here, or click to select a file',
         'too-large-error.message': 'File is too large. Maximum size is 4MB.',

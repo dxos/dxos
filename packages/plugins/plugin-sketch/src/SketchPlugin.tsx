@@ -3,11 +3,10 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
-  AppGraphSerializer,
   NavigationResolver,
   CommentConfig,
   CreateObject,
@@ -32,13 +31,8 @@ export const SketchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: SketchSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'app-graph-serializer',
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
-  }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

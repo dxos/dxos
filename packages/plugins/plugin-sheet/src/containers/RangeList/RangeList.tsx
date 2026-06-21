@@ -19,7 +19,7 @@ export type RangeListProps = {
 };
 
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [sheet, updateSheet] = useObject(sheetProp);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};

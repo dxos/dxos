@@ -4,9 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, EID, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Call } from '@dxos/plugin-calls/types';
 import { Text } from '@dxos/schema';
 import { Event, Transcript } from '@dxos/types';
 
@@ -40,12 +39,6 @@ export const Meeting = Schema.Struct({
   summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 
   /**
-   * Optional live call/room for the meeting (in-person and external meetings have none).
-   * At most one per meeting; provisioned ahead and resumable.
-   */
-  call: Ref.Ref(Call.Call).pipe(FormInputAnnotation.set(false), Schema.optional),
-
-  /**
    * The calendar event this meeting is for, if any. A `Ref` (not a relation) so it can point at a
    * feed/queue event synced from the calendar — relation endpoints require live db objects.
    */
@@ -62,9 +55,22 @@ export type Meeting = Type.InstanceType<typeof Meeting>;
  * Selects the meeting (from an already-resolved list) whose `event` ref points at the given event,
  * or `undefined` if none exists. Pure and synchronous so it can run inside app-graph extension
  * callbacks (executed with `Effect.runSync`, which cannot await a query).
- * Matches by ref DXN so it works for feed/queue events. At most one meeting is expected per event.
+ * Matches by entity ID rather than full URI so refs stored as either the local (`echo:/ID`) or
+ * space-qualified (`echo://SPACEID/ID`) form both match correctly.
+ * At most one meeting is expected per event.
  */
 export const findMeetingForEvent = (meetings: readonly Meeting[], event: Event.Event): Meeting | undefined => {
-  const eventUri = Obj.getURI(event);
-  return meetings.find((meeting) => meeting.event?.uri === eventUri);
+  const eventEid = EID.tryParse(Obj.getURI(event));
+  const eventEntityId = eventEid ? EID.getEntityId(eventEid) : undefined;
+  if (!eventEntityId) {
+    return undefined;
+  }
+  return meetings.find((meeting) => {
+    const refUri = meeting.event?.uri;
+    if (!refUri) {
+      return false;
+    }
+    const refEid = EID.tryParse(refUri);
+    return refEid != null && EID.getEntityId(refEid) === eventEntityId;
+  });
 };

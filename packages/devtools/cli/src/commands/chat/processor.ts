@@ -15,8 +15,7 @@ import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
-import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -115,9 +114,8 @@ export class ChatProcessor {
     Obj.setParent(feed, chat);
     space.db.add(chat);
 
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({ feed, runtime, registry: this._registry });
     await session.open();
