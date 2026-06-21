@@ -135,4 +135,106 @@ export class HubHttpClient extends BaseHttpClient {
       { ...args, method: 'GET' },
     );
   }
+
+  //
+  // Admin (admin-key) endpoints. Require an `ApiKeyAuth` instance — the
+  // verifiable-presentation flow does not satisfy `adminAuth`.
+  //
+
+  public async adminListAccounts(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/account', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminGetAccount(ctx: Context, identityDid: string, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL(`/api/account/${identityDid}`, this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminGrantInvitations(
+    ctx: Context,
+    identityDid: string,
+    count: number,
+    args?: EdgeHttpCallArgs,
+  ): Promise<any> {
+    return this._call(ctx, new URL(`/api/account/${identityDid}/invitations/grant`, this.baseUrl), {
+      ...args,
+      method: 'POST',
+      body: { count },
+    });
+  }
+
+  public async adminListWaitlist(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/waitlist', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminApproveWaitlistEntry(ctx: Context, id: number, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL(`/api/waitlist/${id}/approve`, this.baseUrl), { ...args, method: 'POST' });
+  }
+
+  public async adminRemoveWaitlistEntry(ctx: Context, id: number, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL(`/api/waitlist/${id}`, this.baseUrl), { ...args, method: 'DELETE' });
+  }
+
+  public async adminListInvitationCodes(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/code', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminCreateInvitationCodes(
+    ctx: Context,
+    body: { count?: number; quota?: number; note?: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<any> {
+    return this._call(ctx, new URL('/api/code', this.baseUrl), { ...args, method: 'POST', body });
+  }
+
+  public async adminRevokeInvitationCode(ctx: Context, code: string, args?: EdgeHttpCallArgs): Promise<void> {
+    return this._call(ctx, new URL(`/api/code/${code}`, this.baseUrl), { ...args, method: 'DELETE' });
+  }
+
+  public async adminDeleteInvitationCode(ctx: Context, code: string, args?: EdgeHttpCallArgs): Promise<void> {
+    return this._call(ctx, new URL(`/api/code/${code}/permanent`, this.baseUrl), { ...args, method: 'DELETE' });
+  }
+
+  public async adminListMessages(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/messages', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminListMagicLinks(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/magic-links', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminSendEmail(
+    ctx: Context,
+    body: { from: string; to: string; subject: string; body?: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/email', this.baseUrl), { ...args, method: 'POST', body });
+  }
+
+  public async adminGetServices(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/services', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminListTemplates(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/templates', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminGetTemplate(ctx: Context, type: string, name: string, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL(`/api/admin/templates/${type}/${name}`, this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async adminRunDiagnostics(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/util/diagnostics', this.baseUrl), { ...args, method: 'POST' });
+  }
+
+  public async adminRunSync(
+    ctx: Context,
+    body: { endpoint: 'ghost' | 'kit'; count?: number },
+    args?: EdgeHttpCallArgs,
+  ): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/util/sync', this.baseUrl), { ...args, method: 'POST', body });
+  }
+
+  public async adminListRoutes(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/api/admin/routes', this.baseUrl), { ...args, method: 'GET' });
+  }
 }

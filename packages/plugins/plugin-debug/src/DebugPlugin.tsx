@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, DebugSettings, EdgeIntegrationProvider, ReactContext, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { type DebugPluginOptions } from '#types';
@@ -22,6 +22,11 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),
   AppPlugin.addSettingsModule({ activate: DebugSettings }),
+  Plugin.addModule({
+    id: 'edge-integration-provider',
+    activatesOn: AppActivationEvents.SetupIntegrationProviders,
+    activate: EdgeIntegrationProvider,
+  }),
   Plugin.addModule(({ logStore }) => ({
     id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
     activatesOn: ActivationEvents.SetupReactSurface,

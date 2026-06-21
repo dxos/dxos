@@ -133,6 +133,11 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     [onSettingsChange],
   );
 
+  const handleEnableEdgeAdminChange = useCallback(
+    (checked: boolean) => onSettingsChange?.((s) => ({ ...s, enableEdgeAdmin: !!checked })),
+    [onSettingsChange],
+  );
+
   const handleOpenTracingPanel = useCallback(() => {
     window.open('about:blank', '_blank');
   }, []);
@@ -154,6 +159,16 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
+        <SettingsForm.Item
+          title={t('settings.enable-edge-admin.label')}
+          description={t('settings.enable-edge-admin.description')}
+        >
+          <Input.Switch
+            disabled={!onSettingsChange}
+            checked={settings.enableEdgeAdmin}
+            onCheckedChange={handleEnableEdgeAdminChange}
+          />
+        </SettingsForm.Item>
         <SettingsForm.Item title={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
           <Input.Switch
             disabled={!onSettingsChange}

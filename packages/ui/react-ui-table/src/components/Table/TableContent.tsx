@@ -83,7 +83,8 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenRowsEnd: Math.max(1, draftRowCount),
+        // The trailing frozen row is the "add row" affordance — only present for editable tables.
+        frozenRowsEnd: model?.features.dataEditable ? Math.max(1, draftRowCount) : draftRowCount,
         frozenColsStart: model?.features.selection.enabled ? 1 : 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };

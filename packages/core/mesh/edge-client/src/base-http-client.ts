@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
-import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
-import { encodeAuthHeader } from './http-client';
+import { type EdgeAuthMethod, VerifiablePresentationAuth } from './auth-method';
+import { type EdgeIdentity } from './edge-identity';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
@@ -42,6 +42,12 @@ export type BaseHttpClientOptions = {
    * Used on Edge to classify traffic for metering (e.g. `ci-e2e`).
    */
   clientTag?: string;
+  /**
+   * Authentication strategy. Defaults to {@link VerifiablePresentationAuth} (the
+   * identity-based flow driven by {@link BaseHttpClient.setIdentity}). Pass an
+   * {@link ApiKeyAuth} instance for static-key access.
+   */
+  auth?: EdgeAuthMethod;
 };
 
 type HttpRequestArgs = {
@@ -56,13 +62,15 @@ type HttpRequestArgs = {
 export abstract class BaseHttpClient {
   protected readonly _baseUrl: string;
   protected readonly _clientTag: string | undefined;
-  protected _edgeIdentity: EdgeIdentity | undefined;
+  protected readonly _auth: EdgeAuthMethod;
   /** Auth header cached until next 401. */
   protected _authHeader: string | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     this._clientTag = options?.clientTag;
+    this._auth = options?.auth ?? new VerifiablePresentationAuth();
+    this._authHeader = this._auth.getHeader();
     log('created', { url: this._baseUrl });
   }
 
@@ -71,9 +79,12 @@ export abstract class BaseHttpClient {
   }
 
   setIdentity(identity: EdgeIdentity): void {
-    if (this._edgeIdentity?.identityKey !== identity.identityKey || this._edgeIdentity?.peerKey !== identity.peerKey) {
-      this._edgeIdentity = identity;
-      this._authHeader = undefined;
+    if (this._auth instanceof VerifiablePresentationAuth) {
+      if (this._auth.setIdentity(identity)) {
+        this._authHeader = undefined;
+      }
+    } else {
+      log.warn('setIdentity ignored: client is not using verifiable-presentation auth');
     }
   }
 
@@ -96,7 +107,7 @@ export abstract class BaseHttpClient {
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
-        if (!this._authHeader && args.auth) {
+        if (!this._authHeader && args.auth && this._auth.canPrefetch) {
           const response = await fetch(new URL('/auth', this._baseUrl));
           if (response.status === 401) {
             this._authHeader = await this._handleUnauthorized(response);
@@ -162,13 +173,9 @@ export abstract class BaseHttpClient {
     }
   }
 
-  protected async _handleUnauthorized(response: Response): Promise<string> {
-    if (!this._edgeIdentity) {
-      log.warn('unauthorized response received before identity was set');
-      throw await EdgeCallFailedError.fromHttpFailure(response);
-    }
-    const challenge = await handleAuthChallenge(response, this._edgeIdentity);
-    return encodeAuthHeader(challenge);
+  /** Delegates to the configured auth strategy. Retained for subclasses that drive their own request loop. */
+  protected _handleUnauthorized(response: Response): Promise<string> {
+    return this._auth.onUnauthorized(response);
   }
 }
 
