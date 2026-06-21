@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type VariantProps, tv } from '@dxos/ui-theme';
+import { type VariantProps, mx, tv } from '@dxos/ui-theme';
 
 /** Visual variants for {@link Form}. `settings` is the bordered two-column settings-panel look. */
 export type FormVariant = NonNullable<VariantProps<typeof formStyles>['variant']>;
@@ -32,7 +32,9 @@ const formStyles = tv({
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
         fieldSet: 'flex flex-col gap-trim-md pt-trim-md',
-        field: `grid grid-cols-2 [grid-template-areas:'header_control''description_description'] gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm`,
+        field: mx(
+          `grid grid-cols-2 [grid-template-areas:'header_control''description_description'] gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm`,
+        ),
         description: '[grid-area:description] text-base text-description',
         control: '[grid-area:control] flex items-center justify-end',
         // The error block is outside the named areas; span it full-width so `layout='full'` settings forms don't misplace it.

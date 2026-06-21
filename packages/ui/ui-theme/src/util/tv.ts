@@ -33,8 +33,5 @@ export const bridgeTv = <P extends Record<string, any>, S extends string>(
   slots: readonly S[],
 ): Theme<P> =>
   Object.fromEntries(
-    slots.map((slot) => [
-      slot,
-      (styleProps: P, ...etc: ClassNameArray) => recipe(styleProps)[slot]({ class: etc }),
-    ]),
+    slots.map((slot) => [slot, (styleProps: P, ...etc: ClassNameArray) => recipe(styleProps)[slot]({ class: etc })]),
   ) as Theme<P>;

@@ -169,7 +169,12 @@ export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetCon
   const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
   const styles = formTheme.styles({ variant });
   return (
-    <FormFieldSet schema={form.schema} classNames={styles.fieldSet({ class: classNames })} {...contextProps} {...props} />
+    <FormFieldSet
+      schema={form.schema}
+      classNames={styles.fieldSet({ class: classNames })}
+      {...contextProps}
+      {...props}
+    />
   );
 };
 

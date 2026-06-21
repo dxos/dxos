@@ -158,7 +158,10 @@ const SettingsSchema = Schema.mutable(
       description: 'Set whether documents open in editing or read-only mode.',
     }),
     toolbar: Schema.optional(
-      Schema.Boolean.annotations({ title: 'Show toolbar', description: 'Display a formatting toolbar above the editor.' }),
+      Schema.Boolean.annotations({
+        title: 'Show toolbar',
+        description: 'Display a formatting toolbar above the editor.',
+      }),
     ),
     fontSize: Schema.optional(
       Schema.Number.annotations({ title: 'Font size', description: 'Editor font size, in pixels.' }),

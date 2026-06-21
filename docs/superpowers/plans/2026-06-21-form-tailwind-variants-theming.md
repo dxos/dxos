@@ -40,6 +40,7 @@
 ## Task 1: Shared `tv` instance with mx-parity merge config
 
 **Files:**
+
 - Create: `packages/ui/ui-theme/src/util/tw-merge-config.ts`
 - Modify: `packages/ui/ui-theme/src/util/mx.ts`
 - Create: `packages/ui/ui-theme/src/util/tv.ts`
@@ -50,15 +51,18 @@
 - [ ] **Step 1: Add the dependency**
 
 Run:
+
 ```bash
 export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 pnpm add --filter @dxos/ui-theme --save-catalog tailwind-variants
 ```
+
 Expected: `tailwind-variants` added to the catalog in `pnpm-workspace.yaml` and to `@dxos/ui-theme` `dependencies` as `catalog:`. (It is compatible with the catalog's `tailwind-merge@^3.5.0`.)
 
 - [ ] **Step 2: Extract the shared merge config**
 
 Create `packages/ui/ui-theme/src/util/tw-merge-config.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -107,11 +111,13 @@ export const twMergeConfig = {
 
 export type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 ```
+
 > Note: the `validators.isArbitraryNumber` entry previously in `mx`'s `font-weight` group is dropped from the shared constant only if it cannot be expressed as a plain string. Re-add it in `mx.ts` (Step 3) where `validators` is imported, by spreading the shared list and appending it — see Step 3.
 
 - [ ] **Step 3: Rebuild `mx` from the shared config**
 
 Replace the body of `packages/ui/ui-theme/src/util/mx.ts`:
+
 ```ts
 //
 // Copyright 2022 DXOS.org
@@ -136,6 +142,7 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
 - [ ] **Step 4: Write the failing test for the `tv` instance**
 
 Create `packages/ui/ui-theme/src/util/tv.test.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -180,14 +187,17 @@ describe('bridgeTv', () => {
 - [ ] **Step 5: Run the test to verify it fails**
 
 Run:
+
 ```bash
 moon run ui-theme:test -- src/util/tv.test.ts
 ```
+
 Expected: FAIL — `tv`/`bridgeTv` not found in `./tv`.
 
 - [ ] **Step 6: Implement `tv` and `bridgeTv`**
 
 Create `packages/ui/ui-theme/src/util/tv.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -222,16 +232,14 @@ export const bridgeTv = <P extends Record<string, any>, S extends string>(
   slots: readonly S[],
 ): Theme<P> =>
   Object.fromEntries(
-    slots.map((slot) => [
-      slot,
-      (styleProps: P, ...etc: ClassNameArray) => recipe(styleProps)[slot]({ class: etc }),
-    ]),
+    slots.map((slot) => [slot, (styleProps: P, ...etc: ClassNameArray) => recipe(styleProps)[slot]({ class: etc })]),
   ) as Theme<P>;
 ```
 
 - [ ] **Step 7: Export from the util barrel**
 
 In `packages/ui/ui-theme/src/util/index.ts`, add (preserve existing exports):
+
 ```ts
 export * from './tv';
 export * from './tw-merge-config';
@@ -240,10 +248,12 @@ export * from './tw-merge-config';
 - [ ] **Step 8: Run the test to verify it passes**
 
 Run:
+
 ```bash
 moon run ui-theme:test -- src/util/tv.test.ts
 moon run ui-theme:build
 ```
+
 Expected: PASS; build succeeds.
 
 - [ ] **Step 9: Commit**
@@ -258,6 +268,7 @@ git commit -m "feat(ui-theme): shared tailwind-variants instance + bridgeTv adap
 ## Task 2: `Form.theme.ts` recipe + behavior
 
 **Files:**
+
 - Create: `packages/ui/react-ui-form/src/components/Form/Form.theme.ts`
 - Create: `packages/ui/react-ui-form/src/components/Form/Form.theme.test.ts`
 - Modify: `packages/ui/react-ui-form/package.json` (ensure `@dxos/ui-theme` dep — it already depends on it via `@dxos/react-ui`; add direct dep if `tv` import fails to resolve)
@@ -265,6 +276,7 @@ git commit -m "feat(ui-theme): shared tailwind-variants instance + bridgeTv adap
 - [ ] **Step 1: Write the failing test**
 
 Create `packages/ui/react-ui-form/src/components/Form/Form.theme.test.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -301,14 +313,17 @@ describe('formTheme', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run:
+
 ```bash
 moon run react-ui-form:test -- src/components/Form/Form.theme.test.ts
 ```
+
 Expected: FAIL — `./Form.theme` not found.
 
 - [ ] **Step 3: Implement the recipe + behavior**
 
 Create `packages/ui/react-ui-form/src/components/Form/Form.theme.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -370,9 +385,11 @@ export const formSlots = Object.keys(formTheme.styles()) as Array<keyof ReturnTy
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run:
+
 ```bash
 moon run react-ui-form:test -- src/components/Form/Form.theme.test.ts
 ```
+
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -387,16 +404,20 @@ git commit -m "feat(react-ui-form): Form theme recipe + behavior map"
 ## Task 3: Add `variant` to form context and `Form.Root`
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/hooks/useFormContext.ts`
 - Modify: `packages/ui/react-ui-form/src/components/Form/FormControls.tsx`
 
 - [ ] **Step 1: Add `variant` to `FormContextValue`**
 
 In `useFormContext.ts`, import the type and extend the context value:
+
 ```ts
 import { type FormVariant } from '../components/Form/Form.theme';
 ```
+
 Change the `FormContextValue` type to include `variant`:
+
 ```ts
 export type FormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
@@ -405,11 +426,13 @@ export type FormContextValue<T extends AnyProperties = any> = {
   variant?: FormVariant;
 } & FieldContext;
 ```
+
 > If this creates an import cycle (`hooks` → `components/Form`), instead define `FormVariant` in a leaf module. Verify with the build in Step 4; if cyclic, move `export type FormVariant = 'default' | 'settings'` into `useFormContext.ts` and have `Form.theme.ts` import it, asserting recipe parity in the theme test.
 
 - [ ] **Step 2: Add the `variant` prop to `FormRoot`**
 
 In `FormControls.tsx`, extend `FormRootProps`. It already is `PropsWithChildren<{ onSave; onCancel } & Omit<FormContextValue<T>, 'form'> & Pick<...> & Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>>`. Since `variant` is now on `FormContextValue`, it is already accepted and forwarded into the context via `<FormContextProvider form={form} {...props}>` (because `FormRoot` spreads `...props`). No code change needed beyond confirming `variant` is not destructured away — it must remain in `...props`. Add a doc line above `FormRoot`:
+
 ```ts
 // `variant` (from FormContextValue) flows through `...props` into the context for all parts to read.
 ```
@@ -417,9 +440,11 @@ In `FormControls.tsx`, extend `FormRootProps`. It already is `PropsWithChildren<
 - [ ] **Step 3: Run build to verify wiring/types**
 
 Run:
+
 ```bash
 moon run react-ui-form:build
 ```
+
 Expected: builds (no type errors). If an import cycle is reported, apply the fallback in Step 1's note.
 
 - [ ] **Step 4: Commit**
@@ -434,11 +459,13 @@ git commit -m "feat(react-ui-form): thread Form variant through context"
 ## Task 4: Revert `presentation.tsx` to class-free; remove `FieldRow`
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/components/Form/FormField/presentation.tsx`
 
 - [ ] **Step 1: Replace the file contents**
 
 Replace `presentation.tsx` with the class-free resolved presentation (the chrome now comes from `formTheme`), and remove `FieldRow`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -477,9 +504,11 @@ export const presentationFor = (layout?: FormPresentation): FieldPresentation =>
 - [ ] **Step 2: Run build to find FieldRow references**
 
 Run:
+
 ```bash
 moon run react-ui-form:build 2>&1 | grep -E "FieldRow|presentationFor|fieldClassName" | head
 ```
+
 Expected: errors only in `FormFieldWrapper.tsx` (FieldRow import + `presentationFor(presentation, fieldPresentation)`); these are fixed in Task 5. No other files reference `FieldRow`.
 
 - [ ] **Step 3: Commit (after Task 5 compiles)**
@@ -491,11 +520,13 @@ Defer commit; this file compiles together with Task 5. Proceed to Task 5, then c
 ## Task 5: Rewrite `FormFieldWrapper` to use the theme
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/components/Form/FormField/FormFieldWrapper.tsx`
 
 - [ ] **Step 1: Replace the `FormFieldWrapper` value-rendering section**
 
 Update imports at the top of `FormFieldWrapper.tsx`:
+
 ```ts
 import { Format } from '@dxos/echo';
 import { inputTextLabel, Icon, Input, ThemedClassName, Tooltip } from '@dxos/react-ui';
@@ -507,9 +538,11 @@ import { formTheme } from '../Form.theme';
 import { useFormContext } from '../../../hooks';
 import { type FieldPresentation, presentationFor } from './presentation';
 ```
+
 (Remove the `FieldRow` import.)
 
 Keep `FormFieldLabel` and its `labelClassName` prop exactly as-is (the inner-node seam). Update the `FormFieldWrapperProps` `Pick` to drop `fieldPresentation` (keep `description`):
+
 ```ts
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldRendererProps,
@@ -522,6 +555,7 @@ export type FormFieldWrapperProps<T = any> = Pick<
 ```
 
 Replace the `FormFieldWrapper` function body:
+
 ```tsx
 const FORM_FIELD_WRAPPER_NAME = 'Form.FieldWrapper';
 
@@ -587,14 +621,17 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   );
 };
 ```
+
 (Leave `FormFieldLabel`, `formatStaticValue`, and `FormFieldErrorBoundary` unchanged. `FormFieldLabel` keeps its `labelClassName` prop applied to the inner label node — do not remove it.)
 
 - [ ] **Step 2: Run build**
 
 Run:
+
 ```bash
 moon run react-ui-form:build 2>&1 | grep -E "error TS" | head
 ```
+
 Expected: errors now only about `fieldPresentation`/`FieldPresentationConfig` still referenced in `FormField.tsx` and `types.ts` (fixed in Tasks 6–7). `FormFieldWrapper.tsx` and `presentation.tsx` compile.
 
 - [ ] **Step 3: Commit presentation + wrapper**
@@ -609,38 +646,43 @@ git commit -m "refactor(react-ui-form): FormFieldWrapper renders theme slots"
 ## Task 6: Drop `fieldPresentation` from `FormField` and `types.ts`
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/components/Form/FormField/FormField.tsx`
 - Modify: `packages/ui/react-ui-form/src/types.ts`
 
 - [ ] **Step 1: Remove `fieldPresentation` + revert placeholder in `FormField.tsx`**
 
 In `FormField.tsx`: remove `fieldPresentation` from the destructured props. Revert the placeholder memo to:
+
 ```ts
 const placeholder = useMemo(
   () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
   [examples, description, label, t],
 );
 ```
+
 Remove the `showDescription` const. In the `fieldProps` object, remove the `fieldPresentation` line; **keep** `description` and `presentation: layout`:
+
 ```ts
-  const fieldProps: FormFieldRendererProps = {
-    type,
-    format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
-    readonly,
-    label,
-    description,
-    jsonPath,
-    placeholder,
-    presentation: layout,
-    required,
-    db,
-    ...fieldState,
-  };
+const fieldProps: FormFieldRendererProps = {
+  type,
+  format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
+  readonly,
+  label,
+  description,
+  jsonPath,
+  placeholder,
+  presentation: layout,
+  required,
+  db,
+  ...fieldState,
+};
 ```
 
 - [ ] **Step 2: Remove `FieldPresentationConfig` + `fieldPresentation` from `types.ts`**
 
 In `types.ts`:
+
 - Delete the entire `FieldPresentationConfig` type block.
 - In `FormFieldRendererProps`, delete the `fieldPresentation?: FieldPresentationConfig;` line. **Keep** the `description?: string;` field.
 - In `FormFieldOptions`, delete the `fieldPresentation?: FieldPresentationConfig;` line (and its doc comment).
@@ -648,9 +690,11 @@ In `types.ts`:
 - [ ] **Step 3: Run build**
 
 Run:
+
 ```bash
 moon run react-ui-form:build 2>&1 | grep -E "error TS|presets|settingsLayout" | head
 ```
+
 Expected: errors now only about `./presets` (Form/index.ts) and `presets.ts` itself referencing removed types — fixed in Task 7.
 
 - [ ] **Step 4: Commit**
@@ -665,6 +709,7 @@ git commit -m "refactor(react-ui-form): remove FieldPresentationConfig threading
 ## Task 7: Delete `presets.ts`; wire `FormSection` + `FormFieldSetController` to the theme
 
 **Files:**
+
 - Delete: `packages/ui/react-ui-form/src/components/Form/presets.ts`
 - Modify: `packages/ui/react-ui-form/src/components/Form/index.ts`
 - Modify: `packages/ui/react-ui-form/src/components/Form/FormControls.tsx`
@@ -672,19 +717,24 @@ git commit -m "refactor(react-ui-form): remove FieldPresentationConfig threading
 - [ ] **Step 1: Delete the preset file and its export**
 
 Run:
+
 ```bash
 git rm packages/ui/react-ui-form/src/components/Form/presets.ts
 ```
+
 In `Form/index.ts`, remove the line `export * from './presets';`.
 
 - [ ] **Step 2: Rewrite `FormSection` to use the theme**
 
 In `FormControls.tsx`, add imports:
+
 ```ts
 import { formTheme } from './Form.theme';
 import { useFormContext } from '../../hooks';
 ```
+
 Replace the `FormSection` block. Drop `titleClassName`/`descriptionClassName` props; read `variant` from context:
+
 ```ts
 export type FormSectionProps = ThemedClassName<{ title?: string; description?: string }>;
 
@@ -704,11 +754,13 @@ export const FormSection = composable<HTMLDivElement, FormSectionProps>(
 
 FormSection.displayName = FORM_SECTION_NAME;
 ```
+
 (`composableProps`'s `classNames` default merges with any user `classNames`; per-call override still works.)
 
 - [ ] **Step 3: Apply the `fieldSet` slot in `FormFieldSetController`**
 
 Replace `FormFieldSetController`:
+
 ```ts
 export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetControllerProps) => {
   const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
@@ -716,15 +768,18 @@ export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetCon
   return <FormFieldSet schema={form.schema} classNames={styles.fieldSet({ class: classNames })} {...contextProps} {...props} />;
 };
 ```
+
 > `classNames` is pulled out of `props` so the user override merges through the `fieldSet` slot rather than being overwritten by `{...props}`. `variant` is removed from `contextProps` so it isn't passed twice (it is not a `FormFieldSet` prop).
 
 - [ ] **Step 4: Run build + existing tests**
 
 Run:
+
 ```bash
 moon run react-ui-form:build
 moon run react-ui-form:test
 ```
+
 Expected: build clean; all existing tests pass (53+ plus the two new theme tests).
 
 - [ ] **Step 5: Commit**
@@ -739,42 +794,46 @@ git commit -m "refactor(react-ui-form): Section + FieldSet consume Form theme; d
 ## Task 8: Convert `MarkdownSettings` and stories to `variant`
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/components/MarkdownSettings/MarkdownSettings.tsx`
 - Modify: `packages/ui/react-ui-form/src/components/Form/Form.stories.tsx`
 
 - [ ] **Step 1: Update `MarkdownSettings`**
 
 Replace the import and the JSX so it uses `variant='settings'` and no presets. Keep the existing `SnippetsField` (custom field via `FormFieldWrapper`) and the user's `Panel`/`dx-document`/`py-8` wrappers:
+
 ```tsx
 import { Form, FormFieldWrapper, type FormFieldRendererProps } from '@dxos/react-ui-form';
 ```
+
 ```tsx
-    <Form.Root
-      schema={Markdown.Settings}
-      values={settings}
-      variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
-    >
-      <Form.Viewport classNames='py-8' scroll>
-        <Form.Content classNames='dx-document'>
-          <Form.Section title={meta.profile.name}>
-            <Form.FieldSet
-              fieldMap={{ snippets: SnippetsField }}
-              // The snippets field is a debug-only affordance.
-              filter={(properties) =>
-                settings.debug ? properties : properties.filter((property) => property.name !== 'snippets')
-              }
-            />
-          </Form.Section>
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
+<Form.Root
+  schema={Markdown.Settings}
+  values={settings}
+  variant='settings'
+  readonly={!onSettingsChange}
+  onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+>
+  <Form.Viewport classNames='py-8' scroll>
+    <Form.Content classNames='dx-document'>
+      <Form.Section title={meta.profile.name}>
+        <Form.FieldSet
+          fieldMap={{ snippets: SnippetsField }}
+          // The snippets field is a debug-only affordance.
+          filter={(properties) =>
+            settings.debug ? properties : properties.filter((property) => property.name !== 'snippets')
+          }
+        />
+      </Form.Section>
+    </Form.Content>
+  </Form.Viewport>
+</Form.Root>
 ```
 
 - [ ] **Step 2: Update the `SettingsPresentation` story**
 
 In `Form.stories.tsx`: remove the `import { settingsLayout } from './presets';` line and set the story to use `variant`:
+
 ```ts
 export const SettingsPresentation: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
   args: {
@@ -784,6 +843,7 @@ export const SettingsPresentation: Story<Schema.Schema.Type<typeof SettingsSchem
   },
 };
 ```
+
 Update its doc comment to reference `variant='settings'` instead of `settingsLayout`.
 
 - [ ] **Step 3: Update the `Settings` deprecation notes**
@@ -793,9 +853,11 @@ In `Settings.tsx`, `SettingsFieldSet.tsx`, `SettingsItem.tsx`: change any `setti
 - [ ] **Step 4: Build + lint both packages**
 
 Run:
+
 ```bash
 moon run react-ui-form:build react-ui-form:lint plugin-markdown:build plugin-markdown:lint
 ```
+
 Expected: clean.
 
 - [ ] **Step 5: Commit**
@@ -814,26 +876,33 @@ git commit -m "refactor(plugin-markdown): MarkdownSettings uses Form variant='se
 - [ ] **Step 1: Cast audit**
 
 Run:
+
 ```bash
 git diff origin/main -- '*.ts' '*.tsx' | grep -nE '^\+.*\bas (any|unknown|[A-Z])|as unknown as' | grep -v 'as const'
 ```
+
 Expected: only the `as Theme<P>` in `bridgeTv` (a deliberate adapter boundary — annotate with a comment) and the `Object.keys(...) as Array<...>` in `Form.theme.ts`. Justify or remove any others.
 
 - [ ] **Step 2: Run the full form test suite**
 
 Run:
+
 ```bash
 moon run react-ui-form:test
 ```
+
 Expected: all pass.
 
 - [ ] **Step 3: Visual verification in a worktree storybook**
 
 Start storybook on a free port (do NOT touch the user's 9009):
+
 ```bash
 moon run storybook-react:serve -- --port 9014 --no-open --ci
 ```
+
 Drive with Playwright (or the user's preferred tool):
+
 - `plugins-plugin-markdown-components-markdownsettings--default` at width 1000 — confirm bordered 2-col cards, title spanning, description left, controls right-aligned, "Markdown" section header padded.
 - `ui-react-ui-form-form--default` — confirm default forms are visually unchanged (no borders/grid).
 - `ui-react-ui-form-form--settings-presentation` — confirm the settings look.

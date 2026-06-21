@@ -28,10 +28,10 @@ react-ui and other packages.
 ## Non-goals
 
 - Migrating existing react-ui components (Message/Button/…) in this change. The retrofit is
-  *designed* here (the `bridgeTv` adapter + a Message migration sketch) but only `bridgeTv` + its
+  _designed_ here (the `bridgeTv` adapter + a Message migration sketch) but only `bridgeTv` + its
   unit test ship now.
-- Changing the `FormPresentation` axis (`full`/`compact`/`inline`/`static`), which controls *which*
-  parts render. That stays orthogonal to `variant` (which controls *how* they look).
+- Changing the `FormPresentation` axis (`full`/`compact`/`inline`/`static`), which controls _which_
+  parts render. That stays orthogonal to `variant` (which controls _how_ they look).
 
 ## Prior art
 
@@ -58,9 +58,13 @@ export const twMergeConfig = {
   extend: {
     classGroups: {
       'font-family': ['font-body', 'font-mono'],
-      'font-weight': [/* …existing… */],
+      'font-weight': [
+        /* …existing… */
+      ],
       density: ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
-      'dx-focus-ring': [/* …existing… */],
+      'dx-focus-ring': [
+        /* …existing… */
+      ],
     },
   },
 } as const;
@@ -90,7 +94,20 @@ type FormVariant = 'default' | 'settings';
 type FormBehavior = { showDescription: boolean };
 
 export const formTheme = {
-  styles: tv({ slots: { /* … */ }, variants: { variant: { default: {}, settings: { /* … */ } } }, defaultVariants: { variant: 'default' } }),
+  styles: tv({
+    slots: {
+      /* … */
+    },
+    variants: {
+      variant: {
+        default: {},
+        settings: {
+          /* … */
+        },
+      },
+    },
+    defaultVariants: { variant: 'default' },
+  }),
   behavior: {
     default: { showDescription: false },
     settings: { showDescription: true },
@@ -100,23 +117,23 @@ export const formTheme = {
 
 `tv` owns className composition; the typed `behavior` record owns non-class flags. One `variant`
 drives both. `bridgeTv` (§6) bridges only `.styles` into the `tx` tree — behavior is component-local
-because themes *restyle*, they must not change logic.
+because themes _restyle_, they must not change logic.
 
 ### 3. `Form.theme.ts`
 
 Slots map 1:1 to real DOM targets (no structural guesswork):
 
-| slot | DOM target |
-| --- | --- |
-| `section` | `Form.Section` container |
-| `sectionTitle` | `Form.Section` `<h2>` |
-| `sectionDescription` | `Form.Section` `<p>` |
-| `fieldSet` | `Form.FieldSet` container (`FieldContainer` wrapper) |
-| `field` | `FormFieldWrapper` outer row |
-| `labelContainer` | `FormFieldLabel` outer grid div (column span) |
-| `labelText` | `FormFieldLabel` inner label node (size/color) |
-| `description` | `Input.Description` |
-| `control` | wrapper around the field's control |
+| slot                 | DOM target                                           |
+| -------------------- | ---------------------------------------------------- |
+| `section`            | `Form.Section` container                             |
+| `sectionTitle`       | `Form.Section` `<h2>`                                |
+| `sectionDescription` | `Form.Section` `<p>`                                 |
+| `fieldSet`           | `Form.FieldSet` container (`FieldContainer` wrapper) |
+| `field`              | `FormFieldWrapper` outer row                         |
+| `labelContainer`     | `FormFieldLabel` outer grid div (column span)        |
+| `labelText`          | `FormFieldLabel` inner label node (size/color)       |
+| `description`        | `Input.Description`                                  |
+| `control`            | wrapper around the field's control                   |
 
 ```ts
 export const formTheme = {
@@ -217,7 +234,7 @@ form: bridgeTv(formTheme.styles, Object.keys(formTheme.styles()) as FormSlot[]),
 ```
 
 The slot list is derived once from `Object.keys(formTheme.styles())` so it can't drift from the
-recipe. (Proxy alternative rejected: it returns a function for *any* key, so a typo path defers its
+recipe. (Proxy alternative rejected: it returns a function for _any_ key, so a typo path defers its
 failure to call time instead of resolving to `undefined` at lookup, and is opaque to `Object.keys`.)
 
 This preserves ThemeProvider swap-ability and matches Message/Button consumption. **Retrofit plan**
