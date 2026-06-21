@@ -45,7 +45,9 @@ const formStyles = tv({
       },
     },
   },
-  defaultVariants: { variant: 'default' },
+  defaultVariants: {
+    variant: 'default',
+  },
 });
 
 /** {@link Form} theme template: a tailwind-variants recipe (`styles`) plus non-class `behavior`. */

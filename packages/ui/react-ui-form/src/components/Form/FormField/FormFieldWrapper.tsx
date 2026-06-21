@@ -46,10 +46,12 @@ const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string =
 };
 
 export type FormFieldWrapperProps<T = any> = Pick<
-  FormFieldRendererProps,
+  FormFieldRendererProps<T>,
   'readonly' | 'label' | 'description' | 'presentation' | 'getStatus' | 'getValue' | 'jsonPath' | 'format' | 'required'
 > & {
-  children?: (props: { value: T; presentation: FieldPresentation }) => ReactNode;
+  // `value` is `T | undefined` because `getValue()` returns no value when the field is unset (optional
+  // schema properties, freshly-added array items); renderers default it (e.g. `{ value = '' }`).
+  children?: (props: { value: T | undefined; presentation: FieldPresentation }) => ReactNode;
   /**
    * Render the label as a standalone `<span>` (group/multi-input fields with no single associated control).
    */
