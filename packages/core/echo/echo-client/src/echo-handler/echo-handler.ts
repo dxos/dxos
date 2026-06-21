@@ -1248,7 +1248,6 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
  * Creates a reactive ECHO object backed by a CRDT.
  * @internal
  */
-// TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const type = Obj.getType(obj as unknown as Obj.Unknown);

@@ -627,8 +627,6 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   /**
-   * Internal method to set the resolver.
-   *
    * @internal
    */
   _setResolver(resolver: RefResolver): void {
