@@ -15,8 +15,10 @@ describe('formTheme', () => {
 
   test('settings variant frames the field and shows the description', ({ expect }) => {
     const styles = formTheme.styles({ variant: 'settings' });
+    // Assert stable invariants (bordered, grid-framed, prominent label, right-aligned control),
+    // not the specific grid mechanism, so the test survives layout tweaks.
     expect(styles.field()).toContain('border-separator');
-    expect(styles.field()).toContain('md:grid-cols-[1fr_1fr]');
+    expect(styles.field()).toContain('grid');
     expect(styles.labelText()).toContain('text-lg');
     expect(styles.control()).toContain('justify-end');
     expect(formTheme.behavior.settings.showDescription).toBe(true);

@@ -29,13 +29,11 @@ const formStyles = tv({
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
         fieldSet: 'flex flex-col gap-trim-md pt-trim-md',
-        field:
-          'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm',
-        labelContainer: 'md:col-span-full',
+        field: `grid grid-cols-2 grid-rows-2 [grid-template-areas:'header_control''description_description'] gap-x-trim-lg gap-y-0 p-trim-md border border-separator rounded-sm`,
+        labelContainer: '[grid-area:header]',
         labelText: 'pb-trim-md text-base-fg text-lg',
-        description: 'text-base text-description',
-        // Right-align the control: full-width inputs fill the column; fixed-width controls hug the end.
-        control: 'flex items-center justify-end py-1',
+        description: '[grid-area:description] text-base text-description',
+        control: '[grid-area:control] flex items-center justify-end',
       },
     },
   },
@@ -46,8 +44,12 @@ const formStyles = tv({
 export const formTheme = {
   styles: formStyles,
   behavior: {
-    default: { showDescription: false },
-    settings: { showDescription: true },
+    default: {
+      showDescription: false,
+    },
+    settings: {
+      showDescription: true,
+    },
   } satisfies Record<FormVariant, FormBehavior>,
 };
 

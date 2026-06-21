@@ -166,16 +166,10 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
     return null;
   }
 
-  const str = formatStaticValue(value, format);
-  const control = resolved.isStatic
-    ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{str}</p>)
-    : children
-      ? children({ value, presentation: resolved })
-      : null;
-
   return (
-    <div className={styles.field()}>
-      <Input.Root validationValence={status}>
+    <Input.Root validationValence={status}>
+      <div className={styles.field()}>
+        {/* Label */}
         {resolved.showLabel && (
           <FormFieldLabel
             classNames={styles.labelContainer()}
@@ -188,17 +182,26 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
             path={jsonPath}
           />
         )}
+        {/* Description */}
         {showDescription && description && (
           <Input.Description classNames={styles.description()}>{description}</Input.Description>
         )}
-        <div className={styles.control()}>{control}</div>
+        {/* Control */}
+        <div className={styles.control()}>
+          {resolved.isStatic
+            ? (renderStatic?.(value) ?? <p className='truncate min-w-0'>{formatStaticValue(value, format)}</p>)
+            : children
+              ? children({ value, presentation: resolved })
+              : null}
+        </div>
+        {/* Error */}
         {resolved.showError && error && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>
           </Input.DescriptionAndValidation>
         )}
-      </Input.Root>
-    </div>
+      </div>
+    </Input.Root>
   );
 };
 

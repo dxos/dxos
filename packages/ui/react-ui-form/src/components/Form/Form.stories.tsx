@@ -59,7 +59,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport scroll>
             <Form.Content>
-              <Form.Section label='Section' description='This is a section' />
+              <Form.Section title='Section' description='This is a section' />
               <Form.FieldSet />
               <Form.Actions />
             </Form.Content>
@@ -149,4 +149,32 @@ export const Static: Story<ExcludeId<typeof PersonSchema>> = {
 
 export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
   args: {},
+};
+
+const SettingsSchema = Schema.mutable(
+  Schema.Struct({
+    viewMode: Schema.Literal('preview', 'readonly', 'source').annotations({
+      title: 'Default view mode',
+      description: 'Set whether documents open in editing or read-only mode.',
+    }),
+    toolbar: Schema.optional(
+      Schema.Boolean.annotations({ title: 'Show toolbar', description: 'Display a formatting toolbar above the editor.' }),
+    ),
+    fontSize: Schema.optional(
+      Schema.Number.annotations({ title: 'Font size', description: 'Editor font size, in pixels.' }),
+    ),
+  }),
+);
+
+/**
+ * The bordered, two-column "settings panel" look, achieved with the `settings` form variant:
+ * each field becomes a card whose title spans the top, with its description in the left column and the
+ * control right-aligned in the right column.
+ */
+export const SettingsPresentation: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
+  args: {
+    schema: SettingsSchema,
+    values: { viewMode: 'preview', toolbar: true, fontSize: 14 },
+    variant: 'settings',
+  },
 };
