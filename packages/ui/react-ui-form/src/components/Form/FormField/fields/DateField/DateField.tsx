@@ -66,7 +66,7 @@ export const DateField = ({
   );
 
   return (
-    <FormFieldWrapper<string> readonly={readonly} format={format} {...props}>
+    <FormFieldWrapper<string> {...props} readonly={readonly} format={format}>
       {({ value }) => {
         switch (format) {
           case Format.TypeFormat.Date:
@@ -74,7 +74,7 @@ export const DateField = ({
               <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch'>
                 <Input.Date
                   classNames='min-w-0 overflow-hidden'
-                  disabled={!!readonly}
+                  disabled={readonly}
                   value={value ?? ''}
                   onValueChange={handleSimpleChange}
                 />
@@ -89,7 +89,7 @@ export const DateField = ({
               <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch'>
                 <Input.DateTime
                   classNames='min-w-0 overflow-hidden'
-                  disabled={!!readonly}
+                  disabled={readonly}
                   value={isoToLocalDateTime(value)}
                   onValueChange={handleDateTimeChange}
                 />
