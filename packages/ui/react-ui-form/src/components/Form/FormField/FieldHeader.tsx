@@ -5,7 +5,7 @@
 import React, { type ReactNode } from 'react';
 
 import { CompactIconButton } from './FormField';
-import { FormFieldLabel } from './FormFieldLabel';
+import { FormFieldLabel } from './FormFieldWrapper';
 
 export type FieldHeaderProps = {
   label: string;

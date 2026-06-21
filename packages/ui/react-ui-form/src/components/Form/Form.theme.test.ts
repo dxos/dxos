@@ -19,7 +19,15 @@ describe('formTheme', () => {
     // not the specific grid mechanism, so the test survives layout tweaks.
     expect(styles.field()).toContain('border-separator');
     expect(styles.field()).toContain('grid');
-    expect(styles.control()).toContain('justify-end');
+    expect(styles.fieldLabel()).toContain('[grid-area:header]');
+    expect(styles.fieldLabelText()).toContain('text-lg');
+    expect(styles.fieldControl()).toContain('justify-end');
     expect(formTheme.behavior.settings.showDescription).toBe(true);
+  });
+
+  test('per-slot override wins', ({ expect }) => {
+    const styles = formTheme.styles({ variant: 'settings' });
+    expect(styles.fieldLabelText({ class: 'text-2xl' })).toContain('text-2xl');
+    expect(styles.fieldLabelText({ class: 'text-2xl' })).not.toContain('text-lg');
   });
 });

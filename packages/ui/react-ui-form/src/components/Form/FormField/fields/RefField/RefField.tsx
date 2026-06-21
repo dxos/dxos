@@ -19,7 +19,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
-import { FormFieldLabel } from '../../FormFieldLabel';
+import { FormFieldLabel } from '../../FormFieldWrapper';
 import { presentationFor } from '../../presentation';
 
 // TODO(burdon): Factor out.
