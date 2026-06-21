@@ -56,7 +56,7 @@ const DefaultStory = (props: { initial?: Settings.Settings; readonly?: boolean }
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-crx/CrxSettings',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[30rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     translations,
   },

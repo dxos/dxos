@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { Component, type PropsWithChildren, type ReactNode, type Ref } from 'react';
 
 import { Format } from '@dxos/echo';
-import { inputTextLabel, Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
@@ -59,9 +59,8 @@ export const FormFieldLabel = ({
   // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
   // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
   // The `fieldLabelText` slot is applied last so a variant/caller size/color (e.g. `text-lg`) wins over
-  // the `text-sm`/`text-description` baked into `inputTextLabel`.
   const labelClassNames = mx(
-    inputTextLabel,
+    'text-sm text-description',
     required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
     styles.fieldLabelText({ class: labelClassName }),
   );

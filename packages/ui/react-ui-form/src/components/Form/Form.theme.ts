@@ -32,11 +32,11 @@ const formStyles = tv({
         content: 'dx-document',
         // Gap on the section spaces its direct children — section title/description and, for action
         // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
-        section: 'my-8 gap-trim-md',
+        section: 'border py-8! gap-trim-md',
         sectionTitle: 'px-trim-md text-xl',
-        sectionDescription: 'px-trim-md',
+        sectionDescription: 'px-trim-md pb-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.
-        fieldSet: 'flex flex-col gap-trim-md mb-8',
+        fieldSet: 'flex flex-col gap-trim-md',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
@@ -44,8 +44,8 @@ const formStyles = tv({
           'gap-x-trim-lg gap-y-0 p-trim-md border border-input-separator rounded-md',
         ),
         fieldLabel: '[grid-area:header]',
-        fieldLabelText: 'pb-trim-md text-base-fg text-lg',
-        fieldDescription: '[grid-area:description] text-base text-description',
+        fieldLabelText: 'text-base-fg text-lg',
+        fieldDescription: '[grid-area:description] pt-trim-md text-description',
         fieldControl: '[grid-area:control] flex items-center md:justify-end pt-3 md:pt-0',
         fieldValidation: '[grid-area:validation]',
       },
