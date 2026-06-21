@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -19,20 +19,25 @@ export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: S
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
-        {onShowWelcome && (
-          <SettingsForm.Item title={t('show-welcome.label')}>
-            <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
-          </SettingsForm.Item>
-        )}
-        <SettingsForm.FieldSet
-          readonly={!onSettingsChange}
-          schema={Settings.Settings}
-          values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
-        />
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+    <Form.Root
+      schema={Settings.Settings}
+      values={settings}
+      variant='settings'
+      readonly={!onSettingsChange}
+      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+            {onShowWelcome && (
+              <Form.Row label={t('show-welcome.label')}>
+                <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
+              </Form.Row>
+            )}
+            <Form.FieldSet />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
