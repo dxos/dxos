@@ -19,6 +19,7 @@ import {
   useTranslation,
   withColumn,
 } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
@@ -272,7 +273,7 @@ export const FormSection = composable<HTMLDivElement, FormSectionProps>(
     return (
       <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
         {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
-        {description && <p className={styles.sectionDescription()}>{description}</p>}
+        {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
         {children}
       </div>
     );

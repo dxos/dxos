@@ -32,7 +32,7 @@ const formStyles = tv({
         content: 'dx-document',
         // Gap on the section spaces its direct children — section title/description and, for action
         // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
-        section: 'border py-8! gap-trim-md',
+        section: 'my-8 gap-trim-md',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md pb-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.
