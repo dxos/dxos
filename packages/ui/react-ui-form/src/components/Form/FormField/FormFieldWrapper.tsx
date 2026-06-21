@@ -6,89 +6,14 @@ import { format as formatDate } from 'date-fns';
 import React, { Component, type PropsWithChildren, type ReactNode } from 'react';
 
 import { Format } from '@dxos/echo';
-import { inputTextLabel, Icon, Input, ThemedClassName, Tooltip } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { Input } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
+import { FormFieldLabel } from './FormFieldLabel';
 import { type FieldPresentation, presentationFor } from './presentation';
-
-//
-// FormFieldLabel
-//
-
-export type FormFieldLabelProps = ThemedClassName<
-  {
-    /** Render a plain `<span>` instead of an input-associated `Input.Label`, for labels used outside an `Input.Root` (e.g. section/group headers). */
-    standalone?: boolean;
-    /** Class applied to the inner label text node, overriding the default size/color (e.g. `text-lg`). */
-    labelClassName?: string;
-    error?: string;
-    /**
-     * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
-     * Field metadata; accepted by callers but not currently rendered.
-     */
-    path?: string;
-    /**
-     * Trailing button rendered at the end of the label row (third grid column).
-     * Used by nested-object field sets to surface a collapse toggle.
-     */
-    button?: ReactNode;
-    onClick?: () => void;
-  } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
->;
-
-export const FormFieldLabel = ({
-  classNames,
-  labelClassName,
-  label,
-  error,
-  readonly,
-  required,
-  standalone,
-  button,
-  onClick,
-}: FormFieldLabelProps) => {
-  // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
-  // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
-  // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
-  // `labelClassName` is appended last so a caller-supplied size/color (e.g. `text-lg`) wins over the
-  // `text-sm`/`text-description` baked into `inputTextLabel`.
-  const labelClassNames = mx(
-    inputTextLabel,
-    required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
-    labelClassName,
-  );
-  // `Input.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
-  // plain `span` used for read-only/standalone labels reads `className`.
-  const labelNode =
-    readonly || standalone ? (
-      <span className={labelClassNames}>{label}</span>
-    ) : (
-      <Input.Label classNames={labelClassNames}>{label}</Input.Label>
-    );
-
-  return (
-    <div
-      className={mx('grid grid-cols-[1fr_auto_auto] items-center select-none', onClick && 'cursor-pointer', classNames)}
-      onClick={onClick}
-    >
-      {labelNode}
-      {error ? (
-        <Tooltip.Trigger asChild content={error} side='bottom'>
-          <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
-        </Tooltip.Trigger>
-      ) : (
-        <span />
-      )}
-      {button}
-    </div>
-  );
-};
-
-FormFieldLabel.displayName = 'Form.FieldLabel';
 
 //
 // FormFieldWrapper
@@ -172,8 +97,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
         {/* Label */}
         {resolved.showLabel && (
           <FormFieldLabel
-            classNames={styles.labelContainer()}
-            labelClassName={styles.labelText()}
+            variant={variant}
             error={error}
             readonly={readonly}
             required={required}
