@@ -196,9 +196,11 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
         </div>
         {/* Error */}
         {resolved.showError && error && (
-          <Input.DescriptionAndValidation>
-            <Input.Validation>{error}</Input.Validation>
-          </Input.DescriptionAndValidation>
+          <div className={styles.validation()}>
+            <Input.DescriptionAndValidation>
+              <Input.Validation>{error}</Input.Validation>
+            </Input.DescriptionAndValidation>
+          </div>
         )}
       </div>
     </Input.Root>
