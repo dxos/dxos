@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type Settings as SettingsType } from '../../types/Settings';
-
 import { MapSettings } from './MapSettings';
 
 const DefaultStory = ({ initial }: { initial?: SettingsType }) => {
