@@ -61,6 +61,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
+import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';
 import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
@@ -151,6 +152,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
+      SandboxPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
@@ -240,6 +242,7 @@ export const getPlugins = ({
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),
+    SandboxPlugin(),
     ScriptPlugin(),
     SearchPlugin(),
     (isDev || isLabs) && SidekickPlugin(),

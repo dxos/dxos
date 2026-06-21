@@ -56,7 +56,8 @@ export const Exec = Operation.make({
       description: 'Working directory for the command (absolute path).',
     }),
     env: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })).annotations({
-      description: 'Additional environment variables.',
+      description:
+        'Additional environment variables. Merged with env vars from the sandbox credentials field; these override on conflict.',
     }),
     timeout: Schema.optional(Schema.Number).annotations({
       description: 'Timeout in milliseconds.',

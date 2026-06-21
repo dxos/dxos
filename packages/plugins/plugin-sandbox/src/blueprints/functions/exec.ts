@@ -9,6 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
 import { createSandboxClient } from '../../services/sandbox-url';
+import { mergeExecEnv } from '../../services/sandbox-env';
 import { Exec } from './definitions';
 
 export default Exec.pipe(
@@ -21,9 +22,10 @@ export default Exec.pipe(
       const sandboxId = loaded.id;
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
+      const mergedEnv = yield* mergeExecEnv(loaded.credentials, env);
 
       const result = yield* Effect.promise(() =>
-        sandboxClient.exec(spaceId, sandboxId, { command, cwd, env, timeout }),
+        sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }),
       );
 
       return result;
