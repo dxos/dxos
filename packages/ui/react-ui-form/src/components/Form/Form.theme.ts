@@ -30,10 +30,13 @@ const formStyles = tv({
       default: {},
       settings: {
         content: 'dx-document',
-        section: 'my-8',
+        // Gap on the section spaces its direct children — section title/description and, for action
+        // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
+        section: 'my-8 gap-trim-md',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
-        fieldSet: 'flex flex-col gap-trim-md pt-trim-md mb-8',
+        // No top padding: the section gap already separates the field set from the title above it.
+        fieldSet: 'flex flex-col gap-trim-md mb-8',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
