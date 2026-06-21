@@ -12,6 +12,7 @@ import * as Obj from './Obj';
 import * as Ref from './Ref';
 import * as Relation from './Relation';
 import { TestSchema } from './testing';
+import type * as Type from './Type';
 
 describe('Obj', () => {
   describe('make', () => {
@@ -636,6 +637,18 @@ describe('Obj', () => {
       });
       expect(target.name).toBe('Old');
       expect(target.properties).toEqual({ x: '2' });
+    });
+  });
+
+  describe('exemplars', () => {
+    test('factory', ({ expect }) => {
+      const factory = <S extends Type.AnyObj>(schema: S) => {
+        return (props: Obj.MakeProps<S>) => Obj.make(schema, props);
+      };
+
+      const makePerson = factory(TestSchema.Person);
+      const person = makePerson({ name: 'John Doe' });
+      expect(person.name).toBe('John Doe');
     });
   });
 });
