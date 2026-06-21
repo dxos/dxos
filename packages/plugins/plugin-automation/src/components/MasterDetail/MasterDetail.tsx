@@ -34,6 +34,7 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   detail?: ReactNode;
 }>;
 
+/** Selectable master list (with optional create/delete affordances) above a parent-supplied detail pane. */
 export const MasterDetail = <T extends MasterDetailRecord>({
   classNames,
   items,

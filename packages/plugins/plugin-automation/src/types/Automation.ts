@@ -67,4 +67,5 @@ export const AppliesTo = Schema.Struct({
 
 export type AppliesTo = Type.InstanceType<typeof AppliesTo>;
 
+/** Create an {@link AppliesTo} relation linking an automation (source) to a target object. */
 export const makeAppliesTo = (props: Relation.MakeProps<typeof AppliesTo>) => Relation.make(AppliesTo, props);
