@@ -93,6 +93,9 @@ export const translations: Resource[] = [
         'no-automations.message': 'No automations for this object.',
         'automation-not-associated.message': 'Not yet associated with this object.',
         'automation-detached.message': 'No longer associated with this object.',
+        'add-automation.label': 'Add automation',
+        'save.label': 'Save',
+        'cancel.label': 'Cancel',
 
         'testing.title': 'Testing',
         'force-run.label': 'Force run',

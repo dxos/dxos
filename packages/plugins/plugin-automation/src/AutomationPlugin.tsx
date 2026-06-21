@@ -28,7 +28,14 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Automation.Automation, Operation.PersistentOperation, Routine.Routine, Trigger.Trigger, Trace.Message],
+    schema: [
+      Automation.Automation,
+      Automation.AppliesTo,
+      Operation.PersistentOperation,
+      Routine.Routine,
+      Trigger.Trigger,
+      Trace.Message,
+    ],
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
