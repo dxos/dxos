@@ -28,7 +28,7 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export type DebugSettingsProps = AppSurface.SettingsArticleProps<
+export type DebugSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     logStore: IdbLogStore;

@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 import { type RegistrySettings as RegistrySettingsType, RegistrySettingsSchema } from '../../types';
 
-export type RegistrySettingsProps = AppSurface.SettingsArticleProps<
+export type RegistrySettingsProps = AppSurface.SettingsProps<
   RegistrySettingsType,
   {
     activeDevPluginIds: readonly string[];

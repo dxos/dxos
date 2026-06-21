@@ -13,7 +13,7 @@ import { Settings } from '#types';
 
 import { pingExtension } from '../../util';
 
-export type CrxSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
+export type CrxSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 type TestState =
   | { kind: 'idle' }

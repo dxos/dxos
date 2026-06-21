@@ -16,7 +16,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { NativeCapabilities, type Settings, type Update } from '#types';
 
-export type NativeSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
+export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 type Pending = null | 'check' | 'install' | 'relaunch';
 

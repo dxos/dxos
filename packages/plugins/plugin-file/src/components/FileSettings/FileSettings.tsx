@@ -12,7 +12,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { FileCapabilities, Settings } from '#types';
 
-export type FileSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
+export type FileSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);

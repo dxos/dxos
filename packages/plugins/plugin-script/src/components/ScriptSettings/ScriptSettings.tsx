@@ -11,7 +11,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type ScriptSettingsProps = AppSurface.SettingsArticleProps<
+export type ScriptSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     onAuthenticate?: () => void;

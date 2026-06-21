@@ -11,7 +11,7 @@ import { Form, FormRow, type FormFieldRendererProps } from '@dxos/react-ui-form'
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
-export type MarkdownSettingsProps = AppSurface.SettingsArticleProps<Markdown.Settings>;
+export type MarkdownSettingsProps = AppSurface.SettingsProps<Markdown.Settings>;
 
 export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsProps) => {
   return (

@@ -12,7 +12,7 @@ import { Settings as SettingsForm, createSelectField } from '@dxos/react-ui-form
 import { meta } from '#meta';
 import { Assistant } from '#types';
 
-export type AssistantSettingsProps = AppSurface.SettingsArticleProps<Assistant.Settings>;
+export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);

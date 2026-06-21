@@ -11,7 +11,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type SupportSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings> & {
+export type SupportSettingsProps = AppSurface.SettingsProps<Settings.Settings> & {
   onShowWelcome?: () => void;
 };
 

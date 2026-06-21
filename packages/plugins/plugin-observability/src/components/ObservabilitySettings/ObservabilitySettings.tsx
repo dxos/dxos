@@ -11,7 +11,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type ObservabilitySettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
+export type ObservabilitySettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 export const ObservabilitySettings = ({ settings, onSettingsChange }: ObservabilitySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
