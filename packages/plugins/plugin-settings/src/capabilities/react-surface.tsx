@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
-import { DefaultSettings } from '#components';
+import { DefaultSettings } from '#containers';
 
 // `DefaultSettings` is registered with `position: Position.last` so a
 // plugin-specific surface (matching by prefix) always wins under the settings

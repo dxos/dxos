@@ -8,18 +8,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ScriptSettings } from './ScriptSettings';
+import { AssistantSettings } from './AssistantSettings';
 
 const meta = {
-  title: 'plugins/plugin-script/components/ScriptSettings',
-  component: ScriptSettings,
+  title: 'plugins/plugin-assistant/containers/AssistantSettings',
   tags: ['settings'],
+  component: AssistantSettings,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof ScriptSettings>;
+} satisfies Meta<typeof AssistantSettings>;
 
 export default meta;
 
@@ -27,6 +27,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    settings: { editorInputMode: 'default' },
+    settings: {
+      customPrompts: false,
+      modelProvider: 'edge',
+    },
   },
 };

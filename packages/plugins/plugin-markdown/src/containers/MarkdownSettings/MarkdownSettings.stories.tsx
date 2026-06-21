@@ -11,7 +11,7 @@ import { translations } from '#translations';
 import { MarkdownSettings } from './MarkdownSettings';
 
 const meta = {
-  title: 'plugins/plugin-markdown/components/MarkdownSettings',
+  title: 'plugins/plugin-markdown/containers/MarkdownSettings',
   tags: ['settings'],
   component: MarkdownSettings,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

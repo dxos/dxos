@@ -8,23 +8,27 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceSettings } from './SpaceSettings';
+import { ObservabilitySettings } from './ObservabilitySettings';
 
 const meta = {
-  title: 'plugins/plugin-space/components/SpaceSettings',
-  component: SpaceSettings,
+  title: 'plugins/plugin-observability/containers/ObservabilitySettings',
+  component: ObservabilitySettings,
   tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof SpaceSettings>;
+} satisfies Meta<typeof ObservabilitySettings>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    settings: {
+      enabled: true,
+    },
+  },
 };

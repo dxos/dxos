@@ -17,12 +17,7 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { SampleStatusIndicator } from '#components';
-import {
-  SampleArticle,
-  SampleCompanionPanel,
-  SampleDeckCompanion,
-  SampleProperties,
-} from '#containers';
+import { SampleArticle, SampleCompanionPanel, SampleDeckCompanion, SampleProperties } from '#containers';
 import { SampleCapabilities, SampleItem } from '#types';
 
 export default Capability.makeModule(() =>

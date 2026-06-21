@@ -11,7 +11,7 @@ import { translations } from '#translations';
 import { SupportSettings } from './SupportSettings';
 
 const meta = {
-  title: 'plugins/plugin-support/components/SupportSettings',
+  title: 'plugins/plugin-support/containers/SupportSettings',
   component: SupportSettings,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },

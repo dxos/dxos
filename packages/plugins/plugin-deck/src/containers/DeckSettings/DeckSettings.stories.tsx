@@ -11,7 +11,7 @@ import { translations } from '#translations';
 import { DeckSettings } from './DeckSettings';
 
 const meta = {
-  title: 'plugins/plugin-deck/components/DeckSettings',
+  title: 'plugins/plugin-deck/containers/DeckSettings',
   tags: ['settings'],
   component: DeckSettings,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

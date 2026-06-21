@@ -8,18 +8,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ObservabilitySettings } from './ObservabilitySettings';
+import { ScriptSettings } from './ScriptSettings';
 
 const meta = {
-  title: 'plugins/plugin-observability/components/ObservabilitySettings',
-  component: ObservabilitySettings,
+  title: 'plugins/plugin-script/containers/ScriptSettings',
+  component: ScriptSettings,
   tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof ObservabilitySettings>;
+} satisfies Meta<typeof ScriptSettings>;
 
 export default meta;
 
@@ -27,8 +27,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    settings: {
-      enabled: true,
-    },
+    settings: { editorInputMode: 'default' },
   },
 };

@@ -19,7 +19,6 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
-import { SpaceSettings } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
@@ -40,6 +39,7 @@ import {
   SpaceHomeArticle,
   SpaceHomeRecent,
   SpacePresence,
+  SpaceSettings,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,

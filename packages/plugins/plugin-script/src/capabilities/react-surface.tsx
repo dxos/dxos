@@ -15,8 +15,14 @@ import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { ScriptSettings } from '#components';
-import { DeploymentDialog, NotebookArticle, ScriptArticle, ScriptProperties, TestContainer } from '#containers';
+import {
+  DeploymentDialog,
+  NotebookArticle,
+  ScriptArticle,
+  ScriptProperties,
+  ScriptSettings,
+  TestContainer,
+} from '#containers';
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
 import { Notebook, ScriptCapabilities, type Settings } from '#types';

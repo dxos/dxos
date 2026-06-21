@@ -17,7 +17,6 @@ import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
-import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
@@ -28,6 +27,7 @@ import {
   SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
+  SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
 import { Support, type Settings } from '#types';

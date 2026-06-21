@@ -330,10 +330,7 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
  * filter matches any settings subject (used by the generic default settings
  * surface); pass a `prefix` to match a single plugin's settings.
  */
-export const settings = (
-  token: Surface.RoleToken<any>,
-  prefix?: string,
-): Surface.Filter<SettingsData> => {
+export const settings = (token: Surface.RoleToken<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
