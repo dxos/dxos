@@ -24,25 +24,29 @@ import { isTruthy } from '@dxos/util';
 
 import { Spec } from '#types';
 
-export type SpecArticleProps = AppSurface.ObjectArticleProps<Spec.Spec> & {
-  /** Render the editor in read-only mode (no toolbar, no edits). */
+export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
+  /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */
+  subject?: Spec.Spec;
+  /** Static MDL content, rendered read-only when no `subject` is provided. */
+  content?: string;
+  /** Force read-only mode. Defaults to read-only for static content and editable when editing a Spec. */
   readOnly?: boolean;
 };
 
 /**
- * Renders a Spec ECHO object using react-ui-editor's compound primitives with
- * the .mdl CodeMirror extensions. Live-edits the bound `spec.content`. Used
- * directly when a bare Spec is opened.
+ * Renders MDL with react-ui-editor's compound primitives and the .mdl CodeMirror extensions.
+ * With a `subject` it live-edits the bound ECHO `spec.content` (collaborative); without one it
+ * renders the static `content` string read-only (e.g. a bundled plugin spec, no ECHO binding).
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
-  ({ role, subject: spec, attendableId, readOnly = false }, forwardedRef) => {
+  ({ role, subject: spec, content, attendableId, readOnly = spec == null }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const identity = useIdentity();
-    const space = getSpace(spec);
+    const space = spec ? getSpace(spec) : undefined;
 
-    // Trigger re-render when the content ref resolves.
-    useObject(spec.content);
-    const target = spec.content.target;
+    // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
+    useObject(spec?.content);
+    const target = spec?.content.target;
 
     const extensions = useMemo(
       () =>
@@ -52,7 +56,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           mdl(),
-          target &&
+          // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
+          spec &&
+            target &&
             createDataExtensions({
               id: spec.id,
               text: createDocAccessor(target, ['content']),
@@ -60,7 +66,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec.id, target, themeMode, readOnly],
+      [identity, space, spec?.id, target, themeMode, readOnly],
     );
 
     return (
@@ -72,7 +78,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             </Panel.Toolbar>
           )}
           <Panel.Content>
-            <Editor.View classNames={editorClassNames(role)} />
+            <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
           </Panel.Content>
         </Panel.Root>
       </Editor.Root>

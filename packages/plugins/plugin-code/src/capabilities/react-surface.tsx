@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { SpecView } from '#components';
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Settings, Spec } from '#types';
@@ -55,7 +54,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
-        component: ({ data: { subject }, role }) => <SpecView role={role} content={subject.content} readOnly />,
+        component: ({ data: { subject }, role }) => <SpecArticle role={role} content={subject.content} />,
       }),
     ]),
   ),
