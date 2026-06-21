@@ -9,7 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CodeArticle, CodeSettings, SpecArticle, SpecView } from '#containers';
+import { SpecView } from '#components';
+import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Settings, Spec } from '#types';
 

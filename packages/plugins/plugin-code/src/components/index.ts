@@ -5,3 +5,4 @@
 export * from './BuildOutput';
 export * from './CodeToolbar';
 export * from './FileTree';
+export * from './SpecView';
