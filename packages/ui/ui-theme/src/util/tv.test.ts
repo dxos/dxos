@@ -30,9 +30,9 @@ describe('bridgeTv', () => {
     });
     const theme = bridgeTv(recipe, ['root', 'label']);
     expect(typeof theme.root).toBe('function');
-    expect((theme.root as any)({ variant: 'settings' })).toContain('p-4');
+    expect(theme.root({ variant: 'settings' })).toContain('p-4');
     // consumer override wins via per-slot merge.
-    expect((theme.label as any)({ variant: 'settings' }, 'text-xl')).toContain('text-xl');
-    expect((theme.label as any)({ variant: 'settings' }, 'text-xl')).not.toContain('text-lg');
+    expect(theme.label({ variant: 'settings' }, 'text-xl')).toContain('text-xl');
+    expect(theme.label({ variant: 'settings' }, 'text-xl')).not.toContain('text-lg');
   });
 });

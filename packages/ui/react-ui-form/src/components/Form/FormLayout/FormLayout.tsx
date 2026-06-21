@@ -246,13 +246,17 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
 
   const presentation = presentationFor(layout);
   return (
-    <div className={styles.field()}>
-      <Input.Root>
-        {presentation.showLabel && <FormFieldLabel readonly label={label} path={SchemaEx.createJsonPath(path)} />}
-        <p className='truncate min-w-0' title={text}>
-          {text}
-        </p>
-      </Input.Root>
-    </div>
+    <Input.Root>
+      <div className={styles.field()}>
+        {presentation.showLabel && (
+          <FormFieldLabel variant={variant} readonly label={label} path={SchemaEx.createJsonPath(path)} />
+        )}
+        <div className={styles.fieldControl()}>
+          <p className='truncate min-w-0' title={text}>
+            {text}
+          </p>
+        </div>
+      </div>
+    </Input.Root>
   );
 };

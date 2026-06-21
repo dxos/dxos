@@ -112,7 +112,7 @@ export const RegistrySettings = ({
             <Form.Row label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
               <Button
                 variant={enabled ? undefined : 'primary'}
-                disabled={busy || (!enabled && !trimmedUrl)}
+                disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}
               >
                 {buttonLabel}

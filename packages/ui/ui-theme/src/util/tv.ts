@@ -22,6 +22,14 @@ type SlotsRecipe<P extends Record<string, any>, S extends string> = (
 ) => Record<S, (opts?: { class?: ClassNameValue }) => string>;
 
 /**
+ * The {@link Theme} sub-tree produced by {@link bridgeTv}, with each slot's resolver explicitly typed
+ * so call sites (and tests) stay fully typed instead of falling back to `any`.
+ */
+export type BridgedTheme<P extends Record<string, any>, S extends string> = Theme<P> & {
+  [K in S]: (styleProps: P, ...etc: ClassNameArray) => string;
+};
+
+/**
  * Adapt a tailwind-variants slots recipe into the existing {@link Theme} shape (a map of
  * {@link import('@dxos/ui-types').ComponentFunction}) so it can register in the `tx` theme tree and be
  * consumed via `tx('component.slot', styleProps, ...classNames)`. Slots are enumerated explicitly (not
@@ -31,7 +39,7 @@ type SlotsRecipe<P extends Record<string, any>, S extends string> = (
 export const bridgeTv = <P extends Record<string, any>, S extends string>(
   recipe: SlotsRecipe<P, S>,
   slots: readonly S[],
-): Theme<P> =>
+): BridgedTheme<P, S> =>
   Object.fromEntries(
     slots.map((slot) => [slot, (styleProps: P, ...etc: ClassNameArray) => recipe(styleProps)[slot]({ class: etc })]),
-  ) as Theme<P>;
+  ) as BridgedTheme<P, S>;
