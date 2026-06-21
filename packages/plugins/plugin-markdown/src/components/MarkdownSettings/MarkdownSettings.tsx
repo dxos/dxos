@@ -22,8 +22,8 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
       values={settings}
       onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
     >
-      <Form.Viewport classNames='py-8' scroll>
-        <Form.Content classNames='dx-document'>
+      <Form.Viewport scroll>
+        <Form.Content>
           <Form.Section title={meta.profile.name}>
             <Form.FieldSet
               fieldMap={{ snippets: SnippetsField }}

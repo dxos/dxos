@@ -12,6 +12,8 @@ export type FormBehavior = { showDescription: boolean };
 
 const formStyles = tv({
   slots: {
+    viewport: '',
+    content: '',
     section: 'flex flex-col pt-form-section-gap first:pt-0',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
@@ -27,6 +29,8 @@ const formStyles = tv({
     variant: {
       default: {},
       settings: {
+        viewport: 'py-8',
+        content: 'dx-document',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
         fieldSet: 'flex flex-col gap-trim-md pt-trim-md',

@@ -88,13 +88,22 @@ export type FormViewportProps = { scroll?: boolean; gutter?: ColumnRootProps['gu
 // Content-height by default; `scroll` makes it fill its parent and scroll (the gutter then hosts the scrollbar).
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, gutter = 'xs', ...props }, forwardedRef) => {
+    const { variant = 'default' } = useFormContext(FORM_VIEWPORT_NAME);
+    const styles = formTheme.styles({ variant });
     // Span the full width when nested inside another Column grid (e.g. Card.Root)
     // instead of landing in a single narrow track.
     const span = '[.dx-column-root_&]:col-span-full';
     if (scroll) {
       return (
         <Column.Root gutter={gutter} classNames={['dx-expander', span]}>
-          <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
+          <ScrollArea.Root
+            {...composableProps(props, { classNames: styles.viewport() })}
+            orientation='vertical'
+            centered
+            padding
+            thin
+            ref={forwardedRef}
+          >
             <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>
@@ -102,7 +111,11 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
     }
 
     return (
-      <Column.Root {...composableProps(props)} gutter={gutter} classNames={['w-full min-w-0', span]} ref={forwardedRef}>
+      <Column.Root
+        {...composableProps(props, { classNames: ['w-full min-w-0', span, styles.viewport()] })}
+        gutter={gutter}
+        ref={forwardedRef}
+      >
         {children}
       </Column.Root>
     );
@@ -121,7 +134,8 @@ export type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 // The viewed body: centered in the viewport's gutter. Pure body — the gutter Column is owned by `Form.Viewport`.
 export const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
-  const { form, testId } = useFormContext(FORM_CONTENT_NAME);
+  const { form, testId, variant = 'default' } = useFormContext(FORM_CONTENT_NAME);
+  const styles = formTheme.styles({ variant });
   const localRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMergeRefs([forwardedRef, localRef]);
   useKeyHandler(localRef, form);
@@ -130,7 +144,7 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
     <div
       {...composableProps(props, {
         role: 'form',
-        classNames: mx(withColumn.center(), 'flex flex-col w-full'),
+        classNames: mx(withColumn.center(), 'flex flex-col w-full', styles.content()),
       })}
       data-testid={testId}
       ref={mergedRef}
