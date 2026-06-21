@@ -11,14 +11,14 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type ScriptPluginSettingsProps = AppSurface.SettingsArticleProps<
+export type ScriptSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
     onAuthenticate?: () => void;
   }
 >;
 
-export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticate }: ScriptPluginSettingsProps) => {
+export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: ScriptSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (

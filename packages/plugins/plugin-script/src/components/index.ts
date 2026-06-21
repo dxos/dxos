@@ -10,4 +10,4 @@ export * from './ScriptToolbar';
 export * from './TestPanel';
 export * from './TypescriptEditor';
 
-export const ScriptPluginSettings: ComponentType<any> = lazy(() => import('./ScriptPluginSettings'));
+export const ScriptSettings: ComponentType<any> = lazy(() => import('./ScriptSettings'));

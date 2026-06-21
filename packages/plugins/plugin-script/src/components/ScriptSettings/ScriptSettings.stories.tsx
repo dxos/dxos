@@ -8,18 +8,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ScriptPluginSettings } from './ScriptPluginSettings';
+import { ScriptSettings } from './ScriptSettings';
 
 const meta = {
-  title: 'plugins/plugin-script/components/ScriptPluginSettings',
-  component: ScriptPluginSettings,
+  title: 'plugins/plugin-script/components/ScriptSettings',
+  component: ScriptSettings,
   tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof ScriptPluginSettings>;
+} satisfies Meta<typeof ScriptSettings>;
 
 export default meta;
 
