@@ -8,5 +8,4 @@ export { type MapArticleProps, type MapControlType } from './MapArticle';
 export * from './MapSurface';
 
 export const MapArticle: ComponentType<any> = lazy(() => import('./MapArticle'));
-export const MapSettings: ComponentType<any> = lazy(() => import('./MapSettings'));
 export const MapViewEditor: ComponentType<any> = lazy(() => import('./MapViewEditor'));
