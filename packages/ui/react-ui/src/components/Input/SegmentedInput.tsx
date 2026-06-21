@@ -53,7 +53,8 @@ const toCalendarDate = (date: Date) => new CalendarDate(date.getFullYear(), date
 // Theming.
 //
 
-const fieldClass = 'inline-flex items-center gap-px font-mono tabular-nums focus-within:bg-attention-surface';
+// TODO(burdon): Move to theme.
+const fieldClass = 'inline-flex items-center gap-px tabular-nums focus-within:bg-attention-surface';
 
 // React Aria sets `caret-color: transparent` inline on each segment because spinbuttons replace
 // the whole value rather than inserting at a caret position. We override with `!important` so a
@@ -66,8 +67,8 @@ const fieldClass = 'inline-flex items-center gap-px font-mono tabular-nums focus
 const segmentClass =
   'rounded-xs outline-none text-end [caret-color:currentColor]! ' +
   'data-[type=year]:min-w-[4ch] ' +
-  'data-[type=month]:min-w-[2ch] data-[type=day]:min-w-[2ch] ' +
-  'data-[type=hour]:min-w-[2ch] data-[type=minute]:min-w-[2ch] ' +
+  'data-[type=month]:min-w-[1ch] data-[type=day]:min-w-[1ch] ' +
+  'data-[type=hour]:min-w-[1ch] data-[type=minute]:min-w-[1ch] ' +
   'data-[placeholder]:text-subdued data-[type=literal]:text-subdued ' +
   'data-[focused]:bg-accent-bg data-[focused]:text-accent-fg ' +
   'data-[invalid]:text-rose-500 ' +
@@ -91,7 +92,7 @@ const renderSegment = (segment: { type: string; text: string }) => {
       // Render as a fixed-width spacer (between date and time portions of a datetime field),
       // but hide when at the field's edges — opening LRI is the first child of a time-only
       // field and would push everything right; closing PDI is the last child everywhere.
-      return <span aria-hidden className='select-none w-[2ch] first:hidden last:hidden' />;
+      return <span aria-hidden className='select-none w-[1ch] first:hidden last:hidden' />;
     }
     if (segment.text.includes(',')) {
       return (
@@ -101,6 +102,7 @@ const renderSegment = (segment: { type: string; text: string }) => {
       );
     }
   }
+
   return <DateSegment segment={segment as any} className={segmentClass} />;
 };
 

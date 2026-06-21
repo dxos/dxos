@@ -343,13 +343,14 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
           </Field>
           <div className='flex gap-2'>
             <div className='flex items-center text-sm'>{t('schedule.on.label')}</div>
-            <div className='grid grid-cols-7 gap-2 w-fit'>
+            <div className='grid grid-cols-7 gap-2 w-fit pr-2'>
               {Days.map(({ value: day, label }) => {
                 const checked = value.days.includes(day);
                 return (
                   <label key={day} className='flex items-center gap-1'>
                     <Input.Root>
                       <Input.Checkbox
+                        size={4}
                         checked={checked}
                         onCheckedChange={(next) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
@@ -403,7 +404,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <Field label={t('schedule.cron.label')}>
           <Input.Root>
             <Input.TextInput
-              classNames='w-50 font-mono'
+              classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}
               onChange={(event) => onChange({ kind: 'custom', cron: event.target.value })}

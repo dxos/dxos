@@ -17,6 +17,7 @@ import { EID as _EchoURIReference } from '@dxos/keys';
 
 import { meta } from '#meta';
 
+import * as Automation from './Automation';
 import { TriggerTemplate } from './schema';
 export { _EchoURIReference };
 
@@ -84,4 +85,20 @@ export const RunPromptInNewChat = Operation.make({
   output: Schema.Struct({
     object: Type.getSchema(Chat.Chat),
   }),
+});
+
+// Runs an automation's `runnable` directly (bypassing its triggers). The runnable receives no input;
+// the trigger-driven path is what supplies event-mapped input, so manual runs target runnables that
+// need none.
+export const RunAutomation = Operation.make({
+  meta: {
+    key: makeKey('runAutomation'),
+    name: 'Run Automation',
+    icon: 'ph--play--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    automation: Ref.Ref(Automation.Automation),
+  }),
+  output: Schema.Void,
 });

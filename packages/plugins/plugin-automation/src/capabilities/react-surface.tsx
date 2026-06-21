@@ -12,7 +12,7 @@ import { Blueprint, Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Prompts } from '@dxos/plugin-space';
 
-import { AutomationArticle, AutomationSettings, BlueprintArticle, RoutineArticle, RoutineList } from '#containers';
+import { AutomationArticle, AutomationSettings, BlueprintArticle, RoutineArticle, RoutineSuggestions } from '#containers';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'routines',
         filter: AppSurface.subject(Prompts, Obj.isObject),
-        component: ({ data }) => <RoutineList subject={data.subject} />,
+        component: ({ data }) => <RoutineSuggestions subject={data.subject} />,
       }),
     ]),
   ),

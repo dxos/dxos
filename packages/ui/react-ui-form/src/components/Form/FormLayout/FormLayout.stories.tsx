@@ -383,7 +383,9 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
                   onChange={setTemplate}
                 />
               </Editor.Root>
-              {error && <div className='border-t border-separator p-2 text-sm text-error-text font-mono'>{error}</div>}
+              {error && (
+                <div className='border-t border-input-separator p-2 text-sm text-error-text font-mono'>{error}</div>
+              )}
             </div>
           </TestPanel>
           <TestPanel>

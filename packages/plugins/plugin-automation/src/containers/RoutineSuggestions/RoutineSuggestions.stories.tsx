@@ -22,7 +22,7 @@ import { Organization } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { RoutineList } from './RoutineList';
+import { RoutineSuggestions } from './RoutineSuggestions';
 
 // TODO(burdon): Factor out (see assistant-stories)
 export const config = {
@@ -59,14 +59,14 @@ const DefaultStory = () => {
   return (
     <Panel.Root>
       <Panel.Toolbar className='flex p-1 items-center'>
-        <RoutineList subject={subject} role='toolbar-input' attendableId='story' />
+        <RoutineSuggestions subject={subject} role='toolbar-input' attendableId='story' />
       </Panel.Toolbar>
     </Panel.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-automation/containers/RoutineList',
+  title: 'plugins/plugin-automation/containers/RoutineSuggestions',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
