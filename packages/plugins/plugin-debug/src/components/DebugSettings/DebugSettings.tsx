@@ -11,12 +11,12 @@ import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
 import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
-import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
 type Toast = {
   title: string;
@@ -152,100 +152,102 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
   );
 
   return (
-    <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
-        <SettingsForm.Item title={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-          <Input.Switch
-            disabled={!onSettingsChange}
-            checked={settings.wireframe}
-            onCheckedChange={handleWireframeChange}
-          />
-        </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-          <Input.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
-        </SettingsForm.Item>
-        <SettingsForm.Item
-          title={t('settings.tracing-panel.label')}
-          description={t('settings.tracing-panel.description')}
-        >
-          <IconButton
-            icon='ph--arrow-square-out--regular'
-            iconOnly
-            label={t('settings.tracing-panel.label')}
-            onClick={handleOpenTracingPanel}
-          />
-        </SettingsForm.Item>
-        <SettingsForm.Item
-          title={t('settings.download-diagnostics.label')}
-          description={t('settings.download-diagnostics.description')}
-        >
-          <IconButton
-            icon='ph--download-simple--regular'
-            iconOnly
-            label={t('settings.download-diagnostics.label')}
-            onClick={handleDownload}
-          />
-        </SettingsForm.Item>
-        <SettingsForm.Item
-          title={t('settings.download-logs.label')}
-          description={t('settings.download-logs.description')}
-        >
-          <IconButton
-            icon='ph--download-simple--regular'
-            iconOnly
-            label={t('settings.download-logs.label')}
-            onClick={handleDownloadLogs}
-          />
-        </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings.repair.label')} description={t('settings.repair.description')}>
-          <IconButton
-            icon='ph--first-aid-kit--regular'
-            iconOnly
-            label={t('settings.repair.label')}
-            onClick={handleRepair}
-          />
-        </SettingsForm.Item>
+    <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+            <Form.Row label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
+              <Input.Root>
+                <Input.Switch
+                  disabled={!onSettingsChange}
+                  checked={settings.wireframe}
+                  onCheckedChange={handleWireframeChange}
+                />
+              </Input.Root>
+            </Form.Row>
+            <Form.Row label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
+              <Input.Root>
+                <Input.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+              </Input.Root>
+            </Form.Row>
+            <Form.Row label={t('settings.tracing-panel.label')} description={t('settings.tracing-panel.description')}>
+              <IconButton
+                icon='ph--arrow-square-out--regular'
+                iconOnly
+                label={t('settings.tracing-panel.label')}
+                onClick={handleOpenTracingPanel}
+              />
+            </Form.Row>
+            <Form.Row
+              label={t('settings.download-diagnostics.label')}
+              description={t('settings.download-diagnostics.description')}
+            >
+              <IconButton
+                icon='ph--download-simple--regular'
+                iconOnly
+                label={t('settings.download-diagnostics.label')}
+                onClick={handleDownload}
+              />
+            </Form.Row>
+            <Form.Row label={t('settings.download-logs.label')} description={t('settings.download-logs.description')}>
+              <IconButton
+                icon='ph--download-simple--regular'
+                iconOnly
+                label={t('settings.download-logs.label')}
+                onClick={handleDownloadLogs}
+              />
+            </Form.Row>
+            <Form.Row label={t('settings.repair.label')} description={t('settings.repair.description')}>
+              <IconButton
+                icon='ph--first-aid-kit--regular'
+                iconOnly
+                label={t('settings.repair.label')}
+                onClick={handleRepair}
+              />
+            </Form.Row>
 
-        {/* TODO(burdon): Move to layout? */}
-        {toast && (
-          <Toast.Root>
-            <Toast.Title icon='ph--gift--duotone'>
-              <span>{toast.title}</span>
-            </Toast.Title>
-            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-          </Toast.Root>
-        )}
+            {/* TODO(burdon): Move to layout? */}
+            {toast && (
+              <Toast.Root>
+                <Toast.Title icon='ph--gift--duotone'>
+                  <span>{toast.title}</span>
+                </Toast.Title>
+                {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+              </Toast.Root>
+            )}
 
-        <SettingsForm.Item
-          title={t('settings.choose-storage-adaptor.label')}
-          description={t('settings.choose-storage-adaptor.description')}
-        >
-          <Select.Root
-            disabled={!onSettingsChange}
-            value={
-              Object.entries(StorageAdapters).find(
-                ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-              )?.[0]
-            }
-            onValueChange={handleStorageAdapterChange}
-          >
-            <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {Object.keys(StorageAdapters).map((key) => (
-                    <Select.Option key={key} value={key}>
-                      {t(`settings.storage-adaptor.${key}.label`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-                <Select.Arrow />
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </SettingsForm.Item>
-      </SettingsForm.Section>
-    </SettingsForm.Viewport>
+            <Form.Row
+              label={t('settings.choose-storage-adaptor.label')}
+              description={t('settings.choose-storage-adaptor.description')}
+            >
+              <Select.Root
+                disabled={!onSettingsChange}
+                value={
+                  Object.entries(StorageAdapters).find(
+                    ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+                  )?.[0]
+                }
+                onValueChange={handleStorageAdapterChange}
+              >
+                <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {Object.keys(StorageAdapters).map((key) => (
+                        <Select.Option key={key} value={key}>
+                          {t(`settings.storage-adaptor.${key}.label`)}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                    <Select.Arrow />
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </Form.Row>
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
