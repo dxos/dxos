@@ -19,6 +19,11 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
+        id: 'pluginSpec',
+        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
+        component: ({ data: { subject }, role }) => <SpecArticle role={role} content={subject.content} />,
+      }),
+      Surface.create({
         id: 'specArticle',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Spec.Spec),
@@ -50,11 +55,6 @@ export default Capability.makeModule(() =>
             />
           );
         },
-      }),
-      Surface.create({
-        id: 'pluginSpec',
-        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
-        component: ({ data: { subject }, role }) => <SpecArticle role={role} content={subject.content} />,
       }),
     ]),
   ),
