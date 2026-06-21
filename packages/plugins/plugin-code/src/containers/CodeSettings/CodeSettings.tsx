@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -54,29 +54,40 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
   }, [existing, space]);
 
   return (
-    <Settings.Viewport>
-      <Settings.Section title={meta.profile.name ?? meta.profile.key}>
-        <Settings.Item title={t('api-key.label')}>
-          <Input.TextInput
-            type='password'
-            placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
-          <div className='flex justify-end gap-2 pt-trim-md'>
-            <Button onClick={handleSave} disabled={!draft.trim() || !space}>
-              <Icon icon='ph--floppy-disk--regular' size={4} />
-              {t('api-key.save.label')}
-            </Button>
-            <Button onClick={handleClear} disabled={!existing} variant='ghost'>
-              <Icon icon='ph--trash--regular' size={4} />
-              {t('api-key.clear.label')}
-            </Button>
-          </div>
-        </Settings.Item>
-        <Settings.FieldSet schema={SettingsType.Settings} values={settings} onValuesChanged={onSettingsChange} />
-      </Settings.Section>
-    </Settings.Viewport>
+    <Form.Root
+      schema={SettingsType.Settings}
+      values={settings}
+      variant='settings'
+      onValuesChanged={(values) => onSettingsChange({ ...settings, ...values })}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+            <Form.Row label={t('api-key.label')}>
+              <Input.Root>
+                <Input.TextInput
+                  type='password'
+                  placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                />
+              </Input.Root>
+              <div className='flex justify-end gap-2 pt-trim-md'>
+                <Button onClick={handleSave} disabled={!draft.trim() || !space}>
+                  <Icon icon='ph--floppy-disk--regular' size={4} />
+                  {t('api-key.save.label')}
+                </Button>
+                <Button onClick={handleClear} disabled={!existing} variant='ghost'>
+                  <Icon icon='ph--trash--regular' size={4} />
+                  {t('api-key.clear.label')}
+                </Button>
+              </div>
+            </Form.Row>
+            <Form.FieldSet />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
