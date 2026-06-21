@@ -44,4 +44,21 @@ describe('Sandbox', { tags: ['functions-e2e'] }, () => {
     }),
     { timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT },
   );
+
+  it.effect(
+    'github',
+    agentTest({
+      sandbox: 'local',
+      plugins: [SandboxPlugin()],
+      clientTypes: [Sandbox.Sandbox],
+      instructions: trim`
+        Query contributors to the dxos/dxos repository using CLI in the sandbox.
+      `,
+      completionCriteria: [
+        'Agent did use the gh CLI.',
+        'Contributors include at least: wittjosiah, richburdon, dmaretskyi, mykola-vrmchk',
+      ],
+    }),
+    { timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT },
+  );
 });
