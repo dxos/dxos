@@ -5,12 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { MeetingCapabilities, Settings } from '#types';
 
+// Meeting has no user-configurable settings, so it does NOT contribute
+// `AppCapabilities.Settings` (an empty schema renders a blank settings article).
+// The store is retained only to fire the settings activation event that gates
+// `CallExtension`.
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
@@ -19,13 +22,6 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({}),
     });
 
-    return [
-      Capability.contributes(MeetingCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
-        schema: Settings.Settings,
-        atom: settingsAtom,
-      }),
-    ];
+    return [Capability.contributes(MeetingCapabilities.Settings, settingsAtom)];
   }),
 );

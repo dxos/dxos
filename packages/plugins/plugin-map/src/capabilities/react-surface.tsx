@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
@@ -14,8 +14,11 @@ import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { Position } from '@dxos/util';
 
-import { MapSurface, MapViewEditor } from '#containers';
+import { MapSettings, MapSurface, MapViewEditor } from '#containers';
+import { meta } from '#meta';
 import { LocationAnnotationId, Map, MapInline } from '#types';
+
+import { type Settings } from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -56,6 +59,14 @@ export default Capability.makeModule(() =>
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
+      }),
+      Surface.create({
+        id: 'surface.settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings>(subject.atom);
+          return <MapSettings settings={settings} onSettingsChange={(next: Settings) => updateSettings(() => next)} />;
+        },
       }),
       Surface.create({
         // TODO(burdon): Why this title?
