@@ -5,5 +5,3 @@
 import { lazy } from 'react';
 
 export const SpacetimeArticle = lazy(() => import('./SpacetimeArticle'));
-
-export * from './SpacetimeSettings';
