@@ -820,6 +820,9 @@ export const declareRelation =
  * the subclass falls through to the entity (fields, jsonSchema, brands), while
  * the wrapper satisfies the `extends` requirement of being a constructor.
  */
+// Returns `any`: the result is a constructor (to satisfy `class X extends ...`) that
+// nonetheless delegates to a plain entity object — a shape TypeScript cannot express,
+// so the public `ObjClass` / `RelationClass` types are applied by the callers' signatures.
 const makeEntityClass = (entity: object): any => {
   const constructor = function EntityClass() {};
   Object.setPrototypeOf(constructor, entity);
