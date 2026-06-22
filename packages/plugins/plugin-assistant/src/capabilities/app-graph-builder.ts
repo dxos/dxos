@@ -239,12 +239,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return [
-      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Chat.Chat, { groupId: AppNode.NAV_TREE_GROUP_AI_ID }),
-      ),
-    ];
+    return [Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );

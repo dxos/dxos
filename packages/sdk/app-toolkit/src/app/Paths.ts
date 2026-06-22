@@ -195,15 +195,12 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
 export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId?: string }) => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create type section paths.');
+  const baseSegments: string[] = options?.groupId ? [options.groupId, typename] : [typename];
   return {
     /** Canonical qualified path to the type's section node within a space. */
-    getSectionPath: (spaceId: string): string =>
-      options?.groupId ? getSpacePath(spaceId, options.groupId, typename) : getTypeSectionPath(spaceId, typename),
+    getSectionPath: (spaceId: string): string => getSpacePath(spaceId, ...baseSegments),
     /** Canonical qualified path to a specific object within the type's section. */
-    getObjectPath: (spaceId: string, objectId: string): string =>
-      options?.groupId
-        ? getSpacePath(spaceId, options.groupId, typename, objectId)
-        : getTypeSectionObjectPath(spaceId, typename, objectId),
+    getObjectPath: (spaceId: string, objectId: string): string => getSpacePath(spaceId, ...baseSegments, objectId),
   };
 };
 

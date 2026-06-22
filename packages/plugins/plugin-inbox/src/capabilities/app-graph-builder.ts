@@ -607,12 +607,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return [
-      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Calendar.Calendar, { groupId: AppNode.NAV_TREE_GROUP_COMM_ID }),
-      ),
-    ];
+    return [Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)];
   }),
 );
