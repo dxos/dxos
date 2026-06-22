@@ -154,10 +154,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-connector"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

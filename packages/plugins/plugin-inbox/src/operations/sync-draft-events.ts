@@ -5,15 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
 import { Event } from '@dxos/types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { findShadowObject, reanchorShadowObject } from '../hooks/shadow';
 import { Calendar, InboxOperation, DraftEvent } from '../types';
-import { findIntegrationForRemote } from './google/find-integration';
+import { findBindingForTarget } from './google/find-binding';
 
 export default InboxOperation.SyncDraftEvents.pipe(
   Operation.withHandler(
@@ -27,12 +26,12 @@ export default InboxOperation.SyncDraftEvents.pipe(
         return { synced: 0 };
       }
 
-      const integrations = yield* Effect.promise(() => db.query(Filter.type(Integration.Integration)).run());
-      const integration = findIntegrationForRemote(integrations, calendar.id, googleCalendarId);
-      if (!integration) {
+      const binding = yield* findBindingForTarget(calendar).pipe(Effect.provide(Database.layer(db)));
+      if (!binding) {
         return { synced: 0 };
       }
-      const integrationRef = Ref.make(integration);
+      const connectionRef = Ref.make(Relation.getSource(binding));
+      const bindingRef = Ref.make(binding);
 
       const candidates = yield* Effect.promise(() => db.query(Filter.type(Event.Event)).run());
       const draft = candidates.filter(
@@ -47,7 +46,7 @@ export default InboxOperation.SyncDraftEvents.pipe(
         const { id } = yield* Operation.invoke(InboxOperation.CreateGoogleCalendarEvent, {
           event: draftEvent,
           googleCalendarId,
-          integration: integrationRef,
+          connection: connectionRef,
         });
         Obj.update(draftEvent, (draftEvent) => {
           Obj.getMeta(draftEvent).keys.push({ source: GOOGLE_INTEGRATION_SOURCE, id });
@@ -57,8 +56,7 @@ export default InboxOperation.SyncDraftEvents.pipe(
       // Pull the canonical copies into the feed (best-effort) so the calendar stays populated, then
       // remove the local drafts (their feed counterparts are now the source of truth).
       yield* Operation.invoke(InboxOperation.GoogleCalendarSync, {
-        integration: integrationRef,
-        calendar: Ref.make(calendar),
+        binding: bindingRef,
       }).pipe(
         Effect.catchAll((error) => {
           log.catch(error);

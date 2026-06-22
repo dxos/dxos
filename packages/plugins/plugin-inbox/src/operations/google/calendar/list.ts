@@ -37,16 +37,16 @@ const listGoogleCalendars = (token: string) =>
 
 const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleCalendars> = InboxOperation.GetGoogleCalendars.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration }) {
-      const target = integration.target;
+    Effect.fn(function* ({ connection }) {
+      const target = connection.target;
       const db = target ? Obj.getDatabase(target) : undefined;
       if (!db) {
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
       return yield* Effect.gen(function* () {
-        const integrationObj = yield* Database.load(integration);
-        const accessToken = yield* Database.load(integrationObj.accessToken);
+        const connectionObj = yield* Database.load(connection);
+        const accessToken = yield* Database.load(connectionObj.accessToken);
         if (!accessToken.token) {
           return yield* Effect.fail(new AccessTokenNotPopulatedError());
         }

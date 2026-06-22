@@ -166,13 +166,13 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-connector"
+    },
+    {
       "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-map"

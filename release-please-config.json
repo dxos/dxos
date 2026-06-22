@@ -615,6 +615,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-connector/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-crm/package.json",
           "jsonpath": "$.version"
         },
@@ -691,11 +696,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-integration/package.json",
           "jsonpath": "$.version"
         },
         {

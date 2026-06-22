@@ -8,7 +8,7 @@ import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
@@ -42,6 +42,6 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
     ProcessManagerPlugin(),
     RegistryPlugin(),
     SpacePlugin({}),
-    IntegrationPlugin(),
+    ConnectorPlugin(),
   ];
 };

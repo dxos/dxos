@@ -29,10 +29,10 @@ const SELF_TARGETS = [
 
 const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTargets.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ integration: integrationRef }) {
+    Effect.fnUntraced(function* ({ connection: connectionRef }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const integration = yield* Database.load(integrationRef);
-      if (!Obj.getDatabase(integration)) {
+      const connection = yield* Database.load(connectionRef);
+      if (!Obj.getDatabase(connection)) {
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.Credentials.fromIntegration(integrationRef, client)),
+        Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
         Effect.provide(FetchHttpClient.layer),
         Effect.catchAll((error) =>
           Effect.sync(() => {

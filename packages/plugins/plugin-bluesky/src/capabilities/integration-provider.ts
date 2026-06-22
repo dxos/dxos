@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { type CredentialForm, IntegrationProvider as IntegrationProviderCapability } from '@dxos/plugin-integration';
+import { Connector, type CredentialForm } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
 import { BlueskyOperation } from '../operations';
+import { materializeTarget } from '../operations/sync';
 import { BlueskyTargetOptions } from '../types';
 
 /**
@@ -52,17 +53,22 @@ const AtprotoPreflightForm = Schema.Struct({
 const credentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
   schema: AtprotoPreflightForm,
   defaultValues: { handle: '' },
+  // atproto pre-flight: capture the handle as a `loginHint` and let the
+  // coordinator re-enter the OAuth flow with it. The redirect flow mints the
+  // AccessToken + Connection; this form never builds them directly.
   onSubmit: ({ values }) => Effect.succeed({ kind: 'oauth', loginHint: values.handle.trim() }),
 };
 
 /**
- * Contributes the Bluesky integration-provider entry. plugin-integration
- * looks up by `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets`
- * and target discovery runs through `BlueskyOperation.GetBlueskyTargets`.
+ * Contributes the Bluesky connector entry. plugin-connector looks up by
+ * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (one binding
+ * per call), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
+ * and `materializeTarget` creates the empty local Subscription.Feed bound to
+ * each selected target.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(IntegrationProviderCapability, [
+    return Capability.contributes(Connector, [
       {
         id: BLUESKY_PROVIDER_ID,
         source: BLUESKY_SOURCE,
@@ -76,6 +82,7 @@ export default Capability.makeModule(
         },
         credentialForm,
         optionsSchema: BlueskyTargetOptions,
+        materializeTarget,
         getSyncTargets: BlueskyOperation.GetBlueskyTargets,
         sync: BlueskyOperation.SyncBlueskyTargets,
       },

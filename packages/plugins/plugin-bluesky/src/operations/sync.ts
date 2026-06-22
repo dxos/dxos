@@ -8,50 +8,62 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed as EchoFeed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Subscription } from '@dxos/plugin-feed';
-import { type Integration } from '@dxos/plugin-integration';
+import { type Connection, type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
 
-import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
+import { BLUESKY_SOURCE, BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { IntegrationDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { SyncBlueskyTargets } from './definitions';
 
+/**
+ * Find-or-create the empty local `Subscription.Feed` root for a Bluesky target
+ * so a {@link SyncBinding} relation can be created eagerly (relations require
+ * both endpoints to exist). Keyed by the target's `remoteId` foreign key, so
+ * re-running on the same `(space, remoteId)` returns the same Subscription.
+ * Idempotent. The feed starts empty; posts are appended on first sync.
+ */
+export const materializeTarget: MaterializeTarget = ({ connection, remoteTarget, db }) =>
+  Effect.gen(function* () {
+    invariant(remoteTarget, 'Bluesky is a multi-target connector; remoteTarget is required.');
+    const remoteId = remoteTarget.id;
+
+    const existing = yield* Database.query(
+      Query.select(Filter.foreignKeys(Subscription.Subscription, [{ source: BLUESKY_SOURCE, id: remoteId }])),
+    ).run;
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const subscription = Subscription.makeSubscription({
+      [Obj.Meta]: { keys: [{ source: BLUESKY_SOURCE, id: remoteId }] },
+      name: remoteTarget.name,
+      url: remoteIdToFeedUrl(remoteId),
+      type: 'atproto',
+    });
+    return yield* Database.add(subscription);
+  }).pipe(Effect.provide(Database.layer(db)));
+
 const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTargets.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ integration: integrationRef }) {
+    Effect.fnUntraced(function* ({ binding: bindingRef }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const integration = yield* Database.load(integrationRef);
-      const db = Obj.getDatabase(integration);
+      const binding = yield* Database.load(bindingRef);
+      const connection = Relation.getSource(binding);
+      const db = Obj.getDatabase(binding);
       if (!db) {
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
-      let appended = 0;
-      let failed = 0;
-
-      // The credentials layer loads the integration's access token, validates
+      // The credentials layer loads the connection's access token, validates
       // the handle, and resolves the user's PDS once. Public XRPC reads
       // (e.g. `getAuthorFeed`) only need HttpClient and ignore the layer.
-      return yield* Effect.gen(function* () {
-        for (const [index, target] of integration.targets.entries()) {
-          if (!target.remoteId) {
-            continue;
-          }
-          const result = yield* Effect.either(syncTarget({ client, integration, db, targetIndex: index }));
-          if (result._tag === 'Right') {
-            appended += result.right;
-          } else {
-            failed++;
-            log.warn('Bluesky target sync failed', { remoteId: target.remoteId, error: result.left });
-          }
-        }
-        return { appended, failed };
-      }).pipe(
-        Effect.provide(BlueskyApi.Credentials.fromIntegration(integrationRef, client)),
+      return yield* syncBinding({ client, binding, connection, db }).pipe(
+        Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
         Effect.provide(FetchHttpClient.layer),
       );
     }),
@@ -60,43 +72,42 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
 
 export default handler;
 
-const syncTarget = ({
+const syncBinding = ({
   client,
-  integration,
+  binding,
+  connection,
   db,
-  targetIndex,
 }: {
   client: Client;
-  integration: Integration.Integration;
+  binding: SyncBinding.SyncBinding;
+  connection: Connection.Connection;
   db: Database.Database;
-  targetIndex: number;
 }) =>
   Effect.gen(function* () {
-    const target = integration.targets[targetIndex];
-    invariant(target, 'target index out of range');
-    const remoteId = target.remoteId!;
+    const remoteId = binding.remoteId;
+    if (!remoteId) {
+      return { appended: 0 };
+    }
 
-    // Resolve / materialize the local Subscription.Feed for this target.
-    const subscriptionFeed = yield* resolveOrCreateLocalFeed({
-      db,
-      integration,
-      targetIndex,
-      remoteId,
-      name: target.name ?? remoteId,
-    });
+    const localRoot = Relation.getTarget(binding);
+    if (!Subscription.instanceOf(localRoot)) {
+      log.warn('Bluesky binding target is not a Subscription.Feed; skipping', { remoteId });
+      return { appended: 0 };
+    }
+    const subscriptionFeed = localRoot;
 
     // Walk pages from newest backwards, stopping at the URI we last saw
-    // (`target.cursor`) or after the per-target page budget. atproto returns
+    // (`binding.cursor`) or after the per-target page budget. atproto returns
     // newest first, so anything we collect can be appended in the order it
     // came back without an explicit reverse.
     //
     // Per-target page budget: self-targets (chronological) get the larger
     // default since cursor-stopping bounds them on incremental syncs;
     // custom feeds are algorithmic so we cap conservatively. Both honour
-    // an explicit `target.options.maxPages` override, clamped to the
+    // an explicit `binding.options.maxPages` override, clamped to the
     // hard safety cap.
-    const lastSeen = target.cursor;
-    const maxPages = resolveMaxPages(remoteId, target.options as { maxPages?: number } | undefined);
+    const lastSeen = binding.cursor;
+    const maxPages = resolveMaxPages(remoteId, binding.options as { maxPages?: number } | undefined);
     const collected: BlueskyApi.FeedViewPost[] = [];
     let pageCursor: string | undefined;
     let newestUri: string | undefined;
@@ -125,14 +136,11 @@ const syncTarget = ({
 
     if (collected.length === 0) {
       // Still record a successful run so the UI shows recent activity.
-      Obj.update(integration, (integration) => {
-        integration.targets[targetIndex] = {
-          ...integration.targets[targetIndex],
-          lastSyncAt: new Date().toISOString(),
-          lastError: undefined,
-        };
+      Relation.update(binding, (binding) => {
+        binding.lastSyncAt = new Date().toISOString();
+        binding.lastError = undefined;
       });
-      return 0;
+      return { appended: 0 };
     }
 
     const echoFeed = subscriptionFeed.feed?.target;
@@ -154,71 +162,27 @@ const syncTarget = ({
       });
     }
 
-    Obj.update(integration, (integration) => {
-      integration.targets[targetIndex] = {
-        ...integration.targets[targetIndex],
-        // Track the newest post URI so the next sync stops there.
-        cursor: newestUri,
-        lastSyncAt: new Date().toISOString(),
-        lastError: undefined,
-      };
+    Relation.update(binding, (binding) => {
+      // Track the newest post URI so the next sync stops there.
+      binding.cursor = newestUri;
+      binding.lastSyncAt = new Date().toISOString();
+      binding.lastError = undefined;
     });
 
-    return postObjects.length;
+    return { appended: postObjects.length };
   }).pipe(
     Effect.tapError((error) =>
       Effect.sync(() =>
-        Obj.update(integration, (integration) => {
-          integration.targets[targetIndex] = {
-            ...integration.targets[targetIndex],
-            lastError: error instanceof Error ? error.message : String(error),
-          };
+        Relation.update(binding, (binding) => {
+          binding.lastError = error instanceof Error ? error.message : String(error);
         }),
       ),
     ),
   );
 
 /**
- * Reuse the target's stored `object` if it points to a Subscription.Feed;
- * otherwise create one and pin it to the target.
- */
-const resolveOrCreateLocalFeed = ({
-  db,
-  integration,
-  targetIndex,
-  remoteId,
-  name,
-}: {
-  db: Database.Database;
-  integration: Integration.Integration;
-  targetIndex: number;
-  remoteId: string;
-  name: string;
-}) =>
-  Effect.gen(function* () {
-    const target = integration.targets[targetIndex];
-    const existing = target?.object?.target;
-    if (existing && Subscription.instanceOf(existing)) {
-      return existing;
-    }
-    const newFeed = Subscription.makeSubscription({
-      name,
-      url: remoteIdToFeedUrl(remoteId),
-      type: 'atproto',
-    });
-    const persisted = db.add(newFeed);
-    Obj.update(integration, (integration) => {
-      integration.targets[targetIndex] = {
-        ...integration.targets[targetIndex],
-        object: Ref.make(persisted),
-      };
-    });
-    return persisted;
-  });
-
-/**
  * Resolve the per-sync page budget for a target. User-supplied
- * `target.options.maxPages` takes precedence (clamped to {@link MAX_PAGES_HARD_CAP});
+ * `binding.options.maxPages` takes precedence (clamped to {@link MAX_PAGES_HARD_CAP});
  * otherwise self-targets get the chronological default and custom feeds
  * get the algorithmic-feed default.
  */

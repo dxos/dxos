@@ -7,10 +7,11 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
+import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
+import { materializeTarget } from '../operations/sync';
 import { TrelloApi } from '../services';
 import { TrelloOperation } from '../types';
 
@@ -19,10 +20,10 @@ import { TrelloOperation } from '../types';
  *
  * Calls Trello's `/members/me` to populate `accessToken.account` with the
  * authenticated user's email (falling back to username). Failures are elevated
- * with {@link Effect.orDie}; plugin-integration logs defects from the runner and
- * continues so a failed `/members/me` cannot block the Integration already created.
+ * with {@link Effect.orDie}; plugin-connector logs defects from the runner and
+ * continues so a failed `/members/me` cannot block the Connection already created.
  *
- * The wrapping Integration itself is auto-created by plugin-integration BEFORE
+ * The wrapping Connection itself is auto-created by plugin-connector BEFORE
  * this runs.
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
@@ -40,13 +41,14 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
- * Contributes a single `IntegrationProvider` entry that wires Trello's two operations
- * and the token-created hook to the `'trello.com'` source. plugin-integration looks
- * up providers by source string.
+ * Contributes a single `Connector` entry that wires Trello's discovery,
+ * target materialization, sync operation, and token-created hook to the
+ * `'trello.com'` source. plugin-connector routes connections to connectors
+ * by `connectorId`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(IntegrationProviderCapability, [
+    return Capability.contributes(Connector, [
       {
         id: 'trello',
         source: TRELLO_SOURCE,
@@ -56,6 +58,7 @@ export default Capability.makeModule(
           scopes: [],
         },
         getSyncTargets: TrelloOperation.GetTrelloBoards,
+        materializeTarget,
         sync: TrelloOperation.SyncTrelloBoard,
         onTokenCreated,
       },

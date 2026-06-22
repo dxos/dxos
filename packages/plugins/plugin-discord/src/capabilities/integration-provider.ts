@@ -9,12 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import {
-  type CredentialForm,
-  Integration,
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration';
+import { Connection, Connector, type CredentialForm, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
@@ -26,11 +21,12 @@ import {
   DISCORD_USER_PROVIDER_ID,
 } from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
+import { materializeTarget } from '../operations/sync';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
 import { DiscordOperation, DiscordTargetOptions } from '../types';
 
 /**
- * Manual-credential form for the Discord Bot provider.
+ * Manual-credential form for the Discord Bot connector.
  *
  * Collects a bot token directly because bot auth is outside the normal OAuth
  * flow — the user creates an application in the Discord developer portal,
@@ -48,11 +44,11 @@ const DiscordTokenForm = Schema.Struct({
 
 /**
  * Validate the pasted token against `GET /users/@me` before letting the
- * coordinator persist the Integration.
+ * coordinator persist the Connection.
  *
  * Doing this here (rather than waiting for first sync) means a wrong token —
  * pasted Application ID, expired token, regenerated token — fails the form
- * with a clear message instead of silently creating an Integration that 401s
+ * with a clear message instead of silently creating a Connection that 401s
  * on every later operation. As a bonus we already have the bot's identity,
  * so we populate `accessToken.account` inline and skip the `onTokenCreated`
  * round-trip.
@@ -87,7 +83,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
       }
       yield* validateToken(token);
     }),
-  onSubmit: ({ values, provider }) =>
+  onSubmit: ({ values, connector }) =>
     Effect.gen(function* () {
       // Trim defensively: onValidate is optional and callers bypass it in tests.
       const token = values.token.trim();
@@ -98,23 +94,22 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
         account,
         token,
       });
-      const integration = Obj.make(Integration.Integration, {
-        name: provider.label ?? DISCORD_BOT_LABEL,
-        providerId: provider.id,
+      const connection = Connection.make({
+        name: connector.label ?? DISCORD_BOT_LABEL,
+        connectorId: connector.id,
         accessToken: Ref.make(accessToken),
-        targets: [],
       });
-      return { kind: 'complete' as const, accessToken, integration };
+      return { kind: 'complete' as const, accessToken, connection };
     }).pipe(Effect.orDie),
 };
 
 /**
  * Factory for the token-created hook.
  *
- * Both the bot and user providers call `GET /users/@me` to populate
+ * Both the bot and user connectors call `GET /users/@me` to populate
  * `accessToken.account`; the only difference is which layer they use.
  * Failures are swallowed so a failed call cannot block an otherwise-valid
- * Integration.
+ * Connection.
  */
 const makeOnTokenCreated =
   (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
@@ -136,18 +131,19 @@ const onTokenCreated = makeOnTokenCreated(makeDiscordLayerFromToken);
 const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
 
 /**
- * Contributes two `IntegrationProvider` entries for Discord:
+ * Contributes two `Connector` entries for Discord:
  * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
  * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
  *
- * Both providers share the same `GetDiscordChannels` discovery and
- * `SyncDiscordChannel` sync operations. The auth difference is handled
+ * Both connectors share the same `GetDiscordChannels` discovery,
+ * `materializeTarget` (empty feed-backed Channel per remote channel), and
+ * `SyncDiscordChannel` sync operation. The auth difference is handled
  * transparently at the layer level: `makeDiscordUserLayerFromToken` rewrites
  * dfx's `Bot <token>` header to `Bearer <token>` inside the proxy fetch layer.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(IntegrationProviderCapability, [
+    return Capability.contributes(Connector, [
       {
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,
@@ -155,6 +151,7 @@ export default Capability.makeModule(
         credentialForm,
         optionsSchema: DiscordTargetOptions,
         getSyncTargets: DiscordOperation.GetDiscordChannels,
+        materializeTarget,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated,
       },
@@ -168,6 +165,7 @@ export default Capability.makeModule(
         },
         optionsSchema: DiscordTargetOptions,
         getSyncTargets: DiscordOperation.GetDiscordChannels,
+        materializeTarget,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated: userOnTokenCreated,
       },

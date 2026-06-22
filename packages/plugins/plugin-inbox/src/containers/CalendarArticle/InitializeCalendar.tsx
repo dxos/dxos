@@ -40,8 +40,7 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
   return (
     <InitializeAction
       target={calendar}
-      targetKey='calendar'
-      providerId={GOOGLE_CALENDAR_PROVIDER_ID}
+      connectorId={GOOGLE_CALENDAR_PROVIDER_ID}
       operation={InboxOperation.GoogleCalendarSync}
       syncLabel={t('sync-calendar.label')}
       notify={{

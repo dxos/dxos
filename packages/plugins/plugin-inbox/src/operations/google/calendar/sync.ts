@@ -16,10 +16,9 @@ import * as Stream from 'effect/Stream';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { Database, Feed, Filter, Obj, Query, Ref as EchoRef, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
+import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
 import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
@@ -39,31 +38,13 @@ type BaseSyncProps<T = unknown> = {
   latestUpdate: Ref.Ref<string | undefined>;
 } & T;
 
-const findIntegrationTargetIdx = (integration: Integration.Integration, calendar: Calendar.Calendar): number =>
-  integration.targets?.findIndex((target) => {
-    if (target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === calendar.id) {
-      return true;
-    }
-    const fkId = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE)?.id;
-    return fkId !== undefined && target.remoteId === fkId;
-  }) ?? -1;
-
-const persistCalendarCursor = (
-  integration: Integration.Integration,
-  calendar: Calendar.Calendar,
-  lastUpdate: string,
-) => {
-  const idx = findIntegrationTargetIdx(integration, calendar);
-  if (idx < 0) {
-    return;
-  }
-  Obj.update(integration, (integration) => {
-    const mutable = integration as Obj.Mutable<typeof integration>;
-    mutable.targets[idx] = { ...mutable.targets[idx], cursor: lastUpdate };
+const persistCalendarCursor = (binding: SyncBinding.SyncBinding, lastUpdate: string) => {
+  Relation.update(binding, (binding) => {
+    binding.cursor = lastUpdate;
   });
 };
 
-/** Pre-integration `Calendar.lastSyncedUpdate` persisted on legacy objects — migrate onto `targets[].cursor`. */
+/** Pre-integration `Calendar.lastSyncedUpdate` persisted on legacy objects — migrate onto `binding.cursor`. */
 const readLegacyLastSyncedUpdate = (calendar: Calendar.Calendar): string | undefined => {
   const legacy = calendar as Calendar.Calendar & { lastSyncedUpdate?: unknown };
   return typeof legacy.lastSyncedUpdate === 'string' ? legacy.lastSyncedUpdate : undefined;
@@ -79,10 +60,10 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
 };
 
 /**
- * Find-or-create the local Calendar materialized for this remote calendar
- * id. Idempotent within a space — keyed by `Obj.Meta.keys` matching
- * `{ source: 'google.com', id }`. Used to lazily materialize Calendar
- * targets that the dialog recorded as `{ remoteId, name }` only.
+ * Find-or-create the local Calendar materialized for this remote calendar id.
+ * Idempotent within a space — keyed by `Obj.Meta.keys` matching
+ * `{ source: 'google.com', id }`. Materialized eagerly when a {@link SyncBinding}
+ * is created (relations require both endpoints to exist).
  */
 const findOrCreateCalendar = (remoteId: string, name: string) =>
   Effect.gen(function* () {
@@ -104,18 +85,31 @@ const findOrCreateCalendar = (remoteId: string, name: string) =>
     return yield* Database.add(calendar);
   });
 
+/**
+ * Eagerly materializes a local Calendar for a remote Google calendar so a
+ * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's
+ * foreign key, so re-running for the same remote calendar returns the existing
+ * Calendar without duplicating it.
+ */
+export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
+  Effect.gen(function* () {
+    if (!remoteTarget) {
+      // Calendar is a multi-target connector; a calendar selection is always present.
+      return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
+    }
+    return yield* findOrCreateCalendar(remoteTarget.id, remoteTarget.name);
+  }).pipe(Effect.provide(Database.layer(db)));
+
 const syncOneCalendar = (
-  integration: Integration.Integration,
+  binding: SyncBinding.SyncBinding,
   calendar: Calendar.Calendar,
   defaults: { syncBackDays: number; syncForwardDays: number; pageSize: number; googleCalendarId: string },
 ) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(calendar.feed);
     const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
-    const googleCalendarId = fk?.id ?? defaults.googleCalendarId;
-    const targetIdx = findIntegrationTargetIdx(integration, calendar);
-    const rawOpts = targetIdx >= 0 ? integration.targets[targetIdx]?.options : undefined;
-    const optRecord = rawOpts && typeof rawOpts === 'object' ? (rawOpts as Record<string, unknown>) : {};
+    const googleCalendarId = fk?.id ?? binding.remoteId ?? defaults.googleCalendarId;
+    const optRecord = binding.options ?? {};
     const syncBackDays = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
     const syncForwardDays =
       typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : defaults.syncForwardDays;
@@ -123,13 +117,10 @@ const syncOneCalendar = (
 
     const legacyLastSynced = readLegacyLastSyncedUpdate(calendar);
 
-    let storedCursor =
-      targetIdx >= 0 && typeof integration.targets[targetIdx]?.cursor === 'string'
-        ? integration.targets[targetIdx]?.cursor
-        : undefined;
+    let storedCursor = typeof binding.cursor === 'string' ? binding.cursor : undefined;
 
-    if (legacyLastSynced && targetIdx >= 0 && !storedCursor) {
-      persistCalendarCursor(integration, calendar, legacyLastSynced);
+    if (legacyLastSynced && !storedCursor) {
+      persistCalendarCursor(binding, legacyLastSynced);
       clearLegacyLastSyncedUpdate(calendar);
       storedCursor = legacyLastSynced;
     }
@@ -166,8 +157,8 @@ const syncOneCalendar = (
 
     const lastUpdate = yield* Ref.get(latestUpdate);
     if (lastUpdate) {
-      persistCalendarCursor(integration, calendar, lastUpdate);
-      log('updated integration target cursor for calendar', { lastUpdate, calendarId: calendar.id });
+      persistCalendarCursor(binding, lastUpdate);
+      log('updated binding cursor for calendar', { lastUpdate, calendarId: calendar.id });
     }
 
     const queueEvents = yield* Ref.get(newEvents);
@@ -187,54 +178,40 @@ const syncOneCalendar = (
 
 export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
-    ({
-      integration: integrationRef,
-      calendar: calendarRef,
-      googleCalendarId = 'primary',
-      syncBackDays = 30,
-      syncForwardDays = 365,
-      pageSize = 100,
-    }) =>
+    ({ binding: bindingRef, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 }) =>
       Effect.gen(function* () {
-        const defaults = { googleCalendarId, syncBackDays, syncForwardDays, pageSize };
-        const integrationObj = yield* Database.load(integrationRef);
-        const calendars: Calendar.Calendar[] = [];
-        if (calendarRef) {
-          log('syncing google calendar', { calendar: calendarRef.uri, ...defaults });
-          calendars.push(yield* Database.load(calendarRef));
-        } else {
-          log('syncing all calendar targets on integration', { integration: integrationRef.uri });
-          for (const target of integrationObj.targets ?? []) {
-            const cal = target.object?.target;
-            if (Calendar.instanceOf(cal)) {
-              calendars.push(cal);
-              continue;
-            }
-            if (target.remoteId) {
-              const created = yield* findOrCreateCalendar(target.remoteId, target.name ?? 'Calendar');
-              const remoteId = target.remoteId;
-              Obj.update(integrationObj, (integrationObj) => {
-                const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                const idx = mutable.targets.findIndex((t) => t.remoteId === remoteId);
-                if (idx >= 0) {
-                  mutable.targets[idx] = { ...mutable.targets[idx], object: EchoRef.make(created) };
-                }
-              });
-              calendars.push(created);
-            }
-          }
+        const bindingObj = bindingRef.target;
+        const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
+        if (!bindingObj || !db) {
+          return { newEvents: 0 };
         }
 
-        let total = 0;
-        for (const calendar of calendars) {
-          total += yield* syncOneCalendar(integrationObj, calendar, defaults);
-        }
-        return { newEvents: total };
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
-        ),
-      ),
+        const connectionRef = EchoRef.make(Relation.getSource(bindingObj));
+        const defaults = { googleCalendarId, syncBackDays, syncForwardDays, pageSize };
+
+        return yield* Effect.gen(function* () {
+          const binding = yield* Database.load(bindingRef);
+          const calendar = Relation.getTarget(binding);
+          if (!Calendar.instanceOf(calendar)) {
+            // The integration mechanism only ever binds Calendars for Google Calendar.
+            return { newEvents: 0 };
+          }
+          log('syncing google calendar', { calendar: Obj.getURI(calendar), ...defaults });
+
+          const total = yield* syncOneCalendar(binding, calendar, defaults);
+
+          Relation.update(binding, (binding) => {
+            binding.lastSyncAt = new Date().toISOString();
+            binding.lastError = undefined;
+          });
+
+          return { newEvents: total };
+        }).pipe(
+          Effect.provide(
+            Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
+          ),
+        );
+      }),
   ),
 );
 

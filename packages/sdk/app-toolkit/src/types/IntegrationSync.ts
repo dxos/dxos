@@ -4,19 +4,19 @@
 
 // @import-as-namespace
 
-import { Obj } from '@dxos/echo';
+import { Relation } from '@dxos/echo';
 
 /**
- * Three-way merge primitives shared by integration sync handlers (Trello, Linear,
- * GitHub, ...). Each integration stores per-remote-id snapshots on its
- * `Integration` object's `.snapshots` field so the next pull/push pass can
- * decide, per field, whether the local or the remote side has changed since
- * the last successful sync.
+ * Three-way merge primitives shared by connector sync handlers (Trello, Linear,
+ * GitHub, ...). Each binding stores per-remote-id snapshots on its `SyncBinding`
+ * relation's `.snapshots` field so the next pull/push pass can decide, per
+ * field, whether the local or the remote side has changed since the last
+ * successful sync.
  *
  * The merge primitives are pure; the snapshot accessors operate on any ECHO
- * object that exposes `.snapshots: Record<string, unknown>` — typically the
- * `Integration` schema in `@dxos/plugin-integration` — but app-toolkit does
- * not import that schema directly to avoid a cycle.
+ * relation that exposes `.snapshots: Record<string, unknown>` — typically the
+ * `SyncBinding` relation in `@dxos/plugin-connector` — but app-toolkit does not
+ * import that schema directly to avoid a cycle.
  */
 
 /** Result of {@link mergeField} / {@link mergeDeep}. */
@@ -111,8 +111,8 @@ export const mergeDeep = <T>(local: T, remote: T, snapshot: Snapshot<T>): MergeR
   return { value: remote, source: 'remote' };
 };
 
-/** Type alias for the integration-side carrier of snapshots. */
-export type SnapshotCarrier = Obj.Unknown & { snapshots?: Record<string, unknown> };
+/** Type alias for the binding-side carrier of snapshots. */
+export type SnapshotCarrier = Relation.Unknown & { snapshots?: Record<string, unknown> };
 
 /** Reads `carrier.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
 export const readSnapshot = <T extends object>(carrier: SnapshotCarrier, foreignId: string): T | undefined => {
@@ -137,11 +137,11 @@ export const snapshotField = <T extends object, K extends keyof T>(snapshot: T |
 export const snapshotOf = <T>(present: boolean, value: T): Snapshot<T> => (present ? { value } : undefined);
 
 /**
- * Writes `carrier.snapshots[foreignId] = snapshot` inside an `Obj.update`. Allocates
+ * Writes `carrier.snapshots[foreignId] = snapshot` inside a `Relation.update`. Allocates
  * a fresh map so the assignment is safe under ECHO's structural-sharing semantics.
  */
 export const writeSnapshot = (carrier: SnapshotCarrier, foreignId: string, snapshot: object): void => {
-  Obj.update(carrier, (carrier) => {
+  Relation.update(carrier, (carrier) => {
     const existing = (carrier.snapshots ?? {}) as Record<string, unknown>;
     carrier.snapshots = { ...existing, [foreignId]: snapshot };
   });

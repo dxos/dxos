@@ -6,15 +6,14 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
 
 import { GoogleMail } from '../apis';
-import { GMAIL_SOURCE, GOOGLE_INTEGRATION_SOURCE } from '../constants';
+import { GMAIL_SOURCE } from '../constants';
 import { GoogleCredentials } from '../services/google-credentials';
 import { DraftMessage, InboxOperation, Mailbox } from '../types';
-import { findIntegrationForRemote } from './google/find-integration';
+import { findBindingForTarget } from './google/find-binding';
 
 export default InboxOperation.DeleteEmail.pipe(
   Operation.withHandler(
@@ -36,13 +35,12 @@ export default InboxOperation.DeleteEmail.pipe(
       // Synced message: trash it on Gmail (best-effort) by its foreign key, then drop the feed copy.
       const gmailId = Obj.getMeta(message).keys?.find((key) => key.source === GMAIL_SOURCE)?.id;
       if (gmailId) {
-        const mailboxRemoteId = Obj.getMeta(mailbox).keys?.find((key) => key.source === GOOGLE_INTEGRATION_SOURCE)?.id;
-        const integrations = yield* Effect.promise(() => db.query(Filter.type(Integration.Integration)).run());
-        const integration = findIntegrationForRemote(integrations, mailbox.id, mailboxRemoteId ?? mailbox.id);
-        if (integration) {
+        const binding = yield* findBindingForTarget(mailbox).pipe(Effect.provide(Database.layer(db)));
+        if (binding) {
+          const connectionRef = Ref.make(Relation.getSource(binding));
           yield* GoogleMail.trashMessage('me', gmailId).pipe(
             Effect.provide(FetchHttpClient.layer),
-            Effect.provide(GoogleCredentials.fromIntegration(Ref.make(integration))),
+            Effect.provide(GoogleCredentials.fromConnection(connectionRef)),
             Effect.catchAll((error) => {
               log.catch(error);
               return Effect.void;

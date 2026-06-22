@@ -9,9 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
+import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -20,7 +20,10 @@ import {
   GOOGLE_CONTACTS_PROVIDER_ID,
   GOOGLE_INTEGRATION_SOURCE,
 } from '../constants';
-import { CalendarSyncOptions, InboxOperation, Mailbox, SyncOptions } from '../types';
+import { materializeTarget as calendarMaterializeTarget } from '../operations/google/calendar/sync';
+import { materializeTarget as contactsMaterializeTarget } from '../operations/google/contacts/sync';
+import { materializeTarget as gmailMaterializeTarget } from '../operations/google/gmail/sync';
+import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -49,51 +52,11 @@ const getAccountEmail = (accessToken: { token: string; account?: string }) =>
   });
 
 /**
- * Gmail `onTokenCreated`: set account email; ensure one Mailbox (no `getSyncTargets` for mail).
- * Reuses `existingTarget` (`InitializeMailbox`) and applies default name `email ?? 'Inbox'` when unnamed; else creates Mailbox.
+ * Google `onTokenCreated`: populate `accessToken.account` with the authenticated
+ * email so connections/mailboxes get a sensible default name. The sync target is
+ * materialized separately (`materializeTarget`) when the binding is created.
  */
-const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existingTarget }) =>
-  Effect.gen(function* () {
-    const email = yield* getAccountEmail(accessToken);
-    if (email) {
-      Obj.update(accessToken, (accessToken) => {
-        accessToken.account = email;
-      });
-    }
-
-    const db = Obj.getDatabase(integration);
-    if (!db) {
-      return;
-    }
-    const defaultName = email ?? 'Inbox';
-    let targetRef: Ref.Ref<Obj.Unknown>;
-    if (existingTarget) {
-      // Backfill name on the user's existing Mailbox if they hadn't named it.
-      const existing = (yield* Effect.promise(() => existingTarget.load())) as Mailbox.Mailbox;
-      if (!existing.name) {
-        Obj.update(existing, (existing) => {
-          existing.name = defaultName;
-        });
-      }
-      targetRef = existingTarget;
-    } else {
-      const mailbox = Mailbox.make({ name: defaultName });
-      db.add(mailbox);
-      targetRef = Ref.make(mailbox);
-    }
-    Obj.update(integration, (integration) => {
-      const mutable = integration as Obj.Mutable<typeof integration>;
-      mutable.targets = [
-        ...mutable.targets,
-        {
-          object: targetRef,
-          options: {} as Record<string, unknown>,
-        },
-      ];
-    });
-  }).pipe(Effect.orDie);
-
-const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     const email = yield* getAccountEmail(accessToken);
     if (email) {
@@ -105,7 +68,7 @@ const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(IntegrationProviderCapability, [
+    return Capability.contributes(Connector, [
       {
         id: GMAIL_PROVIDER_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
@@ -121,8 +84,11 @@ export default Capability.makeModule(
           ],
         },
         optionsSchema: SyncOptions,
+        // Single-target connector: no `getSyncTargets`. The coordinator calls
+        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
+        materializeTarget: gmailMaterializeTarget,
         sync: InboxOperation.GoogleMailSync,
-        onTokenCreated: gmailOnTokenCreated,
+        onTokenCreated,
       },
       {
         id: GOOGLE_CALENDAR_PROVIDER_ID,
@@ -140,8 +106,9 @@ export default Capability.makeModule(
         },
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: InboxOperation.GetGoogleCalendars,
+        materializeTarget: calendarMaterializeTarget,
         sync: InboxOperation.GoogleCalendarSync,
-        onTokenCreated: calendarOnTokenCreated,
+        onTokenCreated,
       },
       {
         id: GOOGLE_CONTACTS_PROVIDER_ID,
@@ -155,8 +122,9 @@ export default Capability.makeModule(
           ],
         },
         getSyncTargets: InboxOperation.GetGoogleContactGroups,
+        materializeTarget: contactsMaterializeTarget,
         sync: InboxOperation.SyncContacts,
-        onTokenCreated: calendarOnTokenCreated,
+        onTokenCreated,
       },
     ]);
   }),

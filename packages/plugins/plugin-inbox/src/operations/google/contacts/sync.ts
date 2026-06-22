@@ -11,9 +11,9 @@ import * as Stream from 'effect/Stream';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
+import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
@@ -97,7 +97,7 @@ const upsertPerson = (remote: GooglePeople.Person) =>
   });
 
 const syncOneGroup = (
-  integration: Integration.Integration,
+  binding: SyncBinding.SyncBinding,
   groupResourceName: string,
   connectionsByResourceName: ReadonlyMap<string, GooglePeople.Person>,
 ) =>
@@ -132,48 +132,79 @@ const syncOneGroup = (
       Stream.runFold(0, (acc, batchCount) => acc + batchCount),
     );
 
-    // Persist last sync timestamp on the integration target.
-    const targetIdx = integration.targets?.findIndex((t) => t.remoteId === groupResourceName) ?? -1;
-    if (targetIdx >= 0) {
-      Obj.update(integration, (integration) => {
-        const now = new Date().toISOString();
-        integration.targets[targetIdx] = { ...integration.targets[targetIdx], cursor: now, lastSyncAt: now };
-      });
-    }
+    // Persist last sync timestamp on the binding.
+    Relation.update(binding, (binding) => {
+      const now = new Date().toISOString();
+      binding.cursor = now;
+      binding.lastSyncAt = now;
+      binding.lastError = undefined;
+    });
 
     log('contact group sync complete', { groupResourceName, upserted, total: people.length });
     return upserted;
   });
 
+/**
+ * Find an existing Collection materialized for this contact group, or create
+ * one keyed by the group's foreign key. Idempotent within a space.
+ */
+const findOrCreateContactsCollection = (remoteId: string, name: string) =>
+  Effect.gen(function* () {
+    const existing = yield* Database.query(
+      Query.select(Filter.foreignKeys(Collection.Collection, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
+    ).run;
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    const collection = Collection.make({
+      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }] },
+      name,
+    });
+    return yield* Database.add(collection);
+  });
+
+/**
+ * Eagerly materializes a local Collection for a remote Google contact group so a
+ * {@link SyncBinding} can be created. Contacts have no dedicated root type — the
+ * Collection is the addressable local root for the group; synced `Person` objects
+ * land directly in the space, keyed by foreign id.
+ */
+export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
+  Effect.gen(function* () {
+    if (!remoteTarget) {
+      // Contacts is a multi-target connector; a group selection is always present.
+      return yield* findOrCreateContactsCollection('myContacts', 'Contacts');
+    }
+    return yield* findOrCreateContactsCollection(remoteTarget.id, remoteTarget.name);
+  }).pipe(Effect.provide(Database.layer(db)));
+
 export default InboxOperation.GoogleContactsSync.pipe(
-  Operation.withHandler(({ integration: integrationRef, contactGroupResourceName }) =>
+  Operation.withHandler(({ binding: bindingRef }) =>
     Effect.gen(function* () {
-      const integrationObj = yield* Database.load(integrationRef);
+      const bindingObj = bindingRef.target;
+      const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
+      if (!bindingObj || !db) {
+        return { upserted: 0 };
+      }
 
-      const targetGroups: string[] = [];
-      if (contactGroupResourceName) {
-        targetGroups.push(contactGroupResourceName);
-      } else {
-        for (const target of integrationObj.targets ?? []) {
-          if (target.remoteId) {
-            targetGroups.push(target.remoteId);
-          }
+      const connectionRef = Ref.make(Relation.getSource(bindingObj));
+
+      return yield* Effect.gen(function* () {
+        const binding = yield* Database.load(bindingRef);
+        const groupResourceName = binding.remoteId;
+        if (!groupResourceName) {
+          return { upserted: 0 };
         }
-      }
 
-      // Fetch all connections once and share across groups to avoid redundant API calls.
-      const connectionsByResourceName = yield* fetchAllConnections();
-
-      let total = 0;
-      for (const groupId of targetGroups) {
-        total += yield* syncOneGroup(integrationObj, groupId, connectionsByResourceName);
-      }
-
-      return { upserted: total };
-    }).pipe(
-      Effect.provide(
-        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
-      ),
-    ),
+        // Fetch all connections once and share across the upsert.
+        const connectionsByResourceName = yield* fetchAllConnections();
+        const total = yield* syncOneGroup(binding, groupResourceName, connectionsByResourceName);
+        return { upserted: total };
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
+        ),
+      );
+    }),
   ),
 );

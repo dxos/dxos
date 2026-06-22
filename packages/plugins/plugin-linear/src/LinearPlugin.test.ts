@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { LinearPlugin } from '#plugin';
@@ -17,11 +17,11 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('LinearPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), IntegrationPlugin(), LinearPlugin()],
+      plugins: [ClientPlugin({}), ConnectorPlugin(), LinearPlugin()],
     });
 
     // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
     // ProcessManagerPlugin — both reach the LinearPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('LinearIntegrationProvider'), moduleId('OperationHandler')]),

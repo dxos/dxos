@@ -7,11 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import {
-  type CredentialForm,
-  Integration,
-  IntegrationProvider as IntegrationProviderCapability,
-} from '@dxos/plugin-integration';
+import { Connection, type CredentialForm, Connector } from '@dxos/plugin-connector';
 import { AccessToken } from '@dxos/types';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
@@ -56,25 +52,24 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenFor
   defaultValues: { token: '' },
   // Validates before the dialog closes so 401/403 errors are shown inline.
   onValidate: ({ values }) => validateAnthropicKey(values.token.trim()),
-  onSubmit: ({ values, provider }) =>
+  onSubmit: ({ values, connector }) =>
     Effect.sync(() => {
       const accessToken = Obj.make(AccessToken.AccessToken, {
         source: ANTHROPIC_SOURCE,
         token: values.token.trim(),
       });
-      const integration = Obj.make(Integration.Integration, {
-        name: provider.label ?? 'Anthropic',
-        providerId: provider.id,
+      const connection = Obj.make(Connection.Connection, {
+        name: connector.label ?? 'Anthropic',
+        connectorId: connector.id,
         accessToken: Ref.make(accessToken),
-        targets: [],
       });
-      return { kind: 'complete' as const, accessToken, integration };
+      return { kind: 'complete' as const, accessToken, connection };
     }),
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(IntegrationProviderCapability, [
+    return Capability.contributes(Connector, [
       {
         id: ANTHROPIC_PROVIDER_ID,
         source: ANTHROPIC_SOURCE,

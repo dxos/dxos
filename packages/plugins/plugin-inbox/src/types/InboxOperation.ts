@@ -10,22 +10,14 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { Connection, GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
 import { Actor, Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-/** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-});
 
 export const GetGoogleCalendars = Operation.make({
   // TODO(wittjosiah): Declaring services here forces DynamicRuntime validation to fail before the handler
@@ -34,16 +26,11 @@ export const GetGoogleCalendars = Operation.make({
   meta: {
     key: makeKey('getGoogleCalendars'),
     name: 'Get Google Calendars',
-    description:
-      'Discover Google Calendars reachable from an integration and materialize a Calendar object per remote calendar.',
+    description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 export const AddMailbox = Operation.make({
@@ -120,8 +107,8 @@ export const GmailSend = Operation.make({
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
     message: Type.getSchema(Message.Message),
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration to source Gmail credentials from.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection to source Gmail credentials from.',
     }),
   }),
   output: Schema.Struct({
@@ -139,12 +126,9 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration that owns credentials and per-target sync metadata.',
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
-    mailbox: Ref.Ref(Mailbox.Mailbox)
-      .annotations({ description: 'When omitted, syncs every mailbox listed on the Integration.' })
-      .pipe(Schema.optional),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -180,15 +164,9 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration that owns credentials and per-target sync metadata.',
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
-    calendar: Ref.Ref(Calendar.Calendar)
-      .annotations({
-        description:
-          'When omitted, syncs every calendar target on the Integration (materializing on first run as needed).',
-      })
-      .pipe(Schema.optional),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -214,8 +192,8 @@ export const CreateGoogleCalendarEvent = Operation.make({
   input: Schema.Struct({
     event: Type.getSchema(Event.Event),
     googleCalendarId: Schema.String.annotations({ description: 'Remote Google calendar id.' }),
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration to source Google Calendar credentials from.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection to source Google Calendar credentials from.',
     }),
   }),
   output: Schema.Struct({
@@ -291,15 +269,11 @@ export const GetGoogleContactGroups = Operation.make({
   meta: {
     key: makeKey('getGoogleContactGroups'),
     name: 'Get Google Contact Groups',
-    description: 'Discover Google Contact Groups reachable from an integration.',
+    description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 export const GoogleContactsSync = Operation.make({
@@ -310,12 +284,8 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration that owns credentials and per-target sync metadata.',
-    }),
-    contactGroupResourceName: Schema.optional(Schema.String).annotations({
-      description:
-        'Google contact group resource name (e.g. contactGroups/myContacts). Syncs all targets when omitted.',
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose remoteId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
   }),
@@ -334,7 +304,7 @@ export const SyncContacts = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
+    binding: Ref.Ref(SyncBinding.SyncBinding),
   }),
   output: Schema.Void,
 });

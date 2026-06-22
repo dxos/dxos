@@ -259,6 +259,9 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-connector"
+    },
+    {
       "path": "../../plugins/plugin-crm"
     },
     {
@@ -305,9 +308,6 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
-    },
-    {
-      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-iroh-beacon"

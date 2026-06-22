@@ -16,10 +16,9 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
+import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -49,55 +48,30 @@ const STREAMING_CONFIG = {
   restrictedMax: 20,
 } as const;
 
-const readMailboxTargetOptions = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) => {
-  const match = (integration.targets ?? []).find(
-    (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
-  );
-  const raw = match?.options;
+const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
+  const raw = binding.options;
   if (!raw || typeof raw !== 'object') {
     return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
   }
-  const record = raw as Record<string, unknown>;
   return {
-    syncBackDays: typeof record.syncBackDays === 'number' ? record.syncBackDays : undefined,
-    filter: typeof record.filter === 'string' ? record.filter : undefined,
+    syncBackDays: typeof raw.syncBackDays === 'number' ? raw.syncBackDays : undefined,
+    filter: typeof raw.filter === 'string' ? raw.filter : undefined,
   };
 };
 
-const collectMailboxRefsFromIntegration = (
-  integration: Integration.Integration,
-): Effect.Effect<Array<Ref.Ref<Mailbox.Mailbox>>> =>
-  Effect.gen(function* () {
-    const refs: Array<Ref.Ref<Mailbox.Mailbox>> = [];
-    for (const target of integration.targets ?? []) {
-      if (!target.object) {
-        continue;
-      }
-      const loaded = yield* Database.load(target.object).pipe(
-        Effect.map(Option.some),
-        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
-      );
-      if (Option.isSome(loaded) && Mailbox.instanceOf(loaded.value)) {
-        refs.push(Ref.make(loaded.value));
-      }
-    }
-    return refs;
-  });
-
 const syncSingleMailbox = (input: {
-  integration: Integration.Integration;
-  mailboxRef: Ref.Ref<Mailbox.Mailbox>;
+  binding: SyncBinding.SyncBinding;
+  mailbox: Mailbox.Mailbox;
   userId: string;
   defaultLabel: string;
   defaultAfter: string;
   restrictedMode: boolean;
 }) =>
   Effect.gen(function* () {
-    const { integration, mailboxRef, userId, defaultLabel, defaultAfter, restrictedMode } = input;
+    const { binding, mailbox, userId, defaultLabel, defaultAfter, restrictedMode } = input;
 
-    log('syncing gmail', { mailbox: mailboxRef.uri, userId, after: defaultAfter, restrictedMode });
-    const mailbox = yield* Database.load(mailboxRef);
-    const targetOptions = readMailboxTargetOptions(integration, mailbox);
+    log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, after: defaultAfter, restrictedMode });
+    const targetOptions = readBindingOptions(binding);
     const after =
       targetOptions.syncBackDays !== undefined
         ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
@@ -150,42 +124,68 @@ const syncSingleMailbox = (input: {
     return newMessagesCount;
   });
 
+/**
+ * Eagerly materializes a local Mailbox so a {@link SyncBinding} can be created
+ * (relations require both endpoints to exist). Gmail is a single-target
+ * connector with no remote selection, so a fresh Mailbox is always created;
+ * the connection's `accessToken.account` (the authenticated email) seeds the
+ * default name when available.
+ */
+export const materializeTarget: MaterializeTarget = ({ connection, db }) =>
+  Effect.gen(function* () {
+    const accessToken = yield* Database.load(connection.accessToken);
+    const name = accessToken.account ?? 'Inbox';
+    return yield* Database.add(Mailbox.make({ name }));
+  }).pipe(Effect.provide(Database.layer(db)));
+
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(
     ({
-      integration: integrationRef,
-      mailbox: mailboxRefOptional,
+      binding: bindingRef,
       userId = 'me',
       label = 'inbox',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
       restrictedMode = false,
     }) =>
       Effect.gen(function* () {
-        const normalizedAfter = typeof after === 'number' ? format(new Date(after), 'yyyy-MM-dd') : after;
-        const integration = yield* Database.load(integrationRef);
-        const mailboxRefs =
-          mailboxRefOptional !== undefined
-            ? [mailboxRefOptional]
-            : yield* collectMailboxRefsFromIntegration(integration);
+        const bindingObj = bindingRef.target;
+        const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
+        if (!bindingObj || !db) {
+          return { newMessages: 0 };
+        }
 
-        let total = 0;
-        for (const mailboxRef of mailboxRefs) {
-          total += yield* syncSingleMailbox({
-            integration,
-            mailboxRef,
+        const connectionRef = Ref.make(Relation.getSource(bindingObj));
+        const normalizedAfter = typeof after === 'number' ? format(new Date(after), 'yyyy-MM-dd') : after;
+
+        return yield* Effect.gen(function* () {
+          const binding = yield* Database.load(bindingRef);
+          const mailbox = Relation.getTarget(binding);
+          if (!Mailbox.instanceOf(mailbox)) {
+            // The integration mechanism only ever binds Mailboxes for Gmail.
+            return { newMessages: 0 };
+          }
+
+          const total = yield* syncSingleMailbox({
+            binding,
+            mailbox,
             userId,
             defaultLabel: label,
             defaultAfter: normalizedAfter,
             restrictedMode,
           });
-        }
 
-        return { newMessages: total };
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
-        ),
-      ),
+          Relation.update(binding, (binding) => {
+            binding.lastSyncAt = new Date().toISOString();
+            binding.lastError = undefined;
+          });
+
+          return { newMessages: total };
+        }).pipe(
+          Effect.provide(
+            Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
+          ),
+        );
+      }),
   ),
 );
 

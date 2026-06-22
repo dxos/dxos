@@ -28,7 +28,7 @@ const GUILD_PAGE_LIMIT = 200;
 const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels> =
   DiscordOperation.GetDiscordChannels.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ integration }) {
+      Effect.fn(function* ({ connection }) {
         return yield* Effect.gen(function* () {
           const rest = yield* DiscordREST;
 
@@ -82,7 +82,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels>
             { concurrency: 4 },
           );
           return { targets: perGuild.flat() };
-        }).pipe(Effect.provide(makeDiscordLayer(integration)));
+        }).pipe(Effect.provide(makeDiscordLayer(connection)));
       }),
     ),
   );

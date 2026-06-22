@@ -6,21 +6,24 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Connector, type MaterializeTarget, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
+import { Project } from '@dxos/types';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
 import { GitHubOperation } from '../types';
+
+const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 
 /**
  * Service-specific token-created hook for GitHub.
  *
  * Calls GitHub's `/user` to populate `accessToken.account` with the
  * authenticated user's login (falling back to email). Failures are elevated
- * with {@link Effect.orDie}; plugin-integration logs defects from the runner
- * and continues so a failed `/user` cannot block the Integration already
+ * with {@link Effect.orDie}; plugin-connector logs defects from the runner
+ * and continues so a failed `/user` cannot block the Connection already
  * created.
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
@@ -37,9 +40,36 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
- * Contributes a single `IntegrationProvider` entry that wires GitHub's two
- * operations and the token-created hook to the `'github.com'` source.
- * plugin-integration looks up providers by source string.
+ * Find-or-create the empty local root Project for a GitHub repo so a
+ * {@link SyncBinding} relation can be created eagerly. Idempotent: keyed by the
+ * repo's GitHub foreign id (`remoteTarget.id`), it returns the existing Project
+ * when one already carries that key. The repo's data is filled in lazily by the
+ * sync operation; here we only stamp the foreign key + a display name.
+ */
+const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
+  Effect.gen(function* () {
+    if (!remoteTarget) {
+      return yield* Effect.dieMessage('GitHub materializeTarget requires a remoteTarget (repo descriptor).');
+    }
+
+    const existing = yield* Database.query(
+      Query.select(Filter.foreignKeys(Project.Project, [fkFor(remoteTarget.id)])),
+    ).run;
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const created = Obj.make(Project.Project, {
+      [Obj.Meta]: { keys: [fkFor(remoteTarget.id)] },
+      name: remoteTarget.name,
+    });
+    return yield* Database.add(created);
+  }).pipe(Effect.provide(Database.layer(db)));
+
+/**
+ * Contributes a single `Connector` entry that wires GitHub's two operations,
+ * its target materializer, and the token-created hook to the `'github.com'`
+ * source. plugin-connector routes by `connectorId`.
  *
  * Sync targets are repositories, not organizations — orgs and their members
  * are auto-pulled as a side effect of syncing any repo they own.
@@ -50,7 +80,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(IntegrationProviderCapability, [
+    return Capability.contributes(Connector, [
       {
         id: GITHUB_PROVIDER_ID,
         source: GITHUB_SOURCE,
@@ -60,6 +90,7 @@ export default Capability.makeModule(
           scopes: [],
         },
         getSyncTargets: GitHubOperation.GetGitHubRepositories,
+        materializeTarget,
         sync: GitHubOperation.SyncGitHubRepositories,
         optionsSchema: GitHubOperation.SyncOptions,
         onTokenCreated,

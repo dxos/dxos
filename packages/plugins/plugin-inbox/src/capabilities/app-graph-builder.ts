@@ -15,7 +15,7 @@ import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Integration } from '@dxos/plugin-integration';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Event, Message } from '@dxos/types';
@@ -522,13 +522,11 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          const integrations = get(db.query(Filter.type(Integration.Integration)).atom);
-          const integration = integrations.find((integration) =>
-            integration.targets.some(
-              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
-            ),
-          );
-          if (!integration) {
+          // The sync action appears only when a SyncBinding targets this mailbox; the binding's
+          // source Connection authenticates the sync.
+          const bindings = get(db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding)).atom);
+          const binding = bindings.find(SyncBinding.instanceOf);
+          if (!binding) {
             return Effect.succeed([]);
           }
           return Effect.succeed([
@@ -538,8 +536,7 @@ export default Capability.makeModule(
                 Operation.invoke(
                   InboxOperation.GoogleMailSync,
                   {
-                    integration: Ref.make(integration),
-                    mailbox: Ref.make(mailbox),
+                    binding: Ref.make(binding),
                   },
                   {
                     spaceId: db.spaceId,
@@ -567,13 +564,11 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          const integrations = get(db.query(Filter.type(Integration.Integration)).atom);
-          const integration = integrations.find((integration) =>
-            integration.targets.some(
-              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === calendar.id,
-            ),
-          );
-          if (!integration) {
+          // The sync action appears only when a SyncBinding targets this calendar; the binding's
+          // source Connection authenticates the sync.
+          const bindings = get(db.query(Query.select(Filter.id(calendar.id)).targetOf(SyncBinding.SyncBinding)).atom);
+          const binding = bindings.find(SyncBinding.instanceOf);
+          if (!binding) {
             return Effect.succeed([]);
           }
           return Effect.succeed([
@@ -583,8 +578,7 @@ export default Capability.makeModule(
                 Operation.invoke(
                   InboxOperation.GoogleCalendarSync,
                   {
-                    integration: Ref.make(integration),
-                    calendar: Ref.make(calendar),
+                    binding: Ref.make(binding),
                   },
                   {
                     spaceId: db.spaceId,
