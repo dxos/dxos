@@ -30,7 +30,7 @@ export const dailyDigest: RoutineCapabilities.Template = {
   scaffold: ({ name }) =>
     makeScheduledRoutineAutomation({
       name: name ?? 'Daily Digest',
-      instructions: DEFAULT_INSTRUCTIONS,
+      text: DEFAULT_INSTRUCTIONS,
       blueprintKeys: BLUEPRINT_KEYS,
       cron: DEFAULT_CRON,
     }),

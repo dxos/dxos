@@ -49,31 +49,31 @@ export default RunInstructions.pipe(
           : Effect.succeed(data.input);
 
         yield* Database.flush();
-        const prompt = yield* Database.load(data.prompt);
-        yield* Trace.emitStatus(`Running ${prompt.id}`);
+        const instructions = yield* Database.load(data.prompt);
+        yield* Trace.emitStatus(`Running ${instructions.id}`);
 
-        log.info('starting agent', { prompt: prompt.id, input });
+        log.info('starting agent', { instructions: instructions.id, input });
 
-        // Bind the routine's own refs, dropping any that no longer resolve. The refs must be
+        // Bind the instructions' own refs, dropping any that no longer resolve. The refs must be
         // bound as-is (not re-wrapped via `Ref.make`) to preserve their registry DXN: bindings
         // are persisted to the conversation feed, and registry-only blueprints have no space-DB
         // identity, so an EID ref would not resolve when the binding is re-read.
-        const blueprintRefs = yield* Effect.filter(prompt.blueprints, (ref) =>
+        const blueprintRefs = yield* Effect.filter(instructions.blueprints, (ref) =>
           Database.load(ref).pipe(
             Effect.as(true),
             Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
           ),
         );
 
-        // Bind the routine's context objects (sibling of blueprints), dropping any that no longer resolve.
-        const objectRefs = yield* Effect.filter(prompt.objects ?? [], (ref) =>
+        // Bind the instructions' context objects (sibling of blueprints), dropping any that no longer resolve.
+        const objectRefs = yield* Effect.filter(instructions.objects ?? [], (ref) =>
           Database.load(ref).pipe(
             Effect.as(true),
             Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
           ),
         );
 
-        const textDoc = yield* Database.load(prompt.text);
+        const textDoc = yield* Database.load(instructions.text);
         let promptText = Template.process(textDoc.content, input);
 
         if (input !== undefined) {
@@ -106,7 +106,7 @@ export default RunInstructions.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: routineOutputSchema(prompt.output),
+          output: routineOutputSchema(instructions.output),
           resultSink,
         });
 

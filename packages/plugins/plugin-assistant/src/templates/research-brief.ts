@@ -33,7 +33,7 @@ export const researchBrief: RoutineCapabilities.Template = {
   scaffold: ({ name }) =>
     makeScheduledRoutineAutomation({
       name: name ?? 'Research Brief',
-      instructions: DEFAULT_INSTRUCTIONS,
+      text: DEFAULT_INSTRUCTIONS,
       blueprintKeys: BLUEPRINT_KEYS,
       cron: DEFAULT_CRON,
     }),

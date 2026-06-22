@@ -9,12 +9,12 @@ import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Routine } from '@dxos/plugin-instructions';
 
-/** Registry key of the persisted RunInstructions ("Run Routine") operation a instructions trigger dispatches. */
-const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
+/** Registry key of the persisted RunInstructions operation a trigger dispatches. */
+const RUN_INSTRUCTIONS_KEY = 'org.dxos.function.runInstructions';
 
 export type ScheduledRoutineOptions = {
   name: string;
-  instructions: string;
+  text: string;
   blueprintKeys: readonly string[];
   cron: string;
 };
@@ -27,7 +27,7 @@ export type ScheduledRoutineOptions = {
  */
 export const makeScheduledRoutineAutomation = ({
   name,
-  instructions,
+  text,
   blueprintKeys,
   cron,
 }: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, Error, Database.Service> =>
@@ -36,7 +36,7 @@ export const makeScheduledRoutineAutomation = ({
     const instructions = yield* Database.add(
       Instructions.make({
         name,
-        text: instructions,
+        text,
         blueprints,
       }),
     );
@@ -44,7 +44,7 @@ export const makeScheduledRoutineAutomation = ({
     // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's RunInstructions
     // or persist it on first use.
     const existingFns = yield* Database.query(
-      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(AGENT_PROMPT_KEY)),
+      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(RUN_INSTRUCTIONS_KEY)),
     ).run;
     const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 

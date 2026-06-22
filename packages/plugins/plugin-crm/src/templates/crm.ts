@@ -58,9 +58,9 @@ export const crm: RoutineCapabilities.Template = {
       );
 
       // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's
-      // RunInstructions (key: org.dxos.function.prompt) or persist it on first use.
+      // RunInstructions (key: org.dxos.function.runInstructions) or persist it on first use.
       const existingFns = yield* Database.query(
-        Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.prompt')),
+        Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.runInstructions')),
       ).run;
       const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 
