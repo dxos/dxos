@@ -16,7 +16,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {

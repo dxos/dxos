@@ -202,9 +202,6 @@
       "path": "packages/core/compute/operation/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/doc/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
@@ -212,6 +209,9 @@
     },
     {
       "path": "packages/core/echo/echo-client-e2e/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-doc/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-generator/tsconfig.json"

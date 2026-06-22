@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';

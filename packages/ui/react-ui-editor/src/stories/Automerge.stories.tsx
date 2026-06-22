@@ -8,7 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Obj, Query, Ref } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
+import { DocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';

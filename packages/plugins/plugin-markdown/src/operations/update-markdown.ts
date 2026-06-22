@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
-
+import { DocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = MarkdownOperation.Update.pipe(

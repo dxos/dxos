@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { type Script, Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
-
+import { DocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { Update } from './definitions';
 
 export default Update.pipe(

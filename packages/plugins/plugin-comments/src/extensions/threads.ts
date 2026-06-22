@@ -7,7 +7,8 @@ import { EditorView } from '@codemirror/view';
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { createDocAccessor, getTextInRange } from '@dxos/echo-client';
+import { getTextInRange } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';

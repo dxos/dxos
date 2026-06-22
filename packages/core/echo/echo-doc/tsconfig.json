@@ -13,6 +13,9 @@
     },
     {
       "path": "../echo"
+    },
+    {
+      "path": "../echo-client"
     }
   ]
 }

@@ -14,9 +14,9 @@ import { getDeep } from '@dxos/util';
 export type KeyPath = readonly (string | number)[];
 
 /**
- * Low-level handle over an Automerge document. A deliberately narrow contract (vs. automerge-repo's
- * `DocHandle`) satisfied by both the networked client handle and the synthetic handle over a local,
- * not-yet-attached document.
+ * Low-level handle over an Automerge document.
+ * A deliberately narrow contract (vs. automerge-repo's `DocHandle`) satisfied by both the networked client handle and the synthetic handle
+ * over a local, not-yet-attached document.
  */
 export interface Handle<T = any> {
   doc(): AutomergeDoc<T> | undefined; // TODO(burdon): Remove undefined.

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';

@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-automation/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';

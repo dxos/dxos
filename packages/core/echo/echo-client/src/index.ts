@@ -25,9 +25,8 @@ export {
   isValidKeyPath,
 } from './core-db';
 export { type CloneOptions, clone } from './echo-handler';
-export { createDocAccessor } from './echo-handler';
 export { createObject, EchoReactiveHandler, initEchoReactiveObjectRootProxy } from './echo-handler';
-export { isEchoObject } from './echo-handler';
+export { getObjectCore, isEchoObject } from './echo-handler';
 export { getEditHistory, checkoutVersion } from './echo-handler';
 export { type ProxyTarget } from './echo-handler';
 export {

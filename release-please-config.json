@@ -360,11 +360,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/doc/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/echo/echo/package.json",
           "jsonpath": "$.version"
         },
@@ -376,6 +371,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-doc/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
-import { createDocAccessor, getTextInRange } from '@dxos/echo-client';
-
+import { getTextInRange } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { MarkdownOperation } from '#types';
 import { Markdown } from '#types';
 

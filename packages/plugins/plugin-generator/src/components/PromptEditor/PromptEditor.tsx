@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';

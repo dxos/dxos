@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

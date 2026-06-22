@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { inRange } from '@dxos/compute-hyperformula';
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,

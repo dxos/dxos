@@ -10,7 +10,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
-import { createDocAccessor } from './echo-handler';
+import { getObjectCore } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Cursor => {
@@ -89,7 +89,7 @@ export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
 export const updateText = <T extends Obj.Unknown>(obj: T, path: KeyPath, newText: string): T => {
   assertArgument(isProxy(obj), 'obj');
   invariant(path === undefined || isValidKeyPath(path));
-  const accessor = createDocAccessor(obj, path);
+  const accessor = getObjectCore(obj).getDocAccessor(path);
   accessor.handle.change((doc) => {
     A.updateText(doc, accessor.path.slice(), newText);
   });

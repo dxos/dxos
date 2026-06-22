@@ -24,7 +24,6 @@ import { openAndClose } from '@dxos/test-utils';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createDocAccessor } from './doc-accessor';
 import { createObject, getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
 
@@ -163,12 +162,12 @@ describe('without database', () => {
     const obj = createObject(Obj.make(TestSchema, { text: 'foo', nested: { name: 'bar' } }));
 
     {
-      const accessor = createDocAccessor(obj, 'text');
+      const accessor = getObjectCore(obj).getDocAccessor(['text']);
       expect(DocAccessor.getValue(accessor)).toEqual('foo');
     }
 
     {
-      const accessor = createDocAccessor(obj.nested, 'name');
+      const accessor = getObjectCore(obj).getDocAccessor(['nested', 'name']);
       expect(DocAccessor.getValue(accessor)).toEqual('bar');
     }
   });
@@ -812,7 +811,7 @@ describe('Reactive Object with ECHO database', () => {
         }),
       );
 
-      log.info('', { acc: createDocAccessor(org, []).handle.doc() });
+      log.info('', { acc: getObjectCore(org).getDocAccessor([]).handle.doc() });
 
       expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toEqual([importantUri]);
     });

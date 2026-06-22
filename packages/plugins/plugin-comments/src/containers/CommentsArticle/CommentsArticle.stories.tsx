@@ -13,7 +13,8 @@ import { AppActivationEvents, AppCapabilities, AppPlugin, AppNode, AppSpace, Lay
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor, toCursorRange } from '@dxos/echo-client';
+import { toCursorRange } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';

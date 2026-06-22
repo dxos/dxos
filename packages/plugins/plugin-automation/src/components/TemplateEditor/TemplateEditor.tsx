@@ -7,7 +7,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
 import { type Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { createDocAccessor } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
