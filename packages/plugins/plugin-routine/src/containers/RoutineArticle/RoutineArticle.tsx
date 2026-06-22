@@ -28,7 +28,8 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   // A routine action stores no `runnable`; it is a Routine parented to the automation, so query for one.
   const routines = useQuery(db, Filter.type(Instructions.Instructions));
   const canRun = useMemo(
-    () => Boolean(automation.runnable) || routines.some((instructions) => Obj.getParent(instructions)?.id === subject.id),
+    () =>
+      Boolean(automation.runnable) || routines.some((instructions) => Obj.getParent(instructions)?.id === subject.id),
     [automation.runnable, routines, subject.id],
   );
 
