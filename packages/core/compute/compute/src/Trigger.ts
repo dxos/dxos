@@ -193,14 +193,11 @@ export class Trigger extends Type.declareObj<Trigger>()(
       Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
-  }).pipe(
+  }  ).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
     HiddenAnnotation.set(true),
     Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
   ),
 ) {}
-
-// export type Trigger = Type.InstanceType<typeof TriggerSchema>;
-// export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

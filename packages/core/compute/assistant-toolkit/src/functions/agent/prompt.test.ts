@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
@@ -82,14 +82,15 @@ describe('Agent prompt', () => {
     Effect.fnUntraced(
       function* (_) {
         const Person = Schema.Struct({
-          givenName: Schema.String,
+          name: Schema.String,
           age: Schema.Number,
         });
 
         const routine = yield* Database.add(
           Routine.make({
             name: 'output-schema-test',
-            instructions: 'Invent a fictional person and call completeJob with the success object describing them.',
+            instructions:
+              'Invent a fictional person and call completeJob with the success object describing them (name and age).',
             output: Person,
             blueprints: [],
           }),
@@ -101,8 +102,13 @@ describe('Agent prompt', () => {
           prompt: Ref.make(routine),
           input: {},
         });
-        expect(typeof result.givenName).toBe('string');
-        expect(typeof result.age).toBe('number');
+
+        // The routine persists its declared output as a JSON schema; decode it back and assert the
+        // agent-produced object satisfies that schema.
+        const outputSchema = JsonSchema.toEffectSchema(routine.output);
+        const decoded = Schema.decodeUnknownSync(outputSchema)(result);
+        expect(typeof decoded.name).toBe('string');
+        expect(typeof decoded.age).toBe('number');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

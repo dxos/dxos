@@ -4,8 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-
-
 // NOTE: String literals are used instead of unique symbols for both KindId and SchemaKindId.
 //   Unique symbols cause TS4023 "cannot be named" errors when external packages
 //   try to export types that reference this key (e.g., `export const Graph = ...`).
@@ -44,12 +42,20 @@ export const StaticTypeSchemaSlot = '~@dxos/echo/Type.StaticSchema' as const;
 export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
 
 /**
+ * Whether a value can carry an entity brand/slot. Class-declared types
+ * (`Type.declareObj`) are functions whose prototype chain reaches the entity,
+ * so brand/slot lookups must accept functions as well as plain objects.
+ */
+const isBrandCarrier = (value: unknown): boolean =>
+  value != null && (typeof value === 'object' || typeof value === 'function');
+
+/**
  * Read the hidden `StaticTypeSchemaSlot` off any value that may carry one.
- * Returns `undefined` for raw schemas (no slot) and non-object inputs.
+ * Returns `undefined` for raw schemas (no slot) and inputs that cannot carry a brand.
  * Single point-of-cast for the slot lookup.
  */
 export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
-  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
+  if (!isBrandCarrier(value)) {
     return undefined;
   }
   return (value as { [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext })[StaticTypeSchemaSlot];
@@ -57,11 +63,11 @@ export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext 
 
 /**
  * Read the `[SchemaKindId]` brand off a value. Returns `undefined` for raw
- * schemas (which don't carry the brand on their static type) and non-object
- * inputs. Single point-of-cast for the brand lookup.
+ * schemas (which don't carry the brand on their static type) and inputs that
+ * cannot carry a brand. Single point-of-cast for the brand lookup.
  */
 export const getSchemaKind = (value: unknown): EntityKind | undefined => {
-  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
+  if (!isBrandCarrier(value)) {
     return undefined;
   }
   return (value as { [SchemaKindId]?: EntityKind })[SchemaKindId];
@@ -69,10 +75,10 @@ export const getSchemaKind = (value: unknown): EntityKind | undefined => {
 
 /**
  * Read the `[KindId]` brand off a value. Returns `undefined` for raw schemas
- * and non-object inputs. Companion to {@link getSchemaKind}.
+ * and inputs that cannot carry a brand. Companion to {@link getSchemaKind}.
  */
 export const getEntityKindBrand = (value: unknown): EntityKind | undefined => {
-  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
+  if (!isBrandCarrier(value)) {
     return undefined;
   }
   return (value as { [KindId]?: EntityKind })[KindId];
