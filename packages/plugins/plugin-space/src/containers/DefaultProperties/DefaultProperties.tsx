@@ -8,11 +8,16 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { ObjectProperties as NaturalObjectProperties } from '@dxos/react-ui-form';
+import { ObjectProperties } from '@dxos/react-ui-form';
 
-export type ObjectPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
+export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
-export const ObjectProperties = forwardRef<HTMLDivElement, ObjectPropertiesProps>(
+/**
+ * Generic object-properties companion rendered for any object: a schema-driven {@link ObjectProperties}
+ * form plus the `object-properties` surface, so plugins whose properties are plain editable fields need
+ * not register a bespoke surface (mirrors `DefaultSettings` for plugin settings).
+ */
+export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
   ({ role, subject: object }, forwardedRef) => {
     const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 
@@ -22,9 +27,10 @@ export const ObjectProperties = forwardRef<HTMLDivElement, ObjectPropertiesProps
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <NaturalObjectProperties object={object}>
+          <ObjectProperties object={object}>
+            {/* TODO(burdon): Ambiguous naming since providers only replace parts. */}
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
-          </NaturalObjectProperties>
+          </ObjectProperties>
         </Panel.Content>
       </Panel.Root>
     );
