@@ -25,7 +25,7 @@ export const isKeyPath = (value: unknown): value is KeyPath =>
  * handle and the synthetic handle over a local, not-yet-attached document.
  */
 export interface Handle<T = any> {
-  doc(): Doc<T> | undefined; // TODO(burdon): Remove undefined.
+  doc(): Doc<T>;
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
   addListener(event: 'change', listener: () => void): void;

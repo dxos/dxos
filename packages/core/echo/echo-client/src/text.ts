@@ -15,10 +15,6 @@ import { getObjectCore } from './echo-handler';
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: Accessor, pos: number, assoc = 0): A.Cursor => {
   const doc = accessor.handle.doc();
-  if (!doc) {
-    return '';
-  }
-
   const value = getDeep(doc, accessor.path);
   if (typeof value === 'string' && value.length <= pos) {
     return 'end';
@@ -38,10 +34,6 @@ export const fromCursor = (accessor: Accessor, cursor: A.Cursor): number => {
   }
 
   const doc = accessor.handle.doc();
-  if (!doc) {
-    return 0;
-  }
-
   if (cursor === 'end') {
     const value = getDeep(doc, accessor.path);
     if (typeof value === 'string') {
