@@ -46,12 +46,12 @@ export const crm: RoutineCapabilities.Template = {
         'CRM template requires a Mailbox subject.',
       );
       const mailbox = subject;
-      const routineName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
+      const instructionsName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
       const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
       const instructions = yield* Database.add(
         Instructions.make({
-          name: routineName,
+          name: instructionsName,
           text: DEFAULT_INSTRUCTIONS,
           blueprints: blueprintRefs,
         }),
@@ -79,7 +79,7 @@ export const crm: RoutineCapabilities.Template = {
       );
 
       const automation = Routine.make({
-        name: name ?? routineName,
+        name: name ?? instructionsName,
         runnable: Ref.make(runInstructionsFn),
         triggers: [Ref.make(trigger)],
       });
