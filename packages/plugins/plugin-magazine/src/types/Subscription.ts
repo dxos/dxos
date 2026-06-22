@@ -253,11 +253,16 @@ export const findSystemTagUri = async (
   db: Pick<Database.Database, 'query'>,
   which: SystemTag,
 ): Promise<string | undefined> => {
-  // Also check the legacy 'org.dxos.plugin.feed' source so starred/archived tags created before the
-  // plugin-feed → plugin-magazine rename still resolve correctly.
+  // Prefer the current key; fall back to the legacy 'org.dxos.plugin.feed' source so
+  // starred/archived tags created before the plugin-feed → plugin-magazine rename still resolve.
+  // Two separate queries ensure deterministic priority when both tags co-exist.
+  const [currentTag] = await db.query(Filter.foreignKeys(Tag.Tag, [SYSTEM_TAGS[which].key])).run();
+  if (currentTag) {
+    return Obj.getURI(currentTag).toString();
+  }
   const legacyKey = { source: 'org.dxos.plugin.feed', id: SYSTEM_TAGS[which].key.id };
-  const [tag] = await db.query(Filter.foreignKeys(Tag.Tag, [SYSTEM_TAGS[which].key, legacyKey])).run();
-  return tag ? Obj.getURI(tag).toString() : undefined;
+  const [legacyTag] = await db.query(Filter.foreignKeys(Tag.Tag, [legacyKey])).run();
+  return legacyTag ? Obj.getURI(legacyTag).toString() : undefined;
 };
 
 /** Whether a Post carries the given (resolved) tag uri on its Subscription. Pure. */
