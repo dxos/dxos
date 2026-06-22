@@ -11,7 +11,6 @@ import {
   AppGraphBuilder,
   ChannelBackendFeed,
   CreateObject,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
@@ -25,7 +24,6 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
