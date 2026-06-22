@@ -143,13 +143,15 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 
 /**
  * Helper to define the implementation of a capability.
+ * Returns the opaque `Any` base so call-site inferred types are always portable in declaration
+ * files (avoids TS2883 when the implementation type traces through a nested node_modules path).
+ * Type-correctness of `implementation` is still enforced via the generic parameters.
  */
-// TODO(dmaretskyi): Make the return type non-generic so capabilities are non-discernable.
 export const contributes = <I extends InterfaceDef<any>>(
   interfaceDef: I,
   implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
-): Capability<I> => {
+): Any => {
   return {
     interface: interfaceDef,
     implementation,
