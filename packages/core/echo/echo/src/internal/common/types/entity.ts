@@ -4,6 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { dbg } from '@dxos/log';
+
+import type * as Type from '../../../Type';
+
 // NOTE: String literals are used instead of unique symbols for both KindId and SchemaKindId.
 //   Unique symbols cause TS4023 "cannot be named" errors when external packages
 //   try to export types that reference this key (e.g., `export const Graph = ...`).
@@ -47,7 +51,7 @@ export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
  * Single point-of-cast for the slot lookup.
  */
 export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
-  if (value == null || typeof value !== 'object') {
+  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
     return undefined;
   }
   return (value as { [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext })[StaticTypeSchemaSlot];
@@ -59,7 +63,7 @@ export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext 
  * inputs. Single point-of-cast for the brand lookup.
  */
 export const getSchemaKind = (value: unknown): EntityKind | undefined => {
-  if (value == null || typeof value !== 'object') {
+  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
     return undefined;
   }
   return (value as { [SchemaKindId]?: EntityKind })[SchemaKindId];
@@ -70,7 +74,7 @@ export const getSchemaKind = (value: unknown): EntityKind | undefined => {
  * and non-object inputs. Companion to {@link getSchemaKind}.
  */
 export const getEntityKindBrand = (value: unknown): EntityKind | undefined => {
-  if (value == null || typeof value !== 'object') {
+  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
     return undefined;
   }
   return (value as { [KindId]?: EntityKind })[KindId];
