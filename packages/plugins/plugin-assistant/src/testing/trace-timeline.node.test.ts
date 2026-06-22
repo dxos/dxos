@@ -165,7 +165,7 @@ describe.skip('Trace timeline', () => {
               name: 'DXOS',
             }),
           ]);
-          const prompt = yield* Database.add(
+          const instructions = yield* Database.add(
             Instructions.make({
               name: 'Research',
               text: 'Research the given topic, or object.',
@@ -178,7 +178,7 @@ describe.skip('Trace timeline', () => {
               enabled: true,
               spec: Trigger.specFeed(feed),
               input: {
-                instructions: Ref.make(prompt),
+                instructions: Ref.make(instructions),
                 input: '{{event.item}}',
               },
             }),

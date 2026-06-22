@@ -58,13 +58,13 @@ const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Pro
   ...(options.plugins ?? []),
 ];
 
-const seedInstructions = (prompt: Instructions.Instructions) =>
+const seedInstructions = (instructions: Instructions.Instructions) =>
   Effect.gen(function* () {
-    for (const blueprintRef of prompt.blueprints) {
+    for (const blueprintRef of instructions.blueprints) {
       const blueprint = yield* Database.load(blueprintRef);
       yield* Database.add(blueprint);
     }
-    yield* Database.add(prompt);
+    yield* Database.add(instructions);
     yield* Database.flush();
   });
 

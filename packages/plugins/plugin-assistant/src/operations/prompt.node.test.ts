@@ -46,7 +46,7 @@ describe('Agent prompt (composer plugin harness)', () => {
           );
 
           const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-          const prompt = yield* Database.add(
+          const instructions = yield* Database.add(
             Instructions.make({
               name: 'chat-mode-test',
               text: 'Reply with a single word: ack.',
@@ -58,7 +58,7 @@ describe('Agent prompt (composer plugin harness)', () => {
           const result = yield* Operation.invoke(
             RunInstructions,
             {
-              instructions: Ref.make(prompt),
+              instructions: Ref.make(instructions),
               input: {},
               chat: Ref.make(chat),
             },
