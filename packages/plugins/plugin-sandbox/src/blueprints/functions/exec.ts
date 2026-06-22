@@ -8,8 +8,8 @@ import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { createSandboxClient } from '../../services/sandbox-url';
 import { mergeExecEnv } from '../../services/sandbox-env';
+import { createSandboxClient } from '../../services/sandbox-url';
 import { Exec } from './definitions';
 
 export default Exec.pipe(
