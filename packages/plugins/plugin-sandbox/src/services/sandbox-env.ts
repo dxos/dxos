@@ -21,7 +21,7 @@ export const resolveSandboxCredentialEnv = (
 
     const env: Record<string, string> = {};
     for (const { env: envName, token: tokenRef } of credentials) {
-      const accessToken = yield* Database.load(tokenRef);
+      const accessToken = yield* Database.load(tokenRef).pipe(Effect.orDie);
       if (accessToken.token) {
         env[envName] = accessToken.token;
       }

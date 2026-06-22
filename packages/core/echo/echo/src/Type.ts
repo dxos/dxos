@@ -749,3 +749,58 @@ export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
     draft.jsonSchema = internal.toJsonSchema(removed);
   });
 };
+
+/**
+ * Return type for {@link declare}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends Obj<Self, Fields> {
+  new (_: never): T;
+}
+
+/**
+ * Declare a schema defition and a typescript type in one statememt.
+ * Example:
+ * ```ts
+ * export class MyType extends Type.declare<MyType>()(Schema.Struct({
+ *   name: Schema.String,
+ * })) {}
+ * ```
+ *
+ */
+export const declareObj =
+  <Self>() =>
+  <T, Fields extends Schema.Struct.Fields>(type: Obj<T, Fields>): ObjClass<Self, T, Fields> => {
+    return type as any;
+  };
+
+/**
+ * Return type for {@link declareRelation}.
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface RelationClass<Self, T, Source, Target, Fields extends Schema.Struct.Fields> extends Relation<
+  Self,
+  Source,
+  Target,
+  Fields
+> {
+  new (_: never): T;
+}
+
+/**
+ * Declare a relation schema defition and a typescript type in one statememt.
+ * Example:
+ * ```ts
+ * export class MyRelation extends Type.declareRelation<MyRelation>()(Schema.Struct({
+ *   name: Schema.String,
+ * })) {}
+ * ```
+ */
+export const declareRelation =
+  <Self>() =>
+  <T, Source, Target, Fields extends Schema.Struct.Fields>(
+    type: Relation<T, Source, Target, Fields>,
+  ): RelationClass<Self, T, Source, Target, Fields> => {
+    return type as any;
+  };
