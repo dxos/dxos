@@ -64,9 +64,6 @@
       "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
       "path": "../../core/echo/echo-react"
     },
     {
