@@ -156,7 +156,7 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
   ...(options.plugins ?? []),
 ];
 
-const seedPrompt = (prompt: Instructions.Instructions) =>
+const seedInstructions = (prompt: Instructions.Instructions) =>
   Effect.gen(function* () {
     for (const blueprintRef of prompt.blueprints) {
       const blueprint = yield* Database.load(blueprintRef);
@@ -168,14 +168,14 @@ const seedPrompt = (prompt: Instructions.Instructions) =>
 
 const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spaceId }, Database.Service);
 
-const runAgentPrompt = (harness: TestHarness, routine: Instructions.Instructions, model: ModelName, spaceId: SpaceId) =>
+const runInstructions = (harness: TestHarness, instructions: Instructions.Instructions, model: ModelName, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.gen(function* () {
-      yield* seedPrompt(routine);
+      yield* seedInstructions(instructions);
       return yield* Operation.invoke(
         RunInstructions,
         {
-          prompt: Ref.make(routine),
+          prompt: Ref.make(instructions),
           input: {},
           systemInstructions: INSTRUCTIONS,
           model,
@@ -213,7 +213,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   });
   type OutputSchema = Schema.Schema.Type<typeof OutputSchema>;
 
-  const routine = Instructions.make({
+  const instructions = Instructions.make({
     name: options.name,
     text: formatInstructions(options.instructions, options.completionCriteria),
     blueprints: options.blueprints ?? getDefaultBlueprints(),
@@ -244,7 +244,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         );
         yield* logTraceEvents(harness, personalSpace.id);
 
-        const exit = yield* Effect.promise(() => runAgentPrompt(harness, routine, model, personalSpace.id)).pipe(
+        const exit = yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id)).pipe(
           Effect.flatMap((output: OutputSchema) => {
             const missedCriteria = pipe(
               output.completedCriteria,

@@ -58,7 +58,7 @@ const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Pro
   ...(options.plugins ?? []),
 ];
 
-const seedPrompt = (prompt: Instructions.Instructions) =>
+const seedInstructions = (prompt: Instructions.Instructions) =>
   Effect.gen(function* () {
     for (const blueprintRef of prompt.blueprints) {
       const blueprint = yield* Database.load(blueprintRef);
@@ -68,7 +68,7 @@ const seedPrompt = (prompt: Instructions.Instructions) =>
     yield* Database.flush();
   });
 
-const runAgentPrompt = <I>(
+const runInstructions = <I>(
   harness: TestHarness,
   prompt: Instructions.Instructions,
   model: ModelName,
@@ -77,7 +77,7 @@ const runAgentPrompt = <I>(
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
-      yield* seedPrompt(prompt);
+      yield* seedInstructions(prompt);
       return yield* Operation.invoke(
         RunInstructions,
         {
@@ -112,7 +112,7 @@ export type VariantConfig =
  * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
  *
  * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
- * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runAgentPrompt` with the
+ * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runInstructions` with the
  * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  */
@@ -143,7 +143,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
             EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
           );
 
-          return yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id, input));
+          return yield* Effect.promise(() => runInstructions(harness, prompt, model, personalSpace.id, input));
         }),
       ),
     );
