@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
  * boot. We log at `info` level for visibility without polluting the console.
  */
 
-// TODO(burdon): Configure (integrate with plugin-feed?)
+// TODO(burdon): Configure (integrate with plugin-magazine?)
 // TODO(burdon): In prod point to DXOS rss feed.
 const DEFAULT_FEEDS = [
   'https://www.theregister.com/software/ai_ml/headlines.atom',

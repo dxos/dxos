@@ -11,7 +11,7 @@ import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldWrapper } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 /**
  * Extracts numeric constraints (`minimum`/`maximum` bounds and whether the value must be an integer)
@@ -121,7 +121,7 @@ export const NumberField = ({
   );
 
   return (
-    <FormFieldWrapper<number> readonly={readonly} getValue={getValue} {...props}>
+    <FormRow<number> readonly={readonly} getValue={getValue} {...props}>
       {() => (
         <Input.TextInput
           type='number'
@@ -135,6 +135,6 @@ export const NumberField = ({
           onBlur={handleBlur}
         />
       )}
-    </FormFieldWrapper>
+    </FormRow>
   );
 };

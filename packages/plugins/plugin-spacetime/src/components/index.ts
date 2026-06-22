@@ -3,5 +3,4 @@
 //
 
 export * from './SpacetimeEditor';
-export * from './SpacetimeSettings';
 export * from './SpacetimeToolbar';

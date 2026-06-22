@@ -14,6 +14,7 @@ import { Prompts } from '@dxos/plugin-space';
 
 import {
   AutomationArticle,
+  AutomationCompanion,
   AutomationSettings,
   BlueprintArticle,
   RoutineArticle,
@@ -44,17 +45,20 @@ export default Capability.makeModule(() =>
           <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
-      // Surface.create({
-      //   id: 'companion.automation',
-      //   filter: AppSurface.allOf(
-      //     AppSurface.literal(AppSurface.Article, 'automation'),
-      //     AppSurface.companion(AppSurface.Article),
-      //   ),
-      //   component: ({ data }) => {
-      //     const db = Obj.getDatabase(data.companionTo);
-      //     return <AutomationCompanion db={db} object={data.companionTo} />;
-      //   },
-      // }),
+      Surface.create({
+        id: 'companion.automation',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'automation'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data }) => {
+          const db = Obj.getDatabase(data.companionTo);
+          if (!db) {
+            return null;
+          }
+          return <AutomationCompanion db={db} object={data.companionTo} />;
+        },
+      }),
       Surface.create({
         id: 'blueprint',
         filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),

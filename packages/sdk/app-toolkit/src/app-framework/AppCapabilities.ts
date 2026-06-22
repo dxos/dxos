@@ -120,7 +120,9 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app
 
 export type Settings = {
   prefix: string;
-  schema: Schema$.Schema.All;
+  // Settings are persisted as plain atoms, so the schema is always context-free
+  // (`R = never`); this lets a schema-driven form decode/validate it directly.
+  schema: Schema$.Schema.AnyNoContext;
   atom: Atom.Writable<any>;
 };
 

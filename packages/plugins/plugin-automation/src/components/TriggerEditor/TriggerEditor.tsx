@@ -186,7 +186,6 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
             <IconButton
               iconOnly
               variant='ghost'
-              density='xs'
               square
               icon='ph--x--regular'
               label={t('trigger-kind.clear.label')}
