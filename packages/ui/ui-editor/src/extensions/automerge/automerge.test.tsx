@@ -15,12 +15,10 @@ import { Doc } from '@dxos/echo-doc';
 
 import { automerge } from './automerge';
 
-// The extension binds to a real ECHO `Doc.Accessor`; an in-memory object (no `db.add`) is enough since
-// `Doc.createAccessor` materializes a local core. Its handle uses raw heads, so no adapter is needed.
 const TestType = Schema.Struct({ text: Schema.String }).pipe(
   Type.makeObject(DXN.make('com.example.test.editor', '0.1.0')),
 );
-type TestType = { text: string };
+type TestType = Type.InstanceType<typeof TestType>;
 
 class Generator {
   constructor(private readonly _accessor: Doc.Accessor<TestType>) {}

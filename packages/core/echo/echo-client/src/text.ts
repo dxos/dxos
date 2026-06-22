@@ -9,11 +9,11 @@ import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
-import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
+import { type Accessor, type KeyPath, isValidKeyPath } from './automerge/types';
 import { getObjectCore } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
-export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Cursor => {
+export const toCursor = (accessor: Accessor, pos: number, assoc = 0): A.Cursor => {
   const doc = accessor.handle.doc();
   if (!doc) {
     return '';
@@ -28,11 +28,11 @@ export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Curso
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const toCursorRange = (accessor: DocAccessor, start: number, end: number) => {
+export const toCursorRange = (accessor: Accessor, start: number, end: number) => {
   return `${toCursor(accessor, start)}:${toCursor(accessor, end)}`;
 };
 
-export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
+export const fromCursor = (accessor: Accessor, cursor: A.Cursor): number => {
   if (cursor === '') {
     return 0;
   }
@@ -58,7 +58,7 @@ export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
 /**
  * Return the text value between two cursor positions.
  */
-export const getTextInRange = (accessor: DocAccessor, start: string, end: string): string | undefined => {
+export const getTextInRange = (accessor: Accessor, start: string, end: string): string | undefined => {
   const doc = accessor.handle.doc();
   const value = getDeep(doc, accessor.path);
   if (typeof value === 'string') {
@@ -70,7 +70,7 @@ export const getTextInRange = (accessor: DocAccessor, start: string, end: string
   }
 };
 
-export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
+export const getRangeFromCursor = (accessor: Accessor, cursor: string) => {
   const [start, end] = cursor.split(':');
   if (start === undefined || end === undefined) {
     return undefined;

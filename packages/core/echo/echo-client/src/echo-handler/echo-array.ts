@@ -4,7 +4,8 @@
 
 import { batchEvents } from '@dxos/echo/internal';
 
-import type { KeyPath, ObjectCore } from '../core-db';
+import type { KeyPath } from '../automerge/types';
+import type { ObjectCore } from '../core-db';
 import { type EchoReactiveHandler } from './echo-handler';
 import { symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 

@@ -4,49 +4,17 @@
 
 // @import-as-namespace
 
-import type { ChangeFn, ChangeOptions, Doc as AutomergeDoc, Heads } from '@automerge/automerge';
-
-import { createObject, getObjectCore, isEchoObject } from '@dxos/echo-client';
+import { Doc as ClientDoc, createObject, getObjectCore, isEchoObject } from '@dxos/echo-client';
 import { type AnyProperties, isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
-import { getDeep } from '@dxos/util';
 
-/**
- * Path to a value within a document, addressing nested records and arrays.
- */
-export type KeyPath = readonly (string | number)[];
-
-/**
- * Validates a {@link KeyPath}.
- */
-export const isValidKeyPath = (value: unknown): value is KeyPath =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string' || typeof entry === 'number');
-
-/**
- * Low-level handle over an Automerge document.
- * A deliberately narrow contract (vs. automerge-repo's `DocHandle`) satisfied by both the networked client handle and the synthetic handle
- * over a local, not-yet-attached document.
- */
-export interface Handle<T = any> {
-  doc(): AutomergeDoc<T> | undefined; // TODO(burdon): Remove undefined.
-  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
-  addListener(event: 'change', listener: () => void): void;
-  removeListener(event: 'change', listener: () => void): void;
-}
-
-/**
- * Binds a value at `path` within a document `handle`. Editors and the document operations in this
- * package consume this to read and mutate the underlying Automerge document.
- */
-export interface Accessor<T = any> {
-  get path(): KeyPath;
-  get handle(): Handle<T>;
-}
-
-export const Accessor = {
-  getValue: <T>(accessor: Accessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
-};
+// The accessor abstraction is owned by `@dxos/echo-client` (alongside `ObjectCore`); re-exported here
+// as the canonical `Doc.*` surface so consumers depend only on `@dxos/echo-doc`.
+export type KeyPath = ClientDoc.KeyPath;
+export type Handle<T = any> = ClientDoc.Handle<T>;
+export type Accessor<T = any> = ClientDoc.Accessor<T>;
+export const Accessor = ClientDoc.Accessor;
+export const isValidKeyPath = ClientDoc.isValidKeyPath;
 
 /**
  * Resolves an {@link Accessor} for a value within an object, agnostic to whether the object is

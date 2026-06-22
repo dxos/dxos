@@ -24,15 +24,9 @@ import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type DocHandleProxy } from '../automerge';
+import { type Accessor, type KeyPath, isValidKeyPath } from '../automerge/types';
 import { docChangeSemaphore } from './doc-semaphore';
-import {
-  type DecodedAutomergePrimaryValue,
-  type DocAccessor,
-  type GetObjectCoreByIdOptions,
-  type KeyPath,
-  TargetKey,
-  isValidKeyPath,
-} from './types';
+import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types';
 
 /**
  * Minimal interface that ObjectCore requires from the containing database.
@@ -265,7 +259,7 @@ export class ObjectCore {
     return result;
   }
 
-  getDocAccessor(path: KeyPath = []): DocAccessor {
+  getDocAccessor(path: KeyPath = []): Accessor {
     assertArgument(isValidKeyPath(path), 'path');
     const self = this;
     return {

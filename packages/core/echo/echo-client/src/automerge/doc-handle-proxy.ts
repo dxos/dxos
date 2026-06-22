@@ -10,7 +10,7 @@ import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type IDocHandle } from '../core-db';
+import { type Handle } from './types';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
@@ -50,7 +50,7 @@ export type DocHandleProxyState = 'pending' | 'requesting' | 'ready';
 export type DiskSettlement = boolean;
 
 /**
- * A client-side `IDocHandle` implementation.
+ * A client-side `Handle` implementation.
  * Syncs with a Automerge Repo in shared worker.
  * Inspired by Automerge's `DocHandle`.
  *
@@ -63,7 +63,7 @@ export type DiskSettlement = boolean;
  * {@link whenSettledOnDisk} to learn the outcome of the disk probe without
  * blocking on the network.
  */
-export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements IDocHandle<T> {
+export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements Handle<T> {
   private readonly _ready = new Trigger();
   private readonly _settledOnDisk = new Trigger<DiskSettlement>();
   private _state: DocHandleProxyState = 'pending';

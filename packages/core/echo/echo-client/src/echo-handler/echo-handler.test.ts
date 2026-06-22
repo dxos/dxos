@@ -22,7 +22,7 @@ import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
-import { DocAccessor } from '../core-db';
+import { Accessor } from '../automerge/types';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 import { createObject, getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
@@ -163,12 +163,12 @@ describe('without database', () => {
 
     {
       const accessor = getObjectCore(obj).getDocAccessor(['text']);
-      expect(DocAccessor.getValue(accessor)).toEqual('foo');
+      expect(Accessor.getValue(accessor)).toEqual('foo');
     }
 
     {
       const accessor = getObjectCore(obj).getDocAccessor(['nested', 'name']);
-      expect(DocAccessor.getValue(accessor)).toEqual('bar');
+      expect(Accessor.getValue(accessor)).toEqual('bar');
     }
   });
 });
