@@ -59,4 +59,4 @@ export const SyncBlueskyTargets = Operation.make({
     /** Targets that produced an error this run. */
     failed: Schema.Number,
   }),
-});
+}).pipe(Operation.visible);

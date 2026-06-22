@@ -18,27 +18,33 @@ export {
   type BindOptions,
   type ObjectCoreOptions,
   objectIsUpdated,
-  DocAccessor,
   type DecodedAutomergePrimaryValue,
-  type IDocHandle,
-  type KeyPath,
-  isValidKeyPath,
 } from './core-db';
-export { type CloneOptions, clone } from './echo-handler';
-export { createDocAccessor } from './echo-handler';
-export { createObject, EchoReactiveHandler, initEchoReactiveObjectRootProxy } from './echo-handler';
-export { isEchoObject } from './echo-handler';
-export { getEditHistory, checkoutVersion } from './echo-handler';
-export { type ProxyTarget } from './echo-handler';
 export {
+  type CloneOptions,
+  clone,
+  type ProxyTarget,
+  getEditHistory,
+  checkoutVersion,
+  getObjectCore,
+  isEchoObject,
+  createObject,
+  EchoReactiveHandler,
+  initEchoReactiveObjectRootProxy,
   MutationOutsideChangeContextError,
   createPropertySetError,
   createPropertyDeleteError,
   createArrayMethodError,
+  getDXNWithSpaceKey,
+  findObjectWithForeignKey,
+  matchKeys,
+  ObjectVersion,
+  getVersion,
+  type Selection,
+  type SubscriptionHandle,
+  type UpdateInfo,
+  createSubscription,
 } from './echo-handler';
-export { type Selection, type SubscriptionHandle, type UpdateInfo, createSubscription } from './echo-handler';
-export { getDXNWithSpaceKey, findObjectWithForeignKey, matchKeys } from './echo-handler';
-export { ObjectVersion, getVersion } from './echo-handler';
 export * from './guarded-scope';
 export * from './hypergraph';
 export * from './proxy-db';

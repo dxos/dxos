@@ -12,9 +12,32 @@ export type ConfigPresetOptions = {
    * @default main
    */
   edge?: 'local' | 'dev' | 'main' | 'production';
+
+  /**
+   * Sandbox service (standalone worker; API at /api/sandbox).
+   */
+  sandbox?: 'local' | 'dev' | 'main' | 'production';
 };
 
-export const configPreset = ({ edge = 'main' }: ConfigPresetOptions = {}) =>
+const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
+  Match.value(edge).pipe(
+    Match.when('local', () => 'http://localhost:8787'),
+    Match.when('dev', () => 'https://edge.dxos.workers.dev'),
+    Match.when('main', () => 'https://edge-main.dxos.workers.dev'),
+    Match.when('production', () => 'https://edge-production.dxos.workers.dev'),
+    Match.exhaustive,
+  );
+
+const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
+  Match.value(sandbox).pipe(
+    Match.when('local', () => 'http://localhost:8792'),
+    Match.when('dev', () => 'https://sandbox.dxos.workers.dev'),
+    Match.when('main', () => 'https://sandbox-main.dxos.workers.dev'),
+    Match.when('production', () => 'https://sandbox-production.dxos.workers.dev'),
+    Match.exhaustive,
+  );
+
+export const configPreset = ({ edge = 'main', sandbox }: ConfigPresetOptions = {}) =>
   new Config({
     version: 1,
     runtime: {
@@ -27,14 +50,9 @@ export const configPreset = ({ edge = 'main' }: ConfigPresetOptions = {}) =>
       },
       services: {
         edge: {
-          url: Match.value(edge).pipe(
-            Match.when('local', () => 'http://localhost:8787'),
-            Match.when('dev', () => 'https://edge.dxos.workers.dev'),
-            Match.when('main', () => 'https://edge-main.dxos.workers.dev'),
-            Match.when('production', () => 'https://edge-production.dxos.workers.dev'),
-            Match.exhaustive,
-          ),
+          url: edgeUrl(edge),
         },
+        ...(sandbox ? { sandbox: { url: sandboxUrl(sandbox) } } : {}),
       },
     },
   });

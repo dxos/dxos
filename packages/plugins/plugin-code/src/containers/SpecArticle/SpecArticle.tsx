@@ -6,7 +6,7 @@ import React, { forwardRef, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, useThemeContext } from '@dxos/react-ui';
@@ -61,7 +61,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             target &&
             createDataExtensions({
               id: spec.id,
-              text: createDocAccessor(target, ['content']),
+              text: Doc.createAccessor(target, ['content']),
               messenger: space,
               identity,
             }),
