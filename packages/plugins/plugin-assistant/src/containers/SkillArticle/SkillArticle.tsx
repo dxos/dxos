@@ -6,10 +6,9 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Skill } from '@dxos/compute';
+import { TemplateEditor } from '@dxos/plugin-automation';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-
-import { TemplateEditor } from '#components';
 
 export type SkillArticleProps = AppSurface.ObjectArticleProps<Skill.Skill>;
 

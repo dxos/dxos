@@ -9,11 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { SequencerSkill } from '../skills';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-const skillDefinition: () => Effect.Effect<
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[],
-  never,
-  Capability.Service
-> = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, SequencerSkill)]);
+const skillDefinition = () =>
+  Effect.succeed([Capability.opaque(Capability.contributes(AppCapabilities.SkillDefinition, SequencerSkill))]);
 
 export default skillDefinition;

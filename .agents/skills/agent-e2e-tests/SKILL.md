@@ -16,26 +16,25 @@ Package: `packages/core/assistant-e2e`
 Every test file follows this exact template:
 
 ```typescript
-import { Prompt } from '@dxos/skills';
+import { describe, it } from '@effect/vitest';
+
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
-import { describe, it } from '@effect/vitest';
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultSkills } from '../harness';
+
+import { agentTest, agentTestTimeout, getDefaultSkills } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('DescriptiveName', () => {
   it.effect(
     'short test name',
-    agentTest(
-      Prompt.make({
-        instructions: trim`
-          Your prompt here.
-        `,
-        skills: getDefaultSkills(),
-      }),
-    ),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    agentTest({
+      instructions: trim`
+        Your prompt here.
+      `,
+      skills: getDefaultSkills(),
+    }),
+    { timeout: agentTestTimeout() },
   );
 });
 ```
