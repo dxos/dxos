@@ -34,7 +34,7 @@ export default Capability.makeModule(
 
         return promptRunExtension({
           onRun: (promptText) => {
-            void invokePromise(RoutineOperation.RunPromptInNewChat, { db, prompt: promptText });
+            void invokePromise(RoutineOperation.RunPromptInNewChat, { db, instructions: promptText });
           },
         });
       },

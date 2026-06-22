@@ -37,7 +37,7 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
       if (!space) {
         return;
       }
-      void invokePromise(RoutineOperation.RunPromptInNewChat, { db: space.db, prompt });
+      void invokePromise(RoutineOperation.RunPromptInNewChat, { db: space.db, instructions: prompt });
     },
     [invokePromise, space],
   );
