@@ -99,13 +99,13 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     Effect.fnUntraced(function* () {
       invariant(graph);
 
-      const prompts =
+      const allInstructions =
         notebook?.cells
           .filter((cell) => cell.type === 'prompt')
           .map((cell) => cell.prompt)
           .filter(isNonNullable) ?? [];
 
-      for (const instructions of prompts) {
+      for (const instructions of allInstructions) {
         yield* runPrompt({
           instructions,
           input: { ...queryValues, ...graph.getValuesByName() },
