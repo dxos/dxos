@@ -253,5 +253,12 @@ describe('Type', () => {
       );
       expect(entity.id).toBe(explicit);
     });
+
+    test('Type.declareObj', ({ expect }) => {
+      class Person extends Type.declareObj<Person>()(
+        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+      ) {}
+      expect(Person.jsonSchema).toBeDefined();
+    });
   });
 });

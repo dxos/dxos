@@ -772,7 +772,9 @@ export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends 
 export const declareObj =
   <Self>() =>
   <T, Fields extends Schema.Struct.Fields>(type: Obj<T, Fields>): ObjClass<Self, T, Fields> => {
-    return type as any;
+    function ObjType() {}
+    Object.setPrototypeOf(ObjType, type);
+    return ObjType as any;
   };
 
 /**
@@ -802,5 +804,7 @@ export const declareRelation =
   <T, Source, Target, Fields extends Schema.Struct.Fields>(
     type: Relation<T, Source, Target, Fields>,
   ): RelationClass<Self, T, Source, Target, Fields> => {
-    return type as any;
+    function RelationType() {}
+    Object.setPrototypeOf(RelationType, type);
+    return RelationType as any;
   };
