@@ -37,7 +37,10 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'devtools',
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_SYSTEM_TYPE)),
+        match: NodeMatcher.whenAny(
+          NodeMatcher.whenRoot,
+          AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_SYSTEM_TYPE),
+        ),
         connector: (nodeOrSpace: Node.Node | Space, get) =>
           Effect.gen(function* () {
             const space: Space | undefined = isSpace(nodeOrSpace) ? nodeOrSpace : undefined;

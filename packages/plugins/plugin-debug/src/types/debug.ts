@@ -10,6 +10,7 @@ import type { TimerCallback, TimerOptions } from '@dxos/async';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { meta } from '#meta';
+
 import * as Settings from './Settings';
 
 export type DebugPluginOptions = {
