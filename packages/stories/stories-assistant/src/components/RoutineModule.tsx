@@ -12,8 +12,8 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 export const RoutineModule = ({ space }: { space: Space }) => {
-  const [prompt] = useQuery(space.db, Filter.type(Instructions.Instructions));
-  const data = useMemo(() => ({ attendableId: 'story', subject: prompt }), [prompt]);
+  const [instructions] = useQuery(space.db, Filter.type(Instructions.Instructions));
+  const data = useMemo(() => ({ attendableId: 'story', subject: instructions }), [instructions]);
 
   return (
     <Panel.Root>
