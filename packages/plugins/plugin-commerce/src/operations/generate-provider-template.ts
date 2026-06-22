@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Instructions, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -20,7 +20,7 @@ const TOAST_ID = `${meta.profile.key}/regenerate`;
 /**
  * Runs the provider blueprint agent: materializes the {@link ProviderBlueprint} as an ECHO
  * Blueprint object in the space (cloning the static definition on first use, mirroring the
- * `create-chat` operation), then invokes the {@link AgentPrompt} routine with the blueprint and
+ * `create-chat` operation), then invokes the {@link RunInstructions} routine with the blueprint and
  * provider bound as context. The agent fetches the vendor site (analyzeProvider) and persists a
  * derived search schema + request/result mapping (setProviderTemplate). Returns the (mutated)
  * provider.
@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
             blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY) ??
             db.add(ProviderBlueprint.make());
 
-          // The AgentPrompt routine loads `blueprints`/`context` and binds them to its own session,
+          // The RunInstructions routine loads `blueprints`/`context` and binds them to its own session,
           // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
           // available to the agent without a pre-bound chat.
           const routine = Instructions.make({
@@ -62,14 +62,14 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
             blueprints: [Ref.make(blueprint)],
           });
 
-          // Create the conversation feed in the space so the spawned AgentPrompt environment inherits
-          // space affinity (without it, AgentPrompt creates a space-less feed and Database.Service is
+          // Create the conversation feed in the space so the spawned RunInstructions environment inherits
+          // space affinity (without it, RunInstructions creates a space-less feed and Database.Service is
           // unavailable in the spawn). Mirrors the assistant e2e harness.
           const conversationFeed = yield* Database.add(Feed.make());
 
           yield* Database.flush();
           yield* Operation.invoke(
-            AgentPrompt,
+            RunInstructions,
             { prompt: Ref.make(routine), input: {} },
             { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
           );

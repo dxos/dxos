@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Instructions, Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
 /**
@@ -58,11 +58,11 @@ export const crm: RoutineCapabilities.Template = {
       );
 
       // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's
-      // AgentPrompt (key: org.dxos.function.prompt) or persist it on first use.
+      // RunInstructions (key: org.dxos.function.prompt) or persist it on first use.
       const existingFns = yield* Database.query(
         Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.prompt')),
       ).run;
-      const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
+      const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 
       const feed = yield* Database.load(mailbox.feed);
       const trigger = yield* Database.add(

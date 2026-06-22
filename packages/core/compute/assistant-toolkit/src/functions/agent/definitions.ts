@@ -12,16 +12,14 @@ import { Text } from '@dxos/schema';
 
 import * as Chat from '../../types/Chat';
 
-// TODO(dmaretskyi): Rename to RunInstructions.
-export const AgentPrompt = Operation.make({
+export const RunInstructions = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.prompt'),
-    name: 'Run Routine',
+    name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
-    // TODO(burdon): Rename routine.
     prompt: Ref.Ref(Instructions.Instructions),
 
     /**

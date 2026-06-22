@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
-  AgentPrompt,
+  RunInstructions,
   AgentWizardBlueprint,
   BlueprintManagerBlueprint,
   DatabaseBlueprint,
@@ -23,10 +23,10 @@ import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
@@ -132,7 +132,7 @@ describe('AssistantPlugin', () => {
         yield* Database.flush();
 
         const result = yield* Operation.invoke(
-          AgentPrompt,
+          RunInstructions,
           {
             prompt: Ref.make(routine),
             input: {

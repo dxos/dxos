@@ -8,7 +8,7 @@ import { userEvent, within } from 'storybook/test';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
-  AgentPrompt,
+  RunInstructions,
   DelegationBlueprint,
   LinearBlueprint,
   PlanningBlueprint,
@@ -845,7 +845,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(AgentPrompt)),
+          function: Ref.make(Operation.serialize(RunInstructions)),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
@@ -973,7 +973,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(Operation.serialize(AgentPrompt)),
+        function: Ref.make(Operation.serialize(RunInstructions)),
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {
@@ -1108,7 +1108,7 @@ export const WithPrompt: Story = {
     config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(Operation.serialize(AgentPrompt));
+      space.db.add(Operation.serialize(RunInstructions));
       space.db.add(
         Instructions.make({
           name: 'Research',

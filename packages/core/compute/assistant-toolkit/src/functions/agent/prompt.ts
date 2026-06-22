@@ -26,7 +26,7 @@ import { trim } from '@dxos/util';
 
 import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
-import { AgentPrompt } from './definitions';
+import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
 
@@ -38,7 +38,7 @@ const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All =
   return JsonSchema.toEffectSchema(output);
 };
 
-export default AgentPrompt.pipe(
+export default RunInstructions.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* (data) {

@@ -11,12 +11,7 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Blueprint } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 
-import {
-  RoutineArticle,
-  RoutineCompanion,
-  RoutineSettings,
-  BlueprintArticle,
-} from '#containers';
+import { RoutineArticle, RoutineCompanion, RoutineSettings, BlueprintArticle } from '#containers';
 import { meta } from '#meta';
 import { Routine } from '#types';
 

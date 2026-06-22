@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { RunInstructions, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Instructions, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
@@ -162,7 +162,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              function: Ref.make(Operation.serialize(AgentPrompt)),
+              function: Ref.make(Operation.serialize(RunInstructions)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',

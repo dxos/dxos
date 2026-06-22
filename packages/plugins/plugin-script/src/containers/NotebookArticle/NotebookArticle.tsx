@@ -11,7 +11,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Instructions } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -238,9 +238,9 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
+  const inputData: Operation.Definition.Input<typeof RunInstructions> = { prompt, input };
   // Invoke the function.
-  const result = yield* Operation.invoke(AgentPrompt, inputData).pipe(Effect.orDie, Effect.exit);
+  const result = yield* Operation.invoke(RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

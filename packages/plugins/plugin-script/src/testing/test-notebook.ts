@@ -46,7 +46,7 @@ export const createNotebook = (): Notebook.Notebook =>
         prompt: Ref.make(
           createObject(
             Instructions.make({
-              text:'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
+              text: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
             }),
           ),
         ),
@@ -62,7 +62,7 @@ export const createNotebook = (): Notebook.Notebook =>
         prompt: Ref.make(
           createObject(
             Instructions.make({
-              text:'Very briefly, summarize the documents: {{docs}}',
+              text: 'Very briefly, summarize the documents: {{docs}}',
             }),
           ),
         ),

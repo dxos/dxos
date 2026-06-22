@@ -16,7 +16,7 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import * as Chat from '../../types/Chat';
-import { AgentPrompt } from './definitions';
+import { RunInstructions } from './definitions';
 import defaultAgentPrompt from './prompt';
 
 EntityId.dangerouslyDisableRandomness();
@@ -60,7 +60,7 @@ describe('Agent prompt', () => {
 
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(AgentPrompt, {
+        const result = yield* Operation.invoke(RunInstructions, {
           prompt: Ref.make(prompt),
           input: {},
           chat: Ref.make(chat),
@@ -97,7 +97,7 @@ describe('Agent prompt', () => {
 
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(AgentPrompt, {
+        const result = yield* Operation.invoke(RunInstructions, {
           prompt: Ref.make(routine),
           input: {},
         });

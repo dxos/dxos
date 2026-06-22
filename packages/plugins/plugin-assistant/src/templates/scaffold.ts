@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Routine } from '@dxos/plugin-routine';
 
-/** Registry key of the persisted AgentPrompt ("Run Routine") operation a routine trigger dispatches. */
+/** Registry key of the persisted RunInstructions ("Run Routine") operation a routine trigger dispatches. */
 const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
 
 export type ScheduledRoutineOptions = {
@@ -20,7 +20,7 @@ export type ScheduledRoutineOptions = {
 };
 
 /**
- * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared AgentPrompt
+ * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared RunInstructions
  * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
  * instructions before activating, and is owned by the automation (cascade-deletes with it); the routine
  * stays independent, since it is edited separately and may be reused.
@@ -41,12 +41,12 @@ export const makeScheduledRoutineAutomation = ({
       }),
     );
 
-    // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's AgentPrompt
+    // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's RunInstructions
     // or persist it on first use.
     const existingFns = yield* Database.query(
       Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(AGENT_PROMPT_KEY)),
     ).run;
-    const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
+    const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 
     const trigger = yield* Database.add(
       Obj.make(Trigger.Trigger, {

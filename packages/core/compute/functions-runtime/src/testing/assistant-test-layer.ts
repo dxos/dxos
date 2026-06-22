@@ -210,7 +210,14 @@ export const AssistantTestBaseLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Blueprint.Blueprint, Instructions.Instructions, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
+  types.push(
+    Blueprint.Blueprint,
+    Instructions.Instructions,
+    Operation.PersistentOperation,
+    Feed.Feed,
+    Trigger.Trigger,
+    Tag.Tag,
+  );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(

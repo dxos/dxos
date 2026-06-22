@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { DelegationBlueprint } from '../blueprints';
-import { AgentPrompt } from '../functions';
+import { RunInstructions } from '../functions';
 import { Agent } from '../types';
 
 /**
@@ -69,7 +69,7 @@ const extractArtifactIds = (value: unknown): string[] => {
 /**
  * Supervisor behaviour for the conversational agent: after each turn, every in-progress plan task
  * not already delegated is run by a sub-agent (a synthesized minimal `Routine` executed via
- * `AgentPrompt`); on completion the task status is updated and a templated message is posted back to
+ * `RunInstructions`); on completion the task status is updated and a templated message is posted back to
  * the conversation.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
@@ -105,7 +105,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
       const delegations: Delegation[] = [];
       for (const task of pending) {
-        // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via AgentPrompt
+        // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via RunInstructions
         // with the inherited blueprints bound.
         const routine = yield* Database.add(
           Instructions.make({
@@ -127,7 +127,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           id: task.id,
           spawn: Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(AgentPrompt, { prompt: Ref.make(routine), input: {} });
+            const fiber = yield* invoker.invokeFiber(RunInstructions, { prompt: Ref.make(routine), input: {} });
             const pid = fiber.pid;
             Obj.update(plan, (plan) => {
               const taskRecord = plan.tasks.find((taskRecord) => taskRecord.id === task.id);

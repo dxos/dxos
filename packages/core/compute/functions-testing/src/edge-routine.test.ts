@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { AgentPrompt, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';
+import { RunInstructions, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
 import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
@@ -20,7 +20,7 @@ import { trim } from '@dxos/util';
 import { sync } from './testing';
 
 /**
- * Cron trigger on EDGE runs {@link AgentPrompt} for a {@link Routine} that uses the Database
+ * Cron trigger on EDGE runs {@link RunInstructions} for a {@link Routine} that uses the Database
  * blueprint Query tool against replicated ECHO documents.
  *
  * Prereq: local EDGE (`configPreset({ edge: 'local' })` → `http://localhost:8787`) with LLM
@@ -73,7 +73,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
         blueprints: [Ref.make(databaseBlueprint)],
       }),
     );
-    const fn = Operation.serialize(AgentPrompt);
+    const fn = Operation.serialize(RunInstructions);
     dbg(Obj.toJSON(fn));
 
     const trigger = space.db.add(

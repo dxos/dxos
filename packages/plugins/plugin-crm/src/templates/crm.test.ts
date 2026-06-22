@@ -10,8 +10,8 @@ import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Routine } from '@dxos/plugin-routine';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { Routine } from '@dxos/plugin-routine';
 
 import { crm } from './crm';
 

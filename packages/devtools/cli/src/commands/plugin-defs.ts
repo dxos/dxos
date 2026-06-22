@@ -4,7 +4,6 @@
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -12,6 +11,7 @@ import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
 

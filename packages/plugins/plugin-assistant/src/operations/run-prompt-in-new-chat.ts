@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Instructions, Template } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -72,7 +72,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
                 : prompt;
             yield* Database.flush();
             yield* Operation.invoke(
-              AgentPrompt,
+              RunInstructions,
               {
                 prompt: promptRef,
                 input: {},

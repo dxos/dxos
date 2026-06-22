@@ -11,7 +11,7 @@ import { Routine } from '#types';
  * Reactive query for the routines connected to an object O — without a stored association field.
  *
  * Association is derived: a routine is connected when one of its triggers references O, either via a
- * `Ref` anywhere in the trigger's `input` (e.g. a magazine passed into AgentPrompt's input) or via a feed
+ * `Ref` anywhere in the trigger's `input` (e.g. a magazine passed into RunInstructions's input) or via a feed
  * trigger whose `spec.feed` resolves to `O.feed` (feed-annotated hosts like mailboxes). Both are reachable
  * by reverse-reference traversal because ECHO's reverse-ref index is structural — it records every ref in a
  * document regardless of schema path (incl. untyped records and union-nested fields). The traversal is two

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
-import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
+import { RunInstructions, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -26,7 +26,7 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
-const computeOperationsToImport = [AgentPrompt] as const;
+const computeOperationsToImport = [RunInstructions] as const;
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(

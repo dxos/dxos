@@ -6,15 +6,15 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
+import { RunInstructions, Chat } from '@dxos/assistant-toolkit';
 import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Message } from '@dxos/types';
 
@@ -56,7 +56,7 @@ describe('Agent prompt (composer plugin harness)', () => {
           yield* Database.flush();
 
           const result = yield* Operation.invoke(
-            AgentPrompt,
+            RunInstructions,
             {
               prompt: Ref.make(prompt),
               input: {},

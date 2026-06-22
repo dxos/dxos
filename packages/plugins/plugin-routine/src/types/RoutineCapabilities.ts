@@ -51,10 +51,7 @@ export type Template = {
    * create flow; any auxiliary objects (runnable, triggers) must be added by the scaffold itself via
    * Database.Service. `subject` is set when scaffolding from an object's companion.
    */
-  scaffold: (ctx: {
-    name?: string;
-    subject?: Obj.Unknown;
-  }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
+  scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };
 
 export const Template = Capability.make<Template>('org.dxos.plugin.routine.capability.template');

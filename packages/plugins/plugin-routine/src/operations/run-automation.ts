@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
       const instruction = instructions.find((candidate) => Obj.getParent(candidate)?.id === routineObj.id);
       invariant(instruction, 'Routine has no action to run.');
 
-      // The instructions carry their own context objects and blueprints; AgentPrompt binds them to the
+      // The instructions carry their own context objects and blueprints; RunInstructions binds them to the
       // session, so the run does not forward context separately.
       yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
         db,
