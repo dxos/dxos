@@ -25,10 +25,8 @@ export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
 export type Map = Record<string, Type.InstanceType<typeof Tag>>;
 
-export const sortTags = (
-  { label: a }: Type.InstanceType<typeof Tag>,
-  { label: b }: Type.InstanceType<typeof Tag>,
-) => a.localeCompare(b);
+export const sortTags = ({ label: a }: Type.InstanceType<typeof Tag>, { label: b }: Type.InstanceType<typeof Tag>) =>
+  a.localeCompare(b);
 
 export const createTagList = (tags: Map): Type.InstanceType<typeof Tag>[] =>
   Object.entries(tags)

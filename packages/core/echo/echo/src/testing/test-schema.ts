@@ -60,9 +60,7 @@ export namespace TestSchema {
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(
-    ExampleSchema,
-  ) {}
+  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(ExampleSchema) {}
 
   //
   // Message
@@ -70,13 +68,13 @@ export namespace TestSchema {
 
   // TODO(burdon): Support defaults directly on Type: `make` is erased by `pipe(Type.Obj)`.
   export const MessageStruct = Schema.Struct({
-      // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
-      // TODO(burdon): Support defaults (update create and create).
-      timestamp: Schema.String.pipe(
-        Schema.propertySignature,
-        Schema.withConstructorDefault(() => new Date().toISOString()),
-      ),
-    });
+    // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
+    // TODO(burdon): Support defaults (update create and create).
+    timestamp: Schema.String.pipe(
+      Schema.propertySignature,
+      Schema.withConstructorDefault(() => new Date().toISOString()),
+    ),
+  });
 
   export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(MessageStruct) {}
 
