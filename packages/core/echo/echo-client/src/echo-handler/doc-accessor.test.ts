@@ -5,7 +5,7 @@
 import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
 import { describe, it, test } from 'vitest';
 
-import * as Doc from '@dxos/doc';
+import { Doc, createAccessor } from '@dxos/doc';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -74,7 +74,7 @@ describe('in-memory (unattached object)', () => {
 describe('createDocAccessor (agnostic via @dxos/doc)', () => {
   test('resolves an accessor for an in-memory object not yet added to a db', ({ expect }) => {
     const obj = Obj.make(TestSchema.Task, { description: 'hello' });
-    const accessor = Doc.createAccessor(obj, ['description']);
+    const accessor = createAccessor(obj, ['description']);
     expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello');
 
     accessor.handle.change((doc) => {
@@ -89,7 +89,7 @@ describe('createDocAccessor (agnostic via @dxos/doc)', () => {
     graph.registry.add([TestSchema.Task]);
 
     const obj = db.add(Obj.make(TestSchema.Task, { description: 'hi' }));
-    const accessor = Doc.createAccessor(obj, ['description']);
+    const accessor = createAccessor(obj, ['description']);
     expect(Doc.Accessor.getValue<string>(accessor)).toBe('hi');
 
     accessor.handle.change((doc) => {
@@ -100,7 +100,7 @@ describe('createDocAccessor (agnostic via @dxos/doc)', () => {
 
   test('in-memory edits survive db.add via the agnostic API', async ({ expect }) => {
     const obj = Obj.make(TestSchema.Task, { description: 'draft' });
-    const accessor = Doc.createAccessor(obj, ['description']);
+    const accessor = createAccessor(obj, ['description']);
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 5, 0, 'ed');
     });

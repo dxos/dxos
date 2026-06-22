@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type { ChangeFn, ChangeOptions, Doc as AutomergeDoc, Heads } from '@automerge/automerge';
 
 import { getDeep } from '@dxos/util';

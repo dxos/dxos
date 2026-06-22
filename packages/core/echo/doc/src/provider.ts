@@ -5,14 +5,14 @@
 import { type AnyProperties } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
-import { type Accessor, type KeyPath } from './doc';
+import * as Doc from './Doc';
 
 /**
- * Supplies the concrete {@link Accessor} for an object. Registered by `@dxos/echo-client`; mirrors
+ * Supplies the concrete {@link Doc.Accessor} for an object. Registered by `@dxos/echo-client`; mirrors
  * the `RefResolver` dependency-inversion seam so this package stays free of echo-client internals.
  */
 export interface Provider {
-  getAccessor(obj: AnyProperties, path: KeyPath): Accessor;
+  getAccessor(obj: AnyProperties, path: Doc.KeyPath): Doc.Accessor;
 }
 
 let currentProvider: Provider | undefined;
@@ -25,11 +25,11 @@ export const setProvider = (provider: Provider): void => {
 };
 
 /**
- * Resolves an {@link Accessor} for a value within an object, agnostic to whether the object is
+ * Resolves an {@link Doc.Accessor} for a value within an object, agnostic to whether the object is
  * in-memory or attached to a database. Requires `@dxos/echo-client` to have registered a provider.
  */
 export const createAccessor: {
-  <T extends AnyProperties>(obj: T, path: KeyPath | keyof T): Accessor<T>;
+  <T extends AnyProperties>(obj: T, path: Doc.KeyPath | keyof T): Doc.Accessor<T>;
 } = (obj, path) => {
   invariant(currentProvider, 'Document accessor provider is not registered (requires @dxos/echo-client).');
   return currentProvider.getAccessor(obj, Array.isArray(path) ? path : [path as string | number]);
