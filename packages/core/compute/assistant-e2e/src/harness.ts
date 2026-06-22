@@ -3,12 +3,12 @@
 //
 
 import { TestContext } from '@effect/vitest';
-import { pipe } from 'effect/Function';
-import * as Record from 'effect/Record';
-import * as Schema from 'effect/Schema';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Record from 'effect/Record';
+import * as Schema from 'effect/Schema';
 
 import { AiService, type ModelName } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
