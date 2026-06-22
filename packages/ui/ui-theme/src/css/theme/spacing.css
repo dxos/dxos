@@ -84,8 +84,7 @@
     --dx-lacuna-4: 0.5rem;
     --dx-lacuna-6: 0.75rem;
 
-    --dx-gutter-xs: 0.25rem; /* Input rings */
-    --dx-gutter-sm: 1rem; /* 16px (sm density card) */
+    --dx-gutter-sm: 0.5rem; /* 16px (sm density card) */
     --dx-gutter-md: 2rem; /* 32px (md density card — default) */
     --dx-gutter-lg: 2.5rem; /* 40px (dialog, lg density card) */
   }

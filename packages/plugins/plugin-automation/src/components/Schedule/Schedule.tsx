@@ -209,7 +209,7 @@ export type ScheduleHeaderProps = { classNames?: string };
 const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const { value, timezone } = useScheduleContext('Schedule.Header');
-  return <p className={mx('grow truncate', classNames)}>{describeSchedule(value, timezone)}</p>;
+  return <p className={mx('grow truncate text-description', classNames)}>{describeSchedule(value, timezone)}</p>;
 });
 
 ScheduleHeader.displayName = 'Schedule.Header';
