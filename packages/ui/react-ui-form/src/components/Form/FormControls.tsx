@@ -85,12 +85,15 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-export type FormViewportProps = { scroll?: boolean; gutter?: ColumnRootProps['gutter'] };
+export type FormViewportProps = {
+  scroll?: boolean;
+  gutter?: ColumnRootProps['gutter'];
+};
 
 // The viewing window: owns the gutter Column (chrome/side-padding).
 // Content-height by default; `scroll` makes it fill its parent and scroll (the gutter then hosts the scrollbar).
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
-  ({ children, scroll, gutter = 'xs', ...props }, forwardedRef) => {
+  ({ children, scroll, gutter = 'sm', ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_VIEWPORT_NAME);
     const styles = formTheme.styles({ variant });
     // Span the full width when nested inside another Column grid (e.g. Card.Root)
@@ -264,7 +267,10 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SECTION_NAME = 'Form.Section';
 
-export type FormSectionProps = ThemedClassName<{ title?: string; description?: string }>;
+export type FormSectionProps = ThemedClassName<{
+  title?: string;
+  description?: string;
+}>;
 
 export const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, title, description, ...props }, forwardedRef) => {

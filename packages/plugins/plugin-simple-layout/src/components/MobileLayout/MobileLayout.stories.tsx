@@ -65,7 +65,7 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <Column.Root gutter='xs' classNames='py-form-chrome'>
+        <Column.Root gutter='sm' classNames='py-form-chrome'>
           <Column.Center>
             <Flex column>
               <Input.Root>
