@@ -30,6 +30,14 @@ import { AgentPrompt } from './definitions';
 
 const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
 
+const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
+  // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
+  if ('$id' in output && output.$id === '/schemas/unknown') {
+    return Schema.Any;
+  }
+  return JsonSchema.toEffectSchema(output);
+};
+
 export default AgentPrompt.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
@@ -98,7 +106,7 @@ export default AgentPrompt.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: JsonSchema.toEffectSchema(prompt.output),
+          output: routineOutputSchema(prompt.output),
           resultSink,
         });
 
