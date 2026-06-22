@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Skill, Routine } from '@dxos/compute';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -21,7 +21,7 @@ import { Automation } from '#types';
 
 import { AutomationCompanion } from './AutomationCompanion';
 
-const types = [Automation.Automation, Automation.AppliesTo, Routine.Routine, Blueprint.Blueprint, Text.Text];
+const types = [Automation.Automation, Automation.AppliesTo, Routine.Routine, Skill.Skill, Text.Text];
 
 /** Seed a companion-subject object plus one automation anchored to it via an AppliesTo relation. */
 const seed = (space: Space) => {
