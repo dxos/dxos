@@ -321,8 +321,10 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       // The dispatcher dies on an enabled trigger with no function reference, so `enabled` is only honored
-      // once a function is resolvable (the trigger's own, else the automation's runnable wired in at create).
-      const enabled = values.enabled === true && (trigger?.function ?? automation.runnable) != null;
+      // when the function the trigger will actually carry is present: its own on edit (not backfilled here),
+      // the automation's runnable wired in below on create.
+      const functionRef = trigger ? trigger.function : automation.runnable;
+      const enabled = values.enabled === true && functionRef != null;
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -335,7 +337,7 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
         // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
         // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
         // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
-        const created = db.add(Trigger.make({ function: automation.runnable, enabled, spec }));
+        const created = db.add(Trigger.make({ function: functionRef, enabled, spec }));
         Obj.setParent(created, automation);
         Obj.update(automation, (automation) => {
           automation.triggers = [...automation.triggers, Ref.make(created)];
