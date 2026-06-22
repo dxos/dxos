@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Paths } from '@dxos/app-toolkit';
+import { AppNode, Paths } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
+import { Type } from '@dxos/echo';
 
-const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = Paths.createTypeSectionPaths(Chat.Chat);
+const chatTypename = Type.getTypename(Chat.Chat)!;
 
-export { getChatsPath, getChatPath };
+export const getChatsPath = (spaceId: string): string =>
+  Paths.getSpacePath(spaceId, AppNode.NAV_TREE_GROUP_AI_ID, chatTypename);
+
+export const getChatPath = (spaceId: string, objectId: string): string => `${getChatsPath(spaceId)}/${objectId}`;

@@ -339,6 +339,54 @@ export const makeDeckCompanion = <TData = any>({
 });
 
 //
+// Group helpers.
+//
+
+// Stable identifiers for navtree section groups; kept in app-toolkit so any plugin can
+// reference them without depending on plugin-navtree.
+// ID constants are the node `id` values (used as path segments); TYPE constants are node `type` values.
+export const NAV_TREE_GROUP_AI_ID = 'ai';
+export const NAV_TREE_GROUP_AI_TYPE = 'dxos.org/navtree/group/ai';
+export const NAV_TREE_GROUP_CONTENT_ID = 'content';
+export const NAV_TREE_GROUP_CONTENT_TYPE = 'dxos.org/navtree/group/content';
+export const NAV_TREE_GROUP_COMM_ID = 'communications';
+export const NAV_TREE_GROUP_COMM_TYPE = 'dxos.org/navtree/group/communications';
+export const NAV_TREE_GROUP_SYSTEM_ID = 'system';
+export const NAV_TREE_GROUP_SYSTEM_TYPE = 'dxos.org/navtree/group/system';
+
+/**
+ * Build a navtree section-group node.
+ * Group nodes render as a dense uppercase label with their children always
+ * visible at the same visual level (disposition='group').  The space is stored
+ * in properties so child connectors can retrieve it without an extra graph lookup.
+ */
+export const makeGroup = ({
+  id,
+  type,
+  label,
+  space,
+  position,
+}: {
+  id: string;
+  type: string;
+  label: Translations.Label;
+  space: Space;
+  position?: Position.Position;
+}): Node.NodeArg<null> => ({
+  id,
+  type,
+  data: null,
+  properties: {
+    label,
+    disposition: 'group',
+    draggable: false,
+    droppable: false,
+    space,
+    ...(position !== undefined && { position }),
+  },
+});
+
+//
 // Section helpers.
 //
 

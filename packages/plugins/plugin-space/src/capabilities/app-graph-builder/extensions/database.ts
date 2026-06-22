@@ -9,13 +9,13 @@ import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, isNonNullable } from '@dxos/util';
@@ -45,16 +45,28 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
-    // Types section virtual node under each space.
+    // System section group — created alongside database/settings so the group always
+    // appears when the space plugin is active and hides when there are no children.
+    GraphBuilder.createExtension({
+      id: AppNode.NAV_TREE_GROUP_SYSTEM_ID,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: AppNode.NAV_TREE_GROUP_SYSTEM_ID,
+            type: AppNode.NAV_TREE_GROUP_SYSTEM_TYPE,
+            label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            space,
+            position: 900,
+          }),
+        ]),
+    }),
+
+    // Types section virtual node under the system group.
     GraphBuilder.createExtension({
       id: 'databaseSection',
-      match: AppNodeMatcher.whenSpace,
-      connector: (space, get) => {
-        const spaceState = get(CreateAtom.fromObservable(space.state));
-        if (spaceState !== SpaceState.SPACE_READY) {
-          return Effect.succeed([]);
-        }
-
+      match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_SYSTEM_TYPE),
+      connector: (space) => {
         return Effect.succeed([
           AppNode.makeSection({
             id: Paths.Segments.database,
@@ -62,7 +74,6 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
-            position: 10_000,
             testId: 'spacePlugin.databaseSection',
           }),
         ]);

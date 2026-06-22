@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { AppNode, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { AutomationCapabilities, AutomationOperation } from '../types';
+import { Automation, AutomationCapabilities, AutomationOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation> =
   AutomationOperation.CreateAutomation.pipe(
@@ -24,9 +25,15 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation
           .scaffold({ name, subject })
           .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
+        const targetNodeId = Paths.getSpacePath(
+          db.spaceId,
+          AppNode.NAV_TREE_GROUP_AI_ID,
+          Type.getTypename(Automation.Automation)!,
+        );
         return yield* Operation.invoke(SpaceOperation.AddObject, {
           object,
           target: db,
+          targetNodeId,
         });
       }),
     ),

@@ -7,11 +7,11 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { SpaceState, isSpace } from '@dxos/client/echo';
+import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -38,16 +38,28 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
-    // Collections section virtual node under each space.
+    // Content section group — created alongside collections so the group always
+    // appears when the space plugin is active and hides when there are no children.
+    GraphBuilder.createExtension({
+      id: AppNode.NAV_TREE_GROUP_CONTENT_ID,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: AppNode.NAV_TREE_GROUP_CONTENT_ID,
+            type: AppNode.NAV_TREE_GROUP_CONTENT_TYPE,
+            label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
+            space,
+            position: 200,
+          }),
+        ]),
+    }),
+
+    // Collections section virtual node under the content group.
     GraphBuilder.createExtension({
       id: 'collectionsSection',
-      match: AppNodeMatcher.whenSpace,
+      match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_CONTENT_TYPE),
       connector: (space, get) => {
-        const spaceState = get(CreateAtom.fromObservable(space.state));
-        if (spaceState !== SpaceState.SPACE_READY) {
-          return Effect.succeed([]);
-        }
-
         get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
           Option.getOrUndefined,
@@ -70,7 +82,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               icon: 'ph--folder--regular',
               iconHue: 'amber',
               role: 'branch',
-              position: 200,
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
               droppable: false,

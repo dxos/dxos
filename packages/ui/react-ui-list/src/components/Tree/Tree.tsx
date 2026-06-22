@@ -75,12 +75,7 @@ export const Tree = <T extends { id: string } = any>({
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
       <TreeProvider value={model}>
         {childIds.map((childId, index) => (
-          <TreeChild
-            key={childId}
-            id={childId}
-            last={index === childIds.length - 1}
-            {...childProps}
-          />
+          <TreeChild key={childId} id={childId} last={index === childIds.length - 1} {...childProps} />
         ))}
       </TreeProvider>
     </Treegrid.Root>

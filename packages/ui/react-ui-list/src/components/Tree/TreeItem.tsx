@@ -25,7 +25,14 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { TreeItem as NaturalTreeItem, Treegrid, TREEGRID_PARENT_OF_SEPARATOR, type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  TreeItem as NaturalTreeItem,
+  Treegrid,
+  TREEGRID_PARENT_OF_SEPARATOR,
+  type Label,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import {
   ghostFocusWithin,
   ghostHover,
@@ -47,7 +54,10 @@ const hoverableDescriptionIcons =
 const NavTreeSectionHeader = ({ label }: { label: Label }) => {
   const { t } = useTranslation();
   return (
-    <div role='separator' className='col-[tree-row] px-2 pt-3 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-subdued select-none'>
+    <div
+      role='separator'
+      className='col-[tree-row] px-2 pt-3 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-subdued select-none'
+    >
       {toLocalizedString(label, t)}
     </div>
   );
@@ -154,6 +164,18 @@ const RawTreeItem = <T extends { id: string } = any>({
   const isItemDraggable = draggableProp && itemDraggable !== false;
   const isItemDroppable = itemDroppable !== false;
   const nativeDragText = id;
+
+  // Group nodes have no interactive element (no hover, no toggle) that normally triggers
+  // Graph.expand, so their children would never load. Expand eagerly on mount; Graph.expand
+  // is idempotent so re-renders after the first expansion are harmless.
+  const groupExpandedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (disposition !== 'group' || groupExpandedRef.current === item.id) {
+      return;
+    }
+    groupExpandedRef.current = item.id;
+    onItemHover?.({ item });
+  }, [disposition, item, onItemHover]);
 
   useEffect(() => {
     // Group nodes render no button, so buttonRef is null and drag setup is inapplicable.
@@ -313,7 +335,11 @@ const RawTreeItem = <T extends { id: string } = any>({
   };
 
   // Group nodes render as a flat section header with their children always expanded at the same visual level.
+  // Suppress the header entirely when there are no children to avoid orphaned section labels.
   if (disposition === 'group') {
+    if (childIds.length === 0) {
+      return null;
+    }
     return (
       <>
         <NavTreeSectionHeader label={label} />
