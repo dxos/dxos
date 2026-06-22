@@ -21,6 +21,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
   it.effect(
     'creates a sandbox and runs a shell command',
     agentTest({
+      randomEntityIds: true,
       sandbox: 'local',
       plugins: [SandboxPlugin()],
       clientTypes: [Sandbox.Sandbox],
@@ -48,6 +49,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
   it.effect(
     'github',
     agentTest({
+      randomEntityIds: true,
       sandbox: 'local',
       plugins: [SandboxPlugin()],
       clientTypes: [Sandbox.Sandbox],

@@ -17,12 +17,11 @@ import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos
 import { type ClientOptions } from '@dxos/client';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
-import { Database, Ref, Tag, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
 import { type SpaceId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -80,7 +79,31 @@ interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints'
 
   /** Additional ECHO types registered with ClientPlugin. */
   clientTypes?: ClientOptions['types'];
+
+  /**
+   * When true, skip per-test entity ID seeding so IDs vary between runs (e.g. sandbox-service KV).
+   */
+  randomEntityIds?: boolean;
 }
+
+const STABLE_ENTITY_ID_EPOCH = new Date('2025-01-01').getTime();
+
+const fnv1a = (input: string): number => {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash >>> 0;
+};
+
+/** Stable per-test ULID seed derived from vitest's fully-qualified test name. */
+const stableTestSeed = (ctx: TestContext): [time: number, seed: number] => {
+  const hash = fnv1a(ctx.task.fullName);
+  const time = STABLE_ENTITY_ID_EPOCH + (hash % 86_400_000);
+  const seed = Math.imul(hash ^ (hash >>> 16), 0x9e3779b1) >>> 0;
+  return [time, seed];
+};
 
 const formatInstructions = (instructions: string, completionCriteria: readonly string[] = []): string => {
   if (completionCriteria.length === 0) {
@@ -168,6 +191,12 @@ const logTraceEvents = <A>(harness: TestHarness, spaceId: SpaceId) =>
     yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
   });
 
+/**
+ * Wraps a prompt spec as an agent e2e test.
+ *
+ * Callers must invoke `Obj.ID.dangerouslyDisableRandomness()` at module scope before `describe`;
+ * each test run then pins a stable seed derived from `ctx.task.fullName`.
+ */
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
     options.model ??
@@ -190,6 +219,11 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   });
 
   return Effect.fnUntraced(function* (ctx) {
+    if (!options.randomEntityIds) {
+      const [time, seed] = stableTestSeed(ctx);
+      Obj.ID.dangerouslySetSeed(time, seed);
+    }
+
     yield* Effect.scoped(
       Effect.gen(function* () {
         const harness = yield* Effect.acquireRelease(
