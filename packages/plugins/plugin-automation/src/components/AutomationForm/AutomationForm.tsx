@@ -140,7 +140,7 @@ const ActionEditor = ({
   );
 
   return (
-    <div role='none' className='flex flex-col gap-2'>
+    <div role='none' className='flex flex-col'>
       <ActionKindToggle value={kind} onChange={setKind} />
       {kind === 'operation' ? (
         <OperationEditor
