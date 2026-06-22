@@ -5,7 +5,7 @@
 import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
 import { describe, it, test } from 'vitest';
 
-import { DocAccessor as DocApi, createDocAccessor as createDocAccessorViaProvider } from '@dxos/doc';
+import * as Doc from '@dxos/doc';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -74,13 +74,13 @@ describe('in-memory (unattached object)', () => {
 describe('createDocAccessor (agnostic via @dxos/doc)', () => {
   test('resolves an accessor for an in-memory object not yet added to a db', ({ expect }) => {
     const obj = Obj.make(TestSchema.Task, { description: 'hello' });
-    const accessor = createDocAccessorViaProvider(obj, ['description']);
-    expect(DocApi.getValue<string>(accessor)).toBe('hello');
+    const accessor = Doc.createAccessor(obj, ['description']);
+    expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello');
 
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 5, 0, ' world');
     });
-    expect(DocApi.getValue<string>(accessor)).toBe('hello world');
+    expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello world');
   });
 
   test('resolves an accessor for a db-attached object', async ({ expect }) => {
@@ -89,8 +89,8 @@ describe('createDocAccessor (agnostic via @dxos/doc)', () => {
     graph.registry.add([TestSchema.Task]);
 
     const obj = db.add(Obj.make(TestSchema.Task, { description: 'hi' }));
-    const accessor = createDocAccessorViaProvider(obj, ['description']);
-    expect(DocApi.getValue<string>(accessor)).toBe('hi');
+    const accessor = Doc.createAccessor(obj, ['description']);
+    expect(Doc.Accessor.getValue<string>(accessor)).toBe('hi');
 
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 2, 0, ' there');
@@ -100,11 +100,11 @@ describe('createDocAccessor (agnostic via @dxos/doc)', () => {
 
   test('in-memory edits survive db.add via the agnostic API', async ({ expect }) => {
     const obj = Obj.make(TestSchema.Task, { description: 'draft' });
-    const accessor = createDocAccessorViaProvider(obj, ['description']);
+    const accessor = Doc.createAccessor(obj, ['description']);
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 5, 0, 'ed');
     });
-    expect(DocApi.getValue<string>(accessor)).toBe('drafted');
+    expect(Doc.Accessor.getValue<string>(accessor)).toBe('drafted');
 
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();

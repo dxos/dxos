@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
-import { DocAccessor } from './accessor';
+import { Accessor } from './doc';
 
 /**
  * A single find/replace edit applied to a text document. This is the structured form of the diff
@@ -29,16 +29,16 @@ export interface Edit extends Schema.Schema.Type<typeof Edit> {}
  * Applies a sequence of find/replace {@link Edit}s to the string value an accessor points at,
  * returning the resulting content. Throws if a non-`replaceAll` edit's `oldString` is not found.
  */
-export const applyEdits = (accessor: DocAccessor, edits: readonly Edit[]): string => {
+export const applyEdits = (accessor: Accessor, edits: readonly Edit[]): string => {
   for (const edit of edits) {
     accessor.handle.change((doc) => {
-      const text = DocAccessor.getValue<string>(accessor);
+      const text = Accessor.getValue<string>(accessor);
       // Automerge's `splice` types the path as mutable `Prop[]`; our `KeyPath` is readonly and is not mutated here.
       if (edit.replaceAll) {
         let idx = text.indexOf(edit.oldString);
         while (idx !== -1) {
           A.splice(doc, accessor.path as A.Prop[], idx, edit.oldString.length, edit.newString);
-          const updated = DocAccessor.getValue<string>(accessor);
+          const updated = Accessor.getValue<string>(accessor);
           idx = updated.indexOf(edit.oldString, idx + edit.newString.length);
         }
       } else {
@@ -51,5 +51,5 @@ export const applyEdits = (accessor: DocAccessor, edits: readonly Edit[]): strin
     });
   }
 
-  return DocAccessor.getValue<string>(accessor);
+  return Accessor.getValue<string>(accessor);
 };

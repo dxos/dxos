@@ -5,14 +5,14 @@
 import { next as A } from '@automerge/automerge';
 import { describe, test } from 'vitest';
 
-import { type DocAccessor, type Handle, type KeyPath } from './accessor';
+import { type Accessor, type Handle, type KeyPath } from './doc';
 import { applyEdits } from './edits';
 import { append, diff, getHeads, onChange, splice } from './operations';
 
 type Schema = { content: string };
 
 // Minimal in-memory accessor over a standalone Automerge doc — exercises the operations without echo-client.
-const makeAccessor = (initial: Schema, path: KeyPath = ['content']): DocAccessor<Schema> => {
+const makeAccessor = (initial: Schema, path: KeyPath = ['content']): Accessor<Schema> => {
   let doc = A.from(initial);
   const listeners = new Set<() => void>();
   const handle: Handle<Schema> = {
@@ -29,7 +29,7 @@ const makeAccessor = (initial: Schema, path: KeyPath = ['content']): DocAccessor
     addListener: (_event, listener) => listeners.add(listener),
     removeListener: (_event, listener) => listeners.delete(listener),
   };
-  return { handle, path } as DocAccessor<Schema>;
+  return { handle, path } as Accessor<Schema>;
 };
 
 describe('operations', () => {

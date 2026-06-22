@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
+import type { ChangeFn, ChangeOptions, Doc as AutomergeDoc, Heads } from '@automerge/automerge';
 
 import { getDeep } from '@dxos/util';
 
@@ -17,7 +17,7 @@ export type KeyPath = readonly (string | number)[];
  * not-yet-attached document.
  */
 export interface Handle<T = any> {
-  doc(): Doc<T> | undefined; // TODO(burdon): Remove undefined.
+  doc(): AutomergeDoc<T> | undefined; // TODO(burdon): Remove undefined.
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
   addListener(event: 'change', listener: () => void): void;
@@ -28,13 +28,13 @@ export interface Handle<T = any> {
  * Binds a value at `path` within a document `handle`. Editors and the document operations in this
  * package consume this to read and mutate the underlying Automerge document.
  */
-export interface DocAccessor<T = any> {
-  get handle(): Handle<T>;
+export interface Accessor<T = any> {
   get path(): KeyPath;
+  get handle(): Handle<T>;
 }
 
-export const DocAccessor = {
-  getValue: <T>(accessor: DocAccessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
+export const Accessor = {
+  getValue: <T>(accessor: Accessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
 };
 
 /**
