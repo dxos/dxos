@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Event as EventType } from '@dxos/types';
@@ -29,7 +29,7 @@ export type EventBodyEditorProps = ThemedClassName<{
  */
 export const EventBodyEditor = ({ event, markdown = true, classNames }: EventBodyEditorProps) => {
   const { themeMode } = useThemeContext();
-  const accessor = useMemo(() => createDocAccessor(event, ['description']), [event]);
+  const accessor = useMemo(() => Doc.createAccessor(event, ['description']), [event]);
   const extensions = useMemo<Extension[]>(
     () => [
       createBasicExtensions({ lineWrapping: true }),

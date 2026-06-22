@@ -46,7 +46,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/mesh/edge-client"

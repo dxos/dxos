@@ -94,7 +94,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/deus": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

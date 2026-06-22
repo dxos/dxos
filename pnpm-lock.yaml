@@ -3423,6 +3423,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -4722,6 +4725,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../echo/echo-doc
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol
@@ -5778,6 +5784,30 @@ importers:
         specifier: 3.21.3
         version: 3.21.3
 
+  packages/core/echo/echo-doc:
+    dependencies:
+      '@automerge/automerge':
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../echo-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':
@@ -5792,6 +5822,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../echo-doc
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7575,6 +7608,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../../core/echo/echo-host
@@ -8254,9 +8290,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -8614,9 +8650,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -9101,9 +9137,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -9228,6 +9264,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -10613,9 +10652,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10853,6 +10892,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -11716,6 +11758,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -12691,6 +12736,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13500,6 +13548,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -13963,9 +14014,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -14296,15 +14347,15 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -16021,9 +16072,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -17901,6 +17952,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -19764,6 +19818,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -20081,9 +20138,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
+      '@dxos/echo-doc':
         specifier: workspace:*
-        version: link:../../core/echo/echo-client
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -21918,6 +21975,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

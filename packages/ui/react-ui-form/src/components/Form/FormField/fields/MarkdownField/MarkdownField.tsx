@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
@@ -98,7 +98,7 @@ type RefMarkdownEditorProps = {
 const RefMarkdownEditor = ({ reference, placeholder }: RefMarkdownEditorProps) => {
   const text = useAtomValue(useMemo(() => reference.atom, [reference]));
   const dataExtensions = useMemo(
-    () => (text ? [createDataExtensions({ id: reference.uri, text: createDocAccessor(text, ['content']) })] : []),
+    () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
   const extensions = useBasicMarkdownExtensions({ placeholder, extensions: dataExtensions });

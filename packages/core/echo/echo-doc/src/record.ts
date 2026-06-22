@@ -1,16 +1,18 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { next as A } from '@automerge/automerge';
 
 import { isNonNullable } from '@dxos/util';
 
-// Strings longer than this will have collaborative editing disabled for performance reasons.
+import * as Doc from './Doc';
+
+// Strings longer than this have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
 /**
- * Encode model type to Automerge record.
+ * Default codec: encode a model value to an Automerge record.
  */
 export const encode = (value: any): any => {
   if (Array.isArray(value)) {
@@ -19,7 +21,6 @@ export const encode = (value: any): any => {
   if (value instanceof A.RawString) {
     throw new Error('Encode called on automerge data.');
   }
-
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(
       Object.entries(value)
@@ -28,13 +29,11 @@ export const encode = (value: any): any => {
           if (encoded === undefined) {
             return undefined;
           }
-
-          return [key, value];
+          return [key, encoded];
         })
         .filter(isNonNullable),
     );
   }
-
   if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
     return new A.RawString(value);
   }
@@ -43,7 +42,7 @@ export const encode = (value: any): any => {
 };
 
 /**
- * Encode Automerge record to model type.
+ * Default codec: decode an Automerge record to a model value.
  */
 export const decode = (value: any): any => {
   if (Array.isArray(value)) {
@@ -60,14 +59,12 @@ export const decode = (value: any): any => {
 };
 
 /**
- * Returns the relative path from the base path or return undefined if they dont' match.
- * Used to filter mutations.
+ * Relative path from `base`, or `undefined` if `path` is not under `base`. Used to filter mutations.
  */
-export const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[] | undefined => {
+export const rebasePath = (path: A.Prop[], base: Doc.KeyPath): A.Prop[] | undefined => {
   if (path.length < base.length) {
     return undefined;
   }
-
   for (let i = 0; i < base.length; ++i) {
     if (path[i] !== base[i]) {
       return undefined;
@@ -78,9 +75,9 @@ export const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): 
 };
 
 /**
- * Get value at path.
+ * Read the value at `path`. When `init` is set, auto-vivifies intermediate records.
  */
-export const getDeep = (obj: any, path: readonly (string | number)[], init = false) => {
+export const getDeep = (obj: any, path: Doc.KeyPath, init = false): any => {
   let value = obj;
   for (const key of path) {
     if (init) {
