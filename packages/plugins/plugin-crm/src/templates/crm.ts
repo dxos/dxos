@@ -62,13 +62,13 @@ export const crm: RoutineCapabilities.Template = {
       const existingFns = yield* Database.query(
         Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.runInstructions')),
       ).run;
-      const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
+      const runInstructionsFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 
       const feed = yield* Database.load(mailbox.feed);
       const trigger = yield* Database.add(
         Obj.make(Trigger.Trigger, {
           enabled: false,
-          function: Ref.make(agentPromptFn),
+          function: Ref.make(runInstructionsFn),
           spec: Trigger.specFeed(feed),
           input: {
             prompt: Ref.make(instructions),
@@ -80,7 +80,7 @@ export const crm: RoutineCapabilities.Template = {
 
       const automation = Routine.make({
         name: name ?? routineName,
-        runnable: Ref.make(agentPromptFn),
+        runnable: Ref.make(runInstructionsFn),
         triggers: [Ref.make(trigger)],
       });
       // The trigger is owned by the automation (reachable only via it) so it cascade-deletes with it; the
