@@ -168,7 +168,12 @@ const seedInstructions = (prompt: Instructions.Instructions) =>
 
 const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spaceId }, Database.Service);
 
-const runInstructions = (harness: TestHarness, instructions: Instructions.Instructions, model: ModelName, spaceId: SpaceId) =>
+const runInstructions = (
+  harness: TestHarness,
+  instructions: Instructions.Instructions,
+  model: ModelName,
+  spaceId: SpaceId,
+) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
