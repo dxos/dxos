@@ -19,7 +19,7 @@ export default Config2.make({
 
       An Inbox skill gives AI agents tools to read, draft, classify, and sync mail, plus message extractors that parse confirmation emails (flights, hotels, reservations) into structured Trip and Event objects in the space.
     `,
-    icon: { key: 'ph--address-book-tabs--regular', hue: 'rose' },
+    icon: { key: 'ph--mailbox--regular', hue: 'rose' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
     tags: ['integration'],
   },

@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Routine, Operation } from '@dxos/compute';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -58,31 +58,6 @@ export const SetCurrentChat = Operation.make({
     chat: Type.getSchema(Chat.Chat).pipe(Schema.optional),
   }),
   output: Schema.Void,
-});
-
-export const RunPromptInNewChat = Operation.make({
-  meta: {
-    key: makeKey('runPromptInNewChat'),
-    name: 'Run Prompt In New Chat',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    db: Database.Database,
-    /** Context objects to bind to the new chat. */
-    objects: Schema.optional(Schema.Array(Obj.Unknown)),
-    /** Skill keys to look up and bind to the new chat. */
-    skills: Schema.optional(Schema.Array(Schema.String)),
-    /** Raw instructions or an existing Routine object reference. */
-    prompt: Schema.Union(Schema.String, Ref.Ref(Routine.Routine)),
-    /**
-     * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
-     */
-    background: Schema.optional(Schema.Boolean),
-  }),
-  output: Schema.Struct({
-    object: Type.getSchema(Chat.Chat),
-  }),
 });
 
 const NavigationTargetSchema = Schema.Struct({

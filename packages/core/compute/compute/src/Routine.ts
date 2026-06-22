@@ -25,12 +25,16 @@ export const Routine = Schema.Struct({
     description: 'Output schema',
   }),
   instructions: Ref.Ref(Text.Text).pipe(
-    Annotation.FormInputAnnotation.set(false),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
+    Schema.annotations({ description: 'Describe what the agent should do in each session.' }),
   ),
   skills: Schema.Array(Ref.Ref(Skill.Skill)),
-  context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
+  /**
+   * Context objects bound to the agent's session when this routine runs (sibling of `skills`).
+   * Generic `Ref.Ref(Obj.Unknown)` so any space object qualifies. Honored on every run path that
+   * executes a routine through the agent prompt, not only triggered automations.
+   */
+  objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Schema.annotations({ title: 'Objects' }), Schema.optional),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
@@ -46,18 +50,10 @@ export type MakeProps = {
   output?: Schema.Schema.AnyNoContext;
   instructions?: string;
   skills?: Ref.Ref<Skill.Skill>[];
-  context?: any[];
+  objects?: Ref.Ref<Obj.Unknown>[];
 };
 
-export const make = ({
-  name,
-  description,
-  input,
-  output,
-  instructions,
-  skills = [],
-  context = [],
-}: MakeProps): Routine =>
+export const make = ({ name, description, input, output, instructions, skills = [], objects }: MakeProps): Routine =>
   Obj.make(Routine, {
     name,
     description,
@@ -65,5 +61,5 @@ export const make = ({
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
     instructions: Ref.make(Text.make({ content: instructions ?? '' })),
     skills,
-    context,
+    objects,
   });

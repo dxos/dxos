@@ -84,7 +84,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar className='bg-toolbar-surface'>
+          <Panel.Toolbar classNames='bg-toolbar-surface'>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
           </Panel.Toolbar>
           <Panel.Content>

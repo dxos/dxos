@@ -184,8 +184,10 @@ op RunPromptInNewChat
   output: Chat
   effects: [echo:write, ai:infer]
   note: |
-    When background is true, the prompt runs via the compute runtime without
-    opening the chat UI. The returned Chat can be used to track progress.
+    Operation DEFINED in plugin-automation (AutomationOperation.RunPromptInNewChat)
+    so Routine UI and downstream plugins can dispatch it without depending on
+    plugin-assistant. The HANDLER (chat creation + AiContext binding) is contributed
+    here; see operations/run-prompt-in-new-chat.ts.
 ```
 
 ```mdl

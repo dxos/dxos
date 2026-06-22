@@ -19,19 +19,18 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
-import { SpaceSettings } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
   CreateSpaceDialog,
+  DefaultProperties,
   ImportSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
   MenuFooter,
   ObjectCardStack,
-  ObjectProperties,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -40,6 +39,7 @@ import {
   SpaceHomeArticle,
   SpaceHomeRecent,
   SpacePresence,
+  SpaceSettings,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
@@ -115,7 +115,7 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'settings'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ ref, data, role }) => <ObjectProperties role={role} subject={data.companionTo} ref={ref} />,
+        component: ({ ref, data, role }) => <DefaultProperties role={role} subject={data.companionTo} ref={ref} />,
       }),
       Surface.create({
         id: 'companion.related',

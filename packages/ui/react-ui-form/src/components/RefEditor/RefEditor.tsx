@@ -246,7 +246,7 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
       >
         <Editor.View
           // TOOD(burdon): Use same style as react-ui Input.
-          classNames='border border-separator rounded-xs px-2'
+          classNames='border border-input-separator rounded-xs px-2'
           {...props}
           initialValue={value}
           selectionEnd

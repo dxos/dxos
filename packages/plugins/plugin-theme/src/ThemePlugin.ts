@@ -10,6 +10,7 @@ import { meta } from '#meta';
 import { type ThemePluginOptions } from './react-context';
 
 const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
+const Translator = Capability.lazy('Translator', () => import('./translator'));
 
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
   Plugin.addModule((options: ThemePluginOptions) => ({
@@ -17,6 +18,12 @@ export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
     activatesOn: ActivationEvents.Startup,
     firesBeforeActivation: [AppActivationEvents.SetupTranslations],
     activate: () => ReactContext(options),
+  })),
+  Plugin.addModule((options: ThemePluginOptions) => ({
+    id: Capability.getModuleTag(Translator),
+    activatesOn: ActivationEvents.Startup,
+    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
+    activate: () => Translator(options),
   })),
   Plugin.make,
 );

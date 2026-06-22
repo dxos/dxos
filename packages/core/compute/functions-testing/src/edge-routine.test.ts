@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
@@ -76,7 +75,6 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
           count: Schema.Number,
         }),
         skills: [Ref.make(databaseSkill)],
-        context: [],
       }),
     );
     const fn = Operation.serialize(AgentPrompt);

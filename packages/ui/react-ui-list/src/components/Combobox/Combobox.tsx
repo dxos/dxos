@@ -248,6 +248,8 @@ type ComboboxItemProps = ThemedClassName<
     value: string;
     /** Display label (used when `children` are not provided). */
     label?: string;
+    /** Optional secondary line shown beneath the label (muted, smaller). */
+    description?: string;
     /** Optional icon id (Phosphor) shown before the label. */
     icon?: string;
     /** Additional class names for the icon. */
@@ -272,6 +274,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       onSelect,
       value,
       label,
+      description,
       icon,
       iconClassNames,
       checked,
@@ -313,7 +316,14 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         {children ?? (
           <>
             {icon && <Icon icon={icon} classNames={iconClassNames} />}
-            <span className='w-0 grow truncate'>{label}</span>
+            {description ? (
+              <span className='w-0 grow flex flex-col'>
+                <span className='truncate'>{label}</span>
+                <span className='text-sm text-description truncate'>{description}</span>
+              </span>
+            ) : (
+              <span className='w-0 grow truncate'>{label}</span>
+            )}
             {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
             {checked && <Icon icon='ph--check--regular' />}
           </>

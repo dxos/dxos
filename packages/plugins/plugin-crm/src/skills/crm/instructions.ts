@@ -35,28 +35,11 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
   const registeredSources =
     researchSources.length > 0
       ? researchSources
-          .map(
-            (source) => `    - ${sanitizeInstructionText(source.id)}: ${sanitizeInstructionText(source.description)}`,
-          )
+          .map((source) => `- ${sanitizeInstructionText(source.id)}: ${sanitizeInstructionText(source.description)}`)
           .join('\n')
       : null;
 
-  const additionalSources = registeredSources
-    ? [
-        '  <additional_research_sources>',
-        '    The following pluggable research sources are currently registered:',
-        registeredSources,
-        '    Prefer their tools for their respective domains when appropriate.',
-        '  </additional_research_sources>',
-      ].join('\n')
-    : [
-        '  <additional_research_sources>',
-        '    LinkedIn is not available as a research source in this build.',
-        '    If you believe a LinkedIn profile would materially improve the',
-        '    Profile, note that gap in the "Notes" section.',
-        '  </additional_research_sources>',
-      ].join('\n');
-
+  // TODO(burdon): Should be user editable.
   return trim`
     {{! CRM Research }}
 
@@ -140,7 +123,21 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
       the native web search tool to pull specific pages (e.g. the company
       website's /about page) for more detail.
 
-    ${additionalSources}
+      <additional_research_sources>
+        ${
+          registeredSources
+            ? trim`
+                The following pluggable research sources are currently registered:
+                ${registeredSources}
+                Prefer their tools for their respective domains when appropriate.
+              `
+            : trim`
+                LinkedIn is not available as a research source in this build.
+                If you believe a LinkedIn profile would materially improve the
+                Profile, note that gap in the "Notes" section.
+              `
+        }
+      </additional_research_sources>
     </research>
 
     <profile_document>

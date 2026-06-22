@@ -19,7 +19,9 @@ import {
   useTranslation,
   withColumn,
 } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
+import { type Merge } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -32,18 +34,16 @@ import {
   useFormHandler,
   useKeyHandler,
 } from '../../hooks';
-import {
-  FormFieldSet as NaturalFormFieldSet,
-  type FormFieldSetProps as NaturalFormFieldSetProps,
-} from './FormFieldSet';
-import { FormLayout as NaturalFormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
+import { formTheme } from './Form.theme';
+import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
+import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
 
 //
 // Root
 //
 
-export type FormRootProps<T extends AnyProperties = AnyProperties> = PropsWithChildren<
-  {
+export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
+  PropsWithChildren<{
     /**
      * Called when the form is submitted and passes validation.
      */
@@ -53,11 +53,13 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = PropsWithCh
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  } & Omit<FormContextValue<T>, 'form'> &
-    Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'> &
-    Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
+  }>,
+  Omit<FormContextValue<T>, 'form'>,
+  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
+  Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
+// `variant` (from FormContextValue) flows through `...props` into the context for all parts to read.
 export const FormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   schema,
@@ -83,19 +85,31 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-export type FormViewportProps = { scroll?: boolean; gutter?: ColumnRootProps['gutter'] };
+export type FormViewportProps = {
+  scroll?: boolean;
+  gutter?: ColumnRootProps['gutter'];
+};
 
 // The viewing window: owns the gutter Column (chrome/side-padding).
 // Content-height by default; `scroll` makes it fill its parent and scroll (the gutter then hosts the scrollbar).
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
-  ({ children, scroll, gutter = 'xs', ...props }, forwardedRef) => {
+  ({ children, scroll, gutter = 'sm', ...props }, forwardedRef) => {
+    const { variant = 'default' } = useFormContext(FORM_VIEWPORT_NAME);
+    const styles = formTheme.styles({ variant });
     // Span the full width when nested inside another Column grid (e.g. Card.Root)
     // instead of landing in a single narrow track.
     const span = '[.dx-column-root_&]:col-span-full';
     if (scroll) {
       return (
         <Column.Root gutter={gutter} classNames={['dx-expander', span]}>
-          <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
+          <ScrollArea.Root
+            {...composableProps(props, { classNames: styles.viewport() })}
+            orientation='vertical'
+            centered
+            padding
+            thin
+            ref={forwardedRef}
+          >
             <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>
@@ -103,7 +117,11 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
     }
 
     return (
-      <Column.Root {...composableProps(props)} gutter={gutter} classNames={['w-full min-w-0', span]} ref={forwardedRef}>
+      <Column.Root
+        {...composableProps(props, { classNames: ['w-full min-w-0', span, styles.viewport()] })}
+        gutter={gutter}
+        ref={forwardedRef}
+      >
         {children}
       </Column.Root>
     );
@@ -122,7 +140,8 @@ export type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 // The viewed body: centered in the viewport's gutter. Pure body — the gutter Column is owned by `Form.Viewport`.
 export const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
-  const { form, testId } = useFormContext(FORM_CONTENT_NAME);
+  const { form, testId, variant = 'default' } = useFormContext(FORM_CONTENT_NAME);
+  const styles = formTheme.styles({ variant });
   const localRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMergeRefs([forwardedRef, localRef]);
   useKeyHandler(localRef, form);
@@ -131,7 +150,7 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
     <div
       {...composableProps(props, {
         role: 'form',
-        classNames: mx(withColumn.center(), 'flex flex-col w-full'),
+        classNames: mx(withColumn.center(), 'flex flex-col w-full', styles.content()),
       })}
       data-testid={testId}
       ref={mergedRef}
@@ -149,15 +168,23 @@ FormContent.displayName = FORM_CONTENT_NAME;
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-export type FormFieldSetProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
+export type FormFieldSetControllerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
 
-export const FormFieldSet = (props: FormFieldSetProps) => {
-  const { form, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
-
-  return <NaturalFormFieldSet schema={form.schema} {...contextProps} {...props} />;
+/** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
+export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetControllerProps) => {
+  const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
+  const styles = formTheme.styles({ variant });
+  return (
+    <FormFieldSet
+      schema={form.schema}
+      classNames={styles.fieldSet({ class: classNames })}
+      {...contextProps}
+      {...props}
+    />
+  );
 };
 
-FormFieldSet.displayName = FORM_FIELDSET_NAME;
+FormFieldSetController.displayName = FORM_FIELDSET_NAME;
 
 //
 // Layout
@@ -167,17 +194,18 @@ const FORM_LAYOUT_NAME = 'Form.Layout';
 
 export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
 
-export const FormLayout = ({ schema, ...props }: FormLayoutProps) => {
+/** Context-reading binding for `Form.Layout`: resolves the schema (prop or form) and delegates to {@link FormLayout}. */
+export const FormLayoutController = ({ schema, ...props }: FormLayoutProps) => {
   const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
   const resolvedSchema = schema ?? form.schema;
   if (!resolvedSchema) {
     return null;
   }
 
-  return <NaturalFormLayout schema={resolvedSchema} {...contextProps} {...props} />;
+  return <FormLayout schema={resolvedSchema} {...contextProps} {...props} />;
 };
 
-FormLayout.displayName = FORM_LAYOUT_NAME;
+FormLayoutController.displayName = FORM_LAYOUT_NAME;
 
 //
 // Actions
@@ -239,17 +267,19 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SECTION_NAME = 'Form.Section';
 
-export type FormSectionProps = ThemedClassName<{ label?: string; description?: string }>;
+export type FormSectionProps = ThemedClassName<{
+  title?: string;
+  description?: string;
+}>;
 
 export const FormSection = composable<HTMLDivElement, FormSectionProps>(
-  ({ children, label, description, ...props }, forwardedRef) => {
+  ({ children, title, description, ...props }, forwardedRef) => {
+    const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
+    const styles = formTheme.styles({ variant });
     return (
-      <div
-        {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
-        ref={forwardedRef}
-      >
-        {label && <h2 className='text-lg'>{label}</h2>}
-        {description && <p className='text-description'>{description}</p>}
+      <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
+        {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
+        {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
         {children}
       </div>
     );

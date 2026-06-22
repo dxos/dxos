@@ -9,11 +9,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
-import { type Merge } from '@dxos/effect';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { mx } from '@dxos/ui-theme';
+import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
@@ -27,22 +27,20 @@ import { ChatOptions } from './ChatOptions';
 import { ChatReferences } from './ChatReferences';
 import { ChatStatusIndicator } from './ChatStatusIndicator';
 
-export type ChatPromptProps = ThemedClassName<
-  Merge<
-    {
-      outline?: boolean;
-      settings?: boolean;
-      expandable?: boolean;
-      db?: Database.Database;
-      chat?: Chat.Chat;
-      processor: AiChatProcessor;
-      event: Event<ChatEvent>;
-      online?: boolean;
-      placeholder?: ChatEditorProps['placeholder'];
-      onOnlineChange?: (online: boolean) => void;
-    },
-    ChatPresetProps
-  >
+export type ChatPromptProps = Merge<
+  ThemedClassName<{
+    outline?: boolean;
+    settings?: boolean;
+    expandable?: boolean;
+    db?: Database.Database;
+    chat?: Chat.Chat;
+    processor: AiChatProcessor;
+    event: Event<ChatEvent>;
+    online?: boolean;
+    placeholder?: ChatEditorProps['placeholder'];
+    onOnlineChange?: (online: boolean) => void;
+  }>,
+  ChatPresetProps
 >;
 
 export const ChatPrompt = ({

@@ -63,8 +63,16 @@ const DefaultStory = ({
       {kind === 'time' && <Input.Time {...props} />}
       {kind === 'date' && <Input.Date {...props} />}
       {kind === 'datetime' && <Input.DateTime {...props} />}
-      {kind === 'checkbox' && <Input.Checkbox {...props} />}
-      {kind === 'switch' && <Input.Switch {...props} />}
+      {kind === 'checkbox' && (
+        <Input.Block>
+          <Input.Checkbox {...props} />
+        </Input.Block>
+      )}
+      {kind === 'switch' && (
+        <Input.Block>
+          <Input.Switch {...props} />
+        </Input.Block>
+      )}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}

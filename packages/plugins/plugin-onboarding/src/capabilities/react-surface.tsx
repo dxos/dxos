@@ -14,12 +14,12 @@ import { useClient } from '@dxos/react-client';
 import {
   ABOUT_DIALOG,
   AboutDialog,
-  ExemplarSettings,
   NATIVE_REDIRECT_DIALOG,
   NativeRedirectDialog,
   WELCOME_SCREEN,
   WelcomeScreen,
 } from '../components';
+import { ExemplarSettings } from '../containers';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>

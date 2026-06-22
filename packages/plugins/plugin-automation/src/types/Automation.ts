@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Trigger } from '@dxos/compute';
+import { DXN, Annotation, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Runnable from './Runnable';
@@ -18,20 +19,20 @@ import * as Runnable from './Runnable';
 export const Automation = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   description: Schema.String.pipe(Schema.optional),
+
   /**
    * The action to run. A trigger's `function` Ref points directly at this (so EDGE/the dispatcher can run
    * it). `Runnable` is the type seam — currently just Operation; see Runnable.ts.
    */
+  // TODO(burdon): Change to Array?
   runnable: Ref.Ref(Runnable.Runnable).pipe(Schema.optional),
+
   /**
    * Explicit membership, bi-directional with `trigger.function → runnable`. Required (not derived by query)
    * because the runnable may be a shared registry operation referenced by multiple automations, which would
    * conflate triggers. MVP enforces length <= 1.
-   *
-   * Typed as `Obj.Unknown` (not `Trigger`) to avoid pulling query-AST types into the emitted declaration —
-   * the same reason `Trigger.function` uses `Obj.Unknown`. Resolve and narrow with `Obj.instanceOf(Trigger)`.
    */
-  triggers: Schema.Array(Ref.Ref(Obj.Unknown)),
+  triggers: Schema.Array(Ref.Ref(Trigger.Trigger)),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
@@ -43,3 +44,22 @@ export type Automation = Type.InstanceType<typeof Automation>;
 export const instanceOf = (value: unknown): value is Automation => Obj.instanceOf(Automation, value);
 
 export const make = (props: Obj.MakeProps<typeof Automation>) => Obj.make(Automation, props);
+
+/**
+ * Relation anchoring an Automation (source) to an object it applies to (target). The per-object companion
+ * lists the automations for an object by querying the sources of this relation; mirrors `Chat.CompanionTo`.
+ */
+export const AppliesTo = Schema.Struct({
+  id: Obj.ID,
+}).pipe(
+  Type.makeRelation({
+    dxn: DXN.make('org.dxos.relation.automation.appliesTo', '0.1.0'),
+    source: Automation,
+    target: Obj.Unknown,
+  }),
+);
+
+export type AppliesTo = Type.InstanceType<typeof AppliesTo>;
+
+/** Create an {@link AppliesTo} relation linking an automation (source) to a target object. */
+export const makeAppliesTo = (props: Relation.MakeProps<typeof AppliesTo>) => Relation.make(AppliesTo, props);

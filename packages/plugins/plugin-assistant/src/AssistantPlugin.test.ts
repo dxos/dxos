@@ -6,7 +6,6 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -124,12 +123,6 @@ describe('AssistantPlugin', () => {
             name: 'capital-test',
             instructions:
               'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
-            input: Schema.Struct({
-              country: Schema.String,
-            }),
-            output: Schema.Struct({
-              capital: Schema.String,
-            }),
           }),
         );
         yield* Database.flush();

@@ -79,7 +79,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
 
   return (
     <div className='flex flex-col'>
-      <Form.Section label={t('skill-editor.label')} description={t('skill-editor.description')} />
+      <Form.Section title={t('skill-editor.label')} description={t('skill-editor.description')} />
 
       <Input.Root>
         <Input.Label>{t('skill-instructions.label')}</Input.Label>

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
@@ -833,10 +832,6 @@ export const WithResearchQueue: Story = {
         Routine.make({
           name: 'Research',
           description: 'Research organization',
-          input: Schema.Struct({
-            org: Schema.Any,
-          }),
-          output: Schema.Any,
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],
@@ -961,10 +956,6 @@ export const WithProject: Story = {
         Routine.make({
           name: 'Research',
           description: 'Research organization',
-          input: Schema.Struct({
-            organization: Schema.Any,
-          }),
-          output: Schema.Any,
           instructions: trim`
             Research the organization provided as input.
             Absolutely, in all cases, create a research note for it at the end.
@@ -1117,10 +1108,6 @@ export const WithPrompt: Story = {
         Routine.make({
           name: 'Research',
           description: 'Research organization',
-          input: Schema.Struct({
-            org: Schema.Any,
-          }),
-          output: Schema.Any,
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],

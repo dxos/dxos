@@ -3,7 +3,6 @@
 //
 
 export * from './atom-kvs';
-export * from './types';
 export * as DynamicRuntime from './dynamic-runtime';
 export * as EffectEx from './EffectEx';
 export * as Performance from './Performance';

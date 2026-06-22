@@ -15,9 +15,7 @@ import { useQuery } from '@dxos/react-client/echo';
 
 interface TriggerRuntimeControls {
   triggers: Trigger.Trigger[];
-
   state: TriggerDispatcherState | undefined;
-
   start: () => void;
   stop: () => void;
 }

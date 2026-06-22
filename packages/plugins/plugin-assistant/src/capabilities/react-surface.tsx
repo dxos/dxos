@@ -16,12 +16,11 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
-import { Prompts } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
-import { AssistantSettings } from '#components';
 import {
+  AssistantSettings,
   SkillArticle,
   ChatCompanion,
   ChatArticle,
@@ -29,8 +28,6 @@ import {
   AgentArticle,
   AgentProperties,
   PlanArticle,
-  RoutineArticle,
-  RoutineList,
   SpaceHomePrompt,
   SpaceHomeSuggestions,
   TracePanel,
@@ -134,13 +131,6 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'prompt',
-        filter: AppSurface.object(AppSurface.Article, Routine.Routine),
-        component: ({ data, role }) => (
-          <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
-      Surface.create({
         id: 'plan',
         filter: AppSurface.object(AppSurface.Article, Plan.Plan),
         component: ({ data, role }) => (
@@ -179,11 +169,6 @@ export default Capability.makeModule(() =>
 
           return <TriggerStatus role='status-indicator' space={space} />;
         },
-      }),
-      Surface.create({
-        id: 'prompts',
-        filter: AppSurface.subject(Prompts, Obj.isObject),
-        component: ({ data }) => <RoutineList subject={data.subject} />,
       }),
     ]),
   ),

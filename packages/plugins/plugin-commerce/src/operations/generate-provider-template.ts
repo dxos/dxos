@@ -60,7 +60,6 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
             and the result mapping. Only include fields and selectors you can justify from the page source.
           `,
             skills: [Ref.make(skill)],
-            context: [Ref.make(provider)],
           });
 
           // Create the conversation feed in the space so the spawned AgentPrompt environment inherits
