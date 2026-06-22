@@ -120,6 +120,7 @@ const DefaultStory = () => {
 
 const seedRegisterMagazine = ({ client }: { client: Client }) =>
   Effect.gen(function* () {
+    globalThis.__magazineStoryContext = undefined;
     yield* Effect.promise(() => installRegisterFetchMock());
     yield* initializeIdentity(client);
     const space = (yield* Effect.promise(() => client.spaces.create())) as Space;

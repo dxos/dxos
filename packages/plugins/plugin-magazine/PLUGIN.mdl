@@ -540,12 +540,11 @@ Curation runs a persisted **Routine** rather than an ephemeral one. The Magazine
 no longer carries an `instructions` Template; it carries an optional
 `routine: Ref<Routine>` plus a `topic` seed string.
 
-- **Lazy creation.** `Magazine.ensureRoutine(magazine, blueprintRef)` is called
-  only by the curate op. On first curate it creates a `Routine` whose
-  `instructions` Text is seeded with the default editorial methodology and the
-  magazine's `topic` woven into a `## Topic` section, references the
-  MagazineBlueprint, parents the Routine to the magazine (cascade-delete), sets
-  `magazine.routine`, and adds the magazine to the Routine's `objects` (context).
+- **Eager creation.** `Magazine.make()` creates the `Routine` at magazine
+  instantiation time. The Routine's `instructions` Text is seeded with the
+  default editorial methodology and an optional topic woven into a `## Topic`
+  section; it references the MagazineBlueprint and is parented to the magazine
+  (cascade-delete). The magazine is added to the Routine's `objects` (context).
 - **Run.** The curate op invokes `AgentPrompt` (Run Routine) with
   `prompt: magazine.routine` and the candidate JSON `input`; it decodes the
   `completeJob` structured output and applies selections mechanically (keep-bound,
@@ -554,8 +553,9 @@ no longer carries an `instructions` Template; it carries an optional
   contract). Routine = editorial (selection criteria, dedup, snippet style,
   hero-image choice) + topic. This removes the prior overlap where the blueprint
   held both.
-- **Properties editing.** `MagazineProperties` edits `routine.instructions` once
-  the Routine exists; before first curate it edits the `topic` seed string.
+- **Properties editing.** The `routine` field carries `FormInlineAnnotation`,
+  so the Routine's own fields (name, description, instructions) render inline in
+  the generic `DefaultProperties` companion — no custom surface needed.
 - **Template.** `Template` is retained (it is the type of `Blueprint.instructions`
   and is used across the codebase). The Magazine simply stops using it; the
   Routine's `instructions` is a plain `Ref<Text>`.

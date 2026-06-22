@@ -253,7 +253,10 @@ export const findSystemTagUri = async (
   db: Pick<Database.Database, 'query'>,
   which: SystemTag,
 ): Promise<string | undefined> => {
-  const [tag] = await db.query(Filter.foreignKeys(Tag.Tag, [SYSTEM_TAGS[which].key])).run();
+  // Also check the legacy 'org.dxos.plugin.feed' source so starred/archived tags created before the
+  // plugin-feed → plugin-magazine rename still resolve correctly.
+  const legacyKey = { source: 'org.dxos.plugin.feed', id: SYSTEM_TAGS[which].key.id };
+  const [tag] = await db.query(Filter.foreignKeys(Tag.Tag, [SYSTEM_TAGS[which].key, legacyKey])).run();
   return tag ? Obj.getURI(tag).toString() : undefined;
 };
 
