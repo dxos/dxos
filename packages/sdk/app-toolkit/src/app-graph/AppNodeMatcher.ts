@@ -51,8 +51,8 @@ export const whenSpace = (node: Node.Node): Option.Option<Space> =>
  * ```
  */
 export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
-  const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
-  return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+  const maybeSpace = node.properties.space;
+  return node.type === SETTINGS_SECTION_TYPE && isSpace(maybeSpace) ? Option.some(maybeSpace) : Option.none();
 };
 
 /**
@@ -72,6 +72,6 @@ export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
 export const whenNavTreeGroup =
   (groupType: string) =>
   (node: Node.Node): Option.Option<Space> => {
-    const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
-    return node.type === groupType && space ? Option.some(space) : Option.none();
+    const maybeSpace = node.properties.space;
+    return node.type === groupType && isSpace(maybeSpace) ? Option.some(maybeSpace) : Option.none();
   };

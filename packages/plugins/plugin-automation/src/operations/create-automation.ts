@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation
         const targetNodeId = Paths.getSpacePath(
           db.spaceId,
           AppNode.NAV_TREE_GROUP_AI_ID,
-          Type.getTypename(Automation.Automation)!,
+          Type.getTypename(Automation.Automation),
         );
         return yield* Operation.invoke(SpaceOperation.AddObject, {
           object,
