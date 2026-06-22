@@ -128,14 +128,16 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <MagazineToolbar
-        magazine={subject}
-        viewAtom={viewAtom}
-        busyAtom={busyAtom}
-        attendableId={attendableId}
-        onClear={handleClear}
-        onCurate={handleCurate}
-      />
+      <Panel.Toolbar asChild>
+        <MagazineToolbar
+          magazine={subject}
+          viewAtom={viewAtom}
+          busyAtom={busyAtom}
+          attendableId={attendableId}
+          onClear={handleClear}
+          onCurate={handleCurate}
+        />
+      </Panel.Toolbar>
       <Panel.Content>
         {noPosts ? (
           <div className='flex items-center justify-center h-full text-subdued text-sm'>

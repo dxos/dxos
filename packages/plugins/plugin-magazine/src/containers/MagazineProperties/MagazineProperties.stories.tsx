@@ -36,7 +36,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-magazine/MagazineProperties',
+  title: 'plugins/plugin-magazine/containers/MagazineProperties',
   render: DefaultStory,
   decorators: [
     withTheme(),
