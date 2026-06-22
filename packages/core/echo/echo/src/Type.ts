@@ -97,6 +97,15 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 }
 
 /**
+ * Return type for {@link makeObj}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends Obj<Self, Fields> {
+  new (_: never): T & EntityModule.OfKind<typeof EntityModule.Kind.Object>;
+}
+
+/**
  * Type that represents any ECHO object type — a `Type.Type` entity branded
  * with the object entity kind, i.e. what `Type.makeObject(dxn)` produces.
  */
@@ -121,13 +130,23 @@ export type AnyObj = Obj<unknown>;
  *   name: Schema.String,
  * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
  * ```
+ * Giving the type a nominal class name keeps its inferred type portable for
+ * declaration emit: structural expansion (which can pull in unnameable union
+ * members from referenced schemas) is replaced by a reference to the class.
+ *
+ * @example
+ * ```ts
+ * export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.myType', '0.1.0'))(Schema.Struct({
+ *   name: Schema.String,
+ * })) {}
+ * ```
  */
 export const makeObject: {
-  (
+  <Self>(
     dxn: DXN.DXN,
     options?: { id?: EntityId },
-  ): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
-} = internal.EchoObjectSchema as any;
+  ): <_Schema extends Schema.Schema.Any>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+} = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
 
 //
 // Type — the ECHO entity that holds a schema and metadata.
@@ -256,6 +275,20 @@ export interface Relation<
 }
 
 /**
+ * Return type for {@link declareRelation}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface RelationClass<Self, T, Source, Target, Fields extends Schema.Struct.Fields> extends Relation<
+  Self,
+  Source,
+  Target,
+  Fields
+> {
+  new (_: never): RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>;
+}
+
+/**
  * Type that represents any ECHO relation type — a `Type.Type` entity branded
  * with the relation entity kind, i.e. what `Type.makeRelation(...)` produces.
  */
@@ -277,8 +310,7 @@ export type AnyRelation = Relation<unknown, unknown, unknown>;
  * ```
  */
 export const makeRelation: {
-  <SourceInstance, TargetInstance>(opts: {
-    dxn: DXN.DXN;
+  <Self>(dxn: DXN.DXN): <SourceInstance, TargetInstance>(opts: {
     source: Obj<SourceInstance, any> | internal.UnknownTypeSchema<SourceInstance, typeof EntityModule.Kind.Object>;
     target: Obj<TargetInstance, any> | internal.UnknownTypeSchema<TargetInstance, typeof EntityModule.Kind.Object>;
     /**
@@ -286,14 +318,23 @@ export const makeRelation: {
      * see `Type.makeObject` for the workerd motivation.
      */
     id?: EntityId;
-  }): <Self extends Schema.Schema.Any>(
-    self: Self,
-  ) => Relation<
-    Schema.Schema.Type<Self>,
+  }) => <_Schema extends Schema.Schema.Any>(
+    schema: _Schema,
+  ) => RelationClass<
+    Self,
+    Schema.Schema.Type<_Schema>,
     SourceInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
-    TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+    TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
+    {}
   >;
-} = internal.EchoRelationSchema as any;
+} = (dxn) => (opts) => (schema) =>
+  internal.makeRelationType({
+    dxn,
+    source: opts.source as AnyObj,
+    target: opts.target as AnyObj,
+    schema,
+    id: opts.id,
+  }) as any;
 
 /**
  * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema
@@ -748,83 +789,4 @@ export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
   update(type, (draft) => {
     draft.jsonSchema = internal.toJsonSchema(removed);
   });
-};
-
-/**
- * Return type for {@link declareObj}.
- *
- * Not to be used directly, but must be exported for typescript to infer the type.
- */
-export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends Obj<Self, Fields> {
-  new (_: never): T & EntityModule.OfKind<typeof EntityModule.Kind.Object>;
-}
-
-/**
- * Declare a schema definition and a typescript type in one statement.
- *
- * Giving the type a nominal class name keeps its inferred type portable for
- * declaration emit: structural expansion (which can pull in unnameable union
- * members from referenced schemas) is replaced by a reference to the class.
- *
- * @example
- * ```ts
- * export class MyType extends Type.declareObj<MyType>()(Schema.Struct({
- *   name: Schema.String,
- * }).pipe(Type.makeObject(DXN.make('com.example.type.myType', '0.1.0')))) {}
- * ```
- */
-export const declareObj =
-  <Self>() =>
-  <T, Fields extends Schema.Struct.Fields>(type: Obj<T, Fields>): ObjClass<Self, T, Fields> => {
-    return makeEntityClass(type);
-  };
-
-/**
- * Return type for {@link declareRelation}.
- *
- * Not to be used directly, but must be exported for typescript to infer the type.
- */
-export interface RelationClass<Self, T, Source, Target, Fields extends Schema.Struct.Fields> extends Relation<
-  Self,
-  Source,
-  Target,
-  Fields
-> {
-  new (_: never): RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>;
-}
-
-/**
- * Declare a relation schema definition and a typescript type in one statement.
- *
- * Relation sibling of {@link declareObj}; see its note on portability.
- *
- * @example
- * ```ts
- * export class MyRelation extends Type.declareRelation<MyRelation>()(Schema.Struct({
- *   name: Schema.String,
- * }).pipe(Type.makeRelation({ dxn, source, target }))) {}
- * ```
- */
-export const declareRelation =
-  <Self>() =>
-  <T, Source, Target, Fields extends Schema.Struct.Fields>(
-    type: Relation<T, Source, Target, Fields>,
-  ): RelationClass<Self, T, Source, Target, Fields> => {
-    return makeEntityClass(type);
-  };
-
-/**
- * Adapt a runtime type-schema entity into a constructor usable as the base of a
- * `class X extends ... {}` declaration. The entity is a plain (proxy) value, so
- * it is placed on the constructor's prototype chain: static property access on
- * the subclass falls through to the entity (fields, jsonSchema, brands), while
- * the wrapper satisfies the `extends` requirement of being a constructor.
- */
-// Returns `any`: the result is a constructor (to satisfy `class X extends ...`) that
-// nonetheless delegates to a plain entity object — a shape TypeScript cannot express,
-// so the public `ObjClass` / `RelationClass` types are applied by the callers' signatures.
-const makeEntityClass = (entity: object): any => {
-  const constructor = function EntityClass() {};
-  Object.setPrototypeOf(constructor, entity);
-  return constructor;
 };

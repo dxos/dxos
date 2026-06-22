@@ -233,14 +233,18 @@ describe('Type', () => {
     });
 
     test('Type.makeRelation defaults id to deterministic(typename, version)', ({ expect }) => {
-      const a = Schema.Struct({ since: Schema.Number }).pipe(
-        Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
-      );
-      const b = Schema.Struct({ since: Schema.Number }).pipe(
-        Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
-      );
-      expect(a.id).toBe(b.id);
-      expect(a.id).toBe(EntityId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
+      class RelationA extends Type.makeRelation<RelationA>(worksForDxn)({
+        source: TestSchema.Person,
+        target: TestSchema.Organization,
+      })(Schema.Struct({ since: Schema.Number })) {}
+
+      class RelationB extends Type.makeRelation<RelationB>(worksForDxn)({
+        source: TestSchema.Person,
+        target: TestSchema.Organization,
+      })(Schema.Struct({ since: Schema.Number })) {}
+
+      expect(RelationA.id).toBe(RelationB.id);
+      expect(RelationA.id).toBe(EntityId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
     });
 
     test('Type.makeRelation({ id }) override is honoured', ({ expect }) => {

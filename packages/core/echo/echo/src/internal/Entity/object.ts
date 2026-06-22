@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type EntityId } from '@dxos/keys';
 
+import type * as Type from '../../Type';
 import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
 import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import { EntityKind } from '../common/types';
@@ -70,4 +71,15 @@ export const EchoObjectSchema: {
       options?.id,
     );
   };
+};
+
+export const makeObjectType: (
+  dxn: DXN.DXN,
+  schema: Schema.Schema.Any,
+  options?: { id?: EntityId },
+) => Type.ObjClass<unknown, unknown, {}> = (dxn, schema, options) => {
+  const type = EchoObjectSchema(dxn, options)(schema);
+  const constructor = function ObjectType() {};
+  Object.setPrototypeOf(constructor, type);
+  return constructor as any;
 };

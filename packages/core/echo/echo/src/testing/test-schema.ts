@@ -19,11 +19,9 @@ export namespace TestSchema {
    * Expando object is an object with an arbitrary set of properties.
    * This is the test variant with example.com namespace.
    */
-  export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
-    Type.makeObject(DXN.make('com.example.type.expando', '0.1.0')),
-  );
-
-  export type Expando = Type.InstanceType<typeof Expando>;
+  export class Expando extends Type.makeObject<Expando>(DXN.make('com.example.type.expando', '0.1.0'))(
+    Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
+  ) {}
 
   //
   // Example
@@ -149,32 +147,24 @@ export namespace TestSchema {
   // HasManager
   //
 
-  export const HasManager = Schema.Struct({}).pipe(
-    Type.makeRelation({
-      dxn: DXN.make('com.example.type.hasManager', '0.1.0'),
-      source: Person,
-      target: Person,
-    }),
-  );
-
-  export type HasManager = Type.InstanceType<typeof HasManager>;
+  export class HasManager extends Type.makeRelation<HasManager>(DXN.make('com.example.type.hasManager', '0.1.0'))({
+    source: Person,
+    target: Person,
+  })(Schema.Struct({})) {}
 
   //
   // EmployedBy
   //
 
-  export const EmployedBy = Schema.Struct({
-    role: Schema.String,
-    since: Schema.optional(Schema.String),
-  }).pipe(
-    Type.makeRelation({
-      dxn: DXN.make('com.example.type.employedBy', '0.1.0'),
-      source: Person,
-      target: Organization,
+  export class EmployedBy extends Type.makeRelation<EmployedBy>(DXN.make('com.example.type.employedBy', '0.1.0'))({
+    source: Person,
+    target: Organization,
+  })(
+    Schema.Struct({
+      role: Schema.String,
+      since: Schema.optional(Schema.String),
     }),
-  );
-
-  export type EmployedBy = Type.InstanceType<typeof EmployedBy>;
+  ) {}
 
   //
   // RecordType
@@ -186,19 +176,19 @@ export namespace TestSchema {
     WORK = 2,
   }
 
-  export const Container = Schema.Struct({
-    objects: Schema.Array(Ref.Ref(Obj.Unknown)),
-    records: Schema.Array(
-      Schema.partial(
-        Schema.Struct({
-          title: Schema.String,
-          description: Schema.String,
-          contacts: Schema.Array(Ref.Ref(Person)),
-          type: Schema.Enums(RecordType),
-        }),
+  export class Container extends Type.makeObject<Container>(DXN.make('com.example.type.container', '0.1.0'))(
+    Schema.Struct({
+      objects: Schema.Array(Ref.Ref(Obj.Unknown)),
+      records: Schema.Array(
+        Schema.partial(
+          Schema.Struct({
+            title: Schema.String,
+            description: Schema.String,
+            contacts: Schema.Array(Ref.Ref(Person)),
+            type: Schema.Enums(RecordType),
+          }),
+        ),
       ),
-    ),
-  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.container', '0.1.0')));
-
-  export type Container = Type.InstanceType<typeof Container>;
+    }).pipe(Schema.partial),
+  ) {}
 }

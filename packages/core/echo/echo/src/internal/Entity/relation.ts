@@ -186,3 +186,21 @@ export const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN =
 
   return DXN.make(typename);
 };
+
+export const makeRelationType = (options: {
+  dxn: DXN.DXN;
+  source: Type.AnyObj;
+  target: Type.AnyObj;
+  schema: Schema.Schema.Any;
+  id?: EntityId;
+}): Type.RelationClass<unknown, unknown, unknown, unknown, {}> => {
+  const type = EchoRelationSchema({
+    dxn: options.dxn,
+    source: options.source,
+    target: options.target,
+    id: options.id,
+  })(options.schema);
+  const constructor = function RelationType() {};
+  Object.setPrototypeOf(constructor, type);
+  return constructor as any;
+};
