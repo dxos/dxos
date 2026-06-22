@@ -24,4 +24,5 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
     name: 'compiler',
     description: 'Tests that depend on external CDN resources (e.g. TypeScript playground lib.d.ts).',
   },
+  { name: 'manual', description: 'Tests that require manual setup or credentials not available in CI.' },
 ];
