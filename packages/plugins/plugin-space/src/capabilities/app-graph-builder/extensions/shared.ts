@@ -23,7 +23,6 @@ import { meta } from '#meta';
 
 export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
 export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
-export const TYPE_COLLECTION_TYPE = `${meta.profile.key}.type-collection`;
 export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
 
 //
@@ -37,7 +36,6 @@ export const META_NS: { ns: string } = { ns: meta.profile.key };
 // Stable Callbacks
 //
 
-export const BLOCK_REORDER_ABOVE = (_source: TreeData, instruction: any) => instruction.type === 'reorder-above';
 export const CAN_DROP_SPACE = (source: TreeData) => Obj.isObject(source.item.data) || isSpace(source.item.data);
 
 //
