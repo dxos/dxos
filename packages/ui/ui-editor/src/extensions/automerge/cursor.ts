@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocAccessor, fromCursor, toCursor } from '@dxos/echo-client';
+import { fromCursor, toCursor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 
 import { type CursorConverter } from '../../util';
 
-export const cursorConverter = (accessor: DocAccessor): CursorConverter => ({
+export const cursorConverter = (accessor: Doc.Accessor): CursorConverter => ({
   toCursor: (pos, assoc) => {
     try {
       return toCursor(accessor, pos, assoc);
