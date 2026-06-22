@@ -479,6 +479,9 @@ message Runtime {
       optional google.protobuf.Struct props = 3;
     }
 
+    /** Standalone sandbox-service worker origin (API mounted at /api/sandbox). */
+    message Sandbox { optional string url = 1; }
+
     /** Deprecated: legacy KUBE deployment descriptor; no runtime readers. */
     optional Kube kube = 1 [ deprecated = true ];
     /** Deprecated: no runtime readers. */
@@ -506,12 +509,13 @@ message Runtime {
     optional Edge edge = 15;
     optional Ai ai = 16;
     optional Hub hub = 17;
+    optional Sandbox sandbox = 18;
 
     /// EDGE service configurations keyed by `EdgeService.name`. The canonical set
     /// of valid names is the `EdgeServiceName` enum in
     /// packages/sdk/config/src/edge-services.ts (e.g. "calls", "image", "discord").
     /// Supersedes per-service URL constants; see packages/sdk/config/AUDIT.md.
-    repeated EdgeService edge_services = 18;
+    repeated EdgeService edge_services = 19;
   }
 
   message Keys {

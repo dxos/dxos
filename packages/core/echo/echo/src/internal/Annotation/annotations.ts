@@ -414,6 +414,16 @@ export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormIn
 export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
 
 /**
+ * When set on a `Ref` (or array-of-`Ref`) property, the form OWNS the referenced target(s): "add" creates a
+ * new object of the annotation's typename (instead of opening the existing-object picker) and each target is
+ * rendered inline — its own fields — like {@link FormInlineAnnotation}. The target typename is carried here
+ * (rather than inferred from the element type) so the field can stay `Ref.Ref(Obj.Unknown)` and avoid pulling
+ * the target's type (e.g. query-AST-laden `Trigger`) into the schema's emitted declaration.
+ */
+export const FormCreateAnnotationId = Symbol.for('@dxos/schema/annotation/FormCreate');
+export const FormCreateAnnotation = createAnnotationHelper<string>(FormCreateAnnotationId);
+
+/**
  * When set on an array property, the form renders it as an ordered,
  * drag-to-reorder list (drag handles per row). Element order is meaningful and
  * user-controllable; reordering rewrites the array.

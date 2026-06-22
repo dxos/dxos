@@ -123,8 +123,6 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
     const prompt = Routine.make({
       instructions: options.instructions,
       blueprints: options.blueprints ?? [],
-      input: options.input,
-      output: options.output,
     });
 
     return EffectEx.runAndForwardErrors(

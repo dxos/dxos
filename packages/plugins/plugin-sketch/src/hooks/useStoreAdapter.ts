@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -38,7 +38,7 @@ export const useStoreAdapter = (object?: Sketch.Sketch) => {
         return;
       }
 
-      const accessor = createDocAccessor(canvas, ['content']);
+      const accessor = Doc.createAccessor(canvas, ['content']);
       await adapter.open(accessor);
       if (controller.signal.aborted) {
         void adapter.close();

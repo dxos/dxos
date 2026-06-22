@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { NotFound } from '@dxos/app-toolkit';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { Home, NavBranch } from '#components';
 
@@ -30,7 +31,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'navBranch',
-        position: 'last',
+        position: Position.last,
         filter: Surface.makeFilter(
           AppSurface.Article,
           (data) => ALLOWED_DISPOSITIONS.includes(data.properties?.disposition) || data.properties?.role === 'branch',

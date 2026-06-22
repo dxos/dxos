@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableO
         db,
         typename: Type.getTypename(type),
       });
-      const { subject } = yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
+      const { subject } = yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object });
       yield* Operation.invoke(LayoutOperation.Open, { subject, navigation: 'immediate' });
     }),
   ),

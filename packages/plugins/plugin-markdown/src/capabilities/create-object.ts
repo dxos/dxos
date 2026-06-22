@@ -12,8 +12,6 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { Markdown } from '#types';
 
-import { getDocumentsPath } from '../paths';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
@@ -24,8 +22,7 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            hidden: true,
-            targetNodeId: options.targetNodeId ?? getDocumentsPath(options.db.spaceId),
+            targetNodeId: options.targetNodeId,
           });
         }),
     });

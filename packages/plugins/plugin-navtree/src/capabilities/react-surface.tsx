@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
 import { COMMANDS_DIALOG } from '#meta';
@@ -38,7 +39,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'searchInput',
         filter: Surface.makeFilter(AppSurface.SearchInput),
-        position: 'last',
+        position: Position.last,
         component: () => <CommandsTrigger />,
       }),
     ]),

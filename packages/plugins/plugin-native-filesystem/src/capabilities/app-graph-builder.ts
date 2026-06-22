@@ -13,7 +13,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space';
 import { Expando, Text } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#types';
@@ -103,7 +103,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'primaryActions',
-        position: 'first',
+        position: Position.first,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -218,7 +218,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['settings.general.label', { ns: meta.profile.key }],
                 icon: 'ph--sliders--regular',
-                position: 'first',
+                position: Position.first,
               },
             }),
           ]),

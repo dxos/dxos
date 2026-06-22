@@ -33,7 +33,7 @@ const root: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
  */
 const block: ComponentFunction<IconBlockStyleProps> = ({ compact, square }, ...etc) =>
   mx(
-    'grid place-items-center [&>img]:max-w-[1.5rem]',
+    'grid place-items-center shrink-0 [&>img]:max-w-[1.5rem]',
     square ? 'aspect-square' : 'w-[var(--dx-rail-item)]',
     compact ? '' : 'h-[var(--dx-rail-item)]',
     ...etc,

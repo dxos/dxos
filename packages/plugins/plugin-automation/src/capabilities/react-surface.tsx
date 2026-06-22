@@ -8,22 +8,24 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Blueprint, Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { Prompts } from '@dxos/plugin-space';
 
-import { AutomationArticle, AutomationCompanion, AutomationSettings } from '#containers';
+import {
+  AutomationArticle,
+  AutomationCompanion,
+  AutomationSettings,
+  BlueprintArticle,
+  RoutineArticle,
+  RoutineSuggestions,
+} from '#containers';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'automation.article',
-        filter: AppSurface.object(AppSurface.Article, Automation.Automation),
-        component: ({ data, role }) => (
-          <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
       Surface.create({
         id: 'spaceSettingsAutomation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
@@ -35,6 +37,13 @@ export default Capability.makeModule(() =>
 
           return <AutomationSettings space={space} />;
         },
+      }),
+      Surface.create({
+        id: 'automation.article',
+        filter: AppSurface.object(AppSurface.Article, Automation.Automation),
+        component: ({ data, role }) => (
+          <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: 'companion.automation',
@@ -49,6 +58,25 @@ export default Capability.makeModule(() =>
           }
           return <AutomationCompanion db={db} object={data.companionTo} />;
         },
+      }),
+      Surface.create({
+        id: 'blueprint',
+        filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
+        component: ({ data, role }) => (
+          <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'routine',
+        filter: AppSurface.object(AppSurface.Article, Routine.Routine),
+        component: ({ data, role }) => (
+          <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'routines',
+        filter: AppSurface.subject(Prompts, Obj.isObject),
+        component: ({ data }) => <RoutineSuggestions subject={data.subject} />,
       }),
     ]),
   ),

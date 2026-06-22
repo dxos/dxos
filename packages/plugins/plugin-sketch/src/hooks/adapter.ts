@@ -6,10 +6,8 @@ import { transact } from '@tldraw/state';
 import { type TLRecord, createTLStore, defaultShapeUtils } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
-import { type Context } from '@dxos/context';
+import { AbstractStoreAdapter, type Batch, Modified } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
-
-import { AbstractAutomergeStoreAdapter, type Batch, Modified } from '../util';
 
 /**
  * Ref:
@@ -17,7 +15,7 @@ import { AbstractAutomergeStoreAdapter, type Batch, Modified } from '../util';
  * - https://github.com/tldraw/tldraw-yjs-example/blob/main/src/useYjsStore.ts
  * - https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx
  */
-export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> {
+export class TLDrawStoreAdapter extends AbstractStoreAdapter<TLRecord> {
   private readonly _modified = new Modified<TLRecord>();
   private _store?: TLStore;
 
@@ -40,7 +38,7 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
     });
   }
 
-  protected override onOpen(ctx: Context): void {
+  protected override onOpen(): () => void {
     this._store = createTLStore({ shapeUtils: defaultShapeUtils });
 
     // List for changes to the store.
@@ -58,7 +56,7 @@ export class TLDrawStoreAdapter extends AbstractAutomergeStoreAdapter<TLRecord> 
       },
     );
 
-    ctx.onDispose(() => subscription());
+    return () => subscription();
   }
 
   protected override onClose(): void {

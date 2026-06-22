@@ -6,7 +6,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, type Node as NodeType } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/ui-types/translations';
-import { type Position, byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { DECK_COMPANION_TYPE } from '#types';
 
@@ -18,7 +18,7 @@ export type DeckCompanion = NodeType.Node<
     // TODO(burdon): Scroll area should be controlled by surface.
     /** If true, the panel will not be wrapped in a scroll area. */
     fixed?: boolean;
-    position?: Position;
+    position?: Position.Position;
     joyride?: string;
   }
 >;
@@ -27,5 +27,5 @@ export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
   const connections = useConnections(graph, Node.RootId, 'child');
   const companions = connections.filter((node) => node.type === DECK_COMPANION_TYPE) as DeckCompanion[];
-  return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
+  return companions.toSorted((a, b) => Position.compare(a.properties, b.properties));
 };

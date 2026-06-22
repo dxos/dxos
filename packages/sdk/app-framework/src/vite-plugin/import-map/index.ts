@@ -361,6 +361,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
   let modules: string[] = [];
   let importMapIsDev = false;
   let base = '/';
+  let root = process.cwd();
 
   return [
     // Phase 1: Resolve all package entrypoints and emit chunks.
@@ -380,6 +381,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
       apply: 'build',
       configResolved(config) {
         base = config.base ?? '/';
+        root = config.root;
       },
       async buildStart() {
         importMapIsDev = this.environment.mode === 'dev';
@@ -416,7 +418,16 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             continue;
           }
 
-          const resolved = await this.resolve(specifier);
+          // Resolve with a host-rooted importer (not a bare importer-less resolve). The host's
+          // `importSource` plugin — which routes `@dxos/*` to the `source` (TypeScript) export
+          // instead of the published `dist/` — bails out when `importer` is undefined, so an
+          // importer-less `this.resolve(specifier)` falls through to the `default`/dist export.
+          // That made wrapper chunks evaluate `dist/` while the host app evaluated `src/`,
+          // duplicating module-local identity (the private `ProxyHandlerSlot` class, `Ref`
+          // brand symbols, React contexts) and breaking `instanceof` across the host↔plugin
+          // boundary. Passing a host-rooted importer makes `importSource` resolve these
+          // wrappers to the exact same source module the host app uses.
+          const resolved = await this.resolve(specifier, path.join(root, 'index.html'));
           if (!resolved) {
             this.warn(`Import map: unable to resolve "${specifier}"; omitting from import map.`);
             continue;
@@ -470,16 +481,22 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
         }
 
+        // Re-export from the resolved absolute path, not the bare specifier. A bare re-export
+        // would let Rolldown resolve `@dxos/echo` a second way (the host app reaches it via the
+        // `source` export, this virtual module via the published `dist/`), evaluating the same
+        // source twice and duplicating module-local identity — the private `ProxyHandlerSlot`
+        // class, `Ref` brand symbols, React contexts — which breaks `instanceof` and context
+        // lookups across the host↔remote-plugin boundary. The resolved id (see the importer
+        // passed to `this.resolve` above) already points at the host's module.
         const filePath = trimQueryString(resolvedId);
         const isCjs = filePath.endsWith('.cjs') || (!filePath.endsWith('.mjs') && !resolvedIdIsEsmModule(filePath));
-
         if (isCjs) {
           const named = getCjsNamedExports(filePath);
           if (named.length > 0) {
-            return `export { default, ${named.join(', ')} } from ${JSON.stringify(specifier)};\n${keepalive}\n`;
+            return `export { default, ${named.join(', ')} } from ${JSON.stringify(filePath)};\n${keepalive}\n`;
           }
         }
-        return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
+        return `export * from ${JSON.stringify(filePath)};\n${keepalive}\n`;
       },
 
       // After bundling, map each specifier to the URL of its emitted chunk. Preserves

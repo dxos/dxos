@@ -47,29 +47,41 @@ const Pipeline = Schema.Struct({
   columns: columnsField,
 }).pipe(Schema.mutable);
 
-// `FormOrderedAnnotation` opts the array into a drag-to-reorder list (see `ArrayField`).
 const OrderedPipeline = Schema.Struct({
   ...headerFields,
   columns: columnsField.pipe(FormOrderedAnnotation.set(true)),
 }).pipe(Schema.mutable);
 
-type Pipeline = Schema.Schema.Type<typeof Pipeline>;
+const StringPipeline = Schema.Struct({
+  ...headerFields,
+  columns: Schema.Array(Schema.String).pipe(FormOrderedAnnotation.set(true)),
+}).pipe(Schema.mutable);
 
-const initialValues: Pipeline = {
+type PipelineValues = { name?: string; description?: string; columns: readonly unknown[] };
+
+// Object-array columns (matches `Pipeline` / `OrderedPipeline`).
+const objectColumns: PipelineValues = {
   name: 'Sales',
   description: 'Lead qualification pipeline.',
   columns: [{ name: 'Contacts' }, { name: 'Organizations' }, { name: 'Tasks' }, { name: 'Messages', value: 100 }],
 };
 
-const StoryComponent = ({ schema }: { schema: typeof Pipeline }) => {
-  const [values, setValues] = useState<Pipeline>(initialValues);
+// String-array columns (matches `StringPipeline`); feeding object columns here renders `[object Object]`.
+const stringColumns: PipelineValues = {
+  name: 'Sales',
+  description: 'Lead qualification pipeline.',
+  columns: ['Contacts', 'Organizations', 'Tasks', 'Messages'],
+};
+
+const DefaultStory = ({ schema, values: initial }: { schema: Schema.Schema<any>; values: PipelineValues }) => {
+  const [values, setValues] = useState<PipelineValues>(initial);
 
   return (
     <TestLayout json={values}>
       <Form.Root
         schema={schema}
         values={values}
-        onValuesChanged={(values) => setValues((prev) => ({ ...prev, ...values }))}
+        onValuesChanged={(next) => setValues((prev) => ({ ...prev, ...next }))}
       >
         <Form.Viewport scroll>
           <Form.Content>
@@ -88,16 +100,20 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof StoryComponent>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => <StoryComponent schema={Pipeline} />,
+  render: () => <DefaultStory schema={Pipeline} values={objectColumns} />,
 };
 
 export const Ordered: Story = {
-  render: () => <StoryComponent schema={OrderedPipeline} />,
+  render: () => <DefaultStory schema={OrderedPipeline} values={objectColumns} />,
+};
+
+export const Simple: Story = {
+  render: () => <DefaultStory schema={StringPipeline} values={stringColumns} />,
 };

@@ -10,6 +10,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Map } from '@dxos/plugin-map';
+import { Position } from '@dxos/util';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -21,7 +22,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Map.Map),
         ),
         tagName: 'dx-map-surface',
-        position: 'first',
+        position: Position.first,
       }),
     ]),
   ),

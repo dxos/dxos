@@ -13,6 +13,7 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
 import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
@@ -94,7 +95,7 @@ export default Capability.makeModule(
               label: HELP_COMPANION_LABEL,
               icon: 'ph--info--regular',
               data: 'help',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -111,7 +112,7 @@ export default Capability.makeModule(
               label: HELP_LABEL,
               icon: 'ph--megaphone--regular',
               data: null,
-              position: 'first',
+              position: Position.first,
               joyride: 'welcome/feedback',
             }),
           ]),
@@ -134,7 +135,7 @@ export default Capability.makeModule(
               label: DISCORD_LABEL,
               icon: 'ph--discord-logo--regular',
               data: null,
-              position: 'first',
+              position: Position.first,
             }),
           ]);
         },

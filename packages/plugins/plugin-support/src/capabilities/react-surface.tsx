@@ -15,8 +15,8 @@ import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
 import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
+import { Position } from '@dxos/util';
 
-import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
@@ -27,6 +27,7 @@ import {
   SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
+  SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
 import { Support, type Settings } from '#types';
@@ -50,7 +51,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceHomeWelcome',
         filter: Surface.makeFilter(SpaceHomeContent),
-        position: 'first',
+        position: Position.first,
         component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
@@ -66,7 +67,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'helpMenu',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        position: 'last',
+        position: Position.last,
         component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that

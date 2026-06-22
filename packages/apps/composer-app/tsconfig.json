@@ -283,9 +283,6 @@
       "path": "../../plugins/plugin-explorer"
     },
     {
-      "path": "../../plugins/plugin-feed"
-    },
-    {
       "path": "../../plugins/plugin-file"
     },
     {
@@ -317,6 +314,9 @@
     },
     {
       "path": "../../plugins/plugin-linear"
+    },
+    {
+      "path": "../../plugins/plugin-magazine"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -374,6 +374,9 @@
     },
     {
       "path": "../../plugins/plugin-sample"
+    },
+    {
+      "path": "../../plugins/plugin-sandbox"
     },
     {
       "path": "../../plugins/plugin-script"

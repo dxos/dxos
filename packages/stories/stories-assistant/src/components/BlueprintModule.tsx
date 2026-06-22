@@ -7,7 +7,7 @@ import React from 'react';
 import { Blueprint } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { meta } from '@dxos/plugin-assistant';
-import { TemplateEditor } from '@dxos/plugin-assistant/components';
+import { TemplateEditor } from '@dxos/plugin-automation/components';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';

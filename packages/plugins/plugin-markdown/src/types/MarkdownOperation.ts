@@ -18,6 +18,8 @@ import * as Markdown from './Markdown';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
+// The edit descriptions feed the markdown blueprint's LLM tool definition (and its memoized
+// fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Doc.applyEdits`.
 const Edit = Schema.Struct({
   oldString: Schema.String.annotations({
     description: 'The text to find in the document.',

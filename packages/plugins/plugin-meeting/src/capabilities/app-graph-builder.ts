@@ -18,6 +18,7 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Channel, Event } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
@@ -92,7 +93,7 @@ export default Capability.makeModule(
               label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.profile.key }],
               icon: 'ph--handshake--regular',
               data,
-              position: 'first',
+              position: Position.first,
             }),
           ];
         }),
@@ -117,7 +118,6 @@ export default Capability.makeModule(
                   const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
                   const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
                     target: db,
-                    hidden: true,
                     object: createResult.object,
                   });
                   invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
@@ -167,7 +167,7 @@ export default Capability.makeModule(
               label: ['transcript-companion.label', { ns: meta.profile.key }],
               icon: 'ph--subtitles--regular',
               data: get(Obj.atom(meeting.transcript)),
-              position: 'first',
+              position: Position.first,
             }),
           ];
         }),
@@ -192,7 +192,7 @@ export default Capability.makeModule(
               label: ['meeting-companion.label', { ns: meta.profile.key }],
               icon: 'ph--handshake--regular',
               data: meeting,
-              position: 'first',
+              position: Position.first,
             }),
           ];
         }),

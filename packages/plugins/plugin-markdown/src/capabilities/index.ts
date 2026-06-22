@@ -5,8 +5,6 @@
 import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
 export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));

@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
@@ -38,12 +37,7 @@ export const makeScheduledRoutineAutomation = ({
       Routine.make({
         name,
         instructions,
-        // No per-run input; the task lives in the instructions. Unknown (not Void) so the empty trigger
-        // input still validates.
-        input: Schema.Unknown,
-        output: Schema.Void,
         blueprints,
-        context: [],
       }),
     );
 

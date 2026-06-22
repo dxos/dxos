@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import { Atom } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as Option from 'effect/Option';
@@ -16,6 +17,7 @@ import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint, Credential, Operation } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
+import { type Translator as Translator$ } from '@dxos/i18n';
 import { EID } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
 
@@ -77,6 +79,30 @@ export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>
   'org.dxos.app-framework.capability.translations',
 );
 
+/**
+ * Provides access to the shared, framework-agnostic translation instance so non-React code
+ * (operations, services, Effect programs) can translate strings dynamically.
+ * @category Capability
+ */
+export const Translator = Capability$.make<Translator$>('org.dxos.app-framework.capability.translator');
+
+/**
+ * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
+ * once {@link translatorLayer} is provided.
+ */
+export class TranslatorService extends Context.Tag('@dxos/app-toolkit/TranslatorService')<
+  TranslatorService,
+  Translator$
+>() {}
+
+/**
+ * Layer that resolves {@link TranslatorService} from the {@link Translator} capability.
+ */
+export const translatorLayer: Layer$.Layer<TranslatorService, never, Capability$.Service> = Capability$.asLayer(
+  Translator,
+  TranslatorService,
+);
+
 export type AppGraph = Readonly<{
   graph: Graph.ExpandableGraph;
   explore: typeof GraphBuilder.explore;
@@ -94,7 +120,9 @@ export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app
 
 export type Settings = {
   prefix: string;
-  schema: Schema$.Schema.All;
+  // Settings are persisted as plain atoms, so the schema is always context-free
+  // (`R = never`); this lets a schema-driven form decode/validate it directly.
+  schema: Schema$.Schema.AnyNoContext;
   atom: Atom.Writable<any>;
 };
 

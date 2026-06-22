@@ -51,6 +51,8 @@ const day: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
     'outline-none',
     'data-[hovered]:bg-hover-surface',
     'data-[focus-visible]:outline-2 data-[focus-visible]:outline-primary-500',
+    // Highlight today (overridden by the selected style below when today is also the selected day).
+    'data-[today]:text-orange-500 data-[today]:font-medium',
     'data-[selected]:bg-primary-500 data-[selected]:text-primary-fg data-[selected]:hover:bg-primary-500',
     'data-[outside-month]:text-description/40',
     'data-[disabled]:text-description/40 data-[disabled]:cursor-not-allowed data-[disabled]:hover:bg-transparent',

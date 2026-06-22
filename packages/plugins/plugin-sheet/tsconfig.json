@@ -61,7 +61,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/echo/echo-generator"
@@ -80,6 +80,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"

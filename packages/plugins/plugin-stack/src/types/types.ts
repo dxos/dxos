@@ -42,5 +42,3 @@ export type StackSectionItem = {
   view: StackSectionView;
   metadata: StackSectionMetadata;
 };
-
-export type StackSettingsProps = { separation: boolean };

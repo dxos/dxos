@@ -14,6 +14,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -46,7 +47,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     GraphBuilder.createExtension({
       id: 'spaceHome',
-      position: 'first',
+      position: Position.first,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
@@ -58,7 +59,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
               iconHue: 'cyan',
-              position: 'first',
+              position: Position.first,
               draggable: false,
               droppable: false,
               space,
@@ -69,7 +70,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
     GraphBuilder.createExtension({
       id: 'primaryActions',
-      position: 'first',
+      position: Position.first,
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([

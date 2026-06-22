@@ -30,7 +30,7 @@ export type FlattenedActions = {
 type SharedProperties = {
   testId?: string;
   disabled?: boolean;
-  position?: Position;
+  position?: Position.Position;
   label: Label;
   className?: string;
   headingClassName?: string;

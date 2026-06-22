@@ -51,10 +51,13 @@ export const specFeed = (feed: Feed.Feed): FeedSpec => ({
  */
 export const SubscriptionSpec = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+
+  // TODO(burdon): Issue.
   query: Schema.Struct({
     raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
   }),
+
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -143,54 +146,58 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-const TriggerSchema = Schema.Struct({
-  /**
-   * Function or workflow to invoke.
-   */
-  // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+export class Trigger extends Type.declareObj<Trigger>()(
+  Schema.Struct({
+    /**
+     * Function or workflow to invoke.
+     */
+    // TODO(burdon): Runnable?
+    // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
+    function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+    spec: Schema.optional(Spec),
+    enabled: Schema.optional(Schema.Boolean),
 
-  /**
-   * Only used for workflowSchema.
-   * Specifies the input node in the circuit.
-   * @deprecated Remove and enforce a single input node in all compute graphSchema.
-   */
-  inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
+    concurrency: Schema.Number.pipe(
+      Schema.annotations({
+        title: 'Concurrency',
+        default: 1,
+        description: 'Maximum number of concurrent invocations of the trigger.',
+      }),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
 
-  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
-  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
-  enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
+    /**
+     * Only used for workflowSchema.
+     * Specifies the input node in the circuit.
+     * @deprecated Remove and enforce a single input node in all compute graphSchema.
+     */
+    inputNodeId: Schema.String.pipe(
+      Schema.annotations({ title: 'Input Node ID' }),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
 
-  spec: Schema.optional(Spec),
-
-  concurrency: Schema.optional(
-    Schema.Number.annotations({
-      title: 'Concurrency',
-      default: 1,
-      description:
-        'Maximum number of concurrent invocations of the trigger. For Feed triggers, this will process Feed items in parallel.',
-    }),
+    /**
+     * Passed as the input data to the function.
+     * Must match the function's input schema.
+     *
+     * @example
+     * {
+     *   item: '{{event.item}}',
+     *   instructions: 'Summarize and perform entity-extraction'
+     *   mailbox: { '/': 'echo://AAA/ZZZ' }
+     * }
+     */
+    input: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
+    HiddenAnnotation.set(true),
+    Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
   ),
-
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   *
-   * @example
-   * {
-   *   item: '{{event.item}}',
-   *   instructions: 'Summarize and perform entity-extraction'
-   *   mailbox: { '/': 'echo://AAA/ZZZ' }
-   * }
-   */
-  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-  HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
-);
-
-export type Trigger = Type.InstanceType<typeof TriggerSchema>;
-export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
+) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
