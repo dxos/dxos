@@ -46,12 +46,12 @@ export const makeScheduledRoutineAutomation = ({
     const existingFns = yield* Database.query(
       Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(RUN_INSTRUCTIONS_KEY)),
     ).run;
-    const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
+    const runInstructionsFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 
     const trigger = yield* Database.add(
       Obj.make(Trigger.Trigger, {
         enabled: false,
-        function: Ref.make(agentPromptFn),
+        function: Ref.make(runInstructionsFn),
         spec: Trigger.specTimer(cron),
         input: { prompt: Ref.make(instructions), input: {} },
         concurrency: 1,
@@ -60,7 +60,7 @@ export const makeScheduledRoutineAutomation = ({
 
     const automation = Routine.make({
       name,
-      runnable: Ref.make(agentPromptFn),
+      runnable: Ref.make(runInstructionsFn),
       triggers: [Ref.make(trigger)],
     });
     Obj.setParent(trigger, automation);
