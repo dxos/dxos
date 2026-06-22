@@ -12,9 +12,11 @@ import { getDeep } from '@dxos/util';
 export type KeyPath = readonly (string | number)[];
 
 /**
- * Low-level handle over an Automerge document.
+ * Low-level handle over an Automerge document. A deliberately narrow contract (vs. automerge-repo's
+ * `DocHandle`) satisfied by both the networked client handle and the synthetic handle over a local,
+ * not-yet-attached document.
  */
-export interface IDocHandle<T = any> {
+export interface Handle<T = any> {
   doc(): Doc<T> | undefined; // TODO(burdon): Remove undefined.
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
@@ -27,7 +29,7 @@ export interface IDocHandle<T = any> {
  * package consume this to read and mutate the underlying Automerge document.
  */
 export interface DocAccessor<T = any> {
-  get handle(): IDocHandle<T>;
+  get handle(): Handle<T>;
   get path(): KeyPath;
 }
 

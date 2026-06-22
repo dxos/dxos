@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { describe, test } from 'vitest';
 
-import { type DocAccessor, type IDocHandle, type KeyPath } from './accessor';
+import { type DocAccessor, type Handle, type KeyPath } from './accessor';
 import { applyEdits } from './edits';
 import { append, diff, getHeads, onChange, splice } from './operations';
 
@@ -15,7 +15,7 @@ type Schema = { content: string };
 const makeAccessor = (initial: Schema, path: KeyPath = ['content']): DocAccessor<Schema> => {
   let doc = A.from(initial);
   const listeners = new Set<() => void>();
-  const handle: IDocHandle<Schema> = {
+  const handle: Handle<Schema> = {
     doc: () => doc,
     change: (callback) => {
       doc = A.change(doc, callback);
