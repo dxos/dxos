@@ -17,10 +17,9 @@ import { composableProps, slottable } from '../../util';
 
 const COLUMN_ROOT_NAME = 'Column.Root';
 
-type GutterSize = 'xs' | 'sm' | 'md' | 'lg';
+type GutterSize = 'sm' | 'md' | 'lg';
 
 const gutterSizes: Record<GutterSize, string> = {
-  xs: 'var(--dx-gutter-xs)',
   sm: 'var(--dx-gutter-sm)',
   md: 'var(--dx-gutter-md)',
   lg: 'var(--dx-gutter-lg)',
