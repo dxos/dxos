@@ -53,7 +53,15 @@ export type MakeProps = {
   objects?: Ref.Ref<Obj.Unknown>[];
 };
 
-export const make = ({ name, description, input, output, instructions, blueprints = [], objects }: MakeProps): Routine =>
+export const make = ({
+  name,
+  description,
+  input,
+  output,
+  instructions,
+  blueprints = [],
+  objects,
+}: MakeProps): Routine =>
   Obj.make(Routine, {
     name,
     description,
