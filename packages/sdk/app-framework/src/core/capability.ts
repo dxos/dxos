@@ -159,7 +159,6 @@ export const contributes = <I extends InterfaceDef<any>>(
   } satisfies Capability<I>;
 };
 
-
 type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
   default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
 }>;
