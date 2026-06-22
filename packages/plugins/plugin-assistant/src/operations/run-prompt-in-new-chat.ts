@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
   RoutineOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
-        function* ({ db, prompt, objects, blueprints, background }) {
+        function* ({ db, prompt: instructions, objects, blueprints, background }) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
@@ -61,20 +61,20 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
           }
 
           if (background) {
-            const promptRef =
-              typeof prompt === 'string'
+            const instructionsRef =
+              typeof instructions === 'string'
                 ? Ref.make(
                     Instructions.make({
-                      text: prompt,
+                      text: instructions,
                       blueprints: [],
                     }),
                   )
-                : prompt;
+                : instructions;
             yield* Database.flush();
             yield* Operation.invoke(
               RunInstructions,
               {
-                prompt: promptRef,
+                prompt: instructionsRef,
                 input: {},
                 chat: Ref.make(chat),
               },
@@ -90,11 +90,11 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
 
           const chatPath = getChatPath(db.spaceId, chat.id);
           const pendingPromptText =
-            typeof prompt === 'string'
-              ? prompt
+            typeof instructions === 'string'
+              ? instructions
               : yield* Effect.gen(function* () {
-                  const promptObj = yield* Effect.promise(() => prompt.load());
-                  const source = yield* Effect.promise(() => promptObj.text.load());
+                  const instructionsObj = yield* Effect.promise(() => instructions.load());
+                  const source = yield* Effect.promise(() => instructionsObj.text.load());
                   invariant(Obj.instanceOf(Text.Text, source), 'Prompt text must be Text.');
                   return Template.process(source.content ?? '');
                 });
