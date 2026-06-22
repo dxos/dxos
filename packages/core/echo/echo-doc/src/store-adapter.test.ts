@@ -17,8 +17,7 @@ const Canvas = Schema.Struct({
 type Element = { id: string; value: string };
 
 // Reads/mutates the element map at the accessor's (namespaced) path.
-const elementMap = (accessor: Doc.Accessor): Record<string, Element> =>
-  Doc.Accessor.getValue<Record<string, Element>>(accessor);
+const elementMap = (accessor: Doc.Accessor): Record<string, Element> => Doc.getValue<Record<string, Element>>(accessor);
 const mutateMap = (accessor: Doc.Accessor, mutate: (map: Record<string, Element>) => void): void =>
   accessor.handle.change((doc: any) => {
     let map = doc;

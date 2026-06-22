@@ -10,7 +10,7 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import type { EntityMeta } from '@dxos/echo-protocol';
 import type { SpaceId, URI } from '@dxos/keys';
 
-import { type KeyPath } from '../automerge/types';
+import { type KeyPath } from '../automerge/Doc';
 
 //
 // TargetKey — proxy-target cache key (shared with echo-handler to avoid

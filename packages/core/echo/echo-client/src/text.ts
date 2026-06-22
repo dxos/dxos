@@ -9,7 +9,7 @@ import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
-import { type Accessor, type KeyPath, isValidKeyPath } from './automerge/types';
+import { type Accessor, type KeyPath, isKeyPath } from './automerge/Doc';
 import { getObjectCore } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
@@ -88,7 +88,7 @@ export const getRangeFromCursor = (accessor: Accessor, cursor: string) => {
  */
 export const updateText = <T extends Obj.Unknown>(obj: T, path: KeyPath, newText: string): T => {
   assertArgument(isProxy(obj), 'obj');
-  invariant(path === undefined || isValidKeyPath(path));
+  invariant(path === undefined || isKeyPath(path));
   const accessor = getObjectCore(obj).getDocAccessor(path);
   accessor.handle.change((doc) => {
     A.updateText(doc, accessor.path.slice(), newText);

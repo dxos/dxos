@@ -46,7 +46,7 @@ const Test = ({ accessor }: { accessor: Doc.Accessor<TestType> }) => {
     ];
 
     const view = new EditorView({
-      state: EditorState.create({ doc: Doc.Accessor.getValue<string>(accessor) ?? '', extensions }),
+      state: EditorState.create({ doc: Doc.getValue<string>(accessor) ?? '', extensions }),
       parent: ref.current!,
     });
 

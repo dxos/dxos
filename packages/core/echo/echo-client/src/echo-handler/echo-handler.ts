@@ -77,7 +77,7 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { type KeyPath } from '../automerge/types';
+import { type KeyPath } from '../automerge/Doc';
 import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';

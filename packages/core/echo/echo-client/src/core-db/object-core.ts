@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type DocHandleProxy } from '../automerge';
-import { type Accessor, type KeyPath, isValidKeyPath } from '../automerge/types';
+import { type Accessor, type KeyPath, isKeyPath } from '../automerge/Doc';
 import { docChangeSemaphore } from './doc-semaphore';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types';
 
@@ -260,7 +260,7 @@ export class ObjectCore {
   }
 
   getDocAccessor(path: KeyPath = []): Accessor {
-    assertArgument(isValidKeyPath(path), 'path');
+    assertArgument(isKeyPath(path), 'path');
     const self = this;
     return {
       handle: {

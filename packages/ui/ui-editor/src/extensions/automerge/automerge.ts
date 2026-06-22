@@ -72,7 +72,7 @@ export const automerge = (accessor: Doc.Accessor): Extension => {
           accessor.handle.addListener('change', this._handleChange);
 
           requestAnimationFrame(() => {
-            const value = Doc.Accessor.getValue<string>(accessor);
+            const value = Doc.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {
               this._view.dispatch({

@@ -41,7 +41,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,
-      initialValue: Doc.Accessor.getValue(source),
+      initialValue: Doc.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-2' } } }),

@@ -4,7 +4,7 @@
 
 import { batchEvents } from '@dxos/echo/internal';
 
-import type { KeyPath } from '../automerge/types';
+import type { Doc } from '../automerge';
 import type { ObjectCore } from '../core-db';
 import { type EchoReactiveHandler } from './echo-handler';
 import { symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
@@ -16,7 +16,7 @@ export class EchoArray<T> extends Array<T> {
 
   // Will be initialize when the proxy is created.
   [symbolInternals]: ObjectCore = null as any;
-  [symbolPath]: KeyPath = null as any;
+  [symbolPath]: Doc.KeyPath = null as any;
   [symbolNamespace]: string = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;
 

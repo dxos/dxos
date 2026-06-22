@@ -10,7 +10,7 @@ import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type Handle } from './types';
+import * as Doc from './Doc';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
@@ -63,7 +63,7 @@ export type DiskSettlement = boolean;
  * {@link whenSettledOnDisk} to learn the outcome of the disk probe without
  * blocking on the network.
  */
-export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements Handle<T> {
+export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements Doc.Handle<T> {
   private readonly _ready = new Trigger();
   private readonly _settledOnDisk = new Trigger<DiskSettlement>();
   private _state: DocHandleProxyState = 'pending';

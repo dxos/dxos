@@ -24,7 +24,7 @@ describe('Doc', () => {
 
       const obj = db.add(Obj.make(TestSchema.Task, { description: 'hello' }));
       const accessor = Doc.createAccessor(obj, ['description']);
-      expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello');
+      expect(Doc.getValue<string>(accessor)).toBe('hello');
 
       accessor.handle.change((doc) => {
         const path: A.Prop[] = [...accessor.path];
@@ -40,13 +40,13 @@ describe('Doc', () => {
 
       // No db: a local core is materialized so the accessor can bind.
       const accessor = Doc.createAccessor(obj, ['description']);
-      expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello');
+      expect(Doc.getValue<string>(accessor)).toBe('hello');
 
       accessor.handle.change((doc) => {
         const path: A.Prop[] = [...accessor.path];
         A.splice(doc, path, 5, 0, ' world');
       });
-      expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello world');
+      expect(Doc.getValue<string>(accessor)).toBe('hello world');
 
       const builder = new EchoTestBuilder();
       const { db, graph } = await builder.createDatabase();

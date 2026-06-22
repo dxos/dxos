@@ -37,13 +37,13 @@ export const applyEdits = (accessor: Doc.Accessor, edits: readonly Edit[]): stri
     }
 
     accessor.handle.change((doc) => {
-      const text = Doc.Accessor.getValue<string>(accessor);
+      const text = Doc.getValue<string>(accessor);
       // Automerge's `splice` types the path as mutable `Prop[]`; our `KeyPath` is readonly and is not mutated here.
       if (edit.replaceAll) {
         let idx = text.indexOf(edit.oldString);
         while (idx !== -1) {
           A.splice(doc, accessor.path as A.Prop[], idx, edit.oldString.length, edit.newString);
-          const updated = Doc.Accessor.getValue<string>(accessor);
+          const updated = Doc.getValue<string>(accessor);
           idx = updated.indexOf(edit.oldString, idx + edit.newString.length);
         }
       } else {
@@ -56,5 +56,5 @@ export const applyEdits = (accessor: Doc.Accessor, edits: readonly Edit[]): stri
     });
   }
 
-  return Doc.Accessor.getValue<string>(accessor);
+  return Doc.getValue<string>(accessor);
 };

@@ -61,7 +61,7 @@ export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
 export const computeDiffsWithCursors = <T>(accessor: Doc.Accessor<T>, diffs: readonly string[]) => {
   return reduceDiffs(diffs)
     .map((diff) => {
-      const text = Doc.Accessor.getValue<string>(accessor);
+      const text = Doc.getValue<string>(accessor);
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
         return { cursor: toCursorRange(accessor, idx, idx + diff.match.length), text: diff.replace };
@@ -80,7 +80,7 @@ export const applyDiffs = <T>(
 ): string => {
   for (const diff of reduceDiffs(diffs)) {
     accessor.handle.change((doc: AutomergeDoc<T>) => {
-      const text = Doc.Accessor.getValue<string>(accessor);
+      const text = Doc.getValue<string>(accessor);
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
         // TODO(burdon): Replace smallest substring.
@@ -96,5 +96,5 @@ export const applyDiffs = <T>(
     });
   }
 
-  return Doc.Accessor.getValue<string>(accessor);
+  return Doc.getValue<string>(accessor);
 };
