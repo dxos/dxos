@@ -9,8 +9,7 @@ import { Operation, Script, Trigger } from '@dxos/compute';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { meta } from '#meta';
-
+import { getRoutinesSettingsPath } from '../paths';
 import { RoutineOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTemplate> =
@@ -59,7 +58,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
           target: db,
         });
         yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [`${Paths.getSpacePath(db.spaceId)}/settings/${meta.profile.key}.routines`],
+          subject: [getRoutinesSettingsPath(db.spaceId)],
           workspace: Paths.getSpacePath(db.spaceId),
         });
       }),
