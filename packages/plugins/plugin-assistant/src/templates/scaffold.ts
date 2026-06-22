@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Routine } from '@dxos/plugin-routine';
+import { Routine } from '@dxos/plugin-instructions';
 
-/** Registry key of the persisted RunInstructions ("Run Routine") operation a routine trigger dispatches. */
+/** Registry key of the persisted RunInstructions ("Run Routine") operation a instructions trigger dispatches. */
 const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
 
 export type ScheduledRoutineOptions = {
@@ -22,7 +22,7 @@ export type ScheduledRoutineOptions = {
 /**
  * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared RunInstructions
  * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
- * instructions before activating, and is owned by the automation (cascade-deletes with it); the routine
+ * instructions before activating, and is owned by the automation (cascade-deletes with it); the instructions
  * stays independent, since it is edited separately and may be reused.
  */
 export const makeScheduledRoutineAutomation = ({
@@ -33,7 +33,7 @@ export const makeScheduledRoutineAutomation = ({
 }: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, Error, Database.Service> =>
   Effect.gen(function* () {
     const blueprints = blueprintKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
-    const routine = yield* Database.add(
+    const instructions = yield* Database.add(
       Instructions.make({
         name,
         text: instructions,
@@ -53,7 +53,7 @@ export const makeScheduledRoutineAutomation = ({
         enabled: false,
         function: Ref.make(agentPromptFn),
         spec: Trigger.specTimer(cron),
-        input: { prompt: Ref.make(routine), input: {} },
+        input: { prompt: Ref.make(instructions), input: {} },
         concurrency: 1,
       }),
     );

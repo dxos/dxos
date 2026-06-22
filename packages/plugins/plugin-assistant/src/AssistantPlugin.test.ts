@@ -26,7 +26,7 @@ import { EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import { RoutinePlugin } from '@dxos/plugin-instructions/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
@@ -103,7 +103,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can run memoized routine', { timeout: 120_000 }, async (ctx) => {
+  test('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -123,7 +123,7 @@ describe('AssistantPlugin', () => {
 
     await harness.runPromise(
       Effect.gen(function* () {
-        const routine = yield* Database.add(
+        const instructions = yield* Database.add(
           Instructions.make({
             name: 'capital-test',
             text: 'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
@@ -134,7 +134,7 @@ describe('AssistantPlugin', () => {
         const result = yield* Operation.invoke(
           RunInstructions,
           {
-            prompt: Ref.make(routine),
+            prompt: Ref.make(instructions),
             input: {
               country: 'France',
             },

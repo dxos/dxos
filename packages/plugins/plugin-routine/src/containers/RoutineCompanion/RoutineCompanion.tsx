@@ -15,8 +15,8 @@ import { RoutineForm, MasterDetail } from '#components';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
-/** An in-memory draft automation (with its owned routine) not yet added to the database. */
-type Draft = { automation: Routine.Routine; routine: Instructions.Instructions };
+/** An in-memory draft automation (with its owned instructions) not yet added to the database. */
+type Draft = { automation: Routine.Routine; instructions: Instructions.Instructions };
 
 export type RoutineCompanionProps = {
   db: Database.Database;
@@ -26,10 +26,10 @@ export type RoutineCompanionProps = {
 /**
  * Per-object companion: a master-detail list of the automations anchored to the object via the
  * {@link Routine.AppliesTo} relation. Selecting a row shows its {@link RoutineForm}; "Create"
- * scaffolds a draft pre-filled with the object (bound as routine context) and the object type's
+ * scaffolds a draft pre-filled with the object (bound as instructions context) and the object type's
  * blueprints. Mirrors the Chat companion's blueprint/context binding.
  *
- * The draft automation + routine are added to the database immediately (the routine's Markdown
+ * The draft automation + instructions are added to the database immediately (the instructions's Markdown
  * instructions editor needs a db-attached object), but the anchoring relation — what makes the
  * automation appear in this list — is created only on Save; Cancel removes the draft. So an
  * abandoned draft leaves no association behind.
@@ -60,21 +60,21 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
   }, []);
 
   const handleCreate = useCallback(() => {
-    // Pre-fill: bind the object as routine context and attach the object type's blueprints. The routine
+    // Pre-fill: bind the object as instructions context and attach the object type's blueprints. The instructions
     // and automation are added to the db now (the instructions editor needs a db-attached object); the
     // anchoring relation is deferred to save.
-    const routine = db.add(
+    const instructions = db.add(
       Instructions.make({ blueprints: blueprintRefsForObject(object), objects: [Ref.make(object)] }),
     );
     const automation = db.add(Routine.make({ triggers: [] }));
-    Obj.setParent(routine, automation);
+    Obj.setParent(instructions, automation);
     setSelectedId(undefined);
-    setDraft({ automation, routine });
+    setDraft({ automation, instructions });
   }, [db, object]);
 
   const handleCancel = useCallback(() => {
     if (draft) {
-      // Remove the unsaved draft; its owned routine cascade-deletes.
+      // Remove the unsaved draft; its owned instructions cascade-deletes.
       db.remove(draft.automation);
     }
     setDraft(undefined);
@@ -92,7 +92,7 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
 
   const handleDelete = useCallback(
     (automation: Routine.Routine) => {
-      // Remove the anchoring relation, then the automation (its owned routine cascade-deletes).
+      // Remove the anchoring relation, then the automation (its owned instructions cascade-deletes).
       const relation = relations.find((candidate) => Relation.getSource(candidate)?.id === automation.id);
       if (relation) {
         db.remove(relation);
@@ -146,7 +146,7 @@ const DraftEditor = ({
   const { t } = useTranslation(meta.profile.key);
   return (
     <div role='none' className='flex flex-col min-bs-0'>
-      <RoutineForm db={db} automation={draft.automation} routine={draft.routine} />
+      <RoutineForm db={db} automation={draft.automation} instructions={draft.instructions} />
       <div role='none' className='flex justify-end gap-2 p-2 border-bs border-subdued-separator'>
         <Button onClick={onCancel}>{t('cancel.label')}</Button>
         <Button variant='primary' onClick={onSave}>

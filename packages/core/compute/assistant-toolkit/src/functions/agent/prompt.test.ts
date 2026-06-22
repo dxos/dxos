@@ -78,7 +78,7 @@ describe('Agent prompt', () => {
   );
 
   it.effect(
-    'generates an object conforming to the routine output schema',
+    'generates an object conforming to the instructions output schema',
     Effect.fnUntraced(
       function* (_) {
         const Person = Schema.Struct({
@@ -86,7 +86,7 @@ describe('Agent prompt', () => {
           age: Schema.Number,
         });
 
-        const routine = yield* Database.add(
+        const instructions = yield* Database.add(
           Instructions.make({
             name: 'output-schema-test',
             text: 'Invent a fictional person and call completeJob with the success object describing them (name and age).',
@@ -98,13 +98,13 @@ describe('Agent prompt', () => {
         yield* Database.flush();
 
         const result = yield* Operation.invoke(RunInstructions, {
-          prompt: Ref.make(routine),
+          prompt: Ref.make(instructions),
           input: {},
         });
 
-        // The routine persists its declared output as a JSON schema; decode it back and assert the
+        // The instructions persists its declared output as a JSON schema; decode it back and assert the
         // agent-produced object satisfies that schema.
-        const outputSchema = JsonSchema.toEffectSchema(routine.output);
+        const outputSchema = JsonSchema.toEffectSchema(instructions.output);
         const decoded = Schema.decodeUnknownSync(outputSchema)(result);
         expect(typeof decoded.name).toBe('string');
         expect(typeof decoded.age).toBe('number');

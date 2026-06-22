@@ -26,10 +26,10 @@ import { sync } from './testing';
  * Prereq: local EDGE (`configPreset({ edge: 'local' })` → `http://localhost:8787`) with LLM
  * available (API key and/or memo replay under `conversationsCache/`).
  */
-describe('Edge routine', { tags: ['functions-e2e'] }, () => {
+describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
   const config = configPreset({ edge: 'local' });
 
-  test('timer trigger runs routine with database blueprint on edge', { timeout: 420_000 }, async ({ expect }) => {
+  test('timer trigger runs instructions with database blueprint on edge', { timeout: 420_000 }, async ({ expect }) => {
     await using client = await new Client({
       config,
       types: [
@@ -60,7 +60,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
 
     const databaseBlueprint = space.db.add(DatabaseBlueprint.make());
 
-    const routine = space.db.add(
+    const instructions = space.db.add(
       Instructions.make({
         name: 'edge-e2e-count-orgs-db-blueprint',
         text: trim`
@@ -82,7 +82,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
         function: Ref.make(fn),
         spec: Trigger.specTimer('* * * * * *'),
         input: {
-          prompt: Ref.make(routine),
+          prompt: Ref.make(instructions),
           input: {},
           model: 'ai.claude.model.claude-haiku-4-5',
         },

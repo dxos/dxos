@@ -15,12 +15,12 @@ import { Text } from '@dxos/schema';
 
 import { WebSearchBlueprint } from '../../blueprints';
 
-// Regression coverage for the CRM-routine failure: blueprints live only in the registry
+// Regression coverage for the CRM-instructions failure: blueprints live only in the registry
 // (referenced via `Ref.fromURI(Blueprint.registryURI(key))`), never forked into the space DB.
 //
 // `AiContext.Binder.bind` persists each bound blueprint ref to the conversation feed. A later
 // turn (or spawned process) re-reads that ref with an empty in-memory cache and must resolve it
-// on its own. If the routine's registry blueprint is bound by its registry DXN ref, resolution
+// on its own. If the instructions's registry blueprint is bound by its registry DXN ref, resolution
 // stays in the registry and succeeds. If it is re-wrapped with `Ref.make` first (minting an
 // EID ref to an object that only exists in the registry, never in the DB), the persisted ref
 // dangles — in production the DB query blocks for its full 30s timeout; with a fresh binder here
@@ -40,13 +40,13 @@ describe('Blueprint binding resolution (registry refs)', () => {
         const { db } = yield* Database.Service;
 
         // Register the web-search blueprint in the db registry (the resolver's registry),
-        // the same way `plugin-routine/RegistrySync` does in production.
+        // the same way `plugin-instructions/RegistrySync` does in production.
         db.registry.add([WebSearchBlueprint.make()]);
 
-        // Create a routine referencing the blueprint purely by registry URI. Once added to the
+        // Create a instructions referencing the blueprint purely by registry URI. Once added to the
         // DB its blueprint ref is a resolver-backed registry ref — exactly the ref `prompt.ts`
         // binds.
-        const routine = yield* Database.add(
+        const instructions = yield* Database.add(
           Instructions.make({
             name: 'resolution-test',
             text: 'noop',
@@ -54,13 +54,13 @@ describe('Blueprint binding resolution (registry refs)', () => {
           }),
         );
         yield* Database.flush();
-        const registryRef = routine.blueprints[0];
+        const registryRef = instructions.blueprints[0];
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Database.Service>();
 
-        // Bind the routine's own registry ref (the fix) and persist it to the feed.
+        // Bind the instructions's own registry ref (the fix) and persist it to the feed.
         const writer = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => writer.open());
         yield* Effect.promise(() => writer.bind({ blueprints: [registryRef], objects: [] }));
@@ -91,7 +91,7 @@ describe('Blueprint binding resolution (registry refs)', () => {
         const { db } = yield* Database.Service;
         db.registry.add([WebSearchBlueprint.make()]);
 
-        const routine = yield* Database.add(
+        const instructions = yield* Database.add(
           Instructions.make({
             name: 'resolution-test',
             text: 'noop',
@@ -99,7 +99,7 @@ describe('Blueprint binding resolution (registry refs)', () => {
           }),
         );
         yield* Database.flush();
-        const blueprint = yield* Database.load(routine.blueprints[0]);
+        const blueprint = yield* Database.load(instructions.blueprints[0]);
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();

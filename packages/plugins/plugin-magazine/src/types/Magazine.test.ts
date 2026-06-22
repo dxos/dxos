@@ -53,12 +53,12 @@ describe('Magazine', () => {
         const magazine = yield* Database.add(Magazine.make({ name: 'The Cosmos', instructions: 'Astronomy news' }));
         yield* Database.flush();
 
-        // The routine is created with the magazine (not lazily).
-        expect(magazine.routine).toBeDefined();
-        const routine = yield* Database.load(magazine.routine!);
-        expect(routine.blueprints.length).toBeGreaterThan(0);
+        // The instructions are created with the magazine (not lazily).
+        expect(magazine.instructions).toBeDefined();
+        const instructions = yield* Database.load(magazine.instructions!);
+        expect(instructions.blueprints.length).toBeGreaterThan(0);
 
-        const text = yield* Database.load(routine.text);
+        const text = yield* Database.load(instructions.text);
         expect(text.content).toContain('## Topic');
         expect(text.content).toContain('Astronomy news');
       },

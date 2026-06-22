@@ -20,7 +20,7 @@ const TOAST_ID = `${meta.profile.key}/regenerate`;
 /**
  * Runs the provider blueprint agent: materializes the {@link ProviderBlueprint} as an ECHO
  * Blueprint object in the space (cloning the static definition on first use, mirroring the
- * `create-chat` operation), then invokes the {@link RunInstructions} routine with the blueprint and
+ * `create-chat` operation), then invokes the {@link RunInstructions} instructions with the blueprint and
  * provider bound as context. The agent fetches the vendor site (analyzeProvider) and persists a
  * derived search schema + request/result mapping (setProviderTemplate). Returns the (mutated)
  * provider.
@@ -48,10 +48,10 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
             blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY) ??
             db.add(ProviderBlueprint.make());
 
-          // The RunInstructions routine loads `blueprints`/`context` and binds them to its own session,
+          // The RunInstructions instructions loads `blueprints`/`context` and binds them to its own session,
           // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
           // available to the agent without a pre-bound chat.
-          const routine = Instructions.make({
+          const instructions = Instructions.make({
             name: 'Generate Provider Template',
             text: trim`
             Analyze the provider at ${provider.url} and populate its search template by calling the
@@ -70,7 +70,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           yield* Database.flush();
           yield* Operation.invoke(
             RunInstructions,
-            { prompt: Ref.make(routine), input: {} },
+            { prompt: Ref.make(instructions), input: {} },
             { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
           );
 

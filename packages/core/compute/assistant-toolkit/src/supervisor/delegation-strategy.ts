@@ -49,7 +49,7 @@ const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefine
 const formatResult = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
 
 /**
- * Extracts artifact ids a sub-agent reported in its result (see the synthesized routine
+ * Extracts artifact ids a sub-agent reported in its result (see the synthesized instructions
  * instructions). Tolerates the result being a string, or an object with `artifactIds`/`artifactId`.
  */
 const extractArtifactIds = (value: unknown): string[] => {
@@ -105,9 +105,9 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
       const delegations: Delegation[] = [];
       for (const task of pending) {
-        // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via RunInstructions
+        // Synthesize a minimal instructions whose goal is the task; the sub-agent runs it via RunInstructions
         // with the inherited blueprints bound.
-        const routine = yield* Database.add(
+        const instructions = yield* Database.add(
           Instructions.make({
             name: task.title,
             text: trim`
@@ -127,7 +127,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           id: task.id,
           spawn: Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(RunInstructions, { prompt: Ref.make(routine), input: {} });
+            const fiber = yield* invoker.invokeFiber(RunInstructions, { prompt: Ref.make(instructions), input: {} });
             const pid = fiber.pid;
             Obj.update(plan, (plan) => {
               const taskRecord = plan.tasks.find((taskRecord) => taskRecord.id === task.id);

@@ -9,11 +9,11 @@ import { Blueprint, Instructions, Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine';
+import { Routine, type RoutineCapabilities } from '@dxos/plugin-instructions';
 import { trim } from '@dxos/util';
 
 /**
- * Blueprint keys composed into the CRM routine. The CRM blueprint provides CRM-specific tools; the others
+ * Blueprint keys composed into the CRM instructions. The CRM blueprint provides CRM-specific tools; the others
  * supply the database, web-search, and document utilities the agent relies on.
  */
 const BLUEPRINT_KEYS = [
@@ -23,7 +23,7 @@ const BLUEPRINT_KEYS = [
   'org.dxos.blueprint.markdown',
 ] as const;
 
-/** Default instructions seeded into the routine; the user edits these by opening the routine. */
+/** Default instructions seeded into the instructions; the user edits these by opening the instructions. */
 const DEFAULT_INSTRUCTIONS = trim`
   A new email message is provided in the <input> block below.
 
@@ -49,7 +49,7 @@ export const crm: RoutineCapabilities.Template = {
       const routineName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
       const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
-      const routine = yield* Database.add(
+      const instructions = yield* Database.add(
         Instructions.make({
           name: routineName,
           text: DEFAULT_INSTRUCTIONS,
@@ -71,7 +71,7 @@ export const crm: RoutineCapabilities.Template = {
           function: Ref.make(agentPromptFn),
           spec: Trigger.specFeed(feed),
           input: {
-            prompt: Ref.make(routine),
+            prompt: Ref.make(instructions),
             input: '{{event.item}}',
           },
           concurrency: 1,
@@ -84,7 +84,7 @@ export const crm: RoutineCapabilities.Template = {
         triggers: [Ref.make(trigger)],
       });
       // The trigger is owned by the automation (reachable only via it) so it cascade-deletes with it; the
-      // routine stays independent, since it is edited separately and may be reused.
+      // instructions stays independent, since it is edited separately and may be reused.
       Obj.setParent(trigger, automation);
 
       return automation;

@@ -68,7 +68,7 @@ export const Magazine = Schema.Struct({
    * Routine's own fields), so the brief is edited there without a custom surface.
    * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
    */
-  routine: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -99,7 +99,7 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'routine' | 'postState'> & {
+export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'instructions' | 'postState'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
   /** Editorial brief seeded into the curation Routine's instructions (composed with the default methodology). */
@@ -122,7 +122,7 @@ export const make = (props: MakeProps = {}): Magazine => {
     postState: Ref.make(postState),
   });
 
-  const routine = Instructions.make({
+  const instructions = Instructions.make({
     name: props.name ? `${props.name} curation` : 'Magazine curation',
     text: composeInstructions(props.instructions),
     blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
@@ -130,13 +130,13 @@ export const make = (props: MakeProps = {}): Magazine => {
     objects: [Ref.make(magazine)],
   });
   Obj.update(magazine, (magazine) => {
-    magazine.routine = Ref.make(routine);
+    magazine.instructions = Ref.make(instructions);
   });
 
   // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
-  Obj.setParent(routine, magazine);
-  if (routine.text.target) {
-    Obj.setParent(routine.text.target, routine);
+  Obj.setParent(instructions, magazine);
+  if (instructions.text.target) {
+    Obj.setParent(instructions.text.target, instructions);
   }
   Obj.setParent(postState, magazine);
   return magazine;

@@ -29,11 +29,11 @@ export type RoutineFormProps = {
   db: Database.Database;
   automation: Routine.Routine;
   /**
-   * Draft owned routine for an automation not yet added to the database (the companion's create flow).
+   * Draft owned instructions for an automation not yet added to the database (the companion's create flow).
    * When supplied, the action editor edits it directly instead of querying for / eagerly creating one,
    * so an in-memory draft can be configured before it is persisted.
    */
-  routine?: Instructions.Instructions;
+  instructions?: Instructions.Instructions;
 };
 
 /**
@@ -42,7 +42,7 @@ export type RoutineFormProps = {
  * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
  */
-export const RoutineForm = ({ db, automation, routine }: RoutineFormProps) => {
+export const RoutineForm = ({ db, automation, instructions }: RoutineFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(automation);
   const trigger = usePrimaryTrigger(automation);
@@ -69,7 +69,7 @@ export const RoutineForm = ({ db, automation, routine }: RoutineFormProps) => {
           <Form.FieldSet />
 
           <Section title={t('actions.title')}>
-            <ActionEditor db={db} automation={automation} routine={routine} />
+            <ActionEditor db={db} automation={automation} instructions={instructions} />
           </Section>
 
           <Section title={t('triggers.title')}>
@@ -93,7 +93,7 @@ const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
 // Actions
 //
 
-const ActionKinds = ['routine', 'operation'] as const;
+const ActionKinds = ['instructions', 'operation'] as const;
 type ActionKind = (typeof ActionKinds)[number];
 const isActionKind = (value: string): value is ActionKind => (ActionKinds as readonly string[]).includes(value);
 
@@ -101,32 +101,32 @@ const isActionKind = (value: string): value is ActionKind => (ActionKinds as rea
 const ActionEditor = ({
   db,
   automation,
-  routine: draftRoutine,
+  instructions: draftRoutine,
 }: {
   db: Database.Database;
   automation: Routine.Routine;
-  routine?: Instructions.Instructions;
+  instructions?: Instructions.Instructions;
 }) => {
   const [auto, updateAuto] = useObject(automation);
   const operations = useOperations(db);
-  // A draft (not-yet-persisted) automation supplies its owned routine directly; otherwise resolve it by query.
+  // A draft (not-yet-persisted) automation supplies its owned instructions directly; otherwise resolve it by query.
   const queriedRoutine = useOwnedRoutine(db, automation);
   const ownedRoutine = draftRoutine ?? queriedRoutine;
   const runnableTarget = auto.runnable?.target;
-  // Default to a routine action unless an operation is already bound.
+  // Default to a instructions action unless an operation is already bound.
   const [kind, setKind] = useState<ActionKind>(
-    Obj.instanceOf(Operation.PersistentOperation, runnableTarget) ? 'operation' : 'routine',
+    Obj.instanceOf(Operation.PersistentOperation, runnableTarget) ? 'operation' : 'instructions',
   );
 
-  // A routine action edits an owned Routine; create one on first use (the initial default or a toggle).
+  // A instructions action edits an owned Routine; create one on first use (the initial default or a toggle).
   // The ref guards the gap before `useOwnedRoutine`'s query reflects the new object, avoiding a double create.
-  // Skipped for a draft automation — it owns an in-memory routine that is persisted on save.
+  // Skipped for a draft automation — it owns an in-memory instructions that is persisted on save.
   const createdRoutineRef = useRef(false);
   useEffect(() => {
-    if (!draftRoutine && kind === 'routine' && !queriedRoutine && !createdRoutineRef.current) {
+    if (!draftRoutine && kind === 'instructions' && !queriedRoutine && !createdRoutineRef.current) {
       createdRoutineRef.current = true;
-      const routine = db.add(Instructions.make({ name: auto.name }));
-      Obj.setParent(routine, automation);
+      const instructions = db.add(Instructions.make({ name: auto.name }));
+      Obj.setParent(instructions, automation);
     }
   }, [draftRoutine, kind, queriedRoutine, db, automation, auto.name]);
 
@@ -150,7 +150,7 @@ const ActionEditor = ({
           onChange={handleOperationChange}
         />
       ) : ownedRoutine ? (
-        <InstructionsEditor db={db} routine={ownedRoutine} />
+        <InstructionsEditor db={db} instructions={ownedRoutine} />
       ) : null}
     </div>
   );
@@ -160,7 +160,7 @@ const ActionKindToggle = ({ value, onChange }: { value: ActionKind; onChange: (k
   const { t } = useTranslation(meta.profile.key);
   return (
     <ToggleGroup type='single' value={value} onValueChange={(next) => isActionKind(next) && onChange(next)}>
-      <ToggleGroupItem value='routine'>{t('action-kind.routine.label')}</ToggleGroupItem>
+      <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
       <ToggleGroupItem value='operation'>{t('action-kind.operation.label')}</ToggleGroupItem>
     </ToggleGroup>
   );
@@ -239,11 +239,11 @@ const useOperations = (db: Database.Database) =>
     ),
   );
 
-/** The Routine owned by (parented to) this automation, used for the inline routine action. */
+/** The Routine owned by (parented to) this automation, used for the inline instructions action. */
 const useOwnedRoutine = (db: Database.Database, automation: Routine.Routine): Instructions.Instructions | undefined => {
   const routines = useQuery(db, Query.select(Filter.type(Instructions.Instructions)).from(Scope.space()));
   return useMemo(
-    () => routines.find((routine) => Obj.getParent(routine)?.id === automation.id),
+    () => routines.find((instructions) => Obj.getParent(instructions)?.id === automation.id),
     [routines, automation],
   );
 };
