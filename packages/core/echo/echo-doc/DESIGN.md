@@ -10,10 +10,10 @@ This note records why that dependency exists and how to reduce it.
 
 "Factoring out `Doc`" is two separable extractions that the current code conflates:
 
-| Piece | What it is | Real dependencies |
-|---|---|---|
-| **A. The `Doc` type surface** | `automerge/Doc.ts` — `Handle`, `Accessor`, `KeyPath`, `isKeyPath`, `getValue` | `@automerge/automerge` (types only) + `@dxos/util` (`getDeep`). Nothing else. |
-| **B. The accessor *binding*** | `createAccessor` (echo-doc) + `getDocAccessor` (`ObjectCore`) | The whole `ObjectCore` → `createObject` / `getObjectCore` / `isEchoObject` chain |
+| Piece                         | What it is                                                                    | Real dependencies                                                                |
+| ----------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **A. The `Doc` type surface** | `automerge/Doc.ts` — `Handle`, `Accessor`, `KeyPath`, `isKeyPath`, `getValue` | `@automerge/automerge` (types only) + `@dxos/util` (`getDeep`). Nothing else.    |
+| **B. The accessor _binding_** | `createAccessor` (echo-doc) + `getDocAccessor` (`ObjectCore`)                 | The whole `ObjectCore` → `createObject` / `getObjectCore` / `isEchoObject` chain |
 
 Piece A is trivially extractable and nearly dependency-free. Piece B is the one
 that drags in `ObjectCore` (and therefore automerge-repo, encode/decode, the proxy
@@ -27,7 +27,7 @@ closes over `this.getDoc/change/changeAt` and the `updates` event — so the
 accessor without an `ObjectCore`, and `ObjectCore` is irreducibly automerge-bound
 (`A.from`, `A.change`, `DocHandleProxy`).
 
-The dependency is therefore *structural*, not incidental: the accessor abstraction
+The dependency is therefore _structural_, not incidental: the accessor abstraction
 is defined over `ObjectCore`'s CRDT lifecycle.
 
 ## Recommendation — Option 2: extract `@dxos/echo-core`
@@ -46,8 +46,9 @@ that is unavoidable for anything that touches `ObjectCore`.
 packages/core/echo/echo-core/src/
   index.ts
   automerge/Doc.ts          ← Handle, Accessor, KeyPath, isKeyPath, getValue
-  core-db/object-core.ts    ← ObjectCore
-  core-db/types.ts          ← TargetKey, DecodedAutomergePrimaryValue, ...
+  core-db/
+    object-core.ts          ← ObjectCore
+    types.ts                ← TargetKey, DecodedAutomergePrimaryValue, ...
   echo-handler/
     echo-array.ts
     echo-handler.ts         ← createObject, EchoReactiveHandler

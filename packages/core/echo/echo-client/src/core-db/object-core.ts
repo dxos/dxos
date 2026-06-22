@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type ChangeFn, type ChangeOptions, type Doc as AutomergeDoc, type Heads } from '@automerge/automerge';
+import {
+  next as A,
+  type ChangeFn,
+  type ChangeOptions,
+  type Doc as AutomergeDoc,
+  type Heads,
+} from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import type { InspectOptionsStylized, inspect } from 'util';
