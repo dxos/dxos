@@ -90,8 +90,6 @@ export const translations: Resource[] = [
         'create-object.label': 'Create prompt',
         'create-trigger.label': 'Create trigger',
         'create-stack-section.label': 'Create prompt',
-        'command.placeholder': 'Enter slash command...',
-        'template.placeholder': 'Enter template...',
         'value.placeholder': 'Enter value...',
         'prompt-rules.label': 'Prompt Rules',
         'typename.placeholder': 'Enter typename of objects which this template is for',
@@ -160,8 +158,6 @@ export const translations: Resource[] = [
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
-        'run-prompt.label': 'Run prompt',
-        'routine-running.label': 'Running…',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',

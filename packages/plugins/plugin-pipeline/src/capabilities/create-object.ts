@@ -11,8 +11,6 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { Pipeline } from '@dxos/types';
 
-import { getPipelinesPath } from '../paths';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
@@ -23,8 +21,7 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            hidden: true,
-            targetNodeId: options.targetNodeId ?? getPipelinesPath(options.db.spaceId),
+            targetNodeId: options.targetNodeId,
           });
         }),
     });

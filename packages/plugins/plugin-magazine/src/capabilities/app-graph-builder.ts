@@ -1,0 +1,100 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { GraphBuilder } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+
+import { meta } from '#meta';
+import { FeedOperation } from '#types';
+import { Magazine, Subscription } from '#types';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const selectedId = Atom.family((nodeId: string) =>
+      Atom.make((get) => {
+        const selection = get(viewState.atom(selectionAspect, nodeId));
+        return selection.mode === 'single' ? selection.id : undefined;
+      }),
+    );
+
+    const extensions = yield* Effect.all([
+      // Companion panel: resolve the selected Post under a Magazine node.
+      GraphBuilder.createExtension({
+        id: 'magazinePost',
+        match: (node) =>
+          Magazine.instanceOf(node.data)
+            ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })
+            : Option.none(),
+        connector: (matched, get) => {
+          const { magazine, nodeId } = matched;
+          const postId = get(selectedId(nodeId));
+          let post: Subscription.Post | undefined;
+          if (postId) {
+            for (const ref of magazine.posts) {
+              const resolved = get(ref.atom) as Subscription.Post | undefined;
+              if (resolved?.id === postId) {
+                post = resolved;
+                break;
+              }
+            }
+          }
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('post'),
+              label: ['post-companion.label', { ns: meta.profile.key }],
+              icon: 'ph--article--regular',
+              data: post,
+            }),
+          ]);
+        },
+      }),
+
+      // Actions on each Subscription.Subscription node.
+      GraphBuilder.createExtension({
+        id: 'feedActions',
+        match: (node) =>
+          Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),
+        actions: (feed) =>
+          Effect.succeed([
+            {
+              id: 'sync',
+              data: () =>
+                Operation.invoke(
+                  FeedOperation.SyncFeed,
+                  { feed: Ref.make(feed) },
+                  { spaceId: Obj.getDatabase(feed)?.spaceId },
+                ),
+              properties: {
+                label: ['sync-feed.label', { ns: meta.profile.key }],
+                icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
+              },
+            },
+            {
+              id: 'delete',
+              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
+              properties: {
+                label: ['delete-object.label', { ns: Type.getTypename(Subscription.Subscription) }],
+                icon: 'ph--trash--regular',
+                disposition: 'list-item',
+              },
+            },
+          ]),
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

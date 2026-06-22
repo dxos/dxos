@@ -36,7 +36,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
 
   return (
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
-      <div className='grid grid-cols-[minmax(0,1fr)_min-content_min-content] items-start gap-2'>
+      <div className='grid grid-cols-[minmax(0,1fr)_min-content_min-content] gap-2 items-start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
         {onClose && (

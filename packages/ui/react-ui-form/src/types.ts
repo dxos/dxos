@@ -53,12 +53,20 @@ export type FormFieldRendererProps<T = any> = {
   readonly?: boolean;
   label: string;
   /**
+   * Human-readable description (from the schema's description annotation). Rendered as visible text
+   * only when the resolved presentation opts in; otherwise it falls back to the input placeholder.
+   */
+  description?: string;
+  /**
    * Dotted JSON path of this field within the form values (e.g. `runtime.client.storage.persistent`).
    */
   jsonPath?: string;
   placeholder?: string;
   autoFocus?: boolean;
-  layout?: FormPresentation;
+  /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
+  presentation?: FormPresentation;
+  /** Whether the field is required (non-optional in the schema); surfaces a trailing asterisk on the label. */
+  required?: boolean;
 } & FormFieldStateProps<T>;
 
 export type FormFieldRenderer = FC<FormFieldRendererProps>;
@@ -91,6 +99,8 @@ export type CreateOptions = {
 export type RefOption = {
   id: string;
   label: string;
+  /** Optional secondary line shown beneath the label in the picker list. */
+  description?: string;
   hue?: Palette;
 };
 
@@ -112,6 +122,13 @@ export type RefFieldDataProps = {
    * object is then wired into this slot's form value as a Ref.
    */
   onCreate?: (schema: Type.AnyEntity, values: any) => Obj.Unknown | Promise<Obj.Unknown> | undefined | void;
+  /**
+   * Supply default values for a newly-created owned object when the user clicks "add" on an owned-ref
+   * array field (see `FormCreateAnnotation`). Keyed by the field's json path so a container can pre-populate
+   * the new object (e.g. a back-reference to the parent). The returned values are passed to
+   * `onCreate(schema, values)` before the object is persisted.
+   */
+  getCreateDefaults?: (props: { jsonPath: string; schema: Type.AnyEntity }) => Record<string, unknown> | undefined;
 };
 
 /**
@@ -132,3 +149,16 @@ export type FormFieldOptions = {
    */
   createTypename?: string;
 };
+
+/**
+ * The subset of {@link RefFieldDataProps} that is forwarded down the field recursion. `useResults`
+ * is consumed only by `RefField` itself (it defaults internally), so it is not threaded.
+ */
+export type RefThreadedProps = Pick<RefFieldDataProps, 'useType' | 'getOptions' | 'onCreate' | 'getCreateDefaults'>;
+
+/**
+ * Form-wide configuration threaded unchanged down the entire field recursion. This is the single
+ * canonical source for the bag that `FormContextValue`, `FormFieldProps`, and `FormFieldSetProps`
+ * all carry — so none of them re-Picks fragments of the others.
+ */
+export type FieldContext = FormFieldOptions & CreateOptions & RefThreadedProps;

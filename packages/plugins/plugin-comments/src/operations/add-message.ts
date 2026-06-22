@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
             [subjectId]: state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id),
           },
         });
-        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
         yield* Operation.invoke(SpaceOperation.AddRelation, {
           db,
           schema: AnchoredTo.AnchoredTo,

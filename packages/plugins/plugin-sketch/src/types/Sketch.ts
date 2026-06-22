@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
@@ -24,6 +25,7 @@ export const Sketch = Schema.Struct({
   canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
+  CollectionItemAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.sketch', '0.1.0')),
 );
 export type Sketch = Type.InstanceType<typeof Sketch>;

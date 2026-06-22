@@ -278,32 +278,6 @@ export type ObjectArticleProps<
   CompanionTo = unknown,
 > = ArticleProps<Subject, Props, CompanionTo>;
 
-/** Component props for article-role plugin settings. */
-export type SettingsArticleProps<T extends {}, Props extends {} = {}> = {
-  settings: T;
-  onSettingsChange?: (cb: (current: T) => T) => void;
-} & Props;
-
-/**
- * Filter: matches a plugin-settings article. When `prefix` is omitted the
- * filter matches any settings subject (used by the generic default settings
- * surface); pass a `prefix` to match a single plugin's settings.
- */
-export const settings = (
-  token: Surface.RoleToken<any>,
-  prefix?: string,
-): Surface.Filter<{ subject: AppCapabilities.Settings }> => {
-  const guard = (data: unknown): boolean => {
-    if (typeof data !== 'object' || data === null) {
-      return false;
-    }
-
-    const subject = (data as { subject?: unknown }).subject;
-    return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
-  };
-  return { bindings: [{ role: token.role, guard }] };
-};
-
 //
 // SpaceArticle
 //
@@ -328,6 +302,44 @@ export type SpaceArticleData<Props extends {} = {}> = Omit<ArticleData<unknown>,
 /** Component props for an article whose container receives a resolved Space. */
 export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> & {
   role?: string;
+};
+
+//
+// Settings
+//
+// Plugin settings render as article-role planks whose subject is an
+// `AppCapabilities.Settings` entry (the deck's PlankComponent dispatches every
+// plank under the `article` role). The `settings` filter narrows those planks
+// to a settings subject; `SettingsProps` is the contract a settings panel
+// component receives once `useSettingsState` has resolved the contributed atom.
+//
+
+/** Surface data for a plugin-settings article (subject is an `AppCapabilities.Settings` entry). */
+export type SettingsData<Props extends {} = {}> = {
+  subject: AppCapabilities.Settings;
+} & Props;
+
+/** Component props for a plugin-settings panel. */
+export type SettingsProps<T extends {}, Props extends {} = {}> = {
+  settings: T;
+  onSettingsChange?: (cb: (current: T) => T) => void;
+} & Props;
+
+/**
+ * Filter: matches a plugin-settings article. When `prefix` is omitted the
+ * filter matches any settings subject (used by the generic default settings
+ * surface); pass a `prefix` to match a single plugin's settings.
+ */
+export const settings = (token: Surface.RoleToken<any>, prefix?: string): Surface.Filter<SettingsData> => {
+  const guard = (data: unknown): boolean => {
+    if (typeof data !== 'object' || data === null) {
+      return false;
+    }
+
+    const subject = (data as { subject?: unknown }).subject;
+    return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
+  };
+  return { bindings: [{ role: token.role, guard }] };
 };
 
 //

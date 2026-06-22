@@ -29,6 +29,14 @@ describe('findRefOption', () => {
     expect(findRefOption({ '/': LOCAL }, options)?.label).toBe('Target');
   });
 
+  test('matches a keyed-entity ref by direct URI equality', ({ expect }) => {
+    // Keyed/registry entities (blueprints, operations) are referenced by a named DXN with no parseable
+    // EID; the option id and the ref uri are the same named URI, so they match by direct equality.
+    const named = 'dxn:type:example.com/blueprint/research';
+    const keyedOptions: RefOption[] = [...options, { id: named, label: 'Research' }];
+    expect(findRefOption({ '/': named }, keyedOptions)?.label).toBe('Research');
+  });
+
   test('returns undefined for a non-ref value', ({ expect }) => {
     expect(findRefOption('not-a-ref', options)).toBeUndefined();
     expect(findRefOption(undefined, options)).toBeUndefined();

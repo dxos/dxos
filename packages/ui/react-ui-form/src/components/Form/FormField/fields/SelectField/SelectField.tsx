@@ -4,47 +4,34 @@
 
 import React, { useCallback } from 'react';
 
-import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { Icon, Select, type SelectRootProps } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
-import { type FormFieldRendererProps } from '#types';
+import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 export type SelectFieldOptions = FormFieldRendererProps & {
   options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;
 };
 
-export const SelectField = ({
-  type,
-  readonly,
-  label,
-  jsonPath,
-  layout,
-  placeholder,
-  options,
-  getStatus,
-  getValue,
-  onValueChange,
-}: SelectFieldOptions) => {
-  const { status, error } = getStatus();
-  const value = getValue() as string | undefined;
-
+export const SelectField = ({ type, readonly, placeholder, options, onValueChange, ...props }: SelectFieldOptions) => {
   const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
     (value) => onValueChange(type, value),
     [type, onValueChange],
   );
 
-  if ((readonly || layout === 'static') && value == null) {
-    return null;
-  }
-
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-      {layout === 'static' ? (
-        <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
-      ) : (
+    <FormRow<string>
+      readonly={readonly}
+      renderStatic={(value) => (
+        <p className='truncate min-w-0'>
+          {options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}
+        </p>
+      )}
+      {...props}
+    >
+      {({ value }) => (
         <Select.Root value={value} onValueChange={handleValueChange}>
           {/* TODO(burdon): Placeholder not working? */}
           <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
@@ -67,8 +54,7 @@ export const SelectField = ({
           </Select.Portal>
         </Select.Root>
       )}
-      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+    </FormRow>
   );
 };
 
@@ -76,4 +62,65 @@ const getIconHueStyles = (iconHue?: string): string | undefined => {
   const styles = iconHue ? getStyles(iconHue) : undefined;
 
   return styles?.fg;
+};
+
+export type SelectFieldOption = {
+  value: string;
+  label?: string;
+};
+
+export type CreateSelectFieldOptions = {
+  /** Options to display. Strings are used as both value and label. */
+  options: ReadonlyArray<string | SelectFieldOption>;
+  /** Label for the sentinel option that maps to `undefined`. Defaults to `'Default'`. Pass `null` to omit. */
+  defaultLabel?: string | null;
+};
+
+/**
+ * Factory for a `fieldMap` entry (keyed by JSON path) that renders a Select over a fixed list of
+ * options, with an optional sentinel mapping to `undefined`. Use for fields whose choices come from a
+ * runtime list rather than the schema (e.g. available model ids).
+ */
+export const createSelectField = ({
+  options,
+  defaultLabel = 'Default',
+}: CreateSelectFieldOptions): FormFieldRenderer => {
+  const normalized = options.map((option) => (typeof option === 'string' ? { value: option, label: option } : option));
+  const hasDefault = defaultLabel !== null;
+  // The sentinel maps to `undefined`; '' is a value Select.Root treats as "no selection".
+  const sentinel = '';
+  return ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<string | undefined>) => (
+    <FormRow<string>
+      readonly={readonly}
+      renderStatic={(value) => (
+        <p className='truncate min-w-0'>
+          {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
+        </p>
+      )}
+      {...props}
+    >
+      {({ value }) => (
+        <Select.Root
+          disabled={!!readonly}
+          value={value ?? sentinel}
+          onValueChange={(next) => onValueChange(type, hasDefault && next === sentinel ? undefined : next)}
+        >
+          <Select.TriggerButton classNames='w-full' disabled={!!readonly} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {hasDefault && <Select.Option value={sentinel}>{defaultLabel}</Select.Option>}
+                {normalized.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label ?? option.value}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+              <Select.Arrow />
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      )}
+    </FormRow>
+  );
 };

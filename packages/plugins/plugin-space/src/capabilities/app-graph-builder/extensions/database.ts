@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
@@ -17,6 +17,7 @@ import { type URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
+import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -27,9 +28,9 @@ import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   BLOCK_REORDER_ABOVE,
+  DATABASE_SECTION_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   STATIC_SCHEMA_TYPE,
-  TYPES_SECTION_TYPE,
   TYPE_COLLECTION_TYPE,
   buildViewIndex,
   downloadBlob,
@@ -46,7 +47,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Types section virtual node under each space.
     GraphBuilder.createExtension({
-      id: 'typesSection',
+      id: 'databaseSection',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -56,13 +57,13 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed([
           AppNode.makeSection({
-            id: Paths.Segments.types,
-            type: TYPES_SECTION_TYPE,
-            label: ['types-section.label', { ns: meta.profile.key }],
+            id: Paths.Segments.database,
+            type: DATABASE_SECTION_TYPE,
+            label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
-            position: 'last',
-            testId: 'spacePlugin.typesSection',
+            position: 10_000,
+            testId: 'spacePlugin.databaseSection',
           }),
         ]);
       },
@@ -70,10 +71,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: 'types',
+      id: 'database',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
         // Persisted types live in the space db; static/runtime types live in the shared registry.
@@ -113,7 +114,24 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           return objects.length > 0 || viewIndex.typeUrisWithViews.has(typeUri);
         });
 
-        return Effect.succeed(visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })));
+        // Sort alphabetically by display name. Static types' labels are `typename.label` translation
+        // keys resolved at render; resolve them here via the Translator capability so the order matches
+        // what users see. Resolved reactively inside the connector (not at factory setup) so the
+        // capability — contributed during startup by the theme plugin — is present when this runs.
+        const translator = get(capabilities.atom(AppCapabilities.Translator)).at(0);
+        const labelOf = (node: Node.NodeArg<Type.AnyEntity>): string => {
+          const label = node.properties?.label;
+          if (translator && isLabel(label)) {
+            return toLocalizedString(label, translator.t);
+          }
+          return node.data ? Type.getTypename(node.data) : '';
+        };
+
+        return Effect.succeed(
+          visibleSchemas
+            .map((schema) => createSchemaNode({ schema, space, get }))
+            .toSorted((nodeA, nodeB) => labelOf(nodeA).localeCompare(labelOf(nodeB))),
+        );
       },
     }),
 
@@ -159,6 +177,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
               get,
               db: space.db,
               object,
+              draggable: false,
               droppable: false,
             }),
           )
@@ -193,6 +212,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
                 get,
                 db: space.db,
                 object,
+                draggable: false,
                 droppable: false,
               });
             })

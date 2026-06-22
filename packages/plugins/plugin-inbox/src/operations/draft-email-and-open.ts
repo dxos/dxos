@@ -21,7 +21,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
       yield* Operation.invoke(SpaceOperation.AddObject, {
         object: draft,
         target: db,
-        hidden: true,
       });
 
       // Same linked path as feed messages; feed-object resolver resolves drafts from the DB.

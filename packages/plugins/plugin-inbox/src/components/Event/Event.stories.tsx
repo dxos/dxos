@@ -62,7 +62,7 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
 };
 
 // `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
-// markdown body editor (createDocAccessor) work in the story; the client space provides the
+// markdown body editor (Doc.createAccessor) work in the story; the client space provides the
 // Person registry backing the attendee typeahead.
 const DefaultStory = ({ editable }: { editable?: boolean }) => {
   const { space } = useClientStory();

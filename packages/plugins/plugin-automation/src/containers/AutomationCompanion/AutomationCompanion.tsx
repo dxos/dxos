@@ -2,189 +2,165 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import * as Option from 'effect/Option';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { AppAnnotation } from '@dxos/app-toolkit';
+import { Blueprint, Routine } from '@dxos/compute';
+import { type Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon, Panel, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
-import { Accordion } from '@dxos/react-ui-list';
+import { Button, Panel, useTranslation } from '@dxos/react-ui';
 
+import { AutomationForm, MasterDetail } from '#components';
 import { meta } from '#meta';
-import { Automation, AutomationCapabilities, AutomationOperation } from '#types';
+import { Automation } from '#types';
 
-import { AutomationInlineForm } from '../../containers/AutomationArticle';
-import { connectedAutomationsQuery } from '../../util/automations-for-object';
+/** An in-memory draft automation (with its owned routine) not yet added to the database. */
+type Draft = { automation: Automation.Automation; routine: Routine.Routine };
 
-/** Association state of a row relative to the companion's object. */
-type Status = 'associated' | 'pending' | 'detached';
-
-// TODO(burdon): Use type.
 export type AutomationCompanionProps = {
   db: Database.Database;
   object: Obj.Unknown;
 };
 
 /**
- * Renders the automations connected to an object as an accordion (see `useConnectedAutomations` for the
- * session-stable list it draws from), flagging non-associated rows with a warning badge. New automations are
- * created from a template dropdown (no dialog).
+ * Per-object companion: a master-detail list of the automations anchored to the object via the
+ * {@link Automation.AppliesTo} relation. Selecting a row shows its {@link AutomationForm}; "Create"
+ * scaffolds a draft pre-filled with the object (bound as routine context) and the object type's
+ * blueprints. Mirrors the Chat companion's blueprint/context binding.
+ *
+ * The draft automation + routine are added to the database immediately (the routine's Markdown
+ * instructions editor needs a db-attached object), but the anchoring relation — what makes the
+ * automation appear in this list — is created only on Save; Cancel removes the draft. So an
+ * abandoned draft leaves no association behind.
  */
 export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const templates = useCapabilities(AutomationCapabilities.Template);
-  // Only offer templates applicable to this companion's subject (e.g. a CRM template needs a Mailbox).
-  const applicableTemplates = useMemo(
-    () => templates.filter((template) => template.appliesTo?.(object) ?? true),
-    [templates, object],
+
+  // Relations anchoring automations to this object; the master list is their sources.
+  const relations = useQuery(db, Query.select(Filter.id(object.id)).targetOf(Automation.AppliesTo));
+  const automations = useMemo(
+    () =>
+      relations
+        .map((relation) => Relation.getSource(relation))
+        .filter((source): source is Automation.Automation => Automation.instanceOf(source)),
+    [relations],
   );
-  const { items, statusFor, open, setOpen, handleCreate } = useConnectedAutomations(db, object);
+
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [draft, setDraft] = useState<Draft | undefined>();
+  const selected = useMemo(
+    () => automations.find((automation) => automation.id === selectedId),
+    [automations, selectedId],
+  );
+
+  const handleSelect = useCallback((id: string | undefined) => {
+    setDraft(undefined);
+    setSelectedId(id);
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    // Pre-fill: bind the object as routine context and attach the object type's blueprints. The routine
+    // and automation are added to the db now (the instructions editor needs a db-attached object); the
+    // anchoring relation is deferred to save.
+    const routine = db.add(Routine.make({ blueprints: blueprintRefsForObject(object), objects: [Ref.make(object)] }));
+    const automation = db.add(Automation.make({ triggers: [] }));
+    Obj.setParent(routine, automation);
+    setSelectedId(undefined);
+    setDraft({ automation, routine });
+  }, [db, object]);
+
+  const handleCancel = useCallback(() => {
+    if (draft) {
+      // Remove the unsaved draft; its owned routine cascade-deletes.
+      db.remove(draft.automation);
+    }
+    setDraft(undefined);
+  }, [draft, db]);
+
+  const handleSave = useCallback(() => {
+    if (!draft) {
+      return;
+    }
+    // Anchor the automation to the object; this is what surfaces it in the list.
+    db.add(Automation.makeAppliesTo({ [Relation.Source]: draft.automation, [Relation.Target]: object }));
+    setSelectedId(draft.automation.id);
+    setDraft(undefined);
+  }, [draft, db, object]);
+
+  const handleDelete = useCallback(
+    (automation: Automation.Automation) => {
+      // Remove the anchoring relation, then the automation (its owned routine cascade-deletes).
+      const relation = relations.find((candidate) => Relation.getSource(candidate)?.id === automation.id);
+      if (relation) {
+        db.remove(relation);
+      }
+      db.remove(automation);
+      setSelectedId((current) => (current === automation.id ? undefined : current));
+    },
+    [relations, db],
+  );
+
+  const detail = draft ? (
+    <DraftEditor db={db} draft={draft} onSave={handleSave} onCancel={handleCancel} />
+  ) : selected ? (
+    <AutomationForm db={db} automation={selected} />
+  ) : null;
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content>
-        {items.length === 0 ? (
-          <p className='text-sm text-description p-2'>{t('no-automations.message')}</p>
-        ) : (
-          <Accordion.Root<Automation.Automation> items={items} value={open} onValueChange={setOpen}>
-            {({ items }) => (
-              <div className='flex flex-col divide-y divide-separator'>
-                {items.map((automation) => {
-                  const status = statusFor(automation.id);
-                  return (
-                    <Accordion.Item key={automation.id} item={automation}>
-                      <Accordion.ItemHeader icon='ph--lightning--regular'>
-                        <span className='flex-1 truncate'>
-                          {Obj.getLabel(automation) ??
-                            t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}
-                        </span>
-                        {status !== 'associated' && (
-                          <Tooltip.Trigger
-                            asChild
-                            side='bottom'
-                            content={t(
-                              status === 'pending'
-                                ? 'automation-not-associated.message'
-                                : 'automation-detached.message',
-                            )}
-                          >
-                            <Icon icon='ph--warning--regular' size={4} classNames='text-warning-text shrink-0 mr-2' />
-                          </Tooltip.Trigger>
-                        )}
-                      </Accordion.ItemHeader>
-                      <Accordion.ItemBody>
-                        <AutomationInlineForm automation={automation} db={db} />
-                      </Accordion.ItemBody>
-                    </Accordion.Item>
-                  );
-                })}
-              </div>
-            )}
-          </Accordion.Root>
-        )}
-
-        <div className='border-t border-separator'>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
-              <button type='button' className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
-                <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
-                <span className='flex-1 truncate'>
-                  {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
-                </span>
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  {applicableTemplates.map((template) => (
-                    <DropdownMenu.Item key={template.id} onClick={() => void handleCreate(template.id)}>
-                      <Icon icon={template.icon ?? 'ph--lightning--regular'} size={4} />
-                      <span>{template.label}</span>
-                    </DropdownMenu.Item>
-                  ))}
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </div>
+      <Panel.Content classNames='dx-document'>
+        <MasterDetail<Automation.Automation>
+          items={automations}
+          selectedId={draft ? undefined : selectedId}
+          onSelect={handleSelect}
+          onDelete={handleDelete}
+          getLabel={(automation) =>
+            Obj.getLabel(automation) ?? t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })
+          }
+          getIcon={() => 'ph--lightning--regular'}
+          onCreate={handleCreate}
+          createLabel={t('add-automation.label')}
+          emptyLabel={t('no-automations.message')}
+          detail={detail}
+        />
       </Panel.Content>
     </Panel.Root>
   );
 };
 
-//
-// Hooks
-//
+/** Draft automation editor: the pre-filled form plus Save/Cancel; persists nothing until Save. */
+const DraftEditor = ({
+  db,
+  draft,
+  onSave,
+  onCancel,
+}: {
+  db: Database.Database;
+  draft: Draft;
+  onSave: () => void;
+  onCancel: () => void;
+}) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <div role='none' className='flex flex-col min-bs-0'>
+      <AutomationForm db={db} automation={draft.automation} routine={draft.routine} />
+      <div role='none' className='flex justify-end gap-2 p-2 border-bs border-subdued-separator'>
+        <Button onClick={onCancel}>{t('cancel.label')}</Button>
+        <Button variant='primary' onClick={onSave}>
+          {t('save.label')}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
-/**
- * Owns the companion's session-stable automation list. A reactive reverse-ref query supplies the live
- * connected set, accumulated into an append-only ordering so rows never reorder or disappear while mounted;
- * a row that loses its association (or a freshly-created one not yet connected) is surfaced via `statusFor`
- * rather than dropped. Also holds the accordion open state and a create handler that appends the new
- * automation and auto-expands it for immediate configuration.
- */
-const useConnectedAutomations = (db: Database.Database, object: Obj.Unknown) => {
-  const { invokePromise } = useOperationInvoker();
-
-  // Live connected set (reactive reverse-ref query) + a by-id map for resolving rows that have left it.
-  const connected = useQuery(db, connectedAutomationsQuery(object));
-  const all = useQuery(db, Filter.type(Automation.Automation));
-  const connectedIds = useMemo(() => new Set(connected.map((automation) => automation.id)), [connected]);
-  const byId = useMemo(() => new Map(all.map((automation) => [automation.id, automation])), [all]);
-
-  // Session-stable bookkeeping (held for the component lifetime).
-  const seenOrder = useRef<string[]>([]);
-  const everConnected = useRef<Set<string>>(new Set());
-  const [createdIds, setCreatedIds] = useState<ReadonlySet<string>>(() => new Set());
-  const [open, setOpen] = useState<string[]>([]);
-
-  // Accumulate first-seen order and "was ever connected" — append-only, so rows never reorder or drop.
-  for (const id of connectedIds) {
-    everConnected.current.add(id);
+/** Registry blueprint refs declared by the object type's {@link AppAnnotation.BlueprintsAnnotation}. */
+const blueprintRefsForObject = (object: Obj.Unknown): Ref.Ref<Blueprint.Blueprint>[] => {
+  const type = Obj.getType(object);
+  if (!type) {
+    return [];
   }
-  for (const id of [...connectedIds, ...createdIds]) {
-    if (!seenOrder.current.includes(id)) {
-      seenOrder.current.push(id);
-    }
-  }
-
-  // Resolve to live objects in stable order, dropping ids whose object was hard-deleted.
-  const items = useMemo(
-    () =>
-      seenOrder.current.flatMap((id) => {
-        const automation = byId.get(id);
-        return automation ? [automation] : [];
-      }),
-    [byId, connectedIds, createdIds],
-  );
-
-  const statusFor = useCallback(
-    (id: string): Status =>
-      connectedIds.has(id) ? 'associated' : everConnected.current.has(id) ? 'detached' : 'pending',
-    [connectedIds],
-  );
-
-  const handleCreate = useCallback(
-    async (templateId: string) => {
-      const { data, error } = await invokePromise(AutomationOperation.CreateAutomation, {
-        db,
-        templateId,
-        subject: object,
-      });
-      if (error || !data) {
-        return;
-      }
-
-      setCreatedIds((prev) => new Set(prev).add(data.object.id));
-      setOpen((prev) => (prev.includes(data.object.id) ? prev : [...prev, data.object.id]));
-    },
-    [invokePromise, db, object],
-  );
-
-  return { items, statusFor, open, setOpen, handleCreate };
+  const keys = Option.getOrElse(() => [] as string[])(AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(type)));
+  return keys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
 };

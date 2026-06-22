@@ -70,6 +70,9 @@
       "path": "packages/common/hypercore/tsconfig.json"
     },
     {
+      "path": "packages/common/i18n/tsconfig.json"
+    },
+    {
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
@@ -206,6 +209,9 @@
     },
     {
       "path": "packages/core/echo/echo-client-e2e/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-doc/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-generator/tsconfig.json"
@@ -373,9 +379,6 @@
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-feed/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
@@ -407,6 +410,9 @@
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-magazine/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-map/tsconfig.json"

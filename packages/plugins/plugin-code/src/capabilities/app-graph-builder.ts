@@ -10,6 +10,7 @@ import { AppActivationEvents, AppCapabilities, AppNode, AppNodeMatcher } from '@
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CodeProject } from '#types';
@@ -90,7 +91,7 @@ export default Capability.makeModule(
               icon: 'ph--code--regular',
               iconHue: 'indigo',
               space,
-              position: 'first',
+              position: Position.first,
             }),
           ]);
         },

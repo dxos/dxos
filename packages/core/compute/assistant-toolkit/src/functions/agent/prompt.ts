@@ -18,7 +18,7 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import { Template, Trace, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -29,6 +29,14 @@ import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 
 const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
+
+const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
+  // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
+  if ('$id' in output && output.$id === '/schemas/unknown') {
+    return Schema.Any;
+  }
+  return JsonSchema.toEffectSchema(output);
+};
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
@@ -57,7 +65,8 @@ export default AgentPrompt.pipe(
           ),
         );
 
-        const objectRefs = yield* Effect.filter(prompt.context, (ref) =>
+        // Bind the routine's context objects (sibling of blueprints), dropping any that no longer resolve.
+        const objectRefs = yield* Effect.filter(prompt.objects ?? [], (ref) =>
           Database.load(ref).pipe(
             Effect.as(true),
             Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
@@ -97,7 +106,7 @@ export default AgentPrompt.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
+          output: routineOutputSchema(prompt.output),
           resultSink,
         });
 
@@ -162,13 +171,13 @@ export default AgentPrompt.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Schema.Any;
+  output: Schema.Schema.All;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
       parameters: {
-        success: Schema.optional(Schema.Any), // TODO(dmaretskyi): Pipe output schema here.
+        success: Schema.optional(options.output),
         failure: Schema.optional(
           Schema.Struct({
             message: Schema.String.annotations({

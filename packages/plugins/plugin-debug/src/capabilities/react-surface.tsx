@@ -45,11 +45,12 @@ import { ScriptOperation } from '@dxos/plugin-script';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
+import { Position } from '@dxos/util';
 
-import { DebugSettings } from '#components';
 import {
   DebugGraph,
   DebugObjectPanel,
+  DebugSettings,
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
@@ -171,7 +172,7 @@ export default Capability.makeModule(
             return Obj.isObject(value) && !!settings.wireframe;
           }),
         ),
-        position: 'first',
+        position: Position.first,
         component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
@@ -205,7 +206,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'debugStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        position: 'first',
+        position: Position.first,
         component: () => <DebugStatus />,
       }),
 

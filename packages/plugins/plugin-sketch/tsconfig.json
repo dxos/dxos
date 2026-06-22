@@ -22,9 +22,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -55,6 +52,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -65,6 +65,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

@@ -79,7 +79,7 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
 
   return (
     <div className='flex flex-col'>
-      <Form.Section label={t('blueprint-editor.label')} description={t('blueprint-editor.description')} />
+      <Form.Section title={t('blueprint-editor.label')} description={t('blueprint-editor.description')} />
 
       <Input.Root>
         <Input.Label>{t('blueprint-instructions.label')}</Input.Label>

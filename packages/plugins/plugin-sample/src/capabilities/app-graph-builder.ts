@@ -16,6 +16,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SampleOperation } from '#types';
@@ -33,10 +34,10 @@ export default Capability.makeModule(
       // --- Root-level action ---
       // `NodeMatcher.whenRoot` matches the graph root, making this action appear
       // in the global action menu (e.g., the "+" button in the navigation tree).
-      // `position: 'first'` places the action in the primary action area.
+      // `position: Position.first` places the action in the primary action area.
       GraphBuilder.createExtension({
         id: 'rootActions',
-        position: 'first',
+        position: Position.first,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -159,7 +160,7 @@ export default Capability.makeModule(
       // Deck companions are workspace-wide panels (not attached to a specific object).
       // `AppNode.makeDeckCompanion` creates a node with `DECK_COMPANION_TYPE`.
       // The surface role follows the convention: `deck-companion--{id}`.
-      // `position: 'last'` places it after higher-priority companions.
+      // `position: Position.last` places it after higher-priority companions.
       GraphBuilder.createExtension({
         id: 'deckCompanion',
         match: NodeMatcher.whenRoot,
@@ -170,7 +171,7 @@ export default Capability.makeModule(
               label: ['deck-companion.label', { ns: meta.profile.key }],
               icon: 'ph--book-open--regular',
               data: 'sample-panel' as const,
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),

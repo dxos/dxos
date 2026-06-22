@@ -150,7 +150,10 @@ const getPropertyType = (
 ): SchemaAST.AST | null => {
   const anyOrObject = unwrapAst(
     ast,
-    (candidate) => SchemaAST.isAnyKeyword(candidate) || SchemaAST.isObjectKeyword(candidate),
+    (candidate) =>
+      SchemaAST.isAnyKeyword(candidate) ||
+      SchemaAST.isUnknownKeyword(candidate) ||
+      SchemaAST.isObjectKeyword(candidate),
   );
   if (anyOrObject != null) {
     return ast;

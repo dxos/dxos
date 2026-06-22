@@ -20,7 +20,7 @@ export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotatio
 
 /**
  * Settings common to every Kanban (view or items). Rendered as form fields
- * by `KanbanSettings`.
+ * by `KanbanProperties`.
  */
 export const KanbanSettingsSchema = Schema.Struct({
   hideUncategorized: Schema.Boolean.annotations({

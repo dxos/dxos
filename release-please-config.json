@@ -140,6 +140,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/i18n/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/invariant/package.json",
           "jsonpath": "$.version"
         },
@@ -366,6 +371,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-doc/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -650,11 +660,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-feed/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
@@ -706,6 +711,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-linear/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-magazine/package.json",
           "jsonpath": "$.version"
         },
         {

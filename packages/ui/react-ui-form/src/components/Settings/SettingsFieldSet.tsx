@@ -19,6 +19,8 @@ import { SettingsItem } from './SettingsItem';
 /**
  * Props for a custom field renderer.
  * The renderer provides the control only; SettingsItem wrapper is handled by FieldSet.
+ *
+ * @deprecated Use {@link Form} with a `fieldMap` of {@link FormFieldRenderer}s instead.
  */
 export type SettingsFieldProps<T = any> = {
   value: T;
@@ -66,6 +68,11 @@ export type SettingsFieldSetProps<T extends Record<string, any> = Record<string,
 // Component
 //
 
+/**
+ * Renders a set of form fields derived from a schema object.
+ *
+ * @deprecated Use {@link Form} with `variant='settings'` instead.
+ */
 export const SettingsFieldSet = <T extends Record<string, any>>({
   schema,
   values,
