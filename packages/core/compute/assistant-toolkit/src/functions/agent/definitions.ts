@@ -20,7 +20,7 @@ export const RunInstructions = Operation.make({
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
-    prompt: Ref.Ref(Instructions.Instructions),
+    instructions: Ref.Ref(Instructions.Instructions),
 
     /**
      * Input object or data.

@@ -71,7 +71,7 @@ export const crm: RoutineCapabilities.Template = {
           function: Ref.make(runInstructionsFn),
           spec: Trigger.specFeed(feed),
           input: {
-            prompt: Ref.make(instructions),
+            instructions: Ref.make(instructions),
             input: '{{event.item}}',
           },
           concurrency: 1,

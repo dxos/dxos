@@ -134,7 +134,7 @@ describe('AssistantPlugin', () => {
         const result = yield* Operation.invoke(
           RunInstructions,
           {
-            prompt: Ref.make(instructions),
+            instructions: Ref.make(instructions),
             input: {
               country: 'France',
             },

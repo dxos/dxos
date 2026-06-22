@@ -49,7 +49,7 @@ export default RunInstructions.pipe(
           : Effect.succeed(data.input);
 
         yield* Database.flush();
-        const instructions = yield* Database.load(data.prompt);
+        const instructions = yield* Database.load(data.instructions);
         yield* Trace.emitStatus(`Running ${instructions.id}`);
 
         log.info('starting agent', { instructions: instructions.id, input });

@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
   RoutineOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
-        function* ({ db, prompt: instructions, objects, blueprints, background }) {
+        function* ({ db, instructions, objects, blueprints, background }) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
@@ -74,7 +74,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
             yield* Operation.invoke(
               RunInstructions,
               {
-                prompt: instructionsRef,
+                instructions: instructionsRef,
                 input: {},
                 chat: Ref.make(chat),
               },

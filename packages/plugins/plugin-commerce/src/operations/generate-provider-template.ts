@@ -70,7 +70,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           yield* Database.flush();
           yield* Operation.invoke(
             RunInstructions,
-            { prompt: Ref.make(instructions), input: {} },
+            { instructions: Ref.make(instructions), input: {} },
             { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
           );
 

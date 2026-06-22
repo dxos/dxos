@@ -849,7 +849,7 @@ export const WithResearchQueue: Story = {
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
-            prompt: Ref.make(researchPrompt),
+            instructions: Ref.make(researchPrompt),
             input: '{{event.item}}',
           },
         }),

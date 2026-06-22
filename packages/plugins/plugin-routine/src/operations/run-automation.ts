@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
       // session, so the run does not forward context separately.
       yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
         db,
-        prompt: Ref.make(instruction),
+        instructions: Ref.make(instruction),
         background: true,
       });
     }),

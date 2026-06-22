@@ -82,7 +82,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         function: Ref.make(fn),
         spec: Trigger.specTimer('* * * * * *'),
         input: {
-          prompt: Ref.make(instructions),
+          instructions: Ref.make(instructions),
           input: {},
           model: 'ai.claude.model.claude-haiku-4-5',
         },

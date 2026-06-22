@@ -178,7 +178,7 @@ describe.skip('Trace timeline', () => {
               enabled: true,
               spec: Trigger.specFeed(feed),
               input: {
-                prompt: Ref.make(prompt),
+                instructions: Ref.make(prompt),
                 input: '{{event.item}}',
               },
             }),

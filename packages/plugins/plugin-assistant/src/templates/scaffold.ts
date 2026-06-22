@@ -53,7 +53,7 @@ export const makeScheduledRoutineAutomation = ({
         enabled: false,
         function: Ref.make(runInstructionsFn),
         spec: Trigger.specTimer(cron),
-        input: { prompt: Ref.make(instructions), input: {} },
+        input: { instructions: Ref.make(instructions), input: {} },
         concurrency: 1,
       }),
     );

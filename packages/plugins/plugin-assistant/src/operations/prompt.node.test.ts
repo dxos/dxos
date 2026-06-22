@@ -58,7 +58,7 @@ describe('Agent prompt (composer plugin harness)', () => {
           const result = yield* Operation.invoke(
             RunInstructions,
             {
-              prompt: Ref.make(prompt),
+              instructions: Ref.make(prompt),
               input: {},
               chat: Ref.make(chat),
             },

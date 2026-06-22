@@ -105,14 +105,14 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           .map((cell) => cell.prompt)
           .filter(isNonNullable) ?? [];
 
-      for (const prompt of prompts) {
+      for (const instructions of prompts) {
         yield* runPrompt({
-          prompt,
+          instructions,
           input: { ...queryValues, ...graph.getValuesByName() },
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
-              [prompt.uri]: result,
+              [instructions.uri]: result,
             })),
         });
       }
@@ -230,15 +230,15 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
 
 // TODO(wittjosiah): Factor out. Copied from PromptArticle in plugin-assistant.
 const runPrompt = Effect.fn(function* ({
-  prompt,
+  instructions,
   input,
   onResult,
 }: {
-  prompt: Ref.Ref<Instructions.Instructions>;
+  instructions: Ref.Ref<Instructions.Instructions>;
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: Operation.Definition.Input<typeof RunInstructions> = { prompt, input };
+  const inputData: Operation.Definition.Input<typeof RunInstructions> = { instructions, input };
   // Invoke the function.
   const result = yield* Operation.invoke(RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
 

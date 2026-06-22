@@ -81,7 +81,7 @@ const runInstructions = <I>(
       return yield* Operation.invoke(
         RunInstructions,
         {
-          prompt: Ref.make(instructions),
+          instructions: Ref.make(instructions),
           input,
           systemInstructions: SYSTEM_INSTRUCTIONS,
           model,

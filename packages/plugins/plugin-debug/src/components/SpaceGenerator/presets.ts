@@ -164,7 +164,7 @@ export const generator = () => ({
               spec: Trigger.specSubscription(organizationsQuery),
               function: Ref.make(Operation.serialize(RunInstructions)),
               input: {
-                prompt: Ref.make(researchPrompt),
+                instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
               },
             }),

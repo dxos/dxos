@@ -139,7 +139,7 @@ const selectPostIds = (
       })),
     };
 
-    return yield* Operation.invoke(RunInstructions, { prompt: magazine.instructions, input }, { spaceId }).pipe(
+    return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
       Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catchAll((error) =>

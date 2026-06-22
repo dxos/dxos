@@ -61,7 +61,7 @@ describe('Agent prompt', () => {
         yield* Database.flush();
 
         const result = yield* Operation.invoke(RunInstructions, {
-          prompt: Ref.make(prompt),
+          instructions: Ref.make(prompt),
           input: {},
           chat: Ref.make(chat),
         });
@@ -98,7 +98,7 @@ describe('Agent prompt', () => {
         yield* Database.flush();
 
         const result = yield* Operation.invoke(RunInstructions, {
-          prompt: Ref.make(instructions),
+          instructions: Ref.make(instructions),
           input: {},
         });
 
