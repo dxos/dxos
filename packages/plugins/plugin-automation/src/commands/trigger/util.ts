@@ -278,7 +278,9 @@ export const promptForSchemaInput = Effect.fn(function* (
  * Queries the database for functions and prompts the user to select one.
  */
 export const selectFunction = Effect.fn(function* () {
-  const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
+  const allFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
+  // Hide internal operations: only operations annotated visible are user-bindable as trigger actions.
+  const functions = allFunctions.filter((fn) => Operation.isVisible(fn));
 
   if (functions.length === 0) {
     return yield* Effect.fail(new Error('No functions available'));

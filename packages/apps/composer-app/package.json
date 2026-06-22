@@ -104,6 +104,7 @@
     "@dxos/plugin-pwa": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-sample": "workspace:*",
+    "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-sequencer": "workspace:*",
