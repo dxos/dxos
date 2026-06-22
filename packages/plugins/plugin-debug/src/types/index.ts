@@ -37,10 +37,21 @@ export namespace DebugCapabilities {
   export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
 }
 
+/**
+ * Extracts the last dot-separated segment of a Devtools namespaced ID string.
+ * Use this as the node segment `id` when building app-graph nodes whose `data`
+ * value is one of the `Devtools.*` constants.
+ */
+export const nodeId = (fullId: string): string => fullId.split('.').at(-1)!;
+
 export namespace Devtools {
   export const id = `${meta.profile.key}.devtools`;
 
-  export const ToolsExplorer = `${Devtools.id}.tools-explorer`;
+  /** App-graph node IDs that have no corresponding surface-data constant. */
+  export const AppGraph = 'appGraph';
+  export const Debug = 'debug';
+
+  export const ToolsExplorer = `${Devtools.id}.toolsExplorer`;
 
   export namespace Client {
     export const id = `${Devtools.id}.client`;
