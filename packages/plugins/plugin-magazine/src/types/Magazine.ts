@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 
 import * as Subscription from './Subscription';
 
-export const BLUEPRINT_KEY = 'org.dxos.skill.magazine';
+export const SKILL_KEY = 'org.dxos.skill.magazine';
 
 /**
  * Default editorial methodology seeded into a Magazine's curation Routine. Describes WHAT to curate
@@ -90,7 +90,7 @@ export const Magazine = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
-  AppAnnotation.SkillsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.magazine', '0.2.0')),
 );
 
@@ -125,7 +125,7 @@ export const make = (props: MakeProps = {}): Magazine => {
   const routine = Routine.make({
     name: props.name ? `${props.name} curation` : 'Magazine curation',
     instructions: composeInstructions(props.instructions),
-    skills: [Ref.fromURI(Skill.registryURI(BLUEPRINT_KEY))],
+    skills: [Ref.fromURI(Skill.registryURI(SKILL_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
   });
