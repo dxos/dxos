@@ -4,13 +4,21 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { AiService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Feed, Filter, Ref } from '@dxos/echo';
+import { LayerSpec } from '@dxos/compute';
+import { DXN, Feed, Filter, Ref } from '@dxos/echo';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -24,6 +32,29 @@ import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
 import { MagazinePlugin } from '../MagazinePlugin';
+
+// Curation runs the agent (CurateMagazine → AgentPrompt). The process-manager runtime therefore needs
+// the full agent stack: AutomationPlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
+// MagazinePlugin the curation handlers; this story-local plugin adds the AgentPrompt handler and a
+// live edge AiService (the 'edge-remote' testing preset — no client edge-config or credentials needed).
+// Excluded from CI (the `Test` story is `!test`); intended for manual, signed-in, online use.
+const aiServiceSpec = LayerSpec.make(
+  { affinity: 'space', requires: [], provides: [AiService.AiService] },
+  () => AiServiceTestingPreset('edge-remote').pipe(Layer.orDie),
+);
+
+const AgentRuntimePlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.magazineStoryAgent'), name: 'Magazine Story Agent Runtime' }),
+).pipe(
+  AppPlugin.addOperationHandlerModule({
+    activate: Capability.makeModule(() => Effect.succeed([Capability.contributes(Capabilities.OperationHandler, AgentHandlers)])),
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: Capability.makeModule(() => Effect.succeed([Capability.contributes(Capabilities.LayerSpec, aiServiceSpec)])),
+  }),
+  Plugin.make,
+);
 
 // Source the magazine from the live The Register "AI + ML" feed.
 const REGISTER_FEED_URL =
@@ -69,9 +100,9 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.waitUntilReady());
 
     // Feed points at the real Register AI/ML URL; the mock fetcher serves the
-    // bundled fixture. Posts are NOT pre-seeded — clicking Curate drives the
-    // live RefreshMagazine flow (SyncFeed fetches + parses, then CurateMagazine
-    // pulls the queued Posts into `magazine.posts`).
+    // bundled fixture. Posts are NOT pre-seeded — clicking Curate drives the live
+    // flow (SyncFeed fetches + parses, then CurateMagazine runs the Routine via the
+    // agent to select Posts into `magazine.posts`).
     const feed = space.db.add(
       Subscription.makeSubscription({ name: 'The Register — AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
     );
@@ -98,7 +129,9 @@ const meta: Meta<typeof DefaultStory> = {
         }),
         SpacePlugin({}),
         StorybookPlugin({}),
+        AutomationPlugin(),
         MagazinePlugin(),
+        AgentRuntimePlugin(),
       ],
     }),
   ],
@@ -115,14 +148,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Live curation against the The Register "AI + ML" feed (served from a bundled
- * fixture via a mock fetcher). Renders the empty magazine, clicks Curate to drive
- * the real RefreshMagazine flow (SyncFeed fetches + parses the feed → CurateMagazine
- * pulls the Posts into `magazine.posts`), and the curated Posts render as tiles.
+ * Live, agent-driven curation against the The Register "AI + ML" feed (served from a
+ * bundled fixture via a mock fetcher; the LLM call is real). Clicking Curate drives the
+ * full flow: SyncFeed fetches + parses the feed, then CurateMagazine runs the persisted
+ * Routine through AgentPrompt (live edge model) to select matching Posts into
+ * `magazine.posts`, which render as tiles.
  *
- * Skipped in CI (`!test`) — browser/timing-sensitive interactive demo. The
- * deterministic logic is covered by `theregister-fixture.test.ts` (fetch → parse)
- * and `curate-magazine.test.ts` (curation). The AI/blueprint path is out of scope.
+ * Excluded from CI (`!test`) — requires network + a reachable edge model and is
+ * non-deterministic/slow. Run it manually (signed in, online). The deterministic pieces
+ * are covered by `theregister-fixture.test.ts` (fetch → parse) and `curate-magazine.test.ts`
+ * (keep/select helpers); the agent path by the memoized `curate-magazine.blueprint.test.ts`.
  */
 export const Test: Story = {
   tags: ['!test'],
@@ -133,14 +168,12 @@ export const Test: Story = {
     const empty = await canvas.findByText(/no articles yet/i, {}, { timeout: 10_000 });
     await expect(empty).toBeVisible();
 
-    // Curate: SyncFeed (mock fetch → parse) then CurateMagazine populate the magazine.
+    // Curate: SyncFeed (mock fetch → parse) then the agent selects Posts via the live model.
     const curateButton = await canvas.findByRole('button', { name: /^curate$/i });
     await userEvent.click(curateButton);
 
-    // Curated Posts render as tiles (the empty-state placeholder is replaced).
-    await waitFor(() => expect(canvas.queryByText(/no articles yet/i)).toBeNull(), { timeout: 15_000 });
-    // `/sovereign ai/i` appears in both the title and the snippet, so match all.
-    const matches = await canvas.findAllByText(/sovereign ai/i);
-    await expect(matches.length).toBeGreaterThan(0);
+    // The agent selection is non-deterministic, so assert only that curation produced tiles
+    // (the empty-state placeholder is replaced). Generous timeout for the live model round-trip.
+    await waitFor(() => expect(canvas.queryByText(/no articles yet/i)).toBeNull(), { timeout: 120_000 });
   },
 };

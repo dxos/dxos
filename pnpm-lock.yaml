@@ -11489,6 +11489,9 @@ importers:
         specifier: '>=5.3.6'
         version: 5.7.1
     devDependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

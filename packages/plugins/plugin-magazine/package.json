@@ -127,6 +127,7 @@
     "fast-xml-parser": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
