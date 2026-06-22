@@ -9,6 +9,7 @@ import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Entity from './Entity';
+import * as Filter from './Filter';
 import * as JsonSchema from './JsonSchema';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
@@ -270,6 +271,15 @@ describe('Type', () => {
 
       const refSchema = Ref.Ref(Person);
       expect(refSchema).toBeDefined();
+    });
+
+    test('Filter of Type.declareObj', ({ expect }) => {
+      class Person extends Type.declareObj<Person>()(
+        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+      ) {}
+
+      const filter = Filter.type(Person);
+      expect(filter).toBeDefined();
     });
   });
 });
