@@ -5,7 +5,8 @@
 import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
 import { describe, it, test } from 'vitest';
 
-import { Doc, Obj } from '@dxos/echo';
+import { DocAccessor as DocApi, createDocAccessor as createDocAccessorViaProvider } from '@dxos/doc';
+import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { DocAccessor } from '../core-db';
@@ -67,19 +68,19 @@ describe('in-memory (unattached object)', () => {
   });
 });
 
-// Agnostic top-level API: `Doc.getAccessor` lives in `@dxos/echo` (Automerge-free) and is fulfilled by the
-// provider that `@dxos/echo-client` registers. The same call works whether the object is in-memory or
+// Agnostic top-level API: `createDocAccessor` lives in `@dxos/doc` and is fulfilled by the provider
+// that `@dxos/echo-client` registers. The same call works whether the object is in-memory or
 // attached, so consumers never import echo-client internals or branch on attachment state.
-describe('Doc.getAccessor (agnostic)', () => {
+describe('createDocAccessor (agnostic via @dxos/doc)', () => {
   test('resolves an accessor for an in-memory object not yet added to a db', ({ expect }) => {
     const obj = Obj.make(TestSchema.Task, { description: 'hello' });
-    const accessor = Doc.getAccessor(obj, ['description']);
-    expect(Doc.getValue<string>(accessor)).toBe('hello');
+    const accessor = createDocAccessorViaProvider(obj, ['description']);
+    expect(DocApi.getValue<string>(accessor)).toBe('hello');
 
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 5, 0, ' world');
     });
-    expect(Doc.getValue<string>(accessor)).toBe('hello world');
+    expect(DocApi.getValue<string>(accessor)).toBe('hello world');
   });
 
   test('resolves an accessor for a db-attached object', async ({ expect }) => {
@@ -88,8 +89,8 @@ describe('Doc.getAccessor (agnostic)', () => {
     graph.registry.add([TestSchema.Task]);
 
     const obj = db.add(Obj.make(TestSchema.Task, { description: 'hi' }));
-    const accessor = Doc.getAccessor(obj, ['description']);
-    expect(Doc.getValue<string>(accessor)).toBe('hi');
+    const accessor = createDocAccessorViaProvider(obj, ['description']);
+    expect(DocApi.getValue<string>(accessor)).toBe('hi');
 
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 2, 0, ' there');
@@ -99,11 +100,11 @@ describe('Doc.getAccessor (agnostic)', () => {
 
   test('in-memory edits survive db.add via the agnostic API', async ({ expect }) => {
     const obj = Obj.make(TestSchema.Task, { description: 'draft' });
-    const accessor = Doc.getAccessor(obj, ['description']);
+    const accessor = createDocAccessorViaProvider(obj, ['description']);
     accessor.handle.change((doc) => {
       A.splice(doc, accessor.path as A.Prop[], 5, 0, 'ed');
     });
-    expect(Doc.getValue<string>(accessor)).toBe('drafted');
+    expect(DocApi.getValue<string>(accessor)).toBe('drafted');
 
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();

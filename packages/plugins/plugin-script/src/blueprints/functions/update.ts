@@ -18,8 +18,8 @@ export default Update.pipe(
       if (!loaded.source) {
         return yield* Effect.fail(new Error('Function has no source script.'));
       }
-      const script = (yield* Database.load(loaded.source)) as Script.Script;
 
+      const script = (yield* Database.load(loaded.source)) as Script.Script;
       if (name !== undefined || description !== undefined) {
         Obj.update(script, (script) => {
           if (name !== undefined) {

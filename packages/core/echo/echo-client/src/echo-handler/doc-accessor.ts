@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Doc } from '@dxos/echo';
+import { setProvider } from '@dxos/doc';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
@@ -30,9 +30,9 @@ export const createDocAccessor = <T extends AnyProperties>(obj: T, path: KeyPath
   return core.getDocAccessor(fullPath);
 };
 
-// Fulfil the agnostic `Doc.getAccessor` API declared in `@dxos/echo`. Mirrors the `RefResolver`
-// dependency-inversion seam: `@dxos/echo` owns the API, `@dxos/echo-client` supplies the
+// Fulfil the agnostic `createDocAccessor` API declared in `@dxos/doc`. Mirrors the `RefResolver`
+// dependency-inversion seam: `@dxos/doc` owns the API, `@dxos/echo-client` supplies the
 // Automerge-backed implementation when this module is loaded.
-Doc.setProvider({
+setProvider({
   getAccessor: (obj, path) => createDocAccessor(obj, path),
 });

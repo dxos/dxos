@@ -7,7 +7,6 @@ export { DXN, EID, URI } from '@dxos/keys';
 
 export * as Annotation from './Annotation';
 export * as Database from './Database';
-export * as Doc from './Doc';
 export * as Entity from './Entity';
 // TODO(burdon): Rename to Error (less problematic than Obj/Object).
 export * as Err from './Err';

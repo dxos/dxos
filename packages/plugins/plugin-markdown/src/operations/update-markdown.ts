@@ -19,8 +19,8 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         Effect.map((_) => _.content),
         Effect.flatMap(Database.load),
       );
-      const accessor = createDocAccessor(content, ['content']);
 
+      const accessor = createDocAccessor(content, ['content']);
       for (const edit of edits) {
         accessor.handle.change((doc: Doc<typeof content>) => {
           const text = DocAccessor.getValue<string>(accessor);

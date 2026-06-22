@@ -64,6 +64,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../doc"
+    },
+    {
       "path": "../echo"
     },
     {

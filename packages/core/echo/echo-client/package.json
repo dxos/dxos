@@ -41,6 +41,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/doc": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
