@@ -167,8 +167,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const nativeDragText = id;
 
   useEffect(() => {
-    // Group nodes render no button, so buttonRef is null and drag setup is inapplicable.
-    if (!draggableProp || !buttonRef.current) {
+    if (!draggableProp || (!isItemDraggable && !isItemDroppable)) {
       return;
     }
 
