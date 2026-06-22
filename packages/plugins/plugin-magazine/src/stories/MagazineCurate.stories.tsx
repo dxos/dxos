@@ -12,7 +12,9 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -23,6 +25,8 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
+import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -50,6 +54,7 @@ const AgentRuntimePlugin = Plugin.define(
     activate: Capability.makeModule(() => Effect.succeed([Capability.contributes(Capabilities.OperationHandler, AgentHandlers)])),
   }),
   Plugin.addModule({
+    id: 'ai-service',
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: Capability.makeModule(() => Effect.succeed([Capability.contributes(Capabilities.LayerSpec, aiServiceSpec)])),
   }),
@@ -89,7 +94,19 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <MagazineArticle role='article' subject={magazine} attendableId='story' />;
+  // Two columns: the article (curated tiles + Curate toolbar) and the properties (topic / routine editor).
+  return (
+    <div role='none' className='grid bs-full is-full grid-cols-[minmax(0,1fr)_24rem]'>
+      <MagazineArticle role='article' subject={magazine} attendableId='story' />
+      <Panel.Root classNames='border-is border-separator'>
+        <Panel.Content asChild>
+          <ObjectProperties object={magazine}>
+            <Surface.Surface type={AppSurface.ObjectProperties} data={{ subject: magazine }} />
+          </ObjectProperties>
+        </Panel.Content>
+      </Panel.Root>
+    </div>
+  );
 };
 
 const seedRegisterMagazine = ({ client }: { client: Client }) =>
