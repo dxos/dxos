@@ -756,7 +756,7 @@ export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
  * Not to be used directly, but must be exported for typescript to infer the type.
  */
 export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends Obj<Self, Fields> {
-  new (_: never): T;
+  new (_: never): T & EntityModule.OfKind<typeof EntityModule.Kind.Object>;
 }
 
 /**
@@ -785,7 +785,7 @@ export interface RelationClass<Self, T, Source, Target, Fields extends Schema.St
   Target,
   Fields
 > {
-  new (_: never): T;
+  new (_: never): RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>;
 }
 
 /**
