@@ -42,7 +42,7 @@ export namespace DebugCapabilities {
  * Use this as the node segment `id` when building app-graph nodes whose `data`
  * value is one of the `Devtools.*` constants.
  */
-export const nodeId = (fullId: string): string => fullId.split('.').at(-1)!;
+export const nodeId = (fullId: string): string => fullId.split('.').at(-1) ?? '';
 
 export namespace Devtools {
   export const id = `${meta.profile.key}.devtools`;
