@@ -43,12 +43,12 @@ export const InstructionsEditor = ({ db: dbProp, instructions }: InstructionsEdi
         return;
       }
 
-      Obj.update(instructions, (draft) => {
+      Obj.update(instructions, (instructions) => {
         if (values.text) {
-          draft.text = values.text;
+          instructions.text = values.text;
         }
-        draft.blueprints = [...(values.blueprints ?? [])];
-        draft.objects = [...(values.objects ?? [])];
+        instructions.blueprints = [...(values.blueprints ?? [])];
+        instructions.objects = [...(values.objects ?? [])];
       });
     },
     [instructions],
