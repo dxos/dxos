@@ -7,6 +7,7 @@ import { type ComponentType, lazy } from 'react';
 export * from './AutomationForm';
 export * from './CreateAutomationPanel';
 export * from './MasterDetail';
+export * from './RoutineEditor';
 export * from './Schedule';
 export * from './TemplateEditor';
 export * from './TriggerEditor';
