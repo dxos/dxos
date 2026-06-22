@@ -77,4 +77,4 @@ export const SyncSlackChannel = Operation.make({
       added: Schema.Number,
     }),
   }),
-});
+}).pipe(Operation.visible);

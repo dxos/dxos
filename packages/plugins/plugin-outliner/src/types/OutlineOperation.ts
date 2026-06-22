@@ -38,4 +38,4 @@ export const QuickJournalEntry = Operation.make({
     text: Schema.String,
   }),
   output: Schema.Void,
-});
+}).pipe(Operation.visible);
