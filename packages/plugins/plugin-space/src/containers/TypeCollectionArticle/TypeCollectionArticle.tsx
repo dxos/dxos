@@ -9,7 +9,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { getStyles } from '@dxos/ui-theme';
@@ -64,17 +64,21 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
     <Panel.Root role={role}>
       <Panel.Toolbar />
       <Panel.Content>
-        {visible.length === 0 ? (
-          <div className='flex items-center justify-center bs-full text-subdued text-sm'>
-            {t('type-collection-empty.message')}
-          </div>
-        ) : (
-          <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content>
-              <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
-            </Masonry.Content>
-          </Masonry.Root>
-        )}
+        <ScrollArea.Root orientation='vertical' centered padding>
+          <ScrollArea.Viewport>
+            {visible.length === 0 ? (
+              <div className='flex items-center justify-center bs-full text-subdued text-sm'>
+                {t('type-collection-empty.message')}
+              </div>
+            ) : (
+              <Masonry.Root Tile={TileAdapter}>
+                <Masonry.Content>
+                  <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                </Masonry.Content>
+              </Masonry.Root>
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Panel.Content>
     </Panel.Root>
   );
