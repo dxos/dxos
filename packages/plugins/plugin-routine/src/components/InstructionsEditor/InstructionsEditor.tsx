@@ -17,7 +17,7 @@ const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 // so a single form edits them together.
 const INSTRUCTIONS_FIELDS = new Set(['text', 'blueprints', 'objects']);
 
-export type InstructionsEditorProps = { db?: Database.Database; routine: Instructions.Instructions };
+export type InstructionsEditorProps = { db?: Database.Database; instructions: Instructions.Instructions };
 
 /**
  * Sub-form: edits the owned Instructions in place — its `text` (Markdown), `blueprints`, and the
@@ -25,14 +25,14 @@ export type InstructionsEditorProps = { db?: Database.Database; routine: Instruc
  * FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action forms; the
  * rendered fields are written back so selections persist to the instructions.
  */
-export const InstructionsEditor = ({ db: dbProp, routine }: InstructionsEditorProps) => {
+export const InstructionsEditor = ({ db: dbProp, instructions }: InstructionsEditorProps) => {
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
-  const db = dbProp ?? Obj.getDatabase(routine);
+  const db = dbProp ?? Obj.getDatabase(instructions);
 
   // `objects` is optional; normalize to an array so the ref-array field renders its add affordance.
   const defaultValues = useMemo<Partial<Instructions.Instructions>>(
-    () => ({ ...Obj.getSnapshot(routine), objects: routine.objects ? [...routine.objects] : [] }),
-    [routine],
+    () => ({ ...Obj.getSnapshot(instructions), objects: instructions.objects ? [...instructions.objects] : [] }),
+    [instructions],
   );
 
   const handleValuesChanged = useCallback(
@@ -43,20 +43,20 @@ export const InstructionsEditor = ({ db: dbProp, routine }: InstructionsEditorPr
         return;
       }
 
-      Obj.update(routine, (routine) => {
+      Obj.update(instructions, (draft) => {
         if (values.text) {
-          routine.text = values.text;
+          draft.text = values.text;
         }
-        routine.blueprints = [...(values.blueprints ?? [])];
-        routine.objects = [...(values.objects ?? [])];
+        draft.blueprints = [...(values.blueprints ?? [])];
+        draft.objects = [...(values.objects ?? [])];
       });
     },
-    [routine],
+    [instructions],
   );
 
   return (
     <Form.Root
-      key={routine.id}
+      key={instructions.id}
       schema={INSTRUCTIONS_SCHEMA}
       db={db}
       defaultValues={defaultValues}

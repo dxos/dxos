@@ -20,12 +20,12 @@ const types = [Instructions.Instructions, Blueprint.Blueprint, Text.Text];
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const [routine] = useQuery(space?.db, Filter.type(Instructions.Instructions));
-  if (!space || !routine) {
+  const [instructions] = useQuery(space?.db, Filter.type(Instructions.Instructions));
+  if (!space || !instructions) {
     return <Loading />;
   }
 
-  return <InstructionsEditor db={space.db} routine={routine} />;
+  return <InstructionsEditor db={space.db} instructions={instructions} />;
 };
 
 const withSeededSpace = (seed: (space: Space) => void) =>
