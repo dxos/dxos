@@ -182,21 +182,28 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  *
  * ```ts
  * const { getSectionPath: getChatsPath, getObjectPath: getChatPath } =
- *   createTypeSectionPaths(Chat.Chat);
+ *   createTypeSectionPaths(Chat.Chat, { groupId: AppNode.NAV_TREE_GROUP_AI_ID });
  * export { getChatsPath, getChatPath };
  * ```
  *
+ * Always use alongside {@link TypeSection.createTypeSectionExtension} and
+ * {@link TypeSection.createTypeSectionPathResolver} — pass the same `groupId` to all three.
+ *
  * @deprecated Moving away from the generic type-section pattern; top-level sections will all be
- * custom going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel.
+ * custom going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel, Automation.
  */
-export const createTypeSectionPaths = (type: Type.AnyEntity) => {
+export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId?: string }) => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create type section paths.');
   return {
     /** Canonical qualified path to the type's section node within a space. */
-    getSectionPath: (spaceId: string): string => getTypeSectionPath(spaceId, typename),
+    getSectionPath: (spaceId: string): string =>
+      options?.groupId ? getSpacePath(spaceId, options.groupId, typename) : getTypeSectionPath(spaceId, typename),
     /** Canonical qualified path to a specific object within the type's section. */
-    getObjectPath: (spaceId: string, objectId: string): string => getTypeSectionObjectPath(spaceId, typename, objectId),
+    getObjectPath: (spaceId: string, objectId: string): string =>
+      options?.groupId
+        ? getSpacePath(spaceId, options.groupId, typename, objectId)
+        : getTypeSectionObjectPath(spaceId, typename, objectId),
   };
 };
 
