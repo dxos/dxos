@@ -4,9 +4,9 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { Separator, Treegrid, type TreegridRootProps } from '@dxos/react-ui';
+import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
-import { type TreeModel, TreeProvider, useTree } from './TreeContext';
+import { type TreeModel, TreeProvider } from './TreeContext';
 import { TreeItemById, type TreeItemByIdProps, type TreeItemProps } from './TreeItem';
 
 export type TreeProps<T extends { id: string } = any> = {
@@ -28,24 +28,14 @@ export type TreeProps<T extends { id: string } = any> = {
     | 'levelOffset'
   >;
 
-/** Renders a single root-level child, including the separator above it when `separatorBefore` is set. */
+/** Renders a single root-level child. */
 const TreeChild = <T extends { id: string } = any>({
   id,
   path: parentPath,
-  first,
   last,
   ...childProps
-}: TreeItemByIdProps & { first: boolean; last: boolean }) => {
-  const model = useTree();
-  const itemPath = useMemo(() => [...parentPath, id], [parentPath, id]);
-  const { separatorBefore } = useAtomValue(model.itemProps(itemPath));
-  return (
-    <>
-      {/* A leading separator on the first row has nothing above it to divide. */}
-      {separatorBefore && !first && <Separator subdued classNames='col-[tree-row] my-1' />}
-      <TreeItemById id={id} path={parentPath} last={last} {...childProps} />
-    </>
-  );
+}: TreeItemByIdProps & { last: boolean }) => {
+  return <TreeItemById id={id} path={parentPath} last={last} {...childProps} />;
 };
 
 export const Tree = <T extends { id: string } = any>({
@@ -88,7 +78,6 @@ export const Tree = <T extends { id: string } = any>({
           <TreeChild
             key={childId}
             id={childId}
-            first={index === 0}
             last={index === childIds.length - 1}
             {...childProps}
           />
