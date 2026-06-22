@@ -12,8 +12,8 @@ export type TreeItemDataProps = {
   id: string;
   label: Label;
   parentOf?: string[];
-  /** When `true`, render a separator above this item (used to visually group items by position tier). */
-  separatorBefore?: boolean;
+  /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` → section header). */
+  disposition?: string;
   /** When `false`, the item cannot be dragged (overrides tree-level `draggable`). */
   draggable?: boolean;
   /** When `false`, the item does not participate as a drop target. */

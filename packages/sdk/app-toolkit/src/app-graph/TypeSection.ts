@@ -70,6 +70,12 @@ export const createTypeSectionExtension = (
      * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).
      */
     query?: Query.Any;
+    /**
+     * Override the default {@link AppNodeMatcher.whenSpace} match function.
+     * Use when the section should live under a group node rather than directly under a space.
+     * The match must still return `Option<Space>` so the connector can query the space db.
+     */
+    match?: (node: Node.Node) => Option.Option<Space>;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -89,7 +95,7 @@ export const createTypeSectionExtension = (
 
   return GraphBuilder.createExtension({
     id: typename,
-    match: AppNodeMatcher.whenSpace,
+    match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
       const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
       if (objects.length === 0) {
@@ -170,7 +176,13 @@ export const createTypeSectionExtension = (
  * targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
  * ```
  */
-export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabilities.NavigationPathResolver => {
+export const createTypeSectionPathResolver = (
+  type: Type.AnyEntity,
+  options?: {
+    /** Group node ID to include as a path segment between the space and the typename, e.g. 'ai'. */
+    groupId?: string;
+  },
+): AppCapabilities.NavigationPathResolver => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create a type section path resolver.');
   return (qualifiedPath) => {
@@ -179,7 +191,9 @@ export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabili
       return Effect.succeed(Option.none());
     }
 
-    const sectionPath = `${Paths.getSpacePath(spaceId)}/${typename}`;
+    const sectionPath = options?.groupId
+      ? Paths.getSpacePath(spaceId, options.groupId, typename)
+      : Paths.getSpacePath(spaceId, typename);
     if (!qualifiedPath.startsWith(`${sectionPath}/`)) {
       return Effect.succeed(Option.none());
     }

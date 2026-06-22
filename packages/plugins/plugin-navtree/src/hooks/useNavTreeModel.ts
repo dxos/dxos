@@ -21,10 +21,6 @@ import { useNavTreeState } from './useNavTreeState';
 const isVisibleChild = (node: Node.Node): boolean =>
   node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 
-/** Groups positions into hundred-level tiers; non-finite sentinels (Position.first/last) are their own tiers. */
-const positionTier = (pos: unknown): number =>
-  typeof pos !== 'number' || pos === 0 ? 0 : !isFinite(pos) ? pos : Math.floor(pos / 100);
-
 /** Create an atom family for item display props keyed by path. */
 const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
   Atom.family((pathKey: string) => {
@@ -49,21 +45,16 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
       const droppable =
         node.properties.droppable === false || parentNode?.properties.childrenDroppable === false ? false : undefined;
 
-      // Determine whether a separator should appear above this node by comparing its position
-      // tier to the previous visible sibling's tier. First items always get a separator.
-      const siblings = parentId ? get(graph.connections(parentId, 'child')).filter(isVisibleChild) : [];
-      const siblingIndex = siblings.findIndex((s) => s.id === id);
-      const prevSibling = siblingIndex > 0 ? siblings[siblingIndex - 1] : undefined;
-      const separatorBefore =
-        siblingIndex === 0 || positionTier(node.properties.position) !== positionTier(prevSibling?.properties.position);
+      const disposition = node.properties.disposition as string | undefined;
+      const isGroup = disposition === 'group';
 
       return {
         id: node.id,
-        parentOf,
-        separatorBefore,
-        disabled: node.properties.disabled,
-        draggable: node.properties.draggable,
-        droppable,
+        parentOf: isGroup ? undefined : parentOf,
+        disposition,
+        disabled: isGroup || node.properties.disabled,
+        draggable: isGroup ? false : node.properties.draggable,
+        droppable: isGroup ? false : droppable,
         label: node.properties.label ?? node.id,
         className: mx(node.properties.className, node.properties.modified && 'italic'),
         headingClassName: node.properties.headingClassName,

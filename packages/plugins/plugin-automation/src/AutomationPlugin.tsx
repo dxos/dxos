@@ -11,6 +11,7 @@ import {
   AppGraphBuilder,
   CreateObject,
   LayerSpecs,
+  NavigationResolver,
   OperationHandler,
   ReactSurface,
   RegistrySync,
@@ -26,6 +27,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [

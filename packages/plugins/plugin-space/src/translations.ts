@@ -299,6 +299,9 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
+        'nav-tree-group-content.label': 'Content',
+        'nav-tree-group-comm.label': 'Communications',
+        'nav-tree-group-system.label': 'System',
         'database-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-empty.message': 'No objects of this type yet.',

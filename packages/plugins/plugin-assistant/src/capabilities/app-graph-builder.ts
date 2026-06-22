@@ -7,7 +7,7 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation, Routine } from '@dxos/compute';
@@ -39,6 +39,22 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
+      // AI section group — created here so it shows only when the assistant plugin is active.
+      GraphBuilder.createExtension({
+        id: AppNode.NAV_TREE_GROUP_AI_ID,
+        match: AppNodeMatcher.whenSpace,
+        connector: (space) =>
+          Effect.succeed([
+            AppNode.makeGroup({
+              id: AppNode.NAV_TREE_GROUP_AI_ID,
+              type: AppNode.NAV_TREE_GROUP_AI_TYPE,
+              label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
+              space,
+              position: 100,
+            }),
+          ]),
+      }),
+
       GraphBuilder.createTypeExtension({
         id: 'root',
         type: Chat.Chat,
@@ -173,15 +189,15 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per space (companions are excluded).
+      // Section node: standalone Chat.Chat objects per AI group (companions are excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        position: 101,
         // Exclude chats that are the source of a CompanionTo relation; those belong to
         // their primary object's companion panel and should not appear in the top-level list.
         query: Query.without(
           Query.select(Filter.type(Chat.Chat)),
           Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
         ),
+        match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_AI_TYPE),
       }),
 
       // Create-chat action on the Chats section header.
@@ -223,12 +239,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return [
-      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Chat.Chat),
-      ),
-    ];
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
