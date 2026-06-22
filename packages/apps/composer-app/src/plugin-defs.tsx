@@ -181,7 +181,6 @@ export const getPlugins = ({
   return [
     AssistantPlugin(),
     AttentionPlugin(),
-    RoutinePlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     CallsPlugin(),
@@ -241,6 +240,7 @@ export const getPlugins = ({
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
+    RoutinePlugin(),
     isLocal && SamplePlugin(),
     SandboxPlugin(),
     ScriptPlugin(),
