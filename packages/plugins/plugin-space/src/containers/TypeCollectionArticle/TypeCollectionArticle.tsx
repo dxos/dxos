@@ -69,14 +69,8 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
             {t('type-collection-empty.message')}
           </div>
         ) : (
-          <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-            {/* Constrain the grid to the document content width (matches the editor's readable column). */}
-            <Masonry.Content
-              thin
-              centered
-              padding
-              classNames='pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)] mx-auto! w-full'
-            >
+          <Masonry.Root Tile={TileAdapter}>
+            <Masonry.Content>
               <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
