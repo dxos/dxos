@@ -56,7 +56,7 @@ describe('Magazine', () => {
         // The routine is created with the magazine (not lazily).
         expect(magazine.routine).toBeDefined();
         const routine = yield* Database.load(magazine.routine!);
-        expect(routine.blueprints.length).toBeGreaterThan(0);
+        expect(routine.skills.length).toBeGreaterThan(0);
 
         const instructions = yield* Database.load(routine.instructions);
         expect(instructions.content).toContain('## Topic');

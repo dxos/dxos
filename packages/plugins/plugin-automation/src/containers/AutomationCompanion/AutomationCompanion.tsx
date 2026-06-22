@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Skill, Routine } from '@dxos/compute';
 import { type Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Panel, useTranslation } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ export type AutomationCompanionProps = {
  * Per-object companion: a master-detail list of the automations anchored to the object via the
  * {@link Automation.AppliesTo} relation. Selecting a row shows its {@link AutomationForm}; "Create"
  * scaffolds a draft pre-filled with the object (bound as routine context) and the object type's
- * blueprints. Mirrors the Chat companion's blueprint/context binding.
+ * skills. Mirrors the Chat companion's skill/context binding.
  *
  * The draft automation + routine are added to the database immediately (the routine's Markdown
  * instructions editor needs a db-attached object), but the anchoring relation — what makes the
@@ -60,10 +60,10 @@ export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) =>
   }, []);
 
   const handleCreate = useCallback(() => {
-    // Pre-fill: bind the object as routine context and attach the object type's blueprints. The routine
+    // Pre-fill: bind the object as routine context and attach the object type's skills. The routine
     // and automation are added to the db now (the instructions editor needs a db-attached object); the
     // anchoring relation is deferred to save.
-    const routine = db.add(Routine.make({ blueprints: blueprintRefsForObject(object), objects: [Ref.make(object)] }));
+    const routine = db.add(Routine.make({ skills: skillRefsForObject(object), objects: [Ref.make(object)] }));
     const automation = db.add(Automation.make({ triggers: [] }));
     Obj.setParent(routine, automation);
     setSelectedId(undefined);
@@ -155,12 +155,12 @@ const DraftEditor = ({
   );
 };
 
-/** Registry blueprint refs declared by the object type's {@link AppAnnotation.BlueprintsAnnotation}. */
-const blueprintRefsForObject = (object: Obj.Unknown): Ref.Ref<Blueprint.Blueprint>[] => {
+/** Registry skill refs declared by the object type's {@link AppAnnotation.SkillsAnnotation}. */
+const skillRefsForObject = (object: Obj.Unknown): Ref.Ref<Skill.Skill>[] => {
   const type = Obj.getType(object);
   if (!type) {
     return [];
   }
-  const keys = Option.getOrElse(() => [] as string[])(AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(type)));
-  return keys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
+  const keys = Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(type)));
+  return keys.map((key) => Ref.fromURI(Skill.registryURI(key)));
 };

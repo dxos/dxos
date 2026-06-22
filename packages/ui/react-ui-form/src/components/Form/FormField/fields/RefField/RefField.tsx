@@ -42,7 +42,7 @@ export const findRefOption = (value: unknown, options: RefOption[]): RefOption |
     return undefined;
   }
   const valueUri = isRef ? value.uri : value['/'];
-  // Keyed/registry entities (blueprints, operations) are referenced by a named DXN rather than an
+  // Keyed/registry entities (skills, operations) are referenced by a named DXN rather than an
   // entity-id, so they carry no parseable EID; match those by direct URI equality against the option id.
   const directMatch = options.find((option) => option.id === valueUri);
   if (directMatch) {

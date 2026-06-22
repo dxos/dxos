@@ -57,7 +57,7 @@ export default AgentPrompt.pipe(
           ),
         );
 
-        // Bind the routine's context objects (sibling of blueprints), dropping any that no longer resolve.
+        // Bind the routine's context objects (sibling of skills), dropping any that no longer resolve.
         const objectRefs = yield* Effect.filter(prompt.objects ?? [], (ref) =>
           Database.load(ref).pipe(
             Effect.as(true),

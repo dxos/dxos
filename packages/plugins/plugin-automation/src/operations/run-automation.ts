@@ -13,7 +13,7 @@ import { AutomationOperation } from '../types';
 // An automation's action is either an Operation bound to `runnable`, or a Routine owned by (parented to)
 // the automation — the two variants the action editor produces. Manual runs dispatch accordingly: the
 // runnable is invoked directly; the routine runs as an agent prompt in a new background chat (the same
-// path the assistant uses), so its instructions and blueprints take effect.
+// path the assistant uses), so its instructions and skills take effect.
 const handler: Operation.WithHandler<typeof AutomationOperation.RunAutomation> = AutomationOperation.RunAutomation.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ automation }) {
@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof AutomationOperation.RunAutomation> =
       const routine = routines.find((candidate) => Obj.getParent(candidate)?.id === automationObj.id);
       invariant(routine, 'Automation has no action to run.');
 
-      // The routine carries its own context objects and blueprints; AgentPrompt binds them to the
+      // The routine carries its own context objects and skills; AgentPrompt binds them to the
       // session, so the run does not forward context separately.
       yield* Operation.invoke(AutomationOperation.RunPromptInNewChat, {
         db,

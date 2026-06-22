@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Skill, Operation, Routine, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -153,7 +153,7 @@ const ActionEditor = ({
       ) : ownedRoutine ? (
         <>
           <RoutineEditor db={db} routine={ownedRoutine} />
-          {/* Context objects live on the routine (sibling of blueprints) and bind to its session at run. */}
+          {/* Context objects live on the routine (sibling of skills) and bind to its session at run. */}
           <ObjectsEditor db={db} routine={ownedRoutine} />
         </>
       ) : null}
@@ -228,14 +228,14 @@ const OperationEditor = ({
   );
 };
 
-// Blueprint picker options: surface each blueprint's registry key as the secondary line and sort by
+// Skill picker options: surface each skill's registry key as the secondary line and sort by
 // name — mirroring `getOperationOptions` so the two action editors present refs consistently.
-const getBlueprintOptions = (results: Entity.Any[]): { id: string; label: string; description?: string }[] =>
+const getSkillOptions = (results: Entity.Any[]): { id: string; label: string; description?: string }[] =>
   results
-    .map((blueprint) => {
-      const id = Entity.getURI(blueprint, { prefer: 'named' });
-      const label = Entity.getLabel(blueprint) ?? id;
-      const key = Obj.instanceOf(Blueprint.Blueprint, blueprint) ? Obj.getMeta(blueprint).key : undefined;
+    .map((skill) => {
+      const id = Entity.getURI(skill, { prefer: 'named' });
+      const label = Entity.getLabel(skill) ?? id;
+      const key = Obj.instanceOf(Skill.Skill, skill) ? Obj.getMeta(skill).key : undefined;
       return { id, label, description: key };
     })
     .sort((left, right) => left.label.localeCompare(right.label));
@@ -243,12 +243,12 @@ const getBlueprintOptions = (results: Entity.Any[]): { id: string; label: string
 const ROUTINE_SCHEMA = Type.getSchema(Routine.Routine);
 
 // Owned-routine action fields surfaced for editing.
-const ROUTINE_FIELDS = new Set(['instructions', 'blueprints']);
+const ROUTINE_FIELDS = new Set(['instructions', 'skills']);
 
 /**
- * Sub-form: edits the owned Routine's `instructions` (Markdown) and `blueprints` in place. A bare
+ * Sub-form: edits the owned Routine's `instructions` (Markdown) and `skills` in place. A bare
  * Form.Root + FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action
- * forms; the rendered fields are written back so blueprint selections persist to the routine.
+ * forms; the rendered fields are written back so skill selections persist to the routine.
  */
 const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routine: Routine.Routine }) => {
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
@@ -256,8 +256,8 @@ const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routin
   const defaultValues = useMemo(() => Obj.getSnapshot(routine), [routine]);
   const handleValuesChanged = useCallback(
     (values: Partial<Routine.Routine>, { isValid }: { isValid: boolean }) => {
-      // Skip while invalid (e.g. an empty ref slot just added by the array field) so a partial blueprint
-      // selection isn't persisted; the write lands once a blueprint is chosen.
+      // Skip while invalid (e.g. an empty ref slot just added by the array field) so a partial skill
+      // selection isn't persisted; the write lands once a skill is chosen.
       if (!isValid) {
         return;
       }
@@ -266,7 +266,7 @@ const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routin
         if (values.instructions) {
           routine.instructions = values.instructions;
         }
-        routine.blueprints = [...(values.blueprints ?? [])];
+        routine.skills = [...(values.skills ?? [])];
       });
     },
     [routine],
@@ -278,7 +278,7 @@ const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routin
       schema={ROUTINE_SCHEMA}
       db={db}
       defaultValues={defaultValues}
-      getOptions={getBlueprintOptions}
+      getOptions={getSkillOptions}
       onValuesChanged={handleValuesChanged}
     >
       <Form.FieldSet filter={(props) => props.filter((prop) => ROUTINE_FIELDS.has(prop.name.toString()))} />
@@ -308,7 +308,7 @@ const isSystemObject = (object: Entity.Any): boolean => {
 };
 
 // Context-object picker options: surface each object's typename (plugin/type) as the secondary line and
-// sort by name — mirroring the operation/blueprint pickers so all action editors present refs consistently.
+// sort by name — mirroring the operation/skill pickers so all action editors present refs consistently.
 // Falls back to the type placeholder (then URI) for unlabelled objects, matching the default RefField.
 const getObjectOptions = (
   results: Entity.Any[],
