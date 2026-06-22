@@ -48,7 +48,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
         objects: [trip],
         blueprints: [TRIP_BLUEPRINT_KEY],
         background: true,
-        prompt: trim`
+        instructions: trim`
           Plan the connecting travel and accommodation for this trip. Its activity segments are fixed
           appointments at specific addresses, ordered by time. For each gap between consecutive
           activities in different places, add a road/transfer segment to get between them, and add

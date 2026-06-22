@@ -203,7 +203,7 @@ export const Curate: Story = {
     const { magazine } = globalThis.__magazineStoryContext!;
 
     // The curation Routine is created with the magazine, not on curate.
-    await expect(magazine.routine).toBeDefined();
+    await expect(magazine.instructions).toBeDefined();
 
     // Starts empty; clicking Curate pulls the feed and runs the Routine.
     await expect(await canvas.findByText(/no articles yet/i, {}, { timeout: 10_000 })).toBeVisible();
