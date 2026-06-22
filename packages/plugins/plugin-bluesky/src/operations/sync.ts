@@ -12,8 +12,8 @@ import { Database, Feed as EchoFeed, Filter, Obj, Query, Ref, Relation } from '@
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Subscription } from '@dxos/plugin-feed';
 import { type Connection, type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
+import { Subscription } from '@dxos/plugin-magazine';
 
 import { BLUESKY_SOURCE, BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { IntegrationDatabaseMissingError } from '../errors';

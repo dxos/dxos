@@ -13,8 +13,6 @@ import {
   type Size,
 } from '@dxos/ui-types';
 
-import { inputTextLabel } from './constants';
-
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
   density: Density;
@@ -32,7 +30,7 @@ export type InputMetaStyleProps = Partial<{
 }>;
 
 const textInputSurfaceFocus =
-  'transition-colors bg-input-surface focus:bg-focus-surface border border-separator focus:border-separator';
+  'transition-colors bg-input-surface focus:bg-focus-surface border border-input-separator focus:border-separator';
 
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
@@ -115,7 +113,7 @@ const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 
 const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
-    'flex items-center justify-center font-mono',
+    'flex items-center justify-center tabular-nums',
     props.density === 'lg'
       ? 'size-12 rounded-xs'
       : props.density === 'sm'
@@ -132,7 +130,7 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   );
 
 const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
+  mx('block text-sm text-description', props.srOnly && 'sr-only', ...etc);
 
 const description: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-description', props.srOnly && 'sr-only', ...etc);
@@ -141,7 +139,7 @@ const descriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props,
   mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
 const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx(inputTextLabel, props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
+  mx('text-sm text-description', props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
   mx(

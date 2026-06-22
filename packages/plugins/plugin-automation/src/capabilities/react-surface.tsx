@@ -12,7 +12,14 @@ import { Blueprint, Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Prompts } from '@dxos/plugin-space';
 
-import { AutomationArticle, AutomationSettings, BlueprintArticle, RoutineArticle, RoutineList } from '#containers';
+import {
+  AutomationArticle,
+  AutomationCompanion,
+  AutomationSettings,
+  BlueprintArticle,
+  RoutineArticle,
+  RoutineSuggestions,
+} from '#containers';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
@@ -38,17 +45,20 @@ export default Capability.makeModule(() =>
           <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
-      // Surface.create({
-      //   id: 'companion.automation',
-      //   filter: AppSurface.allOf(
-      //     AppSurface.literal(AppSurface.Article, 'automation'),
-      //     AppSurface.companion(AppSurface.Article),
-      //   ),
-      //   component: ({ data }) => {
-      //     const db = Obj.getDatabase(data.companionTo);
-      //     return <AutomationCompanion db={db} object={data.companionTo} />;
-      //   },
-      // }),
+      Surface.create({
+        id: 'companion.automation',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'automation'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data }) => {
+          const db = Obj.getDatabase(data.companionTo);
+          if (!db) {
+            return null;
+          }
+          return <AutomationCompanion db={db} object={data.companionTo} />;
+        },
+      }),
       Surface.create({
         id: 'blueprint',
         filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
@@ -66,7 +76,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'routines',
         filter: AppSurface.subject(Prompts, Obj.isObject),
-        component: ({ data }) => <RoutineList subject={data.subject} />,
+        component: ({ data }) => <RoutineSuggestions subject={data.subject} />,
       }),
     ]),
   ),

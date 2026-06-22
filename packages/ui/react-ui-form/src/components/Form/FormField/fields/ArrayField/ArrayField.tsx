@@ -267,7 +267,7 @@ export const ArrayField = ({
             <div
               key={index}
               className={mx(
-                'grid grid-cols-[1fr_min-content]',
+                'grid grid-cols-[minmax(0,1fr)_min-content] gap-1',
                 renderItemAsObject || createInline ? 'items-start' : 'items-center',
               )}
             >

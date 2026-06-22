@@ -5,9 +5,9 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { type Database, Ref } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-client';
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -15,10 +15,10 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldWrapper } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
 const editorClassNames =
-  'min-h-[6lh] transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2';
+  'min-h-[6lh] transition-colors bg-input-surface focus-within:bg-focus-surface border border-input-separator rounded-xs p-1 px-2';
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.
@@ -74,9 +74,9 @@ export const MarkdownField = ({
   };
 
   return (
-    <FormFieldWrapper readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
+    <FormRow readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
       {({ value }) => renderEditor(value)}
-    </FormFieldWrapper>
+    </FormRow>
   );
 };
 
@@ -144,18 +144,16 @@ type CreateTextButtonProps = {
 
 const CreateTextButton = ({ db, disabled, onCreate }: CreateTextButtonProps) => {
   const { t } = useTranslation(translationKey);
+
   const handleClick = useCallback(() => {
     if (!db) {
       return;
     }
-    const text = db.add(Obj.make(Text.Text, { content: '' }));
-    onCreate(Ref.make(text));
+
+    onCreate(Ref.make(db.add(Text.make())));
   }, [db, onCreate]);
 
   return (
-    <Button onClick={handleClick} disabled={disabled}>
-      <Icon icon='ph--plus--regular' size={4} />
-      <span>{t('create-text.label')}</span>
-    </Button>
+    <IconButton icon='ph--plus--regular' label={t('create-text.label')} onClick={handleClick} disabled={disabled} />
   );
 };

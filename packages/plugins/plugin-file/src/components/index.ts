@@ -4,4 +4,3 @@
 
 export * from './FileInput';
 export * from './FilePreview';
-export * from './FileSettings';

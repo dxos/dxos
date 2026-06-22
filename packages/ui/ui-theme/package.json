@@ -55,6 +55,7 @@
     "postcss-nesting": "catalog:",
     "tailwind-merge": "catalog:",
     "tailwind-scrollbar": "catalog:",
+    "tailwind-variants": "catalog:",
     "tailwindcss": "catalog:",
     "tailwindcss-radix": "catalog:"
   },

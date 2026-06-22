@@ -53,6 +53,10 @@
   --color-base-surface: var(--dx-elevation-1);
   --color-base-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
+  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
+  --color-attention-surface: var(--dx-elevation-1);
+  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
+
   /**
    * Elevation 2
    */
@@ -76,9 +80,7 @@
 
   --color-card-surface: var(--dx-elevation-3);
 
-  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
-  --color-attention-surface: var(--dx-elevation-3);
-  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
+  --color-toolbar-surface: var(--dx-elevation-3);
 
   /** 
    * Elevation 4
@@ -102,8 +104,6 @@
   /**
    * Elevation 5
    */
-
-  --color-toolbar-surface: var(--dx-elevation-5);
 
   --color-modal-surface: var(--dx-elevation-5);
 
@@ -200,6 +200,7 @@
   /* Separator */
   --color-primary-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
   --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+  --color-input-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-775));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 

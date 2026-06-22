@@ -11,7 +11,7 @@ import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { IconBlock, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -111,7 +111,7 @@ export const FormField = (props: FormFieldProps) => {
   );
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label],
+    [examples, description, label, t],
   );
 
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
@@ -125,6 +125,7 @@ export const FormField = (props: FormFieldProps) => {
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
+    description,
     jsonPath,
     placeholder,
     presentation: layout,
@@ -135,7 +136,7 @@ export const FormField = (props: FormFieldProps) => {
 
   // Omit empty fields entirely in read-only mode -- an empty value has nothing
   // to display, so a labelled row with a blank input is just noise. This
-  // mirrors what `FormFieldWrapper` already does for `presentation === 'static'`, but
+  // mirrors what `FormRow` already does for `presentation === 'static'`, but
   // covers every field type (including those that bypass the wrapper:
   // RefField, SelectField, MarkdownField, ...). Container fields
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
@@ -279,12 +280,7 @@ FormField.displayName = 'Form.FormField';
 //
 
 export const CompactIconButton = (props: IconButtonProps) => {
-  return (
-    // IconBlock defaults to aria-hidden (decorative slot); the button is interactive, so un-hide it.
-    <IconBlock aria-hidden={false}>
-      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
-    </IconBlock>
-  );
+  return <IconButton variant='ghost' iconOnly {...props} />;
 };
 
 /**

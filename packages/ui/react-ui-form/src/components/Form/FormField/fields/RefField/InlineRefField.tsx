@@ -10,13 +10,13 @@ import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
 import { omitId } from '../../../../../util';
 import { FormContent, FormFieldSetController, FormRoot } from '../../../FormControls';
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldLabel } from '../../FormRow';
 import { presentationFor } from '../../presentation';
 import { type RefFieldProps } from './RefField';
 
@@ -76,10 +76,13 @@ export const InlineRefField = (props: RefFieldProps) => {
       ) : (
         !readonly &&
         onCreate && (
-          <Button classNames='w-full gap-form-gap' disabled={!createType || !db} onClick={() => void handleCreate()}>
-            <Icon icon='ph--plus--regular' size={4} />
-            <span>{label || t('ref-field.placeholder')}</span>
-          </Button>
+          <IconButton
+            classNames='w-full gap-form-gap'
+            disabled={!createType || !db}
+            icon='ph--plus--regular'
+            label={label || t('ref-field.placeholder')}
+            onClick={() => void handleCreate()}
+          />
         )
       )}
     </Input.Root>

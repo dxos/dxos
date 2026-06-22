@@ -30,7 +30,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
   }
 
   return (
-    <Form.Section label={t('permissions.title')}>
+    <Form.Section title={t('permissions.title')}>
       <table className='w-full text-sm'>
         <thead>
           <tr className='text-left text-description'>

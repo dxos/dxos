@@ -14,7 +14,7 @@ import { hues, osTranslations } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldLabel } from '../../FormRow';
 
 export const SelectOptionField = ({
   type,
@@ -183,12 +183,12 @@ export const SelectOptionField = ({
                   </OrderedList.Item>
                 ))}
                 <IconButton
+                  classNames='w-full'
                   variant='ghost'
                   icon='ph--plus--regular'
                   label={t('select-option-add.button')}
                   onClick={handleAdd}
                   disabled={!!readonly}
-                  classNames='w-full'
                 />
               </OrderedList.Content>
             )}

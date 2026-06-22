@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Trigger } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Runnable from './Runnable';
@@ -15,7 +15,6 @@ import * as Runnable from './Runnable';
 /**
  * User-facing automation: a thin aggregate of an action (`runnable`) and the triggers that fire it.
  * App-level only — EDGE stays unaware of it (triggers point directly at the runnable).
- * @deprecated
  */
 export const Automation = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -45,3 +44,22 @@ export type Automation = Type.InstanceType<typeof Automation>;
 export const instanceOf = (value: unknown): value is Automation => Obj.instanceOf(Automation, value);
 
 export const make = (props: Obj.MakeProps<typeof Automation>) => Obj.make(Automation, props);
+
+/**
+ * Relation anchoring an Automation (source) to an object it applies to (target). The per-object companion
+ * lists the automations for an object by querying the sources of this relation; mirrors `Chat.CompanionTo`.
+ */
+export const AppliesTo = Schema.Struct({
+  id: Obj.ID,
+}).pipe(
+  Type.makeRelation({
+    dxn: DXN.make('org.dxos.relation.automation.appliesTo', '0.1.0'),
+    source: Automation,
+    target: Obj.Unknown,
+  }),
+);
+
+export type AppliesTo = Type.InstanceType<typeof AppliesTo>;
+
+/** Create an {@link AppliesTo} relation linking an automation (source) to a target object. */
+export const makeAppliesTo = (props: Relation.MakeProps<typeof AppliesTo>) => Relation.make(AppliesTo, props);

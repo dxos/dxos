@@ -18,7 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
-import { createFilename, isNonNullable, Position } from '@dxos/util';
+import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -62,7 +62,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
-            position: Position.last,
+            position: 10_000,
             testId: 'spacePlugin.databaseSection',
           }),
         ]);

@@ -660,11 +660,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-feed/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
@@ -711,6 +706,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-linear/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-magazine/package.json",
           "jsonpath": "$.version"
         },
         {
