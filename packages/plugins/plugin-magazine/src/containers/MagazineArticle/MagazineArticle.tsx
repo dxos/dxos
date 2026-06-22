@@ -2,27 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
+import { useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Menu } from '@dxos/react-ui-menu';
 
-import { type MagazineView, useVisibleMagazinePosts } from '#atoms';
+import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
 import { MagazineTile } from './MagazineTile';
-import { MagazineToolbar } from './MagazineToolbar';
+import { useToolbar } from './useToolbar';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
@@ -30,48 +29,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const { t } = useTranslation(meta.profile.key);
   const invoker = useOperationInvoker();
   const [magazine] = useObject(subject);
-  const registry = useContext(RegistryContext);
+
+  // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
+  // filter the visible posts.
+  const { menu, viewAtom } = useToolbar({ magazine: subject });
+  const view = useAtomValue(viewAtom);
 
   const showItem = useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelection(id, 'single');
-  const viewAtom = useMemo(() => Atom.make<MagazineView>('default'), []);
-  const busyAtom = useMemo(() => Atom.make(false), []);
-  const view = useAtomValue(viewAtom);
   const db = Obj.getDatabase(magazine);
   const posts = useVisibleMagazinePosts(subject, view);
-
-  const handleCurate = useCallback(() => {
-    if (registry.get(busyAtom)) {
-      return;
-    }
-    registry.set(busyAtom, true);
-    void EffectEx.runAndForwardErrors(
-      invoker
-        .invoke(
-          FeedOperation.CurateMagazine,
-          { magazine: Ref.make(subject) },
-          { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.profile.key }] } },
-        )
-        .pipe(Effect.ensuring(Effect.sync(() => registry.set(busyAtom, false)))),
-    );
-  }, [registry, busyAtom, invoker, subject, db]);
-
-  const handleClear = useCallback(() => {
-    if (registry.get(busyAtom)) {
-      return;
-    }
-    registry.set(busyAtom, true);
-    void EffectEx.runAndForwardErrors(
-      invoker
-        .invoke(
-          FeedOperation.ClearMagazine,
-          { magazine: Ref.make(subject) },
-          { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.profile.key }] } },
-        )
-        .pipe(Effect.ensuring(Effect.sync(() => registry.set(busyAtom, false)))),
-    );
-  }, [registry, busyAtom, invoker, subject, db]);
 
   const handleToggleStar = useCallback(
     async (post: Subscription.Post, starred: boolean) => {
@@ -128,24 +96,21 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <MagazineToolbar
-          magazine={subject}
-          viewAtom={viewAtom}
-          busyAtom={busyAtom}
-          attendableId={attendableId}
-          onClear={handleClear}
-          onCurate={handleCurate}
-        />
-      </Panel.Toolbar>
+      <Menu.Root {...menu} attendableId={attendableId}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content>
         {noPosts ? (
-          <div className='flex items-center justify-center h-full text-subdued text-sm'>
+          // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
+          <div className='h-full flex items-center justify-center text-subdued text-sm'>
             {t('empty-magazine.message')}
           </div>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content thin centered padding>
+              {/* TODO(burdon): Move items into Root. */}
               <Masonry.Viewport classNames='py-2' items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>

@@ -47,24 +47,20 @@ describe('Magazine', () => {
   });
 
   it.effect(
-    'ensureRoutine lazily creates the routine once, seeding the topic',
+    'make creates the curation routine with the magazine, seeding its instructions',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const magazine = yield* Database.add(Magazine.make({ name: 'The Cosmos', topic: 'Astronomy news' }));
+        const magazine = yield* Database.add(Magazine.make({ name: 'The Cosmos', instructions: 'Astronomy news' }));
         yield* Database.flush();
-        // Created lazily — absent until the first ensureRoutine.
-        expect(magazine.routine).toBeUndefined();
 
-        const routine = yield* Magazine.ensureRoutine(magazine);
+        // The routine is created with the magazine (not lazily).
         expect(magazine.routine).toBeDefined();
+        const routine = yield* Database.load(magazine.routine!);
+        expect(routine.blueprints.length).toBeGreaterThan(0);
 
         const instructions = yield* Database.load(routine.instructions);
         expect(instructions.content).toContain('## Topic');
         expect(instructions.content).toContain('Astronomy news');
-
-        // Idempotent: a second call returns the same routine rather than creating another.
-        const again = yield* Magazine.ensureRoutine(magazine);
-        expect(again.id).toBe(routine.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

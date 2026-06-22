@@ -140,7 +140,7 @@ describe('CurateMagazine (LLM)', () => {
           Magazine.make({
             name: 'The Cosmos',
             feeds: [Ref.make(subscription)],
-            topic:
+            instructions:
               'Curate articles about space exploration and astronomy — missions, spacecraft, telescopes, and astrophysics discoveries. Exclude unrelated business, finance, or software-tooling news.',
           }),
         );

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -114,9 +114,9 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
 
 /**
  * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
- * The magazine's persisted Routine carries the editorial instructions and references the Magazine
- * blueprint; it is created on first curation via {@link Magazine.ensureRoutine}. Tolerates agent/parse
- * failures (logs → no selection).
+ * The magazine's persisted Routine (created with the magazine) carries the editorial instructions and
+ * references the Magazine blueprint, which AgentPrompt resolves at run time. No routine → no selection.
+ * Tolerates agent/parse failures (logs → no selection).
  */
 const selectPostIds = (
   magazine: Magazine.Magazine,
@@ -124,6 +124,9 @@ const selectPostIds = (
   spaceId: SpaceId,
 ) =>
   Effect.gen(function* () {
+    if (!magazine.routine) {
+      return [] as readonly (typeof CurationOutput.Type.posts)[number][];
+    }
     const input = {
       candidates: candidates.map(({ post, feed }) => ({
         id: post.id,
@@ -135,16 +138,8 @@ const selectPostIds = (
         link: post.link,
       })),
     };
-    // Resolve the base methodology blueprint from the registry by its key and hold it by value. A
-    // bare `Ref.fromURI(registryURI(key))` is unhydrated — `Database.load` fails with EntityNotFoundError
-    // resolve it ("Resolver is not set") — so we resolve to the object and let `Ref.make` carry it.
-    const blueprint = yield* Blueprint.resolve(Magazine.BLUEPRINT_KEY).pipe(Effect.option);
-    const routine = yield* Magazine.ensureRoutine(
-      magazine,
-      Option.toArray(blueprint).map((value) => Ref.make(value)),
-    );
 
-    return yield* Operation.invoke(AgentPrompt, { prompt: Ref.make(routine), input }, { spaceId }).pipe(
+    return yield* Operation.invoke(AgentPrompt, { prompt: magazine.routine, input }, { spaceId }).pipe(
       Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catchAll((error) =>

@@ -4,14 +4,12 @@
 
 // @import-as-namespace
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
-import { Database, DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
 import { StateMap } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -53,10 +51,9 @@ export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
- * Curation is driven by a {@link Routine.Routine}: its instructions hold the editorial methodology
- * plus this magazine's topic, and it references the Magazine blueprint (the tool/output contract).
- * The {@link ensureRoutine} helper creates the Routine lazily on first curation, seeding it with the
- * default editorial instructions and the magazine's {@link topic}.
+ * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): its
+ * instructions hold the editorial brief and it references the Magazine blueprint (the tool/output
+ * contract). {@link CurateMagazine} runs the Routine to select matching Posts.
  */
 export const Magazine = Schema.Struct({
   /** User-facing title of the magazine. */
@@ -66,15 +63,12 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Editorial seed captured from the create dialog. Woven into the Routine's instructions when the
-   * Routine is created on first curation; thereafter the Routine's instructions are authoritative.
+   * Curation Routine, created with the magazine ({@link make}). Holds the editorial brief (its
+   * instructions) and references the Magazine blueprint. Rendered inline by the properties form (the
+   * Routine's own fields), so the brief is edited there without a custom surface.
+   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
    */
-  topic: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-  /**
-   * Curation Routine, created lazily by {@link ensureRoutine} on first curation (absent until then).
-   * Its instructions are edited via the properties companion.
-   */
-  routine: Ref.Ref(Routine.Routine).pipe(FormInputAnnotation.set(false), Schema.optional),
+  routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -108,12 +102,15 @@ export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(
 export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'routine' | 'postState'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
+  /** Editorial brief seeded into the curation Routine's instructions (composed with the default methodology). */
+  instructions?: string;
 };
 
 /**
- * Creates a Magazine with its per-Post state map as a hidden child (cascade-deleted with the
- * magazine). The curation Routine is created lazily by {@link ensureRoutine} on first curation, so
- * no Routine is persisted here.
+ * Creates a Magazine plus its curation Routine and per-Post state map as hidden children (all
+ * cascade-deleted with the magazine). The Routine holds the editorial brief (its instructions,
+ * seeded from {@link composeInstructions}) and references the Magazine blueprint by its registry DXN;
+ * {@link CurateMagazine} runs it and the agent resolves the blueprint at run time.
  */
 export const make = (props: MakeProps = {}): Magazine => {
   const postState = StateMap.make();
@@ -121,57 +118,35 @@ export const make = (props: MakeProps = {}): Magazine => {
     name: props.name,
     feeds: props.feeds ?? [],
     posts: props.posts ?? [],
-    topic: props.topic,
     keep: props.keep,
     postState: Ref.make(postState),
   });
-  // Cascade-delete the per-Post state with the magazine.
+
+  const routine = Routine.make({
+    name: props.name ? `${props.name} curation` : 'Magazine curation',
+    instructions: composeInstructions(props.instructions),
+    blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
+    // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
+    objects: [Ref.make(magazine)],
+  });
+  Obj.update(magazine, (magazine) => {
+    magazine.routine = Ref.make(routine);
+  });
+
+  // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
+  Obj.setParent(routine, magazine);
+  if (routine.instructions.target) {
+    Obj.setParent(routine.instructions.target, routine);
+  }
   Obj.setParent(postState, magazine);
   return magazine;
 };
 
-/** Composes Routine instructions from the default editorial methodology and the magazine's topic. */
+/** Composes Routine instructions from the default editorial methodology and an optional topic focus. */
 export const composeInstructions = (topic?: string): string => {
   const trimmed = topic?.trim();
   return trimmed ? `${DEFAULT_INSTRUCTIONS}\n\n## Topic\n\n${trimmed}` : DEFAULT_INSTRUCTIONS;
 };
-
-/**
- * Resolves the Magazine's curation Routine, creating it on first use. The Routine is seeded with the
- * default editorial instructions (the {@link topic} woven in), references the supplied blueprints, is
- * parented to the magazine for cascade-delete, and is recorded on `magazine.routine`. Idempotent.
- */
-export const ensureRoutine = (
-  magazine: Magazine,
-  blueprints: Ref.Ref<Blueprint.Blueprint>[] = [],
-): Effect.Effect<Routine.Routine, never, Database.Service> =>
-  Effect.gen(function* () {
-    if (magazine.routine) {
-      const existing = yield* Database.load(magazine.routine).pipe(Effect.option);
-      if (Option.isSome(existing)) {
-        return existing.value;
-      }
-    }
-
-    const routine = yield* Database.add(
-      Routine.make({
-        name: magazine.name ? `${magazine.name} curation` : 'Magazine curation',
-        instructions: composeInstructions(magazine.topic),
-        blueprints,
-        // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
-        objects: [Ref.make(magazine)],
-      }),
-    );
-    // Cascade-delete the Routine (and its instructions Text) with the magazine.
-    Obj.setParent(routine, magazine);
-    if (routine.instructions.target) {
-      Obj.setParent(routine.instructions.target, routine);
-    }
-    Obj.update(magazine, (magazine) => {
-      magazine.routine = Ref.make(routine);
-    });
-    return routine;
-  });
 
 /** Schema for the create-magazine dialog form. */
 export const CreateMagazineSchema = Schema.Struct({
@@ -183,7 +158,7 @@ export const CreateMagazineSchema = Schema.Struct({
   feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotations({
     title: 'Feeds',
   }),
-  topic: Schema.optional(
+  instructions: Schema.optional(
     Schema.String.annotations({
       title: 'Topic',
       description: 'Describe what content to curate.',

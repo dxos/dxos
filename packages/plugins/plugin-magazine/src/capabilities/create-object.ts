@@ -43,8 +43,8 @@ export default Capability.makeModule(
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            // The topic seed is woven into the curation Routine's instructions when the Routine is
-            // created on first curation (see Magazine.ensureRoutine); no Routine is persisted here.
+            // `make` creates the curation Routine with the magazine, seeding its instructions from the
+            // dialog's editorial brief (`instructions`); both are added with the magazine below.
             const magazine = Magazine.make(props);
 
             return yield* Operation.invoke(SpaceOperation.AddObject, {

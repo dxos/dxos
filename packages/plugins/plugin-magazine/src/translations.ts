@@ -75,8 +75,6 @@ export const translations = [
         'show-archived.label': 'Show archived',
         'only-starred.label': 'Show starred only',
         'close.label': 'Close',
-        'topic-instructions.label': 'Topic',
-        'topic-instructions.placeholder': 'Topic to curate around…',
       },
     },
   },

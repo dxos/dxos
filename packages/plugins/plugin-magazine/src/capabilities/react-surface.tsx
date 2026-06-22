@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
-import { FeedArticle, FeedProperties, MagazineArticle, MagazineProperties, PostArticle, PostCard } from '#containers';
+import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard } from '#containers';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
@@ -22,11 +22,6 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
-      }),
-      Surface.create({
-        id: 'magazineProperties',
-        filter: AppSurface.object(AppSurface.ObjectProperties, Magazine.Magazine),
-        component: ({ data }) => <MagazineProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'feedArticle',

@@ -28,7 +28,7 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ObjectProperties object={object}>
-            {/* TODO(burdon): Ambiguous naming since providers only replace parts. */}
+            {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
           </ObjectProperties>
         </Panel.Content>
