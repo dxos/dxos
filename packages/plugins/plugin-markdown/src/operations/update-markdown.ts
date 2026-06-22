@@ -9,6 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DocAccessor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
+
 import { MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = MarkdownOperation.Update.pipe(

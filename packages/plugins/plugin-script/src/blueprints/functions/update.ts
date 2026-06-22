@@ -9,6 +9,7 @@ import { type Script, Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DocAccessor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
+
 import { Update } from './definitions';
 
 export default Update.pipe(

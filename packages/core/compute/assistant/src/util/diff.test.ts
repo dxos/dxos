@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Doc } from '@dxos/echo-doc';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
