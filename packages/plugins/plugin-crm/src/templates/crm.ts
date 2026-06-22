@@ -9,7 +9,7 @@ import { Blueprint, Instructions, Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { Routine, type RoutineCapabilities } from '@dxos/plugin-instructions';
+import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
 /**

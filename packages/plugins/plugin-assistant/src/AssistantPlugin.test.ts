@@ -26,7 +26,7 @@ import { EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { RoutinePlugin } from '@dxos/plugin-instructions/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
