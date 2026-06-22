@@ -26,12 +26,12 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const [running, setRunning] = useState(false);
   const db = Obj.getDatabase(subject);
   // A routine action stores no `runnable`; it is a Routine parented to the automation, so query for one.
-  const instructionsList = useQuery(db, Filter.type(Instructions.Instructions));
+  const allInstructions = useQuery(db, Filter.type(Instructions.Instructions));
   const canRun = useMemo(
     () =>
       Boolean(automation.runnable) ||
-      instructionsList.some((instructions) => Obj.getParent(instructions)?.id === subject.id),
-    [automation.runnable, instructionsList, subject.id],
+      allInstructions.some((instructions) => Obj.getParent(instructions)?.id === subject.id),
+    [automation.runnable, allInstructions, subject.id],
   );
 
   const handleRun = useCallback(() => {
