@@ -2634,6 +2634,9 @@ importers:
       '@dxos/plugin-sample':
         specifier: workspace:*
         version: link:../../plugins/plugin-sample
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sandbox
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script
@@ -4816,12 +4819,18 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../../plugins/plugin-assistant
@@ -4834,6 +4843,12 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../../plugins/plugin-inbox
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-markdown
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-sandbox
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../../plugins/plugin-testing
@@ -13470,12 +13485,18 @@ importers:
         specifier: 3.21.3
         version: 3.21.3
     devDependencies:
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/compute/functions-runtime
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -39772,10 +39793,6 @@ packages:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
 
-  tinyglobby@0.2.16:
-    resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
-    engines: {node: '>=12.0.0'}
-
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
@@ -56568,7 +56585,7 @@ snapshots:
       lodash: 4.17.23
       minimist: 1.2.8
       prettier: 3.6.2
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
 
   json-schema-traverse@0.4.1: {}
 
@@ -61989,11 +62006,6 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
 
-  tinyglobby@0.2.16:
-    dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
-
   tinyglobby@0.2.17:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
@@ -62338,7 +62350,7 @@ snapshots:
       markdown-it: 14.1.0
       minimatch: 10.2.5
       typescript: 6.0.3
-      yaml: 2.9.0
+      yaml: 2.8.2
 
   types-package-json@2.0.39: {}
 

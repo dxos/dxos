@@ -54,6 +54,7 @@ describe('Agent prompt', () => {
             name: 'chat-mode-test',
             instructions: 'Reply with a single word: ack.',
             blueprints: [],
+            output: Schema.String,
           }),
         );
 

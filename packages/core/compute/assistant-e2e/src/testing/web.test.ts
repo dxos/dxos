@@ -31,6 +31,7 @@ vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
   return _realFetch(url, init);
 });
 
+// Must stay at module scope: primes the test PRNG; agentTest pins a per-test seed from the test name.
 Obj.ID.dangerouslyDisableRandomness();
 
 // TODO(burdon): Re-enable + regenerate web.conversations.json. The DatabaseBlueprint serializes the

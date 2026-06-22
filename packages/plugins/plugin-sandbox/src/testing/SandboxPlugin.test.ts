@@ -24,7 +24,7 @@ const TestLayer = AssistantTestLayer({
   blueprints: [SandboxBlueprint.make()],
 });
 
-// Requires a running sandbox service and real edge URL. Disabled by default.
+// Requires a running sandbox-service worker (`runtime.services.sandbox.url`). Disabled by default.
 describe.skip('SandboxPlugin', () => {
   it.effect(
     'create sandbox',

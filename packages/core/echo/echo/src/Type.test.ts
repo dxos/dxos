@@ -8,8 +8,10 @@ import { describe, test } from 'vitest';
 import { DXN, EntityId } from '@dxos/keys';
 
 import * as Entity from './Entity';
+import * as Filter from './Filter';
 import * as JsonSchema from './JsonSchema';
 import * as Obj from './Obj';
+import * as Ref from './Ref';
 import * as Relation from './Relation';
 import { TestSchema } from './testing';
 import * as Type from './Type';
@@ -252,6 +254,31 @@ describe('Type', () => {
         }),
       );
       expect(entity.id).toBe(explicit);
+    });
+
+    test('Type.declareObj', ({ expect }) => {
+      class Person extends Type.declareObj<Person>()(
+        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+      ) {}
+      expect(Person.jsonSchema).toBeDefined();
+    });
+
+    test('Ref of Type.declareObj', ({ expect }) => {
+      class Person extends Type.declareObj<Person>()(
+        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+      ) {}
+
+      const refSchema = Ref.Ref(Person);
+      expect(refSchema).toBeDefined();
+    });
+
+    test('Filter of Type.declareObj', ({ expect }) => {
+      class Person extends Type.declareObj<Person>()(
+        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+      ) {}
+
+      const filter = Filter.type(Person);
+      expect(filter).toBeDefined();
     });
   });
 });
