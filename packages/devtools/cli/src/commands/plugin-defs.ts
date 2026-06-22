@@ -31,17 +31,17 @@ export const getDefaults = (): string[] => [
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
-    RoutinePlugin(),
     ChessPlugin(),
-    SamplePlugin(),
     ClientPlugin({ config }),
     InboxPlugin(),
+    IntegrationPlugin(),
     MarkdownPlugin(),
     // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
     ObservabilityPlugin({} as any),
     ProcessManagerPlugin(),
     RegistryPlugin(),
+    RoutinePlugin(),
+    SamplePlugin(),
     SpacePlugin({}),
-    IntegrationPlugin(),
   ];
 };
