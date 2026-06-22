@@ -12,6 +12,7 @@ import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
+import { dbg } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -54,6 +55,7 @@ describe('Agent prompt', () => {
             name: 'chat-mode-test',
             instructions: 'Reply with a single word: ack.',
             blueprints: [],
+            output: Schema.String,
           }),
         );
 
@@ -81,15 +83,14 @@ describe('Agent prompt', () => {
     Effect.fnUntraced(
       function* (_) {
         const Person = Schema.Struct({
-          name: Schema.String,
+          givenName: Schema.String,
           age: Schema.Number,
         });
 
         const routine = yield* Database.add(
           Routine.make({
             name: 'output-schema-test',
-            instructions:
-              'Invent a fictional person and call completeJob with the success object describing them (name and age).',
+            instructions: 'Invent a fictional person and call completeJob with the success object describing them.',
             output: Person,
             blueprints: [],
           }),
@@ -101,13 +102,8 @@ describe('Agent prompt', () => {
           prompt: Ref.make(routine),
           input: {},
         });
-
-        // The routine persists its declared output as a JSON schema; decode it back and assert the
-        // agent-produced object satisfies that schema.
-        const outputSchema = JsonSchema.toEffectSchema(routine.output);
-        const decoded = Schema.decodeUnknownSync(outputSchema)(result);
-        expect(typeof decoded.name).toBe('string');
-        expect(typeof decoded.age).toBe('number');
+        expect(typeof result.givenName).toBe('string');
+        expect(typeof result.age).toBe('number');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

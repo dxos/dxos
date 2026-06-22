@@ -18,7 +18,7 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import { Template, Trace, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -98,7 +98,7 @@ export default AgentPrompt.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
+          output: JsonSchema.toEffectSchema(prompt.output),
           resultSink,
         });
 
@@ -163,13 +163,13 @@ export default AgentPrompt.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Schema.Any;
+  output: Schema.Schema.All;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
       parameters: {
-        success: Schema.optional(Schema.Any), // TODO(dmaretskyi): Pipe output schema here.
+        success: Schema.optional(options.output),
         failure: Schema.optional(
           Schema.Struct({
             message: Schema.String.annotations({
