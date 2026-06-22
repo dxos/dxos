@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import { computeDiffsWithCursors } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { CommentOperation } from '../types';
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
     Effect.fn(function* ({ doc, diffs }) {
       const object = yield* Database.load(doc);
       const content = yield* Effect.promise(() => object.content.load());
-      const accessor = createDocAccessor(content, ['content']);
+      const accessor = Doc.createAccessor(content, ['content']);
 
       yield* Function.pipe(
         computeDiffsWithCursors(accessor, diffs),

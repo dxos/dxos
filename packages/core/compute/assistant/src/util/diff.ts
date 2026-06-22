@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A, type Doc } from '@automerge/automerge';
+import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
 
-import { DocAccessor, toCursorRange } from '@dxos/echo-client';
+import { toCursorRange } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -54,10 +55,13 @@ export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
   }, []);
 };
 
-export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: readonly string[]) => {
+/**
+ * Resolves text diffs against the accessor's current value into cursor-anchored replacements.
+ */
+export const computeDiffsWithCursors = <T>(accessor: Doc.Accessor<T>, diffs: readonly string[]) => {
   return reduceDiffs(diffs)
     .map((diff) => {
-      const text = DocAccessor.getValue<string>(accessor);
+      const text = Doc.getValue<string>(accessor);
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
         return { cursor: toCursorRange(accessor, idx, idx + diff.match.length), text: diff.replace };
@@ -66,14 +70,17 @@ export const computeDiffsWithCursors = <T>(accessor: DocAccessor<T>, diffs: read
     .filter(isNonNullable);
 };
 
+/**
+ * Applies text diffs to the accessor-backed document and returns the resulting string.
+ */
 export const applyDiffs = <T>(
-  accessor: DocAccessor<T>,
+  accessor: Doc.Accessor<T>,
   diffs: readonly string[],
   { errorOnNotFound = false }: { errorOnNotFound?: boolean } = {},
 ): string => {
   for (const diff of reduceDiffs(diffs)) {
-    accessor.handle.change((doc: Doc<T>) => {
-      const text = DocAccessor.getValue<string>(accessor);
+    accessor.handle.change((doc: AutomergeDoc<T>) => {
+      const text = Doc.getValue<string>(accessor);
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
         // TODO(burdon): Replace smallest substring.
@@ -89,5 +96,5 @@ export const applyDiffs = <T>(
     });
   }
 
-  return DocAccessor.getValue<string>(accessor);
+  return Doc.getValue<string>(accessor);
 };

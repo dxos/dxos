@@ -3,7 +3,6 @@
 //
 
 export * from './clone';
-export * from './doc-accessor';
 export { createObject, EchoReactiveHandler, getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
 export { isEchoObject } from './echo-object-utils';
 export * from './edit-history';
