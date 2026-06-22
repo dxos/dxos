@@ -10,7 +10,7 @@ import { type Database, Entity, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { Form } from '@dxos/react-ui-form';
 
-const ROUTINE_SCHEMA = Type.getSchema(Instructions.Instructions);
+const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 
 // Owned-routine action fields surfaced for editing — the prompt text, the agent's `blueprints`,
 // and the context `objects` bound to its session at run. All live on the Instructions schema,
@@ -57,7 +57,7 @@ export const InstructionsEditor = ({ db: dbProp, routine }: InstructionsEditorPr
   return (
     <Form.Root
       key={routine.id}
-      schema={ROUTINE_SCHEMA}
+      schema={INSTRUCTIONS_SCHEMA}
       db={db}
       defaultValues={defaultValues}
       getOptions={getRefOptions}
