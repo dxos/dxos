@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getAutomationsPath } from '../paths';
-import { Automation, AutomationCapabilities, AutomationOperation } from '../types';
+import { AutomationCapabilities, AutomationOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation> =
   AutomationOperation.CreateAutomation.pipe(
