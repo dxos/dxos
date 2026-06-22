@@ -7,13 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import {
-  AppGraphBuilder,
-  ChannelBackendFeed,
-  CreateObject,
-  OperationHandler,
-  ReactSurface,
-} from '#capabilities';
+import { AppGraphBuilder, ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
