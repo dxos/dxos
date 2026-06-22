@@ -166,18 +166,6 @@ const RawTreeItem = <T extends { id: string } = any>({
   const isItemDroppable = itemDroppable !== false;
   const nativeDragText = id;
 
-  // Group nodes have no interactive element (no hover, no toggle) that normally triggers
-  // Graph.expand, so their children would never load. Expand eagerly on mount; Graph.expand
-  // is idempotent so re-renders after the first expansion are harmless.
-  const groupExpandedRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (disposition !== 'group' || groupExpandedRef.current === item.id) {
-      return;
-    }
-    groupExpandedRef.current = item.id;
-    onItemHover?.({ item });
-  }, [disposition, item, onItemHover]);
-
   useEffect(() => {
     // Group nodes render no button, so buttonRef is null and drag setup is inapplicable.
     if (!draggableProp || !buttonRef.current) {
