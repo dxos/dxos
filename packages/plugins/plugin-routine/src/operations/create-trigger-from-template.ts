@@ -59,7 +59,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
           target: db,
         });
         yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [`${Paths.getSpacePath(db.spaceId)}/settings/${meta.profile.key}.automations`],
+          subject: [`${Paths.getSpacePath(db.spaceId)}/settings/${meta.profile.key}.routines`],
           workspace: Paths.getSpacePath(db.spaceId),
         });
       }),

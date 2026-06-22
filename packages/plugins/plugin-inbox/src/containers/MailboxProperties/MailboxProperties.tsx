@@ -35,7 +35,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.automations')],
+      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
       workspace: Paths.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);

@@ -26,7 +26,7 @@ export default Capability.makeModule(
         connector: () => {
           return Effect.succeed([
             AppNode.makeSettingsPanel({
-              id: 'automations',
+              id: 'routines',
               type: `${meta.profile.key}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',

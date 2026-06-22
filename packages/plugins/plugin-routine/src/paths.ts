@@ -11,8 +11,8 @@ const { getSectionPath: getRoutinesPath } = Paths.createTypeSectionPaths(Routine
   groupId: AppNode.NAV_TREE_GROUP_AI_ID,
 });
 
-/** Path to the automations settings section for a given space. */
+/** Path to the routines settings section for a given space. */
 export const getRoutinesSettingsPath = (spaceId: string): string =>
-  Paths.getSpacePath(spaceId, 'settings', `${meta.profile.key}.automations`);
+  Paths.getSpacePath(spaceId, 'settings', `${meta.profile.key}.routines`);
 
 export { getRoutinesPath };
