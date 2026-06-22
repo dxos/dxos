@@ -36,12 +36,7 @@ const DefaultStory = (props: QueryEditorProps) => {
   }, []);
 
   const extensions = useMemo(
-    () => [
-      createDataExtensions({
-        id: object.id,
-        text: Doc.createAccessor(object, ['content']),
-      }),
-    ],
+    () => [createDataExtensions({ id: object.id, text: Doc.createAccessor(object, ['content']) })],
     [],
   );
 

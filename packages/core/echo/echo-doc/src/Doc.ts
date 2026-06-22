@@ -17,6 +17,12 @@ import { getDeep } from '@dxos/util';
 export type KeyPath = readonly (string | number)[];
 
 /**
+ * Validates a {@link KeyPath}.
+ */
+export const isValidKeyPath = (value: unknown): value is KeyPath =>
+  Array.isArray(value) && value.every((entry) => typeof entry === 'string' || typeof entry === 'number');
+
+/**
  * Low-level handle over an Automerge document.
  * A deliberately narrow contract (vs. automerge-repo's `DocHandle`) satisfied by both the networked client handle and the synthetic handle
  * over a local, not-yet-attached document.
@@ -41,12 +47,6 @@ export interface Accessor<T = any> {
 export const Accessor = {
   getValue: <T>(accessor: Accessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
 };
-
-/**
- * Validates a {@link KeyPath}.
- */
-export const isValidKeyPath = (value: unknown): value is KeyPath =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string' || typeof entry === 'number');
 
 /**
  * Resolves an {@link Accessor} for a value within an object, agnostic to whether the object is

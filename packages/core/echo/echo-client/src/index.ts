@@ -18,11 +18,7 @@ export {
   type BindOptions,
   type ObjectCoreOptions,
   objectIsUpdated,
-  DocAccessor,
   type DecodedAutomergePrimaryValue,
-  type IDocHandle,
-  type KeyPath,
-  isValidKeyPath,
 } from './core-db';
 export { type CloneOptions, clone } from './echo-handler';
 export { createObject, EchoReactiveHandler, initEchoReactiveObjectRootProxy } from './echo-handler';

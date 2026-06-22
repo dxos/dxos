@@ -8290,9 +8290,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -8653,9 +8650,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -9143,9 +9137,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -10803,9 +10794,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -14023,9 +14011,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -16084,9 +16069,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -20153,9 +20135,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc

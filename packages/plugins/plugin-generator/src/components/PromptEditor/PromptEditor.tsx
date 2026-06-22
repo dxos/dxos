@@ -38,10 +38,7 @@ export const PromptEditor = ({ id, text, placeholder }: PromptEditorProps) => {
     () =>
       text
         ? [
-            createDataExtensions({
-              id,
-              text: Doc.createAccessor(text, ['content']),
-            }),
+            createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
             createBasicExtensions({
               bracketMatching: false,
               lineWrapping: true,

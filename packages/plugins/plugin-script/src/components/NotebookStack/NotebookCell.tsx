@@ -48,12 +48,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
   const extensions = useMemo(() => {
     return cell.source?.target
-      ? [
-          createDataExtensions({
-            id: cell.id,
-            text: Doc.createAccessor(cell.source.target, ['content']),
-          }),
-        ].filter(isNonNullable)
+      ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(cell.source.target, ['content']) })]
       : [];
   }, [cell.source?.target]);
 

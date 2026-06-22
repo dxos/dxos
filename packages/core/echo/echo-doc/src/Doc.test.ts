@@ -33,7 +33,7 @@ describe('Doc', () => {
     });
   });
 
-  describe('createObject (in-memory) backend', () => {
+  describe('in-memory backend', () => {
     test('binds before db.add and edits survive attach', async ({ expect }) => {
       const obj = Obj.make(TestSchema.Task, { description: 'hello' });
 
