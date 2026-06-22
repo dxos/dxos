@@ -60,10 +60,9 @@ export namespace TestSchema {
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export const Example = ExampleSchema.pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
-
-  /** @deprecated Use another test schema or create a specific local test schema. */
-  export interface Example extends Type.InstanceType<typeof Example> {}
+  export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(
+    ExampleSchema,
+  ) {}
 
   //
   // Message
@@ -71,77 +70,75 @@ export namespace TestSchema {
 
   // TODO(burdon): Support defaults directly on Type: `make` is erased by `pipe(Type.Obj)`.
   export const MessageStruct = Schema.Struct({
-    // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
-    // TODO(burdon): Support defaults (update create and create).
-    timestamp: Schema.String.pipe(
-      Schema.propertySignature,
-      Schema.withConstructorDefault(() => new Date().toISOString()),
-    ),
-  });
+      // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
+      // TODO(burdon): Support defaults (update create and create).
+      timestamp: Schema.String.pipe(
+        Schema.propertySignature,
+        Schema.withConstructorDefault(() => new Date().toISOString()),
+      ),
+    });
 
-  export const Message = MessageStruct.pipe(Type.makeObject(DXN.make('com.example.type.message', '0.1.0')));
-
-  export type Message = Type.InstanceType<typeof Message>;
+  export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(MessageStruct) {}
 
   //
   // Organization
   //
 
-  export const Organization = Schema.Struct({
-    name: Schema.String,
-    properties: Schema.optional(
-      Schema.Record({
-        key: Schema.String,
-        value: Schema.String,
-      }),
-    ),
-  }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
-
-  export type Organization = Type.InstanceType<typeof Organization>;
+  export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
+    Schema.Struct({
+      name: Schema.String,
+      properties: Schema.optional(
+        Schema.Record({
+          key: Schema.String,
+          value: Schema.String,
+        }),
+      ),
+    }),
+  ) {}
 
   //
   // Person
   //
 
-  export const Person = Schema.Struct({
-    name: Schema.String,
-    username: Schema.String,
-    email: Schema.String,
-    age: Schema.Number.pipe(Schema.optional),
-    tasks: Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
-    employer: Schema.optional(Ref.Ref(Organization)),
-    address: Schema.Struct({
-      city: Schema.optional(Schema.String),
-      state: Schema.optional(Schema.String),
-      zip: Schema.optional(Schema.String),
-      coordinates: Schema.Struct({
-        lat: Schema.optional(Schema.Number),
-        lng: Schema.optional(Schema.Number),
+  export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+    Schema.Struct({
+      name: Schema.String,
+      username: Schema.String,
+      email: Schema.String,
+      age: Schema.Number.pipe(Schema.optional),
+      tasks: Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
+      employer: Schema.optional(Ref.Ref(Organization)),
+      address: Schema.Struct({
+        city: Schema.optional(Schema.String),
+        state: Schema.optional(Schema.String),
+        zip: Schema.optional(Schema.String),
+        coordinates: Schema.Struct({
+          lat: Schema.optional(Schema.Number),
+          lng: Schema.optional(Schema.Number),
+        }),
       }),
-    }),
-    fields: Schema.Struct({
-      label: Schema.String,
-      value: Schema.String,
-    }).pipe(Schema.Array, Schema.optional),
-  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
-
-  export interface Person extends Type.InstanceType<typeof Person> {}
+      fields: Schema.Struct({
+        label: Schema.String,
+        value: Schema.String,
+      }).pipe(Schema.Array, Schema.optional),
+    }).pipe(Schema.partial),
+  ) {}
 
   //
   // Task
   //
 
-  export const Task = Schema.Struct({
-    title: Schema.optional(Schema.String),
-    deadline: Schema.optional(Schema.String),
-    completed: Schema.optional(Schema.Boolean),
-    assignee: Schema.optional(Ref.Ref(Person)),
-    previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
-    subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
-    description: Schema.optional(Schema.String),
-  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
-
-  export interface Task extends Type.InstanceType<typeof Task> {}
+  export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
+    Schema.Struct({
+      title: Schema.optional(Schema.String),
+      deadline: Schema.optional(Schema.String),
+      completed: Schema.optional(Schema.Boolean),
+      assignee: Schema.optional(Ref.Ref(Person)),
+      previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
+      subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
+      description: Schema.optional(Schema.String),
+    }).pipe(Schema.partial),
+  ) {}
 
   //
   // HasManager

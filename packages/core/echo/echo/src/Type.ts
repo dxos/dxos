@@ -275,7 +275,7 @@ export interface Relation<
 }
 
 /**
- * Return type for {@link declareRelation}.
+ * Return type for {@link makeRelation}.
  *
  * Not to be used directly, but must be exported for typescript to infer the type.
  */
@@ -652,13 +652,17 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
  *  - `Type<A>`               → `A & OfKind<Type>`
  */
 export type InstanceType<T extends AnyEntity> =
-  T extends Relation<infer Props, infer Source, infer Target, any>
+  T extends RelationClass<any, infer Props, infer Source, infer Target, any>
     ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
-    : T extends Obj<infer A, any>
-      ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
-      : T extends Type<infer A>
-        ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
-        : never;
+    : T extends Relation<infer Props, infer Source, infer Target, any>
+      ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
+      : T extends ObjClass<any, infer A, any>
+        ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+        : T extends Obj<infer A, any>
+          ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+          : T extends Type<infer A>
+            ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
+            : never;
 
 /**
  * Returns the Effect Schema for a type entity.

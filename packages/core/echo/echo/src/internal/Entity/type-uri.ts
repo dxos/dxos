@@ -23,8 +23,8 @@ export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | U
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   }
-  // Type entities are normally proxy objects, but `Type.declareObj` declares them as
-  // classes (functions) whose prototype chain reaches the entity, so accept functions too.
+  // Type entities are normally proxy objects, but class-declared types from
+  // `Type.makeObject` are functions whose prototype chain reaches the entity, so accept functions too.
   if (input !== null && (typeof input === 'object' || typeof input === 'function') && KindId in input) {
     // `Type.Type` entity. Both in-memory and persisted forms expose the schema
     // they declare via `StaticTypeSchemaSlot`, whose URI is exactly what
