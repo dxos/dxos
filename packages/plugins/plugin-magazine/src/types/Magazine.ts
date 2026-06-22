@@ -63,9 +63,9 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Curation Routine, created with the magazine ({@link make}). Holds the editorial brief (its
-   * instructions) and references the Magazine blueprint. Rendered inline by the properties form (the
-   * Routine's own fields), so the brief is edited there without a custom surface.
+   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
+   * references the Magazine blueprint. Rendered inline by the properties form (the Instructions'
+   * own fields), so the brief is edited there without a custom surface.
    * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
    */
   instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
