@@ -98,10 +98,10 @@ export const getTypePath = (spaceId: string, typename: string, ...segments: stri
 
 /**
  * Canonical qualified path to a specific object node within a type's subtree.
- * Uses the ECHO-local object ID, not the full DXN.
+ * The object is a (hidden) child of the type node directly; uses the ECHO-local object ID, not the full DXN.
  */
 export const getObjectPath = (spaceId: string, typename: string, objectId: string): string =>
-  getDatabasePath(spaceId, typename, 'all', objectId);
+  getDatabasePath(spaceId, typename, objectId);
 
 /**
  * Derive the canonical graph path for a reactive ECHO object.
