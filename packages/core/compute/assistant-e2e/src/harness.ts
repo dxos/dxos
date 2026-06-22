@@ -3,6 +3,7 @@
 //
 
 import { TestContext } from '@effect/vitest';
+import { pipe, Record, Schema } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -21,6 +22,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
 import { type SpaceId } from '@dxos/keys';
+import { dbg } from '@dxos/log';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -141,14 +143,14 @@ const seedPrompt = (prompt: Routine.Routine) =>
 
 const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spaceId }, Database.Service);
 
-const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
+const runAgentPrompt = (harness: TestHarness, routine: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.gen(function* () {
-      yield* seedPrompt(prompt);
+      yield* seedPrompt(routine);
       return yield* Operation.invoke(
         AgentPrompt,
         {
-          prompt: Ref.make(prompt),
+          prompt: Ref.make(routine),
           input: {},
           systemInstructions: INSTRUCTIONS,
           model,
@@ -171,10 +173,20 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     options.model ??
     (options.inferenceProvider === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
-  const prompt = Routine.make({
+  const OutputSchema = Schema.Struct({
+    completedCriteria: Schema.Struct({
+      ...Record.fromIterableWith(options.completionCriteria ?? [], (criterion) => [criterion, Schema.Boolean]),
+    }).annotations({
+      description: 'True/false for passed or not passed completion criteria.',
+    }),
+  });
+  type OutputSchema = Schema.Schema.Type<typeof OutputSchema>;
+
+  const routine = Routine.make({
     name: options.name,
     instructions: formatInstructions(options.instructions, options.completionCriteria),
     blueprints: options.blueprints ?? getDefaultBlueprints(),
+    output: OutputSchema,
   });
 
   return Effect.fnUntraced(function* (ctx) {
@@ -196,16 +208,24 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         );
         yield* logTraceEvents(harness, personalSpace.id);
 
-        const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
-          runAgentPrompt(harness, prompt, model, personalSpace.id).then(
-            (value): Exit.Exit<unknown, unknown> => Exit.succeed(value),
-            (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
-          ),
+        const exit = yield* Effect.promise(() => runAgentPrompt(harness, routine, model, personalSpace.id)).pipe(
+          Effect.flatMap((output: OutputSchema) => {
+            const missedCriteria = pipe(
+              output.completedCriteria,
+              Record.filter((isPassed, _) => !isPassed),
+              Record.keys,
+            );
+            if (missedCriteria.length > 0) {
+              return Effect.die(new Error(`Did not meet completion criteria: ${missedCriteria.join(', ')}`));
+            }
+            return Effect.void;
+          }),
+          Effect.exit,
         );
 
         if (options.expect === 'failure') {
           console.log('exit', exit);
-          if (!Exit.isFailure(exit)) {
+          if (Exit.isSuccess(exit)) {
             return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
           }
         } else if (Exit.isFailure(exit)) {
