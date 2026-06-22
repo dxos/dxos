@@ -12,8 +12,7 @@ import * as Operation from './Operation';
 
 const KEY = DXN.make('org.example.test.op');
 
-const makeOp = () =>
-  Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Test Op' } });
+const makeOp = () => Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Test Op' } });
 
 describe('Operation visibility', () => {
   test('operations are hidden by default', ({ expect }) => {
