@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Obj, Query, Ref } from '@dxos/echo';
 import { DocAccessor } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
@@ -109,7 +109,7 @@ const EchoStory = () => {
       return;
     }
 
-    setSource(createDocAccessor(content, ['content']));
+    setSource(Doc.createAccessor(content, ['content']));
   }, [objects]);
 
   useEffect(() => {

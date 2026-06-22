@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { inRange } from '@dxos/compute-hyperformula';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -144,7 +144,7 @@ export const useSheetModelDxGridProps = (
   const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridRows(model));
 
   useEffect(() => {
-    const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
+    const cellsAccessor = Doc.createAccessor(model.sheet, ['cells']);
     if (dxGrid) {
       dxGrid.getCells = cellGetter(model);
     }
@@ -160,8 +160,8 @@ export const useSheetModelDxGridProps = (
   }, [model, dxGrid]);
 
   useEffect(() => {
-    const columnMetaAccessor = createDocAccessor(model.sheet, ['columnMeta']);
-    const rowMetaAccessor = createDocAccessor(model.sheet, ['rowMeta']);
+    const columnMetaAccessor = Doc.createAccessor(model.sheet, ['columnMeta']);
+    const rowMetaAccessor = Doc.createAccessor(model.sheet, ['rowMeta']);
     const handleColumnMetaUpdate = () => {
       setColumns(createDxGridColumns(model));
     };

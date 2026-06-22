@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Relation, Type } from '@dxos/echo';
 import { getRangeFromCursor } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '#types';
@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       key: Type.getTypename(Markdown.Document),
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
         const doc = Relation.getTarget(anchorA) as Markdown.Document;
-        const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
+        const accessor = doc.content.target ? Doc.createAccessor(doc.content.target, ['content']) : undefined;
         if (doc !== Relation.getTarget(anchorB) || !accessor) {
           return 0;
         }

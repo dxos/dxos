@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -112,7 +112,7 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
         createBasicExtensions(),
         createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
-        automerge(createDocAccessor(object, [prop])),
+        automerge(Doc.createAccessor(object, [prop])),
       ],
     };
   }, []);

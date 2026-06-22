@@ -16,7 +16,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
@@ -127,7 +127,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       selection: EditorSelection.cursor(text.content.length),
       initialValue: text.content,
       extensions: [
-        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+        createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
         createBasicExtensions({ readOnly: false, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({

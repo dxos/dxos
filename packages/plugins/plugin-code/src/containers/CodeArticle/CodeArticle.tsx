@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -275,7 +275,7 @@ const FileEditor = ({ file, role }: FileEditorProps) => {
         target &&
           createDataExtensions({
             id: file.id,
-            text: createDocAccessor(target, ['content']),
+            text: Doc.createAccessor(target, ['content']),
             messenger: space,
             identity,
           }),

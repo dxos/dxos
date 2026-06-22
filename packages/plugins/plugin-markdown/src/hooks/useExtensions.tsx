@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -79,7 +79,7 @@ export const useExtensions = ({
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
   // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
   useObject(contentRef);
-  // Get the actual live object target via .target (needed for createDocAccessor).
+  // Get the actual live object target via .target (needed for Doc.createAccessor).
   const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
@@ -125,7 +125,7 @@ export const useExtensions = ({
         target &&
           createDataExtensions({
             id,
-            text: createDocAccessor(target, ['content']),
+            text: Doc.createAccessor(target, ['content']),
             messenger: space,
             identity,
           }),

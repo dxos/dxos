@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { defaultFunctions } from '@dxos/compute-hyperformula';
 import { getRegisteredFunctionNames } from '@dxos/compute-hyperformula/testing';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -54,7 +54,7 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
 
     const functionNames = getRegisteredFunctionNames();
     const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
-    const accessor = createDocAccessor(object, ['cells', cell, 'value']);
+    const accessor = Doc.createAccessor(object, ['cells', cell, 'value']);
     return [automerge(accessor), sheetExtension({ functions })];
   }, [object]);
 

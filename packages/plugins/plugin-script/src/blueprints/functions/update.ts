@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A, type Doc } from '@automerge/automerge';
+import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
 import { type Script, Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DocAccessor } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { Update } from './definitions';
 
 export default Update.pipe(
@@ -33,10 +33,10 @@ export default Update.pipe(
 
       if (edits && edits.length > 0) {
         const text = yield* Database.load(script.source);
-        const accessor = createDocAccessor(text, ['content']);
+        const accessor = Doc.createAccessor(text, ['content']);
 
         for (const edit of edits) {
-          accessor.handle.change((doc: Doc<typeof text>) => {
+          accessor.handle.change((doc: AutomergeDoc<typeof text>) => {
             const source = DocAccessor.getValue<string>(accessor);
             if (edit.replaceAll) {
               let idx = source.indexOf(edit.oldString);

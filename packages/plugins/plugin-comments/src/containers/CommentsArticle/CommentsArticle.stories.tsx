@@ -14,7 +14,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -65,7 +65,7 @@ const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
  * highlighted ranges and the companion lists the threads (with snippets).
  */
 const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => {
-  const accessor = createDocAccessor(text, ['content']);
+  const accessor = Doc.createAccessor(text, ['content']);
   const content = text.content;
   for (const phrase of SEED_PHRASES) {
     const start = content.indexOf(phrase);

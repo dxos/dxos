@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as A, type Doc } from '@automerge/automerge';
+import { next as A, type Doc as AutomergeDoc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DocAccessor } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = MarkdownOperation.Update.pipe(
@@ -20,9 +20,9 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         Effect.flatMap(Database.load),
       );
 
-      const accessor = createDocAccessor(content, ['content']);
+      const accessor = Doc.createAccessor(content, ['content']);
       for (const edit of edits) {
-        accessor.handle.change((doc: Doc<typeof content>) => {
+        accessor.handle.change((doc: AutomergeDoc<typeof content>) => {
           const text = DocAccessor.getValue<string>(accessor);
           if (edit.replaceAll) {
             let idx = text.indexOf(edit.oldString);

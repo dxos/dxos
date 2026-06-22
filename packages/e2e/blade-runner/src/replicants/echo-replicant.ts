@@ -11,7 +11,7 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type DatabaseImpl, type QueryResult } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
@@ -97,7 +97,7 @@ export class EchoReplicant {
     for (let objIdx = 0; objIdx < amount; objIdx++) {
       const doc = Obj.make(Text, { content: '' }) satisfies Text;
       this._db!.add(doc);
-      const accessor = createDocAccessor(doc, ['content']);
+      const accessor = Doc.createAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {
         const length = doc.content?.length;
         accessor.handle.change((doc) => {

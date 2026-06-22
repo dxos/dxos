@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Type } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { MarkdownOperation } from '#types';
 import { Markdown } from '#types';
 
@@ -25,7 +25,7 @@ const activate: () => Effect.Effect<
     getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
       if (doc.content) {
         const [start, end] = anchor.split(':');
-        return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
+        return getTextInRange(Doc.createAccessor(doc.content.target!, ['content']), start, end);
       }
     },
     scrollToAnchor: MarkdownOperation.ScrollToAnchor,

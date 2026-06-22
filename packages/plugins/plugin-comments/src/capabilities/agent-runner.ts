@@ -14,7 +14,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver } from '@dxos/compute';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message } from '@dxos/types';
@@ -116,7 +116,7 @@ const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): EditTarget => {
     return { kind: 'document', text };
   }
   try {
-    const accessor = createDocAccessor(text, ['content']);
+    const accessor = Doc.createAccessor(text, ['content']);
     const range = getRangeFromCursor(accessor, ours.anchor);
     if (!range || range.start === range.end) {
       return { kind: 'document', text };
@@ -231,7 +231,7 @@ export default Capability.makeModule(
                 // span the newly-inserted text so the editor marker continues
                 // to highlight the replaced range.
                 const newTo = target.from + replacement.length;
-                const accessor = createDocAccessor(target.text, ['content']);
+                const accessor = Doc.createAccessor(target.text, ['content']);
                 const newAnchor = toCursorRange(accessor, target.from, newTo);
                 Relation.update(target.relation, (relation) => {
                   (relation as Relation.Mutable<AnchoredTo.AnchoredTo>).anchor = newAnchor;

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { QuerySandbox } from '@dxos/echo-query';
 import { createObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ const DefaultStory = (props: QueryEditorProps) => {
     () => [
       createDataExtensions({
         id: object.id,
-        text: createDocAccessor(object, ['content']),
+        text: Doc.createAccessor(object, ['content']),
       }),
     ],
     [],

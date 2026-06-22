@@ -8,7 +8,7 @@ import { type Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -21,7 +21,7 @@ import { type CommentState } from '#types';
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
   if (doc.content) {
     const [start, end] = anchor.split(':');
-    return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
+    return getTextInRange(Doc.createAccessor(doc.content.target!, ['content']), start, end);
   }
 };
 

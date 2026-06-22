@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-doc';
+import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -113,7 +113,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 
 const testObjectMutators: TestMutationsMap<TestSchemaType> = {
   [TestSchemaType.document]: async (object, params) => {
-    const accessor = createDocAccessor(object, ['content']);
+    const accessor = Doc.createAccessor(object, ['content']);
     for (let i = 0; i < params.count; i++) {
       const length = object.content?.content?.length ?? 0;
       accessor.handle.change((doc) => {
