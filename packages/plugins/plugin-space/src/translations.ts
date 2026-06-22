@@ -301,7 +301,7 @@ export const translations = [
 
         'database-section.label': 'Database',
         'collections-section.label': 'Collections',
-        'type-collection-all.label': 'All',
+        'type-collection-empty.message': 'No objects of this type yet.',
 
         'search.placeholder': 'Search…',
         'auth-code.message': 'Authorization code',
