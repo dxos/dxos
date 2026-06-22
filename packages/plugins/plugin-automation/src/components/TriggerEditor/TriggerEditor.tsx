@@ -30,42 +30,62 @@ import { TriggerKindSelector, type TriggerKind } from './TriggerKindSelector';
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
+// The `enabled` toggle is a field of the Trigger object (sibling of `spec`), not of any spec variant. It is
+// reused from the Trigger schema (rather than redeclared) and extended onto every form member so the editor
+// surfaces it once a kind is chosen; the value is written back to `trigger.enabled`, not the spec.
+const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled'));
+
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
 // itself is chosen by `TriggerKindPicker` (a radio-card list) rather than a select. The feed field carries
 // ParentLabelAnnotation so the built-in RefField labels feed options by their parent object (e.g. the mailbox).
-const TimerSpecForm = Schema.Struct({
-  kind: Schema.Literal('timer'),
-  cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
-});
+const TimerSpecForm = Schema.extend(
+  Schema.Struct({
+    kind: Schema.Literal('timer'),
+    cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
+  }),
+  EnabledForm,
+);
 
-const SubscriptionSpecForm = Schema.Struct({
-  kind: Schema.Literal('subscription'),
-  // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
-  // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
-  typename: Schema.String.pipe(Schema.annotations({ title: 'Type' }), Schema.optional),
-  deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
-  delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
-});
+const SubscriptionSpecForm = Schema.extend(
+  Schema.Struct({
+    kind: Schema.Literal('subscription'),
+    // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
+    // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
+    typename: Schema.String.pipe(Schema.annotations({ title: 'Type' }), Schema.optional),
+    deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
+    delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
+  }),
+  EnabledForm,
+);
 
-const WebhookSpecForm = Schema.Struct({
-  kind: Schema.Literal('webhook'),
-  method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
-  port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
-});
+const WebhookSpecForm = Schema.extend(
+  Schema.Struct({
+    kind: Schema.Literal('webhook'),
+    method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
+    port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
+  }),
+  EnabledForm,
+);
 
-const FeedSpecForm = Schema.Struct({
-  kind: Schema.Literal('feed'),
-  feed: Ref.Ref(Feed.Feed).pipe(
-    ParentLabelAnnotation.set(true),
-    Schema.annotations({ title: 'Feed' }),
-    Schema.optional,
-  ),
-});
+const FeedSpecForm = Schema.extend(
+  Schema.Struct({
+    kind: Schema.Literal('feed'),
+    feed: Ref.Ref(Feed.Feed).pipe(
+      ParentLabelAnnotation.set(true),
+      Schema.annotations({ title: 'Feed' }),
+      Schema.optional,
+    ),
+  }),
+  EnabledForm,
+);
 
-const EmailSpecForm = Schema.Struct({
-  kind: Schema.Literal('email'),
-});
+const EmailSpecForm = Schema.extend(
+  Schema.Struct({
+    kind: Schema.Literal('email'),
+  }),
+  EnabledForm,
+);
 
 const TriggerForm = Schema.Union(TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm);
 type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
@@ -75,6 +95,7 @@ type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 // assignable to it, so handlers/helpers can accept the Form's value verbatim and still read the variant fields.
 type TriggerFormInput = {
   readonly kind?: TriggerKind;
+  readonly enabled?: boolean;
   readonly cron?: string;
   readonly method?: string;
   readonly port?: number;
@@ -179,10 +200,10 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
       defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.Content classNames={mx(kind && 'bg-card-surface pl-2 pb-2 border border-separator rounded-xs', classNames)}>
+      <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
         {kind && (
           <div className='flex items-center'>
-            <div className='grow truncate'>{t(`trigger-kind.${kind}.label`)}</div>
+            <div className='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</div>
             <IconButton
               iconOnly
               variant='ghost'
@@ -193,9 +214,9 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
             />
           </div>
         )}
-        <Form.FieldSet />
+        <Form.FieldSet classNames='px-2' />
         {/* Email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-        {kind === 'email' && <p className='pli-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
+        {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
       </Form.Content>
     </Form.Root>
   );
@@ -271,8 +292,9 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
   // Bumping this remounts the uncontrolled Form so it re-reads `defaultValues` (used to revert to the picker).
   const [resetNonce, setResetNonce] = useState(0);
   // Read per trigger identity / reset; a trigger with no spec yet starts with no kind (shows the picker).
+  // `enabled` is a Trigger-level field, seeded alongside the spec-derived variant values.
   const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => triggerFormValues(trigger?.spec),
+    () => ({ ...triggerFormValues(trigger?.spec), enabled: trigger?.enabled }),
     [trigger, resetNonce],
   );
   // Mirror the active kind: gates the variant picker (shown only while unset) and the variant-specific notes.
@@ -298,18 +320,24 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
+      // The dispatcher dies on an enabled trigger with no function reference, so `enabled` is only honored
+      // when the function the trigger will actually carry is present: its own on edit (not backfilled here),
+      // the automation's runnable wired in below on create.
+      const functionRef = trigger ? trigger.function : automation.runnable;
+      const enabled = values.enabled === true && functionRef != null;
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
           // the structures are identical at runtime, so a readonly->mutable boundary coercion is required here
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
+          trigger.enabled = enabled;
         });
       } else {
         // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
         // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
         // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
-        const created = db.add(Trigger.make({ function: automation.runnable, enabled: false, spec }));
+        const created = db.add(Trigger.make({ function: functionRef, enabled, spec }));
         Obj.setParent(created, automation);
         Obj.update(automation, (automation) => {
           automation.triggers = [...automation.triggers, Ref.make(created)];

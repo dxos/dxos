@@ -2,13 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Operation, Routine, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
@@ -16,6 +14,7 @@ import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
+import { RoutineEditor } from '../RoutineEditor';
 import { TriggerEditor } from '../TriggerEditor';
 
 //
@@ -141,7 +140,7 @@ const ActionEditor = ({
   );
 
   return (
-    <div role='none' className='flex flex-col gap-2'>
+    <div role='none' className='flex flex-col'>
       <ActionKindToggle value={kind} onChange={setKind} />
       {kind === 'operation' ? (
         <OperationEditor
@@ -151,11 +150,7 @@ const ActionEditor = ({
           onChange={handleOperationChange}
         />
       ) : ownedRoutine ? (
-        <>
-          <RoutineEditor db={db} routine={ownedRoutine} />
-          {/* Context objects live on the routine (sibling of blueprints) and bind to its session at run. */}
-          <ObjectsEditor db={db} routine={ownedRoutine} />
-        </>
+        <RoutineEditor db={db} routine={ownedRoutine} />
       ) : null}
     </div>
   );
@@ -223,139 +218,6 @@ const OperationEditor = ({
       db={db}
       defaultValues={defaultValues}
       fieldMap={fieldMap}
-      onValuesChanged={handleValuesChanged}
-    >
-      <Form.FieldSet />
-    </Form.Root>
-  );
-};
-
-// Blueprint picker options: surface each blueprint's registry key as the secondary line and sort by
-// name — mirroring `getOperationOptions` so the two action editors present refs consistently.
-const getBlueprintOptions = (results: Entity.Any[]): { id: string; label: string; description?: string }[] =>
-  results
-    .map((blueprint) => {
-      const id = Entity.getURI(blueprint, { prefer: 'named' });
-      const label = Entity.getLabel(blueprint) ?? id;
-      const key = Obj.instanceOf(Blueprint.Blueprint, blueprint) ? Obj.getMeta(blueprint).key : undefined;
-      return { id, label, description: key };
-    })
-    .sort((left, right) => left.label.localeCompare(right.label));
-
-const ROUTINE_SCHEMA = Type.getSchema(Routine.Routine);
-
-// Owned-routine action fields surfaced for editing.
-const ROUTINE_FIELDS = new Set(['instructions', 'blueprints']);
-
-/**
- * Sub-form: edits the owned Routine's `instructions` (Markdown) and `blueprints` in place. A bare
- * Form.Root + FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action
- * forms; the rendered fields are written back so blueprint selections persist to the routine.
- */
-const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routine: Routine.Routine }) => {
-  // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
-  const db = dbProp ?? Obj.getDatabase(routine);
-  const defaultValues = useMemo(() => Obj.getSnapshot(routine), [routine]);
-  const handleValuesChanged = useCallback(
-    (values: Partial<Routine.Routine>, { isValid }: { isValid: boolean }) => {
-      // Skip while invalid (e.g. an empty ref slot just added by the array field) so a partial blueprint
-      // selection isn't persisted; the write lands once a blueprint is chosen.
-      if (!isValid) {
-        return;
-      }
-
-      Obj.update(routine, (routine) => {
-        if (values.instructions) {
-          routine.instructions = values.instructions;
-        }
-        routine.blueprints = [...(values.blueprints ?? [])];
-      });
-    },
-    [routine],
-  );
-
-  return (
-    <Form.Root
-      key={routine.id}
-      schema={ROUTINE_SCHEMA}
-      db={db}
-      defaultValues={defaultValues}
-      getOptions={getBlueprintOptions}
-      onValuesChanged={handleValuesChanged}
-    >
-      <Form.FieldSet filter={(props) => props.filter((prop) => ROUTINE_FIELDS.has(prop.name.toString()))} />
-    </Form.Root>
-  );
-};
-
-//
-// Context objects
-//
-
-// Pick the routine's generic `objects` ref-array field; the default RefField renders an any-object picker per slot.
-const ObjectsForm = Type.getSchema(Routine.Routine).pipe(Schema.pick('objects'));
-type ObjectsForm = Schema.Schema.Type<typeof ObjectsForm>;
-
-// System objects (e.g. SpaceProperties) carry `HiddenAnnotation` on their type; they are infrastructure,
-// not user content, so they are excluded from the context picker.
-const isSystemObject = (object: Entity.Any): boolean => {
-  if (!Obj.isObject(object)) {
-    return false;
-  }
-  const typeEntity = Obj.getType(object);
-  if (!typeEntity) {
-    return false;
-  }
-  return HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
-};
-
-// Context-object picker options: surface each object's typename (plugin/type) as the secondary line and
-// sort by name — mirroring the operation/blueprint pickers so all action editors present refs consistently.
-// Falls back to the type placeholder (then URI) for unlabelled objects, matching the default RefField.
-const getObjectOptions = (
-  results: Entity.Any[],
-  { getTypePlaceholder }: { getTypePlaceholder?: (typename: string) => string } = {},
-): { id: string; label: string; description?: string }[] =>
-  results
-    .filter((object) => !isSystemObject(object))
-    .map((object) => {
-      const id = Entity.getURI(object, { prefer: 'named' });
-      const typename = Entity.getTypename(object);
-      const label = Entity.getLabel(object) ?? (typename ? getTypePlaceholder?.(typename) : undefined) ?? id;
-      return { id, label, description: typename };
-    })
-    .sort((left, right) => left.label.localeCompare(right.label));
-
-/** Sub-form: picks the context objects bound to the routine's session when it runs. */
-const ObjectsEditor = ({ db: dbProp, routine }: { db?: Database.Database; routine: Routine.Routine }) => {
-  // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
-  const db = dbProp ?? Obj.getDatabase(routine);
-  const [snapshot, updateRoutine] = useObject(routine);
-  const defaultValues = useMemo<Partial<ObjectsForm>>(
-    () => ({ objects: snapshot.objects ? [...snapshot.objects] : [] }),
-    [routine],
-  );
-  const handleValuesChanged = useCallback(
-    (values: Partial<ObjectsForm>, { isValid }: { isValid: boolean }) => {
-      // Skip while invalid (e.g. an empty ref slot just added by the array field) so a partial selection
-      // isn't persisted; the write lands once an object is chosen.
-      if (!isValid) {
-        return;
-      }
-
-      updateRoutine((routine) => {
-        routine.objects = [...(values.objects ?? [])];
-      });
-    },
-    [updateRoutine],
-  );
-
-  return (
-    <Form.Root
-      schema={ObjectsForm}
-      db={db}
-      defaultValues={defaultValues}
-      getOptions={getObjectOptions}
       onValuesChanged={handleValuesChanged}
     >
       <Form.FieldSet />
