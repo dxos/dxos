@@ -40,5 +40,10 @@ export interface Accessor<T = any> {
 }
 
 export const Accessor = {
+  /**
+   * Returns the value at the accessor's path within its document.
+   * The cast to T is unavoidable: path is a dynamic key sequence resolved at runtime by `getDeep`,
+   * so the static type cannot be narrowed beyond `unknown` at this boundary.
+   */
   getValue: <T>(accessor: Accessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
 };
