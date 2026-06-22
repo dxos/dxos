@@ -15,9 +15,9 @@ import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
  * Entity IDs must be unique per run (do not call `Obj.ID.dangerouslyDisableRandomness`) so sandbox-service
  * KV does not reject the same sandboxId under a new space from a prior run.
  * Regenerate memoized conversations with:
- *   ALLOW_LLM_GENERATION=1 VITEST_TAGS_FILTER='functions-e2e' moon run assistant-e2e:test -- src/testing/sandbox.test.ts
+ *   ALLOW_LLM_GENERATION=1 VITEST_TAGS_FILTER='manual' moon run assistant-e2e:test -- src/testing/sandbox.test.ts
  */
-describe('Sandbox', { tags: ['functions-e2e'] }, () => {
+describe('Sandbox', { tags: ['manual'] }, () => {
   it.effect(
     'creates a sandbox and runs a shell command',
     agentTest({

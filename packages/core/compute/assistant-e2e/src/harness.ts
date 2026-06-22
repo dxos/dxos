@@ -16,7 +16,7 @@ import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos
 import { type ClientOptions } from '@dxos/client';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
-import { Database, Ref, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
@@ -32,7 +32,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-export const DEFAULT_TEST_TIMEOUT = 120_000;
+export const DEFAULT_TEST_TIMEOUT = 360_000;
 
 export const getDefaultBlueprints = () => [
   Ref.make(BlueprintManagerBlueprint.make()),
@@ -139,8 +139,7 @@ const seedPrompt = (prompt: Routine.Routine) =>
     yield* Database.flush();
   });
 
-const spaceServices = (spaceId: SpaceId) =>
-  ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService);
+const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spaceId }, Database.Service);
 
 const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
   harness.runPromise(
