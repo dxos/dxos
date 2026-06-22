@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Routine } from '@dxos/plugin-instructions';
+import { Routine } from '@dxos/plugin-routine/types';
 
 /** Registry key of the persisted RunInstructions operation a trigger dispatches. */
 const RUN_INSTRUCTIONS_KEY = 'org.dxos.function.runInstructions';
