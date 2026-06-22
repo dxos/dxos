@@ -6,7 +6,7 @@ import { createCredential, createDidFromIdentityKey, signPresentation } from '@d
 import { type Signer } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { EdgeIdentity } from './edge-identity';
@@ -132,6 +132,8 @@ export const createStubEdgeIdentity = (): EdgeIdentity => {
   const deviceKey = PublicKey.random();
   return {
     identityKey: identityKey.toHex(),
+    // Random placeholder DID — the stub never authenticates or connects; a real identity replaces it.
+    identityDid: IdentityDid.random(),
     peerKey: deviceKey.toHex(),
     presentCredentials: async () => {
       throw new Error('Stub identity does not support authentication.');
