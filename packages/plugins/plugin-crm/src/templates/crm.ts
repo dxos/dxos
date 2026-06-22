@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Skill, Operation, Routine, Trigger } from '@dxos/compute';
