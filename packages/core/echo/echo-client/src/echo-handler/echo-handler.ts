@@ -77,7 +77,8 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
+import * as Doc from '../automerge/Doc';
+import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
@@ -576,7 +577,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return Reflect.has(target, prop);
   }
 
-  private _validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
+  private _validateValue(target: ProxyTarget, path: Doc.KeyPath, value: any): any {
     invariant(path.length > 0);
     if (typeof path.at(-1) === 'symbol') {
       throw new Error('Invalid path');
@@ -763,7 +764,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return false;
   }
 
-  arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
+  arrayPush(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
     this._checkArrayMutationAllowed(target, 'push');
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
@@ -772,7 +773,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  arrayPop(target: ProxyTarget, path: KeyPath): any {
+  arrayPop(target: ProxyTarget, path: Doc.KeyPath): any {
     this._checkArrayMutationAllowed(target, 'pop');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -786,7 +787,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(target: ProxyTarget, path: KeyPath): any {
+  arrayShift(target: ProxyTarget, path: Doc.KeyPath): any {
     this._checkArrayMutationAllowed(target, 'shift');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -800,7 +801,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
+  arrayUnshift(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
     this._checkArrayMutationAllowed(target, 'unshift');
     const validatedItems = this._validateForArray(target, path, items, 0);
     const fullPath = this._getPropertyMountPath(target, path);
@@ -817,7 +818,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(target: ProxyTarget, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+  arraySplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
     this._checkArrayMutationAllowed(target, 'splice');
     const validatedItems = this._validateForArray(target, path, items, start);
 
@@ -839,7 +840,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return deletedElements;
   }
 
-  arraySort(target: ProxyTarget, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: ProxyTarget, path: Doc.KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     this._checkArrayMutationAllowed(target, 'sort');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -853,7 +854,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target as EchoArray<any>;
   }
 
-  arrayReverse(target: ProxyTarget, path: KeyPath): any[] {
+  arrayReverse(target: ProxyTarget, path: Doc.KeyPath): any[] {
     this._checkArrayMutationAllowed(target, 'reverse');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -1015,7 +1016,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number): void {
+  private _arraySetLength(target: ProxyTarget, path: Doc.KeyPath, newLength: number): void {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
     }
@@ -1030,7 +1031,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
   }
 
-  private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
+  private _validateForArray(target: ProxyTarget, path: Doc.KeyPath, items: any[], start: number) {
     return items.map((item, index) => {
       return this._validateValue(target, [...path, String(start + index)], item);
     });
@@ -1042,7 +1043,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].encode(linksEncoded);
   }
 
-  private _getPropertyMountPath(target: ProxyTarget, path: KeyPath): KeyPath {
+  private _getPropertyMountPath(target: ProxyTarget, path: Doc.KeyPath): Doc.KeyPath {
     return [...target[symbolInternals].mountPath, getNamespace(target), ...path];
   }
 
@@ -1177,7 +1178,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 }
 
-export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
+export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
   if (value == null || Array.isArray(value) || Ref.isRef(value) || value instanceof Uint8Array) {
     return;
   }
@@ -1217,7 +1218,7 @@ const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 interface DecodedValueAtPath {
   value: any;
   namespace: string;
-  dataPath: KeyPath;
+  dataPath: Doc.KeyPath;
 }
 
 /**
@@ -1248,7 +1249,6 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
  * Creates a reactive ECHO object backed by a CRDT.
  * @internal
  */
-// TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const type = Obj.getType(obj as unknown as Obj.Unknown);

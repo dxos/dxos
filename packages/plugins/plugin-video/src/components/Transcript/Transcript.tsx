@@ -7,7 +7,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { useEffect } from 'react';
 
 import { type Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/react-client/echo';
 import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -57,7 +57,7 @@ export const Transcript = composable<HTMLDivElement, TranscriptProps>(
       return {
         initialValue: target.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(target, ['content']) }),
+          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           // Remove blockquote parsing so `>>` speaker markers aren't styled as quotes (see decorate-transcript).
