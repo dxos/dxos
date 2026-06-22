@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { DXN, EntityId } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 import * as Entity from './Entity';
 import * as Filter from './Filter';

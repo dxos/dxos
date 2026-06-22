@@ -8,11 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 

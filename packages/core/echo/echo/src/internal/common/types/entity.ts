@@ -4,9 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { dbg } from '@dxos/log';
 
-import type * as Type from '../../../Type';
 
 // NOTE: String literals are used instead of unique symbols for both KindId and SchemaKindId.
 //   Unique symbols cause TS4023 "cannot be named" errors when external packages
