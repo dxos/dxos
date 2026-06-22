@@ -64,6 +64,7 @@ export const FormFieldLabel = ({
     required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
     styles.fieldLabelText({ class: labelClassName }),
   );
+
   // `Input.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
   // plain `span` used for read-only/standalone labels reads `className`.
   const labelNode =
@@ -120,6 +121,8 @@ const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string =
   }
 };
 
+const FORM_ROW_NAME = 'Form.Row';
+
 export type FormRowProps<T = any> = ThemedClassName<
   Pick<FormFieldRendererProps<T>, 'readonly' | 'label' | 'description' | 'presentation' | 'required'> &
     Partial<Pick<FormFieldRendererProps<T>, 'getStatus' | 'getValue' | 'jsonPath' | 'format'>> & {
@@ -154,8 +157,6 @@ export type FormRowProps<T = any> = ThemedClassName<
       children?: ReactNode | ((props: { value: T | undefined; presentation: FieldPresentation }) => ReactNode);
     }
 >;
-
-const FORM_ROW_NAME = 'Form.Row';
 
 /**
  * A labeled card row — the single shell behind both schema fields and free-form "action" rows. Field
@@ -201,7 +202,7 @@ export const FormRow = <T,>({
 
     return (
       <Input.Root validationValence={status}>
-        <div ref={rootRef} className={styles.field({ class: classNames })}>
+        <div className={styles.field({ class: classNames })} ref={rootRef}>
           {resolved.showLabel && (
             <FormFieldLabel
               variant={variant}

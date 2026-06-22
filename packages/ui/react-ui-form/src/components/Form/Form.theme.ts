@@ -19,7 +19,7 @@ const formStyles = tv({
     sectionDescription: 'text-description',
     fieldSet: '',
     field: '',
-    fieldLabel: 'grid grid-cols-[1fr_auto_auto] items-center select-none',
+    fieldLabel: 'h-8 grid grid-cols-[1fr_auto_auto] items-center select-none',
     fieldLabelText: '',
     fieldDescription: 'text-description',
     fieldControl: '',

@@ -30,7 +30,6 @@ import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
-import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
@@ -42,6 +41,7 @@ import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
+import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
@@ -141,7 +141,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
-      FeedPlugin.meta.profile.key,
+      MagazinePlugin.meta.profile.key,
       GalleryPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
@@ -208,7 +208,7 @@ export const getPlugins = ({
     DoctorPlugin(),
     DuffelPlugin(),
     ExplorerPlugin(),
-    FeedPlugin(),
+    MagazinePlugin(),
     GamePlugin(),
     GeneratorPlugin(),
     GraphPlugin(),

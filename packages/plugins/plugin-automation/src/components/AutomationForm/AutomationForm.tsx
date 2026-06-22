@@ -153,8 +153,8 @@ const ActionEditor = ({
       ) : ownedRoutine ? (
         <>
           <RoutineEditor db={db} routine={ownedRoutine} />
-          {/* Context objects bind to the routine's chat, so the picker lives with the routine's Blueprints. */}
-          <ObjectsEditor db={db} automation={automation} />
+          {/* Context objects live on the routine (sibling of blueprints) and bind to its session at run. */}
+          <ObjectsEditor db={db} routine={ownedRoutine} />
         </>
       ) : null}
     </div>
@@ -290,8 +290,8 @@ const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routin
 // Context objects
 //
 
-// Pick the generic `objects` ref-array field; the default RefField renders an any-object picker per slot.
-const ObjectsForm = Type.getSchema(Automation.Automation).pipe(Schema.pick('objects'));
+// Pick the routine's generic `objects` ref-array field; the default RefField renders an any-object picker per slot.
+const ObjectsForm = Type.getSchema(Routine.Routine).pipe(Schema.pick('objects'));
 type ObjectsForm = Schema.Schema.Type<typeof ObjectsForm>;
 
 // System objects (e.g. SpaceProperties) carry `HiddenAnnotation` on their type; they are infrastructure,
@@ -324,12 +324,14 @@ const getObjectOptions = (
     })
     .sort((left, right) => left.label.localeCompare(right.label));
 
-/** Sub-form: picks the context objects bound to the routine's chat when the automation runs. */
-const ObjectsEditor = ({ db, automation }: { db: Database.Database; automation: Automation.Automation }) => {
-  const [auto, updateAuto] = useObject(automation);
+/** Sub-form: picks the context objects bound to the routine's session when it runs. */
+const ObjectsEditor = ({ db: dbProp, routine }: { db?: Database.Database; routine: Routine.Routine }) => {
+  // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
+  const db = dbProp ?? Obj.getDatabase(routine);
+  const [snapshot, updateRoutine] = useObject(routine);
   const defaultValues = useMemo<Partial<ObjectsForm>>(
-    () => ({ objects: auto.objects ? [...auto.objects] : [] }),
-    [automation],
+    () => ({ objects: snapshot.objects ? [...snapshot.objects] : [] }),
+    [routine],
   );
   const handleValuesChanged = useCallback(
     (values: Partial<ObjectsForm>, { isValid }: { isValid: boolean }) => {
@@ -339,11 +341,11 @@ const ObjectsEditor = ({ db, automation }: { db: Database.Database; automation: 
         return;
       }
 
-      updateAuto((automation) => {
-        automation.objects = [...(values.objects ?? [])];
+      updateRoutine((routine) => {
+        routine.objects = [...(values.objects ?? [])];
       });
     },
-    [updateAuto],
+    [updateRoutine],
   );
 
   return (

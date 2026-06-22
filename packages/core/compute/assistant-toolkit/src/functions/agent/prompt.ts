@@ -57,6 +57,14 @@ export default AgentPrompt.pipe(
           ),
         );
 
+        // Bind the routine's context objects (sibling of blueprints), dropping any that no longer resolve.
+        const objectRefs = yield* Effect.filter(prompt.objects ?? [], (ref) =>
+          Database.load(ref).pipe(
+            Effect.as(true),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+          ),
+        );
+
         const promptInstructions = yield* Database.load(prompt.instructions);
         let promptText = Template.process(promptInstructions.content, input);
 
@@ -100,6 +108,7 @@ export default AgentPrompt.pipe(
         yield* Effect.promise(() =>
           session.context.bind({
             blueprints: blueprintRefs,
+            objects: objectRefs,
           }),
         );
 
