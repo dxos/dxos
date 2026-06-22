@@ -148,15 +148,14 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  */
 export class Trigger extends Type.declareObj<Trigger>()(
   Schema.Struct({
-    spec: Schema.optional(Spec),
-    enabled: Schema.optional(Schema.Boolean),
-
     /**
      * Function or workflow to invoke.
      */
     // TODO(burdon): Runnable?
     // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
     function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+    spec: Schema.optional(Spec),
+    enabled: Schema.optional(Schema.Boolean),
 
     concurrency: Schema.Number.pipe(
       Schema.annotations({
