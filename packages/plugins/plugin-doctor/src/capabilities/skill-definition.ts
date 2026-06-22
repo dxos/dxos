@@ -9,7 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { DoctorSkill } from '#skills';
 
-const skillDefinition = () =>
-  Effect.succeed([Capability.opaque(Capability.contributes(AppCapabilities.SkillDefinition, DoctorSkill))]);
+const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, DoctorSkill)]);
 
 export default skillDefinition;

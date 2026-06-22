@@ -9,7 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { MarkdownSkill } from '#skills';
 
-const skillDefinition = () =>
-  Effect.succeed([Capability.opaque(Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill))]);
+const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill)]);
 
 export default skillDefinition;

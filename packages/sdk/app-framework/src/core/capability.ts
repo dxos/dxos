@@ -157,13 +157,6 @@ export const contributes = <I extends InterfaceDef<any>>(
   } satisfies Capability<I>;
 };
 
-/**
- * Widens a specific `Capability<I>` to the opaque `Any` base so that declaration-file emit
- * does not try to inline the concrete type (which would cause TS2883 when it references
- * internal package paths). Use this when returning a capability from a module that is loaded
- * lazily, analogous to `Operation.opaqueHandler`.
- */
-export const opaque = (capability: Any): Any => capability;
 
 type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
   default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
