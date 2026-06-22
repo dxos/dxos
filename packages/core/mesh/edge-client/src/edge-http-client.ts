@@ -9,9 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { type Context } from '@dxos/context';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type CompleteOAuthRegistrationRequest,
@@ -271,7 +272,11 @@ export class EdgeHttpClient extends BaseHttpClient {
     const formData = new FormData();
     formData.append('name', body.name ?? '');
     formData.append('version', body.version);
-    formData.append('ownerPublicKey', body.ownerPublicKey);
+    // DX-995: the function owner is the authenticated identity (edge requires ownerUri === presenter
+    // DID). Send the identity DID, falling back to deriving it from the legacy hex owner key.
+    const ownerUri =
+      this._edgeIdentity?.identityDid ?? (await createDidFromIdentityKey(PublicKey.fromHex(body.ownerPublicKey)));
+    formData.append('ownerUri', ownerUri);
     formData.append('entryPoint', body.entryPoint);
     body.runtime && formData.append('runtime', body.runtime);
     for (const [filename, content] of Object.entries(body.assets)) {
