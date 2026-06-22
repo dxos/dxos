@@ -55,6 +55,9 @@ export const reduceDiffs = (diffs: readonly string[]): Diff[] => {
   }, []);
 };
 
+/**
+ * Resolves text diffs against the accessor's current value into cursor-anchored replacements.
+ */
 export const computeDiffsWithCursors = <T>(accessor: Doc.Accessor<T>, diffs: readonly string[]) => {
   return reduceDiffs(diffs)
     .map((diff) => {
@@ -67,6 +70,9 @@ export const computeDiffsWithCursors = <T>(accessor: Doc.Accessor<T>, diffs: rea
     .filter(isNonNullable);
 };
 
+/**
+ * Applies text diffs to the accessor-backed document and returns the resulting string.
+ */
 export const applyDiffs = <T>(
   accessor: Doc.Accessor<T>,
   diffs: readonly string[],

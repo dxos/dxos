@@ -112,6 +112,9 @@ export abstract class AbstractStoreAdapter<Element extends BaseElement> {
       }
     }
 
+    // Baseline heads after seeding so the first change diffs only post-open mutations (not full history).
+    this.#lastHeads = A.getHeads(accessor.handle.doc()!);
+
     // Propagate document mutations (local and remote) into the store.
     const updateModel = () => {
       const doc = accessor.handle.doc()!;

@@ -29,7 +29,7 @@ export const encode = (value: any): any => {
           if (encoded === undefined) {
             return undefined;
           }
-          return [key, value];
+          return [key, encoded];
         })
         .filter(isNonNullable),
     );

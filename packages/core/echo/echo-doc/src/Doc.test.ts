@@ -27,7 +27,8 @@ describe('Doc', () => {
       expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello');
 
       accessor.handle.change((doc) => {
-        A.splice(doc, accessor.path as A.Prop[], 5, 0, ' world');
+        const path: A.Prop[] = [...accessor.path];
+        A.splice(doc, path, 5, 0, ' world');
       });
       expect(obj.description).toBe('hello world');
     });
@@ -42,7 +43,8 @@ describe('Doc', () => {
       expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello');
 
       accessor.handle.change((doc) => {
-        A.splice(doc, accessor.path as A.Prop[], 5, 0, ' world');
+        const path: A.Prop[] = [...accessor.path];
+        A.splice(doc, path, 5, 0, ' world');
       });
       expect(Doc.Accessor.getValue<string>(accessor)).toBe('hello world');
 
@@ -85,6 +87,12 @@ describe('Doc', () => {
       const obj = Obj.make(TestSchema.Task, { description: 'hello' });
       const accessor = Doc.createAccessor(obj, ['description']);
       expect(() => applyEdits(accessor, [{ oldString: 'xyz', newString: 'abc' }])).toThrow();
+    });
+
+    test('throws on an empty oldString (would otherwise loop forever with replaceAll)', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Task, { description: 'hello' });
+      const accessor = Doc.createAccessor(obj, ['description']);
+      expect(() => applyEdits(accessor, [{ oldString: '', newString: 'x', replaceAll: true }])).toThrow();
     });
   });
 });

@@ -24,9 +24,10 @@ const activate: () => Effect.Effect<
     comments: 'anchored',
     selectionMode: 'multi-range',
     getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
-      if (doc.content) {
+      const target = doc.content?.target;
+      if (target) {
         const [start, end] = anchor.split(':');
-        return getTextInRange(Doc.createAccessor(doc.content.target!, ['content']), start, end);
+        return getTextInRange(Doc.createAccessor(target, ['content']), start, end);
       }
     },
     scrollToAnchor: MarkdownOperation.ScrollToAnchor,

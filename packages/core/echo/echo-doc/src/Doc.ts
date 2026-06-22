@@ -55,8 +55,11 @@ export const Accessor = {
  * persistence; the object's edits then survive a later `db.add`.
  */
 // TODO(burdon): Reduce the dependency on @dxos/echo-client (e.g. move ObjectCore lower or invert).
-export const createAccessor = <T extends AnyProperties>(obj: T, path: KeyPath | keyof T): Accessor<T> => {
-  const keyPath = Array.isArray(path) ? path : [path as string | number];
+export const createAccessor = <T extends AnyProperties>(
+  obj: T,
+  path: KeyPath | Extract<keyof T, string | number>,
+): Accessor<T> => {
+  const keyPath: KeyPath = Array.isArray(path) ? path : [path];
   assertArgument(isProxy(obj), 'obj', 'expect obj to be a LiveObject');
   assertArgument(isValidKeyPath(keyPath), 'path', 'expect path to be a valid key path');
 

@@ -8,6 +8,10 @@ import { log } from '@dxos/log';
 
 import { type CursorConverter } from '../../util';
 
+/**
+ * Maps between editor offsets and stable Automerge cursors for the text the {@link Doc.Accessor}
+ * points at; falls back to empty/zero positions when the document is unavailable.
+ */
 export const cursorConverter = (accessor: Doc.Accessor): CursorConverter => ({
   toCursor: (pos, assoc) => {
     try {

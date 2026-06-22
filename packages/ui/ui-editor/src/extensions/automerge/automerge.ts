@@ -16,6 +16,10 @@ import { cursorConverter } from './cursor';
 import { type State, isReconcile, reconcileAnnotation, updateHeadsEffect } from './defs';
 import { Syncer } from './sync';
 
+/**
+ * CodeMirror extension that two-way syncs the editor with the string the {@link Doc.Accessor} points
+ * at, reconciling local edits and remote document mutations via Automerge.
+ */
 export const automerge = (accessor: Doc.Accessor): Extension => {
   const syncState = StateField.define<State>({
     create: () => {

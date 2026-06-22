@@ -31,6 +31,11 @@ export interface Edit extends Schema.Schema.Type<typeof Edit> {}
  */
 export const applyEdits = (accessor: Doc.Accessor, edits: readonly Edit[]): string => {
   for (const edit of edits) {
+    // `''.indexOf('')` is 0 (never -1), so a `replaceAll` with an empty match would loop forever.
+    if (edit.oldString.length === 0) {
+      throw new Error('Edit oldString must be non-empty.');
+    }
+
     accessor.handle.change((doc) => {
       const text = Doc.Accessor.getValue<string>(accessor);
       // Automerge's `splice` types the path as mutable `Prop[]`; our `KeyPath` is readonly and is not mutated here.

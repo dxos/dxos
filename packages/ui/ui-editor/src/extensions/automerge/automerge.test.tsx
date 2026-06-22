@@ -7,7 +7,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { describe, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
@@ -34,7 +34,6 @@ class Generator {
 
 const Test = ({ accessor }: { accessor: Doc.Accessor<TestType> }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<EditorView>();
   useEffect(() => {
     const extensions = [
       automerge(accessor),
@@ -53,8 +52,8 @@ const Test = ({ accessor }: { accessor: Doc.Accessor<TestType> }) => {
       parent: ref.current!,
     });
 
-    setView(view);
-  }, []);
+    return () => view.destroy();
+  }, [accessor]);
 
   return <div ref={ref} data-testid='editor' />;
 };
