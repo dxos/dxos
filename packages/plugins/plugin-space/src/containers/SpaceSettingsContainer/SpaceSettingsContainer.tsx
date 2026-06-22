@@ -14,7 +14,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
@@ -90,14 +90,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               [onValueChange, type],
             );
             return (
-              <Settings.Item title={label} description={t('display-name.description')}>
+              <Form.Row label={label} description={t('display-name.description')}>
                 <Input.TextInput
                   value={getValue()}
                   onChange={handleChange}
                   placeholder={t('display-name-input.placeholder')}
                   classNames='min-w-64'
                 />
-              </Settings.Item>
+              </Form.Row>
             );
           },
       icon: personal
@@ -106,31 +106,31 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
             const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
             return (
-              <Settings.Item title={label} description={t('icon.description')}>
+              <Form.Row label={label} description={t('icon.description')}>
                 <IconPicker
                   value={getValue()}
                   onChange={handleChange}
                   onReset={handleReset}
                   classNames='justify-self-end'
                 />
-              </Settings.Item>
+              </Form.Row>
             );
           },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('hue.description')}>
+          <Form.Row label={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
-          </Settings.Item>
+          </Form.Row>
         );
       },
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('edge-replication.description')}>
+          <Form.Row label={label} description={t('edge-replication.description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-          </Settings.Item>
+          </Form.Row>
         );
       },
     }),
@@ -171,97 +171,102 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   }, [space, client, invokePromise, t]);
 
   return (
-    <Settings.Viewport>
-      <Settings.Section
-        title={t('space-properties-settings-verbose.label')}
-        description={t('space-properties-settings.description', { ns: meta.profile.key })}
-      >
-        <Form.Root
-          key={space.id}
-          fieldMap={fieldMap}
-          schema={SpaceFormSchema}
-          defaultValues={defaultValues}
-          onValuesChanged={handleValuesChanged}
-        >
-          <Form.FieldSet />
-        </Form.Root>
-      </Settings.Section>
+    <Form.Root
+      variant='settings'
+      key={space.id}
+      fieldMap={fieldMap}
+      schema={SpaceFormSchema}
+      defaultValues={defaultValues}
+      onValuesChanged={handleValuesChanged}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section
+            title={t('space-properties-settings-verbose.label')}
+            description={t('space-properties-settings.description', { ns: meta.profile.key })}
+          >
+            <Form.FieldSet />
+          </Form.Section>
 
-      <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-        <Settings.Item title={t('space-key.title')} description={t('space-key.description')}>
-          <div className='flex items-center gap-2'>
-            <Input.Root>
-              <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
-            </Input.Root>
-            <IconButton
-              icon='ph--copy--regular'
-              iconOnly
-              label={t('copy-space-key.label')}
-              onClick={() => {
-                void navigator.clipboard.writeText(space.key.toHex());
-              }}
-            />
-          </div>
-        </Settings.Item>
-        <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button>
-                {t('download-backup.label')}
-                <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                <DropdownMenu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</DropdownMenu.Item>
-                <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </Settings.Item>
-        <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
-          <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
-        </Settings.Item>
-      </Settings.Section>
+          <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
+            <Form.Row label={t('space-key.title')} description={t('space-key.description')}>
+              <div className='flex items-center gap-2'>
+                <Input.Root>
+                  <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+                </Input.Root>
+                <IconButton
+                  icon='ph--copy--regular'
+                  iconOnly
+                  label={t('copy-space-key.label')}
+                  onClick={() => {
+                    void navigator.clipboard.writeText(space.key.toHex());
+                  }}
+                />
+              </div>
+            </Form.Row>
+            <Form.Row label={t('backup-space.title')} description={t('backup-space.description')}>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button>
+                    {t('download-backup.label')}
+                    <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item onClick={handleBackupBinary}>
+                      {t('download-backup-binary.label')}
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </Form.Row>
+            <Form.Row label={t('repair-space.title')} description={t('repair-space.description')}>
+              <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+            </Form.Row>
+          </Form.Section>
 
-      <Settings.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
-        {!personal && (
-          <Settings.Item title={t('delete-space.title')} description={t('delete-space.description')}>
-            <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-              <Dialog.Trigger asChild>
-                <Button variant='destructive' data-testid='spaceSettings.deleteSpace'>
-                  {t('delete-space.label')}
-                </Button>
-              </Dialog.Trigger>
-              <Dialog.Portal>
-                <Dialog.Overlay>
-                  <Dialog.Content>
-                    <Dialog.Header>
-                      <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
-                    </Dialog.Header>
-                    <Dialog.Body>
-                      <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                      <div className='flex justify-end gap-2 mbs-4'>
-                        <Dialog.Close asChild>
-                          <Button>{t('cancel.label')}</Button>
-                        </Dialog.Close>
-                        <Button
-                          variant='destructive'
-                          onClick={handleDelete}
-                          data-testid='spaceSettings.deleteSpaceConfirm'
-                        >
-                          {t('delete-space.label')}
-                        </Button>
-                      </div>
-                    </Dialog.Body>
-                  </Dialog.Content>
-                </Dialog.Overlay>
-              </Dialog.Portal>
-            </Dialog.Root>
-          </Settings.Item>
-        )}
-      </Settings.Section>
-    </Settings.Viewport>
+          <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
+            {!personal && (
+              <Form.Row label={t('delete-space.title')} description={t('delete-space.description')}>
+                <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                  <Dialog.Trigger asChild>
+                    <Button variant='destructive' data-testid='spaceSettings.deleteSpace'>
+                      {t('delete-space.label')}
+                    </Button>
+                  </Dialog.Trigger>
+                  <Dialog.Portal>
+                    <Dialog.Overlay>
+                      <Dialog.Content>
+                        <Dialog.Header>
+                          <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.Body>
+                          <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
+                          <div className='flex justify-end gap-2 mbs-4'>
+                            <Dialog.Close asChild>
+                              <Button>{t('cancel.label')}</Button>
+                            </Dialog.Close>
+                            <Button
+                              variant='destructive'
+                              onClick={handleDelete}
+                              data-testid='spaceSettings.deleteSpaceConfirm'
+                            >
+                              {t('delete-space.label')}
+                            </Button>
+                          </div>
+                        </Dialog.Body>
+                      </Dialog.Content>
+                    </Dialog.Overlay>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </Form.Row>
+            )}
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

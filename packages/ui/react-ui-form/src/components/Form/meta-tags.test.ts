@@ -11,7 +11,7 @@ import { Obj, Ref, Tag } from '@dxos/echo';
 import { META_TAGS_KEY, withMetaTags } from './meta-tags';
 
 // A feed-host schema whose own `tags` field is a `TagIndex` record (tagId -> objectId[]), not an
-// array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-feed `Subscription`.
+// array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.
 const TagIndexHost = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   tags: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(Schema.optional),

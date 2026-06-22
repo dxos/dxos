@@ -11,6 +11,7 @@ import { SchemaEx } from '@dxos/effect';
 
 import { type FieldContext, type FormFieldStateProps } from '#types';
 
+import { type FormVariant } from '../components/Form/Form.theme';
 import { type FormHandler } from './useFormHandler';
 
 //
@@ -27,6 +28,9 @@ export type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
+
+  /** Visual variant applied across the form's parts (see Form.theme). */
+  variant?: FormVariant;
 } & FieldContext;
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');

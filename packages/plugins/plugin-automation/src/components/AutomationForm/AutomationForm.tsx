@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
@@ -27,6 +29,12 @@ type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 export type AutomationFormProps = {
   db: Database.Database;
   automation: Automation.Automation;
+  /**
+   * Draft owned routine for an automation not yet added to the database (the companion's create flow).
+   * When supplied, the action editor edits it directly instead of querying for / eagerly creating one,
+   * so an in-memory draft can be configured before it is persisted.
+   */
+  routine?: Routine.Routine;
 };
 
 /**
@@ -35,7 +43,7 @@ export type AutomationFormProps = {
  * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
  */
-export const AutomationForm = ({ db, automation }: AutomationFormProps) => {
+export const AutomationForm = ({ db, automation, routine }: AutomationFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(automation);
   const trigger = usePrimaryTrigger(automation);
@@ -62,7 +70,7 @@ export const AutomationForm = ({ db, automation }: AutomationFormProps) => {
           <Form.FieldSet />
 
           <Section title={t('actions.title')}>
-            <ActionEditor db={db} automation={automation} />
+            <ActionEditor db={db} automation={automation} routine={routine} />
           </Section>
 
           <Section title={t('triggers.title')}>
@@ -91,10 +99,20 @@ type ActionKind = (typeof ActionKinds)[number];
 const isActionKind = (value: string): value is ActionKind => (ActionKinds as readonly string[]).includes(value);
 
 /** Single action: an Operation ref (written to `automation.runnable`) or an owned Routine edited inline. */
-const ActionEditor = ({ db, automation }: { db: Database.Database; automation: Automation.Automation }) => {
+const ActionEditor = ({
+  db,
+  automation,
+  routine: draftRoutine,
+}: {
+  db: Database.Database;
+  automation: Automation.Automation;
+  routine?: Routine.Routine;
+}) => {
   const [auto, updateAuto] = useObject(automation);
   const operations = useOperations(db);
-  const ownedRoutine = useOwnedRoutine(db, automation);
+  // A draft (not-yet-persisted) automation supplies its owned routine directly; otherwise resolve it by query.
+  const queriedRoutine = useOwnedRoutine(db, automation);
+  const ownedRoutine = draftRoutine ?? queriedRoutine;
   const runnableTarget = auto.runnable?.target;
   // Default to a routine action unless an operation is already bound.
   const [kind, setKind] = useState<ActionKind>(
@@ -103,14 +121,15 @@ const ActionEditor = ({ db, automation }: { db: Database.Database; automation: A
 
   // A routine action edits an owned Routine; create one on first use (the initial default or a toggle).
   // The ref guards the gap before `useOwnedRoutine`'s query reflects the new object, avoiding a double create.
+  // Skipped for a draft automation — it owns an in-memory routine that is persisted on save.
   const createdRoutineRef = useRef(false);
   useEffect(() => {
-    if (kind === 'routine' && !ownedRoutine && !createdRoutineRef.current) {
+    if (!draftRoutine && kind === 'routine' && !queriedRoutine && !createdRoutineRef.current) {
       createdRoutineRef.current = true;
       const routine = db.add(Routine.make({ name: auto.name }));
       Obj.setParent(routine, automation);
     }
-  }, [kind, ownedRoutine, db, automation, auto.name]);
+  }, [draftRoutine, kind, queriedRoutine, db, automation, auto.name]);
 
   const handleOperationChange = useCallback(
     (operation?: Ref.Ref<Operation.PersistentOperation>) => {
@@ -132,7 +151,11 @@ const ActionEditor = ({ db, automation }: { db: Database.Database; automation: A
           onChange={handleOperationChange}
         />
       ) : ownedRoutine ? (
-        <RoutineEditor routine={ownedRoutine} />
+        <>
+          <RoutineEditor db={db} routine={ownedRoutine} />
+          {/* Context objects live on the routine (sibling of blueprints) and bind to its session at run. */}
+          <ObjectsEditor db={db} routine={ownedRoutine} />
+        </>
       ) : null}
     </div>
   );
@@ -231,8 +254,9 @@ const ROUTINE_FIELDS = new Set(['instructions', 'blueprints']);
  * Form.Root + FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action
  * forms; the rendered fields are written back so blueprint selections persist to the routine.
  */
-const RoutineEditor = ({ routine }: { routine: Routine.Routine }) => {
-  const db = Obj.getDatabase(routine);
+const RoutineEditor = ({ db: dbProp, routine }: { db?: Database.Database; routine: Routine.Routine }) => {
+  // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
+  const db = dbProp ?? Obj.getDatabase(routine);
   const defaultValues = useMemo(() => Obj.getSnapshot(routine), [routine]);
   const handleValuesChanged = useCallback(
     (values: Partial<Routine.Routine>, { isValid }: { isValid: boolean }) => {
@@ -262,6 +286,81 @@ const RoutineEditor = ({ routine }: { routine: Routine.Routine }) => {
       onValuesChanged={handleValuesChanged}
     >
       <Form.FieldSet filter={(props) => props.filter((prop) => ROUTINE_FIELDS.has(prop.name.toString()))} />
+    </Form.Root>
+  );
+};
+
+//
+// Context objects
+//
+
+// Pick the routine's generic `objects` ref-array field; the default RefField renders an any-object picker per slot.
+const ObjectsForm = Type.getSchema(Routine.Routine).pipe(Schema.pick('objects'));
+type ObjectsForm = Schema.Schema.Type<typeof ObjectsForm>;
+
+// System objects (e.g. SpaceProperties) carry `HiddenAnnotation` on their type; they are infrastructure,
+// not user content, so they are excluded from the context picker.
+const isSystemObject = (object: Entity.Any): boolean => {
+  if (!Obj.isObject(object)) {
+    return false;
+  }
+  const typeEntity = Obj.getType(object);
+  if (!typeEntity) {
+    return false;
+  }
+  return HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
+};
+
+// Context-object picker options: surface each object's typename (plugin/type) as the secondary line and
+// sort by name — mirroring the operation/blueprint pickers so all action editors present refs consistently.
+// Falls back to the type placeholder (then URI) for unlabelled objects, matching the default RefField.
+const getObjectOptions = (
+  results: Entity.Any[],
+  { getTypePlaceholder }: { getTypePlaceholder?: (typename: string) => string } = {},
+): { id: string; label: string; description?: string }[] =>
+  results
+    .filter((object) => !isSystemObject(object))
+    .map((object) => {
+      const id = Entity.getURI(object, { prefer: 'named' });
+      const typename = Entity.getTypename(object);
+      const label = Entity.getLabel(object) ?? (typename ? getTypePlaceholder?.(typename) : undefined) ?? id;
+      return { id, label, description: typename };
+    })
+    .sort((left, right) => left.label.localeCompare(right.label));
+
+/** Sub-form: picks the context objects bound to the routine's session when it runs. */
+const ObjectsEditor = ({ db: dbProp, routine }: { db?: Database.Database; routine: Routine.Routine }) => {
+  // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
+  const db = dbProp ?? Obj.getDatabase(routine);
+  const [snapshot, updateRoutine] = useObject(routine);
+  const defaultValues = useMemo<Partial<ObjectsForm>>(
+    () => ({ objects: snapshot.objects ? [...snapshot.objects] : [] }),
+    [routine],
+  );
+  const handleValuesChanged = useCallback(
+    (values: Partial<ObjectsForm>, { isValid }: { isValid: boolean }) => {
+      // Skip while invalid (e.g. an empty ref slot just added by the array field) so a partial selection
+      // isn't persisted; the write lands once an object is chosen.
+      if (!isValid) {
+        return;
+      }
+
+      updateRoutine((routine) => {
+        routine.objects = [...(values.objects ?? [])];
+      });
+    },
+    [updateRoutine],
+  );
+
+  return (
+    <Form.Root
+      schema={ObjectsForm}
+      db={db}
+      defaultValues={defaultValues}
+      getOptions={getObjectOptions}
+      onValuesChanged={handleValuesChanged}
+    >
+      <Form.FieldSet />
     </Form.Root>
   );
 };
