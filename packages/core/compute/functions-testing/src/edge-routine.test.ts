@@ -9,6 +9,8 @@ import { Client } from '@dxos/client';
 import { Skill, Operation, Routine, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
+import * as Schema from 'effect/Schema';
+
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { dbg, log } from '@dxos/log';
