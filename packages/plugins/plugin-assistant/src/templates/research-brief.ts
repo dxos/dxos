@@ -4,7 +4,7 @@
 
 import { type RoutineCapabilities } from '@dxos/plugin-routine';
 
-import { makeScheduledRoutineAutomation } from './scaffold';
+import { makeScheduledRoutine } from './scaffold';
 
 /** The research blueprint drives the brief; web-search, markdown, and database tools support it. */
 const BLUEPRINT_KEYS = [
@@ -27,11 +27,11 @@ sources you used, and create a markdown document titled with the topic and the c
 `;
 
 export const researchBrief: RoutineCapabilities.Template = {
-  id: 'org.dxos.automation.researchBrief',
+  id: 'org.dxos.routine.researchBrief',
   label: 'Research Brief',
   icon: 'ph--newspaper--regular',
   scaffold: ({ name }) =>
-    makeScheduledRoutineAutomation({
+    makeScheduledRoutine({
       name: name ?? 'Research Brief',
       text: DEFAULT_INSTRUCTIONS,
       blueprintKeys: BLUEPRINT_KEYS,

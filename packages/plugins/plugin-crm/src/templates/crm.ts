@@ -35,7 +35,7 @@ const DEFAULT_INSTRUCTIONS = trim`
 
 /** CRM automation template. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`. */
 export const crm: RoutineCapabilities.Template = {
-  id: 'org.dxos.automation.crm',
+  id: 'org.dxos.routine.crm',
   label: 'CRM',
   icon: 'ph--address-book--regular',
   appliesTo: (subject) => subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
@@ -78,15 +78,15 @@ export const crm: RoutineCapabilities.Template = {
         }),
       );
 
-      const automation = Routine.make({
+      const routine = Routine.make({
         name: name ?? instructionsName,
         runnable: Ref.make(runInstructionsFn),
         triggers: [Ref.make(trigger)],
       });
-      // The trigger is owned by the automation (reachable only via it) so it cascade-deletes with it; the
+      // The trigger is owned by the routine (reachable only via it) so it cascade-deletes with it; the
       // instructions stays independent, since it is edited separately and may be reused.
-      Obj.setParent(trigger, automation);
+      Obj.setParent(trigger, routine);
 
-      return automation;
+      return routine;
     }),
 };

@@ -12,7 +12,7 @@ import { Routine, type RoutineCapabilities } from '#types';
  * create flow has a single resolve→scaffold path with no special-casing.
  */
 export const blank: RoutineCapabilities.Template = {
-  id: 'org.dxos.automation.blank',
+  id: 'org.dxos.routine.blank',
   label: 'Blank',
   icon: 'ph--lightning--regular',
   scaffold: ({ name }) => Effect.succeed(Routine.make({ name, triggers: [] })),

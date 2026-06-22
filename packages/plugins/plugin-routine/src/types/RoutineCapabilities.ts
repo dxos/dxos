@@ -34,7 +34,7 @@ export const AgentCompletionGuard = Capability.make<CompletionGuard>(
  * chosen template's `scaffold` to build the automation.
  */
 export type Template = {
-  /** Stable id (e.g. 'org.dxos.automation.blank'). */
+  /** Stable id (e.g. 'org.dxos.routine.blank'). */
   id: string;
   /** Human-readable label shown in the picker. */
   label: string;

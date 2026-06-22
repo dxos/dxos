@@ -26,7 +26,7 @@ const templates = [
   { template: dailyDigest, blueprintCount: 3 },
 ];
 
-describe('scheduled automation templates', () => {
+describe('scheduled routine templates', () => {
   test('apply globally (no subject required)', ({ expect }) => {
     // Like Blank, these are offered in the global create dialog — no `appliesTo` gate.
     expect(researchBrief.appliesTo).toBeUndefined();
@@ -34,14 +34,14 @@ describe('scheduled automation templates', () => {
   });
 
   for (const { template, blueprintCount } of templates) {
-    test(`${template.label} scaffolds a Routine, a disabled timer Trigger, and an Automation`, async ({ expect }) => {
+    test(`${template.label} scaffolds a Routine, a disabled timer Trigger, and Instructions`, async ({ expect }) => {
       await Effect.gen(function* () {
-        const automation = yield* template.scaffold({});
-        yield* Database.add(automation);
+        const routine = yield* template.scaffold({});
+        yield* Database.add(routine);
         yield* Database.flush();
 
-        expect(automation.triggers).toHaveLength(1);
-        expect(automation.runnable).toBeDefined();
+        expect(routine.triggers).toHaveLength(1);
+        expect(routine.runnable).toBeDefined();
 
         const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
         expect(routines).toHaveLength(1);
@@ -52,14 +52,14 @@ describe('scheduled automation templates', () => {
         const trigger = triggers[0];
         expect(trigger?.enabled).toBe(false);
         expect(trigger?.spec?.kind).toBe('timer');
-        expect(trigger?.input?.prompt).toBeDefined();
-        // The trigger is owned by the automation (cascade-deletes with it); the routine stays independent.
-        expect(trigger && Obj.getParent(trigger)?.id).toBe(automation.id);
+        expect(trigger?.input?.instructions).toBeDefined();
+        // The trigger is owned by the routine (cascade-deletes with it); the instructions stays independent.
+        expect(trigger && Obj.getParent(trigger)?.id).toBe(routine.id);
         expect(routines[0] && Obj.getParent(routines[0])).toBeUndefined();
 
         const operations = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
         expect(operations).toHaveLength(1);
-        expect(automation.runnable?.uri).toBe(trigger?.function?.uri);
+        expect(routine.runnable?.uri).toBe(trigger?.function?.uri);
       }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
     });
   }

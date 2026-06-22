@@ -31,25 +31,25 @@ const dbLayer = TestDatabaseLayer({
 
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
 
-describe('crm automation template', () => {
+describe('crm routine template', () => {
   test('applies only to a Mailbox subject', ({ expect }) => {
     const mailbox = Mailbox.make({ name: 'Test Mailbox' });
     expect(crm.appliesTo?.(mailbox)).toBe(true);
     expect(crm.appliesTo?.(undefined)).toBe(false);
   });
 
-  test('scaffolds a Routine, a disabled feed Trigger, and an Automation wiring them together', async ({ expect }) => {
+  test('scaffolds a Routine, a disabled feed Trigger, and an Instructions wiring them together', async ({ expect }) => {
     await Effect.gen(function* () {
       const mailbox = Mailbox.make({ name: 'Test Mailbox' });
       yield* Database.add(mailbox);
       yield* Database.flush();
 
-      const automation = yield* crm.scaffold({ subject: mailbox });
-      yield* Database.add(automation);
+      const routine = yield* crm.scaffold({ subject: mailbox });
+      yield* Database.add(routine);
       yield* Database.flush();
 
-      expect(automation.triggers).toHaveLength(1);
-      expect(automation.runnable).toBeDefined();
+      expect(routine.triggers).toHaveLength(1);
+      expect(routine.runnable).toBeDefined();
 
       const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
       expect(routines).toHaveLength(1);
@@ -63,15 +63,15 @@ describe('crm automation template', () => {
       expect(trigger?.spec?.kind).toBe('feed');
       const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);
-      expect(trigger?.input?.prompt).toBeDefined();
+      expect(trigger?.input?.instructions).toBeDefined();
       expect(trigger?.input?.input).toBe('{{event.item}}');
-      // The trigger is owned by the automation (cascade-deletes with it); the routine stays independent.
-      expect(trigger && Obj.getParent(trigger)?.id).toBe(automation.id);
+      // The trigger is owned by the routine (cascade-deletes with it); the instructions stays independent.
+      expect(trigger && Obj.getParent(trigger)?.id).toBe(routine.id);
       expect(routines[0] && Obj.getParent(routines[0])).toBeUndefined();
 
       const operations = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       expect(operations).toHaveLength(1);
-      expect(automation.runnable?.uri).toBe(trigger?.function?.uri);
+      expect(routine.runnable?.uri).toBe(trigger?.function?.uri);
     }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 });

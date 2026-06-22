@@ -4,7 +4,7 @@
 
 import { type RoutineCapabilities } from '@dxos/plugin-routine';
 
-import { makeScheduledRoutineAutomation } from './scaffold';
+import { makeScheduledRoutine } from './scaffold';
 
 /** Inbox supplies new messages; database queries recent objects; markdown writes the digest document. */
 const BLUEPRINT_KEYS = [
@@ -24,11 +24,11 @@ highlight anything that needs attention, and write it to a markdown document tit
 `;
 
 export const dailyDigest: RoutineCapabilities.Template = {
-  id: 'org.dxos.automation.dailyDigest',
+  id: 'org.dxos.routine.dailyDigest',
   label: 'Daily Digest',
   icon: 'ph--list-bullets--regular',
   scaffold: ({ name }) =>
-    makeScheduledRoutineAutomation({
+    makeScheduledRoutine({
       name: name ?? 'Daily Digest',
       text: DEFAULT_INSTRUCTIONS,
       blueprintKeys: BLUEPRINT_KEYS,

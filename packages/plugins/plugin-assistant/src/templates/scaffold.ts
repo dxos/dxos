@@ -20,12 +20,12 @@ export type ScheduledRoutineOptions = {
 };
 
 /**
- * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared RunInstructions
+ * Scaffold a timer-driven routine: a Routine (instructions + blueprints) run by the shared RunInstructions
  * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
- * instructions before activating, and is owned by the automation (cascade-deletes with it); the instructions
+ * instructions before activating, and is owned by the routine (cascade-deletes with it); the instructions
  * stays independent, since it is edited separately and may be reused.
  */
-export const makeScheduledRoutineAutomation = ({
+export const makeScheduledRoutine = ({
   name,
   text,
   blueprintKeys,
@@ -58,11 +58,11 @@ export const makeScheduledRoutineAutomation = ({
       }),
     );
 
-    const automation = Routine.make({
+    const routine = Routine.make({
       name,
       runnable: Ref.make(runInstructionsFn),
       triggers: [Ref.make(trigger)],
     });
-    Obj.setParent(trigger, automation);
-    return automation;
+    Obj.setParent(trigger, routine);
+    return routine;
   });

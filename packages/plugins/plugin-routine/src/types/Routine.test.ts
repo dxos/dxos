@@ -29,7 +29,7 @@ describe('Routine', () => {
 
   describe('blank template', () => {
     test('is the default no-op template', ({ expect }) => {
-      expect(blank.id).toBe('org.dxos.automation.blank');
+      expect(blank.id).toBe('org.dxos.routine.blank');
       expect(blank.label).toBe('Blank');
       expect(typeof blank.scaffold).toBe('function');
     });
