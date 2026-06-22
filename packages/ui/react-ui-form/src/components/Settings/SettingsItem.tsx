@@ -18,6 +18,7 @@ const SETTINGS_ITEM_NAME = 'Settings.Item';
 
 type SettingsPanelProps = ThemedClassName<PropsWithChildren>;
 
+/** @deprecated Use {@link Form} with `variant='settings'` instead. */
 export const SettingsPanel = ({ classNames, children }: SettingsPanelProps) => {
   return (
     <div className={mx('flex flex-col gap-3 p-trim-md border border-separator rounded-sm', classNames)}>{children}</div>
@@ -35,6 +36,7 @@ type SettingsItemProps = PropsWithChildren<{
   description?: Label;
 }>;
 
+/** @deprecated Use {@link Form} with `variant='settings'` instead. */
 export const SettingsItem = ({ title, description = '', children }: SettingsItemProps) => {
   const { t } = useTranslation(translationKey);
 

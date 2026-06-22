@@ -15,15 +15,9 @@ import { Input } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 
-import { useFormFieldState } from '../../../hooks';
-import {
-  FormFieldErrorBoundary,
-  FormFieldLabel,
-  FieldRow,
-  FormField,
-  type FormFieldProps,
-  presentationFor,
-} from '../FormField';
+import { useFormContext, useFormFieldState } from '../../../hooks';
+import { formTheme } from '../Form.theme';
+import { FormFieldErrorBoundary, FormFieldLabel, FormField, type FormFieldProps, presentationFor } from '../FormField';
 import { LayoutParseError, type LayoutNode, parseLayout } from './parser';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
@@ -241,6 +235,8 @@ type LabelFieldProps = {
  * presentation of regular fields.
  */
 const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
+  const { variant = 'default' } = useFormContext(FORM_LAYOUT_NAME);
+  const styles = formTheme.styles({ variant });
   const { getValue } = useFormFieldState(FORM_LAYOUT_NAME, path);
   const value = getValue();
   const text = value == null ? undefined : Annotation.getLabelWithSchema(schema, value);
@@ -250,13 +246,17 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
 
   const presentation = presentationFor(layout);
   return (
-    <FieldRow presentation={presentation}>
-      <Input.Root>
-        {presentation.showLabel && <FormFieldLabel readonly label={label} path={SchemaEx.createJsonPath(path)} />}
-        <p className='truncate min-w-0' title={text}>
-          {text}
-        </p>
-      </Input.Root>
-    </FieldRow>
+    <Input.Root>
+      <div className={styles.field()}>
+        {presentation.showLabel && (
+          <FormFieldLabel variant={variant} readonly label={label} path={SchemaEx.createJsonPath(path)} />
+        )}
+        <div className={styles.fieldControl()}>
+          <p className='truncate min-w-0' title={text}>
+            {text}
+          </p>
+        </div>
+      </div>
+    </Input.Root>
   );
 };

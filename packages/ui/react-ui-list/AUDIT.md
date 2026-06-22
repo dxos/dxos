@@ -142,7 +142,7 @@ duplicated across at least four call sites.
 - `Mosaic.Stack` — flex linear layout of tiles.
 - `Mosaic.VirtualStack` — `Stack` + `@tanstack/react-virtual`. The
   high-water mark of the package; ~6 plugin call sites
-  (plugin-feed, plugin-inbox, plugin-assistant, plugin-search,
+  (plugin-magazine, plugin-inbox, plugin-assistant, plugin-search,
   plugin-deck Matrix).
 - `Mosaic.Board` — multi-column layout prototype.
 - `Mosaic.Focus` — selection / current-id context.
@@ -610,6 +610,6 @@ Files cited in this audit (paths relative to repo root):
 - `packages/plugins/plugin-code/src/components/FileTree/FileTree.tsx`
 - `packages/plugins/plugin-meeting/src/containers/MeetingsList/`
 - `packages/plugins/plugin-navtree/src/components/Sidebar/L1Panel.tsx`
-- `packages/plugins/plugin-feed/src/components/PostStack/PostStack.tsx`
+- `packages/plugins/plugin-magazine/src/components/PostStack/PostStack.tsx`
 - `packages/plugins/plugin-inbox/src/components/MessageStack/MessageStack.tsx`
 - `packages/ui/react-ui-introspect/src/components/ToolList/ToolList.tsx`

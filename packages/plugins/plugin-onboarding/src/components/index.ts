@@ -3,6 +3,5 @@
 //
 
 export * from './AboutDialog';
-export * from './ExemplarSettings';
 export * from './NativeRedirectDialog';
 export * from './WelcomeScreen';
