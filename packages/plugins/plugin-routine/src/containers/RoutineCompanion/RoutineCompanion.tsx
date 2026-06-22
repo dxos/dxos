@@ -15,8 +15,8 @@ import { RoutineForm, MasterDetail } from '#components';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
-/** An in-memory draft automation (with its owned instructions) not yet added to the database. */
-type Draft = { automation: Routine.Routine; instructions: Instructions.Instructions };
+/** An in-memory draft routine (with its owned instructions) not yet added to the database. */
+type Draft = { routine: Routine.Routine; instructions: Instructions.Instructions };
 
 export type RoutineCompanionProps = {
   db: Database.Database;
@@ -66,16 +66,16 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
     const instructions = db.add(
       Instructions.make({ blueprints: blueprintRefsForObject(object), objects: [Ref.make(object)] }),
     );
-    const automation = db.add(Routine.make({ triggers: [] }));
-    Obj.setParent(instructions, automation);
+    const routine = db.add(Routine.make({ triggers: [] }));
+    Obj.setParent(instructions, routine);
     setSelectedId(undefined);
-    setDraft({ automation, instructions });
+    setDraft({ routine, instructions });
   }, [db, object]);
 
   const handleCancel = useCallback(() => {
     if (draft) {
       // Remove the unsaved draft; its owned instructions cascade-deletes.
-      db.remove(draft.automation);
+      db.remove(draft.routine);
     }
     setDraft(undefined);
   }, [draft, db]);
@@ -85,20 +85,20 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
       return;
     }
     // Anchor the automation to the object; this is what surfaces it in the list.
-    db.add(Routine.makeAppliesTo({ [Relation.Source]: draft.automation, [Relation.Target]: object }));
-    setSelectedId(draft.automation.id);
+    db.add(Routine.makeAppliesTo({ [Relation.Source]: draft.routine, [Relation.Target]: object }));
+    setSelectedId(draft.routine.id);
     setDraft(undefined);
   }, [draft, db, object]);
 
   const handleDelete = useCallback(
-    (automation: Routine.Routine) => {
-      // Remove the anchoring relation, then the automation (its owned instructions cascade-deletes).
-      const relation = relations.find((candidate) => Relation.getSource(candidate)?.id === automation.id);
+    (routine: Routine.Routine) => {
+      // Remove the anchoring relation, then the routine (its owned instructions cascade-deletes).
+      const relation = relations.find((candidate) => Relation.getSource(candidate)?.id === routine.id);
       if (relation) {
         db.remove(relation);
       }
-      db.remove(automation);
-      setSelectedId((current) => (current === automation.id ? undefined : current));
+      db.remove(routine);
+      setSelectedId((current) => (current === routine.id ? undefined : current));
     },
     [relations, db],
   );
@@ -117,8 +117,8 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
           selectedId={draft ? undefined : selectedId}
           onSelect={handleSelect}
           onDelete={handleDelete}
-          getLabel={(automation) =>
-            Obj.getLabel(automation) ?? t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) })
+          getLabel={(routine) =>
+            Obj.getLabel(routine) ?? t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) })
           }
           getIcon={() => 'ph--lightning--regular'}
           onCreate={handleCreate}
@@ -146,7 +146,7 @@ const DraftEditor = ({
   const { t } = useTranslation(meta.profile.key);
   return (
     <div role='none' className='flex flex-col min-bs-0'>
-      <RoutineForm db={db} automation={draft.automation} instructions={draft.instructions} />
+      <RoutineForm db={db} automation={draft.routine} instructions={draft.instructions} />
       <div role='none' className='flex justify-end gap-2 p-2 border-bs border-subdued-separator'>
         <Button onClick={onCancel}>{t('cancel.label')}</Button>
         <Button variant='primary' onClick={onSave}>

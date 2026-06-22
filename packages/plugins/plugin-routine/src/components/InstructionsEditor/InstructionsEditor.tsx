@@ -15,7 +15,7 @@ const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 // Owned-routine action fields surfaced for editing — the prompt text, the agent's `blueprints`,
 // and the context `objects` bound to its session at run. All live on the Instructions schema,
 // so a single form edits them together.
-const ROUTINE_FIELDS = new Set(['text', 'blueprints', 'objects']);
+const INSTRUCTIONS_FIELDS = new Set(['text', 'blueprints', 'objects']);
 
 export type InstructionsEditorProps = { db?: Database.Database; routine: Instructions.Instructions };
 
@@ -63,7 +63,7 @@ export const InstructionsEditor = ({ db: dbProp, routine }: InstructionsEditorPr
       getOptions={getRefOptions}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.FieldSet filter={(props) => props.filter((prop) => ROUTINE_FIELDS.has(prop.name.toString()))} />
+      <Form.FieldSet filter={(props) => props.filter((prop) => INSTRUCTIONS_FIELDS.has(prop.name.toString()))} />
     </Form.Root>
   );
 };
