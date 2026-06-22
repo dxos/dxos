@@ -176,6 +176,8 @@ type OperationActionValues = Schema.Schema.Type<typeof OperationActionForm>;
 // still matches its option.
 const getOperationOptions = (results: Entity.Any[]): { id: string; label: string; description?: string }[] =>
   results
+    // Hide internal operations: only operations annotated visible are user-bindable as trigger actions.
+    .filter((operation) => !Obj.instanceOf(Operation.PersistentOperation, operation) || Operation.isVisible(operation))
     .map((operation) => {
       const id = Entity.getURI(operation, { prefer: 'named' });
       const name = Entity.getLabel(operation) ?? id;

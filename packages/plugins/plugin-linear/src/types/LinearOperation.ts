@@ -71,4 +71,4 @@ export const SyncLinearTeams = Operation.make({
       tasks: Schema.Number,
     }),
   }),
-});
+}).pipe(Operation.visible);
