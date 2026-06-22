@@ -24,4 +24,7 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
     name: 'compiler',
     description: 'Tests that depend on external CDN resources (e.g. TypeScript playground lib.d.ts).',
   },
+  // Trunk analytics injects `!manual` into VITEST_TAGS_FILTER; declaring it here prevents vitest from
+  // throwing "tag pattern not defined" when Trunk appends the filter.
+  { name: 'manual', description: 'Tests excluded from automated CI runs (Trunk analytics integration).' },
 ];
