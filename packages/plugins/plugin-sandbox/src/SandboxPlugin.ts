@@ -4,6 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { AccessToken } from '@dxos/types';
 
 import { BlueprintDefinition, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
@@ -15,7 +16,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const SandboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Sandbox.Sandbox] }),
+  AppPlugin.addSchemaModule({ schema: [Sandbox.Sandbox, AccessToken.AccessToken] }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

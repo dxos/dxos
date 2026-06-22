@@ -19,6 +19,7 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
   { name: 'sync', description: 'Tests that hit external sync APIs (Discord, Linear, browser-based).' },
   { name: 'sync-e2e', description: 'End-to-end tests against the real EDGE worker.' },
   { name: 'functions-e2e', description: 'End-to-end tests that deploy and invoke real Cloudflare functions.' },
+  { name: 'manual', description: 'Opt-in tests run only when explicitly selected (local services, manual setup).' },
   { name: 'tracing-e2e', description: 'End-to-end tracing/observability tests against SigNoz.' },
   {
     name: 'compiler',
