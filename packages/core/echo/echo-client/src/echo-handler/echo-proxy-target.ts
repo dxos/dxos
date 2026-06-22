@@ -9,7 +9,7 @@ import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
 
-import type { KeyPath } from '../automerge/Doc';
+import type * as Doc from '../automerge/Doc';
 import type { ObjectCore } from '../core-db';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
@@ -42,7 +42,7 @@ export type ProxyTarget = {
    *
    * Root objects have an empty path: `[]`.
    */
-  [symbolPath]: KeyPath;
+  [symbolPath]: Doc.KeyPath;
 
   /**
    * Reference to the handler.

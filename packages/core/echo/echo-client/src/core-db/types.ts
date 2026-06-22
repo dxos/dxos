@@ -10,7 +10,7 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import type { EntityMeta } from '@dxos/echo-protocol';
 import type { SpaceId, URI } from '@dxos/keys';
 
-import { type KeyPath } from '../automerge/Doc';
+import * as Doc from '../automerge/Doc';
 
 //
 // TargetKey — proxy-target cache key (shared with echo-handler to avoid
@@ -18,7 +18,7 @@ import { type KeyPath } from '../automerge/Doc';
 //
 
 type TargetKeyType = {
-  path: KeyPath;
+  path: Doc.KeyPath;
   namespace: string;
   type: 'record' | 'array';
 } & Brand.Brand<'TargetKey'>;
@@ -26,8 +26,8 @@ type TargetKeyType = {
 export type TargetKey = TargetKeyType;
 
 export const TargetKey = {
-  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey => {
-    const copiedPath: KeyPath = [...path];
+  new: (path: Doc.KeyPath, namespace: string, type: 'record' | 'array'): TargetKey => {
+    const copiedPath: Doc.KeyPath = [...path];
     return { path: copiedPath, namespace, type } as TargetKey;
   },
   hash: (key: TargetKey): string => JSON.stringify(key),

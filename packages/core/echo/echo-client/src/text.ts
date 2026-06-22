@@ -9,11 +9,11 @@ import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
-import { type Accessor, type KeyPath, isKeyPath } from './automerge/Doc';
+import * as Doc from './automerge/Doc';
 import { getObjectCore } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
-export const toCursor = (accessor: Accessor, pos: number, assoc = 0): A.Cursor => {
+export const toCursor = (accessor: Doc.Accessor, pos: number, assoc = 0): A.Cursor => {
   const doc = accessor.handle.doc();
   const value = getDeep(doc, accessor.path);
   if (typeof value === 'string' && value.length <= pos) {
@@ -24,11 +24,11 @@ export const toCursor = (accessor: Accessor, pos: number, assoc = 0): A.Cursor =
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const toCursorRange = (accessor: Accessor, start: number, end: number) => {
+export const toCursorRange = (accessor: Doc.Accessor, start: number, end: number) => {
   return `${toCursor(accessor, start)}:${toCursor(accessor, end)}`;
 };
 
-export const fromCursor = (accessor: Accessor, cursor: A.Cursor): number => {
+export const fromCursor = (accessor: Doc.Accessor, cursor: A.Cursor): number => {
   if (cursor === '') {
     return 0;
   }
@@ -50,7 +50,7 @@ export const fromCursor = (accessor: Accessor, cursor: A.Cursor): number => {
 /**
  * Return the text value between two cursor positions.
  */
-export const getTextInRange = (accessor: Accessor, start: string, end: string): string | undefined => {
+export const getTextInRange = (accessor: Doc.Accessor, start: string, end: string): string | undefined => {
   const doc = accessor.handle.doc();
   const value = getDeep(doc, accessor.path);
   if (typeof value === 'string') {
@@ -62,7 +62,7 @@ export const getTextInRange = (accessor: Accessor, start: string, end: string): 
   }
 };
 
-export const getRangeFromCursor = (accessor: Accessor, cursor: string) => {
+export const getRangeFromCursor = (accessor: Doc.Accessor, cursor: string) => {
   const [start, end] = cursor.split(':');
   if (start === undefined || end === undefined) {
     return undefined;
@@ -78,9 +78,9 @@ export const getRangeFromCursor = (accessor: Accessor, cursor: string) => {
  * @param newText - The new text value.
  * @returns The updated object.
  */
-export const updateText = <T extends Obj.Unknown>(obj: T, path: KeyPath, newText: string): T => {
+export const updateText = <T extends Obj.Unknown>(obj: T, path: Doc.KeyPath, newText: string): T => {
   assertArgument(isProxy(obj), 'obj');
-  invariant(path === undefined || isKeyPath(path));
+  invariant(path === undefined || Doc.isKeyPath(path));
   const accessor = getObjectCore(obj).getDocAccessor(path);
   accessor.handle.change((doc) => {
     A.updateText(doc, accessor.path.slice(), newText);
