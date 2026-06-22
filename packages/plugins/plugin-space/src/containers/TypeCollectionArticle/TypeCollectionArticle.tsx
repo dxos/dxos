@@ -70,7 +70,7 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
           </div>
         ) : (
           <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content centered padding>
+            <Masonry.Content classNames='dx-document'>
               <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
