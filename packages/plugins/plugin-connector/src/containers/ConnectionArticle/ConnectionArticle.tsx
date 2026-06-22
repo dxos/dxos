@@ -121,9 +121,7 @@ export const ConnectionArticle = ({ subject }: ConnectionArticleProps) => {
               </p>
             </Settings.Panel>
           ) : (
-            bindings.map((binding) => (
-              <BindingRow key={binding.id} binding={binding} onRemove={handleRemoveBinding} />
-            ))
+            bindings.map((binding) => <BindingRow key={binding.id} binding={binding} onRemove={handleRemoveBinding} />)
           )}
         </Settings.Section>
       )}

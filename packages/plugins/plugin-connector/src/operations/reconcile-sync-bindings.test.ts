@@ -125,7 +125,13 @@ describe('reconcileSyncBindings', () => {
     const { db, connection } = await setup();
     const mailbox = db.add(Obj.make(Expando.Expando, { name: 'existing mailbox' }));
 
-    const result = await reconcile(db, connection, makeConnector(), [{ remoteId: 'inbox', name: 'Inbox' }], Ref.make(mailbox));
+    const result = await reconcile(
+      db,
+      connection,
+      makeConnector(),
+      [{ remoteId: 'inbox', name: 'Inbox' }],
+      Ref.make(mailbox),
+    );
     expect(result.added).toBe(1);
 
     const bindings = await queryBindings(db, connection);

@@ -57,9 +57,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'connectorSelector',
-        filter: AppSurface.formInputByField(
-          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotationId),
-        ),
+        filter: AppSurface.formInputByField((ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotationId)),
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
           const connectors = useCapabilities(Connector).flat();
           const options = useMemo(

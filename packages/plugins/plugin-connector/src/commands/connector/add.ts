@@ -159,7 +159,11 @@ const addCustomToken = Effect.fn(function* (
 
   yield* Database.add(accessToken);
   yield* Database.add(
-    Connection.make({ name: data.account ?? data.source, connectorId: data.source, accessToken: Ref.make(accessToken) }),
+    Connection.make({
+      name: data.account ?? data.source,
+      connectorId: data.source,
+      accessToken: Ref.make(accessToken),
+    }),
   );
   yield* printTokenResult(accessToken, json);
 });

@@ -52,9 +52,8 @@ const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
       return yield* Effect.dieMessage('GitHub materializeTarget requires a remoteTarget (repo descriptor).');
     }
 
-    const existing = yield* Database.query(
-      Query.select(Filter.foreignKeys(Project.Project, [fkFor(remoteTarget.id)])),
-    ).run;
+    const existing = yield* Database.query(Query.select(Filter.foreignKeys(Project.Project, [fkFor(remoteTarget.id)])))
+      .run;
     if (existing.length > 0) {
       return existing[0];
     }

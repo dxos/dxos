@@ -17,8 +17,6 @@ import { SyncBinding } from '@dxos/plugin-connector';
  */
 export const findBindingForTarget = (target: Obj.Unknown) =>
   Effect.gen(function* () {
-    const bindings = yield* Database.query(
-      Query.select(Filter.id(target.id)).targetOf(SyncBinding.SyncBinding),
-    ).run;
+    const bindings = yield* Database.query(Query.select(Filter.id(target.id)).targetOf(SyncBinding.SyncBinding)).run;
     return bindings[0];
   });

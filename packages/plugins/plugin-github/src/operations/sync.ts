@@ -207,7 +207,10 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
  * (so we can detect divergence) but is not pushed back — see
  * {@link GitHubApi.updateRepo}.
  */
-const upsertProject = Effect.fn('upsertProject')(function* (binding: SyncBinding.SyncBinding, repo: GitHubApi.GitHubRepo) {
+const upsertProject = Effect.fn('upsertProject')(function* (
+  binding: SyncBinding.SyncBinding,
+  repo: GitHubApi.GitHubRepo,
+) {
   const remoteFields: Required<ProjectSnapshot> = {
     name: repo.full_name,
     description: repo.description ?? '',
@@ -516,8 +519,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
 
         // The repo's foreign id: prefer the binding's `remoteId`, falling back
         // to the GitHub foreign key on the target object.
-        const remoteId =
-          binding.remoteId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
+        const remoteId = binding.remoteId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
 
         const bindingId = binding.id;
 

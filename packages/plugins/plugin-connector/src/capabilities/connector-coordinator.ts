@@ -528,12 +528,7 @@ export default Capability.makeModule(
         return { kind: 'connection-created', connectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const submitCredentialForm: ConnectorCoordinator['submitCredentialForm'] = ({
-      db,
-      spaceId,
-      connectorId,
-      values,
-    }) =>
+    const submitCredentialForm: ConnectorCoordinator['submitCredentialForm'] = ({ db, spaceId, connectorId, values }) =>
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
         if (!connector.credentialForm) {
@@ -562,7 +557,12 @@ export default Capability.makeModule(
         return yield* createConnection({ db, spaceId, connectorId, loginHint });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const setSyncBindings: ConnectorCoordinator['setSyncBindings'] = ({ db, connection: connectionRef, selected, existingTarget }) =>
+    const setSyncBindings: ConnectorCoordinator['setSyncBindings'] = ({
+      db,
+      connection: connectionRef,
+      selected,
+      existingTarget,
+    }) =>
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');

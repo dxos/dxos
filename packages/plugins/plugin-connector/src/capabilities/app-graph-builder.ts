@@ -41,8 +41,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'connectionActions',
-        match: (node) =>
-          Connection.instanceOf(node.data) ? Option.some(node.data) : Option.none(),
+        match: (node) => (Connection.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (connection) =>
           Effect.gen(function* () {
             const connectors = (yield* Capability.Service).getAll(Connector).flat();
@@ -59,9 +58,7 @@ export default Capability.makeModule(
                     Effect.gen(function* () {
                       const bindings = yield* queryConnectionBindings(connection);
                       yield* Effect.all(
-                        bindings.map((binding) =>
-                          Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId }),
-                        ),
+                        bindings.map((binding) => Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId })),
                       );
                     }),
                   properties: {

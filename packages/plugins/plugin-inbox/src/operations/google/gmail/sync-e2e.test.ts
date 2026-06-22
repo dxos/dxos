@@ -176,9 +176,7 @@ const setup = async () => {
       accessToken: Ref.make(accessToken),
     }),
   );
-  const binding = space.db.add(
-    SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: mailbox }),
-  );
+  const binding = space.db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: mailbox }));
 
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
   return { client, space, mailbox, binding, feed, functionsServiceClient };

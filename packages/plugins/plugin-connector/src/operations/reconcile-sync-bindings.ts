@@ -32,7 +32,13 @@ export type ReconcileSyncBindingsInput = {
  * Runs within a {@link Database} context (provide `Database.layer(db)`); the
  * HTTP client `materializeTarget` needs is provided internally.
  */
-export const reconcileSyncBindings = ({ db, connection, connector, selected, existingTarget }: ReconcileSyncBindingsInput) =>
+export const reconcileSyncBindings = ({
+  db,
+  connection,
+  connector,
+  selected,
+  existingTarget,
+}: ReconcileSyncBindingsInput) =>
   Effect.gen(function* () {
     const existingBindings = yield* Database.query(
       Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding),

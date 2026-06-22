@@ -45,10 +45,7 @@ const MESSAGE_PAGE_LIMIT = 100;
  * `daysOfHistory` value, since the option is only consulted while `cursor`
  * is unset.
  */
-const computeInitialCursor = (
-  cursor: string | undefined,
-  options: Record<string, unknown> | undefined,
-): string => {
+const computeInitialCursor = (cursor: string | undefined, options: Record<string, unknown> | undefined): string => {
   if (cursor) {
     return cursor;
   }

@@ -143,19 +143,20 @@ export const findChannelForConversation: (
 export const findOrCreateChannelForTarget: (input: {
   remoteId: string;
   name?: string;
-}) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForTarget')(
-  function* ({ remoteId, name }) {
-    const existing = yield* findChannelForConversation(remoteId);
-    if (existing) {
-      return existing;
-    }
-    const channel = Channel.make({
-      [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: remoteId }] },
-      name: name ?? remoteId,
-    });
-    return yield* Database.add(channel);
-  },
-);
+}) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForTarget')(function* ({
+  remoteId,
+  name,
+}) {
+  const existing = yield* findChannelForConversation(remoteId);
+  if (existing) {
+    return existing;
+  }
+  const channel = Channel.make({
+    [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: remoteId }] },
+    name: name ?? remoteId,
+  });
+  return yield* Database.add(channel);
+});
 
 /**
  * Resolves Slack user ids referenced in `messages` to {@link SlackApi.SlackUser}

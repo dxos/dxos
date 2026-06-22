@@ -10,8 +10,8 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { GraphBuilder } from '@dxos/plugin-graph';
 import { SyncBinding } from '@dxos/plugin-connector';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { Kanban } from '@dxos/plugin-kanban';
 
 import { meta } from '#meta';
