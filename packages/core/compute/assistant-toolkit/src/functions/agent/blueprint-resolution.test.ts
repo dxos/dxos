@@ -7,7 +7,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -40,16 +40,16 @@ describe('Blueprint binding resolution (registry refs)', () => {
         const { db } = yield* Database.Service;
 
         // Register the web-search blueprint in the db registry (the resolver's registry),
-        // the same way `plugin-automation/RegistrySync` does in production.
+        // the same way `plugin-routine/RegistrySync` does in production.
         db.registry.add([WebSearchBlueprint.make()]);
 
         // Create a routine referencing the blueprint purely by registry URI. Once added to the
         // DB its blueprint ref is a resolver-backed registry ref — exactly the ref `prompt.ts`
         // binds.
         const routine = yield* Database.add(
-          Routine.make({
+          Instructions.make({
             name: 'resolution-test',
-            instructions: 'noop',
+            text: 'noop',
             blueprints: [Ref.fromURI(Blueprint.registryURI(blueprintKey))],
           }),
         );
@@ -92,9 +92,9 @@ describe('Blueprint binding resolution (registry refs)', () => {
         db.registry.add([WebSearchBlueprint.make()]);
 
         const routine = yield* Database.add(
-          Routine.make({
+          Instructions.make({
             name: 'resolution-test',
-            instructions: 'noop',
+            text: 'noop',
             blueprints: [Ref.fromURI(Blueprint.registryURI(blueprintKey))],
           }),
         );

@@ -14,7 +14,7 @@ export * as Operation from './Operation';
 export * as OperationHandlerSet from './OperationHandlerSet';
 export * as OperationRegistry from './OperationRegistry';
 export * as Process from './Process';
-export * as Routine from './Routine';
+export * as Instructions from './Instructions';
 export * as Script from './Script';
 export * as ServiceResolver from './ServiceResolver';
 export * as StorageService from './StorageService';

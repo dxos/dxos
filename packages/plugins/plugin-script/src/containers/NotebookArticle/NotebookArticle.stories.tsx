@@ -13,7 +13,7 @@ import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/testing';
@@ -63,7 +63,7 @@ const meta: Meta<typeof NotebookArticle> = {
             }),
         }),
         AssistantPlugin(),
-        AutomationPlugin(),
+        RoutinePlugin(),
         ExplorerPlugin(),
         MarkdownPlugin(),
       ],

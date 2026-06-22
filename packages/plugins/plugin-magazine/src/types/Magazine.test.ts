@@ -58,9 +58,9 @@ describe('Magazine', () => {
         const routine = yield* Database.load(magazine.routine!);
         expect(routine.blueprints.length).toBeGreaterThan(0);
 
-        const instructions = yield* Database.load(routine.instructions);
-        expect(instructions.content).toContain('## Topic');
-        expect(instructions.content).toContain('Astronomy news');
+        const text = yield* Database.load(routine.text);
+        expect(text.content).toContain('## Topic');
+        expect(text.content).toContain('Astronomy news');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Blueprint, Instructions, Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Automation, type AutomationCapabilities } from '@dxos/plugin-automation';
+import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { trim } from '@dxos/util';
 
@@ -34,7 +34,7 @@ const DEFAULT_INSTRUCTIONS = trim`
 `;
 
 /** CRM automation template. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`. */
-export const crm: AutomationCapabilities.Template = {
+export const crm: RoutineCapabilities.Template = {
   id: 'org.dxos.automation.crm',
   label: 'CRM',
   icon: 'ph--address-book--regular',
@@ -50,9 +50,9 @@ export const crm: AutomationCapabilities.Template = {
 
       const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
       const routine = yield* Database.add(
-        Routine.make({
+        Instructions.make({
           name: routineName,
-          instructions: DEFAULT_INSTRUCTIONS,
+          text: DEFAULT_INSTRUCTIONS,
           blueprints: blueprintRefs,
         }),
       );
@@ -78,7 +78,7 @@ export const crm: AutomationCapabilities.Template = {
         }),
       );
 
-      const automation = Automation.make({
+      const automation = Routine.make({
         name: name ?? routineName,
         runnable: Ref.make(agentPromptFn),
         triggers: [Ref.make(trigger)],

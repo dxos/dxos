@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Operation, Routine } from '@dxos/compute';
+import { Operation, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -161,7 +161,7 @@ export default Capability.makeModule(
         id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
-          NodeMatcher.whenEchoTypeMatches(Routine.Routine),
+          NodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
         ),
         connector: () =>
           Effect.succeed([

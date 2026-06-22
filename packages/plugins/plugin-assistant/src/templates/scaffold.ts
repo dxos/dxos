@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Automation } from '@dxos/plugin-automation';
+import { Routine } from '@dxos/plugin-routine';
 
 /** Registry key of the persisted AgentPrompt ("Run Routine") operation a routine trigger dispatches. */
 const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
@@ -30,13 +30,13 @@ export const makeScheduledRoutineAutomation = ({
   instructions,
   blueprintKeys,
   cron,
-}: ScheduledRoutineOptions): Effect.Effect<Automation.Automation, Error, Database.Service> =>
+}: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, Error, Database.Service> =>
   Effect.gen(function* () {
     const blueprints = blueprintKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
     const routine = yield* Database.add(
-      Routine.make({
+      Instructions.make({
         name,
-        instructions,
+        text: instructions,
         blueprints,
       }),
     );
@@ -58,7 +58,7 @@ export const makeScheduledRoutineAutomation = ({
       }),
     );
 
-    const automation = Automation.make({
+    const automation = Routine.make({
       name,
       runnable: Ref.make(agentPromptFn),
       triggers: [Ref.make(trigger)],

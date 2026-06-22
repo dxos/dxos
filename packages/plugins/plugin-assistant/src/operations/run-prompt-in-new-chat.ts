@@ -8,11 +8,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
+import { Blueprint, Operation, Instructions, Template } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
@@ -20,8 +20,8 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatPath } from '../paths';
 
-const handler: Operation.WithHandler<typeof AutomationOperation.RunPromptInNewChat> =
-  AutomationOperation.RunPromptInNewChat.pipe(
+const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
+  RoutineOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
         function* ({ db, prompt, objects, blueprints, background }) {
@@ -64,8 +64,8 @@ const handler: Operation.WithHandler<typeof AutomationOperation.RunPromptInNewCh
             const promptRef =
               typeof prompt === 'string'
                 ? Ref.make(
-                    Routine.make({
-                      instructions: prompt,
+                    Instructions.make({
+                      text: prompt,
                       blueprints: [],
                     }),
                   )
@@ -94,8 +94,8 @@ const handler: Operation.WithHandler<typeof AutomationOperation.RunPromptInNewCh
               ? prompt
               : yield* Effect.gen(function* () {
                   const promptObj = yield* Effect.promise(() => prompt.load());
-                  const source = yield* Effect.promise(() => promptObj.instructions.load());
-                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt instructions must be Text.');
+                  const source = yield* Effect.promise(() => promptObj.text.load());
+                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt text must be Text.');
                   return Template.process(source.content ?? '');
                 });
           yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({

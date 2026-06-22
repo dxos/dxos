@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { AiContext } from '@dxos/assistant';
-import { Routine } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -108,9 +108,9 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via AgentPrompt
         // with the inherited blueprints bound.
         const routine = yield* Database.add(
-          Routine.make({
+          Instructions.make({
             name: task.title,
-            instructions: trim`
+            text: trim`
               Complete the following task and report the result concisely.
 
               If you create any documents or artifacts, call completeJob with a JSON object of the

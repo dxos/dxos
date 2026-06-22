@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import { type RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { makeScheduledRoutineAutomation } from './scaffold';
 
@@ -23,7 +23,7 @@ Review new messages in the inbox and recently changed objects. Produce a short d
 highlight anything that needs attention, and write it to a markdown document titled with the current date.
 `;
 
-export const dailyDigest: AutomationCapabilities.Template = {
+export const dailyDigest: RoutineCapabilities.Template = {
   id: 'org.dxos.automation.dailyDigest',
   label: 'Daily Digest',
   icon: 'ph--list-bullets--regular',

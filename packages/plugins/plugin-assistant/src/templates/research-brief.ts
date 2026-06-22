@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import { type RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { makeScheduledRoutineAutomation } from './scaffold';
 
@@ -26,7 +26,7 @@ Gather current information with the web-search and research tools. Summarize the
 sources you used, and create a markdown document titled with the topic and the current date.
 `;
 
-export const researchBrief: AutomationCapabilities.Template = {
+export const researchBrief: RoutineCapabilities.Template = {
   id: 'org.dxos.automation.researchBrief',
   label: 'Research Brief',
   icon: 'ph--newspaper--regular',

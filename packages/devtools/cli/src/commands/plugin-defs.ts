@@ -4,7 +4,7 @@
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -31,7 +31,7 @@ export const getDefaults = (): string[] => [
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
-    AutomationPlugin(),
+    RoutinePlugin(),
     ChessPlugin(),
     SamplePlugin(),
     ClientPlugin({ config }),

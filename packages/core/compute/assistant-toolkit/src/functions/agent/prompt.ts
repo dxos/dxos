@@ -73,8 +73,8 @@ export default AgentPrompt.pipe(
           ),
         );
 
-        const promptInstructions = yield* Database.load(prompt.instructions);
-        let promptText = Template.process(promptInstructions.content, input);
+        const textDoc = yield* Database.load(prompt.text);
+        let promptText = Template.process(textDoc.content, input);
 
         if (input !== undefined) {
           promptText += `\n<input>${JSON.stringify(input)}</input>`;

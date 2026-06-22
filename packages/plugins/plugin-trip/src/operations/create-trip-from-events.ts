@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { Calendar } from '@dxos/plugin-inbox';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -43,7 +43,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
         }),
       );
 
-      yield* Operation.invoke(AutomationOperation.RunPromptInNewChat, {
+      yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
         db,
         objects: [trip],
         blueprints: [TRIP_BLUEPRINT_KEY],

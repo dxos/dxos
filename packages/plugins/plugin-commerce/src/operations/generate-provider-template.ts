@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Blueprint, Instructions, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
@@ -51,9 +51,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           // The AgentPrompt routine loads `blueprints`/`context` and binds them to its own session,
           // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
           // available to the agent without a pre-bound chat.
-          const routine = Routine.make({
+          const routine = Instructions.make({
             name: 'Generate Provider Template',
-            instructions: trim`
+            text: trim`
             Analyze the provider at ${provider.url} and populate its search template by calling the
             available tools: first analyze-provider to fetch the vendor site, then set-provider-template
             to persist the result. Derive the typed search fields (search schema), the request mapping,

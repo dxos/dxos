@@ -20,7 +20,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { LayerSpec } from '@dxos/compute';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -37,7 +37,7 @@ import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
 import { MagazinePlugin } from '../MagazinePlugin';
 
 // Curation runs the agent (CurateMagazine → AgentPrompt). The process-manager runtime therefore needs
-// the full agent stack: AutomationPlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
+// the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
 // MagazinePlugin the curation handlers; this story-local plugin adds the AgentPrompt handler and a
 // live edge AiService (the 'edge-remote' testing preset — no client edge-config or credentials needed).
 // Excluded from CI (the `Test` story is `!test`); intended for manual, signed-in, online use.
@@ -158,7 +158,7 @@ const meta: Meta<typeof DefaultStory> = {
         }),
         SpacePlugin({}),
         StorybookPlugin({}),
-        AutomationPlugin(),
+        RoutinePlugin(),
         MagazinePlugin(),
         AgentRuntimePlugin(),
       ],

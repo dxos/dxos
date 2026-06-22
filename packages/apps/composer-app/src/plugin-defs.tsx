@@ -11,7 +11,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
@@ -181,7 +181,7 @@ export const getPlugins = ({
   return [
     AssistantPlugin(),
     AttentionPlugin(),
-    AutomationPlugin(),
+    RoutinePlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     CallsPlugin(),

@@ -12,7 +12,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { initializeIdentity, ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -57,7 +57,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
         AssistantPlugin(),
         PreviewPlugin(),
         StorybookPlugin({}),

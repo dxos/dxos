@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -166,7 +166,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
                 return key !== undefined && INCLUDE_BLUEPRINTS.includes(key);
               })
               .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Routine.make({ instructions: '', blueprints }));
+            cell.prompt = Ref.make(Instructions.make({ text: '', blueprints }));
           }
           break;
         }
@@ -234,7 +234,7 @@ const runPrompt = Effect.fn(function* ({
   input,
   onResult,
 }: {
-  prompt: Ref.Ref<Routine.Routine>;
+  prompt: Ref.Ref<Instructions.Instructions>;
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {

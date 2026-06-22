@@ -17,13 +17,13 @@ import {
   BlueprintManagerBlueprint,
   DatabaseBlueprint,
 } from '@dxos/assistant-toolkit';
-import { AgentService, Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { AgentService, Blueprint, Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -111,7 +111,7 @@ describe('AssistantPlugin', () => {
         AssistantPlugin({
           aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     });
 
@@ -124,10 +124,9 @@ describe('AssistantPlugin', () => {
     await harness.runPromise(
       Effect.gen(function* () {
         const routine = yield* Database.add(
-          Routine.make({
+          Instructions.make({
             name: 'capital-test',
-            instructions:
-              'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
+            text: 'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
           }),
         );
         yield* Database.flush();
@@ -156,7 +155,7 @@ describe('AssistantPlugin', () => {
         AssistantPlugin({
           aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     });
 

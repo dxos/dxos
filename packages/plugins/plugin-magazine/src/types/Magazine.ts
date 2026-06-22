@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
@@ -68,7 +68,7 @@ export const Magazine = Schema.Struct({
    * Routine's own fields), so the brief is edited there without a custom surface.
    * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
    */
-  routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
+  routine: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -122,9 +122,9 @@ export const make = (props: MakeProps = {}): Magazine => {
     postState: Ref.make(postState),
   });
 
-  const routine = Routine.make({
+  const routine = Instructions.make({
     name: props.name ? `${props.name} curation` : 'Magazine curation',
-    instructions: composeInstructions(props.instructions),
+    text: composeInstructions(props.instructions),
     blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
@@ -135,8 +135,8 @@ export const make = (props: MakeProps = {}): Magazine => {
 
   // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
   Obj.setParent(routine, magazine);
-  if (routine.instructions.target) {
-    Obj.setParent(routine.instructions.target, routine);
+  if (routine.text.target) {
+    Obj.setParent(routine.text.target, routine);
   }
   Obj.setParent(postState, magazine);
   return magazine;

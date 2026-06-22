@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { AgentPrompt, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
@@ -35,7 +35,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
       types: [
         Operation.PersistentOperation,
         Trigger.Trigger,
-        Routine.Routine,
+        Instructions.Instructions,
         Blueprint.Blueprint,
         Feed.Feed,
         Text.Text,
@@ -61,9 +61,9 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
     const databaseBlueprint = space.db.add(DatabaseBlueprint.make());
 
     const routine = space.db.add(
-      Routine.make({
+      Instructions.make({
         name: 'edge-e2e-count-orgs-db-blueprint',
-        instructions: trim`
+        text: trim`
               You have access to the Database blueprint tools.
               Use the Query tool exactly once with typename "${Type.getTypename(TestSchema.Organization)}" and no other arguments.
               Then call completeJob with the output object { "count": <number of rows returned by Query> }.

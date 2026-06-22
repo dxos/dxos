@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Automation } from '@dxos/plugin-automation';
+import { Routine } from '@dxos/plugin-routine';
 import { Mailbox } from '@dxos/plugin-inbox';
 
 import { crm } from './crm';
@@ -20,8 +20,8 @@ const BLUEPRINT_COUNT = 4;
 
 const dbLayer = TestDatabaseLayer({
   types: [
-    Automation.Automation,
     Routine.Routine,
+    Instructions.Instructions,
     Trigger.Trigger,
     Operation.PersistentOperation,
     Mailbox.Mailbox,
@@ -51,7 +51,7 @@ describe('crm automation template', () => {
       expect(automation.triggers).toHaveLength(1);
       expect(automation.runnable).toBeDefined();
 
-      const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
+      const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
       expect(routines).toHaveLength(1);
       expect(routines[0]?.name).toContain('Test Mailbox');
       expect(routines[0]?.blueprints).toHaveLength(BLUEPRINT_COUNT);

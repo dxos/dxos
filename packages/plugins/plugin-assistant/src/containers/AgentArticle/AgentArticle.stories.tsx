@@ -9,7 +9,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Plan, Agent } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -98,7 +98,7 @@ const meta = {
               );
             }),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
         AssistantPlugin(),
         PreviewPlugin(),
         StorybookPlugin({}),

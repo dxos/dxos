@@ -12,12 +12,12 @@ import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Operation, Routine, ServiceResolver, type Blueprint } from '@dxos/compute';
+import { Operation, Instructions, ServiceResolver, type Blueprint } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -53,12 +53,12 @@ const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Pro
   AssistantPlugin({
     aiServiceMiddleware: await makeAiServiceMiddleware(),
   }),
-  AutomationPlugin(),
+  RoutinePlugin(),
   InboxPlugin(),
   ...(options.plugins ?? []),
 ];
 
-const seedPrompt = (prompt: Routine.Routine) =>
+const seedPrompt = (prompt: Instructions.Instructions) =>
   Effect.gen(function* () {
     for (const blueprintRef of prompt.blueprints) {
       const blueprint = yield* Database.load(blueprintRef);
@@ -70,7 +70,7 @@ const seedPrompt = (prompt: Routine.Routine) =>
 
 const runAgentPrompt = <I>(
   harness: TestHarness,
-  prompt: Routine.Routine,
+  prompt: Instructions.Instructions,
   model: ModelName,
   spaceId: SpaceId,
   input: I,
@@ -120,8 +120,8 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
-    const prompt = Routine.make({
-      instructions: options.instructions,
+    const prompt = Instructions.make({
+      text: options.instructions,
       blueprints: options.blueprints ?? [],
     });
 

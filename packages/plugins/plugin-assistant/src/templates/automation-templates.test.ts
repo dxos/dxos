@@ -6,17 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
+import { Operation, Instructions, Trace, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Automation } from '@dxos/plugin-automation';
+import { Routine } from '@dxos/plugin-routine';
 
 import { dailyDigest } from './daily-digest';
 import { researchBrief } from './research-brief';
 
 const dbLayer = TestDatabaseLayer({
-  types: [Automation.Automation, Routine.Routine, Trigger.Trigger, Operation.PersistentOperation],
+  types: [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Operation.PersistentOperation],
 });
 
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
@@ -43,7 +43,7 @@ describe('scheduled automation templates', () => {
         expect(automation.triggers).toHaveLength(1);
         expect(automation.runnable).toBeDefined();
 
-        const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
+        const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
         expect(routines).toHaveLength(1);
         expect(routines[0]?.blueprints).toHaveLength(blueprintCount);
 

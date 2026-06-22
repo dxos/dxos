@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
-import { Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,14 +23,14 @@ import { AssistantPlugin } from '#plugin';
 EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {
-  // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).
+  // Hits RoutinePlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).
   // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
   test(
     'chat mode appends assistant messages to the chat queue',
     { tags: ['llm'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await createComposerTestApp({
-        plugins: [ClientPlugin({}), AssistantPlugin(), AutomationPlugin()],
+        plugins: [ClientPlugin({}), AssistantPlugin(), RoutinePlugin()],
       });
 
       const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -47,9 +47,9 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
           const prompt = yield* Database.add(
-            Routine.make({
+            Instructions.make({
               name: 'chat-mode-test',
-              instructions: 'Reply with a single word: ack.',
+              text: 'Reply with a single word: ack.',
               blueprints: [],
             }),
           );

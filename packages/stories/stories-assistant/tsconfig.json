@@ -103,9 +103,6 @@
       "path": "../../plugins/plugin-attention"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-board"
     },
     {
@@ -146,6 +143,9 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-script"

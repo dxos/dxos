@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
-import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -50,9 +50,9 @@ describe('Agent prompt', () => {
         );
 
         const prompt = yield* Database.add(
-          Routine.make({
+          Instructions.make({
             name: 'chat-mode-test',
-            instructions: 'Reply with a single word: ack.',
+            text: 'Reply with a single word: ack.',
             blueprints: [],
             output: Schema.String,
           }),
@@ -87,10 +87,9 @@ describe('Agent prompt', () => {
         });
 
         const routine = yield* Database.add(
-          Routine.make({
+          Instructions.make({
             name: 'output-schema-test',
-            instructions:
-              'Invent a fictional person and call completeJob with the success object describing them (name and age).',
+            text: 'Invent a fictional person and call completeJob with the success object describing them (name and age).',
             output: Person,
             blueprints: [],
           }),

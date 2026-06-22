@@ -112,13 +112,13 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

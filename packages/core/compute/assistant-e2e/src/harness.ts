@@ -17,7 +17,7 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-import { Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
 import { Database, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -25,7 +25,7 @@ import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -52,7 +52,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints'> {
+interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'blueprints'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
@@ -151,12 +151,12 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
   AssistantPlugin({
     aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx, options),
   }),
-  AutomationPlugin(),
+  RoutinePlugin(),
   InboxPlugin(),
   ...(options.plugins ?? []),
 ];
 
-const seedPrompt = (prompt: Routine.Routine) =>
+const seedPrompt = (prompt: Instructions.Instructions) =>
   Effect.gen(function* () {
     for (const blueprintRef of prompt.blueprints) {
       const blueprint = yield* Database.load(blueprintRef);
@@ -168,7 +168,7 @@ const seedPrompt = (prompt: Routine.Routine) =>
 
 const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spaceId }, Database.Service);
 
-const runAgentPrompt = (harness: TestHarness, routine: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
+const runAgentPrompt = (harness: TestHarness, routine: Instructions.Instructions, model: ModelName, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedPrompt(routine);
@@ -213,9 +213,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   });
   type OutputSchema = Schema.Schema.Type<typeof OutputSchema>;
 
-  const routine = Routine.make({
+  const routine = Instructions.make({
     name: options.name,
-    instructions: formatInstructions(options.instructions, options.completionCriteria),
+    text: formatInstructions(options.instructions, options.completionCriteria),
     blueprints: options.blueprints ?? getDefaultBlueprints(),
     output: OutputSchema,
   });
