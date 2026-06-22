@@ -70,18 +70,18 @@ const seedInstructions = (prompt: Instructions.Instructions) =>
 
 const runInstructions = <I>(
   harness: TestHarness,
-  prompt: Instructions.Instructions,
+  instructions: Instructions.Instructions,
   model: ModelName,
   spaceId: SpaceId,
   input: I,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
-      yield* seedInstructions(prompt);
+      yield* seedInstructions(instructions);
       return yield* Operation.invoke(
         RunInstructions,
         {
-          prompt: Ref.make(prompt),
+          prompt: Ref.make(instructions),
           input,
           systemInstructions: SYSTEM_INSTRUCTIONS,
           model,
@@ -107,7 +107,7 @@ export type VariantConfig =
     };
 
 /**
- * Creates an Evalite task that runs the assistant against a Routine and returns the agent's output.
+ * Creates an Evalite task that runs the assistant against Instructions and returns the agent's output.
  *
  * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
  *
@@ -120,7 +120,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
-    const prompt = Instructions.make({
+    const instructions = Instructions.make({
       text: options.instructions,
       blueprints: options.blueprints ?? [],
     });
@@ -143,7 +143,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
             EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
           );
 
-          return yield* Effect.promise(() => runInstructions(harness, prompt, model, personalSpace.id, input));
+          return yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id, input));
         }),
       ),
     );
