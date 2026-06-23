@@ -119,7 +119,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
         windowHours,
       };
     })
-    .sort((a, b) => a.windowHours - b.windowHours);
+    .sort((left, right) => left.windowHours - right.windowHours);
 
 /**
  * A single usage field: an optional number carrying its label/caption as `title`/`description`
@@ -260,7 +260,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                   onClick={() => setRawExpanded((value) => !value)}
                 />
               </Form.Row>
-              {rawExpanded && <JsonHighlighter data={data} />}
+              {rawExpanded && <JsonHighlighter data={data} testId='usage-raw-json' />}
             </Form.Section>
           )}
         </Form.Content>
