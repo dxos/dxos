@@ -25,7 +25,6 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Tables',
         'table-name.placeholder': 'Table name',
-        'settings.title': 'Table settings',
         'table-schema.label': 'Type',
         'companion-schema.label': 'Type',
         'continue.label': 'Continue',

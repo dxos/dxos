@@ -11,7 +11,6 @@ export const translations = [
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'Presenter',
-        'settings.title': 'Presenter settings',
         'toggle-presentation.label': 'Present',
       },
     },

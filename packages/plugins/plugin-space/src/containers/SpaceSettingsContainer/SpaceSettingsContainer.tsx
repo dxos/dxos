@@ -91,12 +91,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             );
             return (
               <Form.Row label={label} description={t('display-name.description')}>
-                <Input.TextInput
-                  value={getValue()}
-                  onChange={handleChange}
-                  placeholder={t('display-name-input.placeholder')}
-                  classNames='min-w-64'
-                />
+                <Input.Root>
+                  <Input.TextInput
+                    value={getValue()}
+                    onChange={handleChange}
+                    placeholder={t('display-name-input.placeholder')}
+                    classNames='min-w-64'
+                  />
+                </Input.Root>
               </Form.Row>
             );
           },
@@ -129,7 +131,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Row label={label} description={t('edge-replication.description')}>
-            <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
+            <Input.Root>
+              <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
+            </Input.Root>
           </Form.Row>
         );
       },

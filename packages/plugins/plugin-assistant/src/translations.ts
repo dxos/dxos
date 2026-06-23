@@ -84,7 +84,6 @@ export const translations: Resource[] = [
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
         'plugin.name': 'Assistant',
-        'settings.title': 'Assistant settings',
         'object.placeholder': 'New prompt',
         'create-object.label': 'Create prompt',
         'create-trigger.label': 'Create trigger',

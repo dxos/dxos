@@ -7,7 +7,6 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -100,7 +99,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...stackTranslations],
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

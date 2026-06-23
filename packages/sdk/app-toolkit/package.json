@@ -58,6 +58,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",

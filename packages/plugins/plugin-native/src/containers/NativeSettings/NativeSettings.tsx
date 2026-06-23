@@ -57,7 +57,7 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title')}>
+          <Form.Section title={meta.profile.name}>
             <Form.Row label={t('settings.updates.label')} description={description}>
               {button}
             </Form.Row>
