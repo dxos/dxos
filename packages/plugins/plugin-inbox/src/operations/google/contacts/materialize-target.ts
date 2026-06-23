@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { SyncDatabaseMissingError } from '../../../errors';
 import { InboxOperation } from '../../../types';
 
 /**

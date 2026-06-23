@@ -5,9 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { IntegrationSync, LayoutOperation } from '@dxos/app-toolkit';
+import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 
-const { mergeField, readSnapshot, snapshotField, writeSnapshot } = IntegrationSync;
+const { mergeField, readSnapshot, snapshotField, writeSnapshot } = ConnectorSync;
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';

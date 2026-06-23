@@ -8,12 +8,13 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 
 import { GoogleCalendar } from '../../../apis';
-import { AccessTokenNotPopulatedError, SyncDatabaseMissingError } from '../../../errors';
+import { AccessTokenNotPopulatedError } from '../../../errors';
 import { InboxOperation } from '../../../types';
 
 const CALENDAR_LIST_URL =

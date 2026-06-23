@@ -14,7 +14,7 @@ export const AiService = Capability.lazy<AssistantPluginOptions | void, Capabili
   'AiService',
   () => import('./ai-service'),
 );
-export const IntegrationProvider = Capability.lazy('AnthropicIntegrationProvider', () => import('./connector'));
+export const Connector = Capability.lazy('AnthropicConnector', () => import('./connector'));
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));

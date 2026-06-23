@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Subscription } from '@dxos/plugin-magazine';
 
 import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants';
-import { SyncDatabaseMissingError } from '../errors';
 import { MaterializeBlueskyTarget } from './definitions';
 
 /**

@@ -4,14 +4,6 @@
 
 import { type BaseErrorOptions, BaseError } from '@dxos/errors';
 
-const SYNC_DATABASE_MISSING_MESSAGE = 'No database for connection/binding ref.' as const;
-
-/** Connection/binding ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
-export class SyncDatabaseMissingError extends BaseError.extend(
-  'SyncDatabaseMissingError',
-  SYNC_DATABASE_MISSING_MESSAGE,
-) {}
-
 /** OAuth finished but `AccessToken.token` is still empty (race or incomplete persist). */
 export class AccessTokenNotPopulatedError extends BaseError.extend(
   'AccessTokenNotPopulatedError',

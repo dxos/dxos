@@ -4,11 +4,10 @@
 
 import * as Predicate from 'effect/Predicate';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { BaseError } from '@dxos/errors';
 
 const SLACK_API_ERROR_MESSAGE = 'Slack API returned an error.' as const;
-
-const SYNC_DATABASE_MISSING_MESSAGE = 'No database for connection/binding ref.' as const;
 
 /**
  * Slack returned `{ ok: false, error: '<code>' }`.
@@ -20,12 +19,6 @@ const SYNC_DATABASE_MISSING_MESSAGE = 'No database for connection/binding ref.' 
  */
 export class SlackApiError extends BaseError.extend('SlackApiError', SLACK_API_ERROR_MESSAGE) {}
 
-/** Connection/binding ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
-export class SyncDatabaseMissingError extends BaseError.extend(
-  'SyncDatabaseMissingError',
-  SYNC_DATABASE_MISSING_MESSAGE,
-) {}
-
 /**
  * User-facing / persisted diagnostic string for failures from Slack sync paths.
  */
@@ -35,7 +28,7 @@ export const formatSlackSyncFailure = (error: unknown): string => {
     return typeof code === 'string' ? `Slack API error: ${code}` : SLACK_API_ERROR_MESSAGE;
   }
   if (SyncDatabaseMissingError.is(error)) {
-    return SYNC_DATABASE_MISSING_MESSAGE;
+    return error.message;
   }
   if (error instanceof BaseError) {
     const keys = Object.keys(error.context);

@@ -10,7 +10,7 @@ export const ChannelBackend = Capability.lazy<ThreadCapabilities.ChannelBackendP
   'BlueskyChannelBackend',
   () => import('./channel-backend'),
 );
-export const IntegrationProvider = Capability.lazy('BlueskyIntegrationProvider', () => import('./connector'));
+export const Connector = Capability.lazy('BlueskyConnector', () => import('./connector'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

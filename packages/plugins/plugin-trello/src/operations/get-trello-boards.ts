@@ -5,10 +5,10 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { SyncDatabaseMissingError } from '../errors';
 import { TrelloApi } from '../services';
 import { TrelloOperation } from '../types';
 

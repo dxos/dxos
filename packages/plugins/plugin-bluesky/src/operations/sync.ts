@@ -6,6 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Database, Feed as EchoFeed, Obj, Ref, Relation } from '@dxos/echo';
@@ -16,7 +17,6 @@ import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Subscription } from '@dxos/plugin-magazine';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
-import { SyncDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { SyncBlueskyTargets } from './definitions';
 

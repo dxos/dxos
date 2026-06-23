@@ -20,11 +20,11 @@ describe('SlackPlugin', () => {
       plugins: [ClientPlugin({}), ConnectorPlugin(), SlackPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
+    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
     // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
     // ProcessManagerPlugin — both reach the SlackPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('SlackIntegrationProvider'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('SlackConnector'), moduleId('OperationHandler')]),
     );
   }, 30_000);
 });

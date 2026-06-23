@@ -20,11 +20,11 @@ describe('LinearPlugin', () => {
       plugins: [ClientPlugin({}), ConnectorPlugin(), LinearPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
+    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
     // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
     // ProcessManagerPlugin — both reach the LinearPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('LinearIntegrationProvider'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('LinearConnector'), moduleId('OperationHandler')]),
     );
   }, 30_000);
 });

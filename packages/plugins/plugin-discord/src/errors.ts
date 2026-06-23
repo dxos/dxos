@@ -4,15 +4,8 @@
 
 import * as Predicate from 'effect/Predicate';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { BaseError } from '@dxos/errors';
-
-const SYNC_DATABASE_MISSING_MESSAGE = 'No database for connection/binding ref.' as const;
-
-/** Connection/binding ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
-export class SyncDatabaseMissingError extends BaseError.extend(
-  'SyncDatabaseMissingError',
-  SYNC_DATABASE_MISSING_MESSAGE,
-) {}
 
 /**
  * Discord returned a non-2xx response. dfx surfaces these as
@@ -78,7 +71,7 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
     return typeof code === 'number' ? `Discord API error ${code}` : `Discord API error (HTTP ${error.response.status})`;
   }
   if (SyncDatabaseMissingError.is(error)) {
-    return SYNC_DATABASE_MISSING_MESSAGE;
+    return error.message;
   }
   if (error instanceof BaseError) {
     const keys = Object.keys(error.context);

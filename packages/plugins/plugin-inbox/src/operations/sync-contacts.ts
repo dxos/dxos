@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { type Database, Obj, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -12,7 +12,6 @@ import { SyncBinding } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
-import { SyncDatabaseMissingError } from '../errors';
 import { InboxOperation } from '../types';
 
 const dispatch = (bindingRef: Ref.Ref<SyncBinding.SyncBinding>, db: Database.Database) =>

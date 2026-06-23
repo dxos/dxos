@@ -5,9 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { IntegrationSync, LayoutOperation } from '@dxos/app-toolkit';
+import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 
-const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = IntegrationSync;
+const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = ConnectorSync;
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -19,7 +19,7 @@ import { Expando } from '@dxos/schema';
 import { meta } from '#meta';
 
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
-import { SyncDatabaseMissingError, formatTrelloSyncFailure } from '../errors';
+import { formatTrelloSyncFailure } from '../errors';
 import { TrelloApi } from '../services';
 import { TrelloOperation } from '../types';
 

@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -18,7 +18,7 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 
 import { SLACK_SOURCE } from '../constants';
-import { SyncDatabaseMissingError, formatSlackSyncFailure } from '../errors';
+import { formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
 import { SlackOperation } from '../types';
 

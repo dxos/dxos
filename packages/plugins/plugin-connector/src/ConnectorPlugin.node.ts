@@ -15,7 +15,7 @@ import { connector } from './commands';
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
     // TODO(wittjosiah): Find a better place to fire this event.
-    firesBeforeActivation: [AppActivationEvents.SetupIntegrationProviders],
+    firesBeforeActivation: [AppActivationEvents.SetupConnectors],
     activate: AppGraphBuilder,
   }),
   AppPlugin.addCommandModule({ commands: [connector] }),

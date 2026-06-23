@@ -111,12 +111,18 @@ export const mergeDeep = <T>(local: T, remote: T, snapshot: Snapshot<T>): MergeR
   return { value: remote, source: 'remote' };
 };
 
-/** Type alias for the binding-side carrier of snapshots. */
-export type SnapshotCarrier = Relation.Unknown & { snapshots?: Record<string, unknown> };
+/**
+ * Structural stand-in for the `SyncBinding` relation from `@dxos/plugin-connector`: the merge
+ * helpers read and write `SyncBinding.snapshots`, but app-toolkit cannot import that schema —
+ * plugin-connector depends on app-toolkit, so importing it back would form a dependency cycle.
+ * This captures the one field the helpers touch (`.snapshots`); every `SyncBinding` satisfies it,
+ * and the connector sync handlers pass their `SyncBinding` instances directly.
+ */
+export type SyncBindingLike = Relation.Unknown & { snapshots?: Record<string, unknown> };
 
-/** Reads `carrier.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
-export const readSnapshot = <T extends object>(carrier: SnapshotCarrier, foreignId: string): T | undefined => {
-  const snapshots = (carrier.snapshots ?? {}) as Record<string, unknown>;
+/** Reads `binding.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
+export const readSnapshot = <T extends object>(binding: SyncBindingLike, foreignId: string): T | undefined => {
+  const snapshots = (binding.snapshots ?? {}) as Record<string, unknown>;
   return snapshots[foreignId] as T | undefined;
 };
 
@@ -137,12 +143,12 @@ export const snapshotField = <T extends object, K extends keyof T>(snapshot: T |
 export const snapshotOf = <T>(present: boolean, value: T): Snapshot<T> => (present ? { value } : undefined);
 
 /**
- * Writes `carrier.snapshots[foreignId] = snapshot` inside a `Relation.update`. Allocates
+ * Writes `binding.snapshots[foreignId] = snapshot` inside a `Relation.update`. Allocates
  * a fresh map so the assignment is safe under ECHO's structural-sharing semantics.
  */
-export const writeSnapshot = (carrier: SnapshotCarrier, foreignId: string, snapshot: object): void => {
-  Relation.update(carrier, (carrier) => {
-    const existing = (carrier.snapshots ?? {}) as Record<string, unknown>;
-    carrier.snapshots = { ...existing, [foreignId]: snapshot };
+export const writeSnapshot = (binding: SyncBindingLike, foreignId: string, snapshot: object): void => {
+  Relation.update(binding, (binding) => {
+    const existing = (binding.snapshots ?? {}) as Record<string, unknown>;
+    binding.snapshots = { ...existing, [foreignId]: snapshot };
   });
 };

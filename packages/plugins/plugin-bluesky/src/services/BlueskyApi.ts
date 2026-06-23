@@ -19,12 +19,13 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/plugin-connector';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
-import { SyncDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
+import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
 
 //
 // Schemas

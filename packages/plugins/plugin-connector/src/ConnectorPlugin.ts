@@ -26,7 +26,7 @@ import { translations } from './translations';
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
     // TODO(wittjosiah): Find a better place to fire this event.
-    firesBeforeActivation: [AppActivationEvents.SetupIntegrationProviders],
+    firesBeforeActivation: [AppActivationEvents.SetupConnectors],
     activate: AppGraphBuilder,
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
@@ -35,7 +35,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupIntegrationProviders,
+    activatesOn: AppActivationEvents.SetupConnectors,
     activate: BuiltinConnectors,
   }),
   Plugin.addModule({
