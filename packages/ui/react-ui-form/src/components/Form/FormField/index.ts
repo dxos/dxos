@@ -5,7 +5,6 @@
 export * from './fields';
 export * from './presentation';
 
-export * from './FormFieldContainer';
 export * from './FormFieldHeader';
 export * from './FormField';
 export * from './FormRow';

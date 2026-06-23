@@ -9,10 +9,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { FormFieldHeader } from './FormFieldHeader';
-import { type FormFieldPresentation } from './presentation';
+import { FormFieldHeader } from '../FormField/FormFieldHeader';
+import { type FormFieldPresentation } from '../FormField/presentation';
 
-export type FormFieldContainerProps = ThemedClassName<
+export type FormFieldSetContainerProps = ThemedClassName<
   PropsWithChildren<{
     label?: string;
     /** JSON path of the group, forwarded to the label as field metadata. */
@@ -32,7 +32,7 @@ export type FormFieldContainerProps = ThemedClassName<
  * when collapsible, an indented bordered container around the body. Nested structs, object-array items,
  * and inline refs all reach this via `FormFieldSet`, so their visual containment is identical.
  */
-export const FormFieldContainer = ({
+export const FormFieldSetContainer = ({
   classNames,
   label,
   path,
@@ -40,7 +40,7 @@ export const FormFieldContainer = ({
   presentation,
   collapsible,
   children,
-}: FormFieldContainerProps) => {
+}: FormFieldSetContainerProps) => {
   const { t } = useTranslation(translationKey);
   // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
   const [collapsed, setCollapsed] = useState(false);

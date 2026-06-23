@@ -25,7 +25,7 @@ export type FormFieldHeaderProps = {
 /**
  * Header row for a labelled group or list: a label with optional trailing controls (an inline add
  * affordance and/or arbitrary `actions`). Shared by array/list fields ({@link ArrayField}, the view
- * editor) and {@link FormFieldContainer}'s collapse header, so all group/list headers render identically.
+ * editor) and {@link FormFieldSetContainer}'s collapse header, so all group/list headers render identically.
  */
 export const FormFieldHeader = ({
   label,
