@@ -275,11 +275,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute-runtime/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/ai/package.json",
           "jsonpath": "$.version"
         },
@@ -311,6 +306,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/compute-hyperformula/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/compute-runtime/package.json",
           "jsonpath": "$.version"
         },
         {

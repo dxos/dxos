@@ -10,7 +10,7 @@ import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
-import * as Chat from '../../types/Chat';
+import * as Chat from '../types/Chat';
 
 export const RunInstructions = Operation.make({
   meta: {

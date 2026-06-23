@@ -13,7 +13,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Text } from '@dxos/schema';
 
-import { WebSearchBlueprint } from '../../blueprints';
+import { WebSearchBlueprint } from '../skills';
 
 // Regression coverage for the CRM-instructions failure: blueprints live only in the registry
 // (referenced via `Ref.fromURI(Blueprint.registryURI(key))`), never forked into the space DB.

@@ -24,8 +24,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { PromptError } from '../../errors';
-import * as Chat from '../../types/Chat';
+import { PromptError } from '../errors';
+import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';

@@ -15,9 +15,9 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import * as Chat from '../../types/Chat';
+import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
-import defaultAgentPrompt from './prompt';
+import defaultAgentPrompt from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 

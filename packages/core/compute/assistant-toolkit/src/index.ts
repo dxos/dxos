@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './blueprints';
-export * from './crud';
-export * from './functions';
+export * from './skills';
+export * from './operations';
 export * from './supervisor';
 export * from './sync';
 export * from './toolkits';

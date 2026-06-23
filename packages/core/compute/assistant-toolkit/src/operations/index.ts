@@ -6,4 +6,4 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './definitions';
 
-export const AgentHandlers = OperationHandlerSet.lazy(() => import('./prompt'));
+export const AgentHandlers = OperationHandlerSet.lazy(() => import('./run-instructions'));
