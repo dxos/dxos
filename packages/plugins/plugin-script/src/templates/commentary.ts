@@ -16,7 +16,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -196,7 +196,7 @@ export default Commentary.pipe(
 
           // Load the text content and append the commentary
           const text = yield* Database.load(document.content);
-          const accessor = createDocAccessor(text, ['content']);
+          const accessor = Doc.createAccessor(text, ['content']);
           accessor.handle.change((doc: A.Doc<Text.Text>) => {
             A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
           });

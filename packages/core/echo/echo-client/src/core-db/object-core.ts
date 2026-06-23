@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
+import {
+  next as A,
+  type ChangeFn,
+  type ChangeOptions,
+  type Doc as AutomergeDoc,
+  type Heads,
+} from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import type { InspectOptionsStylized, inspect } from 'util';
@@ -24,15 +30,9 @@ import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type DocHandleProxy } from '../automerge';
+import * as Doc from '../automerge/Doc';
 import { docChangeSemaphore } from './doc-semaphore';
-import {
-  type DecodedAutomergePrimaryValue,
-  type DocAccessor,
-  type GetObjectCoreByIdOptions,
-  type KeyPath,
-  TargetKey,
-  isValidKeyPath,
-} from './types';
+import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types';
 
 /**
  * Minimal interface that ObjectCore requires from the containing database.
@@ -79,7 +79,7 @@ export class ObjectCore {
   /**
    * Set when the object is not bound to a database.
    */
-  public doc?: Doc<EntityStructure> | undefined;
+  public doc?: AutomergeDoc<EntityStructure> | undefined;
 
   /**
    * Set when the object is bound to a database.
@@ -90,7 +90,7 @@ export class ObjectCore {
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `EntityStructure`.
    */
-  public mountPath: KeyPath = [];
+  public mountPath: Doc.KeyPath = [];
 
   /**
    * Handles link resolution as well as manual changes.
@@ -196,7 +196,7 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc(): Doc<unknown> {
+  getDoc(): AutomergeDoc<unknown> {
     if (this.doc) {
       return this.doc;
     }
@@ -265,8 +265,8 @@ export class ObjectCore {
     return result;
   }
 
-  getDocAccessor(path: KeyPath = []): DocAccessor {
-    assertArgument(isValidKeyPath(path), 'path');
+  getDocAccessor(path: Doc.KeyPath = []): Doc.Accessor {
+    assertArgument(Doc.isKeyPath(path), 'path');
     const self = this;
     return {
       handle: {
@@ -388,7 +388,7 @@ export class ObjectCore {
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
+  arrayPush(path: Doc.KeyPath, items: DecodedAutomergePrimaryValue[]): number {
     const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
@@ -402,7 +402,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath): Doc<EntityStructure> | Doc<DatabaseDirectory> {
+  private _getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -413,7 +413,7 @@ export class ObjectCore {
     return value;
   }
 
-  private _setRaw(path: KeyPath, value: any): void {
+  private _setRaw(path: Doc.KeyPath, value: any): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -422,20 +422,20 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Rename to `get`.
-  getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
+  getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
     const decoded = this.decode(this._getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue): void {
+  setDecoded(path: Doc.KeyPath, value: DecodedAutomergePrimaryValue): void {
     this._setRaw(path, this.encode(value));
   }
 
   /**
    * Deletes key at path.
    */
-  delete(path: KeyPath): void {
+  delete(path: Doc.KeyPath): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -609,7 +609,7 @@ export class ObjectCore {
 export type BindOptions = {
   db: IDatabaseBinding;
   docHandle: DocHandleProxy<DatabaseDirectory>;
-  path: KeyPath;
+  path: Doc.KeyPath;
   /** Assign the state from the local doc into the shared structure for the database. */
   assignFromLocalState?: boolean;
 };
@@ -629,7 +629,7 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
  * without an eager migration. Scoped strictly to the `meta` namespace so unrelated values in `data` are
  * untouched.
  */
-const upgradeMeta = (path: KeyPath, value: unknown): unknown => {
+const upgradeMeta = (path: Doc.KeyPath, value: unknown): unknown => {
   if (path[0] !== META_NAMESPACE) {
     return value;
   }

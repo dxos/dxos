@@ -51,6 +51,27 @@ export const whenSpace = (node: Node.Node): Option.Option<Space> =>
  * ```
  */
 export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
-  const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
-  return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+  const maybeSpace = node.properties.space;
+  return node.type === SETTINGS_SECTION_TYPE && isSpace(maybeSpace) ? Option.some(maybeSpace) : Option.none();
 };
+
+/**
+ * Match navtree section-group nodes of a specific type and return the {@link Space}
+ * stored in `node.properties.space`.  Group nodes carry the space in properties
+ * (not `node.data`) so child connectors can access it without an extra graph lookup.
+ *
+ * @example
+ * ```ts
+ * GraphBuilder.createExtension({
+ *   id: 'myAiSection',
+ *   match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_AI_TYPE),
+ *   connector: (space) => Effect.succeed([...]),
+ * });
+ * ```
+ */
+export const whenNavTreeGroup =
+  (groupType: string) =>
+  (node: Node.Node): Option.Option<Space> => {
+    const maybeSpace = node.properties.space;
+    return node.type === groupType && isSpace(maybeSpace) ? Option.some(maybeSpace) : Option.none();
+  };

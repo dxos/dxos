@@ -5,24 +5,22 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Routine, Trace, Operation } from '@dxos/compute';
+import { Instructions, Trace, Operation } from '@dxos/compute';
 import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import * as Chat from '../../types/Chat';
 
-// TODO(dmaretskyi): Rename to RunRoutine.
-export const AgentPrompt = Operation.make({
+export const RunInstructions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.prompt'),
-    name: 'Run Routine',
+    key: DXN.make('org.dxos.function.runInstructions'),
+    name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
-    // TODO(burdon): Rename routine.
-    prompt: Ref.Ref(Routine.Routine),
+    instructions: Ref.Ref(Instructions.Instructions),
 
     /**
      * Input object or data.
@@ -47,7 +45,7 @@ export const AgentPrompt = Operation.make({
   output: Schema.Any,
   // ECHO types that the handler loads via Database.load(). Declaring them here ensures the
   // runtime registers their schema before remote invocation (e.g. via the EDGE function service).
-  types: [Routine.Routine, Text.Text, Feed.Feed, Chat.Chat],
+  types: [Instructions.Instructions, Text.Text, Feed.Feed, Chat.Chat],
   services: [
     AiService.AiService,
     Database.Service,

@@ -4,15 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Filter, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
@@ -59,7 +60,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport scroll>
             <Form.Content>
-              <Form.Section title='Section' description='This is a section' />
+              <Form.Section title='Section' description='This is a [section description](https://dxos.org).' />
               <Form.FieldSet />
               <Form.Actions />
             </Form.Content>
@@ -80,11 +81,12 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, Organization, Person],
+      types: [Tag.Tag, Organization, Person, Text.Text],
       onCreateSpace: ({ space }) => {
         [
           ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
           ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
+          Obj.make(Text.Text, { content: '# Brief\n\nEdit this **inline** markdown text.' }),
         ].map((obj) => space.db.add(obj));
       },
     }),
@@ -167,7 +169,7 @@ const SettingsSchema = Schema.mutable(
 
 export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
   render: (args) => (
-    <div className='grid grid-cols-2'>
+    <div className='grid grid-cols-2 w-full'>
       <DefaultStory {...args} />
       <DefaultStory {...args} variant='settings' />
     </div>
@@ -180,6 +182,52 @@ export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
       toolbar: true,
       fontSize: 14,
     },
+  },
+};
+
+const InlineMarkdownTextSchema = Schema.mutable(
+  Schema.Struct({
+    text: Schema.String,
+    instructions: Ref.Ref(Text.Text).pipe(
+      Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+      Annotation.FormInlineAnnotation.set(true),
+      Schema.annotations({
+        title: 'Instructions',
+        description: 'Ref to a Text object with both markdown and inline-ref annotations.',
+      }),
+    ),
+  }),
+);
+
+const InlineMarkdownTextStory = (args: DefaultStoryProps<any>) => {
+  const spaces = useSpaces();
+  const space = spaces[0];
+  const [text] = useQuery(space?.db, Filter.type(Text.Text));
+  const values = useMemo(() => (text ? { instructions: Ref.make(text) } : undefined), [text]);
+
+  if (!space || !values) {
+    return <Loading />;
+  }
+
+  return (
+    <DefaultStory
+      {...args}
+      schema={InlineMarkdownTextSchema}
+      values={values}
+      onCreate={(_type, props) => space.db.add(Obj.make(Text.Text, { content: '', ...props }))}
+    />
+  );
+};
+
+/**
+ * Exercises a `Ref<Text>` field carrying both `Format.TypeFormat.Markdown` and
+ * `FormInlineAnnotation` — the markdown editor should render inline rather than
+ * opening a ref picker or nested struct form.
+ */
+export const InlineMarkdownText: Story<any> = {
+  render: (args) => <InlineMarkdownTextStory {...args} />,
+  args: {
+    autoSave: true,
   },
 };
 

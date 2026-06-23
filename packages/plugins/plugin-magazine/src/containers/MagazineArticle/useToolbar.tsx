@@ -77,7 +77,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
       const busy = get(busyAtom);
       const hasFeeds = (get(Obj.atomProperty(magazine, 'feeds')) ?? []).length > 0;
       // Curate runs the magazine's Routine, so it is unavailable until that Routine exists.
-      const hasRoutine = Boolean(get(Obj.atomProperty(magazine, 'routine')));
+      const hasRoutine = Boolean(get(Obj.atomProperty(magazine, 'instructions')));
       // Curate is disabled while busy or until there is at least one feed; the tooltip explains why.
       const curateLabel = !hasFeeds ? 'no-feeds.label' : busy ? 'refreshing-magazine.label' : 'curate.label';
 

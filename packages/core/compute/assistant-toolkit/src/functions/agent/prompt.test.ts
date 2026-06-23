@@ -4,10 +4,11 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
-import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
@@ -15,7 +16,7 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import * as Chat from '../../types/Chat';
-import { AgentPrompt } from './definitions';
+import { RunInstructions } from './definitions';
 import defaultAgentPrompt from './prompt';
 
 EntityId.dangerouslyDisableRandomness();
@@ -48,18 +49,19 @@ describe('Agent prompt', () => {
           }),
         );
 
-        const prompt = yield* Database.add(
-          Routine.make({
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: 'chat-mode-test',
-            instructions: 'Reply with a single word: ack.',
+            text: 'Reply with a single word: ack.',
             blueprints: [],
+            output: Schema.String,
           }),
         );
 
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(AgentPrompt, {
-          prompt: Ref.make(prompt),
+        const result = yield* Operation.invoke(RunInstructions, {
+          instructions: Ref.make(instructions),
           input: {},
           chat: Ref.make(chat),
         });
@@ -68,6 +70,44 @@ describe('Agent prompt', () => {
 
         expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
         expect(result).toBe('ack');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'generates an object conforming to the instructions output schema',
+    Effect.fnUntraced(
+      function* (_) {
+        const Person = Schema.Struct({
+          name: Schema.String,
+          age: Schema.Number,
+        });
+
+        const instructions = yield* Database.add(
+          Instructions.make({
+            name: 'output-schema-test',
+            text: 'Invent a fictional person and call completeJob with the success object describing them (name and age).',
+            output: Person,
+            blueprints: [],
+          }),
+        );
+
+        yield* Database.flush();
+
+        const result = yield* Operation.invoke(RunInstructions, {
+          instructions: Ref.make(instructions),
+          input: {},
+        });
+
+        // The instructions persists its declared output as a JSON schema; decode it back and assert the
+        // agent-produced object satisfies that schema.
+        const outputSchema = JsonSchema.toEffectSchema(instructions.output);
+        const decoded = Schema.decodeUnknownSync(outputSchema)(result);
+        expect(typeof decoded.name).toBe('string');
+        expect(typeof decoded.age).toBe('number');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

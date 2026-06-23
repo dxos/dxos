@@ -222,7 +222,9 @@ export const makeFromDatabase = async ({
   }
 
   const allTypes = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
-  const type = allTypes.find((t) => Type.getTypename(t) === typename);
+  // `typename` is matched against both the bare typename and the type URI: callers pass the bare
+  // typename, but type-picker forms (TypeOptions) supply the versioned type URI as the field value.
+  const type = allTypes.find((t) => Type.getTypename(t) === typename || Type.getURI(t) === typename);
   invariant(type, `Type not found: ${typename}`);
   // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
   // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via

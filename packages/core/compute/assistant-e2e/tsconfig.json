@@ -16,13 +16,19 @@
       "path": "../../../plugins/plugin-assistant"
     },
     {
-      "path": "../../../plugins/plugin-automation"
-    },
-    {
       "path": "../../../plugins/plugin-client"
     },
     {
       "path": "../../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../../plugins/plugin-sandbox"
     },
     {
       "path": "../../../plugins/plugin-testing"
@@ -32,6 +38,9 @@
     },
     {
       "path": "../../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../../sdk/config"
     },
     {
       "path": "../../../sdk/types"
@@ -50,6 +59,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../functions-runtime"
     }
   ]
 }

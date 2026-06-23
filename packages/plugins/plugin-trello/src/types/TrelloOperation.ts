@@ -70,4 +70,4 @@ export const SyncTrelloBoard = Operation.make({
   // TODO(wittjosiah): same as GetTrelloBoards above — declare
   //   `services: [Database.Service]` once the OperationInvoker has a
   //   `databaseResolver`. Handler provides the layer itself for now.
-});
+}).pipe(Operation.visible);

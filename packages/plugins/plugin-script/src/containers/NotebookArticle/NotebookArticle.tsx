@@ -11,8 +11,8 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -99,20 +99,20 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     Effect.fnUntraced(function* () {
       invariant(graph);
 
-      const prompts =
+      const allInstructions =
         notebook?.cells
           .filter((cell) => cell.type === 'prompt')
           .map((cell) => cell.prompt)
           .filter(isNonNullable) ?? [];
 
-      for (const prompt of prompts) {
+      for (const instructions of allInstructions) {
         yield* runPrompt({
-          prompt,
+          instructions,
           input: { ...queryValues, ...graph.getValuesByName() },
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
-              [prompt.uri]: result,
+              [instructions.uri]: result,
             })),
         });
       }
@@ -166,7 +166,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
                 return key !== undefined && INCLUDE_BLUEPRINTS.includes(key);
               })
               .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Routine.make({ instructions: '', blueprints }));
+            cell.prompt = Ref.make(Instructions.make({ text: '', blueprints }));
           }
           break;
         }
@@ -230,17 +230,17 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
 
 // TODO(wittjosiah): Factor out. Copied from PromptArticle in plugin-assistant.
 const runPrompt = Effect.fn(function* ({
-  prompt,
+  instructions,
   input,
   onResult,
 }: {
-  prompt: Ref.Ref<Routine.Routine>;
+  instructions: Ref.Ref<Instructions.Instructions>;
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
+  const inputData: Operation.Definition.Input<typeof RunInstructions> = { instructions, input };
   // Invoke the function.
-  const result = yield* Operation.invoke(AgentPrompt, inputData).pipe(Effect.orDie, Effect.exit);
+  const result = yield* Operation.invoke(RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

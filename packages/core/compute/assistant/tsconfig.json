@@ -53,6 +53,9 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../../echo/echo-doc"
+    },
+    {
       "path": "../../echo/echo-protocol"
     },
     {

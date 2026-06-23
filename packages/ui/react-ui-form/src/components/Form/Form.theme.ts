@@ -13,8 +13,8 @@ export type FormBehavior = { showDescription: boolean };
 const formStyles = tv({
   slots: {
     viewport: '',
-    content: '',
-    section: 'flex flex-col pt-form-section-gap first:pt-0',
+    content: 'pb-3',
+    section: 'flex flex-col py-form-section-gap first:pt-0',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
     fieldSet: '',
@@ -32,9 +32,9 @@ const formStyles = tv({
         content: 'dx-document',
         // Gap on the section spaces its direct children — section title/description and, for action
         // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
-        section: 'my-8 gap-trim-md',
+        section: 'py-form-section-gap!',
         sectionTitle: 'px-trim-md text-xl',
-        sectionDescription: 'px-trim-md pb-trim-md',
+        sectionDescription: 'px-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.
         fieldSet: 'flex flex-col gap-trim-md',
         field: mx(

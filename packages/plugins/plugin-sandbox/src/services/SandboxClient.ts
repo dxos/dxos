@@ -24,19 +24,31 @@ export type FileEntry = {
   size?: number;
 };
 
+type ExecRequest = {
+  command: string;
+  cwd?: string;
+  env?: Record<string, string>;
+  timeout?: number;
+};
+
 /**
- * HTTP client for the sandbox REST service.
- * Base path: /api/sandbox
+ * HTTP client for the sandbox-service REST API.
+ * Service origin is configured separately from EDGE; routes are under `/api/sandbox`.
  */
 export class SandboxClient {
-  constructor(private readonly _baseUrl: string) {}
+  constructor(private readonly _origin: string) {}
+
+  #apiPath(path: string): string {
+    const origin = this._origin.replace(/\/$/, '');
+    return `${origin}/api/sandbox${path}`;
+  }
 
   async createSandbox(
     spaceId: string,
     sandboxId: string,
     options?: { name?: string; baseImage?: string; expiresIn?: number },
   ): Promise<SandboxRecord> {
-    const resp = await fetch(`${this._baseUrl}/api/sandbox/spaces/${spaceId}/sandboxes/${sandboxId}`, {
+    const resp = await fetch(this.#apiPath(`/spaces/${spaceId}/sandboxes/${sandboxId}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options ?? {}),
@@ -50,7 +62,7 @@ export class SandboxClient {
   }
 
   async getSandbox(spaceId: string, sandboxId: string): Promise<SandboxRecord> {
-    const resp = await fetch(`${this._baseUrl}/api/sandbox/spaces/${spaceId}/sandboxes/${sandboxId}`);
+    const resp = await fetch(this.#apiPath(`/spaces/${spaceId}/sandboxes/${sandboxId}`));
     if (!resp.ok) {
       const text = await resp.text().catch(() => resp.statusText);
       throw new Error(`Failed to get sandbox (${resp.status}): ${text}`);
@@ -59,12 +71,8 @@ export class SandboxClient {
     return data.sandbox as SandboxRecord;
   }
 
-  async exec(
-    spaceId: string,
-    sandboxId: string,
-    options: { command: string; cwd?: string; env?: Record<string, string>; timeout?: number; stdin?: string },
-  ): Promise<ExecResult> {
-    const resp = await fetch(`${this._baseUrl}/api/sandbox/spaces/${spaceId}/sandboxes/${sandboxId}/exec`, {
+  async exec(spaceId: string, sandboxId: string, options: ExecRequest): Promise<ExecResult> {
+    const resp = await fetch(this.#apiPath(`/spaces/${spaceId}/sandboxes/${sandboxId}/exec`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(options),
@@ -77,7 +85,7 @@ export class SandboxClient {
   }
 
   async readFile(spaceId: string, sandboxId: string, path: string): Promise<string> {
-    const url = new URL(`${this._baseUrl}/api/sandbox/spaces/${spaceId}/sandboxes/${sandboxId}/files`);
+    const url = new URL(this.#apiPath(`/spaces/${spaceId}/sandboxes/${sandboxId}/files`));
     url.searchParams.set('path', path);
     const resp = await fetch(url.toString());
     if (!resp.ok) {
@@ -89,7 +97,7 @@ export class SandboxClient {
   }
 
   async writeFile(spaceId: string, sandboxId: string, path: string, content: string): Promise<void> {
-    const url = new URL(`${this._baseUrl}/api/sandbox/spaces/${spaceId}/sandboxes/${sandboxId}/files`);
+    const url = new URL(this.#apiPath(`/spaces/${spaceId}/sandboxes/${sandboxId}/files`));
     url.searchParams.set('path', path);
     const resp = await fetch(url.toString(), {
       method: 'PUT',

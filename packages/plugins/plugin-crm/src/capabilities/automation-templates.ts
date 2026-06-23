@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { crm } from '../templates/crm';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.contributes(AutomationCapabilities.Template, crm)];
+    return [Capability.contributes(RoutineCapabilities.Template, crm)];
   }),
 );
