@@ -5,10 +5,6 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
-// Routine.Routine is referenced transitively through Magazine.Magazine in the exported types; this
-// import is required for portable .d.ts emission even though Routine is unused at runtime.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Routine } from '@dxos/plugin-routine';
 import { StateMap } from '@dxos/schema';
 
 import { Magazine, type Subscription } from '../types';
@@ -23,17 +19,18 @@ const EMPTY_CURATION_SLICE: CurationSlice = { snippet: undefined, imageUrl: unde
  * `postState`. Fires only when this Post's slice changes — sibling Posts' curation mutations are
  * discarded without propagating. Keyed by a value-equal `Data.tuple([post, magazine])`.
  */
-export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
-  Atom.make<CurationSlice>((get) => {
-    const [post, magazine] = key;
-    const stateMap = get(magazine.postState.atom);
-    if (!stateMap) {
-      return EMPTY_CURATION_SLICE;
-    }
-    const state = get(StateMap.atom<Magazine.PostState>(stateMap, post.id));
-    return { snippet: state.snippet, imageUrl: state.imageUrl };
-  }).pipe(Atom.keepAlive),
-);
+export const postCurationAtom: (key: readonly [Subscription.Post, Magazine.Magazine]) => Atom.Atom<CurationSlice> =
+  Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
+    Atom.make<CurationSlice>((get) => {
+      const [post, magazine] = key;
+      const stateMap = get(magazine.postState.atom);
+      if (!stateMap) {
+        return EMPTY_CURATION_SLICE;
+      }
+      const state = get(StateMap.atom<Magazine.PostState>(stateMap, post.id));
+      return { snippet: state.snippet, imageUrl: state.imageUrl };
+    }).pipe(Atom.keepAlive),
+  );
 
 /** This Post's magazine-scoped curation slice. */
 export const usePostCuration = (post: Subscription.Post, magazine: Magazine.Magazine): CurationSlice =>

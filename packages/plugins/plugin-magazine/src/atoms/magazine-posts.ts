@@ -6,10 +6,6 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
 import { Obj } from '@dxos/echo';
-// Routine.Routine is referenced transitively through Magazine.Magazine in the exported types; this
-// import is required for portable .d.ts emission even though Routine is unused at runtime.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Routine } from '@dxos/plugin-routine';
 
 import { type Magazine, type Subscription } from '../types';
 import { publishedTimestamp } from '../util/date';
@@ -61,7 +57,9 @@ const postVisibilityAtom = Atom.family((key: readonly [Subscription.Post, Magazi
  * view's filter boundary (star/archive); never on read-state changes. Keyed by a value-equal
  * `Data.tuple([magazine, view])`.
  */
-export const visibleMagazinePostsAtom = Atom.family((key: readonly [Magazine.Magazine, MagazineView]) =>
+export const visibleMagazinePostsAtom: (
+  key: readonly [Magazine.Magazine, MagazineView],
+) => Atom.Atom<Subscription.Post[]> = Atom.family((key: readonly [Magazine.Magazine, MagazineView]) =>
   Atom.make<Subscription.Post[]>((get) => {
     const [magazine, view] = key;
     const posts = get(magazinePostsAtom(magazine));
