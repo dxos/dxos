@@ -11,12 +11,8 @@ import { Markdown, Thread } from './plugins';
 
 random.seed(0);
 
+// NOTE: Reduce flakiness in CI by using waitForExpect.
 test.describe('Comments tests', () => {
-  // TODO(wittjosiah): Each test initializes the full app from scratch. The app bundle has grown
-  // enough that CI machines (which are ~2× slower than local Apple Silicon) push the longest tests
-  // past the 60s global timeout. 90s gives sufficient headroom without being excessively loose.
-  test.describe.configure({ timeout: 90_000 });
-
   let host: AppManager;
 
   test.beforeEach(async ({ browser }) => {
