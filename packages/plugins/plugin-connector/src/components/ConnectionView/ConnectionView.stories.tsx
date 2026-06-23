@@ -17,10 +17,10 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
-import { ConnectionView } from '#components';
 import { translations } from '#translations';
+import { Connection, SyncBinding } from '#types';
 
-import { Connection, SyncBinding } from '../../types';
+import { ConnectionView } from './ConnectionView';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
 const OptionsSchema = Schema.Struct({
@@ -72,7 +72,7 @@ const DefaultStory = ({ optionsSchema }: { optionsSchema?: Schema.Schema<any, an
 };
 
 const meta = {
-  title: 'plugins/plugin-connector/containers/ConnectionArticle',
+  title: 'plugins/plugin-connector/components/ConnectionView',
   render: DefaultStory,
   decorators: [
     withTheme(),
