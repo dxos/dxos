@@ -67,11 +67,11 @@ jobs:
         run: |
           # Determine channel argument: omit for production (default channel), use branch name otherwise.
           # Replace slashes with dashes to match the channel name used by cn-channel action.
-          BRANCH="${{ steps.extract_branch.outputs.branch }}"
+          # BRANCH is passed via env to avoid template-injection from expanding untrusted ref names into shell source.
           if [ "$BRANCH" = "production" ]; then
             CHANNEL_ARG=""
           else
-            CHANNEL=$(echo "$BRANCH" | sed 's|/|-|g')
+            CHANNEL=$(printf '%s' "$BRANCH" | sed 's|/|-|g')
             CHANNEL_ARG="--channel $CHANNEL"
           fi
 
@@ -113,6 +113,7 @@ jobs:
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Final version to be used: $NEW_VERSION"
         env:
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
 
       - name: Update tauri.conf.json
