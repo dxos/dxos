@@ -16,12 +16,12 @@ import { InboxOperation } from '../../../types';
 import { toGoogleEvent } from './mapper';
 
 export default InboxOperation.CreateGoogleCalendarEvent.pipe(
-  Operation.withHandler(({ event, googleCalendarId, integration: integrationRef }) =>
+  Operation.withHandler(({ event, googleCalendarId, connection: connectionRef }) =>
     Effect.gen(function* () {
-      log('creating calendar event', { googleCalendarId, integration: integrationRef.uri });
+      log('creating calendar event', { googleCalendarId, connection: connectionRef.uri });
       const response = yield* GoogleCalendar.createEvent(googleCalendarId, toGoogleEvent(event));
       log('calendar event created', { id: response.id });
       return { id: response.id };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromIntegration(integrationRef))),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
   ),
 );

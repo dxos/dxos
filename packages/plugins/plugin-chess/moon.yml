@@ -13,7 +13,7 @@ tasks:
       - '--entryPoint=src/ChessPlugin.tsx'
       - '--entryPoint=src/ChessPlugin.node.ts'
       - '--entryPoint=src/ChessPlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'

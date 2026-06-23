@@ -27,9 +27,9 @@ export default Config2.make({
       so the user can complete submission in their own browser session. Debug logs
       can be attached to any submission via the LogDownloader capability.
 
-      The support blueprint registers the createTicket, markInProgress,
+      The support skill registers the createTicket, markInProgress,
       resolveTicket, and searchDocs operations as AI tools. When a Ticket is the
-      active object the blueprint is bound to the chat companion so the assistant
+      active object the skill is bound to the chat companion so the assistant
       can manage the ticket lifecycle without leaving the conversation. The
       searchDocs operation starts with an in-memory stub and is designed to be
       replaced by a vector index or remote search endpoint without changing the

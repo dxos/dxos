@@ -249,10 +249,10 @@ feat F-4: Object Properties
 ```
 
 ```mdl
-feat F-5: Blueprint
+feat F-5: Skill
 
-  req F-5.1: MapPlugin contributes a Blueprint that enables AI to create and update maps.
-  req F-5.2: The blueprint instructions describe the plugin's geospatial capabilities.
+  req F-5.1: MapPlugin contributes a Skill that enables AI to create and update maps.
+  req F-5.2: The skill instructions describe the plugin's geospatial capabilities.
 ```
 
 ```mdl

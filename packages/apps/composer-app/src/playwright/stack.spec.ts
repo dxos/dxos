@@ -10,6 +10,11 @@ import { AppManager } from './app-manager';
 import { Markdown, Stack, StackPlugin } from './plugins';
 
 test.describe('Stack tests', () => {
+  // TODO(wittjosiah): Each test enables the stack plugin from scratch, which requires a full
+  // page reload (~30-40s). This should not be necessary once plugin enable/reload is faster
+  // or the plugin is pre-enabled in the test build. Until then, 90s gives sufficient headroom.
+  test.describe.configure({ timeout: 90_000 });
+
   let host: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {

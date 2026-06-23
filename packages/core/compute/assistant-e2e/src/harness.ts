@@ -15,7 +15,7 @@ import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/a
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { RunInstructions, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
@@ -37,10 +37,7 @@ import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
 
-export const getDefaultBlueprints = () => [
-  Ref.make(BlueprintManagerBlueprint.make()),
-  Ref.make(DatabaseBlueprint.make()),
-];
+export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
 
 const INSTRUCTIONS = trim`
   You are running within a test environment.
@@ -52,7 +49,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'blueprints'> {
+interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
@@ -158,9 +155,9 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
 
 const seedInstructions = (instructions: Instructions.Instructions) =>
   Effect.gen(function* () {
-    for (const blueprintRef of instructions.blueprints) {
-      const blueprint = yield* Database.load(blueprintRef);
-      yield* Database.add(blueprint);
+    for (const skillRef of instructions.skills) {
+      const skill = yield* Database.load(skillRef);
+      yield* Database.add(skill);
     }
     yield* Database.add(instructions);
     yield* Database.flush();
@@ -221,7 +218,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   const instructions = Instructions.make({
     name: options.name,
     text: formatInstructions(options.instructions, options.completionCriteria),
-    blueprints: options.blueprints ?? getDefaultBlueprints(),
+    skills: options.skills ?? getDefaultSkills(),
     output: OutputSchema,
   });
 

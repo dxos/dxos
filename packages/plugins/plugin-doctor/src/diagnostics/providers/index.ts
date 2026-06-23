@@ -3,12 +3,12 @@
 //
 
 import { type DiagnosticProvider } from '../types';
-import { blueprintToolsDiagnostic } from './blueprints';
 import { danglingRefsDiagnostic } from './dangling-refs';
 import { operationsServicesDiagnostic } from './operations';
 import { schemaDiagnostic } from './schema';
+import { skillToolsDiagnostic } from './skills';
 
-export { blueprintToolsDiagnostic } from './blueprints';
+export { skillToolsDiagnostic } from './skills';
 export { danglingRefsDiagnostic } from './dangling-refs';
 export { KNOWN_SERVICES, operationsServicesDiagnostic } from './operations';
 export { schemaDiagnostic } from './schema';
@@ -21,5 +21,5 @@ export const builtInDiagnostics: readonly DiagnosticProvider[] = [
   schemaDiagnostic,
   danglingRefsDiagnostic,
   operationsServicesDiagnostic,
-  blueprintToolsDiagnostic,
+  skillToolsDiagnostic,
 ];

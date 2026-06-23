@@ -8,7 +8,7 @@ A scripting plugin for `DXOS` Composer that lets users write, deploy, and run cu
 ECHO objects inside their spaces.
 Scripts execute on the Cloudflare Workers-based EDGE runtime and can call DXOS SDK packages, Effect-TS,
 and a curated set of third-party libraries.
-An AI assistant blueprint wires CRUD, deploy, invoke, and inspection operations as tools so an agent can
+An AI assistant skill wires CRUD, deploy, invoke, and inspection operations as tools so an agent can
 scaffold, iterate, and test scripts entirely within a chat session.
 
 ## Extensions
@@ -143,7 +143,7 @@ component ScriptPluginSettings
 
 ## Operations
 
-Blueprint operations (called by the Script assistant via its tool set).
+Skill operations (called by the Script assistant via its tool set).
 
 ```mdl
 op create
@@ -329,14 +329,14 @@ feat F-4: Execute Companion
 ```
 
 ```mdl
-feat F-5: Script Blueprint
+feat F-5: Script Skill
 
-  req F-5.1: A blueprint with key `org.dxos.blueprint.script` is contributed via `addBlueprintDefinitionModule`.
-  req F-5.2: Blueprint tool set includes: create, read, update, delete, deploy, invoke,
+  req F-5.1: A skill with key `org.dxos.skill.script` is contributed via `addSkillDefinitionModule`.
+  req F-5.2: Skill tool set includes: create, read, update, delete, deploy, invoke,
              inspectInvocations, queryDeployedFunctions, installFunction.
   req F-5.3: System instructions describe the EDGE Operation pattern, required export format,
              and available packages.
-  req F-5.4: Blueprint is agent-enabled; the assistant can activate it autonomously.
+  req F-5.4: Skill is agent-enabled; the assistant can activate it autonomously.
 ```
 
 ```mdl
@@ -413,11 +413,11 @@ test T-6: Inspect invocations
 ```
 
 ```mdl
-test T-7: Blueprint tools resolve
+test T-7: Skill tools resolve
   given: composer-app with plugin-script loaded
-  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.script`
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.script`
   then:
-    - blueprint is present
+    - skill is present
     - tool set includes create, read, update, delete, deploy, invoke,
       inspectInvocations, queryDeployedFunctions, and installFunction
 ```

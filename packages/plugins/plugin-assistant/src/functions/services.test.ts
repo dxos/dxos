@@ -6,10 +6,10 @@ import { describe, test } from 'vitest';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import {
-  AgentBlueprintHandlers,
+  AgentSkillHandlers,
   AgentHandlers,
   AgentWizardHandlers,
-  BlueprintManagerHandlers,
+  SkillManagerHandlers,
   DatabaseHandlers,
   DelegationHandlers,
   WebSearchHandlers,
@@ -22,8 +22,8 @@ import { AssistantOperationHandlerSet } from '#operations';
 const handlerSet = OperationHandlerSet.merge(
   AssistantOperationHandlerSet,
   AgentHandlers,
-  AgentBlueprintHandlers,
-  BlueprintManagerHandlers,
+  AgentSkillHandlers,
+  SkillManagerHandlers,
   DatabaseHandlers,
   WebSearchHandlers,
   AgentWizardHandlers,

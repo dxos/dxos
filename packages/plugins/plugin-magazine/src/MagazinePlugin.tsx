@@ -8,7 +8,7 @@ import { Instructions } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
@@ -21,7 +21,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

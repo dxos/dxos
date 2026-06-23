@@ -115,6 +115,9 @@
       "path": "../../plugins/plugin-comments"
     },
     {
+      "path": "../../plugins/plugin-connector"
+    },
+    {
       "path": "../../plugins/plugin-deck"
     },
     {
@@ -128,9 +131,6 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
-    },
-    {
-      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-map"

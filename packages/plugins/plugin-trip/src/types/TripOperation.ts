@@ -64,7 +64,7 @@ export const MergeTrip = Operation.make({
 /**
  * Build a new Trip + itinerary from a set of calendar Events. Each Event that has a `location`
  * becomes an `activity` Segment at that address; events without a location are skipped. The Trip is
- * persisted to the calendar's space, the user is navigated to it, and the trip-planning blueprint is
+ * persisted to the calendar's space, the user is navigated to it, and the trip-planning skill is
  * run in the background to fill in connecting travel and accommodation. The Calendar and Events are
  * passed as live ECHO objects (validated/narrowed in the handler).
  */
@@ -85,7 +85,7 @@ export const CreateTripFromEvents = Operation.make({
 });
 
 /**
- * Add a single Segment to a Trip. Exposed to the trip-planning blueprint so the agent can build out
+ * Add a single Segment to a Trip. Exposed to the trip-planning skill so the agent can build out
  * an itinerary (connecting travel, accommodation) around the fixed activity stops.
  */
 export const AddSegment = Operation.make({

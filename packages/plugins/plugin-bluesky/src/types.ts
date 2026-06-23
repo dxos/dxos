@@ -23,9 +23,8 @@ export interface BlueskyChannel extends Type.InstanceType<typeof BlueskyChannel>
 export const makeBlueskyChannel = (handle: string): BlueskyChannel => Obj.make(BlueskyChannel, { handle });
 
 /**
- * Per-target sync options exposed to the user via `provider.optionsSchema`
- * and edited from `IntegrationArticle`. Stored under
- * `IntegrationTarget.options` (free-form record).
+ * Per-target sync options exposed to the user via the connector's
+ * `optionsSchema`. Stored under `SyncBinding.options` (free-form record).
  */
 export const BlueskyTargetOptions = Schema.Struct({
   /**

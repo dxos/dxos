@@ -7,7 +7,15 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNode,
+  AppNodeMatcher,
+  AppSpace,
+  LayoutOperation,
+  Paths,
+  TypeSection,
+} from '@dxos/app-toolkit';
 import { RunInstructions, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation, Instructions } from '@dxos/compute';
@@ -41,13 +49,13 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
       GraphBuilder.createExtension({
-        id: AppNode.NAV_TREE_GROUP_AI_ID,
+        id: Paths.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
           Effect.succeed([
             AppNode.makeGroup({
-              id: AppNode.NAV_TREE_GROUP_AI_ID,
-              type: AppNode.NAV_TREE_GROUP_AI_TYPE,
+              id: Paths.GroupSegments.ai,
+              type: Paths.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
               space,
               position: 100,
@@ -197,7 +205,7 @@ export default Capability.makeModule(
           Query.select(Filter.type(Chat.Chat)),
           Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
         ),
-        match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_AI_TYPE),
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
       }),
 
       // Create-chat action on the Chats section header.

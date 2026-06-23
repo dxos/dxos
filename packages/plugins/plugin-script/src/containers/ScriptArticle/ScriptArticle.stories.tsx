@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
@@ -80,7 +80,7 @@ const meta = {
               services: SERVICES_CONFIG.REMOTE,
             },
           }),
-          types: [Script.Script, Operation.PersistentOperation, Blueprint.Blueprint, Text.Text],
+          types: [Script.Script, Operation.PersistentOperation, Skill.Skill, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

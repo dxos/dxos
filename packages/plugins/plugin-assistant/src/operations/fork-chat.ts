@@ -58,7 +58,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         ]).pipe(Effect.provide(dbLayer));
       }
 
-      // Copy source chat's blueprint and object bindings to the new feed.
+      // Copy source chat's skill and object bindings to the new feed.
       // Sort chronologically so add/remove events are applied in the correct order.
       const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
         Effect.provide(dbLayer),
@@ -66,18 +66,18 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       if (sourceBindings.length > 0) {
         // Reduce binding events to the final active set.
-        const blueprintRefMap = new Map<string, Ref.Ref<any>>();
+        const skillRefMap = new Map<string, Ref.Ref<any>>();
         const objectRefMap = new Map<string, Ref.Ref<any>>();
         for (const binding of sourceBindings) {
-          binding.blueprints.added.forEach((ref: Ref.Ref<any>) => blueprintRefMap.set(ref.uri, ref));
-          binding.blueprints.removed.forEach((ref: Ref.Ref<any>) => blueprintRefMap.delete(ref.uri));
+          binding.skills.added.forEach((ref: Ref.Ref<any>) => skillRefMap.set(ref.uri, ref));
+          binding.skills.removed.forEach((ref: Ref.Ref<any>) => skillRefMap.delete(ref.uri));
           binding.objects.added.forEach((ref: Ref.Ref<any>) => objectRefMap.set(ref.uri, ref));
           binding.objects.removed.forEach((ref: Ref.Ref<any>) => objectRefMap.delete(ref.uri));
         }
 
         yield* Feed.append(newFeed, [
           Obj.make(AiContext.Binding, {
-            blueprints: { added: Array.from(blueprintRefMap.values()), removed: [] },
+            skills: { added: Array.from(skillRefMap.values()), removed: [] },
             objects: { added: Array.from(objectRefMap.values()), removed: [] },
           }),
         ]).pipe(Effect.provide(dbLayer));

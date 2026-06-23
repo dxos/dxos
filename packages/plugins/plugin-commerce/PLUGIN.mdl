@@ -7,7 +7,7 @@ version: 0.1.0
 A Composer plugin for structured product search across configurable vendor sites.
 Users configure **Providers** (search site templates), compose a **Search** across
 one or more of them, and get back a list of **Results**. Providers are authored
-once — either by the user or via an LLM blueprint that derives the template by
+once — either by the user or via an LLM skill that derives the template by
 inspecting the vendor site — and reused across many searches.
 
 Supported verticals include retail (products), automotive listings, real estate,
@@ -35,7 +35,7 @@ type Provider
     A configured search site. Contains a typed search-field schema plus the
     request and result mappings needed to turn criteria into listings.
     Providers of kind 'api' call a JSON endpoint; kind 'scrape' parse HTML.
-    Templates are authored by the AnalyzeProvider blueprint or edited manually
+    Templates are authored by the AnalyzeProvider skill or edited manually
     via ProviderArticle.
   fields:
     name: string
@@ -50,7 +50,7 @@ type Provider
     icon: ph--globe--regular
     hue: cyan
     label: name
-    blueprint: org.dxos.plugin.commerce/blueprint/provider
+    skill: org.dxos.plugin.commerce/skill/provider
 ```
 
 ```mdl
@@ -181,7 +181,7 @@ component ProviderArticle
   desc: >
     Article surface for editing a Provider. Shows name/url/kind fields plus
     a code-editor region for the raw searchSchema, request, and result
-    mappings. An 'Analyze' toolbar button triggers the AnalyzeProvider blueprint
+    mappings. An 'Analyze' toolbar button triggers the AnalyzeProvider skill
     to auto-derive the template from the live site.
   props:
     provider: Provider
@@ -192,13 +192,13 @@ component ProviderArticle
 ## Services
 
 ```mdl
-service AnalyzeProviderBlueprint
+service AnalyzeProviderSkill
   desc: >
-    LLM blueprint that derives a Provider's template from the live vendor site.
+    LLM skill that derives a Provider's template from the live vendor site.
     Triggered by the Analyze button in ProviderArticle or by a user chat message.
     The agent calls AnalyzeProvider (which fetches the page source), then calls
     SetProviderTemplate to persist the derived schema + mappings.
-  key: org.dxos.plugin.commerce/blueprint/provider
+  key: org.dxos.plugin.commerce/skill/provider
   ops:
     # Tools exposed to the agent:
     # - AnalyzeProvider    (fetch page source)
@@ -212,7 +212,7 @@ op AnalyzeProvider
   desc: >
     Fetches the provider's vendor site via the edge proxy and returns the
     page HTML/JSON source. Pure read — does not mutate the Provider. Used by
-    the blueprint agent as the inspection step before deriving the template.
+    the skill agent as the inspection step before deriving the template.
   input:
     provider: Ref<Provider>
   output: string                    # raw page source
@@ -279,12 +279,12 @@ feat F-1: Provider Templates
 ```
 
 ```mdl
-feat F-2: Blueprint-Derived Templates
+feat F-2: Skill-Derived Templates
   desc: LLM agent derives Provider template from the live site.
 
   req F-2.1: AnalyzeProvider fetches the vendor site and returns page source.
   req F-2.2: SetProviderTemplate persists searchSchema + request + result in one write.
-  req F-2.3: ProviderArticle Analyze button triggers the blueprint flow.
+  req F-2.3: ProviderArticle Analyze button triggers the skill flow.
   req F-2.4: After SetProviderTemplate, the provider is ready for RunProviderSearch.
 ```
 
@@ -395,7 +395,7 @@ test T-7: Run Search button disabled without providers
 Provider templates are the central configuration artifact. Two authoring paths
 exist:
 
-- **Blueprint path (agent-assisted).** The `AnalyzeProvider` blueprint fetches
+- **Skill path (agent-assisted).** The `AnalyzeProvider` skill fetches
   the vendor site and derives `searchSchema`, `request`, and `result` mappings
   via an LLM. The agent uses two tools (`AnalyzeProvider` for fetch, then
   `SetProviderTemplate` to persist). Triggered from ProviderArticle's Analyze

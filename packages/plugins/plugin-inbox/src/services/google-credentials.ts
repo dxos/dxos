@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { Credential } from '@dxos/compute';
 import { Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
+import { Connection } from '@dxos/plugin-connector';
 
 /**
  * Creates the service interface from a cached token.
@@ -25,10 +25,10 @@ const makeService = (cachedToken: string | undefined): Context.Tag.Service<Googl
 /**
  * Service for accessing Google API credentials.
  *
- * Token sourcing follows the Trello pattern: the wrapping `Integration`
- * owns the `AccessToken`, and sync ops compose `fromIntegration(ref)` once
- * at the operation boundary. Falls back to database credentials when no
- * Integration is in scope (legacy / agent paths).
+ * Token sourcing follows the Trello pattern: the `Connection` owns the
+ * `AccessToken`, and sync ops compose `fromConnection(ref)` once at the
+ * operation boundary. Falls back to database credentials when no Connection
+ * is in scope (legacy / agent paths).
  */
 export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   GoogleCredentials,
@@ -38,17 +38,17 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   }
 >() {
   /**
-   * Creates a credentials layer from an Integration ref. Loads the
-   * integration's `accessToken` and returns its `token` value.
+   * Creates a credentials layer from a Connection ref. Loads the
+   * connection's `accessToken` and returns its `token` value.
    */
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>) =>
+  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       GoogleCredentials,
       Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const connection = yield* Database.load(connectionRef);
+        const accessToken = yield* Database.load(connection.accessToken);
         if (accessToken?.token) {
-          log('using integration access token', { source: accessToken.source, account: accessToken.account });
+          log('using connection access token', { source: accessToken.source, account: accessToken.account });
           return makeService(accessToken.token);
         }
         return makeService(undefined);

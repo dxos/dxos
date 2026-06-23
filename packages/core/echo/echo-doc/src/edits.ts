@@ -9,7 +9,7 @@ import * as Doc from './Doc';
 
 /**
  * A single find/replace edit applied to a text document. This is the structured form of the diff
- * protocol described in document blueprints' instructions.
+ * protocol described in document skills' instructions.
  */
 export const Edit = Schema.Struct({
   oldString: Schema.String.annotations({

@@ -217,7 +217,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space, idx) => spaceStates[idx] !== SpaceState.SPACE_INACTIVE)
+              .filter((space, idx) => spaceStates[idx] === SpaceState.SPACE_READY)
               .filter(
                 (space) =>
                   space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
@@ -246,13 +246,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     // future plugin-communications) should own this once one exists.
     // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
     GraphBuilder.createExtension({
-      id: AppNode.NAV_TREE_GROUP_COMM_ID,
+      id: Paths.GroupSegments.communications,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: AppNode.NAV_TREE_GROUP_COMM_ID,
-            type: AppNode.NAV_TREE_GROUP_COMM_TYPE,
+            id: Paths.GroupSegments.communications,
+            type: Paths.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
             space,
             position: 300,

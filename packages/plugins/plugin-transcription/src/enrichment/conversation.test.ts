@@ -21,7 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as url from 'node:url';
 
-import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Skill, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -36,7 +36,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(...EnrichmentHandlers),
-  types: [Person.Person, Organization.Organization, Blueprint.Blueprint, Feed.Feed],
+  types: [Person.Person, Organization.Organization, Skill.Skill, Feed.Feed],
   disableLlmMemoization: true,
 });
 

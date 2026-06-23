@@ -1,0 +1,66 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Skill } from '@dxos/compute';
+import { Ref } from '@dxos/echo';
+import { Text } from '@dxos/schema';
+import { trim } from '@dxos/util';
+
+import {
+  Query,
+  Load,
+  ObjectCreate,
+  ObjectUpdate,
+  ObjectDelete,
+  SchemaAdd,
+  SchemaList,
+  ContextAdd,
+  ContextRemove,
+  RelationCreate,
+  RelationDelete,
+  TagAdd,
+  TagRemove,
+} from './operations/definitions';
+
+const SKILL_KEY = 'org.dxos.skill.database';
+
+const instructions = trim`
+  You can query, create, update, and delete objects in ECHO.
+  You can manage schemas, relations, tags, and add objects to the chat context.
+`;
+
+const make = () =>
+  Skill.make({
+    key: SKILL_KEY,
+    name: 'Database',
+    description: 'Query and manipulate objects in the ECHO database.',
+    agentCanEnable: true,
+    instructions: {
+      source: Ref.make(Text.make({ content: instructions })),
+    },
+    tools: Skill.toolDefinitions({
+      operations: [
+        ContextAdd,
+        ContextRemove,
+        Load,
+        ObjectCreate,
+        ObjectDelete,
+        ObjectUpdate,
+        Query,
+        RelationCreate,
+        RelationDelete,
+        SchemaAdd,
+        SchemaList,
+        TagAdd,
+        TagRemove,
+      ],
+    }),
+  });
+
+const skill: Skill.Definition = {
+  key: SKILL_KEY,
+  make,
+};
+
+export default skill;

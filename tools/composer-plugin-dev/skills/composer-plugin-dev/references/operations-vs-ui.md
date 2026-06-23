@@ -8,7 +8,7 @@
 - Any **external service** call (HTTP, Gmail, GitHub, OpenAI, etc.).
 - Any **LLM** call (use `AiService` — see [ai-service.md](./ai-service.md)).
 - Anything **non-trivial to compute** (parsing, rendering, simulation, search).
-- Anything you'd want an **agent** to be able to do (operations become blueprint tools — see [blueprints.md](./blueprints.md)).
+- Anything you'd want an **agent** to be able to do (operations become skill tools — see [skills.md](./skills.md)).
 - Anything you'd want to **invoke from the CLI** (operations are headless — see [package-json.md](./package-json.md)).
 
 ## What stays in containers
@@ -56,4 +56,4 @@ Move the fetch + transform into an operation, declare its services, and invoke i
 - [operations.md](./operations.md) — operation definition and handler patterns.
 - [external-services.md](./external-services.md) — auth and HTTP integration.
 - [ai-service.md](./ai-service.md) — LLM inference inside operations.
-- [blueprints.md](./blueprints.md) — surface operations to the assistant.
+- [skills.md](./skills.md) — surface operations to the assistant.

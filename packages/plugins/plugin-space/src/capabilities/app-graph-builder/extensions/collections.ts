@@ -41,13 +41,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Content section group — created alongside collections so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: AppNode.NAV_TREE_GROUP_CONTENT_ID,
+      id: Paths.GroupSegments.content,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: AppNode.NAV_TREE_GROUP_CONTENT_ID,
-            type: AppNode.NAV_TREE_GROUP_CONTENT_TYPE,
+            id: Paths.GroupSegments.content,
+            type: Paths.GroupTypes.content,
             label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
             space,
             position: 200,
@@ -58,7 +58,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Collections section virtual node under the content group.
     GraphBuilder.createExtension({
       id: 'collectionsSection',
-      match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_CONTENT_TYPE),
+      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
       connector: (space, get) => {
         get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(

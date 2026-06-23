@@ -71,7 +71,7 @@ export { Create, Move } from './definitions';
 export const FooHandlers = Handlers;
 ```
 
-Why two layers? Definitions are imported by **anyone** (UI, blueprints, CLI, tests) and must stay light. Handlers contain the heavy code path (HTTP, AI, DB writes) and are loaded lazily only when invoked.
+Why two layers? Definitions are imported by **anyone** (UI, skills, CLI, tests) and must stay light. Handlers contain the heavy code path (HTTP, AI, DB writes) and are loaded lazily only when invoked.
 
 ## Wire as a capability
 
@@ -105,4 +105,4 @@ The `services` array on a definition declares what the handler will need. Common
 - From the UI: `useOperationInvoker()` (returns `(op, input) => Promise<output>`).
 - From a test: `harness.invoke(Op, input)`.
 - From another operation: `yield* Operation.invoke(Op, input)`.
-- From an agent: register in a blueprint's tools.
+- From an agent: register in a skill's tools.

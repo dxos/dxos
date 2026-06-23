@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { createSystemPrompt, formatSystemPrompt } from '@dxos/assistant';
-import { Blueprint, Template, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Skill, Template, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
@@ -39,7 +39,7 @@ const Handlers = OperationHandlerSet.make(
 );
 
 const TestLayer = AssistantTestLayer({
-  types: [Text.Text, Organization.Organization, Blueprint.Blueprint],
+  types: [Text.Text, Organization.Organization, Skill.Skill],
   operationHandlers: Handlers,
 });
 
@@ -56,14 +56,14 @@ describe('format', () => {
           }),
         );
 
-        const blueprint = db.add(
-          Blueprint.make({
-            key: 'com.example.blueprint.test',
+        const skill = db.add(
+          Skill.make({
+            key: 'com.example.skill.test',
             name: 'Test',
             instructions: Template.make({
               source: trim`
                 Test
-                This is the test blueprint.
+                This is the test skill.
               `,
             }),
           }),
@@ -71,7 +71,7 @@ describe('format', () => {
 
         const output = yield* formatSystemPrompt({
           system: createSystemPrompt({}),
-          blueprints: [blueprint],
+          skills: [skill],
           objects: [object],
         });
 
@@ -94,9 +94,9 @@ describe('format', () => {
           }),
         );
 
-        const blueprint = db.add(
-          Blueprint.make({
-            key: 'com.example.blueprint.test',
+        const skill = db.add(
+          Skill.make({
+            key: 'com.example.skill.test',
             name: 'Test',
             instructions: Template.make({
               source: trim`
@@ -118,7 +118,7 @@ describe('format', () => {
 
         const output = yield* formatSystemPrompt({
           system: createSystemPrompt({}),
-          blueprints: [blueprint],
+          skills: [skill],
           objects: [object],
         });
 

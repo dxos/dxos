@@ -14,13 +14,11 @@ import * as AppCapabilities from './AppCapabilities';
 export const SetupSettings = ActivationEvent$.make('org.dxos.app-framework.event.setupSettings');
 
 /**
- * Fired before {@link SetupAppGraph}. Activates modules that contribute the
- * integration-provider capability so service plugins register OAuth/sync
- * handlers before the app graph queries them.
+ * Fired before {@link SetupAppGraph}. Activates connector capability modules
+ * so service plugins register their OAuth/sync handlers before the app graph
+ * queries them.
  */
-export const SetupIntegrationProviders = ActivationEvent$.make(
-  'org.dxos.app-framework.event.setupIntegrationProviders',
-);
+export const SetupConnectors = ActivationEvent$.make('org.dxos.app-framework.event.setupConnectors');
 
 /**
  * Fired before the graph is created.

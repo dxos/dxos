@@ -6,6 +6,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const BlueskyHandlers = OperationHandlerSet.lazy(
   () => import('./get-bluesky-targets'),
+  () => import('./materialize-target'),
   () => import('./sync'),
 );
 
