@@ -10,7 +10,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, Input, List, ListItem, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Input, List, ListItem, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -112,14 +112,14 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <Toolbar.Root>
-            <Toolbar.Button onClick={handleSelectAll} disabled={submitting}>
+          <div className='flex gap-2 py-form-gap'>
+            <Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Toolbar.Button>
-            <Toolbar.Button onClick={handleSelectNone} disabled={submitting}>
+            </Button>
+            <Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Toolbar.Button>
-          </Toolbar.Root>
+            </Button>
+          </div>
         )}
 
         {availableTargets.length === 0 ? (
@@ -130,12 +130,6 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
               <List>
                 {availableTargets.map((target) => (
                   <ListItem.Root key={target.id} classNames='px-2'>
-                    <ListItem.Heading classNames='flex flex-col items-start grow truncate'>
-                      <div className='truncate'>{target.name}</div>
-                      {target.description && (
-                        <div className='text-description text-sm truncate'>{target.description}</div>
-                      )}
-                    </ListItem.Heading>
                     <ListItem.Endcap>
                       {/* The checkbox carries an `aria-label` because the visible label is the row heading. */}
                       <Input.Root>
@@ -147,6 +141,12 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                         />
                       </Input.Root>
                     </ListItem.Endcap>
+                    <ListItem.Heading classNames='flex flex-col items-start grow truncate'>
+                      <div className='truncate'>{target.name}</div>
+                      {target.description && (
+                        <div className='text-description text-sm truncate'>{target.description}</div>
+                      )}
+                    </ListItem.Heading>
                   </ListItem.Root>
                 ))}
               </List>
