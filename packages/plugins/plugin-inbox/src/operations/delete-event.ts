@@ -13,7 +13,7 @@ import { GoogleCalendar } from '../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { GoogleCredentials } from '../services/google-credentials';
 import { Calendar, InboxOperation, DraftEvent } from '../types';
-import { findBindingForTarget } from './google/find-binding';
+import { findBindingForTarget } from './find-binding';
 
 export default InboxOperation.DeleteEvent.pipe(
   Operation.withHandler(
