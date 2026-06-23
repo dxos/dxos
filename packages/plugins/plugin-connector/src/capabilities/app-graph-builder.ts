@@ -17,12 +17,12 @@ import { meta } from '#meta';
 import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { Connection, SyncBinding } from '../types';
+import { Connection, ConnectorOperation, SyncBinding } from '../types';
 
 /**
  * Resolve the {@link SyncBinding} relations sourced by a connection. Used by the
- * per-connection `sync` and `delete` actions to fan out over the connection's
- * bindings; runs in the action's `data` thunk where a live `db` is available.
+ * per-connection `delete` action to enumerate the bindings to remove alongside
+ * the connection.
  */
 const queryConnectionBindings = (connection: Connection.Connection): Effect.Effect<SyncBinding.SyncBinding[]> => {
   const db = Obj.getDatabase(connection);
@@ -49,18 +49,15 @@ export default Capability.makeModule(
             const spaceId = Obj.getDatabase(connection)?.spaceId;
             const actions = [];
             if (connector?.sync) {
-              const sync = connector.sync;
               actions.push(
                 Node.makeAction({
                   id: `${meta.profile.key}.sync-connection.${connection.id}`,
-                  // Fan out over every binding the connection sources.
                   data: () =>
-                    Effect.gen(function* () {
-                      const bindings = yield* queryConnectionBindings(connection);
-                      yield* Effect.all(
-                        bindings.map((binding) => Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId })),
-                      );
-                    }),
+                    Operation.invoke(
+                      ConnectorOperation.SyncConnection,
+                      { connection: Ref.make(connection) },
+                      { spaceId },
+                    ),
                   properties: {
                     label: ['sync-connection.label', { ns: meta.profile.key }],
                     icon: 'ph--arrows-clockwise--regular',
