@@ -33,7 +33,9 @@ describe('keyboard', () => {
   });
 
   test('nestKeyboardContext nests attendable ids under graph root', ({ expect }) => {
+    expect(nestKeyboardContext(undefined)).to.equal('root');
     expect(nestKeyboardContext('')).to.equal('root');
+    expect(nestKeyboardContext('root')).to.equal('root');
     expect(nestKeyboardContext('plank-1')).to.equal('root/plank-1');
     expect(nestKeyboardContext('root/plank-1')).to.equal('root/plank-1');
   });
