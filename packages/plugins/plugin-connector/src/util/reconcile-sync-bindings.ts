@@ -92,6 +92,8 @@ export const reconcileSyncBindings = ({
         // Targetless connector: no dedicated local root object, so the binding
         // is a self-loop referencing the connection. The remote target is
         // identified by `remoteId`; synced objects land directly in the space.
+        // TODO(wittjosiah): Verify whether a self-loop SyncBinding (source === target)
+        //   is a good pattern or an anti-pattern; consider a dedicated marker/null target instead.
         target = connection;
       }
       yield* Database.add(
