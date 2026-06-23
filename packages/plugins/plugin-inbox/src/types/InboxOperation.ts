@@ -335,22 +335,6 @@ export const GoogleContactsSync = Operation.make({
   services: [Database.Service, Credential.CredentialsService],
 }).pipe(Operation.visible);
 
-/**
- * Eagerly materializes the local Collection for a selected remote Google contact group so a
- * {@link SyncBinding} can be created. Contacts have no dedicated root type — the Collection is
- * the addressable local root for the group; find-or-create keyed on the group's foreign key.
- */
-export const MaterializeContactsTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeContactsTarget'),
-    name: 'Materialize Contacts Target',
-    description: 'Create the local Collection bound to a selected Google contact group.',
-    icon: 'ph--users--regular',
-  },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
-});
-
 export const SyncContacts = Operation.make({
   meta: {
     key: makeKey('syncContacts'),

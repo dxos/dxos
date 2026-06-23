@@ -174,6 +174,27 @@ describe('reconcileSyncBindings', () => {
     expect(Relation.getTarget(bindings[0]).id).toBe(mailbox.id);
   });
 
+  test('binds the connection itself for a targetless connector (no materializeTarget)', async ({ expect }) => {
+    const { db, connection } = await setup();
+    // A targetless connector (e.g. Google Contacts) has no local root type, so
+    // the binding is a self-loop: source === target === the connection. The
+    // remote target is identified by `remoteId`.
+    const connector = makeConnector({ materializeTarget: undefined });
+
+    const result = await reconcile(db, connection, connector, [
+      { remoteId: 'contactGroups/myContacts', name: 'My Contacts' },
+    ]);
+    expect(result.added).toBe(1);
+    expect(result.removed).toBe(0);
+
+    const bindings = await queryBindings(db, connection);
+    expect(bindings.length).toBe(1);
+    expect(bindings[0].remoteId).toBe('contactGroups/myContacts');
+    expect(bindings[0].name).toBe('My Contacts');
+    expect(Relation.getSource(bindings[0]).id).toBe(connection.id);
+    expect(Relation.getTarget(bindings[0]).id).toBe(connection.id);
+  });
+
   test('leaves single-target bindings (no remoteId) untouched on submit', async ({ expect }) => {
     const { db, connection } = await setup();
     // A single-target connector (e.g. Gmail) creates a binding with a target but

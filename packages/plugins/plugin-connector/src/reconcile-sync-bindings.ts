@@ -29,7 +29,10 @@ export type ReconcileSyncBindingsInput = {
  * remote targets: remove deselected bindings (the synced object is left in
  * place), and create one binding per newly-selected target — binding
  * `existingTarget` for the first new selection, otherwise materializing a fresh
- * local root via `connector.materializeTarget`. Returns add/remove counts.
+ * local root via `connector.materializeTarget`. A connector with no
+ * `materializeTarget` (no dedicated local root type, e.g. Google Contacts) binds
+ * the connection itself as the target; its synced objects land directly in the
+ * space keyed by foreign id. Returns add/remove counts.
  *
  * Runs within a {@link Database} context (provide `Database.layer(db)`); the
  * HTTP client `materializeTarget` needs is provided internally.
@@ -72,7 +75,7 @@ export const reconcileSyncBindings = ({
       if (existingByRemote.has(sel.remoteId)) {
         continue;
       }
-      let target: Obj.Unknown | undefined;
+      let target: Obj.Unknown;
       if (sel === firstNew && existingTarget) {
         target = yield* Database.load(existingTarget);
       } else if (connector.materializeTarget) {
@@ -85,9 +88,11 @@ export const reconcileSyncBindings = ({
           { spaceId: db.spaceId },
         );
         target = yield* Database.load(materialized);
-      }
-      if (!target) {
-        continue;
+      } else {
+        // Targetless connector: no dedicated local root object, so the binding
+        // is a self-loop referencing the connection. The remote target is
+        // identified by `remoteId`; synced objects land directly in the space.
+        target = connection;
       }
       yield* Database.add(
         SyncBinding.make({

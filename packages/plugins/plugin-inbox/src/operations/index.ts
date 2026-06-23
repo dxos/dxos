@@ -23,7 +23,6 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./google/calendar/materialize-target'),
   () => import('./google/calendar/sync'),
   () => import('./google/contacts/list-groups'),
-  () => import('./google/contacts/materialize-target'),
   () => import('./google/contacts/sync'),
   () => import('./google/gmail/materialize-target'),
   () => import('./google/gmail/send'),
