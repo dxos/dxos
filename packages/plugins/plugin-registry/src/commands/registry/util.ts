@@ -32,7 +32,7 @@ export { ALL_NSIDS, NSID };
  */
 
 // `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
-// `ATMOSPHERE_SOURCE` in plugin-integration; inlined to avoid a plugin-registry -> plugin-integration
+// `ATMOSPHERE_SOURCE` in plugin-connector; inlined to avoid a plugin-registry -> plugin-connector
 // dependency.
 const ATMOSPHERE_SOURCE = 'atproto.local';
 

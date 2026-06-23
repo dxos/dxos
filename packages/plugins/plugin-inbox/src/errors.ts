@@ -4,14 +4,6 @@
 
 import { type BaseErrorOptions, BaseError } from '@dxos/errors';
 
-const INTEGRATION_DATABASE_MISSING_MESSAGE = 'No database for integration ref.' as const;
-
-/** Integration ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
-export class IntegrationDatabaseMissingError extends BaseError.extend(
-  'IntegrationDatabaseMissingError',
-  INTEGRATION_DATABASE_MISSING_MESSAGE,
-) {}
-
 /** OAuth finished but `AccessToken.token` is still empty (race or incomplete persist). */
 export class AccessTokenNotPopulatedError extends BaseError.extend(
   'AccessTokenNotPopulatedError',

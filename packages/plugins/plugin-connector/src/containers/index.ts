@@ -1,0 +1,23 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+
+import type { ConnectionArticleProps } from './ConnectionArticle';
+import type { ConnectionSettingsArticleProps } from './ConnectionSettingsArticle';
+import type { CustomTokenDialogProps } from './CustomTokenDialog';
+import type { SyncTargetsDialogProps } from './SyncTargetsDialog';
+
+export const ConnectionArticle: LazyExoticComponent<ComponentType<ConnectionArticleProps>> = lazy(
+  () => import('./ConnectionArticle'),
+);
+export const ConnectionSettingsArticle: LazyExoticComponent<ComponentType<ConnectionSettingsArticleProps>> = lazy(
+  () => import('./ConnectionSettingsArticle'),
+);
+export const SyncTargetsDialog: LazyExoticComponent<ComponentType<SyncTargetsDialogProps>> = lazy(
+  () => import('./SyncTargetsDialog'),
+);
+export const CustomTokenDialog: LazyExoticComponent<ComponentType<CustomTokenDialogProps>> = lazy(
+  () => import('./CustomTokenDialog'),
+);

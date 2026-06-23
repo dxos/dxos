@@ -17,7 +17,7 @@ Composer's user-facing assistance plugin. Covers two paths:
    keeps the telemetry plugin focused on instrumentation only.
 3. **GitHub issue submission** — same form, optional third action: file a
    structured bug/feature request against the upstream repo. When the user
-   has authenticated the GitHub integration (via plugin-integration) the
+   has authenticated the GitHub integration (via plugin-connector) the
    issue is filed as them via the GitHub API; otherwise we open a prefilled
    `issues/new` URL in a new tab so the user can finish the submission in
    their own browser session.

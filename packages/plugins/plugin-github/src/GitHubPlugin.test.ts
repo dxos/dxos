@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { GitHubPlugin } from '#plugin';
@@ -17,14 +17,14 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('GitHubPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), IntegrationPlugin(), GitHubPlugin()],
+      plugins: [ClientPlugin({}), ConnectorPlugin(), GitHubPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
+    // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
     // ProcessManagerPlugin — both reach the GitHubPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('GitHubIntegrationProvider'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('GitHubConnector'), moduleId('OperationHandler')]),
     );
   }, 30_000);
 });

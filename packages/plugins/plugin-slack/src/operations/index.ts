@@ -6,5 +6,6 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const SlackOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./get-slack-channels'),
+  () => import('./materialize-target'),
   () => import('./sync'),
 );

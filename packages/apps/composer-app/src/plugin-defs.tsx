@@ -21,6 +21,7 @@ import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -36,7 +37,6 @@ import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
@@ -203,6 +203,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
     DiscordPlugin(),
@@ -264,7 +265,6 @@ export const getPlugins = ({
       platform: isMobile ? 'mobile' : 'desktop',
     }),
     ThreadPlugin(),
-    IntegrationPlugin(),
     TranscriptionPlugin(),
     OnboardingPlugin({ generateExemplarSpace: !isLocal }),
 

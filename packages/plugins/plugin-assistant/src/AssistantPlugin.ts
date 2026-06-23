@@ -20,7 +20,7 @@ import {
   AgentRuntime,
   AiContext as AiContextCapability,
   AiService,
-  IntegrationProvider,
+  Connector,
   AppGraphBuilder,
   AutomationTemplates,
   AssistantState,
@@ -148,8 +148,8 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: Migrations,
     }),
     Plugin.addModule({
-      activatesOn: AppActivationEvents.SetupIntegrationProviders,
-      activate: IntegrationProvider,
+      activatesOn: AppActivationEvents.SetupConnectors,
+      activate: Connector,
     }),
     AppPlugin.addPluginAssetModule({
       asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

@@ -12,13 +12,13 @@ export const GOOGLE_INTEGRATION_SOURCE = 'google.com';
 /** Foreign-key `Meta.keys[].source` stamped on synced Gmail messages (see gmail mapper). */
 export const GMAIL_SOURCE = 'gmail.com';
 
-/** `IntegrationProvider.id` for Gmail OAuth / sync; use as `providerId` on `IntegrationAuth` surfaces. */
+/** `Connector.id` for Gmail OAuth / sync; stored as `Connection.connectorId`. */
 export const GMAIL_PROVIDER_ID = 'gmail';
 
-/** `IntegrationProvider.id` for Google Calendar OAuth / sync; use as `providerId` on `IntegrationAuth` surfaces. */
+/** `Connector.id` for Google Calendar OAuth / sync; stored as `Connection.connectorId`. */
 export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
 
-/** `IntegrationProvider.id` for Google Contacts OAuth / sync; use as `providerId` on `IntegrationAuth` surfaces. */
+/** `Connector.id` for Google Contacts OAuth / sync; stored as `Connection.connectorId`. */
 export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
 
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
