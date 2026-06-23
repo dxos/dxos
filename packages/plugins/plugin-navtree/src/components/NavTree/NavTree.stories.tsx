@@ -5,7 +5,7 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { type KeyboardEvent, useCallback, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -15,9 +15,8 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
+import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -35,9 +34,8 @@ const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
 const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
-  console.log('hasAttention', hasAttention);
   return (
-    <div className='flex p-1 items-center border-b border-separator'>
+    <Panel.Toolbar classNames='border-b border-separator'>
       <IconButton
         density='lg'
         icon='ph--circle--regular'
@@ -46,8 +44,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
         variant={hasAttention ? 'primary' : 'ghost'}
         classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
-      <StackItem.ResizeHandle />
-    </div>
+    </Panel.Toolbar>
   );
 };
 
@@ -57,40 +54,50 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 
   // NOTE(thure): This is the same workaround as in Plank, but that component is out of scope for this story.
   // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.target === event.currentTarget && event.key === 'Escape') {
-      rootElement.current?.closest('main')?.focus();
+  // Attached imperatively because `Focus.Item`/`Panel.Root` expose a narrow (slottable) prop surface.
+  useEffect(() => {
+    const element = rootElement.current;
+    if (!element) {
+      return;
     }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target === element && event.key === 'Escape') {
+        element.closest('main')?.focus();
+      }
+    };
+
+    element.addEventListener('keydown', handleKeyDown);
+    return () => element.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (
-    <StackItem.Root
-      item={{ id: attendableId }}
-      {...attentionAttrs}
-      classNames='bg-base-surface border-e border-separator'
-      size={30}
-      onKeyDown={handleKeyDown}
-      ref={rootElement}
-    >
-      <StoryPlankHeading attendableId={attendableId} />
-      <StackItem.Content toolbar>
-        <Toolbar.Root classNames='border-b border-subdued-separator'>
-          <Toolbar.Button>Test</Toolbar.Button>
-        </Toolbar.Root>
+    <Focus.Item asChild ref={rootElement}>
+      <Panel.Root
+        {...attentionAttrs}
+        role='article'
+        classNames='is-[30rem] shrink-0 bs-full bg-base-surface border-e border-separator'
+      >
+        <StoryPlankHeading attendableId={attendableId} />
+        <Panel.Content classNames='grid'>
+          <Toolbar.Root classNames='border-b border-subdued-separator'>
+            <Toolbar.Button>Test</Toolbar.Button>
+          </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-current-surface')}>
-          <Input.Root>
-            <Input.Label>Level 1 (group)</Input.Label>
-          </Input.Root>
-          <div className={mx(container, 'bg-base-surface')}>
+          <div className={mx(container, 'm-2 bg-current-surface')}>
             <Input.Root>
-              <Input.Label>Level 2 (base)</Input.Label>
-              <Input.TextArea placeholder='Enter text' />
+              <Input.Label>Level 1 (group)</Input.Label>
             </Input.Root>
+            <div className={mx(container, 'bg-base-surface')}>
+              <Input.Root>
+                <Input.Label>Level 2 (base)</Input.Label>
+                <Input.TextArea placeholder='Enter text' />
+              </Input.Root>
+            </div>
           </div>
-        </div>
-      </StackItem.Content>
-    </StackItem.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Focus.Item>
   );
 };
 
@@ -103,10 +110,10 @@ const DefaultStory = () => {
         <NavTreeContainer tab={state.tab} />
       </Main.NavigationSidebar>
       <Main.Content bounce handlesFocus>
-        <Stack orientation='horizontal' size='contain'>
+        <div role='none' className='flex grow overflow-x-auto'>
           <StoryPlank attendableId='space-0:object-0' />
           <StoryPlank attendableId='space-0:object-1' />
-        </Stack>
+        </div>
       </Main.Content>
     </Main.Root>
   );

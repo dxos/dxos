@@ -155,7 +155,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+          <Form.Section title={meta.profile.name}>
             <Form.Row label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
               <Input.Root>
                 <Input.Switch

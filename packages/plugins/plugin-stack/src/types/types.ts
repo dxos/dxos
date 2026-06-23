@@ -6,7 +6,6 @@ import { type FC } from 'react';
 
 import { type Collection, type Obj } from '@dxos/echo';
 import { type Label } from '@dxos/react-ui';
-import { type StackItemSize } from '@dxos/react-ui-stack';
 
 export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
 
@@ -16,7 +15,7 @@ export type CollectionItem = Collection.Collection['objects'][number];
 
 export type StackSectionView = {
   title?: string;
-  size?: StackItemSize;
+  size?: number;
   height?: number;
   collapsed?: boolean;
   custom?: Record<string, any>;

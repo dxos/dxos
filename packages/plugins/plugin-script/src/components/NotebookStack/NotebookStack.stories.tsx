@@ -27,7 +27,7 @@ const meta = {
   title: 'plugins/plugin-script/components/NotebookStack',
   component: NotebookStackStory,
   decorators: [
-    withLayout({ layout: 'column', classNames: 'w-document-max-width' }),
+    withLayout({ layout: 'column', classNames: 'dx-document' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

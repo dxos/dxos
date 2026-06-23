@@ -362,11 +362,15 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
                 }
               }
               if (best) {
-                yield* Operation.invoke(InboxOperation.ExtractMessage, {
-                  db,
-                  source: message,
-                  extractorId: best.extractor.id,
-                }).pipe(
+                yield* Operation.invoke(
+                  InboxOperation.ExtractMessage,
+                  {
+                    db,
+                    source: message,
+                    extractorId: best.extractor.id,
+                  },
+                  { spaceId: db.spaceId },
+                ).pipe(
                   Effect.catchAll((err) => {
                     // The AI service can be momentarily absent from the process-manager LayerStack
                     // during startup (the assistant plugin's `AiService` LayerSpec races the

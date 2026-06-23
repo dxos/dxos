@@ -31,8 +31,6 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Spacetime',
 
-        'settings.title': 'Spacetime settings',
-
         'selection-mode.label': 'Selection mode',
         'selection-mode.object.label': 'Object',
         'selection-mode.face.label': 'Face',

@@ -40,13 +40,6 @@ import {
   StackItemHeadingStickyContent,
 } from './StackItemHeading';
 import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
-import {
-  StackItemSigil,
-  type StackItemSigilAction,
-  StackItemSigilButton,
-  type StackItemSigilButtonProps,
-  type StackItemSigilProps,
-} from './StackItemSigil';
 
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_HORIZONTAL_SIZE = 50 satisfies StackItemSize;
@@ -296,8 +289,6 @@ export const StackItem = {
   HeadingLabel: StackItemHeadingLabel,
   HeadingStickyContent: StackItemHeadingStickyContent,
   ResizeHandle: StackItemResizeHandle,
-  Sigil: StackItemSigil,
-  SigilButton: StackItemSigilButton,
 };
 
 export type {
@@ -308,7 +299,4 @@ export type {
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
   StackItemResizeHandleProps,
-  StackItemSigilProps,
-  StackItemSigilButtonProps,
-  StackItemSigilAction,
 };

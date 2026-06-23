@@ -75,7 +75,6 @@ export const translations = [
         'start-tour.button': 'Start tour',
         'hide-welcome.button': 'Hide Welcome',
         // Settings.
-        'settings.title': 'Support settings',
         'show-welcome.label': 'Show welcome',
         // Help menu (status-indicator surface; right-rail ? dropdown).
         'help-menu.label': 'Help & resources',
