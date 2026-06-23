@@ -5,16 +5,16 @@
 // @import-as-namespace
 
 export {
-  getBaseType,
   type SchemaProperty,
-  getProperties,
-  VisitResult,
   type Path,
   type TestFn,
   type VisitorFn,
+  VisitResult,
   visit,
   findNode,
   findProperty,
+  getBaseType,
+  getProperties,
   getAnnotation,
   findAnnotation,
   isOption,

@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
 import { Clipboard, Icon, IconButton, List, ListItem, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
@@ -66,42 +66,46 @@ export const InvitationsContainer = () => {
 
   return (
     <Clipboard.Provider>
-      <Settings.Viewport>
-        <Settings.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
-          <Settings.Item
-            title={t('generate-invitation.label')}
-            description={t('generate-invitation.description', { count: remaining })}
-          >
-            <IconButton
-              icon='ph--plus--regular'
-              label={t('generate-invitation.label')}
-              variant='primary'
-              onClick={handleIssue}
-              disabled={pending || remaining <= 0}
-            />
-          </Settings.Item>
-        </Settings.Section>
+      <Form.Root variant='settings'>
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
+              <Form.Row
+                label={t('generate-invitation.label')}
+                description={t('generate-invitation.description', { count: remaining })}
+              >
+                <IconButton
+                  icon='ph--plus--regular'
+                  label={t('generate-invitation.label')}
+                  variant='primary'
+                  onClick={handleIssue}
+                  disabled={pending || remaining <= 0}
+                />
+              </Form.Row>
+            </Form.Section>
 
-        {available.length > 0 ? (
-          <Settings.Section title={t('available-invitations.title')}>
-            <List>
-              {available.map((row) => (
-                <AvailableInvitationItem key={row.code} row={row} />
-              ))}
-            </List>
-          </Settings.Section>
-        ) : null}
+            {available.length > 0 ? (
+              <Form.Section title={t('available-invitations.title')}>
+                <List>
+                  {available.map((row) => (
+                    <AvailableInvitationItem key={row.code} row={row} />
+                  ))}
+                </List>
+              </Form.Section>
+            ) : null}
 
-        {redeemed.length > 0 ? (
-          <Settings.Section title={t('redeemed-invitations.title')}>
-            <List>
-              {redeemed.map((row) => (
-                <RedeemedInvitationItem key={row.code} row={row} />
-              ))}
-            </List>
-          </Settings.Section>
-        ) : null}
-      </Settings.Viewport>
+            {redeemed.length > 0 ? (
+              <Form.Section title={t('redeemed-invitations.title')}>
+                <List>
+                  {redeemed.map((row) => (
+                    <RedeemedInvitationItem key={row.code} row={row} />
+                  ))}
+                </List>
+              </Form.Section>
+            ) : null}
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Clipboard.Provider>
   );
 };

@@ -228,6 +228,7 @@ export const translations = [
         'add-tag.label': 'Add tag',
         'advanced-settings.label': 'Advanced',
         'settings.space-list.label': 'Spaces',
+        'settings.space-list.description': 'Settings for each space you belong to.',
         'settings.open-settings.label': 'Open settings',
         'settings-panel.label': 'Open settings',
         'related-actions.label': 'Related Actions',

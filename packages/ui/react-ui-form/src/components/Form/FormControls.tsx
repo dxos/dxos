@@ -278,10 +278,12 @@ export const FormSection = composable<HTMLDivElement, FormSectionProps>(
     const styles = formTheme.styles({ variant });
     return (
       <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
-        <div className={styles.sectionHeader()}>
-          {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
-          {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
-        </div>
+        {(title || description) && (
+          <div className={styles.sectionHeader()}>
+            {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
+            {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
+          </div>
+        )}
         {children}
       </div>
     );
@@ -289,6 +291,31 @@ export const FormSection = composable<HTMLDivElement, FormSectionProps>(
 );
 
 FormSection.displayName = FORM_SECTION_NAME;
+
+//
+// Group
+//
+
+const FORM_GROUP_NAME = 'Form.Group';
+
+export type FormGroupProps = ThemedClassName<PropsWithChildren>;
+
+/**
+ * A bordered card grouping related rows/controls (e.g. an entity card in a list).
+ * Layout-only and context-free — unlike `Form.FieldSet` it is not schema-driven.
+ */
+export const FormGroup = composable<HTMLDivElement, FormGroupProps>(({ children, ...props }, forwardedRef) => {
+  const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
+  const styles = formTheme.styles({ variant });
+
+  return (
+    <div {...composableProps(props, { classNames: styles.group() })} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
+
+FormGroup.displayName = FORM_GROUP_NAME;
 
 //
 // Submit
