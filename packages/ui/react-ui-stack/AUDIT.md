@@ -2,6 +2,23 @@
 
 Snapshot of every package that depends on `@dxos/react-ui-stack`, what it actually imports, and how heavily. Use this as the baseline for the refactor: it identifies the real API surface in use, the dead weight, and the highest-risk consumers.
 
+## Migration progress
+
+Deprecating `@dxos/react-ui-stack` in favour of `@dxos/react-ui-mosaic`'s `Stack` + `react-ui` `Panel`/`Toolbar` + `AttentionSigil`.
+Tracking below; time is wall-clock (accurate), tokens are cumulative totals computed from the session transcript — `in` = uncached input, `out` = output, `total` = all categories incl. cache read/write. NOTE: the transcript file flushes intermittently (not per-turn), so token figures lag real-time and update in steps; treat them as approximate. Baseline `T0 = 2026-06-23 02:35 EDT`, recorded as stage 0 below.
+
+| #   | Task                                                           | Status      | Completed (elapsed) | Tokens (in / out / total) |
+| --- | -------------------------------------------------------------- | ----------- | ------------------- | ------------------------- |
+| 0   | Planning: audit, research, design decisions                    | done        | T0 (baseline)       | 78K / 131K / 21.6M        |
+| 1   | plugin-navtree: Panel story + local rearrange type, drop dep   | ✅ done      | 02:45 (+10m)        | 78K / 131K / 21.6M (lag)  |
+| 2   | plugin-script: NotebookArticle → Mosaic.Stack                  | pending     | —                   | —                         |
+| 3   | StackItemSigil → AttentionSigil in `app-toolkit/ui/components` | pending     | —                   | —                         |
+| 4   | plugin-stack: Mosaic.Stack + new Tile + StackArticle story     | pending     | —                   | —                         |
+| 5   | plugin-deck: AUDIT mapping + migrate Plank to Mosaic/Tile      | pending     | —                   | —                         |
+| 6   | plugin-deck: companion column-stack option                     | pending     | —                   | —                         |
+
+Decisions (locked): Tile built in plugin-stack first, extracted later · AttentionSigil lives in `app-toolkit/ui/components` (keeps react-ui-attention free of `@dxos/app-graph`) · plugin-stack rebuilt + storybook only, re-wiring deferred · per-task commits, no push without request.
+
 ## Public API surface (current)
 
 Three entrypoints are published (`package.json#exports`):

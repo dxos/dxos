@@ -12228,9 +12228,6 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
