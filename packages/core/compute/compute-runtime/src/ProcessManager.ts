@@ -6,8 +6,10 @@
 
 import { Atom, Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import type { Rpc, RpcClient } from '@effect/rpc';
-import { RpcGroup, RpcTest } from '@effect/rpc';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';

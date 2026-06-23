@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import { Atom, type Registry } from '@effect-atom/atom';
-import type { RpcClient } from '@effect/rpc';
+import * as RpcClient from '@effect/rpc/RpcClient';
 import * as Cause from 'effect/Cause';
 import type * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';

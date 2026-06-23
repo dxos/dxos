@@ -4,7 +4,8 @@
 
 import { Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import { Rpc, RpcGroup } from '@effect/rpc';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';

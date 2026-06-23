@@ -5,7 +5,8 @@
 // @import-as-namespace
 
 import type { Atom } from '@effect-atom/atom';
-import { Rpc, RpcGroup } from '@effect/rpc';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
