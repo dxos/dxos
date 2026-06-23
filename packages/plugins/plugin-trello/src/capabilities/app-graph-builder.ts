@@ -8,10 +8,10 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Integration } from '@dxos/plugin-integration';
 import { Kanban } from '@dxos/plugin-kanban';
 
 import { meta } from '#meta';
@@ -43,13 +43,14 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          const integrations = get(db.query(Filter.type(Integration.Integration)).atom);
-          const integration = integrations.find((integration) =>
-            integration.targets.some(
-              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === kanban.id,
-            ),
+          // The board's sync state lives on the `SyncBinding` relation whose
+          // target is this Kanban. Find it so the action can sync exactly that
+          // binding.
+          const bindings = get(db.query(Filter.type(SyncBinding.SyncBinding)).atom);
+          const binding = bindings.find(
+            (binding) => EID.getEntityId(EID.tryParse(Obj.getURI(Relation.getTarget(binding)))!) === kanban.id,
           );
-          if (!integration) {
+          if (!binding) {
             return Effect.succeed([]);
           }
           return Effect.succeed([
@@ -59,8 +60,7 @@ export default Capability.makeModule(
                 Operation.invoke(
                   TrelloOperation.SyncTrelloBoard,
                   {
-                    integration: Ref.make(integration),
-                    kanban: Ref.make(kanban),
+                    binding: Ref.make(binding),
                   },
                   { spaceId: db.spaceId },
                 ),

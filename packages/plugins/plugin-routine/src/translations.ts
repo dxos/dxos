@@ -27,7 +27,7 @@ export const translations: Resource[] = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Routine',
-        'automation-panel.label': 'Automations',
+        'automation-panel.label': 'Routines',
         'create-panel.template.placeholder': 'Search templates...',
 
         'schedule.kind.once.label': 'Once',
@@ -102,11 +102,11 @@ export const translations: Resource[] = [
         'reset-cursor.label': 'Reset feed cursor',
         'reset-cursor-confirm.label': 'Confirm reset feed cursor',
 
-        'automation-verbose.label': 'Manage automations',
-        'automation.description': 'Manage where automations in this space run.',
+        'automation-verbose.label': 'Manage routines',
+        'automation.description': 'Manage where routines in this space run.',
 
         'runtime.label': 'Runtime location',
-        'runtime.description': 'Determines where automations in this space run.',
+        'runtime.description': 'Determines where routines in this space run.',
         'runtime.disabled.label': 'Disabled',
         'runtime.local.label': 'Local',
         'runtime.edge.label': 'EDGE (experimental)',

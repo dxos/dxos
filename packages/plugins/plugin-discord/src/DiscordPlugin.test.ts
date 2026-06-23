@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { DiscordPlugin } from '#plugin';
@@ -17,14 +17,14 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('DiscordPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), IntegrationPlugin(), DiscordPlugin()],
+      plugins: [ClientPlugin({}), ConnectorPlugin(), DiscordPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
+    // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
     // OperationPlugin — both reach the DiscordPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('DiscordIntegrationProvider'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('DiscordConnector'), moduleId('OperationHandler')]),
     );
   }, 30_000);
 });

@@ -3,4 +3,4 @@
 //
 
 export * as CollectionModel from './CollectionModel';
-export * as IntegrationSync from './IntegrationSync';
+export * as ConnectorSync from './ConnectorSync';

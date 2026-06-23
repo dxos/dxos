@@ -12,16 +12,18 @@ import { type Space } from '@dxos/client/echo';
 import { Trigger, Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Query, Scope, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Relation, Scope, Ref } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
+import { GMAIL_PROVIDER_ID } from '../../../constants';
 import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
@@ -47,14 +49,14 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   });
 
   test('inbox sync function (invoke)', { timeout: 120_000 }, async () => {
-    const { space, mailbox, feed, functionsServiceClient } = await setup();
+    const { space, binding, feed, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const result = await functionsServiceClient.invoke(
       Context.default(),
       func,
       {
-        mailbox: Ref.make(mailbox),
+        binding: Ref.make(binding),
         restrictedMode: true,
       },
       {
@@ -66,7 +68,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deployes inbox sync function (force-trigger)', { timeout: 120_000 }, async () => {
-    const { space, mailbox, feed, functionsServiceClient } = await setup();
+    const { space, binding, feed, functionsServiceClient } = await setup();
     await sync(space);
 
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
@@ -75,7 +77,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
         enabled: true,
         function: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
-        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
+        input: { binding: Ref.make(binding), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -92,7 +94,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 120_000 }, async ({ expect }) => {
-    const { space, mailbox, feed, functionsServiceClient } = await setup();
+    const { space, binding, feed, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
@@ -100,7 +102,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
         enabled: true,
         function: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
-        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
+        input: { binding: Ref.make(binding), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -116,14 +118,14 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
-    const { client: _client, space, mailbox, feed, functionsServiceClient } = await setup();
+    const { client: _client, space, binding, feed, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
         spec: Trigger.specTimer('*/3 * * * * *'),
-        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
+        input: { binding: Ref.make(binding), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -140,7 +142,15 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
 const setup = async () => {
   const client = await new Client({
     config,
-    types: [Feed.Feed, Mailbox.Mailbox, AccessToken.AccessToken, Operation.PersistentOperation, Trigger.Trigger],
+    types: [
+      Feed.Feed,
+      Mailbox.Mailbox,
+      AccessToken.AccessToken,
+      Connection.Connection,
+      SyncBinding.SyncBinding,
+      Operation.PersistentOperation,
+      Trigger.Trigger,
+    ],
   }).initialize();
   await client.halo.createIdentity();
 
@@ -153,15 +163,23 @@ const setup = async () => {
   if (!feed) {
     throw new Error('Mailbox missing backing feed');
   }
-  space.db.add(
+  const accessToken = space.db.add(
     Obj.make(AccessToken.AccessToken, {
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
     }),
   );
+  const connection = space.db.add(
+    Connection.make({
+      name: 'Gmail',
+      connectorId: GMAIL_PROVIDER_ID,
+      accessToken: Ref.make(accessToken),
+    }),
+  );
+  const binding = space.db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: mailbox }));
 
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-  return { client, space, mailbox, feed, functionsServiceClient };
+  return { client, space, mailbox, binding, feed, functionsServiceClient };
 };
 
 const sync = async (space: Space) => {

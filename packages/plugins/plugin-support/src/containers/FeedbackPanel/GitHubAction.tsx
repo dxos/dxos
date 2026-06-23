@@ -141,7 +141,7 @@ export const GitHubAction = () => {
         }
       }
 
-      // Phase 1: prefilled URL only. Authenticated submission via plugin-integration
+      // Phase 1: prefilled URL only. Authenticated submission via plugin-connector
       // is a follow-up — when present, POST to /repos/dxos/dxos/issues using the
       // stored AccessToken and open the resulting `html_url` instead.
       const url = buildGitHubIssueUrl(values, screenshotUrl);
