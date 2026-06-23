@@ -49,7 +49,7 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name} description={t('settings.description')}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
             <Form.FieldSet />
           </Form.Section>
 

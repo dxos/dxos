@@ -32,14 +32,13 @@ Three entrypoints are published (`package.json#exports`):
 | `./playwright`   | `StackManager` (e2e page-object helper)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 > Note: `useStackDropForElements` (`src/components/Stack/useStackDropForElements.ts`) and `useKeyDown` (`src/components/Stack/useKeyDown.ts`) are **not** exported from the package root. They are internal — consumed only by `Stack.tsx`.
-
 > The published export surface is unchanged by the in-progress refactor (same symbols at the same three entrypoints); the refactor is an **internal reorganization** — see "Internal structure" below.
 
 ## Internal structure (post-refactor)
 
 The refactor in flight reorganizes `src/components` without changing the public surface:
 
-```
+```text
 components/
   index.ts                        // barrels Stack, StackContext, StackItem (+ type * from ./types)
   types.ts                        // Orientation, Size, StackItemSize, StackItemData, StackItemRearrangeHandler, StackContextValue  (consolidated here)
@@ -62,7 +61,7 @@ Key moves vs. the previous layout:
 - `StackContextValue`: de-duplicated (was defined in both `types.ts` and `StackContext.tsx`) → single definition in `types.ts`.
 - Context: `components/StackContext.tsx` → `components/StackContext/StackContext.ts`.
 - Hooks: top-level `src/hooks/` removed; `useStackDropForElements` → `Stack/`; new internal `Stack/useKeyDown.ts`.
-- Sigil: `StackItem/StackItemSigil.tsx` + `StackItem/MenuSignifier.tsx` → dedicated `StackItemSigil/` module.
+- Sigil: `StackItem/StackItemSigil.tsx` + `StackItem/MenuSignifier.tsx` → moved out to `@dxos/app-toolkit` (`src/ui/components/AttentionSigil.tsx`) in Task 3; no longer part of react-ui-stack.
 
 ## Consumers
 
