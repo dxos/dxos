@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type { Atom } from '@effect-atom/atom';
+import { Rpc, RpcGroup } from '@effect/rpc';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
@@ -41,7 +42,7 @@ export type ID = Schema.Schema.Type<typeof ID>;
  * - onAlarm -> called for processes scheduling alarms.
  * - onChildEvent -> called when child process produces output or exits.
  */
-export interface Callbacks<I, O, R> {
+export interface Callbacks<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
   /**
    * Called when the process is spawned.
    * Not called for processes that are resumed from a previously suspended state.
@@ -51,7 +52,7 @@ export interface Callbacks<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  onSpawn(): Effect.Effect<void, never, R | BaseServices>;
+  onSpawn(): Effect.Effect<void, never, _Requirements | BaseServices>;
 
   /**
    * Called when there's input available to process.
@@ -63,21 +64,26 @@ export interface Callbacks<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  onInput(input: I): Effect.Effect<void, never, R | BaseServices>;
+  onInput(input: _Input): Effect.Effect<void, never, _Requirements | BaseServices>;
 
   /**
    * Called when the process's alarm is triggered.
    *
    * @throws Throwing in the handler will terminate the process with an error.
    */
-  onAlarm(): Effect.Effect<void, never, R | BaseServices>;
+  onAlarm(): Effect.Effect<void, never, _Requirements | BaseServices>;
 
   /**
    * Called when the process's child process produces output or exits.
    *
    * This allows the parent process to hibernate while a long-running child process is running.
    */
-  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
+  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Handlers for the RPCs provided by the process.
+   */
+  rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>;
 }
 
 /**
@@ -169,7 +175,12 @@ export type ProcessTypeId = typeof ProcessTypeId;
  * `create` is used to instantiate a new process.
  * Can store runtime state in scope of `create` function.
  */
-export interface Process<I, O, R> extends Process.Variance<I, O, R> {
+export interface Process<
+  _Input,
+  _Output,
+  _Requirements = never,
+  _Rpcs extends Rpc.Any = never,
+> extends Process.Variance<_Input, _Output, _Requirements, _Rpcs> {
   /**
    * Unique identifier for the executable in the reverse DNS format.
    */
@@ -182,25 +193,32 @@ export interface Process<I, O, R> extends Process.Variance<I, O, R> {
 
   readonly services: readonly Context.Tag<any, any>[];
 
+  readonly rpcs: RpcGroup.RpcGroup<_Rpcs>;
+
   /**
    * Create a new instance of the process.
    */
-  create(ctx: ProcessContext<I, O>): Effect.Effect<Callbacks<I, O, R>, never, R | BaseServices | Scope.Scope>;
+  create(
+    ctx: ProcessContext<_Input, _Output>,
+  ): Effect.Effect<Callbacks<_Input, _Output, _Requirements, _Rpcs>, never, _Requirements | BaseServices | Scope.Scope>;
 }
 
 export const isProcess = (executable: unknown): executable is Process.Any =>
   typeof executable === 'object' && executable !== null && ProcessTypeId in executable;
 
 export namespace Process {
-  export interface Variance<I, O, R> {
+  export interface Variance<_Input, _Output, _Requirements, _Rpcs> {
     readonly [ProcessTypeId]: {
-      readonly _Input: Types.Contravariant<I>;
-      readonly _Output: Types.Covariant<O>;
-      readonly _Requirements: Types.Covariant<R>;
+      readonly _Input: Types.Contravariant<_Input>;
+      readonly _Output: Types.Covariant<_Output>;
+      readonly _Requirements: Types.Covariant<_Requirements>;
+
+      // TODO(dmaretskyi): What kind of variance is this?
+      readonly _Rpcs: _Rpcs;
     };
   }
 
-  export type Any = Process<any, any, never>;
+  export type Any = Process<any, any, never, any>;
 }
 
 export interface MakeProcessOpts {
@@ -212,6 +230,7 @@ export interface MakeProcessOpts {
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
+  readonly rpcs?: RpcGroup.RpcGroup<any>;
 }
 
 export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
@@ -223,7 +242,8 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
       Callbacks<
         Schema.Schema.Type<Opts['input']>,
         Schema.Schema.Type<Opts['output']>,
-        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+        RpcGroup.Rpcs<Opts['rpcs']>
       >
     >,
     never,
@@ -232,12 +252,14 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
 ): Process<
   Schema.Schema.Type<Opts['input']>,
   Schema.Schema.Type<Opts['output']>,
-  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+  RpcGroup.Rpcs<Opts['rpcs']>
 > => {
   assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
   return {
     [ProcessTypeId]: {} as any,
     ...opts,
+    rpcs: opts.rpcs ?? RpcGroup.make(),
     create: (ctx) =>
       create(ctx).pipe(
         Effect.map((partial) => ({
@@ -246,9 +268,28 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
           onAlarm: () => Effect.void,
           onChildEvent: () => Effect.void,
           ...partial,
+          rpcHandlers: sanitizeRpcs(opts.rpcs, partial.rpcHandlers),
         })),
       ),
   };
+};
+
+const sanitizeRpcs = <Rpcs extends Rpc.Any>(
+  defined: RpcGroup.RpcGroup<Rpcs> | undefined,
+  provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
+): Context.Context<Rpc.ToHandler<Rpcs>> => {
+  const needsRpcs = !defined || defined.requests.size > 0;
+  if (!needsRpcs) {
+    return provided ?? (Context.empty() as any);
+  }
+  if (!provided) {
+    if (needsRpcs) {
+      throw new TypeError('Process declared RPCs but did not provide any handlers');
+    } else {
+      return Context.empty() as any;
+    }
+  }
+  return provided;
 };
 
 /**

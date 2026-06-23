@@ -4,6 +4,7 @@
 
 import { Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import { Rpc, RpcGroup } from '@effect/rpc';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
@@ -13,6 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
@@ -233,6 +235,40 @@ const makeWaitingExecutable = () =>
       onChildEvent: () => Effect.void,
     }),
   );
+
+const rpcs = RpcGroup.make(
+  Rpc.make('getValue', {
+    success: Schema.Number,
+  }),
+  Rpc.make('setValue', {
+    payload: Schema.Struct({ value: Schema.Number }),
+    success: Schema.Void,
+  }),
+);
+
+const ProcessWithRpcs = Process.make(
+  {
+    key: 'test.process-with-rpcs',
+    input: Schema.Void,
+    output: Schema.Void,
+    services: [],
+    rpcs,
+  },
+  (ctx) =>
+    Effect.gen(function* () {
+      const storage = yield* StorageService.StorageService;
+      return {
+        rpcHandlers: yield* rpcs.toHandlersContext({
+          getValue: Effect.fn(function* () {
+            return yield* storage.get(Schema.NumberFromString, 'acc').pipe(Effect.map(Option.getOrElse(() => 0)));
+          }),
+          setValue: Effect.fn(function* ({ value }) {
+            yield* storage.set(Schema.NumberFromString, 'acc', value);
+          }),
+        }),
+      };
+    }),
+);
 
 const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
@@ -521,6 +557,16 @@ describe('ManagerImpl', () => {
       if (Exit.isFailure(exit)) {
         expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true);
       }
+    }, Effect.provide(TestLayer)),
+  );
+});
+
+describe('rpcs', () => {
+  it.effect(
+    'spawns a process with rpcs',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(ProcessWithRpcs);
     }, Effect.provide(TestLayer)),
   );
 });

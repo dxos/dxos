@@ -6,6 +6,7 @@
 
 import { Atom, Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import type { Rpc, RpcClient } from '@effect/rpc';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -48,7 +49,7 @@ export interface Status {
   readonly completedAt: Option.Option<Date>;
 }
 
-export interface Handle<I, O> {
+export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly pid: Process.ID;
   readonly parentId: Process.ID | null;
 
@@ -67,8 +68,8 @@ export interface Handle<I, O> {
    */
   readonly environment: Environment;
 
-  submitInput(input: I): Effect.Effect<void>;
-  subscribeOutputs(): Stream.Stream<O>;
+  submitInput(input: _Input): Effect.Effect<void>;
+  subscribeOutputs(): Stream.Stream<_Output>;
 
   /**
    * Subscribe to ephemeral trace messages for this process.
@@ -117,17 +118,19 @@ export interface Handle<I, O> {
    * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
    * or {@link Process.State.TERMINATED}.
    */
-  runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O>;
+  runAndExit(options: { readonly inputs: readonly _Input[] }): Stream.Stream<_Output>;
 
   /**
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>>;
+  hydrate(definition: Process.Process<_Input, _Output, any, _Rpcs>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
+
+  readonly rpc: RpcClient.RpcClient<_Rpcs>;
 }
 
 export namespace Handle {
-  export type Any = Handle<any, any>;
+  export type Any = Handle<any, any, never>;
 }
 
 /**
@@ -223,12 +226,15 @@ export interface Manager {
   /**
    * Spawn a new process from a process definition.
    */
-  spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+  spawn<I, O, Rpcs extends Rpc.Any = never>(
+    definition: Process.Process<I, O, any, Rpcs>,
+    options?: SpawnOptions,
+  ): Effect.Effect<Handle<I, O, Rpcs>>;
 
   /**
    * Attach to an existing process.
    */
-  attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>>;
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>>;
 
   /**
    * Lists live processes and, when no live match exists, non-terminal processes
@@ -392,7 +398,10 @@ export class ProcessManagerImpl implements Manager {
     );
   }
 
-  spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
+  spawn<I, O, _Rpcs extends Rpc.Any>(
+    definition: Process.Process<I, O, any, _Rpcs>,
+    options?: SpawnOptions,
+  ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen(this, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const clock = yield* Effect.clock;
@@ -771,7 +780,7 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-  #hydrateFromDefinition<I, O>(id: Process.ID, definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> {
+  #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID, definition: Process.Process<I, O, any, Rpcs>): Effect.Effect<Handle<I, O, Rpcs>> {
     return Effect.gen(this, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
@@ -801,11 +810,11 @@ export class ProcessManagerImpl implements Manager {
 
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
-      return handle as unknown as Handle<I, O>;
+      return handle as unknown as Handle<I, O, Rpcs>;
     });
   }
 
-  attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>> {
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
     return Effect.gen(this, function* () {
       const handle = this.#handles.get(id);
       if (!handle) {
@@ -813,7 +822,7 @@ export class ProcessManagerImpl implements Manager {
         return yield* Effect.die(new Error(`Process not found: ${id}`));
       }
       log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
-      return handle as unknown as Handle<I, O>;
+      return handle as unknown as Handle<I, O, Rpcs>;
     });
   }
 
