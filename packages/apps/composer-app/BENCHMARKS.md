@@ -74,3 +74,9 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-06-16T21:43:08Z | 391b48086b |   ⚠   | dev-cold  | chromium |          6537 |      11135 |  140 |       34.3 |     400 | `org.dxos.plugin.duffel.module.org.dxos.plugin.duffel/duffel` (1335) |
 | 2026-06-16T21:46:51Z | 391b48086b |   ⚠   | cold      | chromium |          6685 |      11436 |  196 |       34.3 |     399 | `org.dxos.plugin.duffel.module.org.dxos.plugin.duffel/duffel` (1349) |
 | 2026-06-16T21:47:19Z | 391b48086b |   ⚠   | warm-cold | chromium |          8900 |      13362 |  116 |       34.2 |     396 | `org.dxos.plugin.client.module.Client` (2659)                        |
+| 2026-06-23T18:27:17Z | cd8997fd43 |   ⚠   | dev-cold  | chromium |          6955 |      12339 |  136 |       32.0 |     395 | `org.dxos.plugin.osrm.module.org.dxos.plugin.osrm/osrm` (2322)       |
+| 2026-06-23T18:31:28Z | cd8997fd43 |   ⚠   | cold      | chromium |          7444 |      12874 |  152 |       32.0 |     396 | `org.dxos.plugin.osrm.module.org.dxos.plugin.osrm/osrm` (2412)       |
+| 2026-06-23T18:31:56Z | cd8997fd43 |   ⚠   | warm-cold | chromium |          6673 |      12922 |  144 |       35.1 |     393 | `org.dxos.plugin.calls.module.ReactRoot` (1617)                      |
+| 2026-06-23T20:21:21Z | cd8997fd43 |   ⚠   | dev-cold  | chromium |          6714 |      11861 |  136 |       32.0 |     395 | `org.dxos.plugin.calls.module.ReactRoot` (1553)                      |
+| 2026-06-23T20:25:36Z | cd8997fd43 |   ⚠   | cold      | chromium |         17949 |      28895 |  604 |       31.7 |     395 | `org.dxos.plugin.calls.module.ReactRoot` (4669)                      |
+| 2026-06-23T20:26:35Z | cd8997fd43 |   ⚠   | warm-cold | chromium |          7015 |      12477 |  136 |       32.1 |     393 | `org.dxos.plugin.calls.module.ReactRoot` (1952)                      |

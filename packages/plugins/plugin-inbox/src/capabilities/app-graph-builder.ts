@@ -142,7 +142,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'mailboxesSection',
-        match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_COMM_TYPE),
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
         connector: (space, get) => {
           const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
           if (mailboxes.length === 0) {
@@ -367,7 +367,7 @@ export default Capability.makeModule(
       }),
 
       TypeSection.createTypeSectionExtension(Calendar.Calendar, {
-        match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_COMM_TYPE),
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
       }),
 
       GraphBuilder.createExtension({
