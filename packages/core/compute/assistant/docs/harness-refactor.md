@@ -1,19 +1,22 @@
 # Agent Harness Refactor — Design Spec
 
-Status: in progress.
+Status: implemented (Steps 1–8 landed).
 
 Progress:
 
 - [x] **Step 1 — generic process RPC control plane** (`@dxos/compute` + `@dxos/compute-runtime`).
       Landed: `Process.make({ rpcs })`, `Callbacks.rpcHandlers`, `Handle.rpc`, in-memory
       dispatch via `@effect/rpc` `RpcTest.makeClient`. See §4 for the as-built notes.
-- [ ] Step 2 — annotations-based discovery (`HarnessHostAnnotation`, surface `params.annotations`).
-- [ ] Step 3 — `AgentProcess` `HarnessControl` group + handlers; stamp host annotation at spawn.
-- [ ] Step 4 — `HarnessService` LayerSpec (Tier A + B); migrate call sites; delete deprecated services.
-- [ ] Step 5 — alarm blueprint externalization; remove inline `AlarmToolkit`; persist alarm `message`.
-- [ ] Step 6 — blueprint hook execution engine; planning `end-request` hook; remove `CompletionGuard`.
-- [ ] Step 7 — `StorageService.Key → Cell` rename.
-- [ ] Step 8 — Composer planning skill fix.
+- [x] Step 2 — annotations-based discovery (`HarnessHostAnnotation`, surface `params.annotations`).
+- [x] Step 3 — `AgentProcess` `HarnessControl` group + handlers; stamp host annotation at spawn.
+- [x] Step 4 — `HarnessService` LayerSpec (Tier A + B); migrate call sites; delete deprecated services.
+- [x] Step 5 — alarm blueprint externalization; remove inline `AlarmToolkit`; persist alarm `message`.
+- [x] Step 6 — blueprint hook execution engine; planning `end-request` hook; remove `CompletionGuard`.
+      The ephemeral stop/continue LLM check (§12.4) was dropped — the end-request hook enqueues
+      a continuation reminder when incomplete tasks remain, which keeps the process alive.
+- [x] Step 7 — `StorageService.Key → Cell` rename.
+- [x] Step 8 — Composer planning skill fix (single live `src/skills/planning/` tree; removed an
+      `as any` in `update-tasks.ts` in favour of `Operation.opaqueHandler`).
 
 ## 1. Motivation
 
