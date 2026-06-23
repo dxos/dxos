@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type, URI } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Obj, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 
 import * as McpServer from './McpServer';
@@ -23,7 +23,6 @@ import * as Template from './Template';
  * The registry `key` and `version` are stored in the object meta — access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
  */
-// TODO(burdon): Rename Skill?
 export const Skill = Schema.Struct({
   /**
    * Human-readable name of the skill.
@@ -68,7 +67,7 @@ export const Skill = Schema.Struct({
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.skill', '0.2.0')),
+  Type.makeObject(DXN.make('org.dxos.type.skill', '0.1.0')),
 );
 
 /**
@@ -166,59 +165,3 @@ export const upsert = (key: string): Effect.Effect<Skill, NotFoundError, Registr
 
 export class NotFoundError extends BaseError.extend('SkillNotFound', 'Skill not found') {}
 
-//
-// Legacy schemas and migrations.
-//
-
-/**
- * Skill schema v0.1.0 — `key` is stored as a data property.
- * @deprecated Use {@link Skill} (v0.2.0) instead; the `key` and `version` now live in the object meta.
- */
-export const Skill_v0_1_0 = Schema.Struct({
-  /**
-   * Global registry ID.
-   * NOTE: The `key` property refers to the original registry entry.
-   */
-  key: Schema.String.annotations({
-    description: 'Unique registration key for the skill',
-  }),
-
-  name: Schema.String.annotations({
-    description: 'Human-readable name of the skill',
-  }),
-
-  description: Schema.optional(Schema.String),
-
-  instructions: Template.Template,
-
-  tools: Schema.Array(ToolId),
-
-  agentCanEnable: Schema.optional(Schema.Boolean),
-
-  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.skill', '0.1.0')));
-
-export type Skill_v0_1_0 = Type.InstanceType<typeof Skill_v0_1_0>;
-/**
- * Migration from {@link Skill_v0_1_0} (v0.1.0) to {@link Skill} (v0.2.0).
- * Moves `key` from the data section into the object meta.
- */
-const _migration = Migration.define({
-  from: Skill_v0_1_0,
-  to: Skill,
-  transform: async (from) => ({
-    [Obj.Meta]: { key: from.key, version: '0.1.0' },
-    name: from.name,
-    description: from.description,
-    instructions: from.instructions,
-    tools: from.tools,
-    agentCanEnable: from.agentCanEnable,
-    mcpServers: from.mcpServers,
-  }),
-});
-
-/**
- * Schema migrations exported by this module.
- * Exported as an array for extensibility — append future versions here.
- */
-export const migrations = [_migration];
