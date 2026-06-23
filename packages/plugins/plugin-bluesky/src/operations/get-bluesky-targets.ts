@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { BLUESKY_TARGET } from '../constants';
-import { IntegrationDatabaseMissingError } from '../errors';
+import { SyncDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { GetBlueskyTargets } from './definitions';
 
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       const client = yield* Capability.get(ClientCapabilities.Client);
       const connection = yield* Database.load(connectionRef);
       if (!Obj.getDatabase(connection)) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
 
       // Saved feeds are best-effort. Credentials construction (PDS resolve,

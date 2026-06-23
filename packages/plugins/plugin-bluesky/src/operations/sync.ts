@@ -16,7 +16,7 @@ import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Subscription } from '@dxos/plugin-magazine';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
-import { IntegrationDatabaseMissingError } from '../errors';
+import { SyncDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { SyncBlueskyTargets } from './definitions';
 
@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
       const connection = Relation.getSource(binding);
       const db = Obj.getDatabase(binding);
       if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
 
       // The credentials layer loads the connection's access token, validates

@@ -7,7 +7,7 @@ import { BaseError } from '@dxos/errors';
 const MISSING_HANDLE_MESSAGE =
   'Bluesky access token has no `account` (handle/DID) set; cannot resolve XRPC actor.' as const;
 
-const INTEGRATION_DATABASE_MISSING_MESSAGE = 'No database for integration ref.' as const;
+const SYNC_DATABASE_MISSING_MESSAGE = 'No database for connection/binding ref.' as const;
 
 const PDS_RESOLUTION_FAILED_MESSAGE =
   "Could not resolve the atproto PDS endpoint for this handle/DID; authenticated XRPC requires the user's actual PDS." as const;
@@ -18,10 +18,10 @@ const PDS_RESOLUTION_FAILED_MESSAGE =
  */
 export class MissingBlueskyHandleError extends BaseError.extend('MissingBlueskyHandleError', MISSING_HANDLE_MESSAGE) {}
 
-/** Integration ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
-export class IntegrationDatabaseMissingError extends BaseError.extend(
-  'IntegrationDatabaseMissingError',
-  INTEGRATION_DATABASE_MISSING_MESSAGE,
+/** Connection/binding ref had no resolvable ECHO database (invoker did not provide `Database.layer`). */
+export class SyncDatabaseMissingError extends BaseError.extend(
+  'SyncDatabaseMissingError',
+  SYNC_DATABASE_MISSING_MESSAGE,
 ) {}
 
 /**

@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { IntegrationDatabaseMissingError } from '../../../errors';
+import { SyncDatabaseMissingError } from '../../../errors';
 import { InboxOperation } from '../../../types';
 
 /**
@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.MaterializeContactsTa
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
         if (!db) {
-          return yield* Effect.fail(new IntegrationDatabaseMissingError());
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
 
         // Contacts is a multi-target connector; fall back to the default group when no selection.

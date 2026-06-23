@@ -12,7 +12,7 @@ import { SyncBinding } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
-import { IntegrationDatabaseMissingError } from '../errors';
+import { SyncDatabaseMissingError } from '../errors';
 import { InboxOperation } from '../types';
 
 const dispatch = (bindingRef: Ref.Ref<SyncBinding.SyncBinding>, db: Database.Database) =>
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = Inbox
       const target = input.binding.target;
       const db = target ? Obj.getDatabase(target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
 
       yield* dispatch(input.binding, db).pipe(

@@ -13,7 +13,7 @@ import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 
 import { GooglePeople } from '../../../apis';
-import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../../../errors';
+import { AccessTokenNotPopulatedError, SyncDatabaseMissingError } from '../../../errors';
 import { InboxOperation } from '../../../types';
 
 const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups';
@@ -49,7 +49,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleContactGroup
         const target = connection.target;
         const db = target ? Obj.getDatabase(target) : undefined;
         if (!db) {
-          return yield* Effect.fail(new IntegrationDatabaseMissingError());
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {

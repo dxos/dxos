@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Subscription } from '@dxos/plugin-magazine';
 
 import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants';
-import { IntegrationDatabaseMissingError } from '../errors';
+import { SyncDatabaseMissingError } from '../errors';
 import { MaterializeBlueskyTarget } from './definitions';
 
 /**
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof MaterializeBlueskyTarget> = Material
       //   target and provide `Database.layer(db)` ourselves.
       const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
       const remoteId = remoteTarget.id;
 

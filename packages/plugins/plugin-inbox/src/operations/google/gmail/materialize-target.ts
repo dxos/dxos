@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { IntegrationDatabaseMissingError } from '../../../errors';
+import { SyncDatabaseMissingError } from '../../../errors';
 import { InboxOperation, Mailbox } from '../../../types';
 
 /**
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.MaterializeGmailTarge
         const connectionObj = connection.target;
         const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
         if (!connectionObj || !db) {
-          return yield* Effect.fail(new IntegrationDatabaseMissingError());
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {

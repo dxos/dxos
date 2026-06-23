@@ -18,7 +18,7 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 
 import { SLACK_SOURCE } from '../constants';
-import { IntegrationDatabaseMissingError, formatSlackSyncFailure } from '../errors';
+import { SyncDatabaseMissingError, formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
 import { SlackOperation } from '../types';
 
@@ -261,11 +261,11 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       //   resolve the relation's source/target endpoints.
       const bindingTarget = bindingRef.target;
       if (!bindingTarget) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
       const db = Obj.getDatabase(bindingTarget);
       if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
 
       const client = yield* Capability.get(ClientCapabilities.Client);

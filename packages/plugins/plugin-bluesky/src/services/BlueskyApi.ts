@@ -24,7 +24,7 @@ import { Database, Obj, type Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/plugin-connector';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
-import { IntegrationDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
+import { SyncDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
 
 //
 // Schemas
@@ -348,7 +348,7 @@ export class Credentials extends Context.Tag('@dxos/plugin-bluesky/Credentials')
         }
         const db = Obj.getDatabase(connection);
         if (!db) {
-          return yield* Effect.fail(new IntegrationDatabaseMissingError());
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
         const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
         if (!edgeBaseUrl) {
