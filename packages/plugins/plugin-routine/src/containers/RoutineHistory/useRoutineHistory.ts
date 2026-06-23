@@ -44,7 +44,7 @@ export const useRoutineHistory = (db: Database.Database | undefined, routine: Ro
       }
     }
     return ids;
-  }, [routine.triggers]);
+  }, [routine.triggers.map((triggerRef) => triggerRef?.uri ?? '').join('|')]);
 
   return useMemo(() => groupIntoRuns(messages, triggerEntityIds), [messages, triggerEntityIds]);
 };

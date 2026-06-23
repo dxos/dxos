@@ -5,39 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { Trace } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
-import { Ref } from '@dxos/echo';
-import { EID, EntityId } from '@dxos/keys';
+import { Obj, Ref } from '@dxos/echo';
+import { EID, type EntityId } from '@dxos/keys';
 
 import { groupIntoRuns } from './runs';
-
-// Minimal Ref-like object whose `.uri` is a valid EID.
-const makeRef = (entityId: EntityId): any => Ref.fromURI(EID.make({ entityId }));
-
-// Construct a bare-minimum Trace.Message for testing (no ECHO DB required).
-const makeMessage = (opts: {
-  pid: string;
-  parentPid?: string;
-  triggerEntityId?: EntityId;
-  eventType?: string;
-  eventOutcome?: string;
-  timestamp?: number;
-}): Trace.Message => {
-  const event: any = {
-    type: opts.eventType ?? Trace.OperationStart.key,
-    timestamp: opts.timestamp ?? Date.now(),
-    data: opts.eventOutcome ? { key: 'test', outcome: opts.eventOutcome } : { key: 'test' },
-  };
-  return Obj.make(Trace.Message, {
-    meta: {
-      pid: opts.pid,
-      parentPid: opts.parentPid,
-      trigger: opts.triggerEntityId ? makeRef(opts.triggerEntityId) : undefined,
-    },
-    isEphemeral: false,
-    events: [event],
-  });
-};
 
 const TRIGGER_ID = 'aaaaaaaa-0000-0000-0000-000000000001' as EntityId;
 const OTHER_TRIGGER_ID = 'bbbbbbbb-0000-0000-0000-000000000002' as EntityId;
@@ -117,4 +88,53 @@ describe('groupIntoRuns', () => {
     expect(runs[0].pid).toBe('p1');
     expect(runs[0].duration).toBe(1000);
   });
+
+  test('deep parent chain (>20 levels) resolves to root run', ({ expect }) => {
+    const depth = 25;
+    const messages: Trace.Message[] = [];
+    for (let i = 1; i <= depth; i++) {
+      messages.push(
+        makeMessage({
+          pid: `p${i}`,
+          parentPid: i > 1 ? `p${i - 1}` : undefined,
+          triggerEntityId: TRIGGER_ID,
+          timestamp: i * 1000,
+        }),
+      );
+    }
+    const runs = groupIntoRuns(messages, new Set([TRIGGER_ID]));
+    expect(runs).toHaveLength(1);
+    expect(runs[0].pid).toBe('p1');
+  });
 });
+
+// Minimal Ref whose `.uri` is a valid EID.
+// EntityId is a branded string — the cast on the caller's side is intentional for test fixtures.
+function makeRef(entityId: EntityId): Ref.Ref<never> {
+  return Ref.fromURI(EID.make({ entityId })) as Ref.Ref<never>;
+}
+
+// Construct a bare-minimum Trace.Message for testing (no ECHO DB required).
+function makeMessage(opts: {
+  pid: string;
+  parentPid?: string;
+  triggerEntityId?: EntityId;
+  eventType?: string;
+  eventOutcome?: string;
+  timestamp?: number;
+}): Trace.Message {
+  const event = {
+    type: opts.eventType ?? Trace.OperationStart.key,
+    timestamp: opts.timestamp ?? Date.now(),
+    data: opts.eventOutcome ? { key: 'test', outcome: opts.eventOutcome } : { key: 'test' },
+  } as Trace.Event;
+  return Obj.make(Trace.Message, {
+    meta: {
+      pid: opts.pid,
+      parentPid: opts.parentPid,
+      trigger: opts.triggerEntityId ? makeRef(opts.triggerEntityId) : undefined,
+    },
+    isEphemeral: false,
+    events: [event],
+  });
+}

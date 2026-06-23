@@ -57,14 +57,16 @@ export const groupIntoRuns = (
   // Find the root pid for a given pid (walk up the parent chain).
   const getRootPid = (pid: string): string => {
     let current = pid;
-    // Guard against cycles with a visit limit.
-    for (let i = 0; i < 20; i++) {
+    const visited = new Set<string>();
+    while (!visited.has(current)) {
+      visited.add(current);
       const parent = pidToParent.get(current);
       if (!parent) {
         return current;
       }
       current = parent;
     }
+    // Cycle detected; return a stable fallback key.
     return current;
   };
 

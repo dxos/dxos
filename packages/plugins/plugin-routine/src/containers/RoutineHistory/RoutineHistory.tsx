@@ -32,8 +32,9 @@ const formatDuration = (ms: number): string => {
   if (ms < 60_000) {
     return `${(ms / 1000).toFixed(1)}s`;
   }
-  const mins = Math.floor(ms / 60_000);
-  const secs = Math.round((ms % 60_000) / 1000);
+  const totalSeconds = Math.round(ms / 1000);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
   return `${mins}m ${secs}s`;
 };
 
