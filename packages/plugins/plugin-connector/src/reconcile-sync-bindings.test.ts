@@ -22,7 +22,7 @@ import {
   MaterializeTargetInput,
   MaterializeTargetOutput,
   SyncBinding,
-} from '../types';
+} from './types';
 import { reconcileSyncBindings, type SyncTargetSelection } from './reconcile-sync-bindings';
 
 describe('reconcileSyncBindings', () => {
