@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -10,14 +11,19 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
 import { connectionDeckSubject } from '../../constants';
 import { Connection } from '../../types';
+
+// The add-connection action uses Form's `settings` variant for its labeled-row chrome
+// (an action-mode `Form.Row`); there are no fields to bind, so the schema is empty.
+const ACTIONS_SCHEMA = Schema.Struct({});
+const ACTIONS_VALUES = {};
 
 export type ConnectionSettingsArticleProps = Record<string, never>;
 
@@ -52,32 +58,44 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
   );
 
   return (
-    <Settings.Viewport>
-      <Settings.Section title=''>
-        <Settings.Item
-          title={t('add-connection.label', { defaultValue: 'Add connection' })}
-          description={t('connect-service.description', {
-            defaultValue: 'Link an external service to this space.',
-          })}
-        >
-          <Button onClick={handleAdd}>{t('connect.label', { defaultValue: 'Connect' })}</Button>
-        </Settings.Item>
-      </Settings.Section>
+    <Panel.Root>
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.Section>
+                    <Form.Row
+                      label={t('add-connection.label', { defaultValue: 'Add connection' })}
+                      description={t('connect-service.description', {
+                        defaultValue: 'Link an external service to this space.',
+                      })}
+                    >
+                      <Button onClick={handleAdd}>{t('connect.label', { defaultValue: 'Connect' })}</Button>
+                    </Form.Row>
+                  </Form.Section>
 
-      {connections.length > 0 && (
-        <Settings.Section title={t('connections.label', { defaultValue: 'Connections' })}>
-          <Listbox.Root>
-            <Listbox.Viewport>
-              <Listbox.Content aria-label={t('connections.label', { defaultValue: 'Connections' })}>
-                {connections.map((connection) => (
-                  <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
-                ))}
-              </Listbox.Content>
-            </Listbox.Viewport>
-          </Listbox.Root>
-        </Settings.Section>
-      )}
-    </Settings.Viewport>
+                  {connections.length > 0 && (
+                    <Form.Section title={t('connections.label', { defaultValue: 'Connections' })}>
+                      <Listbox.Root>
+                        <Listbox.Viewport>
+                          <Listbox.Content aria-label={t('connections.label', { defaultValue: 'Connections' })}>
+                            {connections.map((connection) => (
+                              <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
+                            ))}
+                          </Listbox.Content>
+                        </Listbox.Viewport>
+                      </Listbox.Root>
+                    </Form.Section>
+                  )}
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

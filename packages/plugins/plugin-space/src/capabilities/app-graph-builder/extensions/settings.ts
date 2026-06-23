@@ -48,6 +48,8 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     connector: (space) => {
       const personal = AppSpace.isPersonalSpace(space);
       return Effect.succeed([
+        // General and Members are the core space sections and always lead, ahead of the
+        // un-positioned (0) sections other plugins contribute (connections, routines, …).
         Node.make({
           id: 'general',
           type: `${meta.profile.key}.general`,
@@ -57,6 +59,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
             icon: 'ph--brackets-curly--regular',
             iconHue: 'indigo',
             space,
+            position: -2,
             testId: 'spacePlugin.general',
           },
         }),
@@ -71,6 +74,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                   icon: 'ph--users--regular',
                   iconHue: 'indigo',
                   space,
+                  position: -1,
                   testId: 'spacePlugin.members',
                 },
               }),

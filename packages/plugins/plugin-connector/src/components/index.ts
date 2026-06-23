@@ -6,3 +6,5 @@ import { lazy } from 'react';
 
 export const ConnectorAuthButton = lazy(() => import('./ConnectorAuthButton'));
 export const ConnectorPicker = lazy(() => import('./ConnectorPicker'));
+
+export * from './ConnectionView';

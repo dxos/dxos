@@ -126,18 +126,16 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
           <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
         ) : (
           <ScrollArea.Root classNames='max-bs-[24rem]' padding>
-            <ScrollArea.Viewport classNames='flex flex-col gap-2'>
+            <ScrollArea.Viewport classNames='flex flex-col gap-3'>
               {availableTargets.map((target) => (
                 <Input.Root key={target.id}>
-                  <div className='flex gap-2'>
-                    <div>
-                      <Input.Checkbox
-                        checked={selected.has(target.id)}
-                        onCheckedChange={() => handleToggle(target.id)}
-                        disabled={submitting}
-                      />
-                    </div>
-                    <div>
+                  <div className='flex items-start gap-2'>
+                    <Input.Checkbox
+                      checked={selected.has(target.id)}
+                      onCheckedChange={() => handleToggle(target.id)}
+                      disabled={submitting}
+                    />
+                    <div className='flex flex-col'>
                       <Input.Label>{target.name}</Input.Label>
                       {target.description && <p className='text-sm text-description'>{target.description}</p>}
                     </div>
@@ -148,7 +146,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
           </ScrollArea.Root>
         )}
 
-        {error && <p className='mt-form-gap text-error'>{error}</p>}
+        {error && <p className='mt-form-gap text-error-text'>{error}</p>}
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
