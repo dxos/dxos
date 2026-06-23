@@ -34,8 +34,10 @@ export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) 
         )}
       </div>
       <Card.Header>
-        <Icon icon='ph--image--regular' size={5} />
-        <Card.Title>{file?.name ?? ''}</Card.Title>
+        <Card.Block>
+          <Icon icon='ph--image--regular' size={5} />
+        </Card.Block>
+        <Card.Title className='text-description'>{file?.name ?? ''}</Card.Title>
         {onDelete && (
           <Card.Block end>
             <IconButton
