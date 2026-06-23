@@ -13,8 +13,9 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
+import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, type URI } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Operation from './Operation';
@@ -141,16 +142,19 @@ export interface Params {
   readonly name: string | null;
 
   /**
-   * URI of the target this process is assigned to.
+   * User-defined annotations for the process.
+   * Can only be set when the process is spawned.
    */
-  readonly target: URI.URI | null;
-
-  /**
-   * User-facing notifications requested for this process's lifecycle phases.
-   * Surfaced on {@link Info} so a notification tracker can subscribe to the process monitor.
-   */
-  readonly notify?: Operation.NotifyOptions;
+  readonly annotations: Annotation.Dictionary;
 }
+
+/**
+ * Attaches the process to a target object.
+ */
+export const TargetAnnotation = Annotation.make({
+  id: 'org.dxos.process.target',
+  schema: URI.Schema,
+});
 
 //
 // Executable.
