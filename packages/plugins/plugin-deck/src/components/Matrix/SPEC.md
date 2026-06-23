@@ -98,7 +98,7 @@ IDs with a `~` prefix on the last segment (e.g., `root/obj/~settings`) mark the 
 - **DeckMain** ensures attention is initialized:
   - On first render, focuses the first plank's button if nothing is attended.
   - On mobile breakpoint: reads the currently attended ID to determine which plank to show in solo mode.
-- **Keyboard** — `plugin-attention` syncs `Keyboard.singleton.setCurrentContext(\`root/${id}\`)` with the attended ID, so keyboard shortcuts apply to the attended plank while inheriting root-level bindings.
+- **Keyboard** — `plugin-attention` syncs `Keyboard.singleton.setCurrentContext(id)` with the attended ID, so keyboard shortcuts apply to the attended plank.
 
 ### Attention vs Focus vs Matrix.current
 
