@@ -106,7 +106,10 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'routine' | 'instructions' | 'postState'> & {
+export type MakeProps = Omit<
+  Obj.MakeProps<typeof Magazine>,
+  'feeds' | 'posts' | 'routine' | 'instructions' | 'postState'
+> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
   /** Editorial brief seeded into the curation Routine's instructions (composed with the default methodology). */
