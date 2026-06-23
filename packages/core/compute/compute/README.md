@@ -9,7 +9,7 @@ source packages. Namespaces preserve their nesting — there is no extra wrappin
 or unwrapping:
 
 ```ts
-import { Skill, Operation, Routine, Process, Script, Trace, Trigger } from '@dxos/compute';
+import { Skill, Operation, Instructions, Process, Script, Trace, Trigger } from '@dxos/compute';
 
 Skill.make({ /* ... */ });
 Operation.lazy(() => /* ... */);
@@ -21,7 +21,7 @@ This single surface subsumes:
 | Re-exported from   | Includes                                                        |
 | ------------------ | --------------------------------------------------------------- |
 | `@dxos/operation`  | `Operation`, `OperationInvoker`, `OperationHandlerSet`, `OperationRegistry`, errors |
-| `@dxos/skills` | `Skill`, `Routine`, `Template`                              |
+| `@dxos/compute`    | `Skill`, `Instructions`, `Template`                             |
 | `@dxos/functions`  | `Process`, `Trigger`, `TriggerEvent`, `Script`, `Trace`, `ServiceResolver`, `StorageService`, `CredentialsService`, `ExampleHandlers`, services, errors, sdk |
 
 The HyperFormula-based compute graph that previously lived here moved to
@@ -32,7 +32,7 @@ The HyperFormula-based compute graph that previously lived here moved to
 - Stage 1 (current): re-exports — consumers depend only on `@dxos/compute`
   while the source packages stay in place.
 - Stage 2: migrate source into `@dxos/compute` and remove
-  `@dxos/operation`, `@dxos/skills`, and `@dxos/functions`.
+  `@dxos/operation` and `@dxos/functions`.
 - A companion `@dxos/compute-runtime-local` package will host the local
   implementations of the services defined here (currently in
   `@dxos/functions-runtime`).

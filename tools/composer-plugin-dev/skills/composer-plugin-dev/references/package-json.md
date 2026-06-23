@@ -30,7 +30,7 @@ Two flavors: **community** (your own repo, single bundle) and **monorepo** (mult
     "@dxos/app-toolkit": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/echo": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/operation": "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/skills": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/compute": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/react-ui": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/types": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/util": "<COMPOSER_HOST_MAIN_DIST_TAG>",

@@ -13,7 +13,7 @@ A skill pairs:
 ```ts
 // src/skills/my-skill.ts
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Skill, Template } from '@dxos/skills';
+import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { Create, Move, Play, Print } from '#operations';
