@@ -10,8 +10,9 @@ import { AppManager } from './app-manager';
 import { Markdown, Stack, StackPlugin } from './plugins';
 
 test.describe('Stack tests', () => {
-  // Each test in this suite enables a plugin in beforeEach, which adds ~30-40s of setup
-  // on top of the test body. The global 60s limit is too tight; 90s gives sufficient headroom.
+  // TODO(wittjosiah): Each test enables the stack plugin from scratch, which requires a full
+  // page reload (~30-40s). This should not be necessary once plugin enable/reload is faster
+  // or the plugin is pre-enabled in the test build. Until then, 90s gives sufficient headroom.
   test.describe.configure({ timeout: 90_000 });
 
   let host: AppManager;
