@@ -38,7 +38,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/app-graph": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",

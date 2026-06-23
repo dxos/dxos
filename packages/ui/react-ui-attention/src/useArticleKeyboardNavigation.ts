@@ -4,7 +4,6 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { Node } from '@dxos/app-graph';
 import { Keyboard } from '@dxos/keyboard';
 
 import { useAttention } from './components';
@@ -75,10 +74,9 @@ export const useArticleKeyboardNavigation: {
       return;
     }
 
-    const contextPath = `${Node.RootId}/${articleId}`;
-    const context = Keyboard.singleton.getContext(contextPath);
+    const context = Keyboard.singleton.getContext(articleId);
     const prevContext = Keyboard.singleton.getCurrentContext();
-    Keyboard.singleton.setCurrentContext(contextPath);
+    Keyboard.singleton.setCurrentContext(articleId);
 
     const nextBinding = {
       shortcut: 'j',
@@ -110,7 +108,7 @@ export const useArticleKeyboardNavigation: {
       context.unbind('j');
       context.unbind('k');
       // Restore the prior context if we were the ones who set it.
-      if (Keyboard.singleton.getCurrentContext() === contextPath) {
+      if (Keyboard.singleton.getCurrentContext() === articleId) {
         Keyboard.singleton.setCurrentContext(prevContext);
       }
     };
