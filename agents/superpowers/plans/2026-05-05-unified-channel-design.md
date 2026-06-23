@@ -110,7 +110,7 @@ Two distinct interaction patterns, two types:
 - 1:1 between the user and their assistant.
 - "Always respond" semantics: every user message triggers a turn.
 - Driven by `AiSession` running an always-respond loop over the chat's feed.
-- `view` field for per-chat display preference; `CompanionTo` for bound artifacts/skills.
+- `view` field for per-chat display preference; `CompanionTo` for bound artifacts/blueprints.
 
 ### `Channel` — multi-player conversation, AI as participant
 
@@ -134,7 +134,7 @@ A foundational assumption: `Ref<Message>` to a message stored in a feed resolves
 These stay distinct — they encode different semantics:
 
 - **`AnchoredTo(target, anchor)`** — spatial/positional binding. A comment-thread root anchors to a doc range. Used for things that have a _location_ in another object.
-- **`CompanionTo(channel, artifact)`** — artifact/configuration binding. An AI Chat has companion skills, attached objects, configured personas. Used for things conceptually _attached_ to a chat without occupying a position.
+- **`CompanionTo(channel, artifact)`** — artifact/configuration binding. An AI Chat has companion blueprints, attached objects, configured personas. Used for things conceptually _attached_ to a chat without occupying a position.
 
 `Channel` uses `CompanionTo` for things like per-channel assistant config. `AnchoredTo` is reserved for the future comment-thread migration; native channels (Slack/Discord/DMs) don't need it.
 
@@ -174,7 +174,7 @@ Out of scope (future rounds):
 ## Open questions / out of scope
 
 - **Mention block kind.** AI-on-mention requires a stable `MentionBlock` content kind referencing the assistant `Actor`. May already exist in `ContentBlock`; verify before implementing the trigger.
-- **Assistant config per channel.** `CompanionTo(Channel → AssistantConfig)` is the proposed pattern for opting an assistant into a channel with persona/skill/toolkit settings. Want concrete design of `AssistantConfig` shape.
+- **Assistant config per channel.** `CompanionTo(Channel → AssistantConfig)` is the proposed pattern for opting an assistant into a channel with persona/blueprint/toolkit settings. Want concrete design of `AssistantConfig` shape.
 - **Per-thread permissions / mute.** With one feed per channel, per-thread permissions/mute aren't naturally separable. Not a current requirement; if it becomes one, the escape hatch is per-thread `Channel` objects with `parent: Ref<Channel>`. Default is to keep threads as `threadId` groupings.
 - **Generic `Channel` vs source-specific types.** `plugin-slack` and `plugin-discord` use `Channel` directly with meta-key identification. If a plugin grows source-specific schema-level fields that don't fit on `Channel`, fork at that point. Today no source needs this.
 - **Edit semantics on feeds** (relevant to the future comment migration, not this round). Does in-place mutation work for feed-stored objects, or does editing a `Message`'s content require remove + re-append? Affects how typo-fix-on-comment would be implemented post-migration. (Status changes don't depend on this — they're feed events.)

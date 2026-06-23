@@ -33,6 +33,7 @@ const make = () =>
         ${'```'}
       `,
     }),
+    agentCanEnable: true,
   });
 
 const skill: Skill.Definition = {

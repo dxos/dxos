@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
@@ -38,10 +38,7 @@ export const PromptEditor = ({ id, text, placeholder }: PromptEditorProps) => {
     () =>
       text
         ? [
-            createDataExtensions({
-              id,
-              text: createDocAccessor(text, ['content']),
-            }),
+            createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
             createBasicExtensions({
               bracketMatching: false,
               lineWrapping: true,

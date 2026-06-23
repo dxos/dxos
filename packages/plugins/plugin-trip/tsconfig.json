@@ -100,9 +100,6 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-client"
     },
     {
@@ -116,6 +113,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

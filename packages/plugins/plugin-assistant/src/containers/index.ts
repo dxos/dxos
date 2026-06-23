@@ -7,7 +7,6 @@ import { type ComponentType, lazy } from 'react';
 export const AgentArticle: ComponentType<any> = lazy(() => import('./AgentArticle'));
 export const AgentProperties: ComponentType<any> = lazy(() => import('./AgentProperties'));
 export const AssistantSettings: ComponentType<any> = lazy(() => import('./AssistantSettings'));
-export const SkillArticle: ComponentType<any> = lazy(() => import('./SkillArticle'));
 export const ChatCompanion: ComponentType<any> = lazy(() => import('./ChatCompanion'));
 export const ChatArticle: ComponentType<any> = lazy(() => import('./ChatArticle'));
 export const ChatDialog: ComponentType<any> = lazy(() => import('./ChatDialog'));

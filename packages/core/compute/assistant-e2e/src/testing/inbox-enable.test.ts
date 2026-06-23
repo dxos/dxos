@@ -9,6 +9,7 @@ import { trim } from '@dxos/util';
 
 import { agentTest, agentTestTimeout } from '../harness';
 
+// Must stay at module scope: primes the test PRNG; agentTest pins a per-test seed from the test name.
 Obj.ID.dangerouslyDisableRandomness();
 
 // TODO(dmaretskyi): inbox skill (org.dxos.skill.inbox) could not be enabled and ReadEmail could not be called.: {"description":"Step 1 succeeded: A Mailbox object was created successfully in the database (id: 01JGFJJZ00G0WKQSJGMAKCNTHF, typename: org.dxos.type.mailbox, name: 'Test Mailbox').\n\nStep 2 failed: Attempted to enableskill with key 'org.dxos.skill.inbox' using enable-skills. The tool returned: {\"enabled\":[], \"rejected\":[{\"key\":\"org.dxos.skill.inbox\", \"reason\":\"Skill not found in registry.\"}]}. After calling refresh-skills and query-skills again, the skill still does not exist. The available skill keys are: org.dxos.skill.agent, org.dxos.skill.agent-wizard, org.dxos.skill.assistant, org.dxos.skill.skill-manager, org.dxos.skill.browser, org.dxos.skill.database, org.dxos.skill.discord, org.dxos.skill.linear, org.dxos.skill.memory, org.dxos.skill.planning, dxos.org/skill/automation, org.dxos.skill.web-search. None of these is an inbox skill.\n\nStep 3 failed: Without the inbox skill enabled, no read-email tool is available, so ReadEmail (org.dxos.plugin.inbox.operation.readEmail) cannot be called."}

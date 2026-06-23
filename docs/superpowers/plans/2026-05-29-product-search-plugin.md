@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **DXOS sub-skills to load before relevant tasks:** `composer-plugins` (Tasks 1, 12–18), `echo` (Tasks 2–4), `operations` (Tasks 8–11), `skills` (Task 11), `effect` (Tasks 6, 8–11). Run all commands from the worktree `.claude/worktrees/claude+plugin-search`. Tests use `vitest` with `describe`/`test` and `test('x', ({ expect }) => ...)`. Use single quotes. Per project rules: NO casts (`as any`, `as T`, `!`) to silence types; fix at source.
+> **DXOS sub-skills to load before relevant tasks:** `composer-plugins` (Tasks 1, 12–18), `echo` (Tasks 2–4), `operations` (Tasks 8–11), `blueprints` (Task 11), `effect` (Tasks 6, 8–11). Run all commands from the worktree `.claude/worktrees/claude+plugin-search`. Tests use `vitest` with `describe`/`test` and `test('x', ({ expect }) => ...)`. Use single quotes. Per project rules: NO casts (`as any`, `as T`, `!`) to silence types; fix at source.
 
 **Goal:** A Composer plugin (`@dxos/plugin-product-search`, id `org.dxos.plugin.product-search`) for structured multi-vendor product search, where each vendor is an LLM-authored, user-editable template that deterministically drives an HTTP request + result extraction, with results shown as masonry master/detail cards.
 
-**Architecture:** Three ECHO types — `Provider` (site template: JSONSchema fields + request mapping + result mapping), `Search` (multi-provider config holding criteria values + linked results), `Result` (one listing). A pure mapping interpreter turns `(criteria, request)` into an HTTP request and `(response, result-mapping)` into `Result`s. Operations (`RunSearch`, `RunProviderSearch`, `AnalyzeProvider`) run locally or on an agent. A skill drives `AnalyzeProvider`. UI mirrors `plugin-feed`'s `MagazineArticle` (form + masonry + `useSelected`).
+**Architecture:** Three ECHO types — `Provider` (site template: JSONSchema fields + request mapping + result mapping), `Search` (multi-provider config holding criteria values + linked results), `Result` (one listing). A pure mapping interpreter turns `(criteria, request)` into an HTTP request and `(response, result-mapping)` into `Result`s. Operations (`RunSearch`, `RunProviderSearch`, `AnalyzeProvider`) run locally or on an agent. A blueprint drives `AnalyzeProvider`. UI mirrors `plugin-feed`'s `MagazineArticle` (form + masonry + `useSelected`).
 
-**Tech Stack:** TypeScript, Effect-TS, Effect Schema, `@dxos/echo`, `@dxos/compute` (Operation/Skill/Template), `@dxos/app-framework` + `@dxos/app-toolkit`, `@dxos/react-ui-form`, `@dxos/react-ui-masonry`, `@dxos/react-ui-attention`, `@dxos/edge-client` (`proxyFetchLegacy`), `node-html-parser` for scraping, vitest.
+**Tech Stack:** TypeScript, Effect-TS, Effect Schema, `@dxos/echo`, `@dxos/compute` (Operation/Blueprint/Template), `@dxos/app-framework` + `@dxos/app-toolkit`, `@dxos/react-ui-form`, `@dxos/react-ui-masonry`, `@dxos/react-ui-attention`, `@dxos/edge-client` (`proxyFetchLegacy`), `node-html-parser` for scraping, vitest.
 
 **Reference plugin to copy patterns from:** `packages/plugins/plugin-feed` (Subscription≈Provider, Magazine≈Search, Post≈Result).
 
@@ -47,12 +47,12 @@ packages/plugins/plugin-product-search/
       run-provider-search.ts
       analyze-provider.ts
       index.ts                         # OperationHandlerSet.lazy(...)
-    skills/
-      provider-skill.ts
+    blueprints/
+      provider-blueprint.ts
       index.ts
     capabilities/
       react-surface.tsx
-      skill-definition.ts
+      blueprint-definition.ts
       create-object.ts
       operation-handler.ts
       app-graph-builder.ts
@@ -296,7 +296,7 @@ import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { JsonSchema } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-export const SKILL_KEY = 'org.dxos.plugin.product-search/skill/provider';
+export const BLUEPRINT_KEY = 'org.dxos.plugin.product-search/blueprint/provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
 export const FieldBinding = Schema.Struct({
@@ -396,7 +396,7 @@ export const Provider = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--globe--regular', hue: 'cyan' }),
-  SkillsAnnotation.set([SKILL_KEY]),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.product-search-provider', '0.1.0')),
 );
 export type Provider = Type.InstanceType<typeof Provider>;
@@ -408,7 +408,7 @@ export const makeProvider = (
 ): Provider => Obj.make(Provider, { enabled: true, ...props });
 ```
 
-Add the import for `SkillsAnnotation` at the top: `import { SkillsAnnotation } from '@dxos/app-toolkit';`. Confirm `JsonSchema` is exported from `@dxos/echo` (it is — `@dxos/echo#JsonSchema`); if the form needs it as a value schema, use `JsonSchema` directly as the field type.
+Add the import for `BlueprintsAnnotation` at the top: `import { BlueprintsAnnotation } from '@dxos/app-toolkit';`. Confirm `JsonSchema` is exported from `@dxos/echo` (it is — `@dxos/echo#JsonSchema`); if the form needs it as a value schema, use `JsonSchema` directly as the field type.
 
 - [ ] **Step 4: Run to verify pass.**
 
@@ -1253,7 +1253,7 @@ git commit -m "feat(plugin-product-search): run-search handler"
 
 ---
 
-## Task 11: `AnalyzeProvider` handler + skill
+## Task 11: `AnalyzeProvider` handler + blueprint
 
 The LLM analyzes the provider's site and fills in `searchSchema` + `request` + `result`. The operation handler fetches the site HTML (via the proxy) and asks the AI to emit the template as structured output, then writes it onto the Provider.
 
@@ -1261,11 +1261,11 @@ The LLM analyzes the provider's site and fills in `searchSchema` + `request` + `
 
 - Create: `packages/plugins/plugin-product-search/src/operations/analyze-provider.ts`
 - Create: `packages/plugins/plugin-product-search/src/operations/index.ts`
-- Create: `packages/plugins/plugin-product-search/src/skills/provider-skill.ts`
-- Create: `packages/plugins/plugin-product-search/src/skills/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/blueprints/provider-blueprint.ts`
+- Create: `packages/plugins/plugin-product-search/src/blueprints/index.ts`
 
 - [ ] **Step 1: Implement `analyze-provider.ts`.** Read the site, prompt the AI for a structured template, write it back. Use the AI-invocation pattern from `packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts` (AiContext.Binder + `Operation.invoke(AgentPrompt, ...)`), OR — simpler for a deterministic structured result — call the assistant's structured-generation operation. Because the precise AI structured-output API must be confirmed against the current `@dxos/assistant` / `@dxos/assistant-toolkit`, this task has TWO checkpoints:
-  1. Confirm the API for "generate structured JSON from a prompt + schema" by reading `packages/plugins/plugin-assistant/src/operations/*.ts` and the `skills` / `operations` skills. Identify the operation that returns structured output conforming to an Effect Schema.
+  1. Confirm the API for "generate structured JSON from a prompt + schema" by reading `packages/plugins/plugin-assistant/src/operations/*.ts` and the `blueprints` / `operations` skills. Identify the operation that returns structured output conforming to an Effect Schema.
   2. Implement using that API with the target schema being `Schema.Struct({ searchSchema: JsonSchema, request: RequestMapping, result: ResultMapping })`.
 
 Skeleton (fill the AI call per checkpoint 1):
@@ -1310,7 +1310,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
 export default handler;
 ```
 
-This is the one task whose AI call is not fully specified here — it depends on the current assistant API. The implementer MUST resolve checkpoint 1 before writing the call; do not stub it permanently. If structured generation is unavailable, fall back to the skill-driven path (the skill instructs the agent to call a `setProviderTemplate`-style operation; in that case add a `SetProviderTemplate` operation that writes the three fields, and have the skill call it).
+This is the one task whose AI call is not fully specified here — it depends on the current assistant API. The implementer MUST resolve checkpoint 1 before writing the call; do not stub it permanently. If structured generation is unavailable, fall back to the blueprint-driven path (the blueprint instructs the agent to call a `setProviderTemplate`-style operation; in that case add a `SetProviderTemplate` operation that writes the three fields, and have the blueprint call it).
 
 - [ ] **Step 2: Write `operations/index.ts`.**
 
@@ -1328,26 +1328,26 @@ export const SearchOperationHandlerSet = OperationHandlerSet.lazy(
 );
 ```
 
-- [ ] **Step 3: Write `skills/provider-skill.ts`.**
+- [ ] **Step 3: Write `blueprints/provider-blueprint.ts`.**
 
 ```typescript
 //
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { SearchOperation } from '../types';
-import { SKILL_KEY } from '../types/Provider';
+import { BLUEPRINT_KEY } from '../types/Provider';
 
 const operations = [SearchOperation.AnalyzeProvider];
 
 const make = () =>
-  Skill.make({
-    key: SKILL_KEY,
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
     name: 'Search Provider Builder',
-    tools: Skill.toolDefinitions({ operations }),
+    tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
         You build search templates for vendor websites (retail, cars, real estate, etc.).
@@ -1363,19 +1363,19 @@ const make = () =>
     }),
   });
 
-const skill: Skill.Definition = { key: SKILL_KEY, make };
+const blueprint: Blueprint.Definition = { key: BLUEPRINT_KEY, make };
 
-export default skill;
+export default blueprint;
 ```
 
-- [ ] **Step 4: Write `skills/index.ts`.**
+- [ ] **Step 4: Write `blueprints/index.ts`.**
 
 ```typescript
 //
 // Copyright 2026 DXOS.org
 //
 
-export { default as ProviderSkill } from './provider-skill';
+export { default as ProviderBlueprint } from './provider-blueprint';
 ```
 
 - [ ] **Step 5: Compile.**
@@ -1386,8 +1386,8 @@ Expected: success (with the AI call resolved per checkpoint 1).
 - [ ] **Step 6: Commit.**
 
 ```bash
-git add packages/plugins/plugin-product-search/src/operations packages/plugins/plugin-product-search/src/skills
-git commit -m "feat(plugin-product-search): analyze-provider operation + skill"
+git add packages/plugins/plugin-product-search/src/operations packages/plugins/plugin-product-search/src/blueprints
+git commit -m "feat(plugin-product-search): analyze-provider operation + blueprint"
 ```
 
 ---
@@ -1397,7 +1397,7 @@ git commit -m "feat(plugin-product-search): analyze-provider operation + skill"
 **Files:**
 
 - Create: `packages/plugins/plugin-product-search/src/capabilities/operation-handler.ts`
-- Create: `packages/plugins/plugin-product-search/src/capabilities/skill-definition.ts`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/blueprint-definition.ts`
 - Create: `packages/plugins/plugin-product-search/src/capabilities/index.ts`
 - Create: `packages/plugins/plugin-product-search/src/translations.ts`
 - Create: `packages/plugins/plugin-product-search/src/ProductSearchPlugin.tsx`
@@ -1424,7 +1424,7 @@ export default Capability.makeModule(
 
 Confirm `Capabilities.OperationHandler` is the right capability tag by checking `plugin-feed/src/capabilities/operation-handler.ts`; mirror it exactly.
 
-- [ ] **Step 2: `skill-definition.ts`** (mirror `plugin-feed/src/capabilities/skill-definition.ts`).
+- [ ] **Step 2: `blueprint-definition.ts`** (mirror `plugin-feed/src/capabilities/blueprint-definition.ts`).
 
 ```typescript
 //
@@ -1436,11 +1436,11 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { ProviderSkill } from '../skills';
+import { ProviderBlueprint } from '../blueprints';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(AppCapabilities.SkillDefinition, ProviderSkill);
+    return Capability.contributes(AppCapabilities.BlueprintDefinition, ProviderBlueprint);
   }),
 );
 ```
@@ -1499,13 +1499,13 @@ export const translations = [
 //
 
 export { default as OperationHandler } from './operation-handler';
-export { default as SkillDefinition } from './skill-definition';
+export { default as BlueprintDefinition } from './blueprint-definition';
 export { default as CreateObject } from './create-object';
 export { default as ReactSurface } from './react-surface';
 export { default as AppGraphBuilder } from './app-graph-builder';
 ```
 
-(`CreateObject`, `ReactSurface`, `AppGraphBuilder` are created in Tasks 13/17 — add their exports as those tasks complete; for this task, include only `OperationHandler` and `SkillDefinition`.)
+(`CreateObject`, `ReactSurface`, `AppGraphBuilder` are created in Tasks 13/17 — add their exports as those tasks complete; for this task, include only `OperationHandler` and `BlueprintDefinition`.)
 
 - [ ] **Step 5: `ProductSearchPlugin.tsx`** (start with the modules that exist now; add surface/graph/create modules in later tasks).
 
@@ -1517,13 +1517,13 @@ export { default as AppGraphBuilder } from './app-graph-builder';
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { SkillDefinition, OperationHandler } from './capabilities';
+import { BlueprintDefinition, OperationHandler } from './capabilities';
 import { meta } from './meta';
 import { Provider, Search, Result } from './types';
 import { translations } from './translations';
 
 export const ProductSearchPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Provider.Provider, Search.Search, Result.Result] }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -2221,7 +2221,7 @@ git commit -m "feat(plugin-product-search): app-graph actions + create-object"
 - Modify: `packages/plugins/plugin-product-search/PLUGIN.mdl`
 - Modify: `ProductSearchPlugin.tsx` (add `addPluginAssetModule`)
 
-- [ ] **Step 1: Write `PLUGIN.mdl`** — a concise design doc for the plugin (purpose, the three types, how templates are authored by the skill, how search runs locally/agent, the masonry UI). Follow the structure of `packages/plugins/plugin-feed/PLUGIN.mdl`. Per project memory, `PLUGIN.mdl` is the plugin's design doc.
+- [ ] **Step 1: Write `PLUGIN.mdl`** — a concise design doc for the plugin (purpose, the three types, how templates are authored by the blueprint, how search runs locally/agent, the masonry UI). Follow the structure of `packages/plugins/plugin-feed/PLUGIN.mdl`. Per project memory, `PLUGIN.mdl` is the plugin's design doc.
 
 - [ ] **Step 2: Add the asset module** to `ProductSearchPlugin.tsx` (mirror `FeedPlugin.tsx`):
 
@@ -2350,7 +2350,7 @@ git commit -m "chore(plugin-product-search): lint/format + cast audit"
 **Spec coverage:**
 
 - Provider template (schema + request + result mapping) → Tasks 1, 2. ✓
-- LLM-authored, user-editable templates → Task 11 (skill/analyze), Task 16 (editor). ✓
+- LLM-authored, user-editable templates → Task 11 (blueprint/analyze), Task 16 (editor). ✓
 - Search type with providers + typed criteria → Task 4; union form → Tasks 14–15. ✓
 - Typed criteria incl. ranges via annotation → Tasks 14 (RangeField + annotation), 15 (fieldMap wiring). ✓
 - Results as linked objects w/ metadata + image refs → Task 3, Task 9. ✓
@@ -2361,7 +2361,7 @@ git commit -m "chore(plugin-product-search): lint/format + cast audit"
 
 **Known soft spots (flagged inline, must be resolved by implementer, not stubbed):**
 
-- Task 11 AI structured-output call (confirm `@dxos/assistant` API; fallback = skill + `SetProviderTemplate` op).
+- Task 11 AI structured-output call (confirm `@dxos/assistant` API; fallback = blueprint + `SetProviderTemplate` op).
 - Task 15 ref-resolution hooks + operation invocation from React (match `MagazineArticle` exactly; remove the `as any`).
 - Task 17 app-graph capability tag + `GraphBuilder` API (copy from `plugin-feed`).
 - Task 14 `toEffectSchema` input typing (eliminate the `as any` if a typed path exists).

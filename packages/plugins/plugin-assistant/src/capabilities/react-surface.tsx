@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Skill, Routine } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
@@ -21,7 +21,6 @@ import { Position } from '@dxos/util';
 
 import {
   AssistantSettings,
-  SkillArticle,
   ChatCompanion,
   ChatArticle,
   ChatDialog,
@@ -104,7 +103,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'invocations'),
           AppSurface.oneOf(
             AppSurface.companion(AppSurface.Article, Sequence.Sequence),
-            AppSurface.companion(AppSurface.Article, Routine.Routine),
+            AppSurface.companion(AppSurface.Article, Instructions.Instructions),
           ),
         ),
         component: ({ data, role }) => {
@@ -112,7 +111,7 @@ export default Capability.makeModule(() =>
           const feed = space?.properties.invocationTraceFeed?.target;
           const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
-          const target = Obj.instanceOf(Routine.Routine, data.companionTo) ? undefined : data.companionTo;
+          const target = Obj.instanceOf(Instructions.Instructions, data.companionTo) ? undefined : data.companionTo;
 
           return (
             <Panel.Root role={role} className='dx-document'>
@@ -122,13 +121,6 @@ export default Capability.makeModule(() =>
             </Panel.Root>
           );
         },
-      }),
-      Surface.create({
-        id: 'skill',
-        filter: AppSurface.object(AppSurface.Article, Skill.Skill),
-        component: ({ data, role }) => (
-          <SkillArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
       }),
       Surface.create({
         id: 'plan',

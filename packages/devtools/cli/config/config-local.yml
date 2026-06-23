@@ -18,6 +18,8 @@ runtime:
       - urls: https://edge-production.dxos.workers.dev/ice
     ai:
       server: http://localhost:8788
+    sandbox:
+      url: http://localhost:8792
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs

@@ -42,9 +42,9 @@ describe('DescriptiveName', () => {
 ### Mandatory Rules
 
 1. `Obj.ID.dangerouslyDisableRandomness()` **must** be at module scope, before `describe`.
-2. Tests use `it.effect` from `@effect/vitest` and wrap the prompt with `agentTest()`.
+2. Tests use `it.effect` from `@effect/vitest` and pass an options object to `agentTest({ instructions, skills })`.
 3. **No extra code** — no manual DB setup, no custom assertions, no helper functions. The test is the prompt and nothing else.
-4. Always pass `{ timeout: DEFAULT_TEST_TIMEOUT }` as the third argument.
+4. Always pass `{ timeout: agentTestTimeout() }` as the third argument.
 5. Use `trim` template literal for instructions to strip leading whitespace.
 
 ## Prompt Guidelines
@@ -100,30 +100,26 @@ Completion criteria:
 ````
 </example>
 
-Adjust the heading to match the `it.effect` title and the path/range to the `instructions` / `trim` template (or the whole `Prompt.make` if needed).
+Adjust the heading to match the `it.effect` title and the path/range to the `instructions` / `trim` template (or the whole `agentTest({ ... })` options object if needed).
 
 ## Skills
 
 - Use `getDefaultSkills()` for standard tests (includes `SkillManagerSkill` and `DatabaseSkill`).
-- Omit `skills` from `Prompt.make()` if the test needs no skills (e.g., smoke tests).
+- Omit `skills` from the options object if the test needs no skills (e.g., smoke tests).
 - For custom skill sets, pass an array of `Ref.make(SomeSkill.make())`.
 
 ## Expecting Failure
 
-To test that an agent correctly reports failure:
+To test that an agent correctly reports failure, set `expect: 'failure'` in the options object:
 
 ```typescript
-agentTest(
-  { expect: 'failure' },
-  Prompt.make({
-    instructions: trim`
-      Do nothing and fail.
-    `,
-  }),
-),
-````
-
-Pass the options object as the first argument to `agentTest`.
+agentTest({
+  expect: 'failure',
+  instructions: trim`
+    Do nothing and fail.
+  `,
+}),
+```
 
 ## Running Tests
 
@@ -142,12 +138,13 @@ Memoized conversations are stored in `*.conversations.json` next to each test fi
 
 ## Common Mistakes
 
-| Mistake                                                      | Fix                                                                              |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Adding setup code or assertions                              | Remove them — the prompt is the entire test.                                     |
-| Missing `Obj.ID.dangerouslyDisableRandomness()`              | Add it at module scope before `describe`.                                        |
-| Vague prompts without completion criteria                    | Add explicit "Completion criteria:" section.                                     |
-| Assuming data exists in the DB                               | Instruct the agent to create required data.                                      |
-| Not committing `*.conversations.json`                        | Always commit updated conversation fixtures.                                     |
-| Pasting entire test files in chat when structure is standard | Use the short report format under **Reports**: heading + `@path (lines)`.        |
+| Mistake                                                      | Fix                                                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Adding setup code or assertions                              | Remove them — the prompt is the entire test.                                         |
+| Missing `Obj.ID.dangerouslyDisableRandomness()`              | Add it at module scope before `describe`.                                            |
+| Vague prompts without completion criteria                    | Add explicit "Completion criteria:" section.                                         |
+| Assuming data exists in the DB                               | Instruct the agent to create required data.                                          |
+| Not committing `*.conversations.json`                        | Always commit updated conversation fixtures.                                         |
+| Pasting entire test files in chat when structure is standard | Use the short report format under **Reports**: heading + `@path (lines)`.            |
 | Assuming pre-seeded data without saying so in the prompt     | State empty DB; seed via database skill instructions at the start of the prompt. |
+````

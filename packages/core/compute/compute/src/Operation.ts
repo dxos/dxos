@@ -488,6 +488,50 @@ export const isIdempotent = (op: Definition.Any): boolean =>
     : false;
 
 /**
+ * Attaches an annotation to an operation definition, returning a new definition.
+ * Combinators never mutate their input — operation definitions are module-level singletons
+ * shared across handler sets, skills, and the registry, so a fresh value keeps the
+ * annotated definition distinct from any other reference to the original.
+ *
+ * Type-preserving: an annotation does not change the operation's input/output/service types, so the
+ * returned definition keeps `Def` (preserving `withHandler` inference and downstream usage).
+ */
+export const annotate =
+  <T>(annotation: Annotation.Annotation<T>, value: T) =>
+  <Def extends Definition.Any>(op: Def): Def => {
+    const annotations = { ...(op.meta.annotations ?? {}) };
+    Annotation.setDictionary(annotations, annotation, value);
+    // The spread reconstructs the same shape with only `meta.annotations` changed; the checker can't
+    // track the branded variance symbol through the untyped dictionary mutation, so reassert `Def`.
+    return { ...op, meta: { ...op.meta, annotations } } as Def;
+  };
+
+/**
+ * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
+ * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
+ *
+ * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
+ * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
+ */
+export const VisibleAnnotation = Annotation.make({
+  id: 'org.dxos.operation.visible',
+  schema: Schema$.Boolean,
+});
+
+/**
+ * Pipeable combinator that marks an operation visible. Apply at the definition site:
+ * `Operation.make({ ... }).pipe(Operation.visible)`.
+ */
+export const visible = annotate(VisibleAnnotation, true);
+
+/**
+ * Returns true when an operation is annotated as visible on user-facing surfaces (trigger/automation
+ * pickers, manual invocation). Reads from the persisted operation — the form every consumer holds.
+ */
+export const isVisible = (op: PersistentOperation): boolean =>
+  Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */

@@ -469,4 +469,4 @@ git commit -m "chore(assistant): export proper-noun extraction surface; cleanup"
 ## Validation points (from spec)
 
 1. **Edge access** — Tasks 3/5 require the storybook/test identity to reach the edge AI service (`edge-remote`). If unreachable, recording the memoized fixture (Task 3) and the live story (Task 5) won't work; surface this immediately rather than faking output.
-2. **Full-text tokenization** — Task 1 Step 4 is the gate. If "Sarah" → "Sarah Johnson" or "Ink and Switch" → "Ink & Switch" misses, adjust the query (per-token search, like the assistant DB-query skill) or accept the miss; record the decision.
+2. **Full-text tokenization** — Task 1 Step 4 is the gate. If "Sarah" → "Sarah Johnson" or "Ink and Switch" → "Ink & Switch" misses, adjust the query (per-token search, like the assistant DB-query blueprint) or accept the miss; record the decision.

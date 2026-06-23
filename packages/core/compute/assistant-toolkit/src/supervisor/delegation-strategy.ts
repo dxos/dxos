@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { AiContext } from '@dxos/assistant';
-import { Routine } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AgentPrompt } from '../functions';
+import { RunInstructions } from '../functions';
 import { DelegationSkill } from '../skills';
 import { Agent } from '../types';
 
@@ -49,7 +49,7 @@ const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefine
 const formatResult = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
 
 /**
- * Extracts artifact ids a sub-agent reported in its result (see the synthesized routine
+ * Extracts artifact ids a sub-agent reported in its result (see the synthesized instructions
  * instructions). Tolerates the result being a string, or an object with `artifactIds`/`artifactId`.
  */
 const extractArtifactIds = (value: unknown): string[] => {
@@ -69,7 +69,7 @@ const extractArtifactIds = (value: unknown): string[] => {
 /**
  * Supervisor behaviour for the conversational agent: after each turn, every in-progress plan task
  * not already delegated is run by a sub-agent (a synthesized minimal `Routine` executed via
- * `AgentPrompt`); on completion the task status is updated and a templated message is posted back to
+ * `RunInstructions`); on completion the task status is updated and a templated message is posted back to
  * the conversation.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
@@ -105,12 +105,12 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
       const delegations: Delegation[] = [];
       for (const task of pending) {
-        // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via AgentPrompt
+        // Synthesize a minimal instructions whose goal is the task; the sub-agent runs it via RunInstructions
         // with the inherited skills bound.
-        const routine = yield* Database.add(
-          Routine.make({
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: task.title,
-            instructions: trim`
+            text: trim`
               Complete the following task and report the result concisely.
 
               If you create any documents or artifacts, call completeJob with a JSON object of the
@@ -127,7 +127,10 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           id: task.id,
           spawn: Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const fiber = yield* invoker.invokeFiber(AgentPrompt, { prompt: Ref.make(routine), input: {} });
+            const fiber = yield* invoker.invokeFiber(RunInstructions, {
+              instructions: Ref.make(instructions),
+              input: {},
+            });
             const pid = fiber.pid;
             Obj.update(plan, (plan) => {
               const taskRecord = plan.tasks.find((taskRecord) => taskRecord.id === task.id);

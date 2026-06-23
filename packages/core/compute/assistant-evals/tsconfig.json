@@ -21,13 +21,13 @@
       "path": "../../../plugins/plugin-assistant"
     },
     {
-      "path": "../../../plugins/plugin-automation"
-    },
-    {
       "path": "../../../plugins/plugin-client"
     },
     {
       "path": "../../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../../plugins/plugin-routine"
     },
     {
       "path": "../../../plugins/plugin-testing"

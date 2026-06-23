@@ -31,7 +31,7 @@ These provide the bridge between ECHO objects and automerge documents, used heav
 | `packages/plugins/plugin-thread/src/capabilities/agent-runner.ts`                             | `createDocAccessor`, `getRangeFromCursor`, `toCursorRange`, `updateText` |
 | `packages/plugins/plugin-thread/src/extensions/threads.ts`                                    | `createDocAccessor`, `getTextInRange`                                    |
 | `packages/plugins/plugin-thread/src/operations/create-proposals.ts`                           | `createDocAccessor`                                                      |
-| `packages/plugins/plugin-script/src/skills/functions/update.ts`                               | `DocAccessor`, `createDocAccessor`                                       |
+| `packages/plugins/plugin-script/src/blueprints/functions/update.ts`                           | `DocAccessor`, `createDocAccessor`                                       |
 | `packages/plugins/plugin-script/src/components/NotebookStack/NotebookCell.tsx`                | `createDocAccessor`                                                      |
 | `packages/plugins/plugin-script/src/components/QueryEditor/QueryEditor.stories.tsx`           | `createDocAccessor`                                                      |
 | `packages/plugins/plugin-script/src/components/TypescriptEditor/TypescriptEditor.stories.tsx` | `createDocAccessor`                                                      |

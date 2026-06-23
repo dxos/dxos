@@ -9,6 +9,7 @@ import { trim } from '@dxos/util';
 
 import { agentTest, agentTestTimeout } from '../harness';
 
+// Must stay at module scope: primes the test PRNG; agentTest pins a per-test seed from the test name.
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('Smoke', () => {

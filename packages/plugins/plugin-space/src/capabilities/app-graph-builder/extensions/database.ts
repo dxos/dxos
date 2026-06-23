@@ -9,13 +9,12 @@ import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Collection, Entity, Filter, Key, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { type URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, isNonNullable } from '@dxos/util';
@@ -27,11 +26,9 @@ import { SpaceCapabilities } from '#types';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
-  BLOCK_REORDER_ABOVE,
   DATABASE_SECTION_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   STATIC_SCHEMA_TYPE,
-  TYPE_COLLECTION_TYPE,
   buildViewIndex,
   downloadBlob,
 } from './shared';
@@ -45,16 +42,28 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
-    // Types section virtual node under each space.
+    // System section group — created alongside database/settings so the group always
+    // appears when the space plugin is active and hides when there are no children.
+    GraphBuilder.createExtension({
+      id: AppNode.NAV_TREE_GROUP_SYSTEM_ID,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: AppNode.NAV_TREE_GROUP_SYSTEM_ID,
+            type: AppNode.NAV_TREE_GROUP_SYSTEM_TYPE,
+            label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            space,
+            position: 900,
+          }),
+        ]),
+    }),
+
+    // Types section virtual node under the system group.
     GraphBuilder.createExtension({
       id: 'databaseSection',
-      match: AppNodeMatcher.whenSpace,
-      connector: (space, get) => {
-        const spaceState = get(CreateAtom.fromObservable(space.state));
-        if (spaceState !== SpaceState.SPACE_READY) {
-          return Effect.succeed([]);
-        }
-
+      match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_SYSTEM_TYPE),
+      connector: (space) => {
         return Effect.succeed([
           AppNode.makeSection({
             id: Paths.Segments.database,
@@ -62,7 +71,6 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             label: ['database-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
-            position: 10_000,
             testId: 'spacePlugin.databaseSection',
           }),
         ]);
@@ -145,30 +153,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
-
-        const slug = Paths.getTypeSlug(schema);
         const typeUri = Type.getURI(schema);
 
-        // {All} virtual node.
-        const allNode = Node.make({
-          id: 'all',
-          type: TYPE_COLLECTION_TYPE,
-          data: { space, typeUri },
-          properties: {
-            label: ['type-collection-all.label', { ns: meta.profile.key }],
-            icon: 'ph--list--regular',
-            iconHue: 'neutral',
-            role: 'branch',
-            testId: `spacePlugin.typeCollectionAll.${slug}`,
-            selectable: false,
-            draggable: false,
-            droppable: false,
-            childrenDroppable: false,
-            blockInstruction: BLOCK_REORDER_ABOVE,
-          },
-        });
-
-        // View objects for this schema.
+        // View objects are the type node's only visible children; objects of the type are resolved
+        // on demand as hidden children (see the `typeCollectionObject` resolver). The list of all
+        // objects is rendered when the type node is selected (see TypeCollectionArticle).
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
@@ -183,47 +172,54 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           )
           .filter(isNonNullable);
 
-        return Effect.succeed([allNode, ...viewNodes]);
+        return Effect.succeed(viewNodes);
       },
     }),
 
-    // Objects of the schema type under the {All} node.
+    // Objects of a type are not enumerated in the nav tree; navigating directly to the canonical
+    // object path resolves the object on demand as a hidden child of its type node. Mirrors the
+    // inbox feed-object resolver: a resolver keyed on path shape, not a connector.
     GraphBuilder.createExtension({
-      id: 'typeCollectionObjects',
-      match: (node) => {
-        if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
-          return Option.none();
-        }
-        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
-      },
-      connector: ({ space, typeUri }, get) => {
-        const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
-        const viewIndex = buildViewIndex(get, space, schemas);
-        const objects = get(space.db.query(Filter.type(typeUri)).atom).filter(
-          (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
-        );
+      id: 'typeCollectionObject',
+      match: () => Option.none(),
+      resolver: (qualifiedId, get) =>
+        Effect.gen(function* () {
+          const segments = qualifiedId.split('/');
+          // Discriminator: the canonical object path `…/database/<slug>/<objectId>`.
+          if (segments.at(-3) !== Paths.Segments.database) {
+            return null;
+          }
 
-        return Effect.succeed(
-          objects
-            .map((object: Obj.Unknown) => {
-              get(Obj.atom(object));
-              return AppNode.makeObject({
-                get,
-                db: space.db,
-                object,
-                draggable: false,
-                droppable: false,
-              });
-            })
-            .filter(isNonNullable)
-            .toSorted((nodeA, nodeB) => {
-              const labelA = typeof nodeA.properties.label === 'string' ? nodeA.properties.label : '';
-              const labelB = typeof nodeB.properties.label === 'string' ? nodeB.properties.label : '';
-              return labelA.localeCompare(labelB);
-            }),
-        );
-      },
+          const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
+          const objectId = segments.at(-1);
+          if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
+            return null;
+          }
+
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
+          const space = client?.spaces.get(spaceId);
+          if (!space) {
+            return null;
+          }
+
+          const object = get(space.db.query(Filter.id(objectId)).atom).at(0);
+          if (!object) {
+            return null;
+          }
+
+          get(Obj.atom(object));
+          const node = AppNode.makeObject({
+            get,
+            db: space.db,
+            object,
+            disposition: 'hidden',
+            draggable: false,
+            droppable: false,
+          });
+          // Resolver nodes are keyed by the requested path (not the local object id) so the parent
+          // type node's child edge connects; `makeObject` uses the local id, so override it here.
+          return node && { ...node, id: qualifiedId };
+        }),
     }),
 
     // Actions for schema nodes.
@@ -310,9 +306,11 @@ const createSchemaNode = ({
       label,
       icon,
       iconHue,
-      role: 'branch',
+      // Selecting the type node opens a list of every object of this type (see TypeCollectionArticle);
+      // objects resolve on demand as hidden children. View objects are its only visible children, so
+      // without a view the node is a leaf (no `role: 'branch'`).
       testId: `spacePlugin.schemaNode.${typename}`,
-      selectable: false,
+      selectable: true,
       draggable: false,
       droppable: false,
       childrenDroppable: false,
@@ -388,7 +386,9 @@ const createSchemaActions = ({
         Operation.invoke(SpaceOperation.OpenCreateObject, {
           target: space.db,
           views: true,
-          initialFormValues: { typename: Type.getTypename(type) },
+          // The type-picker field value is the type URI (see TypeOptions), so seed the default with
+          // the URI — not the bare typename — for the option to be pre-selected.
+          initialFormValues: { typename: Type.getURI(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import { type RoutineCapabilities } from '@dxos/plugin-routine';
 
-import { makeScheduledRoutineAutomation } from './scaffold';
+import { makeScheduledRoutine } from './scaffold';
 
 /** The research skill drives the brief; web-search, markdown, and database tools support it. */
 const SKILL_KEYS = [
@@ -26,14 +26,14 @@ Gather current information with the web-search and research tools. Summarize the
 sources you used, and create a markdown document titled with the topic and the current date.
 `;
 
-export const researchBrief: AutomationCapabilities.Template = {
-  id: 'org.dxos.automation.researchBrief',
+export const researchBrief: RoutineCapabilities.Template = {
+  id: 'org.dxos.routine.researchBrief',
   label: 'Research Brief',
   icon: 'ph--newspaper--regular',
   scaffold: ({ name }) =>
-    makeScheduledRoutineAutomation({
+    makeScheduledRoutine({
       name: name ?? 'Research Brief',
-      instructions: DEFAULT_INSTRUCTIONS,
+      text: DEFAULT_INSTRUCTIONS,
       skillKeys: SKILL_KEYS,
       cron: DEFAULT_CRON,
     }),

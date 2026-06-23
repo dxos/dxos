@@ -5,7 +5,7 @@
 import { describe } from 'vitest';
 
 import { StorageType } from '../common';
-import { storageBenchmark } from '../testing/benchmark.skill-test';
+import { storageBenchmark } from '../testing/benchmark.blueprint-test';
 import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = 'testing';

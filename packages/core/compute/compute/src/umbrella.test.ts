@@ -12,7 +12,7 @@ import {
   OperationHandlerSet,
   OperationRegistry,
   Process,
-  Routine,
+  Instructions,
   Script,
   ServiceResolver,
   StorageService,
@@ -32,7 +32,7 @@ describe('umbrella re-exports', () => {
     // Skill primitives.
     expect(Skill).toBeDefined();
     expect(Skill.make).toBeTypeOf('function');
-    expect(Routine).toBeDefined();
+    expect(Instructions).toBeDefined();
     expect(Template).toBeDefined();
 
     // Function primitives.

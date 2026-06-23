@@ -24,21 +24,21 @@ This realises the two long-standing TODOs in `ThreadPlugin.tsx`:
 
 ## Current coupling (baseline)
 
-| Concern                                                                                                                                          | Today                      | Used by                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- | ------------------------------ |
-| `CommentsCompanion` container                                                                                                                    | plugin-thread              | comments surface only          |
-| `CommentsPanel` / `CommentsThread`                                                                                                               | plugin-thread `components` | comments                       |
-| `markdown-extension` (`MarkdownCapabilities.ExtensionProvider`)                                                                                  | plugin-thread              | comments-in-editor             |
-| `extensions/threads.ts`, `extensions/command.ts`                                                                                                 | plugin-thread              | comments (command also chat)   |
-| `app-graph-builder` (`commentsCompanion` node + `commentToolbar` action)                                                                         | plugin-thread              | comments                       |
-| `ThreadCapabilities.State` (`toolbar`/`drafts`/`current`), `ViewState`                                                                           | plugin-thread              | comments                       |
-| comment ops: `create`, `add-message`, `delete`, `toggle-resolved`, `select`, `delete-message`, `restore`, `restore-message`, `create-proposals`  | plugin-thread              | comments                       |
-| agent stack: `agent-runner`, `respond-to-thread`, `should-trigger-agent`, `thread-skill`, `AgentRunner`/`AgentIdentity` caps, `set-agent-config` | plugin-thread              | comment threads                |
-| `MessagePanel` (ECHO message binding + block rendering + Surface tiles)                                                                          | plugin-thread `components` | **both** Chat + CommentsThread |
-| `Chat`, `ChannelArticle`, `ChannelChat`, `ThreadContainer`                                                                                       | plugin-thread              | chat/channels                  |
-| chat ops: `create-channel`, `append-channel-message`, `on-create-space`                                                                          | plugin-thread              | chat                           |
-| `Message`, `Thread`, `AnchoredTo`, `Channel` schema                                                                                              | `@dxos/types`              | both (already external)        |
-| `Thread.*` / `Message.*` presentational primitives                                                                                               | `react-ui-thread`          | both                           |
+| Concern                                                                                                                                              | Today                      | Used by                        |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------ |
+| `CommentsCompanion` container                                                                                                                        | plugin-thread              | comments surface only          |
+| `CommentsPanel` / `CommentsThread`                                                                                                                   | plugin-thread `components` | comments                       |
+| `markdown-extension` (`MarkdownCapabilities.ExtensionProvider`)                                                                                      | plugin-thread              | comments-in-editor             |
+| `extensions/threads.ts`, `extensions/command.ts`                                                                                                     | plugin-thread              | comments (command also chat)   |
+| `app-graph-builder` (`commentsCompanion` node + `commentToolbar` action)                                                                             | plugin-thread              | comments                       |
+| `ThreadCapabilities.State` (`toolbar`/`drafts`/`current`), `ViewState`                                                                               | plugin-thread              | comments                       |
+| comment ops: `create`, `add-message`, `delete`, `toggle-resolved`, `select`, `delete-message`, `restore`, `restore-message`, `create-proposals`      | plugin-thread              | comments                       |
+| agent stack: `agent-runner`, `respond-to-thread`, `should-trigger-agent`, `thread-blueprint`, `AgentRunner`/`AgentIdentity` caps, `set-agent-config` | plugin-thread              | comment threads                |
+| `MessagePanel` (ECHO message binding + block rendering + Surface tiles)                                                                              | plugin-thread `components` | **both** Chat + CommentsThread |
+| `Chat`, `ChannelArticle`, `ChannelChat`, `ThreadContainer`                                                                                           | plugin-thread              | chat/channels                  |
+| chat ops: `create-channel`, `append-channel-message`, `on-create-space`                                                                              | plugin-thread              | chat                           |
+| `Message`, `Thread`, `AnchoredTo`, `Channel` schema                                                                                                  | `@dxos/types`              | both (already external)        |
+| `Thread.*` / `Message.*` presentational primitives                                                                                                   | `react-ui-thread`          | both                           |
 
 ## Target architecture — three layers
 
@@ -114,13 +114,13 @@ framework — zero plugin deps. Owns:
 - **Containers:** `CommentsArticle` (was `CommentsCompanion`) + comment-thread list built on `Thread.*`.
 - **Capabilities:** `markdown-extension` (`MarkdownCapabilities.ExtensionProvider`), `react-surface`
   (`comments` surface), `app-graph-builder` (companion node + comment toolbar action), `state`
-  (`State`/`ViewState`), `operation-handler`, `undo-mappings`, `agent-runner`, `skill-definition`.
+  (`State`/`ViewState`), `operation-handler`, `undo-mappings`, `agent-runner`, `blueprint-definition`.
 - **Extensions:** `threads.ts`, `command.ts` move here (command also re-exported by react-ui-thread;
   comments imports the UI one — no duplicate). NOTE: `command` lives in `react-ui-thread`; comments
   uses it from there. `threads.ts` stays in the plugin (needs ops/state).
 - **Operations:** `create`, `add-message`, `delete`, `toggle-resolved`, `select`, `delete-message`,
   `restore`, `restore-message`, `create-proposals`, `respond-to-thread`, `set-agent-config`.
-- **Agent:** `agent-runner`, `should-trigger-agent`, `thread-skill`, `AgentRunner`/`AgentIdentity`.
+- **Agent:** `agent-runner`, `should-trigger-agent`, `thread-blueprint`, `AgentRunner`/`AgentIdentity`.
 - **Types:** `ThreadCapabilities` (renamed `CommentsCapabilities`), `ThreadOperation` (comment subset,
   renamed `CommentsOperation`), `Settings`, `AgentIdentity`, view/state types. The `AgentConfig`/
   `AgentMode` schema currently extends `Thread.Thread` in `@dxos/types`; it stays in `@dxos/types`.

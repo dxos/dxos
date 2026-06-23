@@ -8,7 +8,7 @@ Date: 2026-05-04
 
 - Let plugin authors create Composer plugins via natural-language chat in `plugin-code`.
 - Compile, test, and serve those plugins entirely on Cloudflare infrastructure (the EDGE monorepo).
-- Reuse our existing assistant / skill / operation stack rather than build a parallel agent runtime.
+- Reuse our existing assistant / blueprint / operation stack rather than build a parallel agent runtime.
 - Keep a clean Git story so plugins remain portable and reviewable.
 
 ## Non-goals
@@ -21,7 +21,7 @@ Date: 2026-05-04
 
 - **`plugin-code`** — Composer plugin where users write/modify other Composer plugins. Owns the chat, file UI, preview surface, and ECHO-backed source tree.
 - **`@dxos/introspect` + `introspect-mcp`** — Indexes DXOS / Composer APIs and exposes them as an MCP server for code-aware LLMs.
-- **`@dxos/assistant` + `plugin-assistant`** — Provides agents via the AI Service. Already supports skills (recipe definitions) and operations (tools the LLM can call). Recently hardened against MCP server failures (#11226).
+- **`@dxos/assistant` + `plugin-assistant`** — Provides agents via the AI Service. Already supports blueprints (recipe definitions) and operations (tools the LLM can call). Recently hardened against MCP server failures (#11226).
 - **EDGE** — Separate monorepo of Cloudflare-based services. Already hosts the AI Service.
 
 ## Architecture overview
@@ -32,11 +32,11 @@ Date: 2026-05-04
 │       │                       │                        │
 │       └── ECHO source space ──┘                        │
 └──────────────────────┬─────────────────────────────────┘
-                       │ AI Service (skills / operations / MCP)
+                       │ AI Service (blueprints / operations / MCP)
                        ▼
 ┌────────────────── EDGE (Cloudflare) ───────────────────┐
 │  AI Service                                            │
-│   ├── plugin-developer skill                       │
+│   ├── plugin-developer blueprint                       │
 │   ├── code.* operations  ◀── thin RPC ──┐              │
 │   └── introspect-mcp (remote MCP)        │              │
 │                                          ▼              │
@@ -53,13 +53,13 @@ Date: 2026-05-04
 └────────────────────────────────────────────────────────┘
 ```
 
-## Q1. Can we extend the existing AI Service via skills / operations?
+## Q1. Can we extend the existing AI Service via blueprints / operations?
 
-**Yes — this is the right shape.** The skill/operation/MCP model already covers what we need; agentic coding is a domain skill, not a new runtime.
+**Yes — this is the right shape.** The blueprint/operation/MCP model already covers what we need; agentic coding is a domain blueprint, not a new runtime.
 
-### `plugin-developer` skill
+### `plugin-developer` blueprint
 
-Lives alongside other coding-focused skills (likely `@dxos/assistant-coding` or as a coding bundle inside `@dxos/assistant`). It defines:
+Lives alongside other coding-focused blueprints (likely `@dxos/assistant-coding` or as a coding bundle inside `@dxos/assistant`). It defines:
 
 - **System prompt** scoped to plugin authoring — covers `PLUGIN.mdl` conventions, capability/surface patterns, the import rules in `CLAUDE.md`, and the React conventions that already live in `.agents/sdk/`.
 - **Required tools** — the `code.*` operations below, plus `introspect-mcp` attached as a remote MCP server. The agent calls introspect tools **directly via MCP** — there is no `code.search_api` proxy. MCP gives us streaming, schema-typed tools, and graceful degradation (#11226) for free; a hand-written wrapper would just add a translation layer with nothing to translate. The trade-off is that introspect's tool surface becomes part of the agent's tool budget; we mitigate by keeping its tool count small and well-named.
@@ -67,7 +67,7 @@ Lives alongside other coding-focused skills (likely `@dxos/assistant-coding` or 
 
 ### `code.*` operations
 
-Operations that the agent can invoke as tools. All take a `project_id` from skill context; all are HALO-authenticated.
+Operations that the agent can invoke as tools. All take a `project_id` from blueprint context; all are HALO-authenticated.
 
 | Operation                         | Purpose                                                                                                                              |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -82,14 +82,14 @@ Operations that the agent can invoke as tools. All take a `project_id` from skil
 | `code.deploy(target)`             | Phase 1: returns signed bundle download. Phase 2+: publishes to dispatcher and returns deployment URL. `target ∈ {preview, release}` |
 | `code.preview_url()`              | Resolve the live URL for the latest preview deploy (Phase 2+)                                                                        |
 
-DXOS/Composer API lookup is **not** in this list — that surface is provided by introspect-mcp's own tools (e.g. `search_symbols`, `get_symbol_docs`), which the skill exposes directly to the agent.
+DXOS/Composer API lookup is **not** in this list — that surface is provided by introspect-mcp's own tools (e.g. `search_symbols`, `get_symbol_docs`), which the blueprint exposes directly to the agent.
 
 Compile / test / deploy are long-running and **must stream**. We model them as operations that return a job handle, and provide a streaming subscription so chat surfaces progress live (build logs, test failures) rather than blocking until completion.
 
-### Why skills/operations is enough
+### Why blueprints/operations is enough
 
 - **No new agent loop.** The same orchestrator that runs other DXOS agents drives the coding agent.
-- **Composability.** Future skills (e.g. `migrate-plugin-to-v2`, `port-plugin-to-mobile`) reuse the same operations.
+- **Composability.** Future blueprints (e.g. `migrate-plugin-to-v2`, `port-plugin-to-mobile`) reuse the same operations.
 - **Observability.** Existing tracing / @dxos/log integration applies for free.
 
 ## Q2. What new EDGE services do we need?
@@ -282,7 +282,7 @@ The corollary: there is no need for a transactional edit log between EDGE servic
 
 > User in `plugin-code`: _"Add a panel that lists all unread Slack threads."_
 
-1. `plugin-assistant` invokes `plugin-developer` skill with project context (current `PluginProject`, recent file edits).
+1. `plugin-assistant` invokes `plugin-developer` blueprint with project context (current `PluginProject`, recent file edits).
 2. Agent calls introspect-mcp tool `find_symbol("Slack")` → no DXOS/Composer API match.
 3. Agent calls introspect-mcp tool `find_symbol("MCP server")` and `get_symbol(...)` on the top hit → returns plugin-mcp examples.
 4. Agent proposes a plan in chat → user approves.
@@ -303,12 +303,12 @@ The corollary: there is no need for a transactional edit log between EDGE servic
 
 ## Phasing
 
-| Phase | Scope                                                            | Deliverable                                                                           |
-| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **1** | Sandbox service + `code.*` operations + `plugin-developer` skill | Author-from-chat works; `code.deploy` returns a signed zip download (no live serving) |
-| **2** | Plugin Registry + Plugin Dispatcher                              | Live preview URLs; one-click publish                                                  |
-| **3** | Source Sync (GitHub App)                                         | Two-way GitHub sync; PR workflow                                                      |
-| **4** | Multi-author collab, marketplace, billing                        | Public plugin distribution                                                            |
+| Phase | Scope                                                                | Deliverable                                                                           |
+| ----- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **1** | Sandbox service + `code.*` operations + `plugin-developer` blueprint | Author-from-chat works; `code.deploy` returns a signed zip download (no live serving) |
+| **2** | Plugin Registry + Plugin Dispatcher                                  | Live preview URLs; one-click publish                                                  |
+| **3** | Source Sync (GitHub App)                                             | Two-way GitHub sync; PR workflow                                                      |
+| **4** | Multi-author collab, marketplace, billing                            | Public plugin distribution                                                            |
 
 ## Open questions
 

@@ -9,8 +9,8 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { Calendar } from '@dxos/plugin-inbox';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -43,12 +43,12 @@ export default TripOperation.CreateTripFromEvents.pipe(
         }),
       );
 
-      yield* Operation.invoke(AutomationOperation.RunPromptInNewChat, {
+      yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
         db,
         objects: [trip],
         skills: [TRIP_SKILL_KEY],
         background: true,
-        prompt: trim`
+        instructions: trim`
           Plan the connecting travel and accommodation for this trip. Its activity segments are fixed
           appointments at specific addresses, ordered by time. For each gap between consecutive
           activities in different places, add a road/transfer segment to get between them, and add

@@ -5,17 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SPACE_TYPE } from '@dxos/plugin-space';
-import { getParentId } from '@dxos/react-ui-attention';
+import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Devtools } from '#types';
-
-const DEVTOOLS_TYPE = `${meta.profile.key}.devtools`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -41,50 +37,48 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'devtools',
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),
-        connector: (node, get) =>
+        match: NodeMatcher.whenAny(
+          NodeMatcher.whenRoot,
+          AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_SYSTEM_TYPE),
+        ),
+        connector: (nodeOrSpace: Node.Node | Space, get) =>
           Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
-            const layout = layoutAtom ? get(layoutAtom) : undefined;
-            const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
-            const space = spaceId ? client.spaces.get(spaceId) : undefined;
+            const space: Space | undefined = isSpace(nodeOrSpace) ? nodeOrSpace : undefined;
             const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
 
             return [
               Node.make({
-                id: Devtools.id,
+                id: Devtools.nodeId(Devtools.id),
                 data: null,
-                type: DEVTOOLS_TYPE,
+                type: Devtools.id,
                 properties: {
                   label: ['devtools.label', { ns: meta.profile.key }],
                   icon: 'ph--hammer--regular',
-                  disposition: 'pin-end',
                   position: Position.last,
                 },
                 nodes: [
                   Node.make({
-                    id: 'appGraph',
+                    id: Devtools.nodeId(Devtools.AppGraph),
                     type: `${meta.profile.key}.app-graph`,
-                    data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
+                    data: { graph: graph?.graph, root: Node.RootId },
                     properties: {
                       label: ['debug-app-graph.label', { ns: meta.profile.key }],
                       icon: 'ph--graph--regular',
                     },
                   }),
                   Node.make({
-                    id: 'toolsExplorer',
+                    id: Devtools.nodeId(Devtools.ToolsExplorer),
                     data: Devtools.ToolsExplorer,
-                    type: DEVTOOLS_TYPE,
+                    type: Devtools.id,
                     properties: {
                       label: ['debug-tools-explorer.label', { ns: meta.profile.key }],
                       icon: 'ph--toolbox--regular',
                     },
                   }),
-                  ...(space && node.type === SPACE_TYPE
+                  ...(space
                     ? [
                         Node.make({
-                          id: 'debug',
+                          id: Devtools.nodeId(Devtools.Debug),
                           type: `${meta.profile.key}.space`,
                           data: { space, type: `${meta.profile.key}.space` },
                           properties: {
@@ -95,54 +89,54 @@ export default Capability.makeModule(
                       ]
                     : []),
                   Node.make({
-                    id: Devtools.Client.id,
+                    id: Devtools.nodeId(Devtools.Client.id),
                     data: null,
-                    type: DEVTOOLS_TYPE,
+                    type: Devtools.id,
                     properties: {
                       label: ['client.label', { ns: meta.profile.key }],
                       icon: 'ph--users--regular',
                     },
                     nodes: [
                       Node.make({
-                        id: Devtools.Client.Config,
+                        id: Devtools.nodeId(Devtools.Client.Config),
                         data: Devtools.Client.Config,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['config.label', { ns: meta.profile.key }],
                           icon: 'ph--gear--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Client.Storage,
+                        id: Devtools.nodeId(Devtools.Client.Storage),
                         data: Devtools.Client.Storage,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['storage.label', { ns: meta.profile.key }],
                           icon: 'ph--hard-drives--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Client.Sqlite,
+                        id: Devtools.nodeId(Devtools.Client.Sqlite),
                         data: Devtools.Client.Sqlite,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['sqlite.label', { ns: meta.profile.key }],
                           icon: 'ph--database--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Client.Logs,
+                        id: Devtools.nodeId(Devtools.Client.Logs),
                         data: Devtools.Client.Logs,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['logs.label', { ns: meta.profile.key }],
                           icon: 'ph--file-text--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Client.Diagnostics,
+                        id: Devtools.nodeId(Devtools.Client.Diagnostics),
                         data: Devtools.Client.Diagnostics,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['diagnostics.label', { ns: meta.profile.key }],
                           icon: 'ph--chart-line--regular',
@@ -151,45 +145,45 @@ export default Capability.makeModule(
                     ],
                   }),
                   Node.make({
-                    id: Devtools.Halo.id,
+                    id: Devtools.nodeId(Devtools.Halo.id),
                     data: null,
-                    type: DEVTOOLS_TYPE,
+                    type: Devtools.id,
                     properties: {
                       label: ['halo.label', { ns: meta.profile.key }],
                       icon: 'ph--identification-badge--regular',
                     },
                     nodes: [
                       Node.make({
-                        id: Devtools.Halo.Identity,
+                        id: Devtools.nodeId(Devtools.Halo.Identity),
                         data: Devtools.Halo.Identity,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['identity.label', { ns: meta.profile.key }],
                           icon: 'ph--identification-badge--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Halo.Devices,
+                        id: Devtools.nodeId(Devtools.Halo.Devices),
                         data: Devtools.Halo.Devices,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['devices.label', { ns: meta.profile.key }],
                           icon: 'ph--devices--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Halo.Keyring,
+                        id: Devtools.nodeId(Devtools.Halo.Keyring),
                         data: Devtools.Halo.Keyring,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['keyring.label', { ns: meta.profile.key }],
                           icon: 'ph--key--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Halo.Credentials,
+                        id: Devtools.nodeId(Devtools.Halo.Credentials),
                         data: Devtools.Halo.Credentials,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['credentials.label', { ns: meta.profile.key }],
                           icon: 'ph--credit-card--regular',
@@ -198,99 +192,99 @@ export default Capability.makeModule(
                     ],
                   }),
                   Node.make({
-                    id: Devtools.Echo.id,
+                    id: Devtools.nodeId(Devtools.Echo.id),
                     data: null,
-                    type: DEVTOOLS_TYPE,
+                    type: Devtools.id,
                     properties: {
                       label: ['echo.label', { ns: meta.profile.key }],
                       icon: 'ph--database--regular',
                     },
                     nodes: [
                       Node.make({
-                        id: Devtools.Echo.Spaces,
+                        id: Devtools.nodeId(Devtools.Echo.Spaces),
                         data: Devtools.Echo.Spaces,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['spaces.label', { ns: meta.profile.key }],
                           icon: 'ph--graph--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Space,
+                        id: Devtools.nodeId(Devtools.Echo.Space),
                         data: Devtools.Echo.Space,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['space.label', { ns: meta.profile.key }],
                           icon: 'ph--planet--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Feeds,
+                        id: Devtools.nodeId(Devtools.Echo.Feeds),
                         data: Devtools.Echo.Feeds,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['feeds.label', { ns: meta.profile.key }],
                           icon: 'ph--list-bullets--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Objects,
+                        id: Devtools.nodeId(Devtools.Echo.Objects),
                         data: Devtools.Echo.Objects,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['objects.label', { ns: meta.profile.key }],
                           icon: 'ph--cube--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Schema,
+                        id: Devtools.nodeId(Devtools.Echo.Schema),
                         data: Devtools.Echo.Schema,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['schema.label', { ns: meta.profile.key }],
                           icon: 'ph--database--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Registry,
+                        id: Devtools.nodeId(Devtools.Echo.Registry),
                         data: Devtools.Echo.Registry,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['registry.label', { ns: meta.profile.key }],
                           icon: 'ph--books--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Automerge,
+                        id: Devtools.nodeId(Devtools.Echo.Automerge),
                         data: Devtools.Echo.Automerge,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['automerge.label', { ns: meta.profile.key }],
                           icon: 'ph--gear-six--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Queues,
+                        id: Devtools.nodeId(Devtools.Echo.Queues),
                         data: Devtools.Echo.Queues,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['queues.label', { ns: meta.profile.key }],
                           icon: 'ph--queue--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Members,
+                        id: Devtools.nodeId(Devtools.Echo.Members),
                         data: Devtools.Echo.Members,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['members.label', { ns: meta.profile.key }],
                           icon: 'ph--users--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Echo.Metadata,
+                        id: Devtools.nodeId(Devtools.Echo.Metadata),
                         data: Devtools.Echo.Metadata,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['metadata.label', { ns: meta.profile.key }],
                           icon: 'ph--hard-drive--regular',
@@ -299,36 +293,36 @@ export default Capability.makeModule(
                     ],
                   }),
                   Node.make({
-                    id: Devtools.Mesh.id,
+                    id: Devtools.nodeId(Devtools.Mesh.id),
                     data: null,
-                    type: DEVTOOLS_TYPE,
+                    type: Devtools.id,
                     properties: {
                       label: ['mesh.label', { ns: meta.profile.key }],
                       icon: 'ph--graph--regular',
                     },
                     nodes: [
                       Node.make({
-                        id: Devtools.Mesh.Signal,
+                        id: Devtools.nodeId(Devtools.Mesh.Signal),
                         data: Devtools.Mesh.Signal,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['signal.label', { ns: meta.profile.key }],
                           icon: 'ph--wifi-high--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Mesh.Swarm,
+                        id: Devtools.nodeId(Devtools.Mesh.Swarm),
                         data: Devtools.Mesh.Swarm,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['swarm.label', { ns: meta.profile.key }],
                           icon: 'ph--users-three--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Mesh.Network,
+                        id: Devtools.nodeId(Devtools.Mesh.Network),
                         data: Devtools.Mesh.Network,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['network.label', { ns: meta.profile.key }],
                           icon: 'ph--polygon--regular',
@@ -337,45 +331,45 @@ export default Capability.makeModule(
                     ],
                   }),
                   Node.make({
-                    id: Devtools.Edge.id,
+                    id: Devtools.nodeId(Devtools.Edge.id),
                     data: null,
-                    type: DEVTOOLS_TYPE,
+                    type: Devtools.id,
                     properties: {
                       label: ['edge.label', { ns: meta.profile.key }],
                       icon: 'ph--cloud--regular',
                     },
                     nodes: [
                       Node.make({
-                        id: Devtools.Edge.Dashboard,
+                        id: Devtools.nodeId(Devtools.Edge.Dashboard),
                         data: Devtools.Edge.Dashboard,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['dashboard.label', { ns: meta.profile.key }],
                           icon: 'ph--computer-tower--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Edge.Workflows,
+                        id: Devtools.nodeId(Devtools.Edge.Workflows),
                         data: Devtools.Edge.Workflows,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['workflows.label', { ns: meta.profile.key }],
                           icon: 'ph--function--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Edge.Traces,
+                        id: Devtools.nodeId(Devtools.Edge.Traces),
                         data: Devtools.Edge.Traces,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['traces.label', { ns: meta.profile.key }],
                           icon: 'ph--line-segments--regular',
                         },
                       }),
                       Node.make({
-                        id: Devtools.Edge.Testing,
+                        id: Devtools.nodeId(Devtools.Edge.Testing),
                         data: Devtools.Edge.Testing,
-                        type: DEVTOOLS_TYPE,
+                        type: Devtools.id,
                         properties: {
                           label: ['testing.label', { ns: meta.profile.key }],
                           icon: 'ph--flask--regular',

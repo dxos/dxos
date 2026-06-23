@@ -11,9 +11,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AiContext, AiSession, CompleteBlock } from '@dxos/assistant';
+import { AiContext, AiSession } from '@dxos/assistant';
 import {
   AgentService,
   Skill,
@@ -21,7 +21,7 @@ import {
   Operation,
   OperationHandlerSet,
   Process,
-  Routine,
+  Instructions,
   ServiceNotAvailableError,
   ServiceResolver,
   Trace,
@@ -38,6 +38,7 @@ import { configuredCredentialsLayer } from '@dxos/functions';
 import { AgentService as AgentServiceRuntime } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
+import { traceSinkPrettyLayer } from './trace-pretty-print';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
@@ -209,7 +210,14 @@ export const AssistantTestBaseLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Skill.Skill, Routine.Routine, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
+  types.push(
+    Skill.Skill,
+    Instructions.Instructions,
+    Operation.PersistentOperation,
+    Feed.Feed,
+    Trigger.Trigger,
+    Tag.Tag,
+  );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
@@ -247,7 +255,7 @@ const AssistantTestTracingLayer = (
   Match.value(mode).pipe(
     Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
     Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
-    Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
+    Match.when('pretty', () => Layer.mergeAll(traceSinkPrettyLayer(), FeedTraceSink.layerNoop)),
     Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
     Match.exhaustive,
   );
@@ -266,20 +274,3 @@ export const AssistantTestLayerWithTriggers = (
     ),
     TriggerStateStore.layerMemory,
   ) as any;
-
-const TraceSinkPretty = () =>
-  Layer.succeed(Trace.TraceSink, {
-    write: (message) => {
-      for (const event of message.events) {
-        if (Trace.isOfType(CompleteBlock, event)) {
-          const tag = message.meta.processName ?? `[${message.meta.pid ?? 'unknown'}]`;
-          console.log(`[${tag}] ${event.data.role.toUpperCase()}`);
-          new ConsolePrinter({ tag }).printContentBlock(event.data.block);
-        } else if (Trace.isOfType(Process.SpawnedEvent, event)) {
-          console.log(`[${message.meta.pid}] Process spawned: ${message.meta.processName}`);
-        } else if (Trace.isOfType(Process.ExitedEvent, event)) {
-          console.log(`[${message.meta.pid}] Process exited: ${event.data.outcome}`);
-        }
-      }
-    },
-  });

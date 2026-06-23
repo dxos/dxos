@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability, Capabilities } from '@dxos/app-framework';
 import { Agent, AgentSkill, Chat } from '@dxos/assistant-toolkit';
-import { Skill, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Skill, Operation, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
@@ -40,18 +40,6 @@ export default Capability.makeModule(
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Skill.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Routine.Routine),
-        createObject: (props, options) =>
-          Effect.gen(function* () {
-            const object = Routine.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

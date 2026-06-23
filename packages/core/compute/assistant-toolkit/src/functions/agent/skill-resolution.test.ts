@@ -7,7 +7,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
-import { Skill, Routine } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -15,12 +15,12 @@ import { Text } from '@dxos/schema';
 
 import { WebSearchSkill } from '../../skills';
 
-// Regression coverage for the CRM-routine failure: skills live only in the registry
+// Regression coverage for the CRM-instructions failure: skills live only in the registry
 // (referenced via `Ref.fromURI(Skill.registryURI(key))`), never forked into the space DB.
 //
 // `AiContext.Binder.bind` persists each bound skill ref to the conversation feed. A later
 // turn (or spawned process) re-reads that ref with an empty in-memory cache and must resolve it
-// on its own. If the routine's registry skill is bound by its registry DXN ref, resolution
+// on its own. If the instructions's registry skill is bound by its registry DXN ref, resolution
 // stays in the registry and succeeds. If it is re-wrapped with `Ref.make` first (minting an
 // EID ref to an object that only exists in the registry, never in the DB), the persisted ref
 // dangles — in production the DB query blocks for its full 30s timeout; with a fresh binder here
@@ -40,27 +40,27 @@ describe('Skill binding resolution (registry refs)', () => {
         const { db } = yield* Database.Service;
 
         // Register the web-search skill in the db registry (the resolver's registry),
-        // the same way `plugin-automation/RegistrySync` does in production.
+        // the same way `plugin-instructions/RegistrySync` does in production.
         db.registry.add([WebSearchSkill.make()]);
 
-        // Create a routine referencing the skill purely by registry URI. Once added to the
+        // Create a instructions referencing the skill purely by registry URI. Once added to the
         // DB its skill ref is a resolver-backed registry ref — exactly the ref `prompt.ts`
         // binds.
-        const routine = yield* Database.add(
-          Routine.make({
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: 'resolution-test',
-            instructions: 'noop',
+            text: 'noop',
             skills: [Ref.fromURI(Skill.registryURI(skillKey))],
           }),
         );
         yield* Database.flush();
-        const registryRef = routine.skills[0];
+        const registryRef = instructions.skills[0];
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Database.Service>();
 
-        // Bind the routine's own registry ref (the fix) and persist it to the feed.
+        // Bind the instructions's own registry ref (the fix) and persist it to the feed.
         const writer = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => writer.open());
         yield* Effect.promise(() => writer.bind({ skills: [registryRef], objects: [] }));
@@ -91,15 +91,15 @@ describe('Skill binding resolution (registry refs)', () => {
         const { db } = yield* Database.Service;
         db.registry.add([WebSearchSkill.make()]);
 
-        const routine = yield* Database.add(
-          Routine.make({
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: 'resolution-test',
-            instructions: 'noop',
+            text: 'noop',
             skills: [Ref.fromURI(Skill.registryURI(skillKey))],
           }),
         );
         yield* Database.flush();
-        const skill = yield* Database.load(routine.skills[0]);
+        const skill = yield* Database.load(instructions.skills[0]);
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();

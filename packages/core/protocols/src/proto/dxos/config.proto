@@ -463,6 +463,9 @@ message Runtime {
 
     message Hub { optional string url = 1; }
 
+    /** Standalone sandbox-service worker origin (API mounted at /api/sandbox). */
+    message Sandbox { optional string url = 1; }
+
     /** Deprecated */
     optional Kube kube = 1;
     optional AppServer app = 2;
@@ -485,6 +488,7 @@ message Runtime {
     optional Edge edge = 15;
     optional Ai ai = 16;
     optional Hub hub = 17;
+    optional Sandbox sandbox = 18;
   }
 
   message Keys {

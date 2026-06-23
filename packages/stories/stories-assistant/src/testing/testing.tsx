@@ -29,7 +29,7 @@ import {
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Skill, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
+import { Skill, Instructions, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -38,12 +38,12 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { MarkdownSkill, Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
@@ -109,7 +109,7 @@ const buildPluginManagerOptions = ({
         Skill.Skill,
         Operation.PersistentOperation,
         Markdown.Document,
-        Routine.Routine,
+        Instructions.Instructions,
         Trigger.Trigger,
         ...types,
       ],
@@ -146,7 +146,7 @@ const buildPluginManagerOptions = ({
 
     // User plugins.
     PreviewPlugin(),
-    AutomationPlugin(),
+    RoutinePlugin(),
     AssistantPlugin(),
 
     // Test-specific.

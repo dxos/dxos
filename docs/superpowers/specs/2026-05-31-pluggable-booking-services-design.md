@@ -24,7 +24,7 @@ object. No real order/purchase is placed through Duffel.
   `flight` variant is populated; `train`/`accommodation`/etc. are additive later).
 - Search is implemented as a first-class **`SearchBookings` operation** (resolves
   the contributed `BookingService`s and runs the query) so it can be driven by the
-  UI **and invoked by the assistant** via a skill tool.
+  UI **and invoked by the assistant** via a blueprint tool.
 - A booking search component in `plugin-trip` that invokes the operation,
   reachable from a toolbar toggle on the segment surface.
 - `plugin-duffel`: a new plugin implementing `BookingService` against Duffel,
@@ -134,7 +134,7 @@ implementations may use Effect internally. A `MissingApiKeyError` (or similar
 structured error) is thrown by implementations lacking credentials, and surfaced
 in the search UI.
 
-## `SearchBookings` operation + assistant skill (plugin-trip)
+## `SearchBookings` operation + assistant blueprint (plugin-trip)
 
 Search is an Operation, not a direct service call, so the same code path serves
 the UI and the assistant.
@@ -151,10 +151,10 @@ the UI and the assistant.
   plugin-inbox's `extract-message` operation.)
 - Registered into the existing `TripOperationHandlerSet` /
   `Capabilities.OperationHandler` contribution.
-- **Assistant exposure**: a `booking-skill.ts` exposes `SearchBookings` as a
-  tool via `Skill.toolDefinitions({ operations: [SearchBookings] })`,
-  contributed through `AppCapabilities.SkillDefinition` and wired with
-  `AppPlugin.addSkillDefinitionModule` (mirrors plugin-product-search).
+- **Assistant exposure**: a `booking-blueprint.ts` exposes `SearchBookings` as a
+  tool via `Blueprint.toolDefinitions({ operations: [SearchBookings] })`,
+  contributed through `AppCapabilities.BlueprintDefinition` and wired with
+  `AppPlugin.addBlueprintDefinitionModule` (mirrors plugin-product-search).
 
 > Applying a chosen offer to the segment (the write below) stays a UI action in
 > this first cut. A follow-up `AddOfferToSegment` operation would let the

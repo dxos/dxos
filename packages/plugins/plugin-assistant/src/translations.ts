@@ -3,7 +3,7 @@
 //
 
 import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Skill, Routine } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete skill',
         'object-deleted.label': 'Skill deleted',
       },
-      [Type.getTypename(Routine.Routine)]: {
+      [Type.getTypename(Instructions.Instructions)]: {
         'typename.label': 'Routine',
         'typename.label_zero': 'Routines',
         'typename.label_one': 'Routine',
@@ -190,6 +190,8 @@ export const translations: Resource[] = [
         'space-home.suggestion-data-type.label': 'Create a new data type',
         'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
+
+        'nav-tree-group-ai.label': 'AI',
       },
     },
   },

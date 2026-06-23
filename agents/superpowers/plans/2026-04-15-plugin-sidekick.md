@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a personal companion agent plugin that maintains people profiles, a user profile, a daily journal, and a dashboard — all driven by composing existing DXOS skills and operations.
+**Goal:** Build a personal companion agent plugin that maintains people profiles, a user profile, a daily journal, and a dashboard — all driven by composing existing DXOS blueprints and operations.
 
-**Architecture:** Single plugin with three layers — plugin registration (types, metadata, surfaces, translations), a Sidekick Skill that composes existing database/agent/markdown/inbox skills with a custom instruction template, and a Dashboard Article surface showing day-ahead summary, profiles, action items, and permissions.
+**Architecture:** Single plugin with three layers — plugin registration (types, metadata, surfaces, translations), a Sidekick Blueprint that composes existing database/agent/markdown/inbox blueprints with a custom instruction template, and a Dashboard Article surface showing day-ahead summary, profiles, action items, and permissions.
 
-**Tech Stack:** TypeScript, Effect Schema, React, TailwindCSS, DXOS app-framework / app-toolkit / echo / skills / operation.
+**Tech Stack:** TypeScript, Effect Schema, React, TailwindCSS, DXOS app-framework / app-toolkit / echo / blueprints / operation.
 
 **Spec:** `packages/plugins/plugin-sidekick/PLUGIN.mdl`
 **Supplementary context:** `docs/superpowers/specs/2026-04-15-plugin-sidekick-design.md`
@@ -29,13 +29,13 @@ packages/plugins/plugin-sidekick/
 │   ├── types/
 │   │   ├── index.ts                    # namespace export: export * as Sidekick from './schema'
 │   │   └── schema.ts                   # Profile + SidekickProperties types
-│   ├── skills/
-│   │   ├── index.ts                    # barrel: export { default as SidekickSkill } from './sidekick-skill'
-│   │   └── sidekick-skill.ts       # Skill.make() with instruction template
+│   ├── blueprints/
+│   │   ├── index.ts                    # barrel: export { default as SidekickBlueprint } from './sidekick-blueprint'
+│   │   └── sidekick-blueprint.ts       # Blueprint.make() with instruction template
 │   ├── capabilities/
 │   │   ├── index.ts                    # Capability.lazy() exports
 │   │   ├── react-surface.tsx           # Surface for SidekickArticle
-│   │   └── skill-definition.ts     # SkillDefinition capability
+│   │   └── blueprint-definition.ts     # BlueprintDefinition capability
 │   ├── components/
 │   │   ├── index.ts                    # barrel
 │   │   ├── DayAhead.tsx                # day summary section
@@ -80,7 +80,7 @@ packages/plugins/plugin-sidekick/
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": "./src/skills/index.ts",
+    "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -110,7 +110,7 @@ packages/plugins/plugin-sidekick/
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
-    "@dxos/skills": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/operation": "workspace:*",
@@ -377,22 +377,22 @@ git commit -m "feat(plugin-sidekick): add meta, translations, and index"
 
 ---
 
-### Task 4: Sidekick Skill
+### Task 4: Sidekick Blueprint
 
 **Files:**
 
-- Create: `packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts`
-- Create: `packages/plugins/plugin-sidekick/src/skills/index.ts`
+- Create: `packages/plugins/plugin-sidekick/src/blueprints/sidekick-blueprint.ts`
+- Create: `packages/plugins/plugin-sidekick/src/blueprints/index.ts`
 
 Reference files for patterns:
 
-- `packages/plugins/plugin-chess/src/skills/chess-skill.ts`
-- `packages/core/assistant-toolkit/src/skills/database/skill.ts`
+- `packages/plugins/plugin-chess/src/blueprints/chess-blueprint.ts`
+- `packages/core/assistant-toolkit/src/blueprints/database/blueprint.ts`
 - `docs/superpowers/specs/2026-04-15-plugin-sidekick-design.md` (instruction template)
 
-- [ ] **Step 1: Create sidekick-skill.ts**
+- [ ] **Step 1: Create sidekick-blueprint.ts**
 
-File: `packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts`
+File: `packages/plugins/plugin-sidekick/src/blueprints/sidekick-blueprint.ts`
 
 ```typescript
 //
@@ -400,14 +400,14 @@ File: `packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts`
 //
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Skill, Template } from '@dxos/skills';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-const SKILL_KEY = 'org.dxos.skill.sidekick';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.sidekick';
 
 const make = () =>
-  Skill.make({
-    key: SKILL_KEY,
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
     name: 'Sidekick',
     description: 'Personal companion agent that maintains profiles, journals, and manages communications.',
     agentCanEnable: true,
@@ -467,53 +467,53 @@ const make = () =>
         },
       ],
     }),
-    tools: Skill.toolDefinitions({ operations: [] }),
+    tools: Blueprint.toolDefinitions({ operations: [] }),
   });
 
-const skill: AppCapabilities.SkillDefinition = {
-  key: SKILL_KEY,
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
   make,
 };
 
-export default skill;
+export default blueprint;
 ```
 
-Note: The `tools` array is empty because all operations come from composed skills (database, agent, markdown, inbox) which are enabled on the Agent.Agent object separately. The sidekick skill provides the instructions and identity; the operational tooling comes from standard DXOS skills already available in the system.
+Note: The `tools` array is empty because all operations come from composed blueprints (database, agent, markdown, inbox) which are enabled on the Agent.Agent object separately. The sidekick blueprint provides the instructions and identity; the operational tooling comes from standard DXOS blueprints already available in the system.
 
-- [ ] **Step 2: Create skills/index.ts**
+- [ ] **Step 2: Create blueprints/index.ts**
 
-File: `packages/plugins/plugin-sidekick/src/skills/index.ts`
+File: `packages/plugins/plugin-sidekick/src/blueprints/index.ts`
 
 ```typescript
 //
 // Copyright 2025 DXOS.org
 //
 
-export { default as SidekickSkill } from './sidekick-skill';
+export { default as SidekickBlueprint } from './sidekick-blueprint';
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/plugins/plugin-sidekick/src/skills/
-git commit -m "feat(plugin-sidekick): add Sidekick skill with instruction template"
+git add packages/plugins/plugin-sidekick/src/blueprints/
+git commit -m "feat(plugin-sidekick): add Sidekick blueprint with instruction template"
 ```
 
 ---
 
-### Task 5: Capabilities (skill-definition, react-surface)
+### Task 5: Capabilities (blueprint-definition, react-surface)
 
 **Files:**
 
-- Create: `packages/plugins/plugin-sidekick/src/capabilities/skill-definition.ts`
+- Create: `packages/plugins/plugin-sidekick/src/capabilities/blueprint-definition.ts`
 - Create: `packages/plugins/plugin-sidekick/src/capabilities/react-surface.tsx`
 - Create: `packages/plugins/plugin-sidekick/src/capabilities/index.ts`
 
-Reference: `packages/plugins/plugin-chess/src/capabilities/skill-definition.ts`
+Reference: `packages/plugins/plugin-chess/src/capabilities/blueprint-definition.ts`
 
-- [ ] **Step 1: Create skill-definition.ts**
+- [ ] **Step 1: Create blueprint-definition.ts**
 
-File: `packages/plugins/plugin-sidekick/src/capabilities/skill-definition.ts`
+File: `packages/plugins/plugin-sidekick/src/capabilities/blueprint-definition.ts`
 
 ```typescript
 //
@@ -525,20 +525,21 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { SidekickSkill } from '#skills';
+import { SidekickBlueprint } from '#blueprints';
 
-const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
-  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, SidekickSkill)]),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, SidekickBlueprint)]));
 
-export default skillDefinition;
+export default blueprintDefinition;
 ```
 
 - [ ] **Step 2: Create react-surface.tsx**
 
 File: `packages/plugins/plugin-sidekick/src/capabilities/react-surface.tsx`
 
-The surface needs to match Agent.Agent objects that have the sidekick skill bound. We check for Agent type and filter appropriately.
+The surface needs to match Agent.Agent objects that have the sidekick blueprint bound. We check for Agent type and filter appropriately.
 
 ```typescript
 //
@@ -572,7 +573,7 @@ export default Capability.makeModule(() =>
 );
 ```
 
-Note: This registers a surface for ALL Agent.Agent objects in the article role. If this conflicts with existing Agent surfaces (e.g., from plugin-assistant), we may need to add filtering logic. For Phase 1, this is sufficient since the sidekick dashboard provides a useful view for any agent. If needed, we can add a filter that checks the agent's skill binding later.
+Note: This registers a surface for ALL Agent.Agent objects in the article role. If this conflicts with existing Agent surfaces (e.g., from plugin-assistant), we may need to add filtering logic. For Phase 1, this is sufficient since the sidekick dashboard provides a useful view for any agent. If needed, we can add a filter that checks the agent's blueprint binding later.
 
 - [ ] **Step 3: Create capabilities/index.ts**
 
@@ -585,7 +586,7 @@ File: `packages/plugins/plugin-sidekick/src/capabilities/index.ts`
 
 import { Capability } from '@dxos/app-framework';
 
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 ```
 
@@ -593,7 +594,7 @@ export const ReactSurface = Capability.lazy('ReactSurface', () => import('./reac
 
 ```bash
 git add packages/plugins/plugin-sidekick/src/capabilities/
-git commit -m "feat(plugin-sidekick): add skill-definition and react-surface capabilities"
+git commit -m "feat(plugin-sidekick): add blueprint-definition and react-surface capabilities"
 ```
 
 ---
@@ -1000,15 +1001,15 @@ File: `packages/plugins/plugin-sidekick/src/SidekickPlugin.tsx`
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { SidekickSkill } from '#skills';
-import { SkillDefinition, ReactSurface } from '#capabilities';
+import { SidekickBlueprint } from '#blueprints';
+import { BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { Sidekick } from '#types';
 
 import { translations } from './translations';
 
 export const SidekickPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addSchemaModule({ schema: [Sidekick.Profile, Sidekick.Properties] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

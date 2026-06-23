@@ -6,7 +6,7 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Skill, Routine } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -43,7 +43,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Feed.Feed,
         HasSubject.HasSubject,
         Message.Message,
-        Routine.Routine,
+        Instructions.Instructions,
         Agent.Agent,
         McpServer.McpServer,
         Plan.Plan,

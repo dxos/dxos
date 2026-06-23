@@ -175,14 +175,6 @@ op SetCurrentChat
 ```mdl
 op RunPromptInNewChat
   desc: Creates a new chat, binds context objects and skills, then runs a prompt.
-  input:
-    db: Database
-    objects?: Obj[]
-    skills?: string[]
-    prompt: string | RoutineRef
-    background?: boolean
-  output: Chat
-  effects: [echo:write, ai:infer]
   note: |
     Operation DEFINED in plugin-automation (AutomationOperation.RunPromptInNewChat)
     so Routine UI and downstream plugins can dispatch it without depending on

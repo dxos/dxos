@@ -11,17 +11,17 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AgentPrompt, AgentWizardSkill, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
-import { AgentService, Skill, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { RunInstructions, AgentWizardSkill, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { AgentService, Skill, Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
@@ -98,7 +98,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can run memoized routine', { timeout: 120_000 }, async (ctx) => {
+  test('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -106,7 +106,7 @@ describe('AssistantPlugin', () => {
         AssistantPlugin({
           aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     });
 
@@ -118,19 +118,18 @@ describe('AssistantPlugin', () => {
 
     await harness.runPromise(
       Effect.gen(function* () {
-        const routine = yield* Database.add(
-          Routine.make({
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: 'capital-test',
-            instructions:
-              'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
+            text: 'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
           }),
         );
         yield* Database.flush();
 
         const result = yield* Operation.invoke(
-          AgentPrompt,
+          RunInstructions,
           {
-            prompt: Ref.make(routine),
+            instructions: Ref.make(instructions),
             input: {
               country: 'France',
             },
@@ -151,7 +150,7 @@ describe('AssistantPlugin', () => {
         AssistantPlugin({
           aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     });
 

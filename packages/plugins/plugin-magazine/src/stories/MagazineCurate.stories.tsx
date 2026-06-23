@@ -20,8 +20,8 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { LayerSpec } from '@dxos/compute';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -36,9 +36,9 @@ import { Magazine, Subscription } from '#types';
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
 import { MagazinePlugin } from '../MagazinePlugin';
 
-// Curation runs the agent (CurateMagazine → AgentPrompt). The process-manager runtime therefore needs
-// the full agent stack: AutomationPlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
-// MagazinePlugin the curation handlers; this story-local plugin adds the AgentPrompt handler and a
+// Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
+// the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
+// MagazinePlugin the curation handlers; this story-local plugin adds the RunInstructions handler and a
 // live edge AiService (the 'edge-remote' testing preset — no client edge-config or credentials needed).
 // Excluded from CI (the `Test` story is `!test`); intended for manual, signed-in, online use.
 const aiServiceSpec = LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
@@ -158,7 +158,7 @@ const meta: Meta<typeof DefaultStory> = {
         }),
         SpacePlugin({}),
         StorybookPlugin({}),
-        AutomationPlugin(),
+        RoutinePlugin(),
         MagazinePlugin(),
         AgentRuntimePlugin(),
       ],
@@ -181,7 +181,7 @@ export const Default: Story = {};
  * served from a bundled fixture, but the LLM call is real). It verifies:
  *   1. the curation Routine exists — created with the magazine (Magazine.make), so it is present
  *      before any curate; and
- *   2. clicking Curate pulls the feed (SyncFeed) and runs that Routine via AgentPrompt against the
+ *   2. clicking Curate pulls the feed (SyncFeed) and runs that Routine via RunInstructions against the
  *      live edge model, which selects matching Posts into `magazine.posts` (rendered as tiles).
  *
  * The seed stashes the space + magazine in module scope so the play can read ECHO state directly.
@@ -203,7 +203,7 @@ export const Curate: Story = {
     const { magazine } = globalThis.__magazineStoryContext!;
 
     // The curation Routine is created with the magazine, not on curate.
-    await expect(magazine.routine).toBeDefined();
+    await expect(magazine.instructions).toBeDefined();
 
     // Starts empty; clicking Curate pulls the feed and runs the Routine.
     await expect(await canvas.findByText(/no articles yet/i, {}, { timeout: 10_000 })).toBeVisible();

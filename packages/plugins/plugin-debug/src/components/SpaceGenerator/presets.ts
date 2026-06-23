@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Routine, Trigger, Operation } from '@dxos/compute';
+import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import { Instructions, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -143,13 +143,13 @@ export const generator = () => ({
           );
 
           const researchPrompt = space.db.add(
-            Routine.make({
+            Instructions.make({
               name: 'Research',
               description: 'Research organization',
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
-              instructions: trim`
+              text: trim`
                 Research the organization provided as input.
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
@@ -162,9 +162,9 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              function: Ref.make(Operation.serialize(AgentPrompt)),
+              function: Ref.make(Operation.serialize(RunInstructions)),
               input: {
-                prompt: Ref.make(researchPrompt),
+                instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
               },
             }),

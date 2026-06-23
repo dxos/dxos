@@ -29,7 +29,7 @@ export const SyncFeed = Operation.make({
     feed: Ref.Ref(Subscription.Subscription),
   }),
   output: Schema.Void,
-});
+}).pipe(Operation.visible);
 
 /**
  * Fetches a Post's article page over HTTP and returns extracted plain text plus
@@ -109,9 +109,9 @@ export const CurateMagazine = Operation.make({
     curated: Schema.Number.annotations({ description: 'Number of posts added to the magazine.' }),
   }),
   // Database.Service for candidate collection, Registry.Service to resolve the methodology skill;
-  // sub-operations (SyncFeed, AgentPrompt) resolve through the ambient Operation.Service invoker.
+  // sub-operations (SyncFeed, RunInstructions) resolve through the ambient Operation.Service invoker.
   services: [Database.Service, Registry.Service],
-});
+}).pipe(Operation.visible);
 
 /**
  * Clears a Magazine's curated posts, preserving any that are starred. Drives the MagazineArticle
@@ -131,4 +131,4 @@ export const ClearMagazine = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-});
+}).pipe(Operation.visible);

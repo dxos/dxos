@@ -12,6 +12,7 @@ import * as Obj from './Obj';
 import * as Ref from './Ref';
 import * as Relation from './Relation';
 import { TestSchema } from './testing';
+import type * as Type from './Type';
 
 describe('Obj', () => {
   describe('make', () => {
@@ -636,6 +637,43 @@ describe('Obj', () => {
       });
       expect(target.name).toBe('Old');
       expect(target.properties).toEqual({ x: '2' });
+    });
+  });
+
+  describe('exemplars', () => {
+    test('factory', ({ expect }) => {
+      const factory = <S extends Type.AnyObj>(schema: S) => {
+        return (props: Obj.MakeProps<S>) => Obj.make(schema, props);
+      };
+
+      const makePerson = factory(TestSchema.Person);
+      const person = makePerson({ name: 'John Doe' });
+      expect(person.name).toBe('John Doe');
+    });
+  });
+
+  describe('Hierarchy', () => {
+    test('setParent and getParent', async () => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'child' });
+      expect(Obj.getParent(child)).toBeUndefined();
+
+      Obj.setParent(child, parent);
+      expect(Obj.getParent(child)).toBe(parent);
+
+      Obj.setParent(child, undefined);
+      expect(Obj.getParent(child)).toBeUndefined();
+    });
+
+    test('create object with Obj.Parent in props', () => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+      const child = Obj.make(TestSchema.Person, {
+        [Obj.Parent]: parent,
+        name: 'John',
+      });
+
+      expect(child.name).toBe('John');
+      expect(Obj.getParent(child)).toBe(parent);
     });
   });
 });
