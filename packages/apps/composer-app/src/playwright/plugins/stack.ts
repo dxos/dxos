@@ -34,9 +34,11 @@ export const Stack = {
     const listbox = page.getByRole('listbox');
     await listbox.getByRole('option').filter({ hasText: type }).first().waitFor({ state: 'visible' });
 
-    // Use Enter instead of clicking the option: clicking causes a false "target page
-    // closed" error in Firefox when the dialog unmounts synchronously during
-    // Playwright's post-click verification phase.
+    // Picker.Input only fires triggerSelect() on Enter when selectedValue is set —
+    // ArrowDown moves focus to the first item, then Enter commits it. Clicking the
+    // option causes a false "target page closed" error in Firefox when the dialog
+    // unmounts synchronously during Playwright's post-click verification phase.
+    await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
 
     const objectForm = page.getByTestId('create-object-form');

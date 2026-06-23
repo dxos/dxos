@@ -10,6 +10,10 @@ import { AppManager } from './app-manager';
 import { Markdown, Stack, StackPlugin } from './plugins';
 
 test.describe('Stack tests', () => {
+  // Each test in this suite enables a plugin in beforeEach, which adds ~30-40s of setup
+  // on top of the test body. The global 60s limit is too tight; 90s gives sufficient headroom.
+  test.describe.configure({ timeout: 90_000 });
+
   let host: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
