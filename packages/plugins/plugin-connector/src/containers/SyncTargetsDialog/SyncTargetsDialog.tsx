@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
@@ -10,13 +11,19 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Input, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { ConnectorCoordinator, type RemoteTarget } from '#types';
 
 import { type Connection, SyncBinding } from '../../types';
+
+// The checklist uses Form's `settings` variant purely for its labeled-row chrome
+// (action-mode `Form.Row`s carrying a checkbox); there are no fields to bind, so the schema is empty.
+const CHECKLIST_SCHEMA = Schema.Struct({});
+const CHECKLIST_VALUES = {};
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
@@ -112,36 +119,44 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <div className='flex gap-2 py-form-gap'>
-            <Button onClick={handleSelectAll} disabled={submitting}>
+          <Toolbar.Root>
+            <Toolbar.Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Button>
-            <Button onClick={handleSelectNone} disabled={submitting}>
+            </Toolbar.Button>
+            <Toolbar.Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Button>
-          </div>
+            </Toolbar.Button>
+          </Toolbar.Root>
         )}
 
         {availableTargets.length === 0 ? (
           <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
         ) : (
-          <ScrollArea.Root classNames='max-bs-[24rem]' padding>
-            <ScrollArea.Viewport classNames='flex flex-col gap-3'>
-              {availableTargets.map((target) => (
-                <Input.Root key={target.id}>
-                  <div className='flex items-start gap-2'>
-                    <Input.Checkbox
-                      checked={selected.has(target.id)}
-                      onCheckedChange={() => handleToggle(target.id)}
-                      disabled={submitting}
-                    />
-                    <div className='flex flex-col'>
-                      <Input.Label>{target.name}</Input.Label>
-                      {target.description && <p className='text-sm text-description'>{target.description}</p>}
-                    </div>
-                  </div>
-                </Input.Root>
-              ))}
+          <ScrollArea.Root classNames='max-bs-[24rem]' orientation='vertical'>
+            <ScrollArea.Viewport>
+              <Form.Root variant='settings' schema={CHECKLIST_SCHEMA} values={CHECKLIST_VALUES}>
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.Section>
+                      {availableTargets.map((target) => (
+                        // Action-mode row: the target name/description are the labeled chrome and the
+                        // checkbox is the control. The checkbox carries an `aria-label` because the
+                        // visible label lives in the row, not in an associated `Input.Label`.
+                        <Form.Row key={target.id} label={target.name} description={target.description}>
+                          <Input.Root>
+                            <Input.Checkbox
+                              checked={selected.has(target.id)}
+                              onCheckedChange={() => handleToggle(target.id)}
+                              disabled={submitting}
+                              aria-label={target.name}
+                            />
+                          </Input.Root>
+                        </Form.Row>
+                      ))}
+                    </Form.Section>
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}
