@@ -57,7 +57,7 @@ const NavTreeSectionHeader = ({ label }: { label: Label }) => {
     <div
       role='heading'
       aria-level={2}
-      className='col-[tree-row] px-2 pt-3 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-subdued select-none'
+      className='col-[tree-row] pl-8 pt-3 pb-0.5 text-xs uppercase tracking-widest text-description select-none'
     >
       {toLocalizedString(label, t)}
     </div>
