@@ -136,31 +136,31 @@ export const ConnectionView = ({
                     </Form.Row>
                   </Form.Section>
 
-                  {/* Hide the sync-targets section for connectors that don't sync. Each binding is its
-                      own section (titled by the binding); the umbrella heading only frames the empty state. */}
-                  {canSync && bindings.length === 0 && (
+                  {/* Hide the sync-targets section for connectors that don't sync. */}
+                  {canSync && (
                     <Form.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
-                      <p className='px-trim-md text-description'>
-                        {canChangeTargets
-                          ? t('no-targets.message', {
-                              defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
-                            })
-                          : t('no-targets-yet.message', {
-                              defaultValue: 'No targets yet — finish OAuth to set up the default target.',
-                            })}
-                      </p>
+                      {bindings.length === 0 ? (
+                        <p className='px-trim-md text-description'>
+                          {canChangeTargets
+                            ? t('no-targets.message', {
+                                defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
+                              })
+                            : t('no-targets-yet.message', {
+                                defaultValue: 'No targets yet — finish OAuth to set up the default target.',
+                              })}
+                        </p>
+                      ) : (
+                        bindings.map((binding) => (
+                          <BindingRow
+                            key={binding.id}
+                            binding={binding}
+                            optionsSchema={optionsSchema}
+                            onRemove={onRemoveBinding}
+                          />
+                        ))
+                      )}
                     </Form.Section>
                   )}
-
-                  {canSync &&
-                    bindings.map((binding) => (
-                      <BindingRow
-                        key={binding.id}
-                        binding={binding}
-                        optionsSchema={optionsSchema}
-                        onRemove={onRemoveBinding}
-                      />
-                    ))}
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
@@ -172,15 +172,15 @@ export const ConnectionView = ({
 };
 
 /**
- * One sync binding, rendered as a {@link Form.Section}: the binding's name as the section
- * title and its sync status as the description, with — when the connector declares an options
- * schema and the target is live — a schema-driven options form as the section body. The nested
- * options form keeps the default (flat) variant so its fields render inline rather than each in
- * its own settings-card border.
+ * One sync binding, rendered as a settings item ({@link Form.Row} in action mode): the binding's
+ * name is the item label, its sync status the description, any sync error the validation slot, and
+ * — when the target is missing — a remove button in the control slot. When the connector declares
+ * an options schema and the target is live, a schema-driven options form follows the item; it keeps
+ * the default (flat) variant so its fields render inline rather than each in its own settings-card border.
  *
- * When the binding's target object has been deleted, the section surfaces that state and offers
- * to remove the now-orphaned binding (relations don't cascade-delete, so a target deleted
- * elsewhere leaves a dangling binding).
+ * When the binding's target object has been deleted, the item surfaces that state and offers to
+ * remove the now-orphaned binding (relations don't cascade-delete, so a target deleted elsewhere
+ * leaves a dangling binding).
  */
 const BindingRow = ({
   binding,
@@ -207,7 +207,7 @@ const BindingRow = ({
   // translated label (single-target connectors leave a binding without a name/remoteId, e.g.
   // Gmail's Mailbox). Sync status lives in the description, so the label never describes sync progress.
   const targetTypename = resolvedTarget ? Obj.getTypename(resolvedTarget) : undefined;
-  const label =
+  const label: string =
     binding.name ??
     binding.remoteId ??
     (resolvedTarget ? Obj.getLabel(resolvedTarget) : undefined) ??
@@ -235,10 +235,18 @@ const BindingRow = ({
   );
 
   return (
-    <Form.Section title={label} description={status}>
-      {!missing && binding.lastError && (
-        <p className='px-trim-md text-sm text-error-text'>{binding.lastError}</p>
-      )}
+    <Form.Row
+      label={label}
+      description={status}
+      validation={
+        !missing && binding.lastError ? <span className='text-sm text-error-text'>{binding.lastError}</span> : undefined
+      }
+    >
+      {missing ? (
+        <Button onClick={() => onRemove(binding)}>
+          {t('remove-binding.label', { defaultValue: 'Remove binding' })}
+        </Button>
+      ) : undefined}
 
       {/* Per-binding options: flat (default variant) so fields render inline rather than each in a border. */}
       {optionsSchema && !missing && (
@@ -248,19 +256,6 @@ const BindingRow = ({
           </Form.Content>
         </Form.Root>
       )}
-
-      {missing && (
-        <Form.Row
-          label={t('remove-binding.label', { defaultValue: 'Remove binding' })}
-          description={t('remove-binding.description', {
-            defaultValue: 'Delete this binding to stop tracking the removed object.',
-          })}
-        >
-          <Button onClick={() => onRemove(binding)}>
-            {t('remove-binding.label', { defaultValue: 'Remove binding' })}
-          </Button>
-        </Form.Row>
-      )}
-    </Form.Section>
+    </Form.Row>
   );
 };

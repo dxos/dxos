@@ -47,7 +47,6 @@ export const translations = [
         'never-synced.label': 'Never synced',
         'binding-target-missing.message': 'Synced object was deleted. Remove this binding to clean it up.',
         'remove-binding.label': 'Remove binding',
-        'remove-binding.description': 'Delete this binding to stop tracking the removed object.',
         'sync-targets-dialog.title': 'Choose sync targets',
         'sync-targets-dialog.description': 'Pick which remote targets should be synced into this connection.',
         'select-all.label': 'Select all',
