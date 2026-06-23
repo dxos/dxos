@@ -432,13 +432,19 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  */
 export const Label = Schema.Union(
   Schema.String,
-  Schema.Tuple(
-    Schema.String,
-    Schema.Struct({
-      ns: Schema.String,
-      count: Schema.optional(Schema.Number),
-      defaultValue: Schema.optional(Schema.String),
-    }),
+  // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
+  // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
+  Schema.mutable(
+    Schema.Tuple(
+      Schema.String,
+      Schema.mutable(
+        Schema.Struct({
+          ns: Schema.String,
+          count: Schema.optional(Schema.Number),
+          defaultValue: Schema.optional(Schema.String),
+        }),
+      ),
+    ),
   ),
 );
 export type Label = Schema.Schema.Type<typeof Label>;

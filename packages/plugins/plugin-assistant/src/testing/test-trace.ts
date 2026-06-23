@@ -11,7 +11,7 @@ export const makeProcess = (
 ): Process.Info => ({
   parentPid: null,
   key: `test.process.${overrides.name}`,
-  params: { name: overrides.name, target: null },
+  params: { name: overrides.name, annotations: {} },
   error: null,
   startedAt: Date.now() - 10_000,
   completedAt: Option.none(),

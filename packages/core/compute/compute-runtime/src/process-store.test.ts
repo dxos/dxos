@@ -21,7 +21,7 @@ describe('ProcessStore', () => {
       yield* storeA.putProcess({
         id: pid,
         key: 'test.waiting',
-        params: { name: 'agent', target: null, notify: null },
+        params: { name: 'agent', annotations: {} },
         environment: {},
         parentId: null,
         state: Process.State.RUNNING,

@@ -857,7 +857,9 @@ describe('ProcessOperationInvoker invocations', () => {
       const manager = yield* ProcessManager.Service;
       const notify = { success: 'Done', error: 'Failed' };
       const handle = yield* manager.spawn(makeSumAggregator(), { notify });
-      expect(handle.params.notify).toEqual(notify);
+      expect(Option.getOrUndefined(Annotation.getDictionary(handle.params.annotations, Process.NotifyAnnotation))).toEqual(
+        notify,
+      );
     }, Effect.provide(TestLayer)),
   );
 });

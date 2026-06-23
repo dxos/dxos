@@ -162,6 +162,14 @@ export const TargetAnnotation = Annotation.make({
   schema: URI.Schema,
 });
 
+/**
+ * Notification descriptor for surfacing process lifecycle events to the user.
+ */
+export const NotifyAnnotation = Annotation.make({
+  id: 'org.dxos.process.notify',
+  schema: Operation.NotifyOptions,
+});
+
 //
 // Executable.
 //
@@ -193,14 +201,19 @@ export interface Process<
 
   readonly services: readonly Context.Tag<any, any>[];
 
-  readonly rpcs: RpcGroup.RpcGroup<_Rpcs>;
+  // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
+  // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
+  // structural fields would block `Process<…, never>` from being assignable to `Process.Any`.
+  // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
+  // See design spec §4.4.
+  readonly rpcs: RpcGroup.RpcGroup<any>;
 
   /**
    * Create a new instance of the process.
    */
   create(
     ctx: ProcessContext<_Input, _Output>,
-  ): Effect.Effect<Callbacks<_Input, _Output, _Requirements, _Rpcs>, never, _Requirements | BaseServices | Scope.Scope>;
+  ): Effect.Effect<Callbacks<_Input, _Output, _Requirements, any>, never, _Requirements | BaseServices | Scope.Scope>;
 }
 
 export const isProcess = (executable: unknown): executable is Process.Any =>
@@ -213,12 +226,13 @@ export namespace Process {
       readonly _Output: Types.Covariant<_Output>;
       readonly _Requirements: Types.Covariant<_Requirements>;
 
-      // TODO(dmaretskyi): What kind of variance is this?
-      readonly _Rpcs: _Rpcs;
+      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Process.Any` while
+      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
+      readonly _Rpcs: Types.Covariant<_Rpcs>;
     };
   }
 
-  export type Any = Process<any, any, never, any>;
+  export type Any = Process<any, any, any, any>;
 }
 
 export interface MakeProcessOpts {
@@ -274,14 +288,19 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   };
 };
 
+// Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
+// `Callbacks.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
+// handler contract is enforced by `make`'s `create` parameter, not by this internal helper.
 const sanitizeRpcs = <Rpcs extends Rpc.Any>(
   defined: RpcGroup.RpcGroup<Rpcs> | undefined,
   provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
-): Context.Context<Rpc.ToHandler<Rpcs>> => {
+): Context.Context<any> => {
   // Handlers are required only when a non-empty RPC group is declared.
   const needsRpcs = defined !== undefined && defined.requests.size > 0;
   if (!needsRpcs) {
-    return provided ?? (Context.empty() as any);
+    // `Context.empty()` is `Context<never>`; `Context`'s requirement parameter is contravariant,
+    // so the empty (no-handler) context needs widening to the untyped bag.
+    return provided ?? (Context.empty() as Context.Context<any>);
   }
   if (!provided) {
     throw new TypeError('Process declared RPCs but did not provide any handlers');

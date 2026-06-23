@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Process } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
 
 // A child-exit event flattened to a JSON-serializable shape. Exit/Cause are not
 // directly serializable; on redelivery we reconstruct Exit.void / Exit.die(message).
@@ -47,8 +48,8 @@ export const PersistedProcess = Schema.Struct({
   key: Schema.String,
   params: Schema.Struct({
     name: Schema.NullOr(Schema.String),
-    target: Schema.NullOr(Schema.String),
-    notify: Schema.NullOr(Schema.Unknown),
+    // Annotation dictionary values are pre-encoded (JSON-safe); persisted verbatim.
+    annotations: Annotation.Dictionary,
   }),
   // Environment is { space?: SpaceId, conversation?: URI } — both string-serializable.
   environment: Schema.Struct({

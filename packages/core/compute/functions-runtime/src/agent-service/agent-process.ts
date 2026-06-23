@@ -27,7 +27,7 @@ import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, Feed, Obj, Registry } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Message, ContentBlock } from '@dxos/types';
@@ -95,7 +95,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const feedDxn = ctx.params.target;
+        const feedDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
+          Option.getOrUndefined,
+        );
         if (feedDxn == null) {
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
