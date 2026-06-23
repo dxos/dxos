@@ -4,6 +4,7 @@
 
 export * from './agent';
 export * from './agent-wizard';
+export * from './alarm';
 export * from './automation';
 export * from './blueprint-manager';
 export * from './browser';

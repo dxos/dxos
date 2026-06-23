@@ -8,7 +8,6 @@ import * as Cause from 'effect/Cause';
 import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -121,7 +120,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           now: () => clock.unsafeCurrentTimeMillis(),
         });
         yield* alarmManager.load();
-        const alarmToolkit = makeAlarmToolkit(alarmManager);
         // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
         // execution path are stale after reload and would cause onAlarm to drop them.
         yield* toolCallManager.reconcileWithInputQueue(inputQueue);
@@ -277,7 +275,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
-                  toolkit: alarmToolkit,
+                  // The alarm tools (set-alarm/get-current-date) now arrive as a bound blueprint whose
+                  // operations reach this host's AlarmManager over HarnessService Tier B.
                   system: options.systemPrompt,
                   mcpServers: options.getMcpServers?.(),
                 })
@@ -607,43 +606,6 @@ const AgentAlarmKey = StorageService.key(
   'agentAlarm',
 ).pipe(StorageService.withDefault(() => null));
 
-interface ResolveAlarmInput {
-  /** Duration from now, e.g. `'30 seconds'`, `'5 minutes'`, `'1 hour'`. */
-  in?: string;
-  /** Absolute ISO-8601 timestamp, e.g. `'2026-06-04T18:00:00.000Z'`. */
-  at?: string;
-}
-
-/**
- * Resolves an alarm specification into an absolute UNIX timestamp (ms).
- * Returns a {@link Either.left} with a human-readable message describing invalid input.
- */
-export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Either.Either<number, string> => {
-  const { in: inDuration, at } = input;
-  if (inDuration != null && at != null) {
-    return Either.left('Specify either "in" or "at", not both.');
-  }
-  if (at != null) {
-    const timestamp = new Date(at).getTime();
-    if (Number.isNaN(timestamp)) {
-      return Either.left(`Invalid "at" timestamp: "${at}". Provide an ISO-8601 date-time string.`);
-    }
-    return Either.right(timestamp);
-  }
-  if (inDuration != null) {
-    let millis: number;
-    try {
-      // `DurationInput` narrows strings to a `${number} ${unit}` template; the LLM-provided value is an
-      // arbitrary string validated at runtime by `Duration.decode` (throws on malformed input).
-      millis = Duration.toMillis(Duration.decode(inDuration as Duration.DurationInput));
-    } catch {
-      return Either.left(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
-    }
-    return Either.right(now + millis);
-  }
-  return Either.left('Specify either "in" (a duration from now) or "at" (an absolute time).');
-};
-
 /**
  * Computes the timeout to pass to `ctx.setAlarm`, reconciling pending queue work with the agent's
  * self-wake alarm. Returns `null` when no alarm should be scheduled (process can go idle).
@@ -679,8 +641,9 @@ interface AlarmManagerOptions {
 
 /**
  * Tracks the next agent-scheduled self-wake and keeps it in sync with the process alarm
- * (`ctx.setAlarm`). The agent sets alarms via the {@link AlarmToolkit}; the process reconciles
- * the underlying single-shot alarm timer to fire at the earliest of pending work or the self-wake.
+ * (`ctx.setAlarm`). The agent sets alarms via the alarm blueprint, which dispatches to this manager
+ * through the `HarnessControl` RPC surface; the process reconciles the underlying single-shot alarm
+ * timer to fire at the earliest of pending work or the self-wake.
  */
 export class AlarmManager {
   readonly #storageService: StorageService.Service;
@@ -771,59 +734,6 @@ const wakeUpPrompt = (firedAt: number, message: string | null): string =>
       Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
       Continue with whatever you intended to do when you scheduled this wake-up.
     `;
-
-/**
- * Tools that let the agent schedule a self-wake and inspect the current time.
- */
-export const AlarmToolkit = Toolkit.make(
-  Tool.make('set-alarm', {
-    description: trim`
-      Schedule an alarm to wake yourself up in the future.
-      Provide exactly one of "in" (a duration from now) or "at" (an absolute time).
-      When the alarm fires you will receive a prompt and can continue working.
-      Setting a new alarm replaces any previously scheduled one.
-    `,
-    parameters: {
-      in: Schema.optional(Schema.String).annotations({
-        description: 'Duration from now expressed as "<number> <unit>", e.g. "30 seconds", "5 minutes", "2 hours".',
-      }),
-      at: Schema.optional(Schema.String).annotations({
-        description: 'Absolute ISO-8601 timestamp to wake at, e.g. "2026-06-04T18:00:00.000Z".',
-      }),
-    },
-    success: Schema.String,
-  }),
-  Tool.make('get-current-date', {
-    description: 'Get the current date and time as an ISO-8601 string.',
-    // Anthropic requires `input_schema.type: object`; an empty parameter bag encodes as `anyOf` and is rejected.
-    parameters: {
-      timezone: Schema.optional(Schema.String).annotations({
-        description: 'Optional IANA timezone name. Defaults to the process clock when omitted.',
-      }),
-    },
-    success: Schema.String,
-  }),
-);
-
-/**
- * Builds an opaque toolkit whose handlers drive the given {@link AlarmManager}.
- */
-export const makeAlarmToolkit = (alarmManager: AlarmManager): OpaqueToolkit.OpaqueToolkit =>
-  OpaqueToolkit.make(
-    AlarmToolkit,
-    AlarmToolkit.toLayer({
-      'set-alarm': ({ in: inDuration, at }) =>
-        Effect.gen(function* () {
-          const resolved = resolveWakeAt({ in: inDuration, at }, alarmManager.now());
-          if (Either.isLeft(resolved)) {
-            return resolved.left;
-          }
-          yield* alarmManager.setWakeAt(resolved.right);
-          return `Alarm scheduled to wake you at ${new Date(resolved.right).toISOString()}.`;
-        }),
-      'get-current-date': () => Effect.sync(() => new Date(alarmManager.now()).toISOString()),
-    }),
-  );
 
 const ToolExecutionService = ({
   enableBackgrounding,

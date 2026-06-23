@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
-import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
+import { AlarmBlueprint, Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -40,9 +40,13 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       yield* Effect.promise(() =>
         binder.use((b: AiContext.Binder) =>
           b.bind({
-            blueprints: [AssistantBlueprint, DatabaseBlueprint, AgentWizardBlueprint, BlueprintManagerBlueprint].map(
-              ({ key }) => Ref.fromURI(Blueprint.registryURI(key)),
-            ),
+            blueprints: [
+              AssistantBlueprint,
+              DatabaseBlueprint,
+              AgentWizardBlueprint,
+              BlueprintManagerBlueprint,
+              AlarmBlueprint,
+            ].map(({ key }) => Ref.fromURI(Blueprint.registryURI(key))),
           }),
         ),
       );
