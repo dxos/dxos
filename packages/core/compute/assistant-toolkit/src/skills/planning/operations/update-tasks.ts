@@ -38,7 +38,7 @@ export const UpdateTasks = Operation.make({
  */
 export default UpdateTasks.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ tasks: newTasks }) {
+    Effect.fnUntraced(function* ({ tasks: newTasks }) {
       const agent = yield* Agent.getFromChatContext;
       // TODO(burdon): How to specify requirements/preconditions before calling?
       // TODO(burdon): How to report non-technical error?
@@ -67,6 +67,7 @@ export default UpdateTasks.pipe(
           ${Plan.formatPlan(plan)}
         </plan>
       `;
-    }) as any,
+    }),
   ),
+  Operation.opaqueHandler,
 );
