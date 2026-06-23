@@ -5,10 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const IntegrationProvider = Capability.lazy(
-  'DiscordIntegrationProvider',
-  () => import('./integration-provider'),
-);
+export const Connector = Capability.lazy('DiscordConnector', () => import('./connector'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

@@ -10,22 +10,21 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import {
+  Connection,
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 import { Actor, Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-/** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-});
 
 export const GetGoogleCalendars = Operation.make({
   // TODO(wittjosiah): Declaring services here forces DynamicRuntime validation to fail before the handler
@@ -34,16 +33,11 @@ export const GetGoogleCalendars = Operation.make({
   meta: {
     key: makeKey('getGoogleCalendars'),
     name: 'Get Google Calendars',
-    description:
-      'Discover Google Calendars reachable from an integration and materialize a Calendar object per remote calendar.',
+    description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 export const AddMailbox = Operation.make({
@@ -88,7 +82,7 @@ export const DraftEmail = Operation.make({
     newMessageDXN: Schema.String,
   }),
   services: [Database.Service],
-});
+}).pipe(Operation.visible);
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
@@ -120,8 +114,8 @@ export const GmailSend = Operation.make({
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
     message: Type.getSchema(Message.Message),
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration to source Gmail credentials from.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection to source Gmail credentials from.',
     }),
   }),
   output: Schema.Struct({
@@ -129,7 +123,7 @@ export const GmailSend = Operation.make({
     threadId: Schema.String,
   }),
   services: [Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 export const GoogleMailSync = Operation.make({
   meta: {
@@ -139,12 +133,9 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration that owns credentials and per-target sync metadata.',
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
-    mailbox: Ref.Ref(Mailbox.Mailbox)
-      .annotations({ description: 'When omitted, syncs every mailbox listed on the Integration.' })
-      .pipe(Schema.optional),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -169,6 +160,23 @@ export const GoogleMailSync = Operation.make({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
+}).pipe(Operation.visible);
+
+/**
+ * Eagerly materializes the local Mailbox bound to a Gmail connection so a
+ * {@link SyncBinding} can be created (relations require both endpoints to exist).
+ * Gmail is a single-target connector with no remote selection, so a fresh Mailbox
+ * is always created; the connection's `accessToken.account` seeds the default name.
+ */
+export const MaterializeGmailTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeGmailTarget'),
+    name: 'Materialize Gmail Target',
+    description: 'Create the local Mailbox bound to a Gmail connection.',
+    icon: 'ph--envelope--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 export const GoogleCalendarSync = Operation.make({
@@ -180,15 +188,9 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration that owns credentials and per-target sync metadata.',
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
-    calendar: Ref.Ref(Calendar.Calendar)
-      .annotations({
-        description:
-          'When omitted, syncs every calendar target on the Integration (materializing on first run as needed).',
-      })
-      .pipe(Schema.optional),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -198,6 +200,22 @@ export const GoogleCalendarSync = Operation.make({
     newEvents: Schema.Number,
   }),
   services: [Database.Service, Credential.CredentialsService],
+}).pipe(Operation.visible);
+
+/**
+ * Eagerly materializes the local Calendar for a selected remote Google calendar so a
+ * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's foreign key,
+ * so re-running for the same remote calendar returns the existing Calendar.
+ */
+export const MaterializeCalendarTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeCalendarTarget'),
+    name: 'Materialize Calendar Target',
+    description: 'Create the local Calendar bound to a selected Google calendar.',
+    icon: 'ph--calendar--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**
@@ -214,15 +232,15 @@ export const CreateGoogleCalendarEvent = Operation.make({
   input: Schema.Struct({
     event: Type.getSchema(Event.Event),
     googleCalendarId: Schema.String.annotations({ description: 'Remote Google calendar id.' }),
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration to source Google Calendar credentials from.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection to source Google Calendar credentials from.',
     }),
   }),
   output: Schema.Struct({
     id: Schema.String.annotations({ description: 'Remote Google event id.' }),
   }),
   services: [Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 /**
  * Push draft (locally-created, not-yet-synced) events for a calendar up to Google Calendar, then
@@ -291,15 +309,11 @@ export const GetGoogleContactGroups = Operation.make({
   meta: {
     key: makeKey('getGoogleContactGroups'),
     name: 'Get Google Contact Groups',
-    description: 'Discover Google Contact Groups reachable from an integration.',
+    description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 export const GoogleContactsSync = Operation.make({
@@ -310,12 +324,8 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration).annotations({
-      description: 'Integration that owns credentials and per-target sync metadata.',
-    }),
-    contactGroupResourceName: Schema.optional(Schema.String).annotations({
-      description:
-        'Google contact group resource name (e.g. contactGroups/myContacts). Syncs all targets when omitted.',
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose remoteId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
   }),
@@ -323,7 +333,7 @@ export const GoogleContactsSync = Operation.make({
     upserted: Schema.Number,
   }),
   services: [Database.Service, Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 export const SyncContacts = Operation.make({
   meta: {
@@ -334,7 +344,7 @@ export const SyncContacts = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
+    binding: Ref.Ref(SyncBinding.SyncBinding),
   }),
   output: Schema.Void,
 });

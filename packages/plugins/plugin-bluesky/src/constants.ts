@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** `IntegrationProvider.id` for the Bluesky integration. */
+/** `Connector.id` for the Bluesky integration. */
 export const BLUESKY_PROVIDER_ID = 'bluesky';
 
 /** `Channel.backend.kind` for a read-only ATProto-backed channel (a public author feed). */

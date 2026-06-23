@@ -565,11 +565,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-automation/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-bluesky/package.json",
           "jsonpath": "$.version"
         },
@@ -616,6 +611,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-connector/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -691,11 +691,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-integration/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -806,6 +801,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-routine/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -28,4 +28,5 @@ export const SpaceHomeRecent: ComponentType<any> = lazy(() => import('./SpaceHom
 export const SpaceSettings: ComponentType<any> = lazy(() => import('./SpaceSettings'));
 export const SpaceSettingsContainer: ComponentType<any> = lazy(() => import('./SpaceSettingsContainer'));
 export const SyncStatus: ComponentType<any> = lazy(() => import('./SyncStatus'));
+export const TypeCollectionArticle: ComponentType<any> = lazy(() => import('./TypeCollectionArticle'));
 export const ViewEditor: ComponentType<any> = lazy(() => import('./ViewEditor'));

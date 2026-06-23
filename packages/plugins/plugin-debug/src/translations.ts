@@ -13,7 +13,6 @@ export const translations = [
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'Debug',
-        'settings.title': 'Debug settings',
         'open-devtools.label': 'Open DevTools',
         'devtools.label': 'DevTools',
         'devtools-overview.label': 'Stats',

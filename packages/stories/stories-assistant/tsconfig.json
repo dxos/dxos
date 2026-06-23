@@ -103,9 +103,6 @@
       "path": "../../plugins/plugin-attention"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-board"
     },
     {
@@ -116,6 +113,9 @@
     },
     {
       "path": "../../plugins/plugin-comments"
+    },
+    {
+      "path": "../../plugins/plugin-connector"
     },
     {
       "path": "../../plugins/plugin-deck"
@@ -133,9 +133,6 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
-      "path": "../../plugins/plugin-integration"
-    },
-    {
       "path": "../../plugins/plugin-map"
     },
     {
@@ -146,6 +143,9 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-script"
@@ -245,9 +245,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

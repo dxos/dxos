@@ -12,8 +12,8 @@ import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, type Ref } from '@dxos/echo';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { StackContext, StackSection } from '#components';
@@ -45,6 +45,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.profile.key);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   // TODO(wittjosiah): Re-implement stack views with relations.
   // const defaultStack = useMemo(() => Obj.make(StackViewType, { sections: {} }), [collection]);
@@ -128,37 +129,50 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   return (
-    <StackItem.Content toolbar classNames='dx-document'>
-      <Toolbar.Root>
-        <Toolbar.IconButton
-          icon='ph--plus--regular'
-          iconOnly
-          label='Add section'
-          data-testid='stack.addSection'
-          onClick={handleAddSection}
-        />
-      </Toolbar.Root>
-      <StackContext.Provider
-        value={{
-          attendableId,
-          onCollapse: handleCollapse,
-          onNavigate: handleNavigate,
-          onDelete: handleDelete,
-          onAdd: handleAdd,
-        }}
-      >
-        <Stack
-          orientation='vertical'
-          size='intrinsic'
-          id={Obj.getURI(collection)}
-          data-testid='main.stack'
-          classNames='overflow-y-auto'
+    <Panel.Root classNames='dx-document'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.IconButton
+            icon='ph--plus--regular'
+            iconOnly
+            label='Add section'
+            data-testid='stack.addSection'
+            onClick={handleAddSection}
+          />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <StackContext.Provider
+          value={{
+            attendableId,
+            onCollapse: handleCollapse,
+            onNavigate: handleNavigate,
+            onDelete: handleDelete,
+            onAdd: handleAdd,
+          }}
         >
-          {items.map((item) => (
-            <StackSection key={item.id} {...item} />
-          ))}
-        </Stack>
-      </StackContext.Provider>
-    </StackItem.Content>
+          <Mosaic.Root>
+            <Mosaic.Container
+              asChild
+              orientation='vertical'
+              autoScroll={viewport}
+              eventHandler={{ id: Obj.getURI(collection), canDrop: () => false }}
+            >
+              <ScrollArea.Root orientation='vertical' data-testid='main.stack'>
+                <ScrollArea.Viewport ref={setViewport}>
+                  <Mosaic.Stack
+                    orientation='vertical'
+                    items={items}
+                    getId={(item) => item.id}
+                    draggable={false}
+                    Tile={(tileProps) => <StackSection {...tileProps} />}
+                  />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </Mosaic.Root>
+        </StackContext.Provider>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

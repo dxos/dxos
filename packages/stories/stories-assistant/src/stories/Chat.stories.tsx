@@ -8,13 +8,13 @@ import { userEvent, within } from 'storybook/test';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
-  AgentPrompt,
+  RunInstructions,
   DelegationBlueprint,
   LinearBlueprint,
   PlanningBlueprint,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
+import { Blueprint, Instructions, Operation, Script, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -438,12 +438,12 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
+      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
         import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-integration/plugin'),
+        import('@dxos/plugin-connector/plugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), IntegrationPlugin()],
+        plugins: [InboxPlugin(), ConnectorPlugin()],
       };
     },
     config: config.persistent,
@@ -470,12 +470,12 @@ export const WithGmail: Story = {
 export const WithCalendar: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
+      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
         import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-integration/plugin'),
+        import('@dxos/plugin-connector/plugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), IntegrationPlugin()],
+        plugins: [InboxPlugin(), ConnectorPlugin()],
       };
     },
     config: config.remote,
@@ -835,22 +835,21 @@ export const WithResearchQueue: Story = {
       await space.db.appendToFeed(feed, orgs);
 
       const researchPrompt = space.db.add(
-        Routine.make({
+        Instructions.make({
           name: 'Research',
           description: 'Research organization',
-          instructions:
-            'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          text: 'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(AgentPrompt)),
+          function: Ref.make(Operation.serialize(RunInstructions)),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
-            prompt: Ref.make(researchPrompt),
+            instructions: Ref.make(researchPrompt),
             input: '{{event.item}}',
           },
         }),
@@ -959,10 +958,10 @@ export const WithProject: Story = {
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagUri));
 
       const researchPrompt = space.db.add(
-        Routine.make({
+        Instructions.make({
           name: 'Research',
           description: 'Research organization',
-          instructions: trim`
+          text: trim`
             Research the organization provided as input.
             Absolutely, in all cases, create a research note for it at the end.
             NOTE: Do mocked reseach (set mockSearch to true).
@@ -974,7 +973,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(Operation.serialize(AgentPrompt)),
+        function: Ref.make(Operation.serialize(RunInstructions)),
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {
@@ -1109,13 +1108,12 @@ export const WithPrompt: Story = {
     config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(Operation.serialize(AgentPrompt));
+      space.db.add(Operation.serialize(RunInstructions));
       space.db.add(
-        Routine.make({
+        Instructions.make({
           name: 'Research',
           description: 'Research organization',
-          instructions:
-            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          text: 'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );

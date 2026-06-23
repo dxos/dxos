@@ -157,22 +157,19 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-chess"
     },
     {
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-connector"
+    },
+    {
       "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-map"
@@ -182,6 +179,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

@@ -46,7 +46,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
         <Column.Root style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
-              <div className='dx-document flex flex-col gap-4 py-4'>
+              <div className='dx-document flex flex-col gap-4 pb-12'>
                 <Surface.Surface type={SpaceHomeContent} data={{ space }} />
               </div>
             </ScrollArea.Viewport>

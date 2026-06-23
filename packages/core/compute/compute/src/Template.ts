@@ -63,6 +63,7 @@ export const Template = Schema.Struct({
 });
 
 export type Template = Schema.Schema.Type<typeof Template>;
+
 export type MakeProps = Partial<{ id: string; source: string; inputs: Input[] }>;
 
 export const make = ({ id, source, inputs = [] }: MakeProps = {}): Template => ({
@@ -104,9 +105,9 @@ export const processTemplate = (
             if (results.length === 0) {
               return yield* Effect.fail(new FunctionNotFoundError(input.operation));
             }
-            const fn = Operation.deserialize(results[0]);
 
             // NOTE: Operations referenced by template inputs must accept void input — see `Input.operation`.
+            const fn = Operation.deserialize(results[0]);
             const result = yield* Operation.invoke(fn, undefined as any).pipe(Effect.orDie);
             return [input.name, result] as const;
           }

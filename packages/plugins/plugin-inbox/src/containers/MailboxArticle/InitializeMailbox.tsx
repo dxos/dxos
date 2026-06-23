@@ -40,8 +40,7 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
   return (
     <InitializeAction
       target={mailbox}
-      targetKey='mailbox'
-      providerId={GMAIL_PROVIDER_ID}
+      connectorId={GMAIL_PROVIDER_ID}
       operation={InboxOperation.GoogleMailSync}
       syncLabel={t('sync-mailbox.label')}
       notify={{

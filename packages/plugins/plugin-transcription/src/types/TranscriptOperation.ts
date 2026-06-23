@@ -77,7 +77,7 @@ export const Summarize = Operation.make({
     }),
   }),
   services: [AiService.AiService],
-});
+}).pipe(Operation.visible);
 
 export const EnrichMessage = Operation.make({
   meta: {

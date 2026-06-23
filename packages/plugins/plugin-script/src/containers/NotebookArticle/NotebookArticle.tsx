@@ -11,8 +11,8 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -43,7 +43,7 @@ export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebo
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
-  const db = Obj.getDatabase(notebook);
+  const db = notebook ? Obj.getDatabase(notebook) : undefined;
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
@@ -99,20 +99,20 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     Effect.fnUntraced(function* () {
       invariant(graph);
 
-      const prompts =
+      const allInstructions =
         notebook?.cells
           .filter((cell) => cell.type === 'prompt')
           .map((cell) => cell.prompt)
           .filter(isNonNullable) ?? [];
 
-      for (const prompt of prompts) {
+      for (const instructions of allInstructions) {
         yield* runPrompt({
-          prompt,
+          instructions,
           input: { ...queryValues, ...graph.getValuesByName() },
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
-              [prompt.uri]: result,
+              [instructions.uri]: result,
             })),
         });
       }
@@ -127,23 +127,6 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     await handleExecQueries();
     await handleExecPrompts();
   }, [graph, handleExecQueries, handleExecPrompts]);
-
-  const handleRearrange = useCallback<NonNullable<NotebookStackProps['onRearrange']>>(
-    (source, target) => {
-      invariant(notebook);
-      const from = notebook.cells.findIndex((cell) => cell.id === source.id);
-      const to = notebook.cells.findIndex((cell) => cell.id === target.id);
-      if (from != null && to != null) {
-        Obj.update(notebook, (notebook) => {
-          const cell = notebook.cells.splice(from, 1)[0];
-          if (cell) {
-            notebook.cells.splice(to, 0, cell);
-          }
-        });
-      }
-    },
-    [notebook],
-  );
 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     async (type, after) => {
@@ -166,7 +149,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
                 return key !== undefined && INCLUDE_BLUEPRINTS.includes(key);
               })
               .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Routine.make({ instructions: '', blueprints }));
+            cell.prompt = Ref.make(Instructions.make({ text: '', blueprints }));
           }
           break;
         }
@@ -212,14 +195,13 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <NotebookStack
           db={db}
           notebook={notebook}
           graph={graph}
           env={env}
           promptResults={promptResults}
-          onRearrange={handleRearrange}
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
@@ -230,17 +212,17 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
 
 // TODO(wittjosiah): Factor out. Copied from PromptArticle in plugin-assistant.
 const runPrompt = Effect.fn(function* ({
-  prompt,
+  instructions,
   input,
   onResult,
 }: {
-  prompt: Ref.Ref<Routine.Routine>;
+  instructions: Ref.Ref<Instructions.Instructions>;
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
+  const inputData: Operation.Definition.Input<typeof RunInstructions> = { instructions, input };
   // Invoke the function.
-  const result = yield* Operation.invoke(AgentPrompt, inputData).pipe(Effect.orDie, Effect.exit);
+  const result = yield* Operation.invoke(RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

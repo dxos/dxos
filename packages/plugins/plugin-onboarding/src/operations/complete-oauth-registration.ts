@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Integration } from '@dxos/plugin-integration';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Connection } from '@dxos/plugin-connector';
 import { AccessToken } from '@dxos/types';
 
 import { CompleteOAuthRegistration } from './definitions';
@@ -70,19 +70,18 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
         account: result.identifier,
       });
 
-      // Wrap the AccessToken in an Integration so the connected account surfaces as a first-class
+      // Wrap the AccessToken in a Connection so the connected account surfaces as a first-class
       // object in the personal space. Registration completes exactly once (first sign-up); login and
-      // server-side token refresh never re-run this, so the AccessToken/Integration pair is created
+      // server-side token refresh never re-run this, so the AccessToken/Connection pair is created
       // unconditionally with no de-dup query.
       personalSpace.db.add(
-        Integration.make({
+        Connection.make({
           name: result.email ?? result.identifier,
-          providerId: ATMOSPHERE_PROVIDER_ID,
+          connectorId: ATMOSPHERE_PROVIDER_ID,
           accessToken: Ref.make(tokenObject),
-          targets: [],
         }),
       );
-      log.info('Integration ECHO object created', { accessTokenId: result.accessTokenId, provider: result.provider });
+      log.info('Connection ECHO object created', { accessTokenId: result.accessTokenId, provider: result.provider });
 
       return { email: result.email };
     }),

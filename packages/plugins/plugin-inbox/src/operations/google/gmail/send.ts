@@ -16,9 +16,9 @@ import { GoogleCredentials } from '../../../services/google-credentials';
 import { InboxOperation } from '../../../types';
 
 export default InboxOperation.GmailSend.pipe(
-  Operation.withHandler(({ userId = 'me', message, integration: integrationRef }) =>
+  Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>
     Effect.gen(function* () {
-      log('sending email', { userId, integration: integrationRef.uri });
+      log('sending email', { userId, connection: connectionRef.uri });
 
       const to = message.properties?.to;
       const subject = message.properties?.subject;
@@ -55,6 +55,6 @@ export default InboxOperation.GmailSend.pipe(
         id: response.id,
         threadId: response.threadId,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromIntegration(integrationRef))),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
   ),
 );

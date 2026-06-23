@@ -12,23 +12,23 @@ import { LinearApi } from '../services';
 import { LinearOperation } from '../types';
 
 /**
- * Discovery only — list Linear teams reachable from the integration's token.
+ * Discovery only — list Linear teams reachable from the connection's token.
  * Read-only: NO local objects are created here. Materialization happens
- * lazily in `SyncLinearTeams` on first sync of a target.
+ * through `materializeTarget` when a binding is created.
  *
  * Output is sorted by `key` (case-insensitive) so the picker is stable
  * regardless of Linear's response order.
  */
 const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = LinearOperation.GetLinearTeams.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration }) {
+    Effect.fn(function* ({ connection }) {
       // TODO(wittjosiah): Mirror the Trello pattern — derive the db from the input ref's
       //   target until the OperationInvoker has a `databaseResolver` and the operation
       //   can declare `services: [Database.Service]` directly.
-      const target = integration.target;
-      const db = target ? Obj.getDatabase(target) : undefined;
+      const connectionObj = connection.target;
+      const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
       if (!db) {
-        return yield* Effect.dieMessage('No database for integration ref.');
+        return yield* Effect.dieMessage('No database for connection ref.');
       }
 
       return yield* Effect.gen(function* () {
@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = Li
         return { targets };
       }).pipe(
         Effect.provide(Database.layer(db)),
-        Effect.provide(LinearApi.LinearCredentials.fromIntegration(integration)),
+        Effect.provide(LinearApi.LinearCredentials.fromConnection(connection)),
       );
     }, Effect.provide(FetchHttpClient.layer)),
   ),

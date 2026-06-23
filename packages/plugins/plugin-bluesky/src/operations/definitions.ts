@@ -7,19 +7,26 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Discovery — list the available Bluesky sync targets for the integration's
- * authenticated user. Always returns the three "self" targets (posts,
- * likes, bookmarks) plus one entry per saved feed in the user's preferences.
+ * Discovery — list the available Bluesky sync targets reachable from a
+ * connection's token. Always returns the three "self" targets (posts, likes,
+ * bookmarks) plus one entry per saved feed in the user's preferences.
  *
- * Read-only: returns descriptors only. Local Subscription.Feed objects are
- * materialized lazily on first sync (in {@link SyncBlueskyTargets}).
+ * Read-only: returns descriptors only. Local Subscription.Feed roots are
+ * materialized eagerly when a binding is created (see `materializeTarget`),
+ * so unselected feeds leave no trace in the space.
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
@@ -35,28 +42,43 @@ export const GetBlueskyTargets = Operation.make({
 });
 
 /**
- * Pull-only sync of currently-selected Bluesky targets. For each target
- * fetches posts via XRPC (public for the user's own feed; via Edge atproto
+ * Find-or-create the empty local `Subscription.Feed` root for a selected
+ * Bluesky target so a {@link SyncBinding} relation can be created eagerly
+ * (relations require both endpoints to exist). Keyed by the target's `remoteId`
+ * foreign key, so it is idempotent across re-selection.
+ */
+export const MaterializeBlueskyTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeBlueskyTarget'),
+    name: 'Materialize Bluesky Target',
+    description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
+    icon: 'ph--butterfly--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
+
+/**
+ * Pull-only sync of a single Bluesky feed bound by a {@link SyncBinding}.
+ * Fetches posts via XRPC (public for the user's own feed; via Edge atproto
  * proxy for `getActorLikes` / `getBookmarks` / `getFeed`) and appends new
- * Posts to the backing `Subscription.Feed` queue. On first sync a
- * `Subscription.Feed` is materialized and stored in `target.object`.
+ * Posts to the backing `Subscription.Feed` queue (the binding's target).
+ * Updates the binding's `cursor` / `lastSyncAt` / `lastError`.
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
     key: makeKey('syncBlueskyTargets'),
     name: 'Sync Bluesky',
-    description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
+    description: 'Pull posts for the Bluesky feed bound by a SyncBinding.',
     icon: 'ph--arrows-clockwise--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
+    binding: Ref.Ref(SyncBinding.SyncBinding),
   }),
   output: Schema.Struct({
-    /** Total posts appended across all selected targets. */
+    /** Total posts appended for this binding's target. */
     appended: Schema.Number,
-    /** Targets that produced an error this run. */
-    failed: Schema.Number,
   }),
-});
+}).pipe(Operation.visible);

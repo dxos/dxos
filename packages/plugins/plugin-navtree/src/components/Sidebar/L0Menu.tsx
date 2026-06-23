@@ -39,7 +39,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -59,6 +58,14 @@ type L0ItemData = {
   id: L0ItemProps['item']['id'];
   type: 'l0Item';
 };
+
+// Local rearrange handler (formerly `@dxos/react-ui-stack` `StackItemRearrangeHandler`); drag-and-drop is
+// wired directly via pragmatic-dnd in `L0Item`, so only the callback shape is needed here.
+type StackItemRearrangeHandler<Data extends { id: string } = { id: string }> = (
+  source: Data,
+  target: Data,
+  closestEdge: Edge | null,
+) => void;
 
 type L0ItemRootProps = {
   item: Node.Node;

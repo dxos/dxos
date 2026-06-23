@@ -79,13 +79,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-routine"
     }
   ]
 }

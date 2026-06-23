@@ -16,7 +16,7 @@ import {
   BlueprintDefinition,
   CreateObject,
   InboxSettings,
-  IntegrationProvider,
+  Connector,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
@@ -53,8 +53,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: InboxSettings,
   }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupIntegrationProviders,
-    activate: IntegrationProvider,
+    activatesOn: AppActivationEvents.SetupConnectors,
+    activate: Connector,
   }),
   Plugin.addModule({
     id: 'contact-extractor',

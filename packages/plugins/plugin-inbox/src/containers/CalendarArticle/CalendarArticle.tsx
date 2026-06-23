@@ -17,7 +17,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
-import { EventStack, type EventStackActionHandler, useTargetIntegration } from '#components';
+import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
@@ -43,8 +43,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
-  // Syncing drafts to Google Calendar requires an integration targeting this calendar.
-  const { integration } = useTargetIntegration(subject);
+  // Syncing drafts to Google Calendar requires a connection bound to this calendar.
+  const { connection } = useTargetConnection(subject);
 
   const feed = calendar.feed?.target;
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
@@ -189,14 +189,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         {
           label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
           icon: 'ph--cloud-arrow-up--regular',
-          // Pushing drafts to Google Calendar requires an integration targeting this calendar.
-          disabled: !integration,
+          // Pushing drafts to Google Calendar requires a connection bound to this calendar.
+          disabled: !connection,
         },
         handleSyncDraft,
       );
     }
     return builder.build();
-  }, [handleCreate, handleSyncDraft, draftEvents.length, integration]);
+  }, [handleCreate, handleSyncDraft, draftEvents.length, connection]);
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 

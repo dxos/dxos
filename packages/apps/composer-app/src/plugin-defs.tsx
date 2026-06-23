@@ -11,7 +11,6 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
@@ -22,6 +21,7 @@ import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -37,7 +37,6 @@ import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
@@ -60,6 +59,7 @@ import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
@@ -181,7 +181,6 @@ export const getPlugins = ({
   return [
     AssistantPlugin(),
     AttentionPlugin(),
-    AutomationPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     CallsPlugin(),
@@ -204,6 +203,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
     DiscordPlugin(),
@@ -241,6 +241,7 @@ export const getPlugins = ({
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
+    RoutinePlugin(),
     isLocal && SamplePlugin(),
     SandboxPlugin(),
     ScriptPlugin(),
@@ -264,7 +265,6 @@ export const getPlugins = ({
       platform: isMobile ? 'mobile' : 'desktop',
     }),
     ThreadPlugin(),
-    IntegrationPlugin(),
     TranscriptionPlugin(),
     OnboardingPlugin({ generateExemplarSpace: !isLocal }),
 

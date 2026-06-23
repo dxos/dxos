@@ -75,7 +75,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

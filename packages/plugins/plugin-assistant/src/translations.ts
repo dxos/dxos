@@ -3,7 +3,7 @@
 //
 
 import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -12,7 +12,6 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 
 import { meta } from '#meta';
 
-// TODO(burdon): Standardize translation names.
 export const translations: Resource[] = [
   ...componentsTranslations,
   ...formTranslations,
@@ -29,7 +28,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete blueprint',
         'object-deleted.label': 'Blueprint deleted',
       },
-      [Type.getTypename(Routine.Routine)]: {
+      [Type.getTypename(Instructions.Instructions)]: {
         'typename.label': 'Routine',
         'typename.label_zero': 'Routines',
         'typename.label_one': 'Routine',
@@ -52,15 +51,15 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Sequence deleted',
       },
       [Type.getTypename(Chat.Chat)]: {
-        'typename.label': 'AI Conversation',
-        'typename.label_zero': 'AI Conversations',
-        'typename.label_one': 'AI Conversation',
-        'typename.label_other': 'AI Conversations',
-        'object-name.placeholder': 'New AI conversation',
-        'add-object.label': 'Add AI conversation',
-        'rename-object.label': 'Rename AI conversation',
-        'delete-object.label': 'Delete AI conversation',
-        'object-deleted.label': 'AI conversation deleted',
+        'typename.label': 'Session',
+        'typename.label_zero': 'Sessions',
+        'typename.label_one': 'Session',
+        'typename.label_other': 'Sessions',
+        'object-name.placeholder': 'New session',
+        'add-object.label': 'Add Session',
+        'rename-object.label': 'Rename session',
+        'delete-object.label': 'Delete session',
+        'object-deleted.label': 'Session deleted',
       },
       [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
@@ -85,7 +84,6 @@ export const translations: Resource[] = [
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
         'plugin.name': 'Assistant',
-        'settings.title': 'Assistant settings',
         'object.placeholder': 'New prompt',
         'create-object.label': 'Create prompt',
         'create-trigger.label': 'Create trigger',
@@ -190,6 +188,8 @@ export const translations: Resource[] = [
         'space-home.suggestion-data-type.label': 'Create a new data type',
         'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
+
+        'nav-tree-group-ai.label': 'AI',
       },
     },
   },

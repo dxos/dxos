@@ -322,9 +322,6 @@
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-automation/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-bluesky/tsconfig.json"
     },
     {
@@ -353,6 +350,9 @@
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-connector/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-crm/tsconfig.json"
@@ -398,9 +398,6 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-integration/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
@@ -467,6 +464,9 @@
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-routine/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"

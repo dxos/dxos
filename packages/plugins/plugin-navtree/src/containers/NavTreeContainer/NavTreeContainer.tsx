@@ -4,6 +4,7 @@
 
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -229,6 +230,19 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         },
       });
     }, [graph]);
+
+    // Group nodes are always expanded and have no toggle, so they never trigger Graph.expand through
+    // user interaction. Watch the workspace's children reactively and mark any group nodes as open
+    // so the state machinery treats them consistently with regular open nodes (including on next load).
+    const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
+    useEffect(() => {
+      for (const child of workspaceChildren) {
+        if (child.properties.disposition === 'group') {
+          setItem([Node.RootId, tab, child.id], 'open', true);
+          Graph.expand(graph, child.id, 'child');
+        }
+      }
+    }, [workspaceChildren, tab, setItem, graph]);
 
     const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
 
