@@ -2,27 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { IconButton, Message, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { IconButton, Message, Status, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
 
 export type UsageViewState = 'loading' | 'ready' | 'error' | 'unavailable';
 
-export type UsageViewProps = {
-  /** Current fetch state; drives which content is shown. */
-  state: UsageViewState;
-  /** Profile usage payload; required when `state` is `'ready'`. */
-  data?: GetProfileUsageResponse;
+type UsageViewCommonProps = {
   /** Epoch milliseconds of the last successful fetch. */
   lastUpdated?: number;
   /** Invoked when the user requests a refresh. */
   onRefresh?: () => void;
 };
+
+/**
+ * Discriminated on `state`: the payload is required (and only present) when `state` is `'ready'`, so a
+ * missing payload can't be silently rendered as an empty plan.
+ */
+export type UsageViewProps =
+  | (UsageViewCommonProps & { state: Exclude<UsageViewState, 'ready'>; data?: undefined })
+  | (UsageViewCommonProps & { state: 'ready'; data: GetProfileUsageResponse });
 
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -77,162 +82,189 @@ const formatWindow = (windowHours: number, t: TFunction): string => {
   return t('usage-window-hours.label', { count: windowHours });
 };
 
-/**
- * A single usage row: label + caption on the left, a thin meter, and a value on the right.
- * Omitting `percent` (an unlimited limit) renders no meter.
- */
-const UsageRow = ({
-  label,
-  caption,
-  percent,
-  value,
-}: {
+type UsageRow = {
+  key: string;
+  /** Field label (schema `title` annotation). */
   label: string;
-  caption?: string;
+  /** Field caption (schema `description` annotation). */
+  caption: string;
+  /** Consumption as a whole percentage (`0`–`100`); `undefined` for an unlimited limit. */
   percent?: number;
-  value: string;
-}) => (
-  <div className='flex items-center gap-trim-lg py-trim-sm'>
-    <div className='flex flex-col min-w-0 w-1/3 shrink-0'>
-      <span className='truncate text-base-fg'>{label}</span>
-      {caption && <span className='text-sm text-description'>{caption}</span>}
-    </div>
-    {percent === undefined ? (
-      <div className='flex-1' />
-    ) : (
-      <div
-        role='progressbar'
-        aria-label={label}
-        aria-valuenow={percent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        className='h-1.5 flex-1 rounded-full bg-separator overflow-hidden'
-      >
-        <div
-          className='h-full rounded-full bg-primary-500 transition-[width] duration-500'
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-    )}
-    <span className='shrink-0 w-24 text-end text-sm text-description tabular-nums'>{value}</span>
-  </div>
-);
+  windowHours: number;
+};
 
-/** Placeholder rows shown while the first fetch is in flight. */
-const UsageSkeleton = () => (
-  <div className='flex flex-col'>
-    {Array.from({ length: 3 }).map((_, index) => (
-      <div key={index} className='flex items-center gap-trim-lg py-trim-sm'>
-        <div className='flex flex-col gap-1 w-1/3 shrink-0'>
-          <div className='h-4 w-24 rounded bg-separator animate-pulse' />
-          <div className='h-3 w-32 rounded bg-separator animate-pulse' />
-        </div>
-        <div className='h-1.5 flex-1 rounded-full bg-separator animate-pulse' />
-        <div className='h-3 w-12 shrink-0 rounded bg-separator animate-pulse' />
-      </div>
-    ))}
-  </div>
-);
+/** One display row per limit, shorter windows first. A `null` limit is reported as unlimited. */
+const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
+  data.limits
+    .map((limit): UsageRow => {
+      const used = sumUsageForLimit(data.usage, limit);
+      const label = formatLimitLabel(limit, t);
+      const windowHours = limit.windowDuration / SECONDS_PER_HOUR;
+      const window = formatWindow(windowHours, t);
+      const key = `${limit.eventType}/${limit.subtypePattern.join(',')}/${limit.valueKey}/${limit.windowDuration}/${limit.limit ?? 'unlimited'}`;
+      if (limit.limit === null) {
+        return {
+          key,
+          label,
+          caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
+          windowHours,
+        };
+      }
+      const percent = limit.limit > 0 ? Math.min(100, Math.round((used / limit.limit) * 100)) : used > 0 ? 100 : 0;
+      return {
+        key,
+        label,
+        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window })}`,
+        percent,
+        windowHours,
+      };
+    })
+    .sort((left, right) => left.windowHours - right.windowHours);
 
 /**
- * Presentational view of profile usage: renders loading/error/unavailable/empty states, or one row
- * per limit with a usage meter, plus a collapsible raw-response viewer. Pure — all data via props.
+ * A single usage field: an optional number carrying its label/caption as `title`/`description`
+ * annotations and the consumption percentage as its value. Optional so the form renders no required
+ * markers; `Schema.Number` keeps the field context-free (`R = never`) so the struct stays assignable to `Form`.
+ */
+const usageField = (title: string, description: string) =>
+  Schema.optional(Schema.Number.annotations({ title, description }));
+
+/**
+ * Build the Effect schema (one annotated field per limit) and matching values. Unlimited limits have no
+ * value, so their field reads `undefined` and the renderer shows the "Unlimited" label instead of a meter.
+ */
+const buildUsageForm = (rows: UsageRow[]) => {
+  const fields: Record<string, ReturnType<typeof usageField>> = {};
+  const values: Record<string, number> = {};
+  rows.forEach((row, index) => {
+    const field = `metric_${index}`;
+    fields[field] = usageField(row.label, row.caption);
+    if (row.percent !== undefined) {
+      values[field] = row.percent;
+    }
+  });
+  return { schema: Schema.Struct(fields), values };
+};
+
+/** Non-data states shown as a single `Message`, keyed by message variant (translation keys for the copy). */
+const STATE_MESSAGES = {
+  unavailable: {
+    valence: 'warning',
+    icon: 'ph--cloud-slash--duotone',
+    title: 'usage-unavailable.title',
+    description: 'usage-unavailable.description',
+  },
+  error: {
+    valence: 'error',
+    icon: 'ph--cloud-x--duotone',
+    title: 'usage-offline.title',
+    description: 'usage-offline.description',
+  },
+  empty: {
+    valence: 'neutral',
+    icon: 'ph--chart-bar--duotone',
+    title: 'usage-empty.title',
+    description: 'usage-empty.description',
+  },
+} as const;
+
+/**
+ * Presentational view of profile usage: renders loading/error/unavailable/empty states, or a
+ * schema-driven settings form (one read-only field per limit), plus a refresh control and a
+ * collapsible raw-response viewer. Pure — all data via props.
  */
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [rawExpanded, setRawExpanded] = useState(false);
 
-  // One display row per limit, shorter windows first. A `null` amount means unlimited (rendered without a meter).
-  const limitRows = useMemo(() => {
-    if (!data) {
-      return [];
-    }
-    return data.limits
-      .map((limit) => {
-        const used = sumUsageForLimit(data.usage, limit);
-        const label = formatLimitLabel(limit, t);
-        const windowHours = limit.windowDuration / SECONDS_PER_HOUR;
-        const window = formatWindow(windowHours, t);
-        const key = `${limit.eventType}/${limit.subtypePattern.join(',')}/${limit.valueKey}/${limit.windowDuration}/${limit.limit ?? 'unlimited'}`;
-        if (limit.limit === null) {
-          return {
-            key,
-            label,
-            caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
-            percent: undefined,
-            value: t('usage-unlimited.label'),
-            windowHours,
-          };
-        }
-        const percent = limit.limit > 0 ? Math.min(100, Math.round((used / limit.limit) * 100)) : used > 0 ? 100 : 0;
-        return {
-          key,
-          label,
-          caption: t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window }),
-          percent,
-          value: t('usage-percent-used.label', { percent }),
-          windowHours,
-        };
-      })
-      .sort((a, b) => a.windowHours - b.windowHours);
+  const { schema, values, empty } = useMemo(() => {
+    const rows = data ? computeRows(data, t) : [];
+    return { ...buildUsageForm(rows), empty: rows.length === 0 };
   }, [data, t]);
 
-  return (
-    <Settings.Viewport>
-      <Settings.Section title={t('usage-section.title')} description={t('usage-section.description')}>
-        {state === 'unavailable' ? (
-          <Message.Root valence='warning'>
-            <Message.Title icon='ph--cloud-slash--duotone'>{t('usage-unavailable.title')}</Message.Title>
-            <Message.Content>{t('usage-unavailable.description')}</Message.Content>
-          </Message.Root>
-        ) : state === 'loading' ? (
-          <UsageSkeleton />
-        ) : state === 'error' ? (
-          <Message.Root valence='error'>
-            <Message.Title icon='ph--cloud-x--duotone'>{t('usage-offline.title')}</Message.Title>
-            <Message.Content>{t('usage-offline.description')}</Message.Content>
-          </Message.Root>
-        ) : limitRows.length === 0 ? (
-          <Message.Root valence='neutral'>
-            <Message.Title icon='ph--chart-bar--duotone'>{t('usage-empty.title')}</Message.Title>
-            <Message.Content>{t('usage-empty.description')}</Message.Content>
-          </Message.Root>
-        ) : (
-          <div className='flex flex-col'>
-            {limitRows.map((row) => (
-              <UsageRow key={row.key} label={row.label} caption={row.caption} percent={row.percent} value={row.value} />
-            ))}
+  // Non-data states resolve to a `Message`; `loading` shows a spinner and `ready` with data shows the form.
+  const message =
+    state === 'unavailable'
+      ? STATE_MESSAGES.unavailable
+      : state === 'error'
+        ? STATE_MESSAGES.error
+        : state === 'ready' && empty
+          ? STATE_MESSAGES.empty
+          : undefined;
 
-            <div className='flex items-center gap-1 pt-trim-md text-sm text-description'>
-              {lastUpdated !== undefined && (
-                <span>{t('usage-last-updated.label', { time: new Date(lastUpdated).toLocaleTimeString() })}</span>
-              )}
-              {onRefresh && (
-                <IconButton
+  // Render each metric as a meter from its percentage value; unlimited limits (no value) show a label.
+  const meterFieldProvider = useCallback<FormFieldProvider>(
+    ({ fieldProps: { label, description, getValue } }) => {
+      const percent = getValue();
+      return (
+        <Form.Row label={label} description={description}>
+          {typeof percent === 'number' ? (
+            <Status progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+          ) : (
+            t('usage-unlimited.label')
+          )}
+        </Form.Row>
+      );
+    },
+    [t],
+  );
+
+  return (
+    <Form.Root variant='settings' layout='static' schema={schema} values={values}>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
+            {state === 'loading' ? (
+              <Status indeterminate aria-label={t('usage-section.title')} />
+            ) : message ? (
+              <Message.Root valence={message.valence}>
+                <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
+                <Message.Content>{t(message.description)}</Message.Content>
+              </Message.Root>
+            ) : (
+              <Form.FieldSet fieldProvider={meterFieldProvider} />
+            )}
+          </Form.Section>
+
+          {state === 'ready' && data && (
+            <Form.Section>
+              <Form.Row
+                label={
+                  lastUpdated !== undefined
+                    ? t('usage-last-updated.label', { time: new Date(lastUpdated).toLocaleTimeString() })
+                    : t('usage-refresh.label')
+                }
+              >
+                {onRefresh && (
+                  <IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--arrow-clockwise--regular'
+                    label={t('usage-refresh.label')}
+                    onClick={onRefresh}
+                  />
+                )}
+              </Form.Row>
+            </Form.Section>
+          )}
+
+          {state === 'ready' && data && (
+            <Form.Section>
+              <Form.Row label={t('usage-raw-json.label')}>
+                <ToggleIconButton
                   iconOnly
                   variant='ghost'
-                  icon='ph--arrow-clockwise--regular'
-                  label={t('usage-refresh.label')}
-                  onClick={onRefresh}
+                  active={rawExpanded}
+                  icon='ph--caret-right--regular'
+                  label={t('usage-raw-json.label')}
+                  onClick={() => setRawExpanded((value) => !value)}
                 />
-              )}
-            </div>
-          </div>
-        )}
-        {state === 'ready' && data && (
-          <div className='flex flex-col pt-trim-md'>
-            <IconButton
-              variant='ghost'
-              icon='ph--caret-right--regular'
-              iconClassNames={rawExpanded ? 'transition-transform rotate-90' : 'transition-transform'}
-              label={t('usage-raw-json.label')}
-              onClick={() => setRawExpanded((value) => !value)}
-              classNames='self-start'
-            />
-            {rawExpanded && <JsonHighlighter data={data} classNames='mt-trim-sm text-xs overflow-auto' />}
-          </div>
-        )}
-      </Settings.Section>
-    </Settings.Viewport>
+              </Form.Row>
+              {rawExpanded && <JsonHighlighter data={data} testId='usage-raw-json' />}
+            </Form.Section>
+          )}
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
