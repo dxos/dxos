@@ -43,6 +43,7 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings }: SpaceSettingsProp
                   </ListItem.Heading>
                   <IconButton
                     icon='ph--faders--regular'
+                    iconOnly
                     label={t('settings.open-settings.label')}
                     disabled={!onOpenSpaceSettings}
                     onClick={() => onOpenSpaceSettings?.(space)}

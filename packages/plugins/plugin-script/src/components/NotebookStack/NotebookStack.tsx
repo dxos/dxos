@@ -54,10 +54,10 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
             return;
           }
 
-          Obj.update(notebook, (object) => {
-            const from = object.cells.findIndex((cell) => cell.id === source.id);
+          Obj.update(notebook, (notebook) => {
+            const from = notebook.cells.findIndex((cell) => cell.id === source.id);
             if (from !== -1) {
-              arrayMove(object.cells, from, insertIndex);
+              arrayMove(notebook.cells, from, insertIndex);
             }
           });
         },
@@ -68,7 +68,7 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
     return (
       <Mosaic.Root ref={forwardedRef}>
         <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-          <ScrollArea.Root orientation='vertical' {...composableProps(props)}>
+          <ScrollArea.Root orientation='vertical' padding {...composableProps(props)}>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.Stack
                 orientation='vertical'
@@ -109,8 +109,12 @@ const NotebookSection = ({
       {...tileProps}
       data={cell}
       dragHandle={dragHandle}
-      classNames={mx('grid grid-cols-[min-content_1fr] overflow-visible', resizable && minSectionHeight)}
+      classNames={mx(
+        'grid grid-cols-[min-content_1fr] overflow-visible border border-subdued-separator',
+        resizable && minSectionHeight,
+      )}
     >
+      {/* Side rail */}
       <div className='flex flex-col p-1 border-e border-subdued-separator dx-attention-surface'>
         <IconButton
           ref={setDragHandle}
@@ -121,7 +125,12 @@ const NotebookSection = ({
         />
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <IconButton variant='ghost' icon='ph--dots-three--regular' iconOnly label={t('notebook-cell-insert.label')} />
+            <IconButton
+              variant='ghost'
+              icon='ph--dots-three--regular'
+              iconOnly
+              label={t('notebook-cell-insert.label')}
+            />
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </DropdownMenu.Root>
