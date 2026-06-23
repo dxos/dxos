@@ -133,7 +133,7 @@ export const make = (props: MakeProps = {}): Magazine => {
     magazine.instructions = Ref.make(instructions);
   });
 
-  // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
+  // Cascade-delete the Instructions object (and its Text) and the per-Post state with the magazine.
   Obj.setParent(instructions, magazine);
   if (instructions.text.target) {
     Obj.setParent(instructions.text.target, instructions);

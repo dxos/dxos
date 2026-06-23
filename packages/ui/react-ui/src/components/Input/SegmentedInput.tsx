@@ -4,7 +4,7 @@
 
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { forwardRef, ReactNode, useCallback, useState } from 'react';
+import React, { type ComponentProps, forwardRef, ReactNode, useCallback, useState } from 'react';
 import {
   DateField,
   type DateFieldProps,
@@ -82,12 +82,16 @@ const segmentClassNames =
 // collapse them to zero width.
 const BIDI_FORMAT_RE = /^[‪-‮⁦-⁩]+$/;
 
+// The segment object react-aria passes to the `DateInput` render function and expects back on
+// `DateSegment` — derived from the component so no extra dependency on `react-stately` is needed.
+type DateSegmentData = ComponentProps<typeof DateSegment>['segment'];
+
 /**
  * Render a single DateSegment. Locale-specific literals between date and time portions
  * (e.g. en-US's `", "`) become a plain space; bidi format markers are kept but rendered
  * zero-width so the visible content lines up at the field's left edge.
  */
-const renderSegment = (segment: { type: string; text: string }) => {
+const renderSegment = (segment: DateSegmentData) => {
   if (segment.type === 'literal') {
     if (BIDI_FORMAT_RE.test(segment.text)) {
       // Render as a fixed-width spacer (between date and time portions of a datetime field),
@@ -104,7 +108,7 @@ const renderSegment = (segment: { type: string; text: string }) => {
     }
   }
 
-  return <DateSegment segment={segment as any} className={segmentClassNames} />;
+  return <DateSegment segment={segment} className={segmentClassNames} />;
 };
 
 //

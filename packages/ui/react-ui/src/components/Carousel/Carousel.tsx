@@ -358,7 +358,8 @@ const CarouselSlide = ({
         alt={alt}
         classNames='w-full h-full'
         controls={controls}
-        autoPlay={autoPlay}
+        // In `slide` mode every slide is mounted; only auto-play the active one to avoid off-screen playback.
+        autoPlay={autoPlay && active === index}
         loop={loop}
         muted={muted}
         crossOrigin={crossOrigin}
@@ -447,11 +448,9 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
             key={i}
             role='tab'
             aria-selected={i === index}
-            classNames={mx(
-              'grid p-1! w-4! h-4! border overflow-hidden',
-              i === index ? 'text-primary-500' : 'text-description',
-            )}
+            classNames={mx(i === index ? 'text-primary-500' : 'text-description')}
             variant='ghost'
+            density='sm'
             size={3}
             square
             icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
