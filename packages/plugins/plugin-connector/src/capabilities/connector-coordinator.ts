@@ -27,7 +27,7 @@ import {
   pendingConnectionStorageKey,
 } from '../constants';
 import { ConnectorNotFoundError, SpaceUnavailableError } from '../errors';
-import { reconcileSyncBindings } from '../operations/reconcile-sync-bindings';
+import { reconcileSyncBindings } from './reconcile-sync-bindings';
 
 /** Pending connection awaiting an OAuth callback. */
 type Pending = {
