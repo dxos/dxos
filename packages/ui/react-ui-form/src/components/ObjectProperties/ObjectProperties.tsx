@@ -128,7 +128,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         <Form.Viewport {...composableProps(props)} scroll ref={forwardedRef}>
           <Form.Content>
             <Form.FieldSet />
-            {children}
+            <Form.Section>{children}</Form.Section>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
