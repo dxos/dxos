@@ -21,16 +21,19 @@ import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { MediaPlayer, type MediaKind } from '../MediaPlayer';
 
-// TODO(burdon): Move per-element class strings to `@dxos/ui-theme` (theme tokens)
-// so callers can re-theme via the same mechanism the rest of `react-ui` uses.
+// TODO(burdon): Controller.
 
 //
 // Context
 //
 
+/** Slide change behaviour: `none` hard-swaps the active slide, `slide` animates a horizontal track. */
+export type CarouselTransition = 'none' | 'slide';
+
 type CarouselContextValue = {
   index: number;
   count: number;
+  transition: CarouselTransition;
   setIndex: (index: number) => void;
   next: () => void;
   prev: () => void;
@@ -55,6 +58,8 @@ export type CarouselRootProps = PropsWithChildren<{
   /** Auto-advance interval in milliseconds. Set 0 to disable. */
   intervalMs?: number;
   defaultIndex?: number;
+  /** Slide change behaviour. Defaults to `none` (hard swap); `slide` animates a horizontal track. */
+  transition?: CarouselTransition;
 }>;
 
 const CarouselRoot = ({
@@ -63,6 +68,7 @@ const CarouselRoot = ({
   autorun = false,
   intervalMs = 5_000,
   defaultIndex = 0,
+  transition = 'none',
 }: CarouselRootProps) => {
   const [index, setIndexState] = useState(defaultIndex);
   const [autoAdvance, setAutoAdvance] = useState(autorun);
@@ -101,7 +107,7 @@ const CarouselRoot = ({
   }
 
   return (
-    <CarouselProvider index={index} count={count} setIndex={setIndex} next={next} prev={prev}>
+    <CarouselProvider index={index} count={count} transition={transition} setIndex={setIndex} next={next} prev={prev}>
       {children}
     </CarouselProvider>
   );
@@ -115,7 +121,6 @@ CarouselRoot.displayName = 'Carousel.Root';
 
 export type CarouselContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref land on the grid.
 const CarouselContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
   // Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
   // gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
@@ -143,7 +148,7 @@ export type CarouselViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   const { t } = useTranslation(translationKey);
-  const { count, next, prev } = useCarousel();
+  const { index, count, transition, next, prev } = useCarousel();
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (count <= 1) {
@@ -174,7 +179,19 @@ const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
       aria-label={t('carousel-viewport.label')}
       onKeyDown={handleKeyDown}
     >
-      {children}
+      {transition === 'slide' ? (
+        // Lay slides side-by-side in a flex track and translate by the active index. Each slide
+        // sizes itself to the viewport via `shrink-0 basis-full` (see `Carousel.Slide`).
+        // `motion-reduce` respects the user's reduced-motion preference.
+        <div
+          className='flex h-full transition-transform duration-300 ease-out motion-reduce:transition-none'
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 };
@@ -212,13 +229,22 @@ const CarouselSlide = ({
   muted,
   crossOrigin,
 }: CarouselSlideProps) => {
-  const { index: active } = useCarousel();
-  if (active !== index) {
+  const { index: active, transition } = useCarousel();
+  // In `slide` mode every slide stays mounted as a fixed-width track cell so the track can animate;
+  // in `none` mode only the active slide mounts, overlaid via absolute positioning.
+  if (transition !== 'slide' && active !== index) {
     return null;
   }
 
   return (
-    <div className={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}>
+    <div
+      className={mx(
+        transition === 'slide'
+          ? 'relative shrink-0 basis-full h-full bg-baseSurface'
+          : 'absolute inset-0 w-full h-full bg-baseSurface',
+        classNames,
+      )}
+    >
       <MediaPlayer
         src={src}
         kind={kind}
@@ -314,14 +340,15 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
             key={i}
             role='tab'
             aria-selected={i === index}
-            classNames={i === index ? 'text-primary-500' : 'text-description'}
+            classNames={mx(i === index ? 'text-primary-500' : 'text-description', 'border')}
+            variant='ghost'
+            size={3}
+            square
             icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
             iconOnly
             label={t('carousel-go-to.label', { index: i + 1 })}
             onClick={() => setIndex(i)}
             onFocus={() => setIndex(i)}
-            size={3}
-            variant='ghost'
           />
         ))}
       </div>
