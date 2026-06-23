@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Channel } from '@dxos/types';
 
 export default Capability.makeModule(
@@ -13,7 +13,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(
         AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Channel.Channel, { groupId: AppNode.NAV_TREE_GROUP_COMM_ID }),
+        TypeSection.createTypeSectionPathResolver(Channel.Channel, { groupId: Paths.GroupSegments.communications }),
       ),
     ];
   }),

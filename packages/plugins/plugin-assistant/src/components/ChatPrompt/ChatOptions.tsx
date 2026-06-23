@@ -14,7 +14,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
+import { useActiveSkills, useSkillHandlers, useSkills, useContextObjects, useFilteredTypes } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, type ChatPresetProps } from '#types';
 
@@ -69,8 +69,8 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
-                    <BlueprintsPanel registry={registry} db={db} context={context} />
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+                    <SkillsPanel registry={registry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
@@ -80,11 +80,7 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab
-                      value='blueprints'
-                      icon='ph--blueprint--regular'
-                      label={t('options.blueprints.title')}
-                    />
+                    <Tabs.IconTab value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
@@ -103,32 +99,32 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
   );
 };
 
-const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
+const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const blueprints = useBlueprints({ registry, db });
-  const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, registry });
+  const skills = useSkills({ registry, db });
+  const activeSkills = useActiveSkills({ context });
+  const { onUpdateSkill } = useSkillHandlers({ db, context, registry });
   const { results, handleSearch } = useSearchListResults({
-    items: blueprints,
-    extract: (blueprint) => blueprint.name,
+    items: skills,
+    extract: (skill) => skill.name,
   });
 
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='flex flex-col'>
         <SearchList.Viewport>
-          {results.map((blueprint) => {
-            const blueprintKey = Obj.getMeta(blueprint).key ?? blueprint.id;
-            const isActive = activeBlueprints.has(blueprintKey);
+          {results.map((skill) => {
+            const skillKey = Obj.getMeta(skill).key ?? skill.id;
+            const isActive = activeSkills.has(skillKey);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={blueprintKey}
-                value={blueprintKey}
-                label={blueprint.name}
+                key={skillKey}
+                value={skillKey}
+                label={skill.name}
                 checked={isActive}
-                onSelect={() => onUpdateBlueprint?.(blueprintKey, !isActive)}
+                onSelect={() => onUpdateSkill?.(skillKey, !isActive)}
               />
             );
           })}

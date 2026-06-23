@@ -78,7 +78,7 @@ For each handler module (e.g. `sync.ts`, `handler-a.ts`):
 
 Small handlers with no helpers are just imports + default export.
 
-Reference: `packages/plugins/plugin-script/src/blueprints/functions/deploy.ts`
+Reference: `packages/plugins/plugin-script/src/skills/functions/deploy.ts`
 
 ### Pattern 1: Deployable handlers (one file per handler)
 
@@ -242,7 +242,7 @@ const formatResult = (n: number) => String(n);
 
 ### `index.ts` — Barrel with lazy handler set
 
-Export definitions and create a lazy handler set. See `packages/plugins/plugin-markdown/src/blueprints/functions/` for reference.
+Export definitions and create a lazy handler set. See `packages/plugins/plugin-markdown/src/skills/functions/` for reference.
 
 ```ts
 import { OperationHandlerSet } from '@dxos/compute';
@@ -255,7 +255,7 @@ export const MyHandlers = OperationHandlerSet.lazy(
 );
 ```
 
-For blueprints: pass the definitions to `Blueprint.toolDefinitions({ operations: [Create, Open, Update] })`, and pass `MyHandlers` to the blueprint definition's `operations` field.
+For skills: pass the definitions to `Skill.toolDefinitions({ operations: [Create, Open, Update] })`, and pass `MyHandlers` to the skill definition's `operations` field.
 
 ## OperationHandlerSet
 

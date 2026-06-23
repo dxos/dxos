@@ -3,7 +3,7 @@
 //
 
 import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -17,16 +17,16 @@ export const translations: Resource[] = [
   ...formTranslations,
   {
     'en-US': {
-      [Type.getTypename(Blueprint.Blueprint)]: {
-        'typename.label': 'Blueprint',
-        'typename.label_zero': 'Blueprints',
-        'typename.label_one': 'Blueprint',
-        'typename.label_other': 'Blueprints',
-        'object-name.placeholder': 'New blueprint',
-        'add-object.label': 'Add blueprint',
-        'rename-object.label': 'Rename blueprint',
-        'delete-object.label': 'Delete blueprint',
-        'object-deleted.label': 'Blueprint deleted',
+      [Type.getTypename(Skill.Skill)]: {
+        'typename.label': 'Skill',
+        'typename.label_zero': 'Skills',
+        'typename.label_one': 'Skill',
+        'typename.label_other': 'Skills',
+        'object-name.placeholder': 'New skill',
+        'add-object.label': 'Add skill',
+        'rename-object.label': 'Rename skill',
+        'delete-object.label': 'Delete skill',
+        'object-deleted.label': 'Skill deleted',
       },
       [Type.getTypename(Instructions.Instructions)]: {
         'typename.label': 'Routine',
@@ -96,7 +96,7 @@ export const translations: Resource[] = [
         'service-registry.label': 'Service Registry',
         'type-filter.placeholder': 'Type',
         'any-type-filter.label': 'Any',
-        'no-blueprint.message': 'No active blueprints',
+        'no-skill.message': 'No active skills',
         'tool-call.label': 'Calling',
         'tool-result.label': 'Success',
         'tool-error.label': 'Tool call failed',
@@ -131,7 +131,7 @@ export const translations: Resource[] = [
         'microphone.button': 'Click to speak',
         'cancel-processing.button': 'Stop processing',
 
-        'options.blueprints.title': 'Skills',
+        'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
         'remove-object.label': 'Remove object',

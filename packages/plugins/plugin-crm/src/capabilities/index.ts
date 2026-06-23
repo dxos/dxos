@@ -7,7 +7,7 @@ import type { OperationHandlerSet } from '@dxos/compute';
 
 export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
 
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

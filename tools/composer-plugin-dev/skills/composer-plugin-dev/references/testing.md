@@ -35,10 +35,10 @@ describe('FooPlugin', () => {
       expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
     );
 
-    // Blueprint definitions activate when SetupArtifactDefinition fires
+    // Skill definitions activate when SetupArtifactDefinition fires
     // (normally fired by AssistantPlugin).
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // Operation handlers are lazy — fire SetupOperationHandler to load them.
     await harness.fire(ActivationEvents.SetupOperationHandler);

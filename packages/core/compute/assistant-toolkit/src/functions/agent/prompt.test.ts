@@ -53,7 +53,7 @@ describe('Agent prompt', () => {
           Instructions.make({
             name: 'chat-mode-test',
             text: 'Reply with a single word: ack.',
-            blueprints: [],
+            skills: [],
             output: Schema.String,
           }),
         );
@@ -91,7 +91,7 @@ describe('Agent prompt', () => {
             name: 'output-schema-test',
             text: 'Invent a fictional person and call completeJob with the success object describing them (name and age).',
             output: Person,
-            blueprints: [],
+            skills: [],
           }),
         );
 

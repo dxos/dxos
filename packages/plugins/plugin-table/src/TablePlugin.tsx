@@ -12,7 +12,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { BlueprintDefinition, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { SkillDefinition, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { TableOperation } from '#types';
@@ -21,7 +21,7 @@ import { TableOperation } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

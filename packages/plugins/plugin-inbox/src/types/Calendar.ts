@@ -9,7 +9,7 @@ import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
+export const SKILL_KEY = 'org.dxos.skill.calendar';
 
 /** Calendar object schema. */
 export const Calendar = Schema.Struct({
@@ -21,7 +21,7 @@ export const Calendar = Schema.Struct({
 }).pipe(
   FeedAnnotation.set(true),
   Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.calendar', '0.1.0')),
 );
 

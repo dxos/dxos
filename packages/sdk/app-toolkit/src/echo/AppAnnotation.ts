@@ -13,9 +13,9 @@ export const RootCollectionAnnotation = Annotation.make({
   schema: Ref.Ref(Collection.Collection),
 });
 
-/** Blueprint keys associated with a schema type. Used by AI companion to auto-load blueprints. */
-export const BlueprintsAnnotation = Annotation.make<string[]>({
-  id: 'org.dxos.annotation.blueprints',
+/** Skill keys associated with a schema type. Used by AI companion to auto-load skills. */
+export const SkillsAnnotation = Annotation.make<string[]>({
+  id: 'org.dxos.annotation.skills',
   schema: Schema.mutable(Schema.Array(Schema.String)),
 });
 

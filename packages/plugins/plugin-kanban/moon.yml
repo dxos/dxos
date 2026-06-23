@@ -15,7 +15,7 @@ tasks:
       - '--entryPoint=src/KanbanPlugin.tsx'
       - '--entryPoint=src/KanbanPlugin.node.ts'
       - '--entryPoint=src/KanbanPlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'

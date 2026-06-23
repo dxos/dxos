@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import type { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
-import { Blueprint, McpServer, Process } from '@dxos/compute';
+import { Skill, McpServer, Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
@@ -32,7 +32,7 @@ const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 
 export interface CreateSessionOptions {
-  readonly blueprints?: Blueprint.Blueprint[];
+  readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
   readonly model?: ModelName;
   readonly systemPrompt?: string;
@@ -40,11 +40,11 @@ export interface CreateSessionOptions {
 
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<Session, Blueprint.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
+) => Effect.Effect<Session, Skill.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
   'createSession',
 )(function* (opts) {
-  const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
-    Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
+  const skills = yield* Effect.forEach(opts?.skills ?? [], (skill) =>
+    Skill.upsert(Skill.getKey(skill)).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());
@@ -53,7 +53,7 @@ export const createSession: (
 
   yield* Effect.promise(() =>
     binder.bind({
-      blueprints,
+      skills,
       objects: opts?.context ?? [],
     }),
   );
@@ -214,7 +214,7 @@ const makeSession = (
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({
-          blueprints: [],
+          skills: [],
           objects: context,
         }),
       );

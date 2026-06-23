@@ -3,7 +3,7 @@
 //
 // TODO(wittjosiah): Factor hooks out of plugin-assistant into a standalone package.
 
-export * from './useBlueprintRegistry';
+export * from './useSkillRegistry';
 export * from './useChatKeymap';
 export * from './useChatProcessor';
 export * from './useChatServices';

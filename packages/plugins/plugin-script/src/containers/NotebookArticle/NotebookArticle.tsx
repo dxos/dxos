@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -30,11 +30,7 @@ import { type Notebook } from '#types';
 
 import { ComputeGraph } from '../../notebook';
 
-const INCLUDE_BLUEPRINTS = [
-  'org.dxos.blueprint.assistant',
-  'org.dxos.blueprint.database',
-  'org.dxos.blueprint.markdown',
-];
+const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
@@ -142,14 +138,14 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
 
         case 'prompt': {
           if (db) {
-            const objects = await db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-            const blueprints = objects
-              .filter((blueprint) => {
-                const key = Obj.getMeta(blueprint).key;
-                return key !== undefined && INCLUDE_BLUEPRINTS.includes(key);
+            const objects = await db.query(Query.select(Filter.type(Skill.Skill))).run();
+            const skills = objects
+              .filter((skill) => {
+                const key = Obj.getMeta(skill).key;
+                return key !== undefined && INCLUDE_SKILLS.includes(key);
               })
-              .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Instructions.make({ text: '', blueprints }));
+              .map((skill) => Ref.make(skill));
+            cell.prompt = Ref.make(Instructions.make({ text: '', skills }));
           }
           break;
         }

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Blueprint, Instructions, Operation, Trigger } from '@dxos/compute';
+import { Skill, Instructions, Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -13,14 +13,14 @@ import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
 /**
- * Blueprint keys composed into the CRM instructions. The CRM blueprint provides CRM-specific tools; the others
+ * Skill keys composed into the CRM instructions. The CRM skill provides CRM-specific tools; the others
  * supply the database, web-search, and document utilities the agent relies on.
  */
-const BLUEPRINT_KEYS = [
-  'org.dxos.blueprint.crm',
-  'org.dxos.blueprint.webSearch',
-  'org.dxos.blueprint.database',
-  'org.dxos.blueprint.markdown',
+const SKILL_KEYS = [
+  'org.dxos.skill.crm',
+  'org.dxos.skill.webSearch',
+  'org.dxos.skill.database',
+  'org.dxos.skill.markdown',
 ] as const;
 
 /** Default instructions seeded into the instructions; the user edits these by opening the instructions. */
@@ -48,12 +48,12 @@ export const crm: RoutineCapabilities.Template = {
       const mailbox = subject;
       const instructionsName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
-      const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
+      const skillRefs = SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
       const instructions = yield* Database.add(
         Instructions.make({
           name: instructionsName,
           text: DEFAULT_INSTRUCTIONS,
-          blueprints: blueprintRefs,
+          skills: skillRefs,
         }),
       );
 

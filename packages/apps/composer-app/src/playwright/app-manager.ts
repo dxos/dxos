@@ -302,7 +302,13 @@ export class AppManager {
 
   async renameObject(newName: string, nth = 0): Promise<void> {
     await this.getObjectLinks().nth(nth).hover();
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    // Match any tree depth: the navtree's section-group nesting varies an object's level, and the
+    // actions button testid encodes that level (`actionsLevel${level}`).
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
@@ -313,7 +319,11 @@ export class AppManager {
   }
 
   async deleteObject(nth = 0): Promise<void> {
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();

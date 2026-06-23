@@ -12,7 +12,7 @@ import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Annotation, Database, DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
@@ -24,9 +24,9 @@ import { ComplexSet, isNonNullable } from '@dxos/util';
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
 export const Binding = Schema.Struct({
-  blueprints: Schema.Struct({
-    added: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
-    removed: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
+  skills: Schema.Struct({
+    added: Schema.Array(Ref.Ref(Skill.Skill)),
+    removed: Schema.Array(Ref.Ref(Skill.Skill)),
   }),
 
   objects: Schema.Struct({
@@ -37,12 +37,12 @@ export const Binding = Schema.Struct({
 
 export type Binding = Type.InstanceType<typeof Binding>;
 export type BindingProps = Partial<{
-  blueprints: Ref.Ref<Blueprint.Blueprint>[];
+  skills: Ref.Ref<Skill.Skill>[];
   objects: Ref.Ref<Obj.Unknown>[];
 }>;
 
 export class Bindings {
-  readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.uri);
+  readonly skills = new ComplexSet<Ref.Ref<Skill.Skill>>((ref) => ref.uri);
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
@@ -50,9 +50,9 @@ export class Bindings {
     return echoUri ? EID.getEntityId(echoUri) : undefined;
   });
 
-  toJSON(): { blueprints: URI.URI[]; objects: URI.URI[] } {
+  toJSON(): { skills: URI.URI[]; objects: URI.URI[] } {
     return {
-      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.uri),
+      skills: EArray.fromIterable(this.skills).map((ref) => ref.uri),
       objects: EArray.fromIterable(this.objects).map((ref) => ref.uri),
     };
   }
@@ -66,11 +66,11 @@ export type BinderOptions = {
 };
 
 /**
- * Manages bindings of blueprints and objects to a conversation.
+ * Manages bindings of skills and objects to a conversation.
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class Binder extends Resource {
-  private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
+  private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: AtomRegistry.Registry;
   private readonly _feed: Feed.Feed;
@@ -88,10 +88,10 @@ export class Binder extends Resource {
   }
 
   /**
-   * Returns the blueprints atom for subscription.
+   * Returns the skills atom for subscription.
    */
-  get blueprints(): Atom.Atom<Blueprint.Blueprint[]> {
-    return this._blueprints;
+  get skills(): Atom.Atom<Skill.Skill[]> {
+    return this._skills;
   }
 
   /**
@@ -102,10 +102,10 @@ export class Binder extends Resource {
   }
 
   /**
-   * Gets the current blueprints value.
+   * Gets the current skills value.
    */
-  getBlueprints(): Blueprint.Blueprint[] {
-    return this._registry.get(this._blueprints);
+  getSkills(): Skill.Skill[] {
+    return this._registry.get(this._skills);
   }
 
   /**
@@ -116,10 +116,10 @@ export class Binder extends Resource {
   }
 
   /**
-   * Subscribe to changes in blueprints.
+   * Subscribe to changes in skills.
    */
-  subscribeBlueprints(cb: (blueprints: Blueprint.Blueprint[]) => void): () => void {
-    return this._registry.subscribe(this._blueprints, () => cb(this._registry.get(this._blueprints)));
+  subscribeSkills(cb: (skills: Skill.Skill[]) => void): () => void {
+    return this._registry.subscribe(this._skills, () => cb(this._registry.get(this._skills)));
   }
 
   /**
@@ -153,8 +153,8 @@ export class Binder extends Resource {
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
       log('sync complete', {
-        blueprints: this._registry.get(this._blueprints).length,
-        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Blueprint.getKey(bp)),
+        skills: this._registry.get(this._skills).length,
+        skillKeys: this._registry.get(this._skills).map((bp) => Skill.getKey(bp)),
       });
     }
   }
@@ -169,25 +169,25 @@ export class Binder extends Resource {
 
     log('_updateBindings', {
       items: items.length,
-      blueprintRefs: [...bindings.blueprints].map((ref) => ({ uri: ref.uri, available: ref.isAvailable })),
+      skillRefs: [...bindings.skills].map((ref) => ({ uri: ref.uri, available: ref.isAvailable })),
     });
 
     // Resolve references (loading them first if needed).
-    const currentBlueprints = this._registry.get(this._blueprints);
+    const currentSkills = this._registry.get(this._skills);
     const currentObjects = this._registry.get(this._objects);
-    const resolvedBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
+    const resolvedSkills = await this._resolve(bindings.skills, currentSkills);
     const resolvedObjects = await this._resolve(bindings.objects, currentObjects);
 
     log('_updateBindings resolved', {
-      resolvedBlueprints: resolvedBlueprints.length,
-      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
+      resolvedSkills: resolvedSkills.length,
+      resolvedSkillKeys: resolvedSkills.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
     });
 
-    // Drop blueprints that have no registry key — they cannot be used downstream
-    // (e.g. tool/operation registration calls Blueprint.getKey which throws).
-    const keyedBlueprints = resolvedBlueprints.filter((bp) => {
+    // Drop skills that have no registry key — they cannot be used downstream
+    // (e.g. tool/operation registration calls Skill.getKey which throws).
+    const keyedSkills = resolvedSkills.filter((bp) => {
       if (Obj.getMeta(bp).key === undefined) {
-        log.warn('dropping blueprint with no meta key', { uri: Obj.getURI(bp) });
+        log.warn('dropping skill with no meta key', { uri: Obj.getURI(bp) });
         return false;
       }
       return true;
@@ -195,54 +195,54 @@ export class Binder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new Set<URI.URI>([...bindings.blueprints].map((ref) => ref.uri));
+    const reducedSkillDxns = new Set<URI.URI>([...bindings.skills].map((ref) => ref.uri));
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
-    const filteredBlueprints = currentBlueprints.filter((obj) => {
+    const filteredSkills = currentSkills.filter((obj) => {
       const uri = Obj.getURI(obj);
-      return uri != null && reducedBlueprintDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
+      return uri != null && reducedSkillDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const uri = Obj.getURI(obj);
       return uri != null && reducedObjectDxns.has(uri);
     });
-    const mergedBlueprints = this._mergeInto(filteredBlueprints, keyedBlueprints);
+    const mergedSkills = this._mergeInto(filteredSkills, keyedSkills);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
-    this._registry.set(this._blueprints, mergedBlueprints);
+    this._registry.set(this._skills, mergedSkills);
     this._registry.set(this._objects, mergedObjects);
 
     log('updated bindings', {
-      blueprints: mergedBlueprints.length,
+      skills: mergedSkills.length,
       objects: mergedObjects.length,
     });
   }
 
   protected override async _close(): Promise<void> {
     // Reset atoms to empty state.
-    this._registry.set(this._blueprints, []);
+    this._registry.set(this._skills, []);
     this._registry.set(this._objects, []);
   }
 
-  async bind({ blueprints, objects }: BindingProps): Promise<void> {
-    const currentBlueprints = this._registry.get(this._blueprints);
+  async bind({ skills, objects }: BindingProps): Promise<void> {
+    const currentSkills = this._registry.get(this._skills);
     const currentObjects = this._registry.get(this._objects);
 
-    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, currentBlueprints);
+    const { added: addedSkills, next: nextSkills } = this._processBindings(skills, currentSkills);
     const { added: addedObjects, next: nextObjects } = this._processBindings(objects, currentObjects);
-    if (!addedBlueprints.length && !addedObjects.length) {
+    if (!addedSkills.length && !addedObjects.length) {
       return;
     }
 
     // Atomic updates - subscribers notified automatically.
-    this._registry.set(this._blueprints, nextBlueprints);
+    this._registry.set(this._skills, nextSkills);
     this._registry.set(this._objects, nextObjects);
 
-    log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
+    log('bind', { skills: addedSkills.length, objects: addedObjects.length });
     await Runtime.runPromise(this._runtime)(
       Feed.append(this._feed, [
         Obj.make(Binding, {
-          blueprints: {
-            added: addedBlueprints,
+          skills: {
+            added: addedSkills,
             removed: [],
           },
           objects: {
@@ -254,19 +254,19 @@ export class Binder extends Resource {
     );
   }
 
-  async unbind({ blueprints, objects }: BindingProps): Promise<void> {
-    if (!blueprints?.length && !objects?.length) {
+  async unbind({ skills, objects }: BindingProps): Promise<void> {
+    if (!skills?.length && !objects?.length) {
       return;
     }
 
     // Immediately update atom state so removals are reflected before the queue round-trips.
-    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.uri);
+    const removedSkillDxns = (skills ?? []).map((ref) => ref.uri);
     const removedObjectDxns = (objects ?? []).map((ref) => ref.uri);
-    if (removedBlueprintDxns.length > 0) {
-      const current = this._registry.get(this._blueprints);
+    if (removedSkillDxns.length > 0) {
+      const current = this._registry.get(this._skills);
       this._registry.set(
-        this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.some((uri) => Obj.getURI(obj) === uri)),
+        this._skills,
+        current.filter((obj) => !removedSkillDxns.some((uri) => Obj.getURI(obj) === uri)),
       );
     }
     if (removedObjectDxns.length > 0) {
@@ -277,13 +277,13 @@ export class Binder extends Resource {
       );
     }
 
-    log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
+    log('unbind', { skills: skills?.length, objects: objects?.length });
     await Runtime.runPromise(this._runtime)(
       Feed.append(this._feed, [
         Obj.make(Binding, {
-          blueprints: {
+          skills: {
             added: [],
-            removed: blueprints ?? [],
+            removed: skills ?? [],
           },
           objects: {
             added: [],
@@ -329,14 +329,14 @@ export class Binder extends Resource {
   }
 
   /**
-   * Reduce results into sets of blueprints and objects.
+   * Reduce results into sets of skills and objects.
    */
   private _reduce(items: Binding[]): Bindings {
     return Function.pipe(
       items,
-      EArray.reduce(new Bindings(), (context, { blueprints, objects }) => {
-        blueprints.added.forEach((ref) => context.blueprints.add(ref));
-        blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
+      EArray.reduce(new Bindings(), (context, { skills, objects }) => {
+        skills.added.forEach((ref) => context.skills.add(ref));
+        skills.removed.forEach((ref) => context.skills.delete(ref));
 
         objects.added.forEach((ref) => context.objects.add(ref));
         objects.removed.forEach((ref) => {
@@ -375,7 +375,7 @@ export class Binder extends Resource {
 
   /**
    * Resolve references to objects, loading them first if needed and falling back to existing objects.
-   * DXN refs (e.g. `dxn:org.dxos.blueprint.database`) resolve via the wired-up ECHO ref resolver
+   * DXN refs (e.g. `dxn:org.dxos.skill.database`) resolve via the wired-up ECHO ref resolver
    * which already spans both the space DB and the hypergraph registry.
    */
   private async _resolve<T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
@@ -405,10 +405,10 @@ export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
     binder: Binder;
   }
 >() {
-  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, Service> =>
+  static bindContext = ({ skills, objects }: BindingProps): Effect.Effect<void, never, Service> =>
     Effect.gen(function* () {
       const { binder } = yield* Service;
-      yield* Effect.promise(() => binder.bind({ blueprints, objects }));
+      yield* Effect.promise(() => binder.bind({ skills, objects }));
     });
 
   static findObjects = <T extends Type.AnyObj>(type: T): Effect.Effect<Type.InstanceType<T>[], never, Service> => {

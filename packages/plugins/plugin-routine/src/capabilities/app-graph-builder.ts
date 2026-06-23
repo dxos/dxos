@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -18,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
-        match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_AI_TYPE),
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
       }),
       GraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',

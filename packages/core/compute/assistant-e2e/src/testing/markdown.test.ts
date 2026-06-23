@@ -23,8 +23,8 @@ describe('Markdown', () => {
       `,
       completionCriteria: [
         'A Markdown document object exists in the database.',
-        'Agent enabled the markdown blueprint.',
-        'Agent used markdown blueprint tools to draft a document.',
+        'Agent enabled the markdown skill.',
+        'Agent used markdown skill tools to draft a document.',
       ],
       plugins: [MarkdownPlugin()],
     }),

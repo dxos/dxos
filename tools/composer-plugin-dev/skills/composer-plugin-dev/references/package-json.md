@@ -17,7 +17,7 @@ Two flavors: **community** (your own repo, single bundle) and **monorepo** (mult
     "test": "vitest run"
   },
   "imports": {
-    "#blueprints": "./src/blueprints/index.ts",
+    "#skills": "./src/skills/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -30,7 +30,7 @@ Two flavors: **community** (your own repo, single bundle) and **monorepo** (mult
     "@dxos/app-toolkit": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/echo": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/operation": "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/blueprints": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/compute": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/react-ui": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/types": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "@dxos/util": "<COMPOSER_HOST_MAIN_DIST_TAG>",
@@ -63,7 +63,7 @@ Multiple `exports` subpaths so other in-repo plugins, the assistant, and the CLI
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
     },
-    "./blueprints": { "source": "./src/blueprints/index.ts" /* ... */ },
+    "./skills": { "source": "./src/skills/index.ts" /* ... */ },
     "./cli": { "source": "./src/cli/index.ts" /* ... */ },
     "./operations": { "source": "./src/operations/index.ts" /* ... */ },
     "./types": { "source": "./src/types/index.ts" /* ... */ },
@@ -90,8 +90,8 @@ The `./cli` subpath is the **headless** entrypoint, intended to run under Node (
 
 **`src/cli/` MUST export only:**
 
-- The plugin definition with **schema** + **metadata** + **operations** + **blueprint** modules.
-- `types`, `operations`, `blueprints`.
+- The plugin definition with **schema** + **metadata** + **operations** + **skill** modules.
+- `types`, `operations`, `skills`.
 
 **`src/cli/` MUST NOT import:**
 
@@ -99,7 +99,7 @@ The `./cli` subpath is the **headless** entrypoint, intended to run under Node (
 - The browser variants of capability modules (e.g. the surface-rendering plugin).
 - `@dxos/plugin-client` main entrypoint — use `@dxos/plugin-client/cli` instead.
 
-A typical CLI plugin file is a stripped-down twin of the main plugin, omitting `addSurfaceModule` and `addBlueprintDefinitionModule` if the latter pulls UI:
+A typical CLI plugin file is a stripped-down twin of the main plugin, omitting `addSurfaceModule` and `addSkillDefinitionModule` if the latter pulls UI:
 
 ```ts
 // src/cli/plugin.ts

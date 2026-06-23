@@ -9,4 +9,4 @@ export const RoutineHistory: ComponentType<any> = lazy(() => import('./RoutineHi
 export const RoutineSettings: ComponentType<any> = lazy(() => import('./RoutineSettings'));
 export const RoutineCompanion: ComponentType<any> = lazy(() => import('./RoutineCompanion'));
 export const AutomationCompanionDeprecated: ComponentType<any> = lazy(() => import('./AutomationCompanionDeprecated'));
-export const BlueprintArticle: ComponentType<any> = lazy(() => import('./BlueprintArticle'));
+export const SkillArticle: ComponentType<any> = lazy(() => import('./SkillArticle'));

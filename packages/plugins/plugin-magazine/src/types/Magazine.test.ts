@@ -56,7 +56,7 @@ describe('Magazine', () => {
         // The instructions are created with the magazine (not lazily).
         expect(magazine.instructions).toBeDefined();
         const instructions = yield* Database.load(magazine.instructions!);
-        expect(instructions.blueprints.length).toBeGreaterThan(0);
+        expect(instructions.skills.length).toBeGreaterThan(0);
 
         const text = yield* Database.load(instructions.text);
         expect(text.content).toContain('## Topic');

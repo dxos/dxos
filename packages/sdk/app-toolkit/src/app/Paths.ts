@@ -33,6 +33,31 @@ export const Segments = {
 } as const;
 
 /**
+ * Navtree section-group node `id` values, which double as path segments: a section (collections,
+ * database, etc.) is nested under its group node in the graph, so its canonical path includes the
+ * group segment. Kept in app-toolkit so any plugin can reference them without depending on
+ * plugin-navtree.
+ */
+export const GroupSegments = {
+  ai: 'ai',
+  content: 'content',
+  communications: 'communications',
+  system: 'system',
+} as const;
+
+/**
+ * Navtree section-group node `type` values. Co-located with {@link GroupSegments} so plugins can
+ * match (via `AppNodeMatcher.whenNavTreeGroup`) and create group nodes without depending on
+ * plugin-navtree.
+ */
+export const GroupTypes = {
+  ai: 'org.dxos.navtree.group.ai',
+  content: 'org.dxos.navtree.group.content',
+  communications: 'org.dxos.navtree.group.communications',
+  system: 'org.dxos.navtree.group.system',
+} as const;
+
+/**
  * Canonical qualified path to a space node.
  * Optional additional segments are appended (e.g. a section name for a well-known child node).
  */
@@ -63,7 +88,7 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
  * Optional additional segments are appended.
  */
 export const getDatabasePath = (spaceId: string, ...segments: string[]): string => {
-  const base = getSpacePath(spaceId, Segments.database);
+  const base = getSpacePath(spaceId, GroupSegments.system, Segments.database);
   return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
 };
 
@@ -119,7 +144,7 @@ export const getObjectPathFromObject = (object: Obj.Unknown): string => {
  * Optional additional segments are appended (e.g. an object id for a collection under that section).
  */
 export const getCollectionsPath = (spaceId: string, ...segments: string[]): string =>
-  getSpacePath(spaceId, Segments.collections, ...segments);
+  getSpacePath(spaceId, GroupSegments.content, Segments.collections, ...segments);
 
 /**
  * Qualified path to a child object within a collection node.
@@ -182,7 +207,7 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  *
  * ```ts
  * const { getSectionPath: getChatsPath, getObjectPath: getChatPath } =
- *   createTypeSectionPaths(Chat.Chat, { groupId: AppNode.NAV_TREE_GROUP_AI_ID });
+ *   createTypeSectionPaths(Chat.Chat, { groupId: Paths.GroupSegments.ai });
  * export { getChatsPath, getChatPath };
  * ```
  *

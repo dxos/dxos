@@ -138,11 +138,11 @@ describe('Obj', () => {
 
     test("prefer: 'named' returns dxn: URI when meta.key is set", ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
-        [Obj.Meta]: { key: 'org.dxos.blueprint.webSearch' },
+        [Obj.Meta]: { key: 'org.dxos.skill.webSearch' },
         name: 'Alice',
       });
       const uri = Obj.getURI(obj, { prefer: 'named' });
-      expect(uri).toBe('dxn:org.dxos.blueprint.webSearch');
+      expect(uri).toBe('dxn:org.dxos.skill.webSearch');
     });
 
     test("prefer: 'named' falls back to EID when meta.key is absent", ({ expect }) => {
@@ -153,12 +153,12 @@ describe('Obj', () => {
 
     test("prefer: 'named' handles key with hyphens (falls back to raw key URI)", ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
-        [Obj.Meta]: { key: 'org.dxos.blueprint.web-search' },
+        [Obj.Meta]: { key: 'org.dxos.skill.web-search' },
         name: 'Alice',
       });
       // Hyphens in the final DXN segment are invalid; falls back to the raw key as URI.
       const uri = Obj.getURI(obj, { prefer: 'named' });
-      expect(uri).toBe('org.dxos.blueprint.web-search');
+      expect(uri).toBe('org.dxos.skill.web-search');
     });
 
     test("prefer: 'absolute' falls back to current EID when object has no database", ({ expect }) => {

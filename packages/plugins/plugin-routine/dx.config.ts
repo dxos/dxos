@@ -21,7 +21,7 @@ export default Config2.make({
       execution: running locally in the browser when computeEnvironment is "local", or delegating to
       the DXOS edge for server-side reliability; the space settings page chooses the runtime location.
 
-      Operation handlers and blueprints contributed by any plugin in the application are
+      Operation handlers and skills contributed by any plugin in the application are
       automatically merged and made available to every space's OperationRegistry, so new
       capabilities registered by other plugins become instantly invocable from routines.
     `,

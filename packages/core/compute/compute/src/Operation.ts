@@ -490,7 +490,7 @@ export const isIdempotent = (op: Definition.Any): boolean =>
 /**
  * Attaches an annotation to an operation definition, returning a new definition.
  * Combinators never mutate their input — operation definitions are module-level singletons
- * shared across handler sets, blueprints, and the registry, so a fresh value keeps the
+ * shared across handler sets, skills, and the registry, so a fresh value keeps the
  * annotated definition distinct from any other reference to the original.
  *
  * Type-preserving: an annotation does not change the operation's input/output/service types, so the

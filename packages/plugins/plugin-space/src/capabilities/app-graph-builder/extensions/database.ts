@@ -45,13 +45,13 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // System section group — created alongside database/settings so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: AppNode.NAV_TREE_GROUP_SYSTEM_ID,
+      id: Paths.GroupSegments.system,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: AppNode.NAV_TREE_GROUP_SYSTEM_ID,
-            type: AppNode.NAV_TREE_GROUP_SYSTEM_TYPE,
+            id: Paths.GroupSegments.system,
+            type: Paths.GroupTypes.system,
             label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
             space,
             position: 900,
@@ -62,7 +62,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // Types section virtual node under the system group.
     GraphBuilder.createExtension({
       id: 'databaseSection',
-      match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_SYSTEM_TYPE),
+      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system),
       connector: (space) => {
         return Effect.succeed([
           AppNode.makeSection({

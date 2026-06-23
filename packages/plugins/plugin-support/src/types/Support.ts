@@ -8,7 +8,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.support';
+export const SKILL_KEY = 'org.dxos.skill.support';
 
 export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
 export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
@@ -37,7 +37,7 @@ export const Ticket = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--lifebuoy--regular', hue: 'rose' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
 );
 
