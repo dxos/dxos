@@ -1,6 +1,19 @@
 # Agent Harness Refactor — Design Spec
 
-Status: draft / design-only (no implementation yet)
+Status: in progress.
+
+Progress:
+
+- [x] **Step 1 — generic process RPC control plane** (`@dxos/compute` + `@dxos/compute-runtime`).
+      Landed: `Process.make({ rpcs })`, `Callbacks.rpcHandlers`, `Handle.rpc`, in-memory
+      dispatch via `@effect/rpc` `RpcTest.makeClient`. See §4 for the as-built notes.
+- [ ] Step 2 — annotations-based discovery (`HarnessHostAnnotation`, surface `params.annotations`).
+- [ ] Step 3 — `AgentProcess` `HarnessControl` group + handlers; stamp host annotation at spawn.
+- [ ] Step 4 — `HarnessService` LayerSpec (Tier A + B); migrate call sites; delete deprecated services.
+- [ ] Step 5 — alarm blueprint externalization; remove inline `AlarmToolkit`; persist alarm `message`.
+- [ ] Step 6 — blueprint hook execution engine; planning `end-request` hook; remove `CompletionGuard`.
+- [ ] Step 7 — `StorageService.Key → Cell` rename.
+- [ ] Step 8 — Composer planning skill fix.
 
 ## 1. Motivation
 
@@ -65,78 +78,92 @@ agent's turn*, which runs inside the live agent process. The owner is therefore 
 when Tier B is invoked; `NotSupportedError` is a resolution-time concern (no agent owns this
 conversation — stories, standalone sessions), not a runtime race.
 
-## 4. Process RPC control plane (generic, in `@dxos/compute` + `@dxos/compute-runtime`)
+## 4. Process RPC control plane (generic, in `@dxos/compute` + `@dxos/compute-runtime`) — IMPLEMENTED
 
-Add an optional typed control surface to processes, built on `@effect/rpc` (already present
-in the dependency tree at `@effect/rpc@0.75.1`).
+A typed control surface on processes, built on `@effect/rpc` (`@effect/rpc@0.75.1`). This
+section documents the as-built design (Step 1).
 
 ### 4.1 Definition surface
 
+A process optionally declares an `rpcs` group; `create()` must then return matching
+`rpcHandlers`. Both are typed by a fourth `Process` type parameter `_Rpcs extends Rpc.Any`
+(phantom-covariant so `never`-RPC processes remain assignable — see §4.4).
+
 ```ts
 // Process.ts
-export interface MakeProcessOpts {
-  readonly key: string;
-  readonly input: Schema.Schema.AnyNoContext;
-  readonly output: Schema.Schema.AnyNoContext;
-  readonly services: readonly Context.Tag<any, any>[];
-  readonly rpc?: RpcGroup.RpcGroup<any>; // control plane (optional)
-}
-
-export interface Callbacks<I, O, R> {
-  onSpawn(): Effect.Effect<void, never, R | BaseServices>;
-  onInput(input: I): Effect.Effect<void, never, R | BaseServices>;
-  onAlarm(): Effect.Effect<void, never, R | BaseServices>;
-  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
-  // Handlers for the rpc group declared on the definition. Live in create()'s scope,
-  // closing over the same state as the lifecycle callbacks.
-  rpcHandlers?: /* RpcGroup.Handlers for Opts['rpc'] */;
-}
+Process.make(
+  {
+    key: 'test.process-with-rpcs',
+    input: Schema.Void,
+    output: Schema.Void,
+    services: [],
+    rpcs, // RpcGroup.RpcGroup<_Rpcs> (optional; defaults to an empty group)
+  },
+  (ctx) =>
+    Effect.gen(function* () {
+      const storage = yield* StorageService.StorageService;
+      return {
+        // Built with rpcs.toHandlersContext: captures create()'s service context, so
+        // handlers run against the same StorageService / closed-over state as the
+        // lifecycle callbacks.
+        rpcHandlers: yield* rpcs.toHandlersContext({
+          getValue: Effect.fn(function* () { /* read storage */ }),
+          setValue: Effect.fn(function* ({ value }) { /* write storage */ }),
+        }),
+      };
+    }),
+);
 ```
+
+`Callbacks.rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>`. `Process.make` validates the
+handler contract at construction via `sanitizeRpcs`: handlers are required iff a non-empty
+`rpcs` group is declared (and rejected/empty otherwise).
 
 ### 4.2 Handle surface
 
 ```ts
-// ProcessManager.Handle<I, O>
-readonly rpc: RpcClient.RpcClient<G>; // typed client over the definition's rpc group
+// ProcessManager.Handle<I, O, _Rpcs>
+readonly rpc: RpcClient.RpcClient<_Rpcs>; // typed client over the definition's rpc group
 ```
 
-For a future worker boundary, a remote/proxy handle implements the same `rpc` client over a
-serialized transport; same interface.
+Callers invoke RPCs as `handle.rpc.<tag>(payload)` returning `Effect<Success, Error>`
+(see the `rpcs` test in `ProcessManager.test.ts`). For a future worker boundary, a
+remote/proxy handle implements the same `rpc` client over a serialized transport; same
+interface.
 
-### 4.3 Runtime semantics — `#runRpc` (the riskiest piece)
+### 4.3 Runtime semantics — in-memory loopback (as built)
 
-An RPC invocation reuses the existing `#runHandler` machinery in `ProcessHandleImpl` to get,
-for free:
+Rather than hand-rolling a `#runRpc` that reuses `#runHandler`, the handle wires a
+**no-serialization `@effect/rpc` client/server pair** via `RpcTest.makeClient(definition.rpcs)`,
+provided with `callbacks.rpcHandlers` and the **process scope**. The resulting client is stored
+as `Handle.rpc`. This is done at both construction sites (`spawn` and rehydrate) in
+`ProcessManager`.
 
-- `#activeHandlers++` accounting → process cannot go `IDLE`/`SUCCEEDED` while an RPC is
-  in-flight;
-- execution with `this.#services` inside the process scope → handlers can use
-  `StorageService`, the closed-over `AlarmManager`/`inputQueue`;
-- post-settle `persistence.setAlarm(this.#alarmDueAt)` + `setState` → a `setAlarm` RPC's
-  durable effect is captured exactly like an `onAlarm` turn.
+Consequences of this choice (and how the original `#runHandler` concerns are addressed):
 
-It MUST diverge from `#runHandler` in one way:
+- **Service access / durable side effects.** `toHandlersContext` captures `create()`'s context,
+  so handlers resolve `StorageService` and close over `AlarmManager`/`inputQueue`. A Tier-B
+  handler persists its own durable effect inline (e.g. `AgentAlarmKey.set(...)`), so no
+  post-settle `persistence` hook is needed.
+- **Lifecycle accounting.** RPC calls are **not** integrated into `#activeHandlers`. This is
+  acceptable because Tier-B RPCs are issued **synchronously within an active turn** (the calling
+  operation runs inside the live agent process while `onInput`/`onAlarm` is in flight), so the
+  process cannot reach `IDLE` mid-call. The durable effect is captured by the handler itself, not
+  by turn-settle bookkeeping.
+- **Failure isolation (free).** `@effect/rpc` returns typed handler errors to the caller over the
+  loopback; a handler error does not route into `#failImmediately`, so the process survives. Only
+  defects/interruptions on the server fiber propagate as process failure.
+- **Liveness.** The client/server fibers are bound to the process scope, so the control surface is
+  torn down with the process — consistent with "control plane is live-only".
+- **Not durable.** RPCs are never appended to the mailbox (`appendEvent`); they are transient.
 
-- **Failure isolation.** `#runHandler` routes all failures into `#handleError → #failImmediately`
-  (kills the process). For RPC, a typed handler error must be returned to the **caller**; only
-  defects / interruptions propagate to process failure.
+### 4.4 Type-system note (`_Rpcs` variance)
 
-Other rules:
-
-- RPCs are **not** appended to the durable mailbox (`appendEvent`) — they are live-only.
-  Their *side effects* persist via the handler (e.g. `alarmManager.setWakeAt` → `StorageService`).
-- RPC handlers run **concurrently** with an in-flight `onAlarm`/`onInput` (same shared
-  handler-concurrency model that the tool-result path already relies on). Tier-B handlers are
-  pure state mutations + `reconcile`, so this is safe.
-
-```ts
-// ProcessHandleImpl
-request<Req, Res, Err>(rpc: Rpc<Req, Res, Err>, payload: Req): Effect.Effect<Res, Err> {
-  // activeHandlers++, setStatus(RUNNING), run handler with #services in scope,
-  // persist alarm+state after settle, decrement + recompute idle/hybernating;
-  // typed Err -> caller; defect/interrupt -> process failure.
-}
-```
+`Process`/`Handle`/`Callbacks` carry `_Rpcs extends Rpc.Any`. Because `RpcGroup`/`RpcClient` are
+invariant in their type argument, the runtime stores the group/handlers/client as `any` internally
+(`Handle.rpc: RpcClient.RpcClient<any>`, `#callbacks: Callbacks<I, O, R, any>`) while the public
+`Handle<I, O, _Rpcs>` surface stays precise. This keeps `never`-RPC processes (the common case)
+assignable to `Process.Any`/`Handle.Any` without casts at call sites.
 
 ## 5. Process annotations for discovery
 
@@ -191,10 +218,11 @@ Provided by a single `LayerSpec`, process affinity, requiring `Database.Service`
   `context.conversation`, build a `Binder` / read history. (This is the existing
   `AiContext.Service` LayerSpec logic, merged in.)
 - **Tier B** (`setAlarm`, `enqueueMessage`): look up the owning host process **lazily per
-  call** (so a model-switch process replacement isn't captured stale), then call its RPC:
+  call** (so a model-switch process replacement isn't captured stale), then dispatch over its
+  `Handle.rpc` control surface (§4):
 
 ```ts
-const owningAgent = Effect.gen(function* () {
+const owningHost = Effect.gen(function* () {
   const procs = yield* pm.list({ target: context.conversation });
   const host = procs.find(
     (p) =>
@@ -206,14 +234,23 @@ const owningAgent = Effect.gen(function* () {
   );
   return host ?? (yield* Effect.fail(new NotSupportedError()));
 });
+
+// HarnessService.setAlarm:
+const host = yield* owningHost;
+yield* host.rpc.setAlarm({ at, message });
 ```
+
+The `host.rpc.setAlarm(...)` call runs the handler on the host's server fiber (§4.3), inside
+the live `AgentProcess` scope, with that process's `AlarmManager`/`inputQueue` in scope. The
+`NotSupportedError` is raised at discovery time when no live host owns the conversation.
 
 ### 6.1 AgentProcess control group
 
 Defined and implemented by `AgentProcess` (it owns the state):
 
 ```ts
-class HarnessControl extends RpcGroup.make(
+// AgentProcess module scope — the group passed to Process.make({ rpcs: HarnessControl }).
+const HarnessControl = RpcGroup.make(
   Rpc.make('setAlarm', {
     payload: { at: Schema.DateTimeUtc, message: Schema.NullOr(Schema.String) },
     success: Schema.Void,
@@ -222,18 +259,21 @@ class HarnessControl extends RpcGroup.make(
     payload: { content: Schema.Array(ContentBlock.Any) },
     success: Schema.Void,
   }),
-) {}
+);
 
-// in AgentProcess create(), alongside onInput/onAlarm:
-rpcHandlers: HarnessControl.toLayer({
-  setAlarm: ({ at, message }) => alarmManager.setWakeAt(DateTime.toEpochMillis(at), message),
-  enqueueMessage: ({ content }) =>
-    Effect.gen(function* () {
-      inputQueue.push({ _tag: 'prompt', content });
-      yield* AgentEventsKey.set(inputQueue);
-      alarmManager.reconcile(true);
-    }),
-});
+// in AgentProcess create(), alongside onInput/onAlarm — same `toHandlersContext` pattern
+// the generic RPC surface expects (§4.1). Handlers close over the live alarmManager/inputQueue
+// and persist their own durable effect inline.
+rpcHandlers: yield* HarnessControl.toHandlersContext({
+  setAlarm: Effect.fn(function* ({ at, message }) {
+    yield* alarmManager.setWakeAt(DateTime.toEpochMillis(at), message);
+  }),
+  enqueueMessage: Effect.fn(function* ({ content }) {
+    inputQueue.push({ _tag: 'prompt', content });
+    yield* AgentEventsKey.set(inputQueue);
+    yield* alarmManager.reconcile(true);
+  }),
+}),
 ```
 
 ### 6.2 Call-site migration
@@ -296,8 +336,9 @@ editing so the fix lands on the active copy.
 
 ## 11. Sequencing
 
-1. Generic process RPC surface: `Process.make` `rpc` group, `Callbacks.rpcHandlers`,
-   `Handle.rpc`, `ProcessHandleImpl.#runRpc` (with failure isolation). In-memory dispatch.
+1. ~~Generic process RPC surface: `Process.make({ rpcs })`, `Callbacks.rpcHandlers`,
+   `Handle.rpc`, in-memory dispatch (via `@effect/rpc` `RpcTest.makeClient`, with failure
+   isolation).~~ **Done** (§4).
 2. Annotations-based discovery: `HarnessHostAnnotation`; surface `params.annotations` on
    `Handle`/`list`.
 3. `AgentProcess` `HarnessControl` group + handlers; stamp `HarnessHostAnnotation` at spawn.
@@ -313,21 +354,26 @@ additions, 4 is the breaking consolidation.
 
 ## 12. Open decisions
 
-1. **RPC transport now**: in-memory direct dispatch behind `Handle.rpc` (recommended), with
-   `@effect/rpc` `RpcServer`/`RpcClient` over a worker transport deferred until the worker
-   boundary exists. Confirm we define the `RpcGroup` contract now regardless.
-2. **`enqueueMessage` payload vs `submitInput`**: widen the `AgentEvent` `prompt` variant to
+1. ~~**RPC transport now**~~: **Resolved** — in-memory `@effect/rpc` no-serialization
+   client/server loopback behind `Handle.rpc` (§4.3). A worker transport can swap in the same
+   `RpcGroup` contract later.
+2. ~~**`#runRpc` defect policy**~~: **Resolved** — typed handler errors return to the caller over
+   the loopback; defects/interrupts propagate as process failure (§4.3). Lifecycle accounting is
+   intentionally not integrated (Tier-B calls happen within an active turn).
+3. **`enqueueMessage` payload vs `submitInput`**: widen the `AgentEvent` `prompt` variant to
    `ContentBlock[]`. Decide whether the external work-queue API (`submitInput`) stays
    `string`-only while internal enqueue is rich content.
-3. **Ephemeral stop/continue check**: keep (inside the hook fn) or drop.
-4. **`#runRpc` defect policy**: do defects in an RPC handler fail the whole process, or only
-   the call? (Proposed: typed errors → caller; defects/interrupts → process failure.)
+4. **Ephemeral stop/continue check**: keep (inside the hook fn) or drop.
+5. **Tier-B accounting**: if a future Tier-B RPC can be issued *outside* an active turn (e.g. a
+   detached supervisor poking a hibernating agent), revisit whether `Handle.rpc` needs to bump
+   `#activeHandlers` to prevent a race into `IDLE` before the durable effect persists.
 
 ## 13. Testing
 
-- Process RPC: unit-test `#runRpc` accounting (no premature idle), failure isolation (typed
-  error returned, process survives), and durable side effects (alarm set via RPC survives
-  suspend/hydrate).
+- Process RPC: ~~unit-test accounting / failure isolation / durable side effects~~. Basic
+  spawn-and-dispatch landed (`ProcessManager.test.ts` `rpcs`: `getValue`/`setValue` round-trip
+  through per-process `StorageService`). Still TODO: failure isolation (typed error returned,
+  process survives) and durable side effects across suspend/hydrate (alarm set via RPC).
 - HarnessService: Tier A resolvable without a live process; Tier B returns `NotSupportedError`
   with no host and succeeds against a stamped host.
 - Alarm blueprint: agent schedules a self-wake via the operation and is woken (TestClock).
