@@ -59,12 +59,18 @@ describe('Magazine', () => {
 
         // The Routine is created with the magazine (not lazily), parented to it.
         expect(magazine.routine).toBeDefined();
-        const routine = yield* Database.load(magazine.routine!);
+        if (!magazine.routine) {
+          throw new Error('Expected magazine.routine to be defined.');
+        }
+        const routine = yield* Database.load(magazine.routine);
         expect(Obj.getParent(routine)?.id).toBe(magazine.id);
 
         // The Instructions is created with the magazine, parented to the Routine.
         expect(magazine.instructions).toBeDefined();
-        const instructions = yield* Database.load(magazine.instructions!);
+        if (!magazine.instructions) {
+          throw new Error('Expected magazine.instructions to be defined.');
+        }
+        const instructions = yield* Database.load(magazine.instructions);
         expect(Obj.getParent(instructions)?.id).toBe(routine.id);
         expect(instructions.blueprints.length).toBeGreaterThan(0);
 

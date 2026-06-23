@@ -42,6 +42,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         .filter(isNonNullable);
 
       for (const entity of entities) {
+        // Parented objects must be removed via their parent (which cascades); attempting a direct
+        // remove would throw in removeCore and leave collection membership partially applied.
+        if (Obj.getParent(entity as Obj.Unknown)) {
+          continue;
+        }
+
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
           const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
           if (index !== -1) {
