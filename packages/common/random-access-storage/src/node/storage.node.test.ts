@@ -101,7 +101,7 @@ describe('testing node storage types', (v) => {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  // TODO(burdon): Factor out into suites of skills.
+  // TODO(burdon): Factor out into suites of blueprints.
   test('persistence', async () => {
     const filename = randomText();
     const data = Buffer.from(randomText());

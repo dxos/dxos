@@ -24,10 +24,10 @@ Example (see `packages/plugins/plugin-markdown/src/skills/markdown-skill.ts`):
 
 ```ts
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Skill, Template } from '@dxos/skills';
+import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { MarkdownHandlers, Create, Open, Update } from './functions';
+import { MarkdownHandlers, Create, Open, Update } from './operations';
 
 const SKILL_KEY = 'org.dxos.skill.markdown';
 
@@ -66,7 +66,7 @@ plugin-my-domain/
 │   ├── skills/
 │   │   ├── index.ts              # Re-exports skill
 │   │   ├── my-skill.ts       # Skill definition (key, operations, make)
-│   │   └── functions/            # Operations (definitions + handlers)
+│   │   └── operations/          # Operations (definitions + handlers)
 │   │       ├── definitions.ts
 │   │       ├── create.ts
 │   │       ├── open.ts
@@ -118,7 +118,7 @@ Use `AssistantTestLayer` from `@dxos/assistant/testing` to test operations and A
 
 ```ts
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Skill } from '@dxos/skills';
+import { Skill } from '@dxos/compute';
 import MarkdownSkill from '../markdown-skill';
 
 const TestLayer = AssistantTestLayer({
