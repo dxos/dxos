@@ -12,13 +12,13 @@ import { Carousel, type CarouselTransition } from './Carousel';
 // Stable placeholder images so the story renders without network fixtures.
 const IMAGES = Array.from({ length: 5 }).map((_, index) => `https://placehold.co/640x360?text=Slide+${index + 1}`);
 
-type DefaultStoryProps = { count?: number; transition?: CarouselTransition };
+type DefaultStoryProps = { count?: number; transition?: CarouselTransition; continuous?: boolean };
 
-const DefaultStory = ({ count = IMAGES.length, transition }: DefaultStoryProps) => {
+const DefaultStory = ({ count = IMAGES.length, transition, continuous }: DefaultStoryProps) => {
   const images = IMAGES.slice(0, count);
   return (
     <div className='h-full flex items-center'>
-      <Carousel.Root count={images.length} transition={transition}>
+      <Carousel.Root count={images.length} transition={transition} continuous={continuous}>
         <Carousel.Content>
           <Carousel.Previous />
           <Carousel.Viewport>
@@ -55,4 +55,8 @@ export const Default: Story = {
 
 export const Sliding: Story = {
   args: { count: 5, transition: 'slide' },
+};
+
+export const Continuous: Story = {
+  args: { count: 5, transition: 'slide', continuous: true },
 };

@@ -5,11 +5,16 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  Children,
+  cloneElement,
+  isValidElement,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
+  type TransitionEvent,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -34,6 +39,18 @@ type CarouselContextValue = {
   index: number;
   count: number;
   transition: CarouselTransition;
+  /** When `transition === 'slide'`, wrap-around advances continue in the same direction (clone + snap). */
+  continuous: boolean;
+  /**
+   * Track position in slide units. Equals `index` except mid-wrap, when it points at a clone cell
+   * (`count` = trailing clone of the first slide, `-1` = leading clone of the last) so the track keeps
+   * moving in the travel direction. Settled back to the real index once the transition ends.
+   */
+  offset: number;
+  /** Whether the track transform should animate; disabled for the instantaneous post-wrap snap. */
+  animate: boolean;
+  /** Snap a clone cell back to its real slide once the wrap transition completes. */
+  settle: () => void;
   setIndex: (index: number) => void;
   next: () => void;
   prev: () => void;
@@ -60,6 +77,11 @@ export type CarouselRootProps = PropsWithChildren<{
   defaultIndex?: number;
   /** Slide change behaviour. Defaults to `none` (hard swap); `slide` animates a horizontal track. */
   transition?: CarouselTransition;
+  /**
+   * Wrap-around in the same travel direction (last → first slides forward, first → last slides back).
+   * Only applies when `transition === 'slide'`; otherwise wrap is an instant index change.
+   */
+  continuous?: boolean;
 }>;
 
 const CarouselRoot = ({
@@ -69,45 +91,99 @@ const CarouselRoot = ({
   intervalMs = 5_000,
   defaultIndex = 0,
   transition = 'none',
+  continuous = false,
 }: CarouselRootProps) => {
   const [index, setIndexState] = useState(defaultIndex);
+  const [offset, setOffset] = useState(defaultIndex);
+  const [animate, setAnimate] = useState(true);
   const [autoAdvance, setAutoAdvance] = useState(autorun);
+
+  // Continuous wrap is only meaningful for the animated track with more than one slide.
+  const wraps = continuous && transition === 'slide' && count > 1;
+
+  // Latest index without re-creating the advance/auto-advance callbacks on every change.
+  const indexRef = useRef(index);
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
 
   // Reset to first slide if the slide count shrinks below the current index.
   useEffect(() => {
     if (index >= count) {
       setIndexState(0);
+      setOffset(0);
     }
   }, [count, index]);
+
+  // Step one slide in `delta` direction. `stopAuto` halts auto-advance on user interaction. In wrap
+  // mode an edge step targets a clone cell (offset `count` / `-1`) so the track travels in `delta`'s
+  // direction; `settle` snaps it back to the real index after the transition.
+  const advance = useCallback(
+    (delta: 1 | -1, stopAuto: boolean) => {
+      if (stopAuto) {
+        setAutoAdvance(false);
+      }
+      const current = indexRef.current;
+      const nextIndex = (current + delta + count) % count;
+      setAnimate(true);
+      if (wraps && delta === 1 && current === count - 1) {
+        setOffset(count);
+      } else if (wraps && delta === -1 && current === 0) {
+        setOffset(-1);
+      } else {
+        setOffset(nextIndex);
+      }
+      setIndexState(nextIndex);
+    },
+    [count, wraps],
+  );
 
   // Auto-advance — stops permanently once the user interacts with any control.
   useEffect(() => {
     if (!autoAdvance || count <= 1 || intervalMs <= 0) {
       return;
     }
-    const handle = setInterval(() => setIndexState((i) => (i + 1) % count), intervalMs);
+    const handle = setInterval(() => advance(1, false), intervalMs);
     return () => clearInterval(handle);
-  }, [autoAdvance, count, intervalMs]);
+  }, [autoAdvance, count, intervalMs, advance]);
 
   const setIndex = useCallback((next: number) => {
     setAutoAdvance(false);
+    setAnimate(true);
+    setOffset(next);
     setIndexState(next);
   }, []);
-  const next = useCallback(() => {
-    setAutoAdvance(false);
-    setIndexState((i) => (i + 1) % count);
-  }, [count]);
-  const prev = useCallback(() => {
-    setAutoAdvance(false);
-    setIndexState((i) => (i - 1 + count) % count);
-  }, [count]);
+  const next = useCallback(() => advance(1, true), [advance]);
+  const prev = useCallback(() => advance(-1, true), [advance]);
+
+  // Once the wrap transition lands on a clone, jump (without animating) to the matching real slide.
+  const settle = useCallback(() => {
+    if (offset === count) {
+      setAnimate(false);
+      setOffset(0);
+    } else if (offset === -1) {
+      setAnimate(false);
+      setOffset(count - 1);
+    }
+  }, [offset, count]);
 
   if (count === 0) {
     return null;
   }
 
   return (
-    <CarouselProvider index={index} count={count} transition={transition} setIndex={setIndex} next={next} prev={prev}>
+    <CarouselProvider
+      index={index}
+      count={count}
+      transition={transition}
+      continuous={wraps}
+      offset={offset}
+      animate={animate}
+      settle={settle}
+      setIndex={setIndex}
+      next={next}
+      prev={prev}
+    >
       {children}
     </CarouselProvider>
   );
@@ -148,7 +224,8 @@ export type CarouselViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   const { t } = useTranslation(translationKey);
-  const { index, count, transition, next, prev } = useCarousel();
+  const { count, transition, continuous, offset, animate, settle, next, prev } = useCarousel();
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (count <= 1) {
@@ -163,6 +240,31 @@ const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
       }
     },
     [count, next, prev],
+  );
+
+  // In continuous mode bracket the track with clones — last before first, first after last — so a wrap
+  // step has a real cell to slide into before `settle` snaps back to the matching slide.
+  const slides = Children.toArray(children);
+  const trackChildren =
+    continuous && slides.length > 1
+      ? [
+          isValidElement(slides[slides.length - 1])
+            ? cloneElement(slides[slides.length - 1], { key: 'clone-last' })
+            : slides[slides.length - 1],
+          ...slides,
+          isValidElement(slides[0]) ? cloneElement(slides[0], { key: 'clone-first' }) : slides[0],
+        ]
+      : slides;
+  // Leading clone occupies the first cell in continuous mode, so shift the translate by one.
+  const translate = continuous ? -(offset + 1) * 100 : -offset * 100;
+
+  const handleTransitionEnd = useCallback(
+    (event: TransitionEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget && event.propertyName === 'transform') {
+        settle();
+      }
+    },
+    [settle],
   );
 
   return (
@@ -182,12 +284,17 @@ const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
       {transition === 'slide' ? (
         // Lay slides side-by-side in a flex track and translate by the active index. Each slide
         // sizes itself to the viewport via `shrink-0 basis-full` (see `Carousel.Slide`).
-        // `motion-reduce` respects the user's reduced-motion preference.
+        // `motion-reduce` respects the user's reduced-motion preference; the snap after a wrap also
+        // disables the transition (`animate === false`).
         <div
-          className='flex h-full transition-transform duration-300 ease-out motion-reduce:transition-none'
-          style={{ transform: `translateX(-${index * 100}%)` }}
+          className={mx(
+            'flex h-full motion-reduce:transition-none',
+            animate ? 'transition-transform duration-300 ease-out' : 'transition-none',
+          )}
+          style={{ transform: `translateX(${translate}%)` }}
+          onTransitionEnd={handleTransitionEnd}
         >
-          {children}
+          {trackChildren}
         </div>
       ) : (
         children
@@ -340,7 +447,10 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
             key={i}
             role='tab'
             aria-selected={i === index}
-            classNames={mx(i === index ? 'text-primary-500' : 'text-description', 'border')}
+            classNames={mx(
+              'grid p-1! w-4! h-4! border overflow-hidden',
+              i === index ? 'text-primary-500' : 'text-description',
+            )}
             variant='ghost'
             size={3}
             square
