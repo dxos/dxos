@@ -6,6 +6,7 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Instructions } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
+import { Routine } from '@dxos/plugin-routine';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
@@ -30,6 +31,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       Subscription.Post,
       Subscription.PostContent,
       Magazine.Magazine,
+      Routine.Routine,
       Instructions.Instructions,
       StateMap.StateMap,
       TagIndex.TagIndex,

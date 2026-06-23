@@ -193,7 +193,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           : Option.none();
       },
       actions: ({ object, nodeId }, get) => {
-        const deletable = !Type.isType(object);
+        // Types cannot be deleted here; neither can objects that have a parent (they cascade-delete
+        // with their parent, and the ECHO layer enforces this with an invariant on direct removal).
+        const deletable = !Type.isType(object) && !Obj.getParent(object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);

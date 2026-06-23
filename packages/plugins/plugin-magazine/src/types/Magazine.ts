@@ -11,6 +11,7 @@ import { Blueprint, Instructions } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
+import { Routine } from '@dxos/plugin-routine';
 import { StateMap } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -51,9 +52,10 @@ export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
- * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): its
- * instructions hold the editorial brief and it references the Magazine blueprint (the tool/output
- * contract). {@link CurateMagazine} runs the Routine to select matching Posts.
+ * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): it
+ * holds the editorial brief, is parented to the magazine (cascade-deletes with it), and appears in
+ * the nav tree as a non-deletable child. {@link CurateMagazine} runs the curation agent via the
+ * Routine's owned Instructions.
  */
 export const Magazine = Schema.Struct({
   /** User-facing title of the magazine. */
@@ -63,12 +65,17 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
-   * references the Magazine blueprint. Rendered inline by the properties form (the Instructions'
-   * own fields), so the brief is edited there without a custom surface.
-   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
+   * Curation Routine, created with the magazine ({@link make}). Parented to the magazine so it
+   * cascade-deletes with it and appears in the nav tree as a non-deletable child. Rendered inline
+   * by the properties form (Routine's own fields), allowing the routine to be reviewed inline.
    */
-  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+  routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
+  /**
+   * Curation Instructions owned by the Routine ({@link make}). Kept as a direct ref on the magazine
+   * so the strong-dep chain (magazine → instructions → text) ensures all objects are persisted when
+   * the magazine is added to the database. Not shown in forms.
+   */
+  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -91,7 +98,7 @@ export const Magazine = Schema.Struct({
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
   AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.magazine', '0.2.0')),
+  Type.makeObject(DXN.make('org.dxos.type.magazine', '0.3.0')),
 );
 
 export type Magazine = Type.InstanceType<typeof Magazine>;
@@ -99,7 +106,7 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'instructions' | 'postState'> & {
+export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'routine' | 'instructions' | 'postState'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
   /** Editorial brief seeded into the curation Routine's instructions (composed with the default methodology). */
@@ -107,12 +114,14 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' |
 };
 
 /**
- * Creates a Magazine plus its curation Routine and per-Post state map as hidden children (all
- * cascade-deleted with the magazine). The Routine holds the editorial brief (its instructions,
- * seeded from {@link composeInstructions}) and references the Magazine blueprint by its registry DXN;
- * {@link CurateMagazine} runs it and the agent resolves the blueprint at run time.
+ * Creates a Magazine plus its curation Routine, Instructions, and per-Post state map — all
+ * cascade-deleted with the magazine. The Routine is parented to the magazine (visible in the nav
+ * tree as a non-deletable child); the Instructions is parented to the Routine. Both are also held
+ * as direct refs on the magazine so the strong-dep chain persists the whole object graph when the
+ * magazine is added to the database.
  */
 export const make = (props: MakeProps = {}): Magazine => {
+  const curationName = props.name ? `${props.name} curation` : 'Magazine curation';
   const postState = StateMap.make();
   const magazine = Obj.make(Magazine, {
     name: props.name,
@@ -123,18 +132,23 @@ export const make = (props: MakeProps = {}): Magazine => {
   });
 
   const instructions = Instructions.make({
-    name: props.name ? `${props.name} curation` : 'Magazine curation',
+    name: curationName,
     text: composeInstructions(props.instructions),
     blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
   });
+  const routine = Routine.make({ name: curationName, triggers: [] });
+
   Obj.update(magazine, (magazine) => {
+    magazine.routine = Ref.make(routine);
     magazine.instructions = Ref.make(instructions);
   });
 
-  // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
-  Obj.setParent(instructions, magazine);
+  // Parent chain: magazine → routine → instructions → text; postState → magazine.
+  // Cascade-delete propagates down the parent chain when the magazine is deleted.
+  Obj.setParent(routine, magazine);
+  Obj.setParent(instructions, routine);
   if (instructions.text.target) {
     Obj.setParent(instructions.text.target, instructions);
   }

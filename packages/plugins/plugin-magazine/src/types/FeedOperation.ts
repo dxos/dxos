@@ -8,6 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Ref, Registry } from '@dxos/echo';
+// Routine.Routine is referenced transitively through Magazine.Magazine in the exported types; this
+// import is required for portable .d.ts emission even though Routine is unused at runtime.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Routine } from '@dxos/plugin-routine';
 
 import { meta } from '#meta';
 

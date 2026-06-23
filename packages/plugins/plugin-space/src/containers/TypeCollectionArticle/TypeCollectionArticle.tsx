@@ -34,8 +34,7 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
   const currentId = useSelection(attendableId, 'single');
 
   const objects = useQuery(space.db, Filter.type(typeUri));
-  // Parented objects belong to a collection and surface there, not in the type's list.
-  const visible = useMemo(() => objects.filter((object) => !Obj.getParent(object)), [objects]);
+  const visible = objects;
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {

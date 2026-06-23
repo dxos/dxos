@@ -481,6 +481,9 @@ export class EntityManager implements IDatabaseBinding {
 
   removeCore(core: ObjectCore): void {
     invariant(this._objects.has(core.id));
+    // Objects with a parent cascade-delete via the parent; direct removal is forbidden.
+    // Delete the parent instead — the ECHO query layer will treat this object as deleted transitively.
+    invariant(!core.getParent(), 'Cannot delete an object that has a parent; delete the parent instead.');
     core.setDeleted(true);
   }
 

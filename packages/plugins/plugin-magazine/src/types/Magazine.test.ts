@@ -6,10 +6,12 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { test } from 'vitest';
 
-import { Database, Feed, Tag } from '@dxos/echo';
+import { Instructions } from '@dxos/compute';
+import { Database, Feed, Obj, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
+import { Routine } from '@dxos/plugin-routine';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
 import * as Magazine from './Magazine';
@@ -23,6 +25,8 @@ const TestLayer = AssistantTestLayer({
     Subscription.Subscription,
     Subscription.Post,
     Magazine.Magazine,
+    Routine.Routine,
+    Instructions.Instructions,
     Tag.Tag,
     Text.Text,
     StateMap.StateMap,
@@ -53,9 +57,15 @@ describe('Magazine', () => {
         const magazine = yield* Database.add(Magazine.make({ name: 'The Cosmos', instructions: 'Astronomy news' }));
         yield* Database.flush();
 
-        // The instructions are created with the magazine (not lazily).
+        // The Routine is created with the magazine (not lazily), parented to it.
+        expect(magazine.routine).toBeDefined();
+        const routine = yield* Database.load(magazine.routine!);
+        expect(Obj.getParent(routine)?.id).toBe(magazine.id);
+
+        // The Instructions is created with the magazine, parented to the Routine.
         expect(magazine.instructions).toBeDefined();
         const instructions = yield* Database.load(magazine.instructions!);
+        expect(Obj.getParent(instructions)?.id).toBe(routine.id);
         expect(instructions.blueprints.length).toBeGreaterThan(0);
 
         const text = yield* Database.load(instructions.text);

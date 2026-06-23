@@ -6,6 +6,10 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
 import { Obj } from '@dxos/echo';
+// Routine.Routine is referenced transitively through Magazine.Magazine in the exported types; this
+// import is required for portable .d.ts emission even though Routine is unused at runtime.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Routine } from '@dxos/plugin-routine';
 
 import { type Magazine, type Subscription } from '../types';
 import { publishedTimestamp } from '../util/date';

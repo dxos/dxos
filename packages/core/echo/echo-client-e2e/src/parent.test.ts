@@ -125,6 +125,21 @@ describe('Parent Hierarchy', () => {
     }
   });
 
+  test('removing a child directly throws; removing the parent cascades', async () => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    await using db = await peer.createDatabase();
+    const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
+    const child = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' }));
+
+    // Direct removal of a parented child is forbidden; parent must be removed instead.
+    expect(() => db.remove(child)).toThrow();
+
+    // Removing the parent cascades: child becomes deleted transitively.
+    db.remove(parent);
+    expect(Obj.isDeleted(parent)).to.be.true;
+    expect(Obj.isDeleted(child)).to.be.true;
+  });
+
   // TODO(dmaretskyi): Currently bugged and I'm not sure if we want to support this.
   test.skip('cannot un-delete child if parent is deleted', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
