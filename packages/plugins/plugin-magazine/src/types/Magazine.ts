@@ -63,13 +63,6 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
-   * references the Magazine blueprint. Rendered inline by the properties form (the Instructions'
-   * own fields), so the brief is edited there without a custom surface.
-   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
-   */
-  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
-  /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
    * curation time and take precedence over the RSS-derived defaults in display.
@@ -87,6 +80,13 @@ export const Magazine = Schema.Struct({
     }),
     Schema.optional,
   ),
+  /**
+   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
+   * references the Magazine blueprint. Rendered inline by the properties form (the Instructions'
+   * own fields), so the brief is edited there without a custom surface.
+   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
+   */
+  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
@@ -133,7 +133,7 @@ export const make = (props: MakeProps = {}): Magazine => {
     magazine.instructions = Ref.make(instructions);
   });
 
-  // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
+  // Cascade-delete the Instructions object (and its Text) and the per-Post state with the magazine.
   Obj.setParent(instructions, magazine);
   if (instructions.text.target) {
     Obj.setParent(instructions.text.target, instructions);
