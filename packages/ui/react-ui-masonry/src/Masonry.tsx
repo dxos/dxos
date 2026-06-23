@@ -13,6 +13,8 @@ import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/r
 import { composable, composableProps, scrollbar } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
+// TODO(burdon): Make scrollable optional.
+
 //
 // Context
 //
