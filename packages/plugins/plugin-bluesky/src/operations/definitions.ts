@@ -58,4 +58,4 @@ export const SyncBlueskyTargets = Operation.make({
     /** Total posts appended for this binding's target. */
     appended: Schema.Number,
   }),
-});
+}).pipe(Operation.visible);

@@ -28,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   // MagazineOperationHandlerSet provides CurateMagazine + SyncFeed + FetchArticleContent (the blueprint
-  // tool); AgentHandlers provides the AgentPrompt handler the curate operation invokes.
+  // tool); AgentHandlers provides the RunInstructions handler the curate operation invokes.
   operationHandlers: [MagazineOperationHandlerSet, AgentHandlers],
   types: [
     Feed.Feed,

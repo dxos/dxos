@@ -219,7 +219,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
 
     const identity = this._identity;
-    const path = `/ws/${identity.identityKey}/${identity.peerKey}`;
+    const path = `/ws/${identity.identityDid}/${identity.peerKey}`;
     const protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
     if (this._identity !== identity) {
       log('identity changed during auth header request');

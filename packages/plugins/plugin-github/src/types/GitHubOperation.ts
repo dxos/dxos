@@ -75,4 +75,4 @@ export const SyncGitHubRepositories = Operation.make({
       comments: Schema.Number,
     }),
   }),
-});
+}).pipe(Operation.visible);

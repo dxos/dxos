@@ -33,6 +33,7 @@ const make = () =>
         ${'```'}
       `,
     }),
+    agentCanEnable: true,
   });
 
 const blueprint: Blueprint.Definition = {

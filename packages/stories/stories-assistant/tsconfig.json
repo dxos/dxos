@@ -79,6 +79,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-protocol"
     },
     {
@@ -98,9 +101,6 @@
     },
     {
       "path": "../../plugins/plugin-attention"
-    },
-    {
-      "path": "../../plugins/plugin-automation"
     },
     {
       "path": "../../plugins/plugin-board"
@@ -143,6 +143,9 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-script"

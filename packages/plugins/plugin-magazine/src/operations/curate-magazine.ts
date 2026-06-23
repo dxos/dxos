@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityId, type SpaceId } from '@dxos/keys';
@@ -114,8 +114,8 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
 
 /**
  * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
- * The magazine's persisted Routine (created with the magazine) carries the editorial instructions and
- * references the Magazine blueprint, which AgentPrompt resolves at run time. No routine → no selection.
+ * The magazine's persisted Instructions (created with the magazine) carries the editorial brief and
+ * references the Magazine blueprint, which RunInstructions resolves at run time. No instructions → no selection.
  * Tolerates agent/parse failures (logs → no selection).
  */
 const selectPostIds = (
@@ -124,7 +124,7 @@ const selectPostIds = (
   spaceId: SpaceId,
 ) =>
   Effect.gen(function* () {
-    if (!magazine.routine) {
+    if (!magazine.instructions) {
       return [] as readonly (typeof CurationOutput.Type.posts)[number][];
     }
     const input = {
@@ -139,7 +139,7 @@ const selectPostIds = (
       })),
     };
 
-    return yield* Operation.invoke(AgentPrompt, { prompt: magazine.routine, input }, { spaceId }).pipe(
+    return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
       Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catchAll((error) =>

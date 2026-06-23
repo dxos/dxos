@@ -75,7 +75,7 @@ export const DraftEmail = Operation.make({
     newMessageDXN: Schema.String,
   }),
   services: [Database.Service],
-});
+}).pipe(Operation.visible);
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
@@ -116,7 +116,7 @@ export const GmailSend = Operation.make({
     threadId: Schema.String,
   }),
   services: [Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 export const GoogleMailSync = Operation.make({
   meta: {
@@ -153,7 +153,7 @@ export const GoogleMailSync = Operation.make({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
-});
+}).pipe(Operation.visible);
 
 export const GoogleCalendarSync = Operation.make({
   meta: {
@@ -176,7 +176,7 @@ export const GoogleCalendarSync = Operation.make({
     newEvents: Schema.Number,
   }),
   services: [Database.Service, Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 /**
  * Create a single event on Google Calendar (the write counterpart to {@link GoogleCalendarSync}, and
@@ -200,7 +200,7 @@ export const CreateGoogleCalendarEvent = Operation.make({
     id: Schema.String.annotations({ description: 'Remote Google event id.' }),
   }),
   services: [Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 /**
  * Push draft (locally-created, not-yet-synced) events for a calendar up to Google Calendar, then
@@ -293,7 +293,7 @@ export const GoogleContactsSync = Operation.make({
     upserted: Schema.Number,
   }),
   services: [Database.Service, Credential.CredentialsService],
-});
+}).pipe(Operation.visible);
 
 export const SyncContacts = Operation.make({
   meta: {

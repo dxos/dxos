@@ -136,6 +136,8 @@ export const Read = Operation.make({
   services: [Database.Service],
 });
 
+// The edit descriptions feed the script blueprint's LLM tool definition (and its memoized
+// fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Doc.applyEdits`.
 const Edit = Schema.Struct({
   oldString: Schema.String.annotations({
     description: 'The text to find in the source.',

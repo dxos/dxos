@@ -375,6 +375,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-doc/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-generator/package.json",
           "jsonpath": "$.version"
         },
@@ -556,11 +561,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -801,6 +801,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-routine/package.json",
           "jsonpath": "$.version"
         },
         {

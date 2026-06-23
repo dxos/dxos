@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { AccessToken } from '@dxos/types';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.sandbox';
 
@@ -19,6 +20,14 @@ export const Sandbox = Schema.Struct({
   baseImage: Schema.optional(Schema.String),
   createdAt: Schema.optional(Schema.String),
   expiresAt: Schema.optional(Schema.String),
+  credentials: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        env: Schema.String,
+        token: Ref.Ref(AccessToken.AccessToken),
+      }),
+    ),
+  ),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.sandbox', '0.1.0')),

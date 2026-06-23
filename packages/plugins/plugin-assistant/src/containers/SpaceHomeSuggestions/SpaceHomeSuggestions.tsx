@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 
@@ -37,7 +37,7 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
       if (!space) {
         return;
       }
-      void invokePromise(AutomationOperation.RunPromptInNewChat, { db: space.db, prompt });
+      void invokePromise(RoutineOperation.RunPromptInNewChat, { db: space.db, instructions: prompt });
     },
     [invokePromise, space],
   );

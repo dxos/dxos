@@ -89,9 +89,6 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -123,6 +120,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-sample"

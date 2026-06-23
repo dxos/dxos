@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
@@ -27,7 +27,9 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      TypeSection.createTypeSectionExtension(Channel.Channel, { position: 300 }),
+      TypeSection.createTypeSectionExtension(Channel.Channel, {
+        match: AppNodeMatcher.whenNavTreeGroup(AppNode.NAV_TREE_GROUP_COMM_TYPE),
+      }),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',

@@ -241,6 +241,25 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       // resolver: (id, get) => { ... },
     }),
 
+    // Communications section group — no single plugin owns this category; it lives here so the
+    // group is always present when the space plugin is active. A more specific plugin (e.g. a
+    // future plugin-communications) should own this once one exists.
+    // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
+    GraphBuilder.createExtension({
+      id: AppNode.NAV_TREE_GROUP_COMM_ID,
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          AppNode.makeGroup({
+            id: AppNode.NAV_TREE_GROUP_COMM_ID,
+            type: AppNode.NAV_TREE_GROUP_COMM_TYPE,
+            label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            space,
+            position: 300,
+          }),
+        ]),
+    }),
+
     GraphBuilder.createExtension({
       id: 'actions',
       match: AppNodeMatcher.whenSpace,

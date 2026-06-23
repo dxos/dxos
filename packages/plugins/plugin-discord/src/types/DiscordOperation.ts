@@ -58,4 +58,4 @@ export const SyncDiscordChannel = Operation.make({
       added: Schema.Number,
     }),
   }),
-});
+}).pipe(Operation.visible);

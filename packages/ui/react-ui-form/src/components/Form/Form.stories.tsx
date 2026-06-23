@@ -167,7 +167,7 @@ const SettingsSchema = Schema.mutable(
 
 export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
   render: (args) => (
-    <div className='grid grid-cols-2'>
+    <div className='grid grid-cols-2 w-full'>
       <DefaultStory {...args} />
       <DefaultStory {...args} variant='settings' />
     </div>
