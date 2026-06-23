@@ -164,4 +164,3 @@ export const upsert = (key: string): Effect.Effect<Skill, NotFoundError, Registr
   });
 
 export class NotFoundError extends BaseError.extend('SkillNotFound', 'Skill not found') {}
-

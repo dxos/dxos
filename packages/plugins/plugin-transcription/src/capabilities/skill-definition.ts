@@ -9,6 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { TranscriptionSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TranscriptionSkill)]);
+const skillDefinition = () =>
+  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TranscriptionSkill)]);
 
 export default skillDefinition;
