@@ -16,7 +16,6 @@ import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -135,7 +134,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...formTranslations, ...stackTranslations],
+    translations: [...translations, ...formTranslations],
   },
 } satisfies Meta<typeof PipelineProperties>;
 

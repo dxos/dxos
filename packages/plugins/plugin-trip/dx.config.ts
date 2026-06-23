@@ -25,7 +25,7 @@ export default Config2.make({
       flight and hotel confirmation emails, parses them into Booking and Segment
       objects, and appends them to the relevant Trip in the user's space. The
       extractor runs in three modes: manually from a message action menu,
-      agent-assisted via the inbox blueprint tool, and automatically on message
+      agent-assisted via the inbox skill tool, and automatically on message
       arrival when opted in per Mailbox. All three modes funnel through the same
       ExtractMessage operation so behaviour is consistent regardless of how
       extraction was triggered.

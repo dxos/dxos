@@ -278,8 +278,10 @@ export const FormSection = composable<HTMLDivElement, FormSectionProps>(
     const styles = formTheme.styles({ variant });
     return (
       <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
-        {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
-        {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
+        <div className={styles.sectionHeader()}>
+          {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
+          {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
+        </div>
         {children}
       </div>
     );

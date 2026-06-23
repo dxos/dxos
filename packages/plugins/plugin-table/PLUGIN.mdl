@@ -186,11 +186,11 @@ feat F-5: Comments
 ```
 
 ```mdl
-feat F-6: AI / Blueprint
+feat F-6: AI / Skill
 
-  req F-6.1: Plugin contributes a Table blueprint with instructions for creating and updating tables.
+  req F-6.1: Plugin contributes a Table skill with instructions for creating and updating tables.
   req F-6.2:
-    when: AI agent uses the Table blueprint
+    when: AI agent uses the Table skill
     then: agent can create tables with sorted columns via op:create
 ```
 

@@ -72,7 +72,7 @@ describe('Magazine', () => {
         }
         const instructions = yield* Database.load(magazine.instructions);
         expect(Obj.getParent(instructions)?.id).toBe(routine.id);
-        expect(instructions.blueprints.length).toBeGreaterThan(0);
+        expect(instructions.skills.length).toBeGreaterThan(0);
 
         const text = yield* Database.load(instructions.text);
         expect(text.content).toContain('## Topic');

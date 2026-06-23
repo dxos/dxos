@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
 
-import { AutomationTemplates, BlueprintDefinition, OperationHandler } from '#capabilities';
+import { AutomationTemplates, SkillDefinition, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProfileOf } from '#types';
@@ -14,7 +14,7 @@ import { ProfileOf } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrmPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),

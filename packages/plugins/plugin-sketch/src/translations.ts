@@ -24,7 +24,6 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Sketch',
-        'settings.title': 'Sketch settings',
         'settings.hover-tools.label': 'Auto hide controls',
       },
     },

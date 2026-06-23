@@ -13,7 +13,7 @@ import { useSpinner } from '../hooks';
 export type StatusBarProps = {
   model: ModelName;
   metadata?: AiService.ServiceMetadata;
-  blueprints?: string[];
+  skills?: string[];
   processing?: Accessor<boolean>;
 };
 
@@ -36,8 +36,8 @@ export const StatusBar = (props: StatusBarProps) => {
       </text>
       <box flexGrow={1} />
       <box marginRight={1} flexDirection='row'>
-        <For each={props.blueprints}>
-          {(blueprint) => <text style={{ fg: theme.text.secondary, marginRight: 1 }}>{toCircled(blueprint[0])}</text>}
+        <For each={props.skills}>
+          {(skill) => <text style={{ fg: theme.text.secondary, marginRight: 1 }}>{toCircled(skill[0])}</text>}
         </For>
       </box>
       <text style={{ fg: theme.text.subdued, marginRight: 1 }}>{props.model}</text>

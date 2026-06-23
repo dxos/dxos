@@ -16,7 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { Connection } from '@dxos/plugin-connector';
 
 import { SLACK_API_BASE } from '../constants';
 import { SlackApiError } from '../errors';
@@ -117,22 +117,21 @@ const SlackUsersInfoResponseSchema = Schema.Struct({
 });
 
 /**
- * Layer-based credentials service. Mirrors the `TrelloCredentials` pattern in
- * plugin-trello: every API call pulls creds from this service rather than
- * threading them through, so callers compose
- * `Effect.provide(SlackApi.SlackCredentials.fromIntegration(ref))` once at the
+ * Layer-based credentials service. Every API call pulls creds from this service
+ * rather than threading them through, so callers compose
+ * `Effect.provide(SlackApi.SlackCredentials.fromConnection(ref))` once at the
  * operation boundary.
  */
 export class SlackCredentials extends Context.Tag('@dxos/plugin-slack/SlackCredentials')<
   SlackCredentials,
   SlackCredentialsValue
 >() {
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>) =>
+  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       SlackCredentials,
       Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const connection = yield* Database.load(connectionRef);
+        const accessToken = yield* Database.load(connection.accessToken);
         return { token: accessToken.token };
       }),
     );
@@ -360,7 +359,7 @@ export const fetchBot = (botId: string): SlackEffect<SlackBot | undefined> =>
  * Fetches messages from a single conversation (`conversations.history`).
  *
  * `oldest` is a Slack ts string (`"1700000000.000000"`) — we store the most
- * recent processed `ts` as `IntegrationTarget.cursor` so subsequent syncs
+ * recent processed `ts` as the binding's `cursor` so subsequent syncs
  * pick up only new messages. Drains every page so callers see the full
  * delta in one call; `limit` caps the per-request page size only.
  *

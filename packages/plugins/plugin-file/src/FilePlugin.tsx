@@ -8,7 +8,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
-  BlueprintDefinition,
+  SkillDefinition,
   CreateObject,
   FileUploader,
   InlineBackend,
@@ -25,7 +25,7 @@ import { File } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const FilePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [File.File] }),

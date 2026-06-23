@@ -6,8 +6,8 @@ import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
@@ -33,8 +33,8 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
     ChessPlugin(),
     ClientPlugin({ config }),
+    ConnectorPlugin(),
     InboxPlugin(),
-    IntegrationPlugin(),
     MarkdownPlugin(),
     // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
     ObservabilityPlugin({} as any),

@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Card } from '@dxos/react-ui';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -33,7 +32,7 @@ const meta = {
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
-    translations: [...translations, ...stackTranslations],
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

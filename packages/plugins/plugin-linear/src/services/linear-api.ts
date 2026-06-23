@@ -16,7 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { Connection } from '@dxos/plugin-connector';
 
 import { LINEAR_API_URL } from '../constants';
 import { LinearGraphQLError } from '../errors';
@@ -110,12 +110,12 @@ export class LinearCredentials extends Context.Tag('@dxos/plugin-linear/LinearCr
   LinearCredentials,
   LinearCredentialsValue
 >() {
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>) =>
+  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       LinearCredentials,
       Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const connection = yield* Database.load(connectionRef);
+        const accessToken = yield* Database.load(connection.accessToken);
         return { token: accessToken.token };
       }),
     );

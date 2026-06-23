@@ -15,7 +15,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps, ObjectArticle, useTargetIntegration } from '#components';
+import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
@@ -35,8 +35,8 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   const event = live ?? subject;
   // A draft event (locally created, not yet synced) is editable and savable.
   const draft = DraftEvent.instanceOf(event);
-  // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
-  const { integration } = useTargetIntegration(calendar);
+  // Saving (pushing to Google Calendar) requires a connection bound to the calendar.
+  const { connection } = useTargetConnection(calendar);
 
   // Starring uses the calendar's TagIndex (events are feed objects). Subscribe to the index via
   // `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
@@ -119,7 +119,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
           <Event.Toolbar
             graph={graph}
             editing={draft}
-            saveDisabled={!integration}
+            saveDisabled={!connection}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
             onDelete={calendar ? handleDelete : undefined}

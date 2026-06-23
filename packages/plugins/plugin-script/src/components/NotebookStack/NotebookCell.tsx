@@ -85,7 +85,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       }
 
       return (
-        <>
+        <div className='flex flex-col divide-y divide-subdued-separator'>
           <TypescriptEditor
             id={cell.id}
             role='section'
@@ -100,7 +100,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             }}
           />
           <NotebookCellValue cell={cell} graph={graph} />
-        </>
+        </div>
       );
 
     case 'query':
@@ -113,7 +113,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <div className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-b border-subdued-separator']}
+            classNames={editorStyles}
             db={db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
@@ -154,12 +154,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   }
 
   return (
-    <div
-      className={mx(
-        'flex w-full bg-group-surface border-y border-subdued-separator text-description font-mono',
-        valueStyles,
-      )}
-    >
+    <div className={mx('flex w-full bg-group-surface text-description font-mono', valueStyles)}>
       {name && (
         <>
           <span className='text-success-text'>{name}</span>
@@ -197,11 +192,8 @@ const NotebookTextEditor = ({
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [
-      createBasicExtensions({
-        placeholder: t('notebook-markdown.placeholder'),
-        readOnly,
-      }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+      createBasicExtensions({ placeholder: t('notebook-markdown.placeholder'), readOnly }),
       createMarkdownExtensions(),
       decorateMarkdown(),
       extensionsProp,
@@ -210,7 +202,7 @@ const NotebookTextEditor = ({
 
   return (
     <Editor.Root>
-      <Editor.View {...props} extensions={extensions} selectionEnd />
+      <Editor.View classNames='border' {...props} extensions={extensions} selectionEnd />
     </Editor.Root>
   );
 };

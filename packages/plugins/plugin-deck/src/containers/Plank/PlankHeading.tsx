@@ -5,11 +5,11 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, AttentionSigil, AttentionSigilButton, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
-import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '#hooks';
@@ -35,7 +35,7 @@ export type PlankHeadingProps = {
   pending?: boolean;
   companioned?: 'primary' | 'companion';
   companions?: Node.Node[];
-  actions?: StackItemSigilAction[];
+  actions?: AttentionSigilAction[];
   debug?: boolean;
 };
 
@@ -108,7 +108,7 @@ export const PlankHeading = memo(
     }, [actions, node, variant, graph]);
 
     const handleAction = useCallback(
-      (action: StackItemSigilAction) => {
+      (action: AttentionSigilAction) => {
         if (typeof action.data === 'function') {
           void runAction(action as Node.Action, { parent: node, caller: meta.profile.key });
         }
@@ -177,7 +177,7 @@ export const PlankHeading = memo(
           <>
             <ActionRoot>
               {node && sigilActions ? (
-                <StackItem.Sigil
+                <AttentionSigil
                   icon={icon}
                   related={part === 'complementary'}
                   attendableId={attendableId}
@@ -189,12 +189,12 @@ export const PlankHeading = memo(
                     type={AppSurface.MenuFooter}
                     data={{ subject: node.data } satisfies AppSurface.MenuFooterData}
                   />
-                </StackItem.Sigil>
+                </AttentionSigil>
               ) : (
-                <StackItem.SigilButton>
+                <AttentionSigilButton>
                   <span className='sr-only'>{label}</span>
                   <Icon icon={icon} />
-                </StackItem.SigilButton>
+                </AttentionSigilButton>
               )}
             </ActionRoot>
             <TextTooltip text={label} onlyWhenTruncating>

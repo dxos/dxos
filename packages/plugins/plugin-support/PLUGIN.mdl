@@ -17,7 +17,7 @@ Composer's user-facing assistance plugin. Covers two paths:
    keeps the telemetry plugin focused on instrumentation only.
 3. **GitHub issue submission** — same form, optional third action: file a
    structured bug/feature request against the upstream repo. When the user
-   has authenticated the GitHub integration (via plugin-integration) the
+   has authenticated the GitHub integration (via plugin-connector) the
    issue is filed as them via the GitHub API; otherwise we open a prefilled
    `issues/new` URL in a new tab so the user can finish the submission in
    their own browser session.
@@ -26,9 +26,9 @@ A future iteration will absorb plugin-help (welcome tour, contextual hints,
 keyboard shortcuts) so all user education lives here.
 
 Initial scope is a thin skeleton: a `Ticket` schema, four ticket operations
-wired to a blueprint, a `FeedbackForm` + `captureUserFeedback` operation, and
+wired to a skill, a `FeedbackForm` + `captureUserFeedback` operation, and
 two surfaces (`Ticket` article + `--help` companion). Documentation search and
-issue filing are stubbed — the blueprint exists so the assistant can be
+issue filing are stubbed — the skill exists so the assistant can be
 exercised end-to-end while the integrations land in later phases.
 
 ## Extensions
@@ -215,11 +215,11 @@ feat F-1: Ticket Lifecycle
 ```mdl
 feat F-2: AI Support Assistant
 
-  req F-2.1: A blueprint is registered with key org.dxos.blueprint.support.
-  req F-2.2: Blueprint tools include createTicket, markInProgress, resolveTicket, searchDocs.
+  req F-2.1: A skill is registered with key org.dxos.skill.support.
+  req F-2.2: Skill tools include createTicket, markInProgress, resolveTicket, searchDocs.
   req F-2.3:
     when: a Ticket is the active object
-    then: the support blueprint is bound to the chat companion surface.
+    then: the support skill is bound to the chat companion surface.
   req F-2.4: The assistant is instructed to gather details, search docs, and only resolve when the user confirms.
 ```
 

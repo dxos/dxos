@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/assistant';
-import { Blueprint, Template } from '@dxos/compute';
+import { Skill, Template } from '@dxos/compute';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -44,20 +44,18 @@ const TEMPLATE = trim`
 
 const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
-  const [blueprint] = useState(() => {
+  const [skill] = useState(() => {
     const space = client.spaces.get()[0];
     return space.db.add(
-      Blueprint.make({
-        key: 'com.example.blueprint.test',
+      Skill.make({
+        key: 'com.example.skill.test',
         name: 'Test',
         instructions: Template.make({ source }),
       }),
     );
   });
 
-  return (
-    <TemplateEditor classNames='dx-document bg-base-surface' id={blueprint.id} source={blueprint.instructions.source} />
-  );
+  return <TemplateEditor classNames='dx-document bg-base-surface' id={skill.id} source={skill.instructions.source} />;
 };
 
 const meta = {
@@ -68,7 +66,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [Blueprint.Blueprint],
+      types: [Skill.Skill],
       createIdentity: true,
       createSpace: true,
     }),

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { type GetProfileUsageResponse } from '@dxos/protocols';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -50,6 +51,7 @@ const meta = {
   title: 'plugins/plugin-client/containers/UsageView',
   component: UsageView,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  tags: ['test'],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -111,4 +113,15 @@ export const Empty: Story = {
 
 export const Unavailable: Story = {
   args: { state: 'unavailable' },
+};
+
+// Drives the raw-response disclosure: collapsed until toggled, then the JSON viewer appears.
+export const Test: Story = {
+  args: Default.args,
+  play: async () => {
+    const screen = within(document.body);
+    await expect(screen.queryByTestId('usage-raw-json')).toBeNull();
+    await userEvent.click(await screen.findByRole('button', { name: 'Raw JSON' }, { timeout: 10_000 }));
+    await screen.findByTestId('usage-raw-json');
+  },
 };

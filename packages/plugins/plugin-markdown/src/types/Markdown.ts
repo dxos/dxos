@@ -9,7 +9,7 @@ import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
+export const SKILL_KEY = 'org.dxos.skill.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
 import * as SettingsModule from './Settings';
@@ -28,7 +28,7 @@ export const Document = Schema.Struct({
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
   Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
   CollectionItemAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),

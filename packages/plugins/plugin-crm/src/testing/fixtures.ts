@@ -6,7 +6,7 @@ import { ContentBlock, Message } from '@dxos/types';
 
 /**
  * Shared email fixtures used by both the extractor unit tests and the CRM
- * blueprint playground. Keeping them in one module prevents drift between
+ * skill playground. Keeping them in one module prevents drift between
  * test layers as we tune behaviour.
  *
  * All names, emails, phone numbers, and corporate domains are synthetic.

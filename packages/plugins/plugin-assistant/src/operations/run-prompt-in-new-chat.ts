@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Instructions, Template } from '@dxos/compute';
+import { Skill, Operation, Instructions, Template } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,11 +24,11 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
   RoutineOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
-        function* ({ db, instructions, objects, blueprints, background }) {
+        function* ({ db, instructions, objects, skills, background }) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
-          if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
+          if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
             const feedTarget = chat.feed.target;
             invariant(feedTarget, 'Chat feed not found.');
             const client = yield* Capability.get(ClientCapabilities.Client);
@@ -44,14 +44,14 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
                   bindingProps.objects = objects.map((obj) => Ref.make(obj));
                 }
 
-                if (blueprints && blueprints.length > 0) {
-                  const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
-                  const matchedBlueprints = allBlueprints.filter((blueprint) => {
-                    const blueprintKey = Obj.getMeta(blueprint).key;
-                    return blueprintKey !== undefined && blueprints.includes(blueprintKey);
+                if (skills && skills.length > 0) {
+                  const allSkills = await db.query(Filter.type(Skill.Skill)).run();
+                  const matchedSkills = allSkills.filter((skill) => {
+                    const skillKey = Obj.getMeta(skill).key;
+                    return skillKey !== undefined && skills.includes(skillKey);
                   });
-                  if (matchedBlueprints.length > 0) {
-                    bindingProps.blueprints = matchedBlueprints.map((blueprint) => Ref.make(blueprint));
+                  if (matchedSkills.length > 0) {
+                    bindingProps.skills = matchedSkills.map((skill) => Ref.make(skill));
                   }
                 }
 
@@ -66,7 +66,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
                 ? Ref.make(
                     Instructions.make({
                       text: instructions,
-                      blueprints: [],
+                      skills: [],
                     }),
                   )
                 : instructions;

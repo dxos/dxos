@@ -11,17 +11,17 @@ export default Config2.make({
     name: 'CRM',
     author: 'DXOS',
     description: trim`
-      CRM adds a blueprint that drives the AI assistant to research people and
+      CRM adds a skill that drives the AI assistant to research people and
       organizations and produce structured Profile documents stored in your
       local-first ECHO space. Given a Person, Organization, or email Message as
-      input, the blueprint locates or creates the corresponding ECHO objects,
+      input, the skill locates or creates the corresponding ECHO objects,
       performs web research, and composes a markdown Profile following an editable
       section template (Overview, Background, Current Role, Organization, Key
       Links, Notes, Sources).
 
       The plugin is a thin composition layer: heavy lifting such as web search,
       document creation, and ECHO database CRUD is delegated to existing
-      blueprints from @dxos/assistant-toolkit (research, web-search, database,
+      skills from @dxos/assistant-toolkit (research, web-search, database,
       markdown). plugin-crm contributes CRM-specific instructions, a ProfileOf
       ECHO relation that links a Profile document to its subject, a best-effort
       image-attachment operation that uploads avatars and company logos to the
@@ -37,10 +37,10 @@ export default Config2.make({
 
       v1 includes a Mailbox companion panel for one-click CRM routine setup and
       enable/disable toggling. All further customisation is done through the
-      blueprint editor: the section template and research instructions are editable
+      skill editor: the section template and research instructions are editable
       prose, and additional research sources (such as a planned LinkedIn integration
       via the browser extension) register themselves via the ResearchSource contract
-      without modifying the core blueprint.
+      without modifying the core skill.
     `,
     icon: { key: 'ph--address-book--regular', hue: 'rose' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',

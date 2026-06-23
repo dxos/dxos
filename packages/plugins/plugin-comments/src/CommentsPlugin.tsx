@@ -13,7 +13,7 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 import {
   AgentRunner,
   AppGraphBuilder,
-  BlueprintDefinition,
+  SkillDefinition,
   Markdown,
   OperationHandler,
   UndoMappings,
@@ -29,7 +29,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CommentsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({

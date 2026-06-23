@@ -13,7 +13,6 @@ export const translations = [
         'object.placeholder': 'New table',
         'create-object.label': 'Create table',
         'table-name.placeholder': 'Table name',
-        'settings.title': 'Table settings',
         'table-schema.label': 'Type',
         'continue.label': 'Continue',
         'create-stack-section.label': 'Create table',

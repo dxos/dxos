@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
@@ -17,12 +17,12 @@ import { trim } from '@dxos/util';
 
 import * as Subscription from './Subscription';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
+export const SKILL_KEY = 'org.dxos.skill.magazine';
 
 /**
  * Default editorial methodology seeded into a Magazine's curation Routine. Describes WHAT to curate
  * (selection, dedup, snippet, hero image). The HOW (candidate input shape, tool usage, output
- * contract) lives in the Magazine blueprint, not here.
+ * contract) lives in the Magazine skill, not here.
  */
 export const DEFAULT_INSTRUCTIONS = trim`
   You curate articles for a Magazine around the Topic described below.
@@ -53,9 +53,9 @@ export type PostState = Schema.Schema.Type<typeof PostState>;
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
  * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): it
- * holds the editorial brief, is parented to the magazine (cascade-deletes with it), and appears in
- * the nav tree as a non-deletable child. {@link CurateMagazine} runs the curation agent via the
- * Routine's owned Instructions.
+ * holds the editorial brief and references the Magazine skill (the tool/output contract), is
+ * parented to the magazine (cascade-deletes with it), and appears in the nav tree as a
+ * non-deletable child. {@link CurateMagazine} runs the Routine to select matching Posts.
  */
 export const Magazine = Schema.Struct({
   /** User-facing title of the magazine. */
@@ -97,7 +97,7 @@ export const Magazine = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.magazine', '0.3.0')),
 );
 
@@ -119,9 +119,9 @@ export type MakeProps = Omit<
 /**
  * Creates a Magazine plus its curation Routine, Instructions, and per-Post state map — all
  * cascade-deleted with the magazine. The Routine is parented to the magazine (visible in the nav
- * tree as a non-deletable child); the Instructions is parented to the Routine. Both are also held
- * as direct refs on the magazine so the strong-dep chain persists the whole object graph when the
- * magazine is added to the database.
+ * tree as a non-deletable child); the Instructions is parented to the Routine and references the
+ * Magazine skill by its registry DXN. Both are also held as direct refs on the magazine so the
+ * strong-dep chain persists the whole object graph when the magazine is added to the database.
  */
 export const make = (props: MakeProps = {}): Magazine => {
   const curationName = props.name ? `${props.name} curation` : 'Magazine curation';
@@ -137,7 +137,7 @@ export const make = (props: MakeProps = {}): Magazine => {
   const instructions = Instructions.make({
     name: curationName,
     text: composeInstructions(props.instructions),
-    blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
+    skills: [Ref.fromURI(Skill.registryURI(SKILL_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
   });

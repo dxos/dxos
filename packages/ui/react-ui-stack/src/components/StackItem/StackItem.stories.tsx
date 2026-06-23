@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { DropdownMenu, Icon } from '@dxos/react-ui';
+import { DropdownMenu, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem, type StackItemRootProps } from './StackItem';
@@ -18,15 +18,13 @@ const DefaultStory = (props: StackItemRootProps) => {
         <div className='sticky -top-px bg-(--sticky-bg) p-1 w-full'>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <StackItem.SigilButton>
-                <Icon icon='ph--dots-three--regular' />
-              </StackItem.SigilButton>
+              <IconButton icon='ph--dots-three--regular' iconOnly label='Actions' />
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>
         </div>
       </StackItem.Heading>
       <StackItem.Content>
-        <div className='p-4 text-center'>Content</div>
+        <div className='grid place-items-center'>Content</div>
       </StackItem.Content>
     </StackItem.Root>
   );

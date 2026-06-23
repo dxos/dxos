@@ -17,7 +17,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/types/index.ts'

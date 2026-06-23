@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -17,14 +17,14 @@ import { Agent, Chat, Plan } from '../types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Blueprint.Blueprint, Feed.Feed, Text.Text],
+  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed, Text.Text],
   disableLlmMemoization: true,
 });
 
 const makeAgent = Effect.fnUntraced(function* () {
   return yield* Agent.makeInitialized(
     { name: 'Test', instructions: '' },
-    Blueprint.make({ key: 'org.dxos.test.blueprint', name: 'Test' }),
+    Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
   );
 });
 

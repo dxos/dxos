@@ -10,7 +10,7 @@ import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
+export const SKILL_KEY = 'org.dxos.skill.chess';
 
 /**
  * Chess variant state. Referenced by the base `Game` object via `Game.variant`.
@@ -25,7 +25,7 @@ export const State = Schema.Struct({
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--shield-chevron--regular', hue: 'amber' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   // Implementation detail of the unified `Game` schema. The user-facing object is `Game`;
   // this state is only ever referenced via `Game.variant`. HiddenAnnotation keeps it out of the
   // navtree's typed branches so an orphaned state object doesn't reappear after the

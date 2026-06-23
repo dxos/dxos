@@ -15,7 +15,7 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, McpServer, Operation, Trace } from '@dxos/compute';
+import { type Skill, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -38,7 +38,7 @@ export type RunProps<R = never> = {
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 
   /**
-   * Space-level MCP servers to connect alongside blueprint-defined ones.
+   * Space-level MCP servers to connect alongside skill-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
 
@@ -69,7 +69,7 @@ const SUMMARY_THRESHOLD = 80_000;
  */
 export class Session extends Resource {
   /**
-   * Blueprints and objects bound to the session.
+   * Skills and objects bound to the session.
    */
   private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
@@ -114,7 +114,7 @@ export class Session extends Resource {
     ToolExecutionService | ToolResolverService
   > {
     return Effect.gen(this, function* () {
-      const toolkit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
+      const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
   }
@@ -140,12 +140,12 @@ export class Session extends Resource {
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
-      const blueprints = this.context.getBlueprints();
+      const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
       log('run', {
         history: history.length,
-        blueprints: blueprints.length,
+        skills: skills.length,
         objects: objects.length,
       });
 
@@ -159,27 +159,27 @@ export class Session extends Resource {
 
       yield* request.begin({
         history,
-        blueprints,
+        skills,
         objects,
         prompt: params.prompt,
         system: params.system,
       });
 
-      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled blueprints.
+      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       do {
         yield* Effect.promise(() => this.context.sync());
-        const currentBlueprints = this.context.getBlueprints();
-        const mcps = yield* connectMcpServers(currentBlueprints, params.mcpServers);
+        const currentSkills = this.context.getSkills();
+        const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
-          blueprints: currentBlueprints,
+          skills: currentSkills,
           opaqueToolkits: mcps,
         });
 
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
-          blueprints: currentBlueprints,
+          skills: currentSkills,
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
@@ -270,11 +270,11 @@ const aiContextFromSession = Layer.effect(
 );
 
 const connectMcpServers = (
-  blueprints: readonly Blueprint.Blueprint[],
+  skills: readonly Skill.Skill[],
   spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
-    blueprints,
+  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+    skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
@@ -283,7 +283,7 @@ const connectMcpServers = (
     protocol,
     apiKey,
   }));
-  const allServers = [...blueprintServers, ...spaceServers];
+  const allServers = [...skillServers, ...spaceServers];
 
   return pipe(
     allServers,

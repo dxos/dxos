@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -30,11 +30,7 @@ import { type Notebook } from '#types';
 
 import { ComputeGraph } from '../../notebook';
 
-const INCLUDE_BLUEPRINTS = [
-  'org.dxos.blueprint.assistant',
-  'org.dxos.blueprint.database',
-  'org.dxos.blueprint.markdown',
-];
+const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
@@ -43,7 +39,7 @@ export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebo
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
-  const db = Obj.getDatabase(notebook);
+  const db = notebook ? Obj.getDatabase(notebook) : undefined;
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
@@ -128,23 +124,6 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     await handleExecPrompts();
   }, [graph, handleExecQueries, handleExecPrompts]);
 
-  const handleRearrange = useCallback<NonNullable<NotebookStackProps['onRearrange']>>(
-    (source, target) => {
-      invariant(notebook);
-      const from = notebook.cells.findIndex((cell) => cell.id === source.id);
-      const to = notebook.cells.findIndex((cell) => cell.id === target.id);
-      if (from != null && to != null) {
-        Obj.update(notebook, (notebook) => {
-          const cell = notebook.cells.splice(from, 1)[0];
-          if (cell) {
-            notebook.cells.splice(to, 0, cell);
-          }
-        });
-      }
-    },
-    [notebook],
-  );
-
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     async (type, after) => {
       invariant(notebook);
@@ -159,14 +138,14 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
 
         case 'prompt': {
           if (db) {
-            const objects = await db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-            const blueprints = objects
-              .filter((blueprint) => {
-                const key = Obj.getMeta(blueprint).key;
-                return key !== undefined && INCLUDE_BLUEPRINTS.includes(key);
+            const objects = await db.query(Query.select(Filter.type(Skill.Skill))).run();
+            const skills = objects
+              .filter((skill) => {
+                const key = Obj.getMeta(skill).key;
+                return key !== undefined && INCLUDE_SKILLS.includes(key);
               })
-              .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Instructions.make({ text: '', blueprints }));
+              .map((skill) => Ref.make(skill));
+            cell.prompt = Ref.make(Instructions.make({ text: '', skills }));
           }
           break;
         }
@@ -212,14 +191,13 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <NotebookStack
           db={db}
           notebook={notebook}
           graph={graph}
           env={env}
           promptResults={promptResults}
-          onRearrange={handleRearrange}
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />

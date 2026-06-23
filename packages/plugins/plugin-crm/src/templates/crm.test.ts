@@ -15,8 +15,8 @@ import { Routine } from '@dxos/plugin-routine';
 
 import { crm } from './crm';
 
-/** Number of blueprint keys wired into a CRM routine. */
-const BLUEPRINT_COUNT = 4;
+/** Number of skill keys wired into a CRM routine. */
+const SKILL_COUNT = 4;
 
 const dbLayer = TestDatabaseLayer({
   types: [
@@ -54,7 +54,7 @@ describe('crm routine template', () => {
       const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
       expect(routines).toHaveLength(1);
       expect(routines[0]?.name).toContain('Test Mailbox');
-      expect(routines[0]?.blueprints).toHaveLength(BLUEPRINT_COUNT);
+      expect(routines[0]?.skills).toHaveLength(SKILL_COUNT);
 
       const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
       expect(triggers).toHaveLength(1);

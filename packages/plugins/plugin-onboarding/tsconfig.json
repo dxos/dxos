@@ -99,13 +99,13 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-connector"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-inbox"
-    },
-    {
-      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-kanban"
