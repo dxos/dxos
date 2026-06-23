@@ -22,7 +22,7 @@ export default Config2.make({
 
       The plugin integrates deeply with the Composer lifecycle: a default Task table is created
       when a new space is initialised, and a table is automatically opened whenever a new schema
-      type is added to a space. An AI blueprint lets agents create and populate tables
+      type is added to a space. An AI skill lets agents create and populate tables
       programmatically using the plugin's operation set.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-table',

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
+import { Skill, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Routine } from '@dxos/plugin-routine/types';
 
@@ -15,12 +15,12 @@ const RUN_INSTRUCTIONS_KEY = 'org.dxos.function.runInstructions';
 export type ScheduledRoutineOptions = {
   name: string;
   text: string;
-  blueprintKeys: readonly string[];
+  skillKeys: readonly string[];
   cron: string;
 };
 
 /**
- * Scaffold a timer-driven routine: a Routine (instructions + blueprints) run by the shared RunInstructions
+ * Scaffold a timer-driven routine: a Routine (instructions + skills) run by the shared RunInstructions
  * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
  * instructions before activating, and is owned by the routine (cascade-deletes with it); the instructions
  * stays independent, since it is edited separately and may be reused.
@@ -28,16 +28,16 @@ export type ScheduledRoutineOptions = {
 export const makeScheduledRoutine = ({
   name,
   text,
-  blueprintKeys,
+  skillKeys,
   cron,
 }: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, Error, Database.Service> =>
   Effect.gen(function* () {
-    const blueprints = blueprintKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
+    const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
     const instructions = yield* Database.add(
       Instructions.make({
         name,
         text,
-        blueprints,
+        skills,
       }),
     );
 

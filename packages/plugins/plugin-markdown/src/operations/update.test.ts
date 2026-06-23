@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Blueprint, Operation } from '@dxos/compute';
+import { Skill, Operation } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
@@ -20,7 +20,7 @@ import { trim } from '@dxos/util';
 
 import { WithProperties } from '#testing';
 
-import MarkdownBlueprint from '../blueprints/markdown-blueprint';
+import MarkdownSkill from '../skills/markdown-skill';
 import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
@@ -29,15 +29,8 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
-  types: [
-    SpaceProperties,
-    Collection.Collection,
-    Blueprint.Blueprint,
-    Markdown.Document,
-    HasSubject.HasSubject,
-    Feed.Feed,
-  ],
-  blueprints: [MarkdownBlueprint.make()],
+  types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
+  skills: [MarkdownSkill.make()],
   tracing: 'pretty',
 });
 
@@ -73,7 +66,7 @@ describe('update', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          blueprints: [MarkdownBlueprint.make()],
+          skills: [MarkdownSkill.make()],
         });
 
         yield* agent.submitPrompt('Create a document with a cookie recipe.');
@@ -132,7 +125,7 @@ describe('update', () => {
           }),
         );
         const agent = yield* AgentService.createSession({
-          blueprints: [MarkdownBlueprint.make()],
+          skills: [MarkdownSkill.make()],
           context: [Ref.make(document)],
         });
 
@@ -175,7 +168,7 @@ describe('update', () => {
           }),
         );
         const agent = yield* AgentService.createSession({
-          blueprints: [MarkdownBlueprint.make()],
+          skills: [MarkdownSkill.make()],
           context: [Ref.make(document)],
         });
 

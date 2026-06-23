@@ -433,7 +433,7 @@ feat F-5: Filters and Labels
 ```mdl
 feat F-6: AI Assistance
 
-  req F-6.1: Plugin contributes an Inbox blueprint with read / draft / classify / sync / extract tools.
+  req F-6.1: Plugin contributes an Inbox skill with read / draft / classify / sync / extract tools.
   req F-6.2:
     when: agent calls op:classifyEmail on a message
     then: best-matching tag is applied; no tag applied below extractors.threshold

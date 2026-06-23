@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
-import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Skill, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
@@ -43,10 +43,10 @@ const Handlers = OperationHandlerSet.make(
   ),
 );
 
-const blueprint = Blueprint.make({
-  key: 'org.dxos.blueprint.test',
-  name: 'Test blueprint',
-  tools: Blueprint.toolDefinitions({ operations: [ReadName] }),
+const skill = Skill.make({
+  key: 'org.dxos.skill.test',
+  name: 'Test skill',
+  tools: Skill.toolDefinitions({ operations: [ReadName] }),
 });
 
 const TestLayer = Layer.empty.pipe(
@@ -75,7 +75,7 @@ describe('Research', () => {
         yield* new AiRequest.Request({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({
-            blueprints: [blueprint],
+            skills: [skill],
           }),
         });
       },

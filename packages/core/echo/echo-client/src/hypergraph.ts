@@ -180,7 +180,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
           const entity = this._registry.getByURI(uri.toString());
           return entity ? middleware(entity) : undefined;
@@ -586,7 +586,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return undefined;
       } else if (DXN.isDXN(uri)) {
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         const entity = this._registry.getByURI(uri.toString());
         status = entity ? 'resolved' : 'missing';
         return entity ?? undefined;

@@ -8,7 +8,7 @@ A real-time voice-to-text transcription plugin for DXOS Composer.
 Captures spoken audio from a microphone, converts it to timestamped text segments via the
 Whisper speech-recognition service, and stores the results in an ECHO `Transcript` object
 backed by a `Feed`.
-The plugin also exposes blueprint-compatible operations that let AI assistants open and
+The plugin also exposes skill-compatible operations that let AI assistants open and
 summarize transcripts inside agent workflows.
 
 ## Extensions
@@ -274,9 +274,9 @@ feat F-5: AI Summary
 ```
 
 ```mdl
-feat F-6: Blueprint Integration
+feat F-6: Skill Integration
 
-  req F-6.1: Blueprint exposes op:openTranscript and op:summarizeTranscript as AI tools.
+  req F-6.1: Skill exposes op:openTranscript and op:summarizeTranscript as AI tools.
   req F-6.2: An AI assistant can open a transcript by Ref and return formatted text to the user.
   req F-6.3: An AI assistant can invoke the summary operation and present the result as a message.
 ```

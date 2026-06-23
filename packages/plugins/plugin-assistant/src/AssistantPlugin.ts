@@ -6,7 +6,7 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -24,7 +24,7 @@ import {
   AppGraphBuilder,
   AutomationTemplates,
   AssistantState,
-  BlueprintDefinition,
+  SkillDefinition,
   CompanionChatProvisioner,
   CreateObject,
   EdgeModelResolver,
@@ -50,14 +50,14 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
     AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-    AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+    AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
     AppPlugin.addCreateObjectModule({ activate: CreateObject }),
     AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
     AppPlugin.addSchemaModule({
       schema: [
         Chat.Chat,
         Chat.CompanionTo,
-        Blueprint.Blueprint,
+        Skill.Skill,
         AiContext.Binding,
         Feed.Feed,
         HasSubject.HasSubject,

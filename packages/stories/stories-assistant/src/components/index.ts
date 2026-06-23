@@ -4,7 +4,7 @@
 
 export * from './types';
 
-export * from './BlueprintModule';
+export * from './SkillModule';
 export * from './ChatModule';
 export * from './ChessModule';
 export * from './CommentsModule';

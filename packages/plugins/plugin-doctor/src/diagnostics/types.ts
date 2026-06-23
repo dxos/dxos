@@ -16,7 +16,7 @@ export type DiagnosticIssue = {
   readonly id: string;
   readonly severity: DiagnosticSeverity;
   readonly message: string;
-  /** Optional secondary label (e.g. object id, blueprint key). */
+  /** Optional secondary label (e.g. object id, skill key). */
   readonly subjectLabel?: string;
   readonly spaceId?: string;
 };

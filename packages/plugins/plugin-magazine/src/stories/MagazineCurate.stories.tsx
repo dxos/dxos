@@ -29,7 +29,7 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { MagazineBlueprint } from '#blueprints';
+import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
@@ -136,9 +136,9 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
 
     const magazine = Magazine.make({ name: 'AI', feeds: [Ref.make(feed)] });
     space.db.add(magazine);
-    // Curation resolves the base methodology blueprint from the registry; register it here since the
-    // automation plugin (which normally syncs BlueprintDefinition capabilities) isn't in this story.
-    client.graph.registry.add([MagazineBlueprint.make()]);
+    // Curation resolves the base methodology skill from the registry; register it here since the
+    // automation plugin (which normally syncs SkillDefinition capabilities) isn't in this story.
+    client.graph.registry.add([MagazineSkill.make()]);
     yield* Effect.promise(() => space.db.flush());
 
     globalThis.__magazineStoryContext = { space, magazine };
@@ -189,7 +189,7 @@ export const Default: Story = {};
  * Excluded from CI (`!test`) — needs network + a reachable edge model and is non-deterministic/slow;
  * run it manually (signed in, online). Deterministic pieces are covered by `theregister-fixture.test.ts`
  * (fetch → parse), `curate-magazine.test.ts`, and `Magazine.test.ts`; the agent path by
- * `curate-magazine.blueprint.test.ts`.
+ * `curate-magazine.skill.test.ts`.
  */
 export const Curate: Story = {
   tags: ['!test'],

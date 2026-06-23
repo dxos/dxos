@@ -78,9 +78,9 @@ type Post
 type Magazine
   desc: >
     An agent-curated collection of articles drawn from one or more Feeds.
-    Curation is driven by a Routine (see MagazineBlueprint): the Routine's
+    Curation is driven by a Routine (see MagazineSkill): the Routine's
     editorial instructions describe what content this Magazine should gather,
-    and it references the MagazineBlueprint (the HOW — tools and output
+    and it references the MagazineSkill (the HOW — tools and output
     contract). The Routine is created lazily on first curation, its
     instructions seeded with the default editorial methodology and the user's
     `topic`. The agent selects matching Posts from the referenced Feeds,
@@ -185,22 +185,22 @@ component PostArticle
 ## Services
 
 ```mdl
-service MagazineBlueprint
+service MagazineSkill
   desc: |
-    Agent blueprint referenced by each Magazine's Routine. Registered as a
-    BlueprintDefinition capability. The blueprint instructions are limited to
+    Agent skill referenced by each Magazine's Routine. Registered as a
+    SkillDefinition capability. The skill instructions are limited to
     HOW to operate: how to call the FetchArticleContent tool and the
     completeJob output contract. The editorial methodology (what to select,
     dedup, snippet style, hero-image choice) and the magazine's topic live on
     the Routine's instructions, not here.
-  key: org.dxos.blueprint.magazine
+  key: org.dxos.skill.magazine
   ops:
-    # Agent-facing tools exposed by the blueprint:
+    # Agent-facing tools exposed by the skill:
     # - FetchArticleContent
     # (completeJob is provided by the agent runtime; SyncFeed / CurateMagazine /
     #  ClearMagazine / LoadPostContent are orchestration/UI, not agent tools.)
   note: >
-    The curate op resolves this blueprint from the registry and references it
+    The curate op resolves this skill from the registry and references it
     from the Magazine's Routine. The agent reads candidate summaries from the
     `input`, MAY call FetchArticleContent to read full text, then calls
     completeJob with the structured selection.
@@ -287,9 +287,9 @@ op CurateMagazine
     added: number
   effects: [echo:write]
   note: >
-    Exists alongside the blueprint. The deterministic path gives the button
+    Exists alongside the skill. The deterministic path gives the button
     an immediate, reliable result without needing an LLM. The agent path
-    (via the blueprint's fine-grained tools) delivers instruction-driven,
+    (via the skill's fine-grained tools) delivers instruction-driven,
     higher-quality curation through chat.
 ```
 
@@ -412,8 +412,8 @@ feat F-7: Future Tagging (schema scaffolding only)
   req F-7.2: MagazineTile renders a tags row conditionally on tags.length > 0.
   req F-7.3: FetchArticleContent is reusable as the input stage for a future TagPosts operation.
   note: >
-    Later features (out of scope): TagPosts operation, a MagazineTagger blueprint
-    (or extension of MagazineBlueprint), tag-filter chips in the toolbar,
+    Later features (out of scope): TagPosts operation, a MagazineTagger skill
+    (or extension of MagazineSkill), tag-filter chips in the toolbar,
     'Find more like this' action, and 'Suggest feeds' action proposing new Feed
     URLs based on accumulated tag distribution.
 ```
@@ -461,14 +461,14 @@ test T-4: Curate flow runs sync then deterministic curation
 ```
 
 ```mdl
-test T-4a: Agent curation via blueprint
-  given: a chat referencing a Magazine whose MagazineBlueprint is active
+test T-4a: Agent curation via skill
+  given: a chat referencing a Magazine whose MagazineSkill is active
   when: the agent is prompted to curate the magazine
   then:
     - Agent calls ListCandidatePosts, FetchArticleContent, AddPostToMagazine
     - Magazine.posts grows by the agent-selected count
   note: >
-    The blueprint path is distinct from the Curate button (T-4). The button
+    The skill path is distinct from the Curate button (T-4). The button
     runs the deterministic CurateMagazine op; agents invoke the fine-grained
     tools through chat.
 ```
@@ -543,20 +543,20 @@ no longer carries an `instructions` Template; it carries an optional
 - **Eager creation.** `Magazine.make()` creates the `Routine` at magazine
   instantiation time. The Routine's `instructions` Text is seeded with the
   default editorial methodology and an optional topic woven into a `## Topic`
-  section; it references the MagazineBlueprint and is parented to the magazine
+  section; it references the MagazineSkill and is parented to the magazine
   (cascade-delete). The magazine is added to the Routine's `objects` (context).
 - **Run.** The curate op invokes `AgentPrompt` (Run Routine) with
   `prompt: magazine.routine` and the candidate JSON `input`; it decodes the
   `completeJob` structured output and applies selections mechanically (keep-bound,
   per-post snippet/imageUrl). No ephemeral routine is constructed.
-- **Instruction split.** Blueprint = HOW (FetchArticleContent + completeJob
+- **Instruction split.** Skill = HOW (FetchArticleContent + completeJob
   contract). Routine = editorial (selection criteria, dedup, snippet style,
-  hero-image choice) + topic. This removes the prior overlap where the blueprint
+  hero-image choice) + topic. This removes the prior overlap where the skill
   held both.
 - **Properties editing.** The `routine` field carries `FormInlineAnnotation`,
   so the Routine's own fields (name, description, instructions) render inline in
   the generic `DefaultProperties` companion — no custom surface needed.
-- **Template.** `Template` is retained (it is the type of `Blueprint.instructions`
+- **Template.** `Template` is retained (it is the type of `Skill.instructions`
   and is used across the codebase). The Magazine simply stops using it; the
   Routine's `instructions` is a plain `Ref<Text>`.
 
@@ -569,7 +569,7 @@ Two curation paths exist side-by-side:
   derived from each Post's existing `description` field (no HTTP, no LLM).
   Chosen for the user-initiated button because it is fast, reliable, and does
   not depend on an LLM runtime being present.
-- **Agent path (blueprint).** The `MagazineBlueprint` exposes three fine-grained
+- **Agent path (skill).** The `MagazineSkill` exposes three fine-grained
   tools (`ListCandidatePosts`, `FetchArticleContent`, `AddPostToMagazine`) and
   an instruction template that tells an agent to consult `Magazine.instructions`
   when selecting Posts. Triggered when an agent chat references the Magazine —
@@ -633,8 +633,8 @@ The tagging feature is strictly additive to this design:
 - `Post.tags` already exists as an optional string array.
 - `FetchArticleContent` is the reusable read-stage for tagging.
 - `MagazineTile` renders a tags row when non-empty — no UI change needed.
-- A `TagPosts` operation and either an extended prompt in `MagazineBlueprint`
-  or a second `MagazineTagger` blueprint will complete the feature in a later
+- A `TagPosts` operation and either an extended prompt in `MagazineSkill`
+  or a second `MagazineTagger` skill will complete the feature in a later
   revision.
 
 Further future work enabled by tags (all out of scope here): tag-filter chips
