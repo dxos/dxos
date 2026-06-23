@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Node } from '@dxos/plugin-graph';
 import { Keyboard } from '@dxos/keyboard';
+import { Node } from '@dxos/plugin-graph';
 
 import { AttentionCapabilities } from '#types';
 
