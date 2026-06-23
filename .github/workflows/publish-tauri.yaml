@@ -65,14 +65,13 @@ jobs:
         #        └─ No → Skip bump
         id: bump-version
         run: |
-          # TODO(wittjosiah): Switch to production.
-          # Determine channel argument: omit for labs, use branch name otherwise.
+          # Determine channel argument: omit for production (default channel), use branch name otherwise.
           # Replace slashes with dashes to match the channel name used by cn-channel action.
           BRANCH="${{ steps.extract_branch.outputs.branch }}"
-          CHANNEL=$(echo "$BRANCH" | sed 's|/|-|g')
-          if [ "$BRANCH" = "labs" ]; then
+          if [ "$BRANCH" = "production" ]; then
             CHANNEL_ARG=""
           else
+            CHANNEL=$(echo "$BRANCH" | sed 's|/|-|g')
             CHANNEL_ARG="--channel $CHANNEL"
           fi
 
