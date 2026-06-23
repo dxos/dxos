@@ -6,15 +6,15 @@ Use this as the baseline for the refactor: it identifies the real API surface in
 ## Migration progress
 
 Deprecating `@dxos/react-ui-stack` in favour of `@dxos/react-ui-mosaic`'s `Stack` + `react-ui` `Panel`/`Toolbar` + `AttentionSigil`.
-Tracking below; time is wall-clock (accurate), tokens are cumulative totals computed from the session transcript — `in` = uncached input, `out` = output, `total` = all categories incl. cache read/write.
-NOTE: the transcript file flushes intermittently (not per-turn), so token figures lag real-time and update in steps; treat them as approximate. Baseline `T0 = 2026-06-23 02:35 EDT`, recorded as stage 0 below.
+Tracking below; time is wall-clock (accurate). Tokens are cumulative totals summed across **all** session transcript files for this worktree (`in` = uncached input, `out` = output, `total` = all categories incl. cache read/write).
+NOTE: rows 0–2 under-reported tokens — the session was resumed under a new transcript id and the earlier checkpoints summed only the original (now-frozen) file, so they all read the same 21.6M. Corrected method (sum all files) is used from Task 3 on. Real cumulative at Task 3 start: **234K in / 641K out / 122.0M total**. Baseline `T0 = 2026-06-23 02:35 EDT`, recorded as stage 0.
 
 | #   | Task                                                           | Status   | Completed (elapsed) | Tokens (in / out / total) |
 | --- | -------------------------------------------------------------- | -------- | ------------------- | ------------------------- |
 | 0   | Planning: audit, research, design decisions                    | [x] done | T0 (baseline)       | 78K / 131K / 21.6M        |
-| 1   | plugin-navtree: Panel story + local rearrange type, drop dep   | [x] done | 02:45 (+10m)        | 78K / 131K / 21.6M (lag)  |
-| 2   | plugin-script: NotebookArticle → Mosaic.Stack                  | [x] done | 11:31               | 78K / 131K / 21.6M (lag)  |
-| 3   | StackItemSigil → AttentionSigil in `app-toolkit/ui/components` | pending  | —                   | —                         |
+| 1   | plugin-navtree: Panel story + local rearrange type, drop dep   | [x] done | 02:45 (+10m)        | under-reported (see note) |
+| 2   | plugin-script: NotebookArticle → Mosaic.Stack                  | [x] done | 11:31               | under-reported (see note) |
+| 3   | StackItemSigil → AttentionSigil in `app-toolkit/ui/components` | [x] done | 11:54               | 246K / 726K / 166.1M      |
 | 4   | plugin-stack: Mosaic.Stack + new Tile + StackArticle story     | pending  | —                   | —                         |
 | 5   | plugin-deck: AUDIT mapping + migrate Plank to Mosaic/Tile      | pending  | —                   | —                         |
 | 6   | plugin-deck: companion column-stack option                     | pending  | —                   | —                         |
@@ -50,12 +50,11 @@ components/
   StackContext/
     StackContext.ts               // StackContext, useStack, StackItemContext, useStackItem, ItemDragState, idle
   StackItem/
-    StackItem.tsx                 // StackItem namespace + DEFAULT_*_SIZE; re-imports Sigil bits
+    StackItem.tsx                 // StackItem namespace + DEFAULT_*_SIZE
     StackItemContent.tsx · StackItemDragHandle.tsx · StackItemHeading.tsx · StackItemResizeHandle.tsx
-  StackItemSigil/
-    StackItemSigil.tsx            // StackItemSigil, StackItemSigilButton, StackItemSigilAction
-    MenuSignifier.tsx             // moved here
 ```
+
+> Task 3 removed the `StackItemSigil/` module: it moved to `@dxos/app-toolkit` (`src/ui/components/AttentionSigil.tsx`) as `AttentionSigil`/`AttentionSigilButton`/`AttentionSigilAction`. `StackItem.Sigil`/`StackItem.SigilButton` and the `@dxos/keyboard` dep are gone from react-ui-stack. Consumers (plugin-deck `PlankHeading`, plugin-stack `StackSection`) now import the sigil from `@dxos/app-toolkit/ui`.
 
 Key moves vs. the previous layout:
 

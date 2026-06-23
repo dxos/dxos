@@ -29,13 +29,6 @@ import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';
-import {
-  StackItemSigil,
-  type StackItemSigilAction,
-  StackItemSigilButton,
-  type StackItemSigilButtonProps,
-  type StackItemSigilProps,
-} from '../StackItemSigil';
 import { type StackItemData, type StackItemSize } from '../types';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
@@ -296,8 +289,6 @@ export const StackItem = {
   HeadingLabel: StackItemHeadingLabel,
   HeadingStickyContent: StackItemHeadingStickyContent,
   ResizeHandle: StackItemResizeHandle,
-  Sigil: StackItemSigil,
-  SigilButton: StackItemSigilButton,
 };
 
 export type {
@@ -308,7 +299,4 @@ export type {
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
   StackItemResizeHandleProps,
-  StackItemSigilProps,
-  StackItemSigilButtonProps,
-  StackItemSigilAction,
 };

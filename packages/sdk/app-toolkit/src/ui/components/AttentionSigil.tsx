@@ -8,12 +8,8 @@ import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
-
-import { translationKey } from '#translations';
-
-import { MenuSignifierHorizontal } from './MenuSignifier';
 
 export type KeyBinding = {
   windows?: string;
@@ -23,15 +19,33 @@ export type KeyBinding = {
   unknown?: string;
 };
 
-export type StackItemSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
+export type AttentionSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
 
-export type StackItemSigilButtonProps = Omit<ButtonProps, 'variant'> &
+export type AttentionSigilButtonProps = Omit<ButtonProps, 'variant'> &
   AttendableId &
   Related & {
     isMenu?: boolean;
   };
 
-export const StackItemSigilButton = forwardRef<HTMLButtonElement, StackItemSigilButtonProps>(
+/**
+ * A small line under the button indicating that it opens a menu.
+ */
+const MenuSignifierHorizontal = () => (
+  <svg className='absolute bottom-[7px]' width={20} height={2} viewBox='0 0 20 2' stroke='currentColor' opacity={0.5}>
+    <line
+      x1={0.5}
+      y1={0.75}
+      x2={19}
+      y2={0.75}
+      strokeWidth={1.25}
+      strokeLinecap='round'
+      strokeDasharray='6 20'
+      strokeDashoffset='-6.5'
+    />
+  </svg>
+);
+
+export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigilButtonProps>(
   ({ attendableId, classNames, related, isMenu = true, children, ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
@@ -53,26 +67,30 @@ export const StackItemSigilButton = forwardRef<HTMLButtonElement, StackItemSigil
   },
 );
 
-export type StackItemSigilProps = PropsWithChildren<
+export type AttentionSigilProps = PropsWithChildren<
   {
     attendableId?: string;
     triggerLabel: string;
-    actions?: StackItemSigilAction[][];
+    actions?: AttentionSigilAction[][];
     icon: string;
-    onAction?: (action: StackItemSigilAction) => void;
+    onAction?: (action: AttentionSigilAction) => void;
   } & Related
 >;
 
-export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>(
+/**
+ * Attention-aware sigil button that surfaces an object's actions in a dropdown menu.
+ * The button reflects attention state (primary when attended/ancestor/related, ghost otherwise).
+ */
+export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
   ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = useTranslation(osTranslations);
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
     const hasActions = actionGroups && actionGroups.length > 0;
 
     const button = (
-      <StackItemSigilButton
+      <AttentionSigilButton
         attendableId={attendableId}
         related={related}
         isMenu={hasActions}
@@ -82,7 +100,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
       >
         <span className='sr-only'>{triggerLabel}</span>
         <Icon icon={icon} />
-      </StackItemSigilButton>
+      </AttentionSigilButton>
     );
 
     if (!hasActions) {

@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Paths } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -50,9 +50,9 @@ export const StackSection = ({
               }}
             >
               <DropdownMenu.Trigger asChild>
-                <StackItem.SigilButton>
+                <AttentionSigilButton>
                   <Icon icon={icon} classNames='transition-opacity' />
-                </StackItem.SigilButton>
+                </AttentionSigilButton>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content>
