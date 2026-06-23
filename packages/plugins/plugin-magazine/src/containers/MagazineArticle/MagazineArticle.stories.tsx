@@ -167,10 +167,11 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     ];
     yield* Effect.promise(() => space.db.appendToFeed(echoFeed, posts));
 
-    const mag = Magazine.make({
+    const { magazine: mag, instructions } = Magazine.make({
       name: 'Curate Flow Test',
       feeds: [Ref.make(subscriptionFeed)],
     });
+    space.db.add(instructions);
     space.db.add(mag);
     // Curation resolves the base methodology skill from the registry; register it here since the
     // automation plugin (which normally syncs SkillDefinition capabilities) isn't in this story.

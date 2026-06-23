@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { test } from 'vitest';
 
 import { Instructions } from '@dxos/compute';
-import { Database, Feed, Obj, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
@@ -54,23 +54,32 @@ describe('Magazine', () => {
     'make creates the curation routine with the magazine, seeding its instructions',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const magazine = yield* Database.add(Magazine.make({ name: 'The Cosmos', instructions: 'Astronomy news' }));
+        const { magazine, instructions: instructionsObj } = Magazine.make({
+          name: 'The Cosmos',
+          instructions: 'Astronomy news',
+        });
+        yield* Database.add(instructionsObj);
+        const persistedMagazine = yield* Database.add(magazine);
         yield* Database.flush();
 
         // The Routine is created with the magazine (not lazily), parented to it.
-        expect(magazine.routine).toBeDefined();
-        if (!magazine.routine) {
+        expect(persistedMagazine.routine).toBeDefined();
+        if (!persistedMagazine.routine) {
           throw new Error('Expected magazine.routine to be defined.');
         }
-        const routine = yield* Database.load(magazine.routine);
-        expect(Obj.getParent(routine)?.id).toBe(magazine.id);
+        const routine = yield* Database.load(persistedMagazine.routine);
+        expect(Obj.getParent(routine)?.id).toBe(persistedMagazine.id);
 
-        // The Instructions is created with the magazine, parented to the Routine.
-        expect(magazine.instructions).toBeDefined();
-        if (!magazine.instructions) {
-          throw new Error('Expected magazine.instructions to be defined.');
+        // The Instructions is parented to the Routine (found via parent query, no direct Ref).
+        const dbService = yield* Database.Service;
+        const allInstructions = yield* Effect.promise(() =>
+          dbService.db.query(Filter.type(Instructions.Instructions)).run(),
+        );
+        const instructions = allInstructions.find((c) => Obj.getParent(c)?.id === routine.id);
+        expect(instructions).toBeDefined();
+        if (!instructions) {
+          throw new Error('Expected instructions parented to routine.');
         }
-        const instructions = yield* Database.load(magazine.instructions);
         expect(Obj.getParent(instructions)?.id).toBe(routine.id);
         expect(instructions.skills.length).toBeGreaterThan(0);
 

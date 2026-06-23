@@ -76,10 +76,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
       const view = get(viewAtom);
       const busy = get(busyAtom);
       const hasFeeds = (get(Obj.atomProperty(magazine, 'feeds')) ?? []).length > 0;
-      // Curate runs the magazine's Routine; fall back to legacy Instructions for pre-0.3.0 magazines
-      // that have instructions but no routine (no migration was written for the 0.3.0 schema bump).
-      const hasRoutine =
-        Boolean(get(Obj.atomProperty(magazine, 'routine'))) || Boolean(get(Obj.atomProperty(magazine, 'instructions')));
+      const hasRoutine = Boolean(get(Obj.atomProperty(magazine, 'routine')));
       // Curate is disabled while busy or until there is at least one feed; the tooltip explains why.
       const curateLabel = !hasFeeds ? 'no-feeds.label' : busy ? 'refreshing-magazine.label' : 'curate.label';
 

@@ -7,10 +7,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Instructions, Operation } from '@dxos/compute';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { findRoutineInstructions } from '@dxos/plugin-routine';
 
 import { FeedOperation, Magazine, Subscription } from '../types';
 import { collectCandidates, partitionByKeepBound } from './util';
@@ -114,9 +115,9 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
 
 /**
  * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
- * The magazine's persisted Instructions (created with the magazine) carries the editorial brief and
- * references the Magazine skill, which RunInstructions resolves at run time. No instructions → no selection.
- * Tolerates agent/parse failures (logs → no selection).
+ * The magazine's Routine owns an Instructions object (parented to it) carrying the editorial brief
+ * and the Magazine skill, which RunInstructions resolves at run time. No routine/instructions → no
+ * selection. Tolerates agent/parse failures (logs → no selection).
  */
 const selectPostIds = (
   magazine: Magazine.Magazine,
@@ -124,9 +125,20 @@ const selectPostIds = (
   spaceId: SpaceId,
 ) =>
   Effect.gen(function* () {
-    if (!magazine.instructions) {
+    if (!magazine.routine) {
       return [] as readonly (typeof CurationOutput.Type.posts)[number][];
     }
+    const db = Obj.getDatabase(magazine);
+    if (!db) {
+      return [] as readonly (typeof CurationOutput.Type.posts)[number][];
+    }
+    const routine = yield* Database.load(magazine.routine);
+    const allInstructions = yield* Effect.promise(() => db.query(Filter.type(Instructions.Instructions)).run());
+    const instructions = findRoutineInstructions(allInstructions, routine);
+    if (!instructions) {
+      return [] as readonly (typeof CurationOutput.Type.posts)[number][];
+    }
+
     const input = {
       candidates: candidates.map(({ post, feed }) => ({
         id: post.id,
@@ -139,7 +151,7 @@ const selectPostIds = (
       })),
     };
 
-    return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
+    return yield* Operation.invoke(RunInstructions, { instructions: Ref.make(instructions), input }, { spaceId }).pipe(
       Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catchAll((error) =>

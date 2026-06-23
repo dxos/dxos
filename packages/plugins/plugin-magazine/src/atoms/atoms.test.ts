@@ -173,7 +173,7 @@ describe('postCurationAtom', () => {
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
-    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)] }));
+    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)] }).magazine);
     await db.flush();
 
     const registry = Registry.make();
@@ -204,7 +204,7 @@ describe('postCurationAtom', () => {
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     const postB = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
-    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)] }));
+    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)] }).magazine);
     await db.flush();
 
     const registry = Registry.make();
@@ -232,7 +232,7 @@ describe('postCurationAtom', () => {
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
-    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)] }));
+    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)] }).magazine);
     await db.flush();
 
     const registry = Registry.make();
@@ -276,7 +276,7 @@ describe('postDisplayAtom', () => {
     const post = db.add(
       Obj.make(Subscription.Post, { source: Ref.make(subscription), description: 'RSS description.' }),
     );
-    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)], posts: [Ref.make(post)] }));
+    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)], posts: [Ref.make(post)] }).magazine);
     await db.flush();
 
     const registry = Registry.make();
@@ -306,7 +306,7 @@ describe('postDisplayAtom', () => {
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Feed', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
-    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)], posts: [Ref.make(post)] }));
+    const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscription)], posts: [Ref.make(post)] }).magazine);
     await db.flush();
 
     const registry = Registry.make();

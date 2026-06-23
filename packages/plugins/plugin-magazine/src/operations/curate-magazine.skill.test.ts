@@ -136,14 +136,14 @@ describe('CurateMagazine (LLM)', () => {
         yield* Feed.append(postFeed, posts);
         yield* Database.flush();
 
-        const magazine = yield* Database.add(
-          Magazine.make({
-            name: 'The Cosmos',
-            feeds: [Ref.make(subscription)],
-            instructions:
-              'Curate articles about space exploration and astronomy — missions, spacecraft, telescopes, and astrophysics discoveries. Exclude unrelated business, finance, or software-tooling news.',
-          }),
-        );
+        const { magazine: magazineObj, instructions } = Magazine.make({
+          name: 'The Cosmos',
+          feeds: [Ref.make(subscription)],
+          instructions:
+            'Curate articles about space exploration and astronomy — missions, spacecraft, telescopes, and astrophysics discoveries. Exclude unrelated business, finance, or software-tooling news.',
+        });
+        yield* Database.add(instructions);
+        const magazine = yield* Database.add(magazineObj);
         yield* Database.flush();
 
         const result = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: Ref.make(magazine) });

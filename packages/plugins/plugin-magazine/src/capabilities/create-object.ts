@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -43,10 +43,15 @@ export default Capability.makeModule(
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            // `make` creates the curation Routine with the magazine, seeding its instructions from the
-            // dialog's editorial brief (`instructions`); both are added with the magazine below.
-            const magazine = Magazine.make(props);
-
+            // `make` creates the curation Routine and Instructions with the magazine, seeding the
+            // editorial brief from the dialog's `instructions` field. The Instructions has no Ref
+            // from the magazine or routine (found via parent query at run time), so it must be added
+            // to the database explicitly; the magazine/routine/postState cascade via strong Refs.
+            const { magazine, instructions } = Magazine.make(props);
+            const db = Database.isDatabase(options.target)
+              ? options.target
+              : Obj.getDatabase(options.target as Obj.Unknown);
+            db?.add(instructions);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object: magazine,
               target: options.target,

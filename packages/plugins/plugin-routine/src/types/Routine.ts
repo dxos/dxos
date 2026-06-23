@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Trigger } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as Runnable from './Runnable';
 

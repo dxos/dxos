@@ -68,14 +68,9 @@ export const Magazine = Schema.Struct({
    * Curation Routine, created with the magazine ({@link make}). Parented to the magazine so it
    * cascade-deletes with it and appears in the nav tree as a non-deletable child. Rendered inline
    * by the properties form (Routine's own fields), allowing the routine to be reviewed inline.
+   * The routine owns the curation Instructions via parent (found by parent query at run time).
    */
   routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
-  /**
-   * Curation Instructions owned by the Routine ({@link make}). Kept as a direct ref on the magazine
-   * so the strong-dep chain (magazine → instructions → text) ensures all objects are persisted when
-   * the magazine is added to the database. Not shown in forms.
-   */
-  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -106,24 +101,31 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-export type MakeProps = Omit<
-  Obj.MakeProps<typeof Magazine>,
-  'feeds' | 'posts' | 'routine' | 'instructions' | 'postState'
-> & {
+export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'routine' | 'postState'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
   /** Editorial brief seeded into the curation Routine's instructions (composed with the default methodology). */
   instructions?: string;
 };
 
+/** All objects produced by {@link make} that must be added to the database. */
+export type MakeResult = {
+  magazine: Magazine;
+  routine: Routine.Routine;
+  instructions: Instructions.Instructions;
+  postState: StateMap.StateMap;
+};
+
 /**
  * Creates a Magazine plus its curation Routine, Instructions, and per-Post state map — all
- * cascade-deleted with the magazine. The Routine is parented to the magazine (visible in the nav
+ * parented for cascade-delete. The Routine is parented to the magazine (visible in the nav
  * tree as a non-deletable child); the Instructions is parented to the Routine and references the
- * Magazine skill by its registry DXN. Both are also held as direct refs on the magazine so the
- * strong-dep chain persists the whole object graph when the magazine is added to the database.
+ * Magazine skill by its registry DXN. The Instructions are found from the Routine via parent
+ * query (no direct Ref), so callers must add all objects to the database explicitly:
+ * `db.add(result.instructions)` persists instructions + text; `db.add(result.magazine)` persists
+ * magazine + routine + postState via the strong-dep chain.
  */
-export const make = (props: MakeProps = {}): Magazine => {
+export const make = (props: MakeProps = {}): MakeResult => {
   const curationName = props.name ? `${props.name} curation` : 'Magazine curation';
   const postState = StateMap.make();
   const magazine = Obj.make(Magazine, {
@@ -145,7 +147,6 @@ export const make = (props: MakeProps = {}): Magazine => {
 
   Obj.update(magazine, (magazine) => {
     magazine.routine = Ref.make(routine);
-    magazine.instructions = Ref.make(instructions);
   });
 
   // Parent chain: magazine → routine → instructions → text; postState → magazine.
@@ -156,7 +157,7 @@ export const make = (props: MakeProps = {}): Magazine => {
     Obj.setParent(instructions.text.target, instructions);
   }
   Obj.setParent(postState, magazine);
-  return magazine;
+  return { magazine, routine, instructions, postState };
 };
 
 /** Composes Routine instructions from the default editorial methodology and an optional topic focus. */

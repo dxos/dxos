@@ -134,7 +134,8 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
       Subscription.makeSubscription({ name: 'The Register — AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
     );
 
-    const magazine = Magazine.make({ name: 'AI', feeds: [Ref.make(feed)] });
+    const { magazine, instructions } = Magazine.make({ name: 'AI', feeds: [Ref.make(feed)] });
+    space.db.add(instructions);
     space.db.add(magazine);
     // Curation resolves the base methodology skill from the registry; register it here since the
     // automation plugin (which normally syncs SkillDefinition capabilities) isn't in this story.
@@ -203,7 +204,7 @@ export const Curate: Story = {
     const { magazine } = globalThis.__magazineStoryContext!;
 
     // The curation Routine is created with the magazine, not on curate.
-    await expect(magazine.instructions).toBeDefined();
+    await expect(magazine.routine).toBeDefined();
 
     // Starts empty; clicking Curate pulls the feed and runs the Routine.
     await expect(await canvas.findByText(/no articles yet/i, {}, { timeout: 10_000 })).toBeVisible();
