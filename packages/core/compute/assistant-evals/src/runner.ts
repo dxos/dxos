@@ -11,18 +11,18 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Operation, Routine, ServiceResolver, type Blueprint } from '@dxos/compute';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Operation, Instructions, ServiceResolver, type Blueprint } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -53,35 +53,35 @@ const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Pro
   AssistantPlugin({
     aiServiceMiddleware: await makeAiServiceMiddleware(),
   }),
-  AutomationPlugin(),
+  RoutinePlugin(),
   InboxPlugin(),
   ...(options.plugins ?? []),
 ];
 
-const seedPrompt = (prompt: Routine.Routine) =>
+const seedInstructions = (instructions: Instructions.Instructions) =>
   Effect.gen(function* () {
-    for (const blueprintRef of prompt.blueprints) {
+    for (const blueprintRef of instructions.blueprints) {
       const blueprint = yield* Database.load(blueprintRef);
       yield* Database.add(blueprint);
     }
-    yield* Database.add(prompt);
+    yield* Database.add(instructions);
     yield* Database.flush();
   });
 
-const runAgentPrompt = <I>(
+const runInstructions = <I>(
   harness: TestHarness,
-  prompt: Routine.Routine,
+  instructions: Instructions.Instructions,
   model: ModelName,
   spaceId: SpaceId,
   input: I,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
-      yield* seedPrompt(prompt);
+      yield* seedInstructions(instructions);
       return yield* Operation.invoke(
-        AgentPrompt,
+        RunInstructions,
         {
-          prompt: Ref.make(prompt),
+          instructions: Ref.make(instructions),
           input,
           systemInstructions: SYSTEM_INSTRUCTIONS,
           model,
@@ -107,12 +107,12 @@ export type VariantConfig =
     };
 
 /**
- * Creates an Evalite task that runs the assistant against a Routine and returns the agent's output.
+ * Creates an Evalite task that runs the assistant against Instructions and returns the agent's output.
  *
  * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
  *
  * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
- * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runAgentPrompt` with the
+ * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runInstructions` with the
  * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  */
@@ -120,8 +120,8 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
-    const prompt = Routine.make({
-      instructions: options.instructions,
+    const instructions = Instructions.make({
+      text: options.instructions,
       blueprints: options.blueprints ?? [],
     });
 
@@ -143,7 +143,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
             EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
           );
 
-          return yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id, input));
+          return yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id, input));
         }),
       ),
     );

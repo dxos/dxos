@@ -226,9 +226,6 @@
       "path": "../../plugins/plugin-attention"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-bluesky"
     },
     {
@@ -371,6 +368,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-sample"

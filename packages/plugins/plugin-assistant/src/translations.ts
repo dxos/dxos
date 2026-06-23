@@ -3,7 +3,7 @@
 //
 
 import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete blueprint',
         'object-deleted.label': 'Blueprint deleted',
       },
-      [Type.getTypename(Routine.Routine)]: {
+      [Type.getTypename(Instructions.Instructions)]: {
         'typename.label': 'Routine',
         'typename.label_zero': 'Routines',
         'typename.label_one': 'Routine',

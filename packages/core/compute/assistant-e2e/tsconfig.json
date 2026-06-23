@@ -16,9 +16,6 @@
       "path": "../../../plugins/plugin-assistant"
     },
     {
-      "path": "../../../plugins/plugin-automation"
-    },
-    {
       "path": "../../../plugins/plugin-client"
     },
     {
@@ -26,6 +23,9 @@
     },
     {
       "path": "../../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../../plugins/plugin-routine"
     },
     {
       "path": "../../../plugins/plugin-sandbox"
