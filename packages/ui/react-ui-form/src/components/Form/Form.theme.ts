@@ -15,6 +15,7 @@ const formStyles = tv({
     viewport: '',
     content: 'pb-3',
     section: 'flex flex-col py-form-section-gap first:pt-0',
+    group: 'flex flex-col gap-3 p-trim-md border border-separator rounded-sm',
     sectionHeader: '',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',

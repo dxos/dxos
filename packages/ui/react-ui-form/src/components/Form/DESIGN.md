@@ -14,8 +14,8 @@ Form.Root                               context: schema, values, validation, onV
       │  │  └─ FormFieldSetContainer    group wrapper: FormFieldHeader (label + collapse) over the body
       │  │     └─ FormField             one per schema property; dispatches by type:
       │  │        ├─ ArrayField         array → FormFieldHeader + item rows
-      │  │        ├─ Form.Row           scalar → label + description + the control (<field>)
-      │  │        └─ Form.FieldSet      nested object → recurses (its own FormFieldSetContainer)
+      │  │        ├─ Form.FieldSet      nested object → recurses (its own FormFieldSetContainer)
+      │  │        └─ Form.Row           scalar → label + description + the control (<field>)
       │  └─ Form.Row                    OR a hand-written row (label + description + any control)
       ├─ Form.Layout                    alternative to FieldSet: lays fields out per a parsed layout spec
       └─ Form.Actions

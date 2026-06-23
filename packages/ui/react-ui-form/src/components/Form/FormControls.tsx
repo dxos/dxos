@@ -293,6 +293,28 @@ export const FormSection = composable<HTMLDivElement, FormSectionProps>(
 FormSection.displayName = FORM_SECTION_NAME;
 
 //
+// Group
+//
+
+const FORM_GROUP_NAME = 'Form.Group';
+
+export type FormGroupProps = ThemedClassName<PropsWithChildren>;
+
+/**
+ * A bordered card grouping related rows/controls (e.g. an entity card in a list). Layout-only and
+ * context-free — unlike `Form.FieldSet` it is not schema-driven. Replaces the deprecated `Settings.Panel`.
+ */
+export const FormGroup = composable<HTMLDivElement, FormGroupProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <div {...composableProps(props, { classNames: formTheme.styles().group() })} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
+
+FormGroup.displayName = FORM_GROUP_NAME;
+
+//
 // Submit
 //
 
