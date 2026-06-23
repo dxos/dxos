@@ -100,7 +100,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
-        let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
+        let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -123,7 +123,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // into the conversation on completion. Absent (the default), the process behaves as a plain
         // conversational agent.
         const strategy = Option.fromNullable(options.delegationStrategy);
-        let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
+        let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
 
@@ -176,7 +176,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             }),
             enqueueMessage: Effect.fn(function* ({ content }) {
               inputQueue.push({ _tag: 'prompt', content });
-              yield* AgentEventsKey.set(inputQueue);
+              yield* AgentEventsCell.set(inputQueue);
               alarmManager.reconcile(true);
             }),
           }),
@@ -184,7 +184,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
             inputQueue.push({ _tag: 'prompt', content: [ContentBlock.Text.make({ text: prompt })] });
             log('agent onInput persisting queue', { depth: inputQueue.length });
-            yield* AgentEventsKey.set(inputQueue);
+            yield* AgentEventsCell.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });
             alarmManager.reconcile(true);
             log('agent onInput alarm scheduled');
@@ -198,7 +198,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               if (fired != null) {
                 log('agent onAlarm self-wake', { firedAt: fired.firedAt });
                 inputQueue.push({ _tag: 'alarm', firedAt: fired.firedAt, message: fired.message });
-                yield* AgentEventsKey.set(inputQueue);
+                yield* AgentEventsCell.set(inputQueue);
               }
 
               // Skip reported tool results at head of queue (stale after reload).
@@ -216,7 +216,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               if (!item) {
                 log('agent onAlarm empty queue', {});
                 alarmManager.reconcile(false);
-                yield* AgentEventsKey.set(inputQueue);
+                yield* AgentEventsCell.set(inputQueue);
                 yield* maybeComplete;
                 return;
               }
@@ -268,7 +268,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   ),
                 );
               log('end request');
-              yield* AgentEventsKey.set(inputQueue);
+              yield* AgentEventsCell.set(inputQueue);
 
               // Reconcile outstanding work into linked child processes (supervisor behaviour). The
               // children are linked, so their exits wake `onChildEvent` below.
@@ -281,7 +281,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   log('delegated work', { pid, id: delegation.id });
                 }
                 if (pending.length > 0) {
-                  yield* DelegationsKey.set(delegations);
+                  yield* DelegationsCell.set(delegations);
                 }
               }
 
@@ -312,7 +312,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               const delegation = delegations.find((delegation) => delegation.pid === event.pid);
               if (delegation) {
                 delegations = delegations.filter((other) => other.pid !== event.pid);
-                yield* DelegationsKey.set(delegations);
+                yield* DelegationsCell.set(delegations);
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
@@ -358,7 +358,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 );
                 inputQueue.push(result);
                 log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
-                yield* AgentEventsKey.set(inputQueue);
+                yield* AgentEventsCell.set(inputQueue);
                 alarmManager.reconcile(true);
                 log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
               } else {
@@ -406,7 +406,7 @@ const AgentEvent = Schema.Union(
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
-const AgentEventsKey = StorageService.key(
+const AgentEventsCell = StorageService.cell(
   Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
   'inputQueue',
 ).pipe(StorageService.withDefault(() => []));
@@ -418,7 +418,7 @@ const AgentEventsKey = StorageService.key(
 const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).pipe(Schema.mutable);
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
-const DelegationsKey = StorageService.key(
+const DelegationsCell = StorageService.cell(
   Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
@@ -435,7 +435,7 @@ const ToolCallState = Schema.Struct({
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
-const ToolCallStateKey = StorageService.key(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
+const ToolCallStateCell = StorageService.cell(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
   StorageService.withDefault(() => ({ activeCalls: [] })),
 );
 
@@ -449,14 +449,14 @@ class ToolCallManager {
 
   load() {
     return Effect.gen(this, function* () {
-      this.#state = yield* ToolCallStateKey.get;
+      this.#state = yield* ToolCallStateCell.get;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   beginCall(pid: Process.ID) {
     return Effect.gen(this, function* () {
       this.#state.activeCalls.push({ pid, reported: false });
-      yield* ToolCallStateKey.set(this.#state);
+      yield* ToolCallStateCell.set(this.#state);
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -467,7 +467,7 @@ class ToolCallManager {
         return;
       }
       call.reported = true;
-      yield* ToolCallStateKey.set(this.#state);
+      yield* ToolCallStateCell.set(this.#state);
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -503,7 +503,7 @@ class ToolCallManager {
         }
       }
       if (changed) {
-        yield* ToolCallStateKey.set(this.#state);
+        yield* ToolCallStateCell.set(this.#state);
       }
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
@@ -538,7 +538,7 @@ export const isAgentWorkPending = ({
  * Persisted next agent-scheduled self-wake: the UNIX timestamp (ms) and an optional reminder
  * message delivered when it fires, or `null` when no self-wake is set.
  */
-const AgentAlarmKey = StorageService.key(
+const AgentAlarmCell = StorageService.cell(
   Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
   'agentAlarm',
 ).pipe(StorageService.withDefault(() => null));
@@ -612,7 +612,7 @@ export class AlarmManager {
   /** Restores the persisted alarm state. */
   load(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      const persisted = yield* AgentAlarmKey.get;
+      const persisted = yield* AgentAlarmCell.get;
       this.#wakeAt = persisted?.wakeAt ?? null;
       this.#message = persisted?.message ?? null;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
@@ -623,7 +623,7 @@ export class AlarmManager {
     return Effect.gen(this, function* () {
       this.#wakeAt = wakeAt;
       this.#message = message;
-      yield* AgentAlarmKey.set({ wakeAt, message });
+      yield* AgentAlarmCell.set({ wakeAt, message });
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -640,7 +640,7 @@ export class AlarmManager {
       const message = this.#message;
       this.#wakeAt = null;
       this.#message = null;
-      yield* AgentAlarmKey.set(null);
+      yield* AgentAlarmCell.set(null);
       return { firedAt, message };
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }

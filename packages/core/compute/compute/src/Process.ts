@@ -322,7 +322,7 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
  * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
  * when the process reaches a terminal state (the runtime clears the process's storage).
  */
-const OperationStartedKey = StorageService.key(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
+const OperationStartedCell = StorageService.cell(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
   StorageService.withDefault(() => false),
 );
 
@@ -350,13 +350,13 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               if (!idempotent) {
-                const started = yield* OperationStartedKey.get;
+                const started = yield* OperationStartedCell.get;
                 if (started) {
                   return yield* Effect.die(
                     new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
                   );
                 }
-                yield* OperationStartedKey.set(true);
+                yield* OperationStartedCell.set(true);
               }
 
               // Emit operation start event.
