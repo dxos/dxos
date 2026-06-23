@@ -43,7 +43,9 @@ const meta: Meta<typeof StackArticle> = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               const sections = ['Section One', 'Section Two', 'Section Three'].map((title) =>
-                Ref.make(personalSpace.db.add(Markdown.make({ name: title, content: `# ${title}\n\nContent for ${title}.` }))),
+                Ref.make(
+                  personalSpace.db.add(Markdown.make({ name: title, content: `# ${title}\n\nContent for ${title}.` })),
+                ),
               );
               personalSpace.db.add(Collection.make({ name: COLLECTION_NAME, objects: sections }));
             }),
