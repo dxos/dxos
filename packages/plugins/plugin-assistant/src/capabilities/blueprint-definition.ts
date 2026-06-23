@@ -22,6 +22,7 @@ import {
   DiscordBlueprint,
   LinearBlueprint,
   PlanningBlueprint,
+  PlanningHandlers,
   WebSearchBlueprint,
   WebSearchHandlers,
   MemoryBlueprint,
@@ -29,7 +30,6 @@ import {
   DelegationBlueprint,
   DelegationHandlers,
   makeDelegationStrategy,
-  makePlanCompletionGuard,
 } from '@dxos/assistant-toolkit';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
@@ -61,11 +61,11 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
     Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
+    Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
     Capability.contributes(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
-    Capability.contributes(RoutineCapabilities.AgentCompletionGuard, makePlanCompletionGuard()),
   ]);
 
 export default blueprintDefinition;

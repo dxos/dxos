@@ -6,7 +6,7 @@ import type * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import type { Database, Obj } from '@dxos/echo';
-import type { CompletionGuard, DelegationStrategy } from '@dxos/functions-runtime';
+import type { DelegationStrategy } from '@dxos/functions-runtime';
 
 import * as Routine from './Routine';
 
@@ -18,14 +18,6 @@ import * as Routine from './Routine';
  */
 export const AgentDelegationStrategy = Capability.make<DelegationStrategy>(
   'org.dxos.plugin.routine.capability.agentDelegationStrategy',
-);
-
-/**
- * Optional plan-completion guard for the agent chat service. When contributed, the agent process
- * runs an ephemeral stop/continue check before succeeding if open plan tasks remain.
- */
-export const AgentCompletionGuard = Capability.make<CompletionGuard>(
-  'org.dxos.plugin.routine.capability.agentCompletionGuard',
 );
 
 /**

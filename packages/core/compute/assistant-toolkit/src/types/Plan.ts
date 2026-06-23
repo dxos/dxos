@@ -55,6 +55,9 @@ export const Task = Schema.Struct({
 
 export type Task = Schema.Schema.Type<typeof Task>;
 
+/** Lifecycle status of a {@link Task}. */
+export type TaskStatus = Task['status'];
+
 /**
  * Short tag label for a delegated sub-agent process id (e.g. `agent-a1b2`).
  */
@@ -119,3 +122,9 @@ export const formatPlan = (plan: Plan): string => {
     .map((task) => `- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} <!-- id=${task.id} -->`)
     .join('\n');
 };
+
+/**
+ * True when the plan has any task that is not yet `done` (i.e. `todo` or `in-progress`).
+ */
+export const hasIncompleteTasks = (plan: Plan): boolean =>
+  plan.tasks.some((task) => task.status === 'todo' || task.status === 'in-progress');
