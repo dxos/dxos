@@ -13,7 +13,7 @@ import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../../hooks';
 import { type FormVariant, formTheme } from '../Form.theme';
-import { type FieldPresentation, presentationFor } from './presentation';
+import { type FormFieldPresentation, presentationFor } from './presentation';
 
 //
 // FormFieldLabel
@@ -154,7 +154,7 @@ export type FormRowProps<T = any> = ThemedClassName<
        * `value` is `T | undefined` because `getValue()` returns no value when the field is unset (optional
        * schema properties, freshly-added array items); renderers default it (e.g. `{ value = '' }`).
        */
-      children?: ReactNode | ((props: { value: T | undefined; presentation: FieldPresentation }) => ReactNode);
+      children?: ReactNode | ((props: { value: T | undefined; presentation: FormFieldPresentation }) => ReactNode);
     }
 >;
 

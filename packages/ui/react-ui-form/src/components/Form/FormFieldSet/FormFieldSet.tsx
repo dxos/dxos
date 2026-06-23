@@ -14,7 +14,13 @@ import { type FieldContext } from '#types';
 
 import { type FormHandlerProps, useFormValues } from '../../../hooks';
 import { getRootFormProperties } from '../../../util';
-import { FieldContainer, FormField, FormFieldErrorBoundary, type FormFieldProps, presentationFor } from '../FormField';
+import {
+  FormFieldContainer,
+  FormField,
+  FormFieldErrorBoundary,
+  type FormFieldProps,
+  presentationFor,
+} from '../FormField';
 import { FormLayout } from '../FormLayout';
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
@@ -101,7 +107,7 @@ export const FormFieldSet = ({
     );
 
   return (
-    <FieldContainer
+    <FormFieldContainer
       classNames={classNames}
       label={label}
       path={SchemaEx.createJsonPath(path ?? [])}
@@ -110,7 +116,7 @@ export const FormFieldSet = ({
       collapsible={collapsible}
     >
       {body}
-    </FieldContainer>
+    </FormFieldContainer>
   );
 };
 

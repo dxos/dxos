@@ -9,16 +9,16 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { FieldHeader } from './FieldHeader';
-import { type FieldPresentation } from './presentation';
+import { FormFieldHeader } from './FormFieldHeader';
+import { type FormFieldPresentation } from './presentation';
 
-export type FieldContainerProps = ThemedClassName<
+export type FormFieldContainerProps = ThemedClassName<
   PropsWithChildren<{
     label?: string;
     /** JSON path of the group, forwarded to the label as field metadata. */
     path?: string;
     readonly?: boolean;
-    presentation: FieldPresentation;
+    presentation: FormFieldPresentation;
     /**
      * Render a collapse toggle in the header and wrap the body in an indented, bordered box.
      * Used for nested objects (struct fields, object-array items, inline refs).
@@ -32,7 +32,7 @@ export type FieldContainerProps = ThemedClassName<
  * when collapsible, an indented bordered container around the body. Nested structs, object-array items,
  * and inline refs all reach this via `FormFieldSet`, so their visual containment is identical.
  */
-export const FieldContainer = ({
+export const FormFieldContainer = ({
   classNames,
   label,
   path,
@@ -40,7 +40,7 @@ export const FieldContainer = ({
   presentation,
   collapsible,
   children,
-}: FieldContainerProps) => {
+}: FormFieldContainerProps) => {
   const { t } = useTranslation(translationKey);
   // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
   const [collapsed, setCollapsed] = useState(false);
@@ -49,7 +49,7 @@ export const FieldContainer = ({
   const content = (
     <>
       {presentation.showLabel && label && (
-        <FieldHeader
+        <FormFieldHeader
           label={label}
           path={path}
           readonly={readonly}

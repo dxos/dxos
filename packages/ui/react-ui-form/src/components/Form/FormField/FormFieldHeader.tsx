@@ -7,7 +7,7 @@ import React, { type ReactNode } from 'react';
 import { CompactIconButton } from './FormField';
 import { FormFieldLabel } from './FormRow';
 
-export type FieldHeaderProps = {
+export type FormFieldHeaderProps = {
   label: string;
   /** JSON path forwarded to the label as field metadata. */
   path?: string;
@@ -25,9 +25,9 @@ export type FieldHeaderProps = {
 /**
  * Header row for a labelled group or list: a label with optional trailing controls (an inline add
  * affordance and/or arbitrary `actions`). Shared by array/list fields ({@link ArrayField}, the view
- * editor) and {@link FieldContainer}'s collapse header, so all group/list headers render identically.
+ * editor) and {@link FormFieldContainer}'s collapse header, so all group/list headers render identically.
  */
-export const FieldHeader = ({
+export const FormFieldHeader = ({
   label,
   path,
   required,
@@ -36,7 +36,7 @@ export const FieldHeader = ({
   add,
   actions,
   onClick,
-}: FieldHeaderProps) => (
+}: FormFieldHeaderProps) => (
   <FormFieldLabel
     standalone
     classNames={classNames}
