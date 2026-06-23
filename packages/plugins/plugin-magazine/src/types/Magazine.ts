@@ -63,13 +63,6 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Curation Routine, created with the magazine ({@link make}). Holds the editorial brief (its
-   * instructions) and references the Magazine blueprint. Rendered inline by the properties form (the
-   * Routine's own fields), so the brief is edited there without a custom surface.
-   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
-   */
-  routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
-  /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
    * curation time and take precedence over the RSS-derived defaults in display.
@@ -87,6 +80,13 @@ export const Magazine = Schema.Struct({
     }),
     Schema.optional,
   ),
+  /**
+   * Curation Routine, created with the magazine ({@link make}). Holds the editorial brief (its
+   * instructions) and references the Magazine blueprint. Rendered inline by the properties form (the
+   * Routine's own fields), so the brief is edited there without a custom surface.
+   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
+   */
+  routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
