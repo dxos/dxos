@@ -864,6 +864,26 @@ describe('ProcessOperationInvoker invocations', () => {
   );
 });
 
+describe('annotations', () => {
+  it.effect(
+    'surfaces spawn annotations on the handle and via list',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSumAggregator(), {
+        annotations: Annotation.buildDictionary((dictionary) => {
+          Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+        }),
+      });
+      expect(
+        Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
+      ).toBe(true);
+      const listed = yield* manager.list();
+      expect(listed.some((process) => process.pid === handle.pid)).toBe(true);
+      yield* handle.terminate();
+    }, Effect.provide(TestLayer)),
+  );
+});
+
 // Minimal layer for durability tests: no auto-created ProcessManager; supplies raw deps.
 const DurabilityTestLayer = Layer.mergeAll(
   Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty),

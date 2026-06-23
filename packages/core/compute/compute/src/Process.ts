@@ -170,6 +170,14 @@ export const NotifyAnnotation = Annotation.make({
   schema: Operation.NotifyOptions,
 });
 
+/**
+ * Marks a process as the harness host for its conversation (discovery substrate).
+ */
+export const HarnessHostAnnotation = Annotation.make({
+  id: 'org.dxos.process.harnessHost',
+  schema: Schema.Boolean,
+});
+
 //
 // Executable.
 //
