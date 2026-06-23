@@ -10,8 +10,9 @@ import { FeedTraceSink } from '@dxos/functions-runtime';
 import { EID } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 
-import { groupIntoRuns, type RoutineRun } from './runs';
 import { type Routine } from '#types';
+
+import { groupIntoRuns, type RoutineRun } from './runs';
 
 /**
  * Returns the execution history for a routine.

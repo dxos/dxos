@@ -344,7 +344,9 @@ export const collectProcessActivityLines = (
     if (!pid || !descendantPids.has(pid)) {
       return false;
     }
-    const metaConvId = message.meta.conversation ? EID.getEntityId(EID.parse(message.meta.conversation.uri)) : undefined;
+    const metaConvId = message.meta.conversation
+      ? EID.getEntityId(EID.parse(message.meta.conversation.uri))
+      : undefined;
     if (conversationId && metaConvId !== undefined && metaConvId !== conversationId) {
       return false;
     }
@@ -383,7 +385,9 @@ export const deriveInFlightActivityLine = (
     if (!pid || !descendantPids.has(pid)) {
       return false;
     }
-    const metaConvId = message.meta.conversation ? EID.getEntityId(EID.parse(message.meta.conversation.uri)) : undefined;
+    const metaConvId = message.meta.conversation
+      ? EID.getEntityId(EID.parse(message.meta.conversation.uri))
+      : undefined;
     if (conversationId && metaConvId !== undefined && metaConvId !== conversationId) {
       return false;
     }

@@ -8,10 +8,11 @@ import { Obj } from '@dxos/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useRoutineHistory } from './useRoutineHistory';
-import { type RunStatus } from './runs';
 import { meta } from '#meta';
 import { Routine } from '#types';
+
+import { type RunStatus } from './runs';
+import { useRoutineHistory } from './useRoutineHistory';
 
 export type RoutineHistoryProps = {
   role?: string;
@@ -52,10 +53,7 @@ export const RoutineHistory = ({ role, subject }: RoutineHistoryProps) => {
         ) : (
           <ul className='flex flex-col gap-1'>
             {runs.map((run) => (
-              <li
-                key={run.pid}
-                className='flex items-center gap-3 rounded px-3 py-2 text-sm hover:bg-hoverSurface'
-              >
+              <li key={run.pid} className='flex items-center gap-3 rounded px-3 py-2 text-sm hover:bg-hoverSurface'>
                 <span className={mx('w-16 shrink-0 font-medium', STATUS_CLASSES[run.status])}>
                   {t(`history.status.${run.status}.label`)}
                 </span>

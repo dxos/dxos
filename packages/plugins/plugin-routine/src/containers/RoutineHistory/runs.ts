@@ -27,7 +27,10 @@ export type RoutineRun = {
  *
  * The triggerIds set identifies which messages belong to this routine.
  */
-export const groupIntoRuns = (messages: readonly Trace.Message[], triggerEntityIds: ReadonlySet<string>): RoutineRun[] => {
+export const groupIntoRuns = (
+  messages: readonly Trace.Message[],
+  triggerEntityIds: ReadonlySet<string>,
+): RoutineRun[] => {
   // Filter to messages whose trigger ref matches one of the routine's triggers.
   const relevant = messages.filter((msg) => {
     if (!msg.meta.trigger) {

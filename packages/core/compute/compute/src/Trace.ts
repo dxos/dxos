@@ -10,9 +10,9 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import * as Trigger from './Trigger';
-import { log } from '@dxos/log';
 
 /**
  * Writes ephemeral or persistent events to the trace.
