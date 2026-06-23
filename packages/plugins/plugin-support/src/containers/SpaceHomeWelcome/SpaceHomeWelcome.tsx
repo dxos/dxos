@@ -100,13 +100,15 @@ const WelcomePanel = memo(() => {
       <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
         <Carousel.Root count={slides.length} transition='slide' continuous autoAdvance={10_000}>
-          <Carousel.Content classNames='max-w-[50rem]'>
+          <Carousel.Content>
             <Carousel.Previous />
-            <Carousel.Viewport>
-              {slides.map((slide, index) => (
-                <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
-              ))}
-            </Carousel.Viewport>
+            <div className='flex justify-center w-full'>
+              <Carousel.Viewport classNames='max-w-[40rem]'>
+                {slides.map((slide, index) => (
+                  <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
+                ))}
+              </Carousel.Viewport>
+            </div>
             <Carousel.Next />
             <Carousel.Indicators />
             <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>

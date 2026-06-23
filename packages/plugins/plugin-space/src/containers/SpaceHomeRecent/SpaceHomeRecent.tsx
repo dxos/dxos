@@ -60,8 +60,8 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
 
   // TODO(burdon): Should this be a Masonry or just flow? Do we expect this to scroll?
   return (
-    <div className='flex items-center'>
-      <div className='flex flex-col max-w-[20rem]'>
+    <div className='flex justify-center w-full'>
+      <div className='flex flex-col w-full max-w-[40rem]'>
         <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
         <Masonry.Root Tile={RecentObjectTile}>
           <Masonry.Content padding={false} centered>

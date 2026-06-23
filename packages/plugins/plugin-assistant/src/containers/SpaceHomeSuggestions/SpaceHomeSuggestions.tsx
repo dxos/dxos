@@ -43,28 +43,30 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
   );
 
   return (
-    <div className='flex flex-col gap-2'>
-      <h2 className='text-sm font-medium text-description'>{t('space-home.suggestions.heading')}</h2>
-      <div className='flex flex-col gap-3'>
-        {SUGGESTION_KEYS.map((key) => {
-          const prompt = t(key);
-          return (
-            <Card.Root
-              key={key}
-              fullWidth
-              role='button'
-              classNames='cursor-pointer'
-              onClick={() => handleRunPrompt(prompt)}
-            >
-              <Card.Header>
-                <Card.Block>
-                  <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
-                </Card.Block>
-                <Card.Title>{prompt}</Card.Title>
-              </Card.Header>
-            </Card.Root>
-          );
-        })}
+    <div className='flex justify-center w-full'>
+      <div className='flex flex-col gap-2 w-full max-w-[40rem]'>
+        <h2 className='text-sm font-medium text-description'>{t('space-home.suggestions.heading')}</h2>
+        <div className='flex flex-col gap-3'>
+          {SUGGESTION_KEYS.map((key) => {
+            const prompt = t(key);
+            return (
+              <Card.Root
+                key={key}
+                fullWidth
+                role='button'
+                classNames='cursor-pointer'
+                onClick={() => handleRunPrompt(prompt)}
+              >
+                <Card.Header>
+                  <Card.Block>
+                    <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
+                  </Card.Block>
+                  <Card.Title>{prompt}</Card.Title>
+                </Card.Header>
+              </Card.Root>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
