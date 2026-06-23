@@ -90,19 +90,15 @@ export const CustomTokenDialog = ({ db, spaceId, connectorId, connectorLabel }: 
           </Dialog.Close>
         </Dialog.Header>
         <Dialog.Body>
-          <p className='text-error'>
-            {t('provider-form-dialog.no-form.message', {
-              defaultValue: 'Connector has no credential form configured.',
-            })}
-          </p>
+          <p className='text-error'>{t('provider-form-dialog.no-form.message')}</p>
         </Dialog.Body>
       </Dialog.Content>
     );
   }
 
   const title = connector?.label
-    ? t('provider-form-dialog.title', { defaultValue: `Connect ${connector.label}`, label: connector.label })
-    : t('custom-token-dialog.title', { defaultValue: 'Add custom token' });
+    ? t('provider-form-dialog.title', { label: connector.label })
+    : t('custom-token-dialog.title');
 
   return (
     <Dialog.Content>

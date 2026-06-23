@@ -84,70 +84,37 @@ export const ConnectionView = ({
               <Form.Viewport>
                 <Form.Content>
                   <Form.Section title={title} description={source}>
-                    {!hasConnector && (
-                      <p className='px-trim-md text-description'>
-                        {t('no-connector.message', {
-                          defaultValue: 'No service plugin is registered for this connection.',
-                        })}
-                      </p>
-                    )}
+                    {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
 
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (
-                      <Form.Row
-                        label={t('sync-now.label', { defaultValue: 'Sync now' })}
-                        description={t('sync-now.description', {
-                          defaultValue: 'Reconcile cards with the remote service.',
-                        })}
-                      >
+                      <Form.Row label={t('sync-now.label')} description={t('sync-now.description')}>
                         <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
-                          {syncing
-                            ? t('syncing.label', { defaultValue: 'Syncing…' })
-                            : t('sync-now.label', { defaultValue: 'Sync now' })}
+                          {syncing ? t('syncing.label') : t('sync-now.label')}
                         </Button>
                       </Form.Row>
                     )}
 
                     {/* Only show change-targets for connectors that support user-pickable targets. */}
                     {canChangeTargets && (
-                      <Form.Row
-                        label={t('change-targets.label', { defaultValue: 'Change sync targets' })}
-                        description={t('change-targets.description', {
-                          defaultValue: 'Pick which remote items this connection syncs into the space.',
-                        })}
-                      >
+                      <Form.Row label={t('change-targets.label')} description={t('change-targets.description')}>
                         <Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
-                          {loadingTargets
-                            ? t('loading.label', { defaultValue: 'Loading…' })
-                            : t('change-targets.label', { defaultValue: 'Change sync targets' })}
+                          {loadingTargets ? t('loading.label') : t('change-targets.label')}
                         </Button>
                       </Form.Row>
                     )}
 
-                    <Form.Row
-                      label={t('delete-connection.label', { defaultValue: 'Delete connection' })}
-                      description={t('delete-connection.description', {
-                        defaultValue: 'Remove this connection and its sync bindings.',
-                      })}
-                    >
-                      <Button onClick={onDelete}>
-                        {t('delete-connection.label', { defaultValue: 'Delete connection' })}
-                      </Button>
+                    <Form.Row label={t('delete-connection.label')} description={t('delete-connection.description')}>
+                      <Button onClick={onDelete}>{t('delete-connection.label')}</Button>
                     </Form.Row>
                   </Form.Section>
 
                   {/* Hide the sync-targets section for connectors that don't sync. */}
                   {canSync && (
-                    <Form.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
+                    <Form.Section title={t('targets.label')}>
                       {bindings.length === 0 ? (
                         <p className='px-trim-md text-description'>
-                          {canChangeTargets
-                            ? t('no-targets.message', {
-                                defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
-                              })
-                            : t('no-targets-yet.message', {
-                                defaultValue: 'No targets yet — finish OAuth to set up the default target.',
-                              })}
+                          {canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}
                         </p>
                       ) : (
                         bindings.map((binding) => (
@@ -211,16 +178,16 @@ const BindingRow = ({
     binding.name ??
     binding.remoteId ??
     (resolvedTarget ? Obj.getLabel(resolvedTarget) : undefined) ??
+    // `typename.label` is owned by the target type's plugin (a foreign namespace we can't
+    // guarantee), so fall back to the raw typename when that plugin defines no label.
     (targetTypename ? t('typename.label', { ns: targetTypename, defaultValue: targetTypename }) : undefined) ??
-    t('sync-target.label', { defaultValue: 'Sync target' });
+    t('sync-target.label');
 
   const status = missing
-    ? t('binding-target-missing.message', {
-        defaultValue: 'Synced object was deleted. Remove this binding to clean it up.',
-      })
+    ? t('binding-target-missing.message')
     : binding.lastSyncAt
-      ? `${t('last-sync.label', { defaultValue: 'Last synced' })}: ${new Date(binding.lastSyncAt).toLocaleString()}`
-      : t('never-synced.label', { defaultValue: 'Never synced' });
+      ? `${t('last-sync.label')}: ${new Date(binding.lastSyncAt).toLocaleString()}`
+      : t('never-synced.label');
 
   // Seed the options form from the binding's current options; SyncBinding is an ECHO relation,
   // so edits persist via `Relation.update`.
@@ -242,11 +209,7 @@ const BindingRow = ({
         !missing && binding.lastError ? <span className='text-sm text-error-text'>{binding.lastError}</span> : undefined
       }
     >
-      {missing ? (
-        <Button onClick={() => onRemove(binding)}>
-          {t('remove-binding.label', { defaultValue: 'Remove binding' })}
-        </Button>
-      ) : undefined}
+      {missing ? <Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button> : undefined}
 
       {/* Per-binding options: flat (default variant) so fields render inline rather than each in a border. */}
       {optionsSchema && !missing && (

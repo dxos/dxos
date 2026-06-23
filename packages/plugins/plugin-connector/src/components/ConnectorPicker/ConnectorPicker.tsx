@@ -70,7 +70,7 @@ export const ConnectorPicker = ({ connectorId, db, existingTarget }: ConnectorPi
       {connections.length > 0 && (
         <Listbox.Root>
           <Listbox.Viewport>
-            <Listbox.Content aria-label={t('connections.label', { defaultValue: 'Connections' })}>
+            <Listbox.Content aria-label={t('connections.label')}>
               {connections.map((connection) => (
                 <ConnectionItem
                   key={connection.id}

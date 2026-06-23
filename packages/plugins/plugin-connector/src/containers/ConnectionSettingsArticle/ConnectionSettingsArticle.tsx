@@ -66,21 +66,16 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
               <Form.Viewport>
                 <Form.Content>
                   <Form.Section>
-                    <Form.Row
-                      label={t('add-connection.label', { defaultValue: 'Add connection' })}
-                      description={t('connect-service.description', {
-                        defaultValue: 'Link an external service to this space.',
-                      })}
-                    >
-                      <Button onClick={handleAdd}>{t('connect.label', { defaultValue: 'Connect' })}</Button>
+                    <Form.Row label={t('add-connection.label')} description={t('connect-service.description')}>
+                      <Button onClick={handleAdd}>{t('connect.label')}</Button>
                     </Form.Row>
                   </Form.Section>
 
                   {connections.length > 0 && (
-                    <Form.Section title={t('connections.label', { defaultValue: 'Connections' })}>
+                    <Form.Section title={t('connections.label')}>
                       <Listbox.Root>
                         <Listbox.Viewport>
-                          <Listbox.Content aria-label={t('connections.label', { defaultValue: 'Connections' })}>
+                          <Listbox.Content aria-label={t('connections.label')}>
                             {connections.map((connection) => (
                               <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
                             ))}
