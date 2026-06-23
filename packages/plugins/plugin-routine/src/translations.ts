@@ -60,7 +60,7 @@ export const translations: Resource[] = [
         'action.placeholder': 'Select an operation or instructions',
         'action-input.label': 'Input',
         'action-kind.operation.label': 'Operation',
-        'action-kind.routine.label': 'Instructions',
+        'action-kind.instructions.label': 'Instructions',
 
         'triggers.title': 'Triggers',
         'triggers.description': 'When this automation runs.',
