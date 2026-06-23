@@ -102,12 +102,14 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Row label={label} description={t('display-name.description')}>
-            <Input.TextInput
-              value={getValue()}
-              onChange={handleChange}
-              placeholder={t('display-name-input.placeholder')}
-              classNames='min-w-64'
-            />
+            <Input.Root>
+              <Input.TextInput
+                value={getValue()}
+                onChange={handleChange}
+                placeholder={t('display-name-input.placeholder')}
+                classNames='min-w-64'
+              />
+            </Input.Root>
           </Form.Row>
         );
       },
@@ -149,10 +151,12 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Form.Row label={label} description={t('did.description')}>
-            <ButtonGroup classNames='w-full'>
-              <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
-              <Clipboard.IconButton value={getValue() ?? ''} />
-            </ButtonGroup>
+            <Input.Root>
+              <ButtonGroup classNames='w-full'>
+                <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
+                <Clipboard.IconButton value={getValue() ?? ''} />
+              </ButtonGroup>
+            </Input.Root>
           </Form.Row>
         );
       },
