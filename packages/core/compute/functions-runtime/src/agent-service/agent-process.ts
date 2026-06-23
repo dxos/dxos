@@ -27,7 +27,7 @@ import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, Feed, Obj, Registry } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Message, ContentBlock } from '@dxos/types';
@@ -804,7 +804,7 @@ const ToolExecutionService = ({
                 conversation: Obj.getURI(feed),
               },
               traceMeta: {
-                conversationId: feed.id,
+                conversation: Ref.make(feed),
               },
             });
             yield* toolCallManager.beginCall(fiber.pid);

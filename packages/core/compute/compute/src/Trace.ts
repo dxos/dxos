@@ -9,7 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+
+import * as Trigger from './Trigger';
 import { log } from '@dxos/log';
 
 /**
@@ -110,14 +112,14 @@ export const Meta = Schema.Struct({
   space: Schema.optional(Schema.String),
 
   /**
-   * ID of the conversation feed object if present.
+   * Ref to the conversation feed object if present.
    */
-  conversationId: Schema.optional(Obj.ID),
+  conversation: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
 
   /**
-   * ID of the trigger object if invocation resulted from a trigger.
+   * Ref to the trigger object if invocation resulted from a trigger.
    */
-  triggerId: Schema.optional(Obj.ID),
+  trigger: Ref.Ref(Trigger.Trigger).pipe(Schema.optional),
 
   /**
    * ID of the tool call that created the current process.

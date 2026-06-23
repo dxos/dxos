@@ -177,7 +177,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
                   conversation: target,
                 },
                 traceMeta: {
-                  conversationId: feed.id,
+                  conversation: Ref.make(feed),
                 },
               });
             }

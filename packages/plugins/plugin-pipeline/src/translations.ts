@@ -30,8 +30,6 @@ export const translations = [
         'enumerating-tab.label': 'List',
         'editing-tab.label': 'Edit',
         'columns.label': 'Columns',
-        'pipeline-invocations.label': 'Invocations',
-        'pipeline-automation.label': 'Automations',
         'toggle-expand.label': 'Toggle expand',
         'delete-column.label': 'Delete column',
       },
