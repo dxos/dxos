@@ -128,23 +128,6 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     await handleExecPrompts();
   }, [graph, handleExecQueries, handleExecPrompts]);
 
-  const handleRearrange = useCallback<NonNullable<NotebookStackProps['onRearrange']>>(
-    (source, target) => {
-      invariant(notebook);
-      const from = notebook.cells.findIndex((cell) => cell.id === source.id);
-      const to = notebook.cells.findIndex((cell) => cell.id === target.id);
-      if (from != null && to != null) {
-        Obj.update(notebook, (notebook) => {
-          const cell = notebook.cells.splice(from, 1)[0];
-          if (cell) {
-            notebook.cells.splice(to, 0, cell);
-          }
-        });
-      }
-    },
-    [notebook],
-  );
-
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     async (type, after) => {
       invariant(notebook);
@@ -212,14 +195,13 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <NotebookStack
           db={db}
           notebook={notebook}
           graph={graph}
           env={env}
           promptResults={promptResults}
-          onRearrange={handleRearrange}
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
