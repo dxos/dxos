@@ -11,7 +11,6 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
@@ -60,6 +59,7 @@ import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
@@ -181,7 +181,6 @@ export const getPlugins = ({
   return [
     AssistantPlugin(),
     AttentionPlugin(),
-    AutomationPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     CallsPlugin(),
@@ -241,6 +240,7 @@ export const getPlugins = ({
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
+    RoutinePlugin(),
     isLocal && SamplePlugin(),
     SandboxPlugin(),
     ScriptPlugin(),

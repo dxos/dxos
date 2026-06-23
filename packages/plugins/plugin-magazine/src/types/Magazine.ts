@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Instructions } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
@@ -63,12 +63,12 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Curation Routine, created with the magazine ({@link make}). Holds the editorial brief (its
-   * instructions) and references the Magazine blueprint. Rendered inline by the properties form (the
-   * Routine's own fields), so the brief is edited there without a custom surface.
+   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
+   * references the Magazine blueprint. Rendered inline by the properties form (the Instructions'
+   * own fields), so the brief is edited there without a custom surface.
    * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
    */
-  routine: Ref.Ref(Routine.Routine).pipe(FormInlineAnnotation.set(true), Schema.optional),
+  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -99,7 +99,7 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'routine' | 'postState'> & {
+export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'instructions' | 'postState'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
   /** Editorial brief seeded into the curation Routine's instructions (composed with the default methodology). */
@@ -122,21 +122,21 @@ export const make = (props: MakeProps = {}): Magazine => {
     postState: Ref.make(postState),
   });
 
-  const routine = Routine.make({
+  const instructions = Instructions.make({
     name: props.name ? `${props.name} curation` : 'Magazine curation',
-    instructions: composeInstructions(props.instructions),
+    text: composeInstructions(props.instructions),
     blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
   });
   Obj.update(magazine, (magazine) => {
-    magazine.routine = Ref.make(routine);
+    magazine.instructions = Ref.make(instructions);
   });
 
   // Cascade-delete the Routine (and its instructions Text) and the per-Post state with the magazine.
-  Obj.setParent(routine, magazine);
-  if (routine.instructions.target) {
-    Obj.setParent(routine.instructions.target, routine);
+  Obj.setParent(instructions, magazine);
+  if (instructions.text.target) {
+    Obj.setParent(instructions.text.target, instructions);
   }
   Obj.setParent(postState, magazine);
   return magazine;

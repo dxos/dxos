@@ -4,65 +4,65 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Blueprint, Operation, Instructions, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Automation } from '@dxos/plugin-automation';
+import { Routine } from '@dxos/plugin-routine/types';
 
-/** Registry key of the persisted AgentPrompt ("Run Routine") operation a routine trigger dispatches. */
-const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
+/** Registry key of the persisted RunInstructions operation a trigger dispatches. */
+const RUN_INSTRUCTIONS_KEY = 'org.dxos.function.runInstructions';
 
 export type ScheduledRoutineOptions = {
   name: string;
-  instructions: string;
+  text: string;
   blueprintKeys: readonly string[];
   cron: string;
 };
 
 /**
- * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared AgentPrompt
+ * Scaffold a timer-driven routine: a Routine (instructions + blueprints) run by the shared RunInstructions
  * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
- * instructions before activating, and is owned by the automation (cascade-deletes with it); the routine
+ * instructions before activating, and is owned by the routine (cascade-deletes with it); the instructions
  * stays independent, since it is edited separately and may be reused.
  */
-export const makeScheduledRoutineAutomation = ({
+export const makeScheduledRoutine = ({
   name,
-  instructions,
+  text,
   blueprintKeys,
   cron,
-}: ScheduledRoutineOptions): Effect.Effect<Automation.Automation, Error, Database.Service> =>
+}: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, Error, Database.Service> =>
   Effect.gen(function* () {
     const blueprints = blueprintKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
-    const routine = yield* Database.add(
-      Routine.make({
+    const instructions = yield* Database.add(
+      Instructions.make({
         name,
-        instructions,
+        text,
         blueprints,
       }),
     );
 
-    // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's AgentPrompt
+    // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's RunInstructions
     // or persist it on first use.
     const existingFns = yield* Database.query(
-      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(AGENT_PROMPT_KEY)),
+      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(RUN_INSTRUCTIONS_KEY)),
     ).run;
-    const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
+    const runInstructionsFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
 
     const trigger = yield* Database.add(
       Obj.make(Trigger.Trigger, {
         enabled: false,
-        function: Ref.make(agentPromptFn),
+        function: Ref.make(runInstructionsFn),
         spec: Trigger.specTimer(cron),
-        input: { prompt: Ref.make(routine), input: {} },
+        input: { instructions: Ref.make(instructions), input: {} },
         concurrency: 1,
       }),
     );
 
-    const automation = Automation.make({
+    const routine = Routine.make({
       name,
-      runnable: Ref.make(agentPromptFn),
+      runnable: Ref.make(runInstructionsFn),
       triggers: [Ref.make(trigger)],
     });
-    Obj.setParent(trigger, automation);
-    return automation;
+    Obj.setParent(trigger, routine);
+    return routine;
   });

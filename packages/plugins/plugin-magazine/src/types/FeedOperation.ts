@@ -109,7 +109,7 @@ export const CurateMagazine = Operation.make({
     curated: Schema.Number.annotations({ description: 'Number of posts added to the magazine.' }),
   }),
   // Database.Service for candidate collection, Registry.Service to resolve the methodology blueprint;
-  // sub-operations (SyncFeed, AgentPrompt) resolve through the ambient Operation.Service invoker.
+  // sub-operations (SyncFeed, RunInstructions) resolve through the ambient Operation.Service invoker.
   services: [Database.Service, Registry.Service],
 }).pipe(Operation.visible);
 

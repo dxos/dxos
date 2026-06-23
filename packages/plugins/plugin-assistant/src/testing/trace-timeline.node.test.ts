@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import {
   AgentHandlers,
-  AgentPrompt,
+  RunInstructions,
   DatabaseBlueprint,
   DatabaseHandlers,
   WebSearchBlueprint,
   WebSearchHandlers,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Trace, Trigger, Operation } from '@dxos/compute';
+import { Blueprint, Instructions, Trace, Trigger, Operation } from '@dxos/compute';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -165,20 +165,20 @@ describe.skip('Trace timeline', () => {
               name: 'DXOS',
             }),
           ]);
-          const prompt = yield* Database.add(
-            Routine.make({
+          const instructions = yield* Database.add(
+            Instructions.make({
               name: 'Research',
-              instructions: 'Research the given topic, or object.',
+              text: 'Research the given topic, or object.',
               blueprints: [Ref.make(yield* Blueprint.upsert(WebSearchBlueprint.key))],
             }),
           );
           yield* Database.add(
             Trigger.make({
-              function: Ref.make(Operation.serialize(AgentPrompt)),
+              function: Ref.make(Operation.serialize(RunInstructions)),
               enabled: true,
               spec: Trigger.specFeed(feed),
               input: {
-                prompt: Ref.make(prompt),
+                instructions: Ref.make(instructions),
                 input: '{{event.item}}',
               },
             }),

@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
-import { TemplateEditor } from '@dxos/plugin-automation/components';
+import { TemplateEditor } from '@dxos/plugin-routine/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
@@ -136,12 +136,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       return (
         <>
-          <TemplateEditor
-            id={cell.id}
-            source={cell.prompt.target.instructions}
-            lineNumbers={false}
-            classNames={editorStyles}
-          />
+          <TemplateEditor id={cell.id} source={cell.prompt.target.text} lineNumbers={false} classNames={editorStyles} />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
       );
