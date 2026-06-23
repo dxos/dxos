@@ -43,7 +43,7 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
   );
 
   return (
-    <>
+    <div>
       <h2 className='text-sm font-medium text-description'>{t('space-home.suggestions.heading')}</h2>
       {SUGGESTION_KEYS.map((key) => {
         const prompt = t(key);
@@ -64,6 +64,6 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
           </Card.Root>
         );
       })}
-    </>
+    </div>
   );
 };

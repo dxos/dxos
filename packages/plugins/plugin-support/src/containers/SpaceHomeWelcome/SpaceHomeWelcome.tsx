@@ -32,7 +32,6 @@ type SpaceScopedProps = {
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
   const isPersonal = !!space && AppSpace.isPersonalSpace(space);
   const [dismissed] = useWelcomeDismissed(space);
-
   if (!isPersonal) {
     return null;
   }
@@ -96,7 +95,7 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <div className='flex flex-col items-center gap-4 pbe-2'>
+    <div className='flex flex-col items-center gap-4 pbe-2 px-4'>
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
       <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
