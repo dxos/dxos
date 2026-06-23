@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { isNonNullable } from '@dxos/util';
+
 
 import { SpaceOperation } from './definitions';
 
@@ -29,36 +29,38 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
       invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
-      // Type entities (persisted schemas) live outside collections — `findIndex` will
-      // return -1 for them and the splice/active-tracking branches are skipped.
-      const indices = entities.map((entity) =>
-        Obj.instanceOf(Collection.Collection, parentCollection)
-          ? parentCollection.objects.findIndex((ref) => ref.target === entity)
-          : -1,
-      );
-
-      const wasActive = entities
-        .map((entity) => layout.active.find((graphId) => graphId.endsWith(entity.id)))
-        .filter(isNonNullable);
+      // Track only entities that are actually removed — parented objects are skipped because
+      // they must be removed via their parent so ownership and collection membership stay consistent.
+      const removedEntities: Entity.Unknown[] = [];
+      const indices: number[] = [];
+      const wasActive: string[] = [];
 
       for (const entity of entities) {
-        // Parented objects must be removed via their parent (which cascades); attempting a direct
-        // remove would throw in removeCore and leave collection membership partially applied.
         if (Obj.getParent(entity as Obj.Unknown)) {
           continue;
         }
 
+        const activeGraphId = layout.active.find((graphId) => graphId.endsWith(entity.id));
+        if (activeGraphId) {
+          wasActive.push(activeGraphId);
+        }
+
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
           const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
+          indices.push(index);
           if (index !== -1) {
             Obj.update(parentCollection, (parentCollection) => {
               parentCollection.objects.splice(index, 1);
             });
           }
+        } else {
+          // Type entities (persisted schemas) live outside collections.
+          indices.push(-1);
         }
 
         const db = Entity.getDatabase(entity);
         db?.remove(entity);
+        removedEntities.push(entity);
       }
 
       if (wasActive.length > 0) {
@@ -66,7 +68,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       }
 
       return {
-        objects: entities,
+        objects: removedEntities,
         parentCollection,
         indices,
         wasActive,
