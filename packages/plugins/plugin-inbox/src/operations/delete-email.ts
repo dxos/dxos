@@ -13,7 +13,7 @@ import { GoogleMail } from '../apis';
 import { GMAIL_SOURCE } from '../constants';
 import { GoogleCredentials } from '../services/google-credentials';
 import { DraftMessage, InboxOperation, Mailbox } from '../types';
-import { findBindingForTarget } from './find-binding';
+import { findBindingForTarget } from '../util';
 
 export default InboxOperation.DeleteEmail.pipe(
   Operation.withHandler(
