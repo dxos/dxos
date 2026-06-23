@@ -12,7 +12,6 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 
 import { meta } from '#meta';
 
-// TODO(burdon): Standardize translation names.
 export const translations: Resource[] = [
   ...componentsTranslations,
   ...formTranslations,
@@ -52,15 +51,15 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Sequence deleted',
       },
       [Type.getTypename(Chat.Chat)]: {
-        'typename.label': 'AI Conversation',
-        'typename.label_zero': 'AI Conversations',
-        'typename.label_one': 'AI Conversation',
-        'typename.label_other': 'AI Conversations',
-        'object-name.placeholder': 'New AI conversation',
-        'add-object.label': 'Add AI conversation',
-        'rename-object.label': 'Rename AI conversation',
-        'delete-object.label': 'Delete AI conversation',
-        'object-deleted.label': 'AI conversation deleted',
+        'typename.label': 'Session',
+        'typename.label_zero': 'Sessions',
+        'typename.label_one': 'Session',
+        'typename.label_other': 'Sessions',
+        'object-name.placeholder': 'New session',
+        'add-object.label': 'Add Session',
+        'rename-object.label': 'Rename session',
+        'delete-object.label': 'Delete session',
+        'object-deleted.label': 'Session deleted',
       },
       [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
