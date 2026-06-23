@@ -18,7 +18,7 @@ import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -123,20 +123,6 @@ const syncSingleMailbox = (input: {
     log('sync complete', { newMessages: newMessagesCount });
     return newMessagesCount;
   });
-
-/**
- * Eagerly materializes a local Mailbox so a {@link SyncBinding} can be created
- * (relations require both endpoints to exist). Gmail is a single-target
- * connector with no remote selection, so a fresh Mailbox is always created;
- * the connection's `accessToken.account` (the authenticated email) seeds the
- * default name when available.
- */
-export const materializeTarget: MaterializeTarget = ({ connection, db }) =>
-  Effect.gen(function* () {
-    const accessToken = yield* Database.load(connection.accessToken);
-    const name = accessToken.account ?? 'Inbox';
-    return yield* Database.add(Mailbox.make({ name }));
-  }).pipe(Effect.provide(Database.layer(db)));
 
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(

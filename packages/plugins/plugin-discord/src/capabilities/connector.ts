@@ -21,7 +21,6 @@ import {
   DISCORD_USER_PROVIDER_ID,
 } from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
-import { materializeTarget } from '../operations/sync';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
 import { DiscordOperation, DiscordTargetOptions } from '../types';
 
@@ -151,7 +150,7 @@ export default Capability.makeModule(
         credentialForm,
         optionsSchema: DiscordTargetOptions,
         getSyncTargets: DiscordOperation.GetDiscordChannels,
-        materializeTarget,
+        materializeTarget: DiscordOperation.MaterializeDiscordTarget,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated,
       },
@@ -165,7 +164,7 @@ export default Capability.makeModule(
         },
         optionsSchema: DiscordTargetOptions,
         getSyncTargets: DiscordOperation.GetDiscordChannels,
-        materializeTarget,
+        materializeTarget: DiscordOperation.MaterializeDiscordTarget,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated: userOnTokenCreated,
       },

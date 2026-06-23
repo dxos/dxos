@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 
@@ -472,7 +472,7 @@ export const findKanbanForBoard: (
  * (the `pivotField`), so the uncategorized column would only show transient
  * pre-sync state.
  */
-const makeEmptyKanbanForBoard = (boardId: string, name: string): Kanban.Kanban =>
+export const makeEmptyKanbanForBoard = (boardId: string, name: string): Kanban.Kanban =>
   Obj.make(Kanban.Kanban, {
     [Obj.Meta]: { keys: [{ source: TRELLO_SOURCE, id: boardId }] },
     name,
@@ -496,26 +496,6 @@ export const findOrCreateKanbanForBoard: (board: TrelloBoard) => Effect.Effect<K
     }
     return yield* Database.add(makeEmptyKanbanForBoard(board.id, board.name));
   });
-
-/**
- * Eagerly materializes an empty local Kanban for a remote Trello board so a
- * {@link SyncBinding} can be created (relations require both endpoints to exist).
- * Find-or-create keyed on the board's foreign key, so re-running for the same
- * board returns the existing Kanban without duplicating it. The Kanban is left
- * empty here — cards are reconciled on the first `SyncTrelloBoard` run.
- */
-export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
-  Effect.gen(function* () {
-    if (!remoteTarget) {
-      // Trello is a multi-target connector; a board selection is always present.
-      return yield* Effect.fail(new Error('Trello materializeTarget requires a remote board selection.'));
-    }
-    const existing = yield* findKanbanForBoard(remoteTarget.id);
-    if (existing) {
-      return existing;
-    }
-    return yield* Database.add(makeEmptyKanbanForBoard(remoteTarget.id, remoteTarget.name));
-  }).pipe(Effect.provide(Database.layer(db)));
 
 const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = TrelloOperation.SyncTrelloBoard.pipe(
   Operation.withHandler(

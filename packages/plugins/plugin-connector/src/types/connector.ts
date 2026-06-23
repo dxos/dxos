@@ -41,19 +41,24 @@ export const GetSyncTargetsOutput = Schema.Struct({
 export interface GetSyncTargetsOutput extends Schema.Schema.Type<typeof GetSyncTargetsOutput> {}
 
 /**
- * Create an empty local root object of the connector's type so a {@link SyncBinding}
- * relation can be created eagerly (relations require both endpoints to exist).
- * Returns the persisted object. `remoteTarget` is omitted for single-target
- * connectors (e.g. Gmail) that have no remote selection.
- *
- * A plain function (not an operation) so the coordinator can call it inline
- * during binding reconciliation alongside the connector-registry lookup.
+ * Input accepted by every {@link ConnectorEntry.materializeTarget} operation.
+ * `remoteTarget` is omitted for single-target connectors (e.g. Gmail) that have
+ * no remote selection.
  */
-export type MaterializeTarget = (input: {
-  connection: Connection.Connection;
-  remoteTarget?: RemoteTarget;
-  db: Database.Database;
-}) => Effect.Effect<Obj.Unknown, Error, HttpClient.HttpClient>;
+export const MaterializeTargetInput = Schema.Struct({
+  connection: Ref.Ref(Connection.Connection),
+  remoteTarget: RemoteTarget.pipe(Schema.optional),
+});
+export interface MaterializeTargetInput extends Schema.Schema.Type<typeof MaterializeTargetInput> {}
+
+/**
+ * Output returned by {@link ConnectorEntry.materializeTarget} operations: a ref
+ * to the persisted local root object the binding will reference.
+ */
+export const MaterializeTargetOutput = Schema.Struct({
+  target: Ref.Ref(Obj.Unknown),
+});
+export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof MaterializeTargetOutput> {}
 
 /** Minimum input for provider {@link ConnectorEntry.sync} operations: one binding to reconcile. */
 export type SyncInput = {
@@ -153,7 +158,7 @@ export type ConnectorEntry = {
   /** Discover remote targets reachable from a connection (multi-target connectors). */
   getSyncTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
   /** Create an empty local root object so a binding can be created eagerly. */
-  materializeTarget?: MaterializeTarget;
+  materializeTarget?: Operation.Definition<MaterializeTargetInput, MaterializeTargetOutput>;
   /** Reconcile one binding's target object with its remote. */
   sync?: Operation.Definition<SyncInput, SyncOutput>;
   /** Schema describing per-binding `.options`. */

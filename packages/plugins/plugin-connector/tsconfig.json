@@ -55,6 +55,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

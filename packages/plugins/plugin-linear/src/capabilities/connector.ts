@@ -11,7 +11,6 @@ import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
-import { materializeTarget } from '../operations/sync';
 import { LinearApi } from '../services';
 import { LinearOperation } from '../types';
 
@@ -68,7 +67,7 @@ export default Capability.makeModule(
           scopes: ['read', 'write'],
         },
         getSyncTargets: LinearOperation.GetLinearTeams,
-        materializeTarget,
+        materializeTarget: LinearOperation.MaterializeLinearTarget,
         sync: LinearOperation.SyncLinearTeams,
         optionsSchema: LinearOperation.SyncOptions,
         onTokenCreated,

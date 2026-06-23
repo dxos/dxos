@@ -13,7 +13,6 @@ import { Database, Feed, Filter, Obj, Query, Relation, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type MaterializeTarget } from '@dxos/plugin-connector';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -125,28 +124,6 @@ export const findChannelForDiscordChannel: (
     return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );
-
-/**
- * Find-or-create the empty local root for a Discord channel: a feed-backed
- * `Channel` keyed by the Discord channel id. Idempotent — re-running on the
- * same `(space, channel)` returns the same Channel.
- *
- * Materialization is eager (binding creation), so the Channel exists before
- * the first sync; `sync` only appends messages to its feed.
- */
-export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
-  Effect.gen(function* () {
-    invariant(remoteTarget, 'Discord is a multi-target connector; remoteTarget is required.');
-    const existing = yield* findChannelForDiscordChannel(remoteTarget.id);
-    if (existing) {
-      return existing;
-    }
-    const channel = Channel.make({
-      [Obj.Meta]: { keys: [{ source: DISCORD_SOURCE, id: remoteTarget.id }] },
-      name: remoteTarget.name,
-    });
-    return yield* Database.add(channel);
-  }).pipe(Effect.provide(Database.layer(db)));
 
 /**
  * Reconciles messages for the single Discord channel bound by a {@link SyncBinding}.

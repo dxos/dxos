@@ -39,9 +39,9 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
     ObservabilityPlugin({} as any),
     ProcessManagerPlugin(),
     RegistryPlugin(),
+    ConnectorPlugin(),
     RoutinePlugin(),
     SamplePlugin(),
     SpacePlugin({}),
-    ConnectorPlugin(),
   ];
 };

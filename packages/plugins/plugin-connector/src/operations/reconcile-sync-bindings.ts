@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Database, Filter, type Obj, Query, type Ref, Relation } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Filter, type Obj, Query, Ref, Relation } from '@dxos/echo';
 
 import { type Connection, type ConnectorEntry, SyncBinding } from '../types';
 
@@ -13,7 +13,9 @@ import { type Connection, type ConnectorEntry, SyncBinding } from '../types';
 export type SyncTargetSelection = { remoteId: string; name?: string };
 
 export type ReconcileSyncBindingsInput = {
-  /** Live database; forwarded to `connector.materializeTarget`. */
+  /** Resolves the connector's `materializeTarget` operation against the connection's space. */
+  invoker: Operation.OperationService;
+  /** Live database the bindings are reconciled in. */
   db: Database.Database;
   connection: Connection.Connection;
   connector: ConnectorEntry;
@@ -33,6 +35,7 @@ export type ReconcileSyncBindingsInput = {
  * HTTP client `materializeTarget` needs is provided internally.
  */
 export const reconcileSyncBindings = ({
+  invoker,
   db,
   connection,
   connector,
@@ -73,13 +76,15 @@ export const reconcileSyncBindings = ({
       if (sel === firstNew && existingTarget) {
         target = yield* Database.load(existingTarget);
       } else if (connector.materializeTarget) {
-        target = yield* connector
-          .materializeTarget({
-            connection,
-            db,
+        const { target: materialized } = yield* invoker.invoke(
+          connector.materializeTarget,
+          {
+            connection: Ref.make(connection),
             remoteTarget: { id: sel.remoteId, name: sel.name ?? sel.remoteId },
-          })
-          .pipe(Effect.provide(FetchHttpClient.layer));
+          },
+          { spaceId: db.spaceId },
+        );
+        target = yield* Database.load(materialized);
       }
       if (!target) {
         continue;

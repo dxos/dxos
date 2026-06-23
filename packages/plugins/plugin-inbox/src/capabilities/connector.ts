@@ -20,9 +20,6 @@ import {
   GOOGLE_CONTACTS_PROVIDER_ID,
   GOOGLE_INTEGRATION_SOURCE,
 } from '../constants';
-import { materializeTarget as calendarMaterializeTarget } from '../operations/google/calendar/sync';
-import { materializeTarget as contactsMaterializeTarget } from '../operations/google/contacts/sync';
-import { materializeTarget as gmailMaterializeTarget } from '../operations/google/gmail/sync';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
@@ -86,7 +83,7 @@ export default Capability.makeModule(
         optionsSchema: SyncOptions,
         // Single-target connector: no `getSyncTargets`. The coordinator calls
         // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
-        materializeTarget: gmailMaterializeTarget,
+        materializeTarget: InboxOperation.MaterializeGmailTarget,
         sync: InboxOperation.GoogleMailSync,
         onTokenCreated,
       },
@@ -106,7 +103,7 @@ export default Capability.makeModule(
         },
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: InboxOperation.GetGoogleCalendars,
-        materializeTarget: calendarMaterializeTarget,
+        materializeTarget: InboxOperation.MaterializeCalendarTarget,
         sync: InboxOperation.GoogleCalendarSync,
         onTokenCreated,
       },
@@ -122,7 +119,7 @@ export default Capability.makeModule(
           ],
         },
         getSyncTargets: InboxOperation.GetGoogleContactGroups,
-        materializeTarget: contactsMaterializeTarget,
+        materializeTarget: InboxOperation.MaterializeContactsTarget,
         sync: InboxOperation.SyncContacts,
         onTokenCreated,
       },

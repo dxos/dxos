@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
-import { Database, Obj } from '@dxos/echo';
-import { Connector, type MaterializeTarget, type OnTokenCreated } from '@dxos/plugin-connector';
+import { Obj } from '@dxos/echo';
+import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
-import { findOrCreateChannelForTarget } from '../operations/sync';
 import { SlackApi } from '../services';
 import { SlackOperation } from '../types';
 
@@ -45,20 +44,6 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
- * Materializes the empty local Channel root for a Slack conversation so a
- * {@link SyncBinding} relation can be created eagerly. Idempotent: re-running
- * for the same `(db, remoteTarget)` returns the existing Channel. Slack is a
- * multi-target connector, so `remoteTarget` is always supplied.
- */
-const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
-  Effect.gen(function* () {
-    if (!remoteTarget) {
-      return yield* Effect.die(new Error('Slack materializeTarget requires a remoteTarget'));
-    }
-    return yield* findOrCreateChannelForTarget({ remoteId: remoteTarget.id, name: remoteTarget.name });
-  }).pipe(Effect.provide(Database.layer(db)));
-
-/**
  * Contributes a single `Connector` entry that wires Slack's auth, discovery,
  * materialization and sync to the `'slack.com'` source.
  */
@@ -74,7 +59,7 @@ export default Capability.makeModule(
           scopes: SLACK_SCOPES,
         },
         getSyncTargets: SlackOperation.GetSlackChannels,
-        materializeTarget,
+        materializeTarget: SlackOperation.MaterializeSlackTarget,
         sync: SlackOperation.SyncSlackChannel,
         onTokenCreated,
       },

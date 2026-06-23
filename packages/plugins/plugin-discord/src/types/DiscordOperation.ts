@@ -9,7 +9,13 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -33,6 +39,23 @@ export const GetDiscordChannels = Operation.make({
   services: [Capability.Service],
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
+});
+
+/**
+ * Find-or-create the empty local feed-backed `Channel` for a selected Discord
+ * channel so a {@link SyncBinding} relation can be created eagerly (relations
+ * require both endpoints to exist). Keyed by the Discord channel id foreign
+ * key, so it is idempotent across re-selection.
+ */
+export const MaterializeDiscordTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeDiscordTarget'),
+    name: 'Materialize Discord Target',
+    description: 'Create the empty local Channel bound to a selected Discord channel.',
+    icon: 'ph--hash--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**

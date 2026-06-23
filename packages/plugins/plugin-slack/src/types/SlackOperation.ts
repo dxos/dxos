@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection, MaterializeTargetInput, MaterializeTargetOutput, SyncBinding } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -47,6 +47,23 @@ export const GetSlackChannels = Operation.make({
   output: Schema.Struct({
     targets: Schema.Array(RemoteTarget),
   }),
+});
+
+/**
+ * Find-or-create the empty local `Channel` root for a selected Slack
+ * conversation so a {@link SyncBinding} relation can be created eagerly
+ * (relations require both endpoints to exist). Keyed by the conversation's
+ * `remoteId` foreign key, so it is idempotent across re-selection.
+ */
+export const MaterializeSlackTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeSlackTarget'),
+    name: 'Materialize Slack Target',
+    description: 'Create the empty local Channel bound to a selected Slack conversation.',
+    icon: 'ph--slack-logo--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**

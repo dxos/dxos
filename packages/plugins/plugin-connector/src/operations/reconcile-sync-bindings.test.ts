@@ -3,15 +3,26 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, DXN, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
-import { type ConnectorEntry, Connection, SyncBinding } from '../types';
+import {
+  type ConnectorEntry,
+  Connection,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '../types';
 import { reconcileSyncBindings, type SyncTargetSelection } from './reconcile-sync-bindings';
 
 describe('reconcileSyncBindings', () => {
@@ -25,13 +36,41 @@ describe('reconcileSyncBindings', () => {
     await builder.close();
   });
 
-  // Connector whose `materializeTarget` stands in a fresh Expando for each
+  // Stand-in materialize operation: creates a fresh Expando for each
   // newly-selected remote target (real connectors create a Mailbox/Kanban/Project).
+  // The handler derives its own Database from the connection ref, matching the
+  // production connectors (composer's invoker has no `databaseResolver`).
+  const MaterializeExampleTarget = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.materializeExampleTarget') },
+    input: MaterializeTargetInput,
+    output: MaterializeTargetOutput,
+  });
+
+  const materializeHandler = MaterializeExampleTarget.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ connection, remoteTarget }) {
+        const connectionObj = connection.target;
+        invariant(connectionObj, 'connection ref must be hydrated');
+        const db = Obj.getDatabase(connectionObj);
+        invariant(db, 'connection must live in a database');
+        const created = db.add(Obj.make(Expando.Expando, { name: remoteTarget?.name ?? 'target' }));
+        return { target: Ref.make(created) };
+      }),
+    ),
+  );
+
+  // A real invoker resolving the single stand-in handler; no `databaseResolver`,
+  // exactly like composer's wiring. The empty runtime's `R = never` is widened to
+  // `any` to satisfy `AnyManagedRuntime` (no service requirements in this test).
+  const invoker = OperationInvoker.make(
+    () => Effect.succeed([materializeHandler]),
+    ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
+  );
+
   const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
-    materializeTarget: ({ db, remoteTarget }) =>
-      Effect.succeed(db.add(Obj.make(Expando.Expando, { name: remoteTarget?.name ?? 'target' }))),
+    materializeTarget: MaterializeExampleTarget,
     ...overrides,
   });
 
@@ -52,7 +91,7 @@ describe('reconcileSyncBindings', () => {
     selected: ReadonlyArray<SyncTargetSelection>,
     existingTarget?: Ref.Ref<Obj.Unknown>,
   ) =>
-    reconcileSyncBindings({ db, connection, connector, selected, existingTarget }).pipe(
+    reconcileSyncBindings({ invoker, db, connection, connector, selected, existingTarget }).pipe(
       Effect.provide(Database.layer(db)),
       EffectEx.runAndForwardErrors,
     );

@@ -8,7 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -32,6 +38,23 @@ export const GetGitHubRepositories = Operation.make({
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
+});
+
+/**
+ * Find-or-create the empty local root Project for a selected GitHub repo so a
+ * {@link SyncBinding} relation can be created eagerly (relations require both
+ * endpoints to exist). Keyed by the repo's GitHub foreign id (`remoteTarget.id`),
+ * so it is idempotent across re-selection.
+ */
+export const MaterializeGitHubTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeGithubTarget'),
+    name: 'Materialize GitHub Target',
+    description: 'Create the empty local root Project bound to a selected GitHub repository.',
+    icon: 'ph--github-logo--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**

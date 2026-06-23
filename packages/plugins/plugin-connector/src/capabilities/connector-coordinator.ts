@@ -157,6 +157,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
  * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
  */
 const createSingleBinding = (
+  invoker: Operation.OperationService,
   db: Database.Database,
   connector: ConnectorEntry,
   connection: Connection.Connection,
@@ -167,7 +168,12 @@ const createSingleBinding = (
     if (existingTarget) {
       target = yield* Database.load(existingTarget);
     } else if (connector.materializeTarget) {
-      target = yield* connector.materializeTarget({ connection, db }).pipe(Effect.provide(FetchHttpClient.layer));
+      const { target: materialized } = yield* invoker.invoke(
+        connector.materializeTarget,
+        { connection: Ref.make(connection) },
+        { spaceId: db.spaceId },
+      );
+      target = yield* Database.load(materialized);
     }
     if (!target) {
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
@@ -211,7 +217,7 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       );
     } else {
       // Single-target (e.g. Gmail): materialize/bind one target immediately.
-      yield* createSingleBinding(db, connector, persistedConnection, existingTarget);
+      yield* createSingleBinding(invoker, db, connector, persistedConnection, existingTarget);
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
@@ -566,7 +572,7 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');
-        return yield* reconcileSyncBindings({ db, connection, connector, selected, existingTarget });
+        return yield* reconcileSyncBindings({ invoker, db, connection, connector, selected, existingTarget });
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(

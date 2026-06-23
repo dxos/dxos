@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -109,36 +109,6 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
   }
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 };
-
-//
-// Materialization
-//
-
-/**
- * Find-or-create the empty local root object for a Linear team so a
- * {@link SyncBinding} can be created eagerly. The team's root is a
- * {@link Project} carrying the team's `LINEAR_SOURCE` foreign key; the team's
- * Linear projects and issues are pulled under it on sync. Idempotent: queried
- * by foreign key, so repeated calls return the existing root.
- */
-export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
-  Effect.gen(function* () {
-    if (!remoteTarget) {
-      return yield* Effect.dieMessage('Linear is a multi-target connector; remoteTarget is required.');
-    }
-    const teamId = remoteTarget.id;
-    return yield* Effect.gen(function* () {
-      const existing = yield* findByForeignId<Project.Project>(Project.Project, teamId);
-      if (existing) {
-        return existing;
-      }
-      const created = Obj.make(Project.Project, {
-        [Obj.Meta]: { keys: [fkFor(teamId)] },
-        name: remoteTarget.name,
-      });
-      return yield* Database.add(created);
-    }).pipe(Effect.provide(Database.layer(db)));
-  });
 
 //
 // Pull (snapshot-driven three-way merge)

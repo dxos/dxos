@@ -11,9 +11,9 @@ import * as Stream from 'effect/Stream';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
@@ -143,40 +143,6 @@ const syncOneGroup = (
     log('contact group sync complete', { groupResourceName, upserted, total: people.length });
     return upserted;
   });
-
-/**
- * Find an existing Collection materialized for this contact group, or create
- * one keyed by the group's foreign key. Idempotent within a space.
- */
-const findOrCreateContactsCollection = (remoteId: string, name: string) =>
-  Effect.gen(function* () {
-    const existing = yield* Database.query(
-      Query.select(Filter.foreignKeys(Collection.Collection, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
-    ).run;
-    if (existing.length > 0) {
-      return existing[0];
-    }
-    const collection = Collection.make({
-      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }] },
-      name,
-    });
-    return yield* Database.add(collection);
-  });
-
-/**
- * Eagerly materializes a local Collection for a remote Google contact group so a
- * {@link SyncBinding} can be created. Contacts have no dedicated root type — the
- * Collection is the addressable local root for the group; synced `Person` objects
- * land directly in the space, keyed by foreign id.
- */
-export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
-  Effect.gen(function* () {
-    if (!remoteTarget) {
-      // Contacts is a multi-target connector; a group selection is always present.
-      return yield* findOrCreateContactsCollection('myContacts', 'Contacts');
-    }
-    return yield* findOrCreateContactsCollection(remoteTarget.id, remoteTarget.name);
-  }).pipe(Effect.provide(Database.layer(db)));
 
 export default InboxOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>

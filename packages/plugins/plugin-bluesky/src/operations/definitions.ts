@@ -7,7 +7,13 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -33,6 +39,23 @@ export const GetBlueskyTargets = Operation.make({
   services: [Capability.Service],
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
+});
+
+/**
+ * Find-or-create the empty local `Subscription.Feed` root for a selected
+ * Bluesky target so a {@link SyncBinding} relation can be created eagerly
+ * (relations require both endpoints to exist). Keyed by the target's `remoteId`
+ * foreign key, so it is idempotent across re-selection.
+ */
+export const MaterializeBlueskyTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeBlueskyTarget'),
+    name: 'Materialize Bluesky Target',
+    description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
+    icon: 'ph--butterfly--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**

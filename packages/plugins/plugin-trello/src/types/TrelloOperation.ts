@@ -8,7 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -35,6 +41,23 @@ export const GetTrelloBoards = Operation.make({
   //   forces DynamicRuntime validation to fail before the handler runs because
   //   the managed runtime doesn't carry per-space Database. The handler
   //   provides `Database.layer(db)` itself.
+});
+
+/**
+ * Find-or-create the empty local Kanban for a selected Trello board so a
+ * {@link SyncBinding} relation can be created eagerly (relations require both
+ * endpoints to exist). Keyed by the board's foreign key, so it is idempotent
+ * across re-selection.
+ */
+export const MaterializeTrelloTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeTrelloTarget'),
+    name: 'Materialize Trello Target',
+    description: 'Create the empty local Kanban bound to a selected Trello board.',
+    icon: 'ph--kanban--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**

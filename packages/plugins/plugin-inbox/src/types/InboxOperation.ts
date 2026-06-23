@@ -10,7 +10,14 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
-import { Connection, GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
+import {
+  Connection,
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 import { Actor, Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -155,6 +162,23 @@ export const GoogleMailSync = Operation.make({
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
 }).pipe(Operation.visible);
 
+/**
+ * Eagerly materializes the local Mailbox bound to a Gmail connection so a
+ * {@link SyncBinding} can be created (relations require both endpoints to exist).
+ * Gmail is a single-target connector with no remote selection, so a fresh Mailbox
+ * is always created; the connection's `accessToken.account` seeds the default name.
+ */
+export const MaterializeGmailTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeGmailTarget'),
+    name: 'Materialize Gmail Target',
+    description: 'Create the local Mailbox bound to a Gmail connection.',
+    icon: 'ph--envelope--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
+
 export const GoogleCalendarSync = Operation.make({
   meta: {
     key: makeKey('googleCalendarSync'),
@@ -177,6 +201,22 @@ export const GoogleCalendarSync = Operation.make({
   }),
   services: [Database.Service, Credential.CredentialsService],
 }).pipe(Operation.visible);
+
+/**
+ * Eagerly materializes the local Calendar for a selected remote Google calendar so a
+ * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's foreign key,
+ * so re-running for the same remote calendar returns the existing Calendar.
+ */
+export const MaterializeCalendarTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeCalendarTarget'),
+    name: 'Materialize Calendar Target',
+    description: 'Create the local Calendar bound to a selected Google calendar.',
+    icon: 'ph--calendar--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
 
 /**
  * Create a single event on Google Calendar (the write counterpart to {@link GoogleCalendarSync}, and
@@ -294,6 +334,22 @@ export const GoogleContactsSync = Operation.make({
   }),
   services: [Database.Service, Credential.CredentialsService],
 }).pipe(Operation.visible);
+
+/**
+ * Eagerly materializes the local Collection for a selected remote Google contact group so a
+ * {@link SyncBinding} can be created. Contacts have no dedicated root type — the Collection is
+ * the addressable local root for the group; find-or-create keyed on the group's foreign key.
+ */
+export const MaterializeContactsTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeContactsTarget'),
+    name: 'Materialize Contacts Target',
+    description: 'Create the local Collection bound to a selected Google contact group.',
+    icon: 'ph--users--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
 
 export const SyncContacts = Operation.make({
   meta: {

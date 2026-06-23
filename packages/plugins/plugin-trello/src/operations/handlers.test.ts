@@ -19,7 +19,7 @@ import { AccessToken } from '@dxos/types';
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
 import getTrelloBoardsHandler from './get-trello-boards';
-import { materializeTarget } from './sync';
+import materializeTrelloTargetHandler from './materialize-target';
 import syncTrelloBoardHandler from './sync';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
@@ -185,7 +185,11 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     remoteTarget: { id: string; name: string },
   ) =>
     Effect.gen(function* () {
-      const kanban = yield* materializeTarget({ connection, remoteTarget, db });
+      const { target } = yield* materializeTrelloTargetHandler.handler({
+        connection: Ref.make(connection),
+        remoteTarget,
+      });
+      const kanban = yield* Database.load(target);
       return yield* Database.add(
         SyncBinding.make({
           [Relation.Source]: connection,

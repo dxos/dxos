@@ -11,7 +11,6 @@ import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
-import { materializeTarget } from '../operations/sync';
 import { TrelloApi } from '../services';
 import { TrelloOperation } from '../types';
 
@@ -58,7 +57,7 @@ export default Capability.makeModule(
           scopes: [],
         },
         getSyncTargets: TrelloOperation.GetTrelloBoards,
-        materializeTarget,
+        materializeTarget: TrelloOperation.MaterializeTrelloTarget,
         sync: TrelloOperation.SyncTrelloBoard,
         onTokenCreated,
       },

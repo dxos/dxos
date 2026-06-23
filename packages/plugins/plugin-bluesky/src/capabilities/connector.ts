@@ -11,7 +11,6 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
 import { BlueskyOperation } from '../operations';
-import { materializeTarget } from '../operations/sync';
 import { BlueskyTargetOptions } from '../types';
 
 /**
@@ -82,7 +81,7 @@ export default Capability.makeModule(
         },
         credentialForm,
         optionsSchema: BlueskyTargetOptions,
-        materializeTarget,
+        materializeTarget: BlueskyOperation.MaterializeBlueskyTarget,
         getSyncTargets: BlueskyOperation.GetBlueskyTargets,
         sync: BlueskyOperation.SyncBlueskyTargets,
       },

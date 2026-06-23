@@ -8,7 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, SyncBinding } from '@dxos/plugin-connector';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
@@ -29,6 +35,24 @@ export const GetLinearTeams = Operation.make({
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
+});
+
+/**
+ * Find-or-create the empty local root Project for a Linear team so a
+ * {@link SyncBinding} relation can be created eagerly. Idempotent: keyed by the
+ * team's `LINEAR_SOURCE` foreign id (`remoteTarget.id`), it returns the existing
+ * Project when one already carries that key. The team's projects and issues are
+ * pulled under it on sync; here we only stamp the foreign key + a display name.
+ */
+export const MaterializeLinearTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeLinearTarget'),
+    name: 'Materialize Linear Target',
+    description: 'Create the empty local root Project bound to a selected Linear team.',
+    icon: 'ph--users--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**

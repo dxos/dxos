@@ -16,14 +16,13 @@ import * as Stream from 'effect/Stream';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Ref as EchoRef, Relation } from '@dxos/echo';
+import { Database, Feed, Obj, Ref as EchoRef, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaterializeTarget, SyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { CalendarForeignKeyWrongTypeError } from '../../../errors';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
 import { Calendar } from '../../../types';
@@ -58,47 +57,6 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
     delete (calendar as { lastSyncedUpdate?: string }).lastSyncedUpdate;
   });
 };
-
-/**
- * Find-or-create the local Calendar materialized for this remote calendar id.
- * Idempotent within a space — keyed by `Obj.Meta.keys` matching
- * `{ source: 'google.com', id }`. Materialized eagerly when a {@link SyncBinding}
- * is created (relations require both endpoints to exist).
- */
-const findOrCreateCalendar = (remoteId: string, name: string) =>
-  Effect.gen(function* () {
-    const existing = yield* Database.query(
-      Query.select(Filter.foreignKeys(Calendar.Calendar, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
-    ).run;
-    if (existing.length > 0) {
-      const candidate = existing[0];
-      // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.
-      if (!Calendar.instanceOf(candidate)) {
-        return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
-      }
-      return candidate;
-    }
-    const calendar = Calendar.make({
-      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }] },
-      name,
-    });
-    return yield* Database.add(calendar);
-  });
-
-/**
- * Eagerly materializes a local Calendar for a remote Google calendar so a
- * {@link SyncBinding} can be created. Find-or-create keyed on the calendar's
- * foreign key, so re-running for the same remote calendar returns the existing
- * Calendar without duplicating it.
- */
-export const materializeTarget: MaterializeTarget = ({ remoteTarget, db }) =>
-  Effect.gen(function* () {
-    if (!remoteTarget) {
-      // Calendar is a multi-target connector; a calendar selection is always present.
-      return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
-    }
-    return yield* findOrCreateCalendar(remoteTarget.id, remoteTarget.name);
-  }).pipe(Effect.provide(Database.layer(db)));
 
 const syncOneCalendar = (
   binding: SyncBinding.SyncBinding,
