@@ -16,8 +16,14 @@ import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
+import {
+  type ConnectorEntry,
+  Connection,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '../types';
 import { reconcileSyncBindings, type SyncTargetSelection } from './reconcile-sync-bindings';
-import { type ConnectorEntry, Connection, MaterializeTargetInput, MaterializeTargetOutput, SyncBinding } from './types';
 
 describe('reconcileSyncBindings', () => {
   let builder: EchoTestBuilder;
