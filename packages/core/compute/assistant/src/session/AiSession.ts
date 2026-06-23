@@ -215,6 +215,7 @@ export class Session extends Resource {
 
 /**
  * Gives access to the ai session.
+ * @deprecated Use HarnessService instead.
  */
 export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Service, Session>() {
   /**

@@ -399,6 +399,9 @@ export class Binder extends Resource {
   }
 }
 
+/**
+ * @deprecated Use HarnessService instead.
+ */
 export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
   Service,
   {

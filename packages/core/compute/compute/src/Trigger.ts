@@ -142,6 +142,19 @@ export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpe
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
+ * Forms the input data passed to the function.
+ * Must match the function's input schema.
+ *
+ * @example
+ * {
+ *   item: '{{event.item}}',
+ *   instructions: 'Summarize and perform entity-extraction'
+ *   mailbox: { '/': 'echo://AAA/ZZZ' }
+ * }
+ */
+export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.Any });
+
+/**
  * Function trigger.
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
@@ -180,19 +193,8 @@ export class Trigger extends Type.declareObj<Trigger>()(
 
     /**
      * Passed as the input data to the function.
-     * Must match the function's input schema.
-     *
-     * @example
-     * {
-     *   item: '{{event.item}}',
-     *   instructions: 'Summarize and perform entity-extraction'
-     *   mailbox: { '/': 'echo://AAA/ZZZ' }
-     * }
      */
-    input: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
-      Annotation.FormInputAnnotation.set(false),
-      Schema.optional,
-    ),
+    input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
     HiddenAnnotation.set(true),

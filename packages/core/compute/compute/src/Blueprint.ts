@@ -8,12 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type, URI } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type, URI, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 
 import * as McpServer from './McpServer';
 import * as Operation from './Operation';
 import * as Template from './Template';
+import * as Trigger from './Trigger';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
@@ -65,6 +66,11 @@ export const Blueprint = Schema.Struct({
    * Array of MCP servers that the AI assistant can use when this blueprint is active.
    */
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+
+  /**
+   * Hooks are triggerd automatically at certain points in the agent's lifecycle.
+   */
+  hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
@@ -75,6 +81,53 @@ export const Blueprint = Schema.Struct({
  * TypeScript type for Blueprint.
  */
 export type Blueprint = Type.InstanceType<typeof Blueprint>;
+
+/**
+ * Controls when the hook is triggered.
+ */
+export const HookSpec = Schema.Union(
+  /**
+   * Tiggered when the agent is about to start a request.
+   * A request is a series of agent/tool turns that the model drives.
+   */
+  Schema.TaggedStruct('begin-request', {}),
+  /**
+   * Tiggered when the agent has completed a request.
+   * A request is a series of agent/tool turns that the model drives.
+   */
+  Schema.TaggedStruct('end-request', {}),
+);
+
+/**
+ * Allows to hook into the agent's lifecycle.
+ * NOTE: Intentionally similar to Trigger, perhaps we should merge them.
+ */
+export const Hook = Schema.Struct({
+  /**
+   * What to do when the hook is triggered.
+   *
+   * Can be a Ref to a PersistentOperation.
+   */
+  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+
+  /**
+   * Controls when the hook is triggered.
+   */
+  spec: HookSpec,
+
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   *
+   * @example
+   * {
+   *   item: '{{event.item}}',
+   *   instructions: 'Summarize and perform entity-extraction'
+   *   mailbox: { '/': 'echo://AAA/ZZZ' }
+   * }
+   */
+  input: Trigger.InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+});
 
 type MakeProps = { key: string; version?: string; name: string } & Partial<Blueprint>;
 
