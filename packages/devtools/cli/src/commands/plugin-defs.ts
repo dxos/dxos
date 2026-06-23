@@ -33,13 +33,13 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
     ChessPlugin(),
     ClientPlugin({ config }),
+    ConnectorPlugin(),
     InboxPlugin(),
     MarkdownPlugin(),
     // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
     ObservabilityPlugin({} as any),
     ProcessManagerPlugin(),
     RegistryPlugin(),
-    ConnectorPlugin(),
     RoutinePlugin(),
     SamplePlugin(),
     SpacePlugin({}),
