@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiContext } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -30,7 +30,7 @@ export const UpdateTasks = Operation.make({
     tasks: Schema.Array(SimpleTask),
   }),
   output: Schema.Any,
-  services: [AiContext.Service, Database.Service],
+  services: [Harness.HarnessService, Database.Service],
 });
 
 /**

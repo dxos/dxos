@@ -4,8 +4,6 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Cause from 'effect/Cause';
 import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
@@ -22,6 +20,7 @@ import {
   AiSession,
   AgentRequestBegin,
   AgentRequestEnd,
+  HarnessControl,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -73,22 +72,6 @@ interface AgentProcessOptions {
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
-
-/**
- * Typed control surface on the live agent process. A child operation reaches the owning
- * `AgentProcess`'s `AlarmManager`/`inputQueue` over this RPC group (the control plane);
- * handlers run on the host process's server fiber where that state is in scope.
- */
-const HarnessControl = RpcGroup.make(
-  Rpc.make('setAlarm', {
-    payload: Schema.Struct({ at: Schema.DateTimeUtc, message: Schema.NullOr(Schema.String) }),
-    success: Schema.Void,
-  }),
-  Rpc.make('enqueueMessage', {
-    payload: Schema.Struct({ content: Schema.Array(ContentBlock.Any) }),
-    success: Schema.Void,
-  }),
-);
 
 /**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.

@@ -3,7 +3,7 @@
 //
 
 import { AiService } from '@dxos/ai';
-import { AiContext, AiSession } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Credential, Operation, StorageService, Trace } from '@dxos/compute';
 import { Database, Filter, Obj, Registry } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
@@ -21,9 +21,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
   [
-    AiContext.Service,
+    Harness.HarnessService,
     AiService.AiService,
-    AiSession.Service,
     Registry.Service,
     Credential.CredentialsService,
     Database.Service,

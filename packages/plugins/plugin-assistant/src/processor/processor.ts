@@ -19,6 +19,7 @@ import {
   AiSession,
   createSystemPrompt,
   formatSystemPrompt,
+  Harness,
   McpServerError,
   PartialBlock,
   ToolExecutionServices,
@@ -214,7 +215,7 @@ export class AiChatProcessor {
     }
   }
 
-  get context() {
+  get context(): AiContext.Binder {
     return this._conversation.context;
   }
 
@@ -241,12 +242,16 @@ export class AiChatProcessor {
       Effect.gen(this, function* () {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
-        return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(
-        Effect.provideService(AiContext.Service, { binder: this.context }),
-        Effect.provide(this._spaceLayer),
-        Effect.orDie,
-      ),
+        // Tier A only: system-prompt formatting runs operations that read the conversation context;
+        // the live-host Tier B control surface is not reachable from this fiber.
+        const runtime = yield* Effect.runtime<Database.Service>();
+        return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects }).pipe(
+          Effect.provideService(
+            Harness.HarnessService,
+            Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),
+          ),
+        );
+      }).pipe(Effect.provide(this._spaceLayer), Effect.orDie),
     );
   }
 

@@ -487,7 +487,7 @@ export interface InvokeOptions {
    * URI of the conversation feed (queue) — today always an EID, but typed as
    * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
    * at the point of use.
-   * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
+   * Passed to the process environment so nested operations can resolve HarnessService and related services.
    */
   conversation?: URI.URI;
   /**

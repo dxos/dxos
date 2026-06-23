@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiContext } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -44,5 +44,5 @@ export const EnableBlueprints = Operation.make({
       }),
     ),
   }),
-  services: [Registry.Service, Database.Service, AiContext.Service],
+  services: [Registry.Service, Database.Service, Harness.HarnessService],
 });

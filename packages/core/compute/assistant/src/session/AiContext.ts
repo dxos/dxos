@@ -6,8 +6,6 @@
 
 import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
@@ -399,25 +397,3 @@ export class Binder extends Resource {
   }
 }
 
-/**
- * @deprecated Use HarnessService instead.
- */
-export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
-  Service,
-  {
-    binder: Binder;
-  }
->() {
-  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, Service> =>
-    Effect.gen(function* () {
-      const { binder } = yield* Service;
-      yield* Effect.promise(() => binder.bind({ blueprints, objects }));
-    });
-
-  static findObjects = <T extends Type.AnyObj>(type: T): Effect.Effect<Type.InstanceType<T>[], never, Service> => {
-    return Effect.gen(function* () {
-      const { binder } = yield* Service;
-      return binder.getObjects().filter(Obj.instanceOf(type));
-    });
-  };
-}

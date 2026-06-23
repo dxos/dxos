@@ -4,11 +4,11 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AiContext, AiSession } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
@@ -27,14 +27,19 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
+const provideTestLayers = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.provide(Effect.scoped(effect), TestLayer);
 
 /**
- * Gets the conversation DXN for passing to Operation.invoke options.
+ * Creates a conversation feed and a {@link AiContext.Binder} over it. Operations run against the
+ * conversation DXN (binding into a process-scoped binder resolved by the test layer); this binder
+ * reads the same feed so bindings are visible after `sync()`.
  */
-const getConversationDXN = Effect.gen(function* () {
-  const session = yield* AiSession.Service;
-  return Obj.getURI(session.feed);
+const setupConversation = Effect.gen(function* () {
+  const feed = yield* Database.add(Feed.make());
+  const runtime = yield* Effect.runtime<Database.Service>();
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  return { conversation: Obj.getURI(feed), binder };
 });
 
 describe('Blueprint Manager', () => {
@@ -42,7 +47,7 @@ describe('Blueprint Manager', () => {
     'query-blueprints: returns all registered blueprints',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDXN;
+        const { conversation } = yield* setupConversation;
         const result = yield* Operation.invoke(QueryBlueprints, {}, { conversation });
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => Obj.getMeta(blueprint).key);
@@ -60,7 +65,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: enables blueprints with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDXN;
+        const { conversation, binder } = yield* setupConversation;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.database'] },
@@ -70,7 +75,7 @@ describe('Blueprint Manager', () => {
         expect(Obj.getMeta(enabled[0]).key).toBe('org.dxos.blueprint.database');
         expect(rejected).toHaveLength(0);
 
-        const { binder } = yield* AiContext.Service;
+        yield* Effect.promise(() => binder.sync());
         const bound = binder.getBlueprints();
         expect(bound.some((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key === 'org.dxos.blueprint.database')).toBe(
           true,
@@ -86,7 +91,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: rejects blueprints without agentCanEnable',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDXN;
+        const { conversation, binder } = yield* setupConversation;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.discord'] },
@@ -96,7 +101,7 @@ describe('Blueprint Manager', () => {
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.discord');
 
-        const { binder } = yield* AiContext.Service;
+        yield* Effect.promise(() => binder.sync());
         const bound = binder.getBlueprints();
         expect(bound.some((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key === 'org.dxos.blueprint.discord')).toBe(
           false,
@@ -112,7 +117,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: mixed keys enables only allowed ones',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDXN;
+        const { conversation } = yield* setupConversation;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           {
@@ -137,7 +142,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: unknown keys are rejected with reason',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDXN;
+        const { conversation } = yield* setupConversation;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.nonexistent'] },

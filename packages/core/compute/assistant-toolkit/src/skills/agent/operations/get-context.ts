@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AiContext } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 
 import { Plan, Agent } from '../../../types';
 import { GetContext } from './definitions';
@@ -17,7 +17,7 @@ export default GetContext.pipe(
       // This runs unconditionally during system-prompt formatting. A delegated sub-agent has no
       // agent bound to its context, so degrade gracefully for the zero-agent case — but still
       // surface the "more than one agent" invariant rather than masking every failure.
-      const agents = yield* AiContext.Service.findObjects(Agent.Agent);
+      const agents = yield* Harness.queryContext(Filter.type(Agent.Agent));
       if (agents.length === 0) {
         return { id: '', name: '', instructions: 'No agent context.', plan: 'No plan found.', artifacts: [] };
       }

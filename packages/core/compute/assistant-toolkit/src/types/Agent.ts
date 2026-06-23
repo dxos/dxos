@@ -5,12 +5,11 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContext } from '@dxos/assistant';
+import { AiContext, Harness } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';
@@ -227,8 +226,8 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> = Effect.gen(function* () {
-  const agents = yield* Function.pipe(AiContext.Service.findObjects(Agent));
+export const getFromChatContext: Effect.Effect<Agent, Error, Harness.HarnessService> = Effect.gen(function* () {
+  const agents = yield* Harness.queryContext(Filter.type(Agent));
   if (agents.length !== 1) {
     return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
   }

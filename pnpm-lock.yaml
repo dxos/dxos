@@ -4664,6 +4664,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -4733,6 +4736,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.3)
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
       '@xenova/transformers':
         specifier: 'catalog:'
         version: 2.17.2

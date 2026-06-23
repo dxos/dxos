@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiContext, AiRequest, AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiRequest, AiSession, GenerationObserver, Harness } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -44,12 +44,12 @@ export const runSteps: (
  */
 // TODO(dmaretskyi): Potentially the agent will auto-bind the blueprints.
 export const addBlueprints = Effect.fnUntraced(function* (blueprints: Blueprint.Definition[]) {
-  yield* AiContext.Service.bindContext({
-    blueprints: yield* pipe(
-      blueprints,
-      Arr.map((blueprint) => blueprint.make()),
-      Effect.forEach(Database.add),
-      Effect.map(Arr.map(Ref.make)),
-    ),
-  });
+  const refs = yield* pipe(
+    blueprints,
+    Arr.map((blueprint) => blueprint.make()),
+    Effect.forEach(Database.add),
+    Effect.map(Arr.map(Ref.make)),
+  );
+  const binder = yield* Harness.binder;
+  yield* Effect.promise(() => binder.bind({ blueprints: refs }));
 });

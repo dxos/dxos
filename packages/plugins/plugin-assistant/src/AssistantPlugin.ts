@@ -111,7 +111,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: () => AiService(options),
     })),
     Plugin.addModule({
-      // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+      // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
       // dispatched as their own processes (e.g. via `Operation.invoke` from
       // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
       // conversation-scoped services without an inline `Effect.provideService`

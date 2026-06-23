@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
-import { AiContext } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 
@@ -35,9 +35,8 @@ export default EnableBlueprints.pipe(
       }
 
       if (enabled.length > 0) {
-        yield* AiContext.Service.bindContext({
-          blueprints: enabled.map(Ref.make),
-        });
+        const binder = yield* Harness.binder;
+        yield* Effect.promise(() => binder.bind({ blueprints: enabled.map(Ref.make) }));
       }
 
       return { enabled, rejected };
