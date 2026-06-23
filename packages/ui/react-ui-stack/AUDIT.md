@@ -15,7 +15,7 @@ NOTE: rows 0–2 under-reported tokens — the session was resumed under a new t
 | 1   | plugin-navtree: Panel story + local rearrange type, drop dep   | [x] done | 02:45 (+10m)        | under-reported (see note) |
 | 2   | plugin-script: NotebookArticle → Mosaic.Stack                  | [x] done | 11:31               | under-reported (see note) |
 | 3   | StackItemSigil → AttentionSigil in `app-toolkit/ui/components` | [x] done | 11:54               | 246K / 726K / 166.1M      |
-| 4   | plugin-stack: Mosaic.Stack + new Tile + StackArticle story     | pending  | —                   | —                         |
+| 4   | plugin-stack: Mosaic.Stack + new Tile + StackArticle story     | [x] done | 15:50               | 267K / 965K / 250.9M      |
 | 5   | plugin-deck: AUDIT mapping + migrate Plank to Mosaic/Tile      | pending  | —                   | —                         |
 | 6   | plugin-deck: companion column-stack option                     | pending  | —                   | —                         |
 
