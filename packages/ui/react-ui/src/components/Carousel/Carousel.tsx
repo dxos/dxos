@@ -70,10 +70,11 @@ export const useCarousel = (): CarouselContextValue => useCarouselContext('useCa
 export type CarouselRootProps = PropsWithChildren<{
   /** Total number of slides; drives auto-advance and indicator counts. */
   count: number;
-  /** Whether to auto-advance slides on mount. Defaults to `false`. */
-  autorun?: boolean;
-  /** Auto-advance interval in milliseconds. Set 0 to disable. */
-  intervalMs?: number;
+  /**
+   * Auto-advance interval in milliseconds. A positive value advances slides on its own until the user
+   * interacts with a control; omit (or `0`) to disable.
+   */
+  autoAdvance?: number;
   defaultIndex?: number;
   /** Slide change behaviour. Defaults to `none` (hard swap); `slide` animates a horizontal track. */
   transition?: CarouselTransition;
@@ -87,8 +88,7 @@ export type CarouselRootProps = PropsWithChildren<{
 const CarouselRoot = ({
   children,
   count,
-  autorun = false,
-  intervalMs = 5_000,
+  autoAdvance = 0,
   defaultIndex = 0,
   transition = 'none',
   continuous = false,
@@ -96,7 +96,7 @@ const CarouselRoot = ({
   const [index, setIndexState] = useState(defaultIndex);
   const [offset, setOffset] = useState(defaultIndex);
   const [animate, setAnimate] = useState(true);
-  const [autoAdvance, setAutoAdvance] = useState(autorun);
+  const [autoEnabled, setAutoEnabled] = useState(autoAdvance > 0);
 
   // Continuous wrap is only meaningful for the animated track with more than one slide.
   const wraps = continuous && transition === 'slide' && count > 1;
@@ -121,7 +121,7 @@ const CarouselRoot = ({
   const advance = useCallback(
     (delta: 1 | -1, stopAuto: boolean) => {
       if (stopAuto) {
-        setAutoAdvance(false);
+        setAutoEnabled(false);
       }
       const current = indexRef.current;
       const nextIndex = (current + delta + count) % count;
@@ -140,15 +140,15 @@ const CarouselRoot = ({
 
   // Auto-advance — stops permanently once the user interacts with any control.
   useEffect(() => {
-    if (!autoAdvance || count <= 1 || intervalMs <= 0) {
+    if (!autoEnabled || count <= 1 || autoAdvance <= 0) {
       return;
     }
-    const handle = setInterval(() => advance(1, false), intervalMs);
+    const handle = setInterval(() => advance(1, false), autoAdvance);
     return () => clearInterval(handle);
-  }, [autoAdvance, count, intervalMs, advance]);
+  }, [autoEnabled, count, autoAdvance, advance]);
 
   const setIndex = useCallback((next: number) => {
-    setAutoAdvance(false);
+    setAutoEnabled(false);
     setAnimate(true);
     setOffset(next);
     setIndexState(next);
@@ -245,14 +245,14 @@ const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   // In continuous mode bracket the track with clones — last before first, first after last — so a wrap
   // step has a real cell to slide into before `settle` snaps back to the matching slide.
   const slides = Children.toArray(children);
+  const first = slides[0];
+  const last = slides[slides.length - 1];
   const trackChildren =
     continuous && slides.length > 1
       ? [
-          isValidElement(slides[slides.length - 1])
-            ? cloneElement(slides[slides.length - 1], { key: 'clone-last' })
-            : slides[slides.length - 1],
+          isValidElement(last) ? cloneElement(last, { key: 'clone-last' }) : last,
           ...slides,
-          isValidElement(slides[0]) ? cloneElement(slides[0], { key: 'clone-first' }) : slides[0],
+          isValidElement(first) ? cloneElement(first, { key: 'clone-first' }) : first,
         ]
       : slides;
   // Leading clone occupies the first cell in continuous mode, so shift the translate by one.
