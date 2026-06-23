@@ -9,7 +9,7 @@ import { AccessToken } from '@dxos/types';
 
 import {
   AppGraphBuilder,
-  BuiltinProviders,
+  BuiltinConnectors,
   Coordinator,
   CreateObject,
   OAuthRedirect,
@@ -36,7 +36,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupIntegrationProviders,
-    activate: BuiltinProviders,
+    activate: BuiltinConnectors,
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
