@@ -31,7 +31,7 @@ catalog:
   '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.23
   '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.23
   '@automerge/automerge-subduction': 0.13.0
-  '@babel/core': ^7.18.13
+  '@babel/core': ^7.29.6
   '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
