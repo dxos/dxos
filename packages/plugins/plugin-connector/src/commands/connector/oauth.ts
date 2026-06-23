@@ -12,11 +12,11 @@ import { type OAuthFlowResult } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
 
 import {
+  type OAuthPreset,
   type OAuthServerProvider,
   createFetchOAuthInitiator,
   performOAuthFlow as performOAuthFlowShared,
 } from '../../oauth';
-import { type OAuthPreset } from './util';
 
 /**
  * Bun-based OAuth callback server provider for CLI usage. Wraps the shared callback server in

@@ -9,10 +9,9 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 import { type AccessToken } from '@dxos/types';
 
-import { type OAuthPreset } from '../defs';
 import { getEdgeAuthHeader } from './edge-auth-header';
 import { MOBILE_OAUTH_ORIGIN } from './mobile-deep-link';
-import { type OAuthInitiator, createFetchOAuthInitiator } from './oauth-flow';
+import { type OAuthInitiator, type OAuthPreset, createFetchOAuthInitiator } from './oauth-flow';
 
 /** Custom URL scheme for OAuth callback on mobile. */
 const CALLBACK_SCHEME = 'composer';

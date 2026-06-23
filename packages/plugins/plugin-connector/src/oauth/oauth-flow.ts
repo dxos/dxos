@@ -11,13 +11,29 @@ import * as Ref from 'effect/Ref';
 
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
+import {
+  type EdgeEnvelope,
+  type InitiateOAuthFlowResponse,
+  type OAuthFlowResult,
+  type OAuthProvider,
+} from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
 
-import { type OAuthPreset } from '../defs';
 import { getEdgeAuthHeader } from './edge-auth-header';
 
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.
+
+/**
+ * OAuth flow descriptor consumed by the platform-agnostic OAuth helpers
+ * (Tauri / mobile / CLI) and the CLI preset list. Mirrors the `oauth` spec on a
+ * `Connector` capability entry plus a label/source for display.
+ */
+export type OAuthPreset = {
+  label: string;
+  source: string;
+  provider: OAuthProvider;
+  scopes: string[];
+};
 
 /**
  * OAuth server provider interface.

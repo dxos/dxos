@@ -5,14 +5,8 @@
 import { FormBuilder } from '@dxos/cli-util';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { type OAuthPreset } from '../../oauth';
 import { type Connection } from '../../types';
-
-export type OAuthPreset = {
-  provider: OAuthProvider;
-  source: string;
-  label: string;
-  scopes: string[];
-};
 
 // TODO(wittjosiah): Copied from plugin-token-manager.
 export const OAUTH_PRESETS: OAuthPreset[] = [
