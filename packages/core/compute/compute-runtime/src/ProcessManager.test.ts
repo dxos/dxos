@@ -563,10 +563,13 @@ describe('ManagerImpl', () => {
 
 describe('rpcs', () => {
   it.effect(
-    'spawns a process with rpcs',
+    'spawn and use rpcs',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(ProcessWithRpcs);
+      expect(yield* handle.rpc.getValue()).toEqual(0);
+      yield* handle.rpc.setValue({ value: 20 });
+      expect(yield* handle.rpc.getValue()).toEqual(20);
     }, Effect.provide(TestLayer)),
   );
 });

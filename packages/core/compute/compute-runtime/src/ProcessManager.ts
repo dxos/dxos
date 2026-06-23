@@ -7,6 +7,7 @@
 import { Atom, Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import type { Rpc, RpcClient } from '@effect/rpc';
+import { RpcTest } from '@effect/rpc';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -551,6 +552,13 @@ export class ProcessManagerImpl implements Manager {
           Effect.orElseSucceed(() => null),
         );
 
+      // In-memory RPC control plane: a no-serialization client/server pair bound to the
+      // process scope, dispatching to the handlers the process declared via `create()`.
+      const rpcClient = yield* RpcTest.makeClient(definition.rpcs).pipe(
+        Effect.provide(callbacks.rpcHandlers),
+        Effect.provideService(Scope.Scope, scope),
+      );
+
       const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
@@ -565,6 +573,7 @@ export class ProcessManagerImpl implements Manager {
         environment,
         this.#traceSink,
         clock,
+        rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -733,6 +742,11 @@ export class ProcessManagerImpl implements Manager {
       const defRaw = definition as unknown as { input: Schema.Schema<any, any, never> };
       const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
 
+      const rpcClient = yield* RpcTest.makeClient(definition.rpcs).pipe(
+        Effect.provide(callbacks.rpcHandlers),
+        Effect.provideService(Scope.Scope, scope),
+      );
+
       const handle = new ProcessHandle.ProcessHandleImpl<any, any, any>(
         id,
         Option.getOrNull(parentOption),
@@ -747,6 +761,7 @@ export class ProcessManagerImpl implements Manager {
         environment,
         this.#traceSink,
         clock,
+        rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),

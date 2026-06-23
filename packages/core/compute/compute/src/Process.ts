@@ -278,16 +278,13 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
   defined: RpcGroup.RpcGroup<Rpcs> | undefined,
   provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
 ): Context.Context<Rpc.ToHandler<Rpcs>> => {
-  const needsRpcs = !defined || defined.requests.size > 0;
+  // Handlers are required only when a non-empty RPC group is declared.
+  const needsRpcs = defined !== undefined && defined.requests.size > 0;
   if (!needsRpcs) {
     return provided ?? (Context.empty() as any);
   }
   if (!provided) {
-    if (needsRpcs) {
-      throw new TypeError('Process declared RPCs but did not provide any handlers');
-    } else {
-      return Context.empty() as any;
-    }
+    throw new TypeError('Process declared RPCs but did not provide any handlers');
   }
   return provided;
 };
