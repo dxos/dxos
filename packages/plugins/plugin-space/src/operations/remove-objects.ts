@@ -10,7 +10,6 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(
