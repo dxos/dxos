@@ -301,12 +301,15 @@ const FORM_GROUP_NAME = 'Form.Group';
 export type FormGroupProps = ThemedClassName<PropsWithChildren>;
 
 /**
- * A bordered card grouping related rows/controls (e.g. an entity card in a list). Layout-only and
- * context-free — unlike `Form.FieldSet` it is not schema-driven. Replaces the deprecated `Settings.Panel`.
+ * A bordered card grouping related rows/controls (e.g. an entity card in a list).
+ * Layout-only and context-free — unlike `Form.FieldSet` it is not schema-driven.
  */
 export const FormGroup = composable<HTMLDivElement, FormGroupProps>(({ children, ...props }, forwardedRef) => {
+  const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
+  const styles = formTheme.styles({ variant });
+
   return (
-    <div {...composableProps(props, { classNames: formTheme.styles().group() })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: styles.group() })} ref={forwardedRef}>
       {children}
     </div>
   );

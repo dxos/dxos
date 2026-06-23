@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { Form, Settings } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { useIntegrationProvider, useSyncIntegration, useSyncTargetsChecklist } from '#hooks';
 import { meta } from '#meta';
@@ -33,82 +33,91 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
   const headerTitle = integration.name ?? accessToken?.account ?? accessToken?.source ?? '';
 
   return (
-    <Settings.Viewport>
-      <Settings.Section title={headerTitle} description={sourceLine}>
-        {!provider && (
-          <Settings.Panel>
-            <p className='text-description'>
-              {t('no-provider.message', {
-                defaultValue: 'No service plugin is registered for this integration.',
-              })}
-            </p>
-          </Settings.Panel>
-        )}
+    <Form.Root variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={headerTitle} description={sourceLine}>
+            {!provider && (
+              <Form.Group>
+                <p className='text-description'>
+                  {t('no-provider.message', {
+                    defaultValue: 'No service plugin is registered for this integration.',
+                  })}
+                </p>
+              </Form.Group>
+            )}
 
-        {/* Hide Sync now entirely when the provider has no `sync` op.
-            Mirrors how Change sync targets is gated on `getSyncTargets` —
-            integrations without sync support shouldn't show a phantom
-            disabled button. */}
-        {syncAvailable && (
-          <Settings.Item
-            title={t('sync-now.label', { defaultValue: 'Sync now' })}
-            description={t('sync-now.description', {
-              defaultValue: 'Reconcile cards with the remote service.',
-            })}
-          >
-            <Button onClick={() => void sync()} disabled={syncing || !hasTargets}>
-              {syncing
-                ? t('syncing.label', { defaultValue: 'Syncing…' })
-                : t('sync-now.label', { defaultValue: 'Sync now' })}
-            </Button>
-          </Settings.Item>
-        )}
+            {/* Hide Sync now entirely when the provider has no `sync` op.
+                Mirrors how Change sync targets is gated on `getSyncTargets` —
+                integrations without sync support shouldn't show a phantom
+                disabled button. */}
+            {syncAvailable && (
+              <Form.Row
+                label={t('sync-now.label', { defaultValue: 'Sync now' })}
+                description={t('sync-now.description', {
+                  defaultValue: 'Reconcile cards with the remote service.',
+                })}
+              >
+                <Button onClick={() => void sync()} disabled={syncing || !hasTargets}>
+                  {syncing
+                    ? t('syncing.label', { defaultValue: 'Syncing…' })
+                    : t('sync-now.label', { defaultValue: 'Sync now' })}
+                </Button>
+              </Form.Row>
+            )}
 
-        {/* Only show the change-targets row when the provider supports
-            user-pickable targets. For single-target providers (Mail) the
-            target is hardcoded at create time and there's nothing to pick. */}
-        {provider?.getSyncTargets && (
-          <Settings.Item
-            title={t('change-targets.label', { defaultValue: 'Change sync targets' })}
-            description={t('change-targets.description', {
-              defaultValue: 'Pick which remote items this integration syncs into the space.',
-            })}
-          >
-            <Button onClick={openChecklist} disabled={!syncTargetsAvailable || loading}>
-              {loading
-                ? t('loading.label', { defaultValue: 'Loading…' })
-                : t('change-targets.label', { defaultValue: 'Change sync targets' })}
-            </Button>
-          </Settings.Item>
-        )}
-      </Settings.Section>
+            {/* Only show the change-targets row when the provider supports
+                user-pickable targets. For single-target providers (Mail) the
+                target is hardcoded at create time and there's nothing to pick. */}
+            {provider?.getSyncTargets && (
+              <Form.Row
+                label={t('change-targets.label', { defaultValue: 'Change sync targets' })}
+                description={t('change-targets.description', {
+                  defaultValue: 'Pick which remote items this integration syncs into the space.',
+                })}
+              >
+                <Button onClick={openChecklist} disabled={!syncTargetsAvailable || loading}>
+                  {loading
+                    ? t('loading.label', { defaultValue: 'Loading…' })
+                    : t('change-targets.label', { defaultValue: 'Change sync targets' })}
+                </Button>
+              </Form.Row>
+            )}
+          </Form.Section>
 
-      {/* Hide the entire Sync targets section for providers that don't sync
-          (e.g. the Custom Token provider). With no `sync` op there's nothing
-          to populate the list with — the section would just be a phantom
-          empty row. */}
-      {provider?.sync && (
-        <Settings.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
-          {!hasTargets ? (
-            <Settings.Panel>
-              <p className='text-description'>
-                {provider?.getSyncTargets
-                  ? t('no-targets.message', {
-                      defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
-                    })
-                  : t('no-targets-yet.message', {
-                      defaultValue: 'No targets yet — finish OAuth to set up the default target.',
-                    })}
-              </p>
-            </Settings.Panel>
-          ) : (
-            integration.targets.map((_target, idx) => (
-              <TargetRow key={idx} integration={subject} targetIndex={idx} optionsSchema={provider?.optionsSchema} />
-            ))
+          {/* Hide the entire Sync targets section for providers that don't sync
+              (e.g. the Custom Token provider). With no `sync` op there's nothing
+              to populate the list with — the section would just be a phantom
+              empty row. */}
+          {provider?.sync && (
+            <Form.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
+              {!hasTargets ? (
+                <Form.Group>
+                  <p className='text-description'>
+                    {provider?.getSyncTargets
+                      ? t('no-targets.message', {
+                          defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
+                        })
+                      : t('no-targets-yet.message', {
+                          defaultValue: 'No targets yet — finish OAuth to set up the default target.',
+                        })}
+                  </p>
+                </Form.Group>
+              ) : (
+                integration.targets.map((_target, idx) => (
+                  <TargetRow
+                    key={idx}
+                    integration={subject}
+                    targetIndex={idx}
+                    optionsSchema={provider?.optionsSchema}
+                  />
+                ))
+              )}
+            </Form.Section>
           )}
-        </Settings.Section>
-      )}
-    </Settings.Viewport>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
@@ -158,7 +167,7 @@ const TargetRow = ({
   }
 
   return (
-    <Settings.Panel>
+    <Form.Group>
       <div className='flex flex-col gap-1'>
         <span className='text-base'>{label}</span>
         <span className='text-description text-sm'>
@@ -180,6 +189,6 @@ const TargetRow = ({
           </Form.Content>
         </Form.Root>
       )}
-    </Settings.Panel>
+    </Form.Group>
   );
 };

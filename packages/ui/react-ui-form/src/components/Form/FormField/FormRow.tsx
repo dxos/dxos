@@ -149,7 +149,7 @@ export type FormRowProps<T = any> = ThemedClassName<
       /**
        * The control. A render-prop binds to the form value (field mode: `Input.Root` validation, static
        * rendering, value via `getValue`). Plain nodes render an arbitrary control with no value wiring
-       * (action mode, e.g. a button) — the labeled-card escape hatch that replaces `Settings.Item`.
+       * (action mode, e.g. a button) — the labeled-card escape hatch for an arbitrary control.
        *
        * `value` is `T | undefined` because `getValue()` returns no value when the field is unset (optional
        * schema properties, freshly-added array items); renderers default it (e.g. `{ value = '' }`).
@@ -162,7 +162,7 @@ export type FormRowProps<T = any> = ThemedClassName<
  * A labeled card row — the single shell behind both schema fields and free-form "action" rows. Field
  * renderers pass a render-prop `children` (field mode: bound to the form value, with validation and
  * static rendering); consumers pass plain `children` for an arbitrary control (action mode), the
- * affordance that replaces the deprecated `Settings.Item`.
+ * affordance for an arbitrary labeled control (action rows, settings cards).
  */
 export const FormRow = <T,>({
   classNames,

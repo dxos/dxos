@@ -48,7 +48,7 @@ const formStyles = tv({
         ),
         fieldLabel: '[grid-area:header]',
         fieldLabelText: 'text-base-fg text-lg',
-        fieldDescription: '[grid-area:description] pt-1 text-description _pr-3 _border-e _border-subdued-separator',
+        fieldDescription: '[grid-area:description] pt-1 text-description',
         fieldControl: '[grid-area:control] flex justify-end items-start md:text-right pt-3 md:pt-0',
         fieldValidation: '[grid-area:validation]',
       },

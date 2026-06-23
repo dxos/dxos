@@ -15,7 +15,7 @@ import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -123,38 +123,42 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <Settings.Viewport>
-        <Settings.Section title={t('members-verbose.label')} description={t('members.description')}>
-          <Settings.Panel>
-            <div role='group' className='min-w-0'>
-              <h3 className='text-lg mb-2'>{t('members.label')}</h3>
-              <SpaceMemberList spaceKey={space.key} includeSelf />
-            </div>
-            <div role='group' className='min-w-0'>
-              <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
-              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-              {!selectedInvitation && (
-                <>
-                  <p className='text-description mb-2'>{t('space-invitation.description')}</p>
-                  <InvitationList
-                    className='mb-2'
-                    send={handleSend}
-                    invitations={visibleInvitations ?? []}
-                    onClickRemove={(invitation) => invitation.cancel()}
-                    createInvitationUrl={createInvitationUrl}
-                  />
-                  <BifurcatedAction
-                    actions={inviteActions}
-                    activeAction={activeAction}
-                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                    data-testid='membersContainer.createInvitation'
-                  />
-                </>
-              )}
-            </div>
-          </Settings.Panel>
-        </Settings.Section>
-      </Settings.Viewport>
+      <Form.Root variant='settings'>
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Section title={t('members-verbose.label')} description={t('members.description')}>
+              <Form.Group>
+                <div role='group' className='min-w-0'>
+                  <h3 className='text-lg mb-2'>{t('members.label')}</h3>
+                  <SpaceMemberList spaceKey={space.key} includeSelf />
+                </div>
+                <div role='group' className='min-w-0'>
+                  <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
+                  {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+                  {!selectedInvitation && (
+                    <>
+                      <p className='text-description mb-2'>{t('space-invitation.description')}</p>
+                      <InvitationList
+                        className='mb-2'
+                        send={handleSend}
+                        invitations={visibleInvitations ?? []}
+                        onClickRemove={(invitation) => invitation.cancel()}
+                        createInvitationUrl={createInvitationUrl}
+                      />
+                      <BifurcatedAction
+                        actions={inviteActions}
+                        activeAction={activeAction}
+                        onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                        data-testid='membersContainer.createInvitation'
+                      />
+                    </>
+                  )}
+                </div>
+              </Form.Group>
+            </Form.Section>
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Clipboard.Provider>
   );
 };
