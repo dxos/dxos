@@ -63,7 +63,7 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
     <div>
       <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
       <Masonry.Root Tile={RecentObjectTile}>
-        <Masonry.Content padding={false}>
+        <Masonry.Content padding={false} centered>
           <Masonry.Viewport classNames='py-2' items={recent} getId={(object) => object.id} />
         </Masonry.Content>
       </Masonry.Root>
