@@ -1724,9 +1724,9 @@ At the end of Task 11 `plugin-trip` is a buildable, lint-clean package with:
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the generic `MessageExtractor` contract in `plugin-inbox` and the heuristic `TravelMessageExtractor` impl in `plugin-trip` that converts Air France flight + Booking.com hotel confirmation emails into `Booking` + `Segment`s, attaches them to a Trip, and supports manual (per-message menu), agent (skill tool), and auto-on-arrival dispatch modes.
+**Goal:** Ship the generic `MessageExtractor` contract in `plugin-inbox` and the heuristic `TravelMessageExtractor` impl in `plugin-trip` that converts Air France flight + Booking.com hotel confirmation emails into `Booking` + `Segment`s, attaches them to a Trip, and supports manual (per-message menu), agent (blueprint tool), and auto-on-arrival dispatch modes.
 
-**Architecture:** Two-package change. plugin-inbox owns the abstract contract (`MessageExtractor` capability, `ExtractedFrom` relation, `Mailbox.extractors` config, `ExtractMessage` operation) plus the UI / skill / ingestion wiring. plugin-trip contributes one `MessageExtractor` registration backed by pure per-provider parser functions. All three dispatch modes funnel through the single `ExtractMessage` operation handler.
+**Architecture:** Two-package change. plugin-inbox owns the abstract contract (`MessageExtractor` capability, `ExtractedFrom` relation, `Mailbox.extractors` config, `ExtractMessage` operation) plus the UI / blueprint / ingestion wiring. plugin-trip contributes one `MessageExtractor` registration backed by pure per-provider parser functions. All three dispatch modes funnel through the single `ExtractMessage` operation handler.
 
 **Tech Stack:** Effect-TS Schema, `@dxos/echo`, `@dxos/echo-db/testing`, `@dxos/operation`, `@dxos/app-framework`, `@effect/vitest`, `@dxos/react-ui-menu` (for toolbar menu extension).
 
@@ -1747,7 +1747,7 @@ At the end of Task 11 `plugin-trip` is a buildable, lint-clean package with:
 | `src/types/InboxOperation.ts`                    | Modify | Add `ExtractMessage` operation definition.                                           |
 | `src/operations/extract-message.ts`              | Create | Operation handler — picks extractor, runs `extract`, persists output + ExtractedFrom |
 | `src/operations/index.ts`                        | Modify | Register `extract-message` in the lazy handler set.                                  |
-| `src/skills/inbox.ts`                            | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
+| `src/blueprints/inbox.ts`                        | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
 | `src/operations/google/gmail/sync.ts`            | Modify | After each appended message, dispatch auto-on-arrival per `Mailbox.extractors`.      |
 | `src/components/Message/useExtractorActions.tsx` | Create | Hook that resolves registered extractors, matches the message, returns menu items.   |
 | `src/components/Message/useToolbar.tsx`          | Modify | Compose extractor menu items into the existing message toolbar.                      |
@@ -2388,11 +2388,11 @@ git commit -m "feat(plugin-inbox): show registered extractors in message toolbar
 
 **Files:**
 
-- Modify: `packages/plugins/plugin-inbox/src/skills/inbox.ts`
+- Modify: `packages/plugins/plugin-inbox/src/blueprints/inbox.ts`
 
-- [ ] **Step 1: Append the operation to the skill tool list**
+- [ ] **Step 1: Append the operation to the blueprint tool list**
 
-In the `tools: Skill.toolDefinitions({ operations: [...] })` block, add `InboxOperation.ExtractMessage` after `InboxOperation.GoogleMailSync`:
+In the `tools: Blueprint.toolDefinitions({ operations: [...] })` block, add `InboxOperation.ExtractMessage` after `InboxOperation.GoogleMailSync`:
 
 ```typescript
 operations: [
@@ -2404,7 +2404,7 @@ operations: [
 ],
 ```
 
-- [ ] **Step 2: Update the skill instructions**
+- [ ] **Step 2: Update the blueprint instructions**
 
 Add a sentence to the `instructions` template (same file) telling the agent: "Use `ExtractMessage` to parse a confirmation email (e.g., flight, hotel) into structured objects."
 
@@ -2419,8 +2419,8 @@ Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add packages/plugins/plugin-inbox/src/skills/inbox.ts
-git commit -m "feat(plugin-inbox): expose ExtractMessage as inbox skill tool"
+git add packages/plugins/plugin-inbox/src/blueprints/inbox.ts
+git commit -m "feat(plugin-inbox): expose ExtractMessage as inbox blueprint tool"
 ```
 
 ---

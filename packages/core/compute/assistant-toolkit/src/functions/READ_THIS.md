@@ -1,5 +1,5 @@
 ###
 
-Can we move all functions into the corresponding skill folder?
+Can we move all functions into the corresponding blueprint folder?
 
 ###

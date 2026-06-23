@@ -1,6 +1,6 @@
 # @dxos/plugin-doctor
 
-Self-introspection skill for Composer. Contributes a single AI tool,
+Self-introspection blueprint for Composer. Contributes a single AI tool,
 `queryComposerLogs`, that reads the browser tab's own NDJSON log store
 (populated by `@dxos/log-store-idb`) and supports filtering, projection,
 aggregation, and top-K counting — the same scenarios as
