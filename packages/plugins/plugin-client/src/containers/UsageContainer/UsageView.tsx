@@ -3,27 +3,31 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
 import { IconButton, Message, Status, ToggleIconButton, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
 
 export type UsageViewState = 'loading' | 'ready' | 'error' | 'unavailable';
 
-export type UsageViewProps = {
-  /** Current fetch state; drives which content is shown. */
-  state: UsageViewState;
-  /** Profile usage payload; required when `state` is `'ready'`. */
-  data?: GetProfileUsageResponse;
+type UsageViewCommonProps = {
   /** Epoch milliseconds of the last successful fetch. */
   lastUpdated?: number;
   /** Invoked when the user requests a refresh. */
   onRefresh?: () => void;
 };
+
+/**
+ * Discriminated on `state`: the payload is required (and only present) when `state` is `'ready'`, so a
+ * missing payload can't be silently rendered as an empty plan.
+ */
+export type UsageViewProps =
+  | (UsageViewCommonProps & { state: Exclude<UsageViewState, 'ready'>; data?: undefined })
+  | (UsageViewCommonProps & { state: 'ready'; data: GetProfileUsageResponse });
 
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -84,8 +88,8 @@ type UsageRow = {
   label: string;
   /** Field caption (schema `description` annotation). */
   caption: string;
-  /** Field value, rendered as static text (e.g. "26% used", "Unlimited"). */
-  value: string;
+  /** Consumption as a whole percentage (`0`–`100`); `undefined` for an unlimited limit. */
+  percent?: number;
   windowHours: number;
 };
 
@@ -103,7 +107,6 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
           key,
           label,
           caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
-          value: t('usage-unlimited.label'),
           windowHours,
         };
       }
@@ -111,35 +114,59 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
       return {
         key,
         label,
-        caption: t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window }),
-        value: t('usage-percent-used.label', { percent }),
+        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window })}`,
+        percent,
         windowHours,
       };
     })
     .sort((a, b) => a.windowHours - b.windowHours);
 
 /**
- * A single read-only usage field: an optional string carrying its label/caption as `title`/`description`
- * annotations. Optional so the read-only form renders no required markers; `Schema.String` keeps the
- * field context-free (`R = never`) so the struct stays assignable to `Form`.
+ * A single usage field: an optional number carrying its label/caption as `title`/`description`
+ * annotations and the consumption percentage as its value. Optional so the form renders no required
+ * markers; `Schema.Number` keeps the field context-free (`R = never`) so the struct stays assignable to `Form`.
  */
 const usageField = (title: string, description: string) =>
-  Schema.optional(Schema.String.annotations({ title, description }));
+  Schema.optional(Schema.Number.annotations({ title, description }));
 
 /**
- * Build the Effect schema (one annotated field per limit) and matching values for generic
- * `Form.FieldSet` rendering.
+ * Build the Effect schema (one annotated field per limit) and matching values. Unlimited limits have no
+ * value, so their field reads `undefined` and the renderer shows the "Unlimited" label instead of a meter.
  */
 const buildUsageForm = (rows: UsageRow[]) => {
   const fields: Record<string, ReturnType<typeof usageField>> = {};
-  const values: Record<string, string> = {};
+  const values: Record<string, number> = {};
   rows.forEach((row, index) => {
     const field = `metric_${index}`;
     fields[field] = usageField(row.label, row.caption);
-    values[field] = row.value;
+    if (row.percent !== undefined) {
+      values[field] = row.percent;
+    }
   });
   return { schema: Schema.Struct(fields), values };
 };
+
+/** Non-data states shown as a single `Message`, keyed by message variant (translation keys for the copy). */
+const STATE_MESSAGES = {
+  unavailable: {
+    valence: 'warning',
+    icon: 'ph--cloud-slash--duotone',
+    title: 'usage-unavailable.title',
+    description: 'usage-unavailable.description',
+  },
+  error: {
+    valence: 'error',
+    icon: 'ph--cloud-x--duotone',
+    title: 'usage-offline.title',
+    description: 'usage-offline.description',
+  },
+  empty: {
+    valence: 'neutral',
+    icon: 'ph--chart-bar--duotone',
+    title: 'usage-empty.title',
+    description: 'usage-empty.description',
+  },
+} as const;
 
 /**
  * Presentational view of profile usage: renders loading/error/unavailable/empty states, or a
@@ -155,30 +182,47 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     return { ...buildUsageForm(rows), empty: rows.length === 0 };
   }, [data, t]);
 
+  // Non-data states resolve to a `Message`; `loading` shows a spinner and `ready` with data shows the form.
+  const message =
+    state === 'unavailable'
+      ? STATE_MESSAGES.unavailable
+      : state === 'error'
+        ? STATE_MESSAGES.error
+        : state === 'ready' && empty
+          ? STATE_MESSAGES.empty
+          : undefined;
+
+  // Render each metric as a meter from its percentage value; unlimited limits (no value) show a label.
+  const meterFieldProvider = useCallback<FormFieldProvider>(
+    ({ fieldProps: { label, description, getValue } }) => {
+      const percent = getValue();
+      return (
+        <Form.Row label={label} description={description}>
+          {typeof percent === 'number' ? (
+            <Status progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+          ) : (
+            t('usage-unlimited.label')
+          )}
+        </Form.Row>
+      );
+    },
+    [t],
+  );
+
   return (
     <Form.Root variant='settings' layout='static' schema={schema} values={values}>
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
-            {state === 'unavailable' ? (
-              <Message.Root valence='warning'>
-                <Message.Title icon='ph--cloud-slash--duotone'>{t('usage-unavailable.title')}</Message.Title>
-                <Message.Content>{t('usage-unavailable.description')}</Message.Content>
-              </Message.Root>
-            ) : state === 'loading' ? (
+            {state === 'loading' ? (
               <Status indeterminate aria-label={t('usage-section.title')} />
-            ) : state === 'error' ? (
-              <Message.Root valence='error'>
-                <Message.Title icon='ph--cloud-x--duotone'>{t('usage-offline.title')}</Message.Title>
-                <Message.Content>{t('usage-offline.description')}</Message.Content>
-              </Message.Root>
-            ) : empty ? (
-              <Message.Root valence='neutral'>
-                <Message.Title icon='ph--chart-bar--duotone'>{t('usage-empty.title')}</Message.Title>
-                <Message.Content>{t('usage-empty.description')}</Message.Content>
+            ) : message ? (
+              <Message.Root valence={message.valence}>
+                <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
+                <Message.Content>{t(message.description)}</Message.Content>
               </Message.Root>
             ) : (
-              <Form.FieldSet />
+              <Form.FieldSet fieldProvider={meterFieldProvider} />
             )}
           </Form.Section>
 
