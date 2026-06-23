@@ -6,34 +6,20 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import * as Ref from 'effect/Ref';
 
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import {
-  type EdgeEnvelope,
-  type InitiateOAuthFlowResponse,
-  type OAuthFlowResult,
-  type OAuthProvider,
-} from '@dxos/protocols';
+import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
 
-import { getEdgeAuthHeader } from './edge-auth-header';
+import { type OAuthPreset } from './util';
+
+// TODO(wittjosiah): Migrate the CLI `connector add` OAuth path off the hard-coded
+//   `OAUTH_PRESETS` list onto the registered `Connector` capabilities (which already
+//   declare each service's `oauth` provider/scopes), then this CLI-only flow can be
+//   replaced by the connector-driven flow used by the app coordinator.
 
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.
-
-/**
- * OAuth flow descriptor consumed by the platform-agnostic OAuth helpers
- * (Tauri / mobile / CLI) and the CLI preset list. Mirrors the `oauth` spec on a
- * `Connector` capability entry plus a label/source for display.
- */
-export type OAuthPreset = {
-  label: string;
-  source: string;
-  provider: OAuthProvider;
-  scopes: string[];
-};
 
 /**
  * OAuth server provider interface.
@@ -200,51 +186,11 @@ export const performOAuthFlow = Effect.fn(function* (
 });
 
 /**
- * Creates an Effect-based OAuth server provider.
- * Used for CLI with Effect Platform's HTTP server.
+ * Returns the Edge client's cached auth header if available, so Edge can associate
+ * the OAuth flow with the current identity.
  */
-export const createEffectOAuthServerProvider = (
-  createServer: (
-    port: number,
-    callbackReceived: Ref.Ref<boolean>,
-    callbackResult: Ref.Ref<Option.Option<OAuthFlowResult>>,
-  ) => Effect.Effect<{ stop: () => Effect.Effect<void, never> }, Error>,
-  getPort: () => Effect.Effect<number, Error>,
-): OAuthServerProvider => ({
-  start: () =>
-    Effect.gen(function* () {
-      const port = yield* getPort();
-      const callbackReceived = yield* Ref.make(false);
-      const callbackResult = yield* Ref.make<Option.Option<OAuthFlowResult>>(Option.none());
-
-      const server = yield* createServer(port, callbackReceived, callbackResult);
-
-      return {
-        port,
-        stop: () => server.stop().pipe(Effect.catchAll(() => Effect.void)),
-        waitForResult: (accessTokenId: string, timeoutMs: number = OAUTH_TIMEOUT_MS) =>
-          Effect.race(
-            Effect.gen(function* () {
-              // Poll for callback.
-              while (true) {
-                const received = yield* Ref.get(callbackReceived);
-                if (received) {
-                  break;
-                }
-                yield* Effect.sleep('500 millis');
-              }
-
-              // Get result.
-              const result = yield* Ref.get(callbackResult);
-              return yield* Option.match(result, {
-                onNone: () => Effect.fail(new Error('OAuth callback received but no result')),
-                onSome: (value) => Effect.succeed(value),
-              });
-            }),
-            Effect.sleep(`${timeoutMs} millis`).pipe(
-              Effect.flatMap(() => Effect.fail(new Error('OAuth flow timed out'))),
-            ),
-          ),
-      };
-    }),
-});
+// TODO(wittjosiah): EdgeHttpClient does not expose this publicly. Prefer adding a proper API
+//   (e.g. getAuthHeader() or an initiateOAuth helper) to @dxos/edge-client instead of reading
+//   private _authHeader. Cast is at the external-client boundary until that API exists.
+const getEdgeAuthHeader = (edgeClient: EdgeHttpClient): string | undefined =>
+  (edgeClient as unknown as { _authHeader?: string })._authHeader;

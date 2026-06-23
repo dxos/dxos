@@ -5,8 +5,21 @@
 import { FormBuilder } from '@dxos/cli-util';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { type OAuthPreset } from '../../oauth';
 import { type Connection } from '../../types';
+
+/**
+ * OAuth flow descriptor for the CLI `connector add` preset list. Mirrors the `oauth`
+ * spec on a `Connector` capability entry plus a label/source for display.
+ */
+// TODO(wittjosiah): Replace this hard-coded list by resolving the registered `Connector`
+//   capabilities (which already declare each service's provider/scopes) once the CLI can
+//   access them.
+export type OAuthPreset = {
+  label: string;
+  source: string;
+  provider: OAuthProvider;
+  scopes: string[];
+};
 
 // TODO(wittjosiah): Copied from plugin-token-manager.
 export const OAUTH_PRESETS: OAuthPreset[] = [
