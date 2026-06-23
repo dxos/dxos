@@ -153,7 +153,7 @@ component TemplateEditor
     Markdown + Handlebars source editor backed by a Ref<Text>. Decorates
     Handlebars tags, DXN/URL tokens, and XML nodes. Reused by Routine and
     Skill article surfaces and by downstream plugins (plugin-script,
-    plugin-magazine) via the `@dxos/plugin-automation/components` export.
+    plugin-magazine) via the `@dxos/plugin-routine/components` export.
   props:
     id: string
     source?: Ref<Text>

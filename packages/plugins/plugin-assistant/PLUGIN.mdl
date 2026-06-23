@@ -176,7 +176,7 @@ op SetCurrentChat
 op RunPromptInNewChat
   desc: Creates a new chat, binds context objects and skills, then runs a prompt.
   note: |
-    Operation DEFINED in plugin-automation (AutomationOperation.RunPromptInNewChat)
+    Operation DEFINED in plugin-routine (RoutineOperation.RunPromptInNewChat)
     so Routine UI and downstream plugins can dispatch it without depending on
     plugin-assistant. The HANDLER (chat creation + AiContext binding) is contributed
     here; see operations/run-prompt-in-new-chat.ts.

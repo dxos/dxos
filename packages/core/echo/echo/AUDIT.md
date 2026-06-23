@@ -83,7 +83,7 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 **Verified already Feed-aware (no change needed):**
 
 - [plugin-slack/operations/sync.ts](packages/plugins/plugin-slack/src/operations/sync.ts) — `Feed.append`.
-- [plugin-automation/capabilities/compute-runtime.ts](packages/plugins/plugin-automation/src/capabilities/compute-runtime.ts) — `createFeedServiceLayer`.
+- [plugin-routine/capabilities/compute-runtime.ts](packages/plugins/plugin-routine/src/capabilities/compute-runtime.ts) — `createFeedServiceLayer`.
 - [plugin-thread/operations/append-channel-message.ts](packages/plugins/plugin-thread/src/operations/append-channel-message.ts) — `Feed.append`.
 - [plugin-assistant/operations/run-prompt-in-new-chat.ts](packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts) — `createFeedServiceLayer`.
 
