@@ -123,10 +123,10 @@ export class Keyboard {
       const isInput =
         tagName === 'INPUT' || tagName === 'TEXTAREA' || (event.target as any)?.getAttribute('contenteditable');
 
-      // Normalized key binding (order matters, see note above).
-      const str = [ctrlKey && 'ctrl', shiftKey && 'shift', altKey && 'alt', metaKey && 'meta', key]
-        .filter(Boolean)
-        .join('+');
+      // Normalized key binding (order and case; see parseShortcut).
+      const str = parseShortcut(
+        [ctrlKey && 'ctrl', shiftKey && 'shift', altKey && 'alt', metaKey && 'meta', key].filter(Boolean).join('+'),
+      );
 
       // Scan matching contexts.
       for (let i = this._contexts.length - 1; i >= 0; --i) {
