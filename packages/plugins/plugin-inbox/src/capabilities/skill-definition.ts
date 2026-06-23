@@ -9,12 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { CalendarSkill, InboxSkill, InboxSendSkill } from '#skills';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-const skillDefinition: () => Effect.Effect<
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[],
-  never,
-  Capability.Service
-> = () =>
+const skillDefinition = () =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.SkillDefinition, InboxSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, InboxSendSkill),

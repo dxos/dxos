@@ -33,8 +33,7 @@ import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { AssistantSkill } from '#skills';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-const skillDefinition: () => Effect.Effect<Capability.Capability<unknown>[]> = () =>
+const skillDefinition = () =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.SkillDefinition, AssistantSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, BrowserSkill),

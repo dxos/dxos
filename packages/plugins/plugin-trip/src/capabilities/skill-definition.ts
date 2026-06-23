@@ -9,11 +9,6 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { TripSkill } from '../skills';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-const skillDefinition: () => Effect.Effect<
-  Capability.Capability<typeof AppCapabilities.SkillDefinition>[],
-  never,
-  Capability.Service
-> = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TripSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TripSkill)]);
 
 export default skillDefinition;
