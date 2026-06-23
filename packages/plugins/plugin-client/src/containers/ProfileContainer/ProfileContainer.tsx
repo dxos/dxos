@@ -166,15 +166,17 @@ export const ProfileContainer = () => {
 
   return (
     <Clipboard.Provider>
-      <Form.Root variant='settings'>
+      <Form.Root
+        variant='settings'
+        schema={UserProfile}
+        values={values}
+        fieldMap={fieldMap}
+        onValuesChanged={handleChange}
+      >
         <Form.Viewport scroll>
           <Form.Content>
             <Form.Section title={t('profile.label')} description={t('profile.description')}>
-              <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
-                <Form.Content classNames='gap-form-gap'>
-                  <Form.FieldSet />
-                </Form.Content>
-              </Form.Root>
+              <Form.FieldSet />
             </Form.Section>
           </Form.Content>
         </Form.Viewport>
