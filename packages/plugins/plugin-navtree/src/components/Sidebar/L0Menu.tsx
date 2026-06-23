@@ -39,7 +39,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
+import { type StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';

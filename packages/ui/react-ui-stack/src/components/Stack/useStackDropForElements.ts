@@ -8,7 +8,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useLayoutEffect, useState } from 'react';
 
-import { type Orientation, type StackItemData, type StackItemRearrangeHandler } from '../components';
+import { type Orientation, type StackItemData, type StackItemRearrangeHandler } from '../index';
 
 const noop = () => {};
 

@@ -5,5 +5,5 @@
 export type * from './types';
 
 export * from './Stack';
-
+export * from './StackContext';
 export * from './StackItem';

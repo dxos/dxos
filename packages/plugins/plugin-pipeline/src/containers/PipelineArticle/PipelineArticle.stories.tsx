@@ -15,7 +15,6 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -210,7 +209,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...stackTranslations],
+    translations,
   },
 } satisfies Meta<typeof PipelineArticle>;
 

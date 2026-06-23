@@ -43,7 +43,7 @@ export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebo
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
-  const db = Obj.getDatabase(notebook);
+  const db = notebook ? Obj.getDatabase(notebook) : undefined;
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).

@@ -29,6 +29,13 @@ import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';
+import {
+  StackItemSigil,
+  type StackItemSigilAction,
+  StackItemSigilButton,
+  type StackItemSigilButtonProps,
+  type StackItemSigilProps,
+} from '../StackItemSigil';
 import { type StackItemData, type StackItemSize } from '../types';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
@@ -40,13 +47,6 @@ import {
   StackItemHeadingStickyContent,
 } from './StackItemHeading';
 import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
-import {
-  StackItemSigil,
-  type StackItemSigilAction,
-  StackItemSigilButton,
-  type StackItemSigilButtonProps,
-  type StackItemSigilProps,
-} from './StackItemSigil';
 
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_HORIZONTAL_SIZE = 50 satisfies StackItemSize;

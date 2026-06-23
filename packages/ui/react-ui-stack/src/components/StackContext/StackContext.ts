@@ -4,16 +4,7 @@
 
 import { createContext, useContext } from 'react';
 
-import { type Orientation, type Size } from './Stack';
-import { type StackItemRearrangeHandler, type StackItemSize } from './types';
-
-export type StackContextValue = {
-  orientation: Orientation;
-  rail: boolean;
-  size: Size;
-  onRearrange?: StackItemRearrangeHandler;
-  stackId?: string;
-};
+import { type StackContextValue, type StackItemSize } from '../types';
 
 export const StackContext = createContext<StackContextValue>({
   orientation: 'vertical',

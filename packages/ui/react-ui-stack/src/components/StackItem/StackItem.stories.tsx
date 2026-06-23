@@ -26,7 +26,7 @@ const DefaultStory = (props: StackItemRootProps) => {
         </div>
       </StackItem.Heading>
       <StackItem.Content>
-        <div className='p-4 text-center'>Content</div>
+        <div className='grid place-items-center'>Content</div>
       </StackItem.Content>
     </StackItem.Root>
   );
