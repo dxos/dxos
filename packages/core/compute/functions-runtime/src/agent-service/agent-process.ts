@@ -4,7 +4,10 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Cause from 'effect/Cause';
+import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
@@ -72,6 +75,22 @@ interface AgentProcessOptions {
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
 
 /**
+ * Typed control surface on the live agent process. A child operation reaches the owning
+ * `AgentProcess`'s `AlarmManager`/`inputQueue` over this RPC group (the control plane);
+ * handlers run on the host process's server fiber where that state is in scope.
+ */
+const HarnessControl = RpcGroup.make(
+  Rpc.make('setAlarm', {
+    payload: Schema.Struct({ at: Schema.DateTimeUtc, message: Schema.NullOr(Schema.String) }),
+    success: Schema.Void,
+  }),
+  Rpc.make('enqueueMessage', {
+    payload: Schema.Struct({ content: Schema.Array(ContentBlock.Any) }),
+    success: Schema.Void,
+  }),
+);
+
+/**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
  * The process target is a queue DXN string.
  */
@@ -92,6 +111,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
         Credential.CredentialsService,
       ],
+      rpcs: HarnessControl,
     },
     (ctx) =>
       Effect.gen(function* () {
@@ -154,9 +174,22 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         });
 
         return {
+          // Control plane (§4.3): handlers run on the host process's server fiber, closing over the
+          // live `alarmManager`/`inputQueue` and persisting their durable effect inline.
+          rpcHandlers: yield* HarnessControl.toHandlersContext({
+            setAlarm: Effect.fn(function* ({ at, message }) {
+              yield* alarmManager.setWakeAt(DateTime.toEpochMillis(at), message);
+              alarmManager.reconcile(inputQueue.length > 0);
+            }),
+            enqueueMessage: Effect.fn(function* ({ content }) {
+              inputQueue.push({ _tag: 'prompt', content });
+              yield* AgentEventsKey.set(inputQueue);
+              alarmManager.reconcile(true);
+            }),
+          }),
           onInput: Effect.fnUntraced(function* (prompt: string) {
             log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
-            inputQueue.push({ _tag: 'prompt', content: prompt });
+            inputQueue.push({ _tag: 'prompt', content: [ContentBlock.Text.make({ text: prompt })] });
             log('agent onInput persisting queue', { depth: inputQueue.length });
             yield* AgentEventsKey.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });
@@ -168,10 +201,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('agent onAlarm fired', { pending: inputQueue.length });
 
               // If the agent scheduled a self-wake that has come due, enqueue a wake-up prompt.
-              const firedAt = yield* alarmManager.takeFiredAlarm();
-              if (firedAt != null) {
-                log('agent onAlarm self-wake', { firedAt });
-                inputQueue.push({ _tag: 'alarm', firedAt });
+              const fired = yield* alarmManager.takeFiredAlarm();
+              if (fired != null) {
+                log('agent onAlarm self-wake', { firedAt: fired.firedAt });
+                inputQueue.push({ _tag: 'alarm', firedAt: fired.firedAt, message: fired.message });
                 yield* AgentEventsKey.set(inputQueue);
               }
 
@@ -225,7 +258,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
 
               const prompt: ContentBlock.Any[] = Match.value(item).pipe(
-                Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
+                Match.tag('prompt', (item) => [...item.content]),
                 Match.tag('tool_result', (item) =>
                   item.isError
                     ? [
@@ -242,7 +275,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       ],
                 ),
                 Match.tag('alarm', (item) => [
-                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt), disposition: 'synthetic' }),
+                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt, item.message), disposition: 'synthetic' }),
                 ]),
                 Match.tag('plan_continue_reminder', (item) => [
                   ContentBlock.Text.make({
@@ -397,7 +430,7 @@ interface ToolExecutionServiceOptions {
 
 const AgentEvent = Schema.Union(
   Schema.TaggedStruct('prompt', {
-    content: Schema.String,
+    content: Schema.Array(ContentBlock.Any),
   }),
   Schema.TaggedStruct('tool_result', {
     pid: Process.ID,
@@ -406,6 +439,8 @@ const AgentEvent = Schema.Union(
   }),
   Schema.TaggedStruct('alarm', {
     firedAt: Schema.Number,
+    // Optional reminder carried from the self-wake; surfaced to the agent when the alarm fires.
+    message: Schema.NullOr(Schema.String),
   }),
   Schema.TaggedStruct('completion_check', {
     planSummary: Schema.String,
@@ -581,11 +616,13 @@ export const parseContinueDecision = (reply: string): boolean => {
 //
 
 /**
- * Persisted UNIX timestamp (ms) of the next agent-scheduled self-wake, or `null` when none is set.
+ * Persisted next agent-scheduled self-wake: the UNIX timestamp (ms) and an optional reminder
+ * message delivered when it fires, or `null` when no self-wake is set.
  */
-const AgentAlarmKey = StorageService.key(Schema.parseJson(Schema.NullOr(Schema.Number)), 'agentAlarm').pipe(
-  StorageService.withDefault(() => null),
-);
+const AgentAlarmKey = StorageService.key(
+  Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
+  'agentAlarm',
+).pipe(StorageService.withDefault(() => null));
 
 interface ResolveAlarmInput {
   /** Duration from now, e.g. `'30 seconds'`, `'5 minutes'`, `'1 hour'`. */
@@ -667,6 +704,7 @@ export class AlarmManager {
   readonly #setAlarm: (timeout?: number) => void;
   readonly #now: () => number;
   #wakeAt: number | null = null;
+  #message: string | null = null;
 
   constructor({ storageService, setAlarm, now = () => Date.now() }: AlarmManagerOptions) {
     this.#storageService = storageService;
@@ -679,6 +717,11 @@ export class AlarmManager {
     return this.#wakeAt;
   }
 
+  /** Reminder message delivered when the current self-wake fires, or `null` when none is set. */
+  get message(): string | null {
+    return this.#message;
+  }
+
   now(): number {
     return this.#now();
   }
@@ -686,31 +729,36 @@ export class AlarmManager {
   /** Restores the persisted alarm state. */
   load(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      this.#wakeAt = yield* AgentAlarmKey.get;
+      const persisted = yield* AgentAlarmKey.get;
+      this.#wakeAt = persisted?.wakeAt ?? null;
+      this.#message = persisted?.message ?? null;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
-  /** Records a new self-wake target and persists it. */
-  setWakeAt(wakeAt: number): Effect.Effect<void> {
+  /** Records a new self-wake target (with an optional reminder message) and persists it. */
+  setWakeAt(wakeAt: number, message: string | null = null): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       this.#wakeAt = wakeAt;
-      yield* AgentAlarmKey.set(wakeAt);
+      this.#message = message;
+      yield* AgentAlarmKey.set({ wakeAt, message });
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   /**
-   * Clears the self-wake alarm if it is due, returning the timestamp it was scheduled for
-   * (or `null` if no alarm was due).
+   * Clears the self-wake alarm if it is due, returning the timestamp it was scheduled for and the
+   * reminder message it carried (or `null` if no alarm was due).
    */
-  takeFiredAlarm(): Effect.Effect<number | null> {
+  takeFiredAlarm(): Effect.Effect<{ firedAt: number; message: string | null } | null> {
     return Effect.gen(this, function* () {
       if (this.#wakeAt == null || this.#now() < this.#wakeAt) {
         return null;
       }
       const firedAt = this.#wakeAt;
+      const message = this.#message;
       this.#wakeAt = null;
+      this.#message = null;
       yield* AgentAlarmKey.set(null);
-      return firedAt;
+      return { firedAt, message };
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -727,12 +775,19 @@ export class AlarmManager {
 }
 
 /**
- * Prompt delivered to the agent when a self-scheduled alarm fires.
+ * Prompt delivered to the agent when a self-scheduled alarm fires. When the alarm carried a
+ * reminder message it is surfaced verbatim, otherwise a generic continuation prompt is used.
  */
-const wakeUpPrompt = (firedAt: number): string => trim`
-  Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-  Continue with whatever you intended to do when you scheduled this wake-up.
-`;
+const wakeUpPrompt = (firedAt: number, message: string | null): string =>
+  message != null
+    ? trim`
+      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
+      ${message}
+    `
+    : trim`
+      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
+      Continue with whatever you intended to do when you scheduled this wake-up.
+    `;
 
 /**
  * Tools that let the agent schedule a self-wake and inspect the current time.

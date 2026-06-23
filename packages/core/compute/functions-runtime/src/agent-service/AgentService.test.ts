@@ -3,10 +3,13 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Clock from 'effect/Clock';
+import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
@@ -16,7 +19,7 @@ import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
@@ -531,6 +534,43 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
+  // tests above to avoid perturbing their shared deterministic ID stream.
+  it.scoped(
+    'setAlarm over the process control surface reaches the live agent and arms a self-wake',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        // createSession spawns the agent process (no LLM turn yet) bound to a stamped host marker.
+        const agent = yield* AgentService.createSession();
+        const target = Obj.getURI(agent.feed);
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
+        ).toBe(true);
+
+        // A Tier-B caller reaches the live AlarmManager over the process RPC loopback. The handler
+        // runs on the host's server fiber against the real closed-over AlarmManager; a successful
+        // void result proves the control-plane wiring end-to-end (persistence semantics are covered
+        // by the AlarmManager unit tests).
+        const now = yield* Clock.currentTimeMillis;
+        const at = DateTime.unsafeMake(now + Duration.toMillis(Duration.hours(1)));
+        yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
+
+        // The RPC did not fail the process; it remains live and ready for the conversation to resume.
+        expect(handle.status.state).not.toBe(Process.State.FAILED);
+        expect(handle.status.state).not.toBe(Process.State.TERMINATED);
+
+        yield* handle.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
   );
 });
 

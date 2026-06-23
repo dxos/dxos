@@ -9,6 +9,7 @@ import * as Either from 'effect/Either';
 
 import { Process } from '@dxos/compute';
 import { storageServiceLayer } from '@dxos/compute-runtime';
+import { ContentBlock } from '@dxos/types';
 
 import {
   AlarmManager,
@@ -144,8 +145,8 @@ describe('AlarmManager', () => {
       const { alarmManager, storageService } = yield* makeManager();
       yield* alarmManager.setWakeAt(NOW - 1_000);
 
-      const firedAt = yield* alarmManager.takeFiredAlarm();
-      expect(firedAt).toBe(NOW - 1_000);
+      const fired = yield* alarmManager.takeFiredAlarm();
+      expect(fired).toEqual({ firedAt: NOW - 1_000, message: null });
       expect(alarmManager.wakeAt).toBe(null);
 
       const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
@@ -160,9 +161,28 @@ describe('AlarmManager', () => {
       const { alarmManager } = yield* makeManager();
       yield* alarmManager.setWakeAt(NOW + 60_000);
 
-      const firedAt = yield* alarmManager.takeFiredAlarm();
-      expect(firedAt).toBe(null);
+      const fired = yield* alarmManager.takeFiredAlarm();
+      expect(fired).toBe(null);
       expect(alarmManager.wakeAt).toBe(NOW + 60_000);
+    }),
+  );
+
+  it.effect(
+    'persists and restores the reminder message alongside the self-wake',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, storageService } = yield* makeManager();
+      yield* alarmManager.setWakeAt(NOW - 1_000, 'check the build');
+      expect(alarmManager.message).toBe('check the build');
+
+      // A new manager backed by the same storage recovers both the timestamp and the message.
+      const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
+      yield* recovered.load();
+      expect(recovered.wakeAt).toBe(NOW - 1_000);
+      expect(recovered.message).toBe('check the build');
+
+      const fired = yield* recovered.takeFiredAlarm();
+      expect(fired).toEqual({ firedAt: NOW - 1_000, message: 'check the build' });
+      expect(recovered.message).toBe(null);
     }),
   );
 });
@@ -266,7 +286,7 @@ describe('isAgentWorkPending', () => {
     expect(
       isAgentWorkPending(
         makeSnapshot({
-          inputQueue: [{ _tag: 'prompt', content: 'hello' }],
+          inputQueue: [{ _tag: 'prompt', content: [ContentBlock.Text.make({ text: 'hello' })] }],
         }),
       ),
     ).toBe(true);
