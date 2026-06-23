@@ -125,10 +125,10 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         onCreate={handleCreate}
         getCreateDefaults={getCreateDefaults}
       >
-        <Form.Viewport {...composableProps(props)} ref={forwardedRef}>
+        <Form.Viewport {...composableProps(props)} scroll ref={forwardedRef}>
           <Form.Content>
             <Form.FieldSet />
-            {children}
+            <Form.Section>{children}</Form.Section>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

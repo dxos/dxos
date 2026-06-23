@@ -32,7 +32,6 @@ type SpaceScopedProps = {
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
   const isPersonal = !!space && AppSpace.isPersonalSpace(space);
   const [dismissed] = useWelcomeDismissed(space);
-
   if (!isPersonal) {
     return null;
   }
@@ -96,18 +95,20 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <div className='flex flex-col items-center gap-4 pbe-2'>
+    <div className='flex flex-col items-center gap-4 py-8'>
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
-      <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+      <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
-        <Carousel.Root count={slides.length}>
-          <Carousel.Content classNames='max-w-[50rem]'>
+        <Carousel.Root count={slides.length} transition='slide' continuous autoAdvance={10_000}>
+          <Carousel.Content>
             <Carousel.Previous />
-            <Carousel.Viewport>
-              {slides.map((slide, index) => (
-                <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
-              ))}
-            </Carousel.Viewport>
+            <div className='flex justify-center w-full'>
+              <Carousel.Viewport classNames='max-w-[40rem]'>
+                {slides.map((slide, index) => (
+                  <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
+                ))}
+              </Carousel.Viewport>
+            </div>
             <Carousel.Next />
             <Carousel.Indicators />
             <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>

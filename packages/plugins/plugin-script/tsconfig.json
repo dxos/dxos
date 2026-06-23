@@ -71,6 +71,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-query"
     },
     {
@@ -146,9 +149,6 @@
       "path": "../plugin-assistant"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-chess"
     },
     {
@@ -165,6 +165,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

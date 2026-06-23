@@ -19,19 +19,18 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
-import { SpaceSettings } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
   CreateSpaceDialog,
+  DefaultProperties,
   ImportSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
   MenuFooter,
   ObjectCardStack,
-  ObjectProperties,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -40,8 +39,10 @@ import {
   SpaceHomeArticle,
   SpaceHomeRecent,
   SpacePresence,
+  SpaceSettings,
   SpaceSettingsContainer,
   SyncStatus,
+  TypeCollectionArticle,
   ViewEditor,
 } from '#containers';
 import { meta } from '#meta';
@@ -96,6 +97,25 @@ export default Capability.makeModule(
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Surface.create({
+        id: 'typeCollection',
+        filter: AppSurface.subject(AppSurface.Article, Type.isType),
+        component: ({ data, role }) => {
+          const space = isSpace(data.properties?.space) ? data.properties.space : undefined;
+          if (!space) {
+            return null;
+          }
+
+          return (
+            <TypeCollectionArticle
+              role={role}
+              space={space}
+              typeUri={Type.getURI(data.subject)}
+              attendableId={data.attendableId}
+            />
+          );
+        },
+      }),
+      Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: () => {
@@ -115,7 +135,7 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'settings'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ ref, data, role }) => <ObjectProperties role={role} subject={data.companionTo} ref={ref} />,
+        component: ({ ref, data, role }) => <DefaultProperties role={role} subject={data.companionTo} ref={ref} />,
       }),
       Surface.create({
         id: 'companion.related',

@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Routine } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
@@ -19,8 +19,8 @@ import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
-import { AssistantSettings } from '#components';
 import {
+  AssistantSettings,
   ChatCompanion,
   ChatArticle,
   ChatDialog,
@@ -103,7 +103,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'invocations'),
           AppSurface.oneOf(
             AppSurface.companion(AppSurface.Article, Sequence.Sequence),
-            AppSurface.companion(AppSurface.Article, Routine.Routine),
+            AppSurface.companion(AppSurface.Article, Instructions.Instructions),
           ),
         ),
         component: ({ data, role }) => {
@@ -111,7 +111,7 @@ export default Capability.makeModule(() =>
           const feed = space?.properties.invocationTraceFeed?.target;
           const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
-          const target = Obj.instanceOf(Routine.Routine, data.companionTo) ? undefined : data.companionTo;
+          const target = Obj.instanceOf(Instructions.Instructions, data.companionTo) ? undefined : data.companionTo;
 
           return (
             <Panel.Root role={role} className='dx-document'>

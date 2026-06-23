@@ -79,6 +79,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-query"
     },
     {

@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { File } from '@dxos/types';
 
-import { SandboxClient } from '../../services/SandboxClient';
+import { createSandboxClient } from '../../services/sandbox-url';
 import { DownloadFile } from './definitions';
 
 export default DownloadFile.pipe(
@@ -22,8 +22,7 @@ export default DownloadFile.pipe(
       const loadedSandbox = yield* Database.load(sandbox);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url ?? '';
-      const sandboxClient = new SandboxClient(edgeUrl);
+      const sandboxClient = createSandboxClient(client);
 
       const content = yield* Effect.promise(() => sandboxClient.readFile(spaceId, sandboxId, path));
 

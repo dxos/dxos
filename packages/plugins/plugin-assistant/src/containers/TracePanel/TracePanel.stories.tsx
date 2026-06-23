@@ -14,9 +14,9 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
@@ -277,7 +277,7 @@ export const Default: Story = {
             }),
         }),
         AssistantPlugin(),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     }),
   ],
@@ -300,7 +300,7 @@ export const WithSnapshot: Story = {
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     }),
   ],
@@ -320,7 +320,7 @@ export const WithRemoteSnapshot: Story = {
             () => import('../../testing/data/trace-timeline-remote.dx.json'),
           ),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     }),
   ],
@@ -340,7 +340,7 @@ export const WithRemoteMultipleSnapshot: Story = {
             () => import('../../testing/data/trace-timeline-multiple.dx.json'),
           ),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     }),
   ],

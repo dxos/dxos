@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -31,52 +31,61 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
   const existing = tokens[0];
   const [draft, setDraft] = useState('');
+  const touchedRef = useRef(false);
 
-  const handleSave = useCallback(() => {
-    const value = draft.trim();
-    if (!value || !space) {
+  // The token is write-only (never rendered back), so the input rests empty.
+  // Persist on blur, but only when the field was actually edited — an untouched
+  // blur must not be read as "clear" and wipe an existing token. A trimmed-empty
+  // value after editing removes the token.
+  const handleCommit = useCallback(() => {
+    if (!touchedRef.current || !space) {
       return;
     }
-    if (existing) {
-      Obj.update(existing, (existing) => {
-        (existing as Obj.Mutable<typeof existing>).token = value;
-      });
-    } else {
-      space.db.add(Obj.make(AccessToken.AccessToken, { source: SERVICE, token: value }));
+    touchedRef.current = false;
+    const value = draft.trim();
+    if (value) {
+      if (existing) {
+        Obj.update(existing, (existing) => {
+          (existing as Obj.Mutable<typeof existing>).token = value;
+        });
+      } else {
+        space.db.add(Obj.make(AccessToken.AccessToken, { source: SERVICE, token: value }));
+      }
+    } else if (existing) {
+      space.db.remove(existing);
     }
     setDraft('');
   }, [draft, existing, space]);
 
-  const handleClear = useCallback(() => {
-    if (existing && space) {
-      space.db.remove(existing);
-    }
-  }, [existing, space]);
-
   return (
-    <Settings.Viewport>
-      <Settings.Section title={meta.profile.name ?? meta.profile.key}>
-        <Settings.Item title={t('api-key.label')}>
-          <Input.TextInput
-            type='password'
-            placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
-          <div className='flex justify-end gap-2 pt-trim-md'>
-            <Button onClick={handleSave} disabled={!draft.trim() || !space}>
-              <Icon icon='ph--floppy-disk--regular' size={4} />
-              {t('api-key.save.label')}
-            </Button>
-            <Button onClick={handleClear} disabled={!existing} variant='ghost'>
-              <Icon icon='ph--trash--regular' size={4} />
-              {t('api-key.clear.label')}
-            </Button>
-          </div>
-        </Settings.Item>
-        <Settings.FieldSet schema={SettingsType.Settings} values={settings} onValuesChanged={onSettingsChange} />
-      </Settings.Section>
-    </Settings.Viewport>
+    <Form.Root
+      schema={SettingsType.Settings}
+      values={settings}
+      variant='settings'
+      onValuesChanged={(values) => onSettingsChange({ ...settings, ...values })}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+            <Form.Row label={t('api-key.label')}>
+              <Input.Root>
+                <Input.TextInput
+                  type='password'
+                  placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
+                  value={draft}
+                  onChange={(event) => {
+                    touchedRef.current = true;
+                    setDraft(event.target.value);
+                  }}
+                  onBlur={handleCommit}
+                />
+              </Input.Root>
+            </Form.Row>
+            <Form.FieldSet />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

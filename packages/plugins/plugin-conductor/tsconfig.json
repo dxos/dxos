@@ -71,10 +71,10 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-automation"
+      "path": "../plugin-client"
     },
     {
-      "path": "../plugin-client"
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

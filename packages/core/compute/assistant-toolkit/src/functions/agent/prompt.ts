@@ -18,7 +18,7 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import { Template, Trace, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -26,11 +26,19 @@ import { trim } from '@dxos/util';
 
 import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
-import { AgentPrompt } from './definitions';
+import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
 
-export default AgentPrompt.pipe(
+const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
+  // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
+  if ('$id' in output && output.$id === '/schemas/unknown') {
+    return Schema.Any;
+  }
+  return JsonSchema.toEffectSchema(output);
+};
+
+export default RunInstructions.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* (data) {
@@ -41,24 +49,32 @@ export default AgentPrompt.pipe(
           : Effect.succeed(data.input);
 
         yield* Database.flush();
-        const prompt = yield* Database.load(data.prompt);
-        yield* Trace.emitStatus(`Running ${prompt.id}`);
+        const instructions = yield* Database.load(data.instructions);
+        yield* Trace.emitStatus(`Running ${instructions.id}`);
 
-        log.info('starting agent', { prompt: prompt.id, input });
+        log.info('starting agent', { instructions: instructions.id, input });
 
-        // Bind the routine's own refs, dropping any that no longer resolve. The refs must be
+        // Bind the instructions' own refs, dropping any that no longer resolve. The refs must be
         // bound as-is (not re-wrapped via `Ref.make`) to preserve their registry DXN: bindings
         // are persisted to the conversation feed, and registry-only blueprints have no space-DB
         // identity, so an EID ref would not resolve when the binding is re-read.
-        const blueprintRefs = yield* Effect.filter(prompt.blueprints, (ref) =>
+        const blueprintRefs = yield* Effect.filter(instructions.blueprints, (ref) =>
           Database.load(ref).pipe(
             Effect.as(true),
             Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
           ),
         );
 
-        const promptInstructions = yield* Database.load(prompt.instructions);
-        let promptText = Template.process(promptInstructions.content, input);
+        // Bind the instructions' context objects (sibling of blueprints), dropping any that no longer resolve.
+        const objectRefs = yield* Effect.filter(instructions.objects ?? [], (ref) =>
+          Database.load(ref).pipe(
+            Effect.as(true),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+          ),
+        );
+
+        const textDoc = yield* Database.load(instructions.text);
+        let promptText = Template.process(textDoc.content, input);
 
         if (input !== undefined) {
           promptText += `\n<input>${JSON.stringify(input)}</input>`;
@@ -90,7 +106,7 @@ export default AgentPrompt.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
+          output: routineOutputSchema(instructions.output),
           resultSink,
         });
 
@@ -100,6 +116,7 @@ export default AgentPrompt.pipe(
         yield* Effect.promise(() =>
           session.context.bind({
             blueprints: blueprintRefs,
+            objects: objectRefs,
           }),
         );
 
@@ -154,13 +171,13 @@ export default AgentPrompt.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Schema.Any;
+  output: Schema.Schema.All;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
       parameters: {
-        success: Schema.optional(Schema.Any), // TODO(dmaretskyi): Pipe output schema here.
+        success: Schema.optional(options.output),
         failure: Schema.optional(
           Schema.Struct({
             message: Schema.String.annotations({

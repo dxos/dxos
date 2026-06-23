@@ -19,7 +19,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldLabel } from '../../FormRow';
 import { presentationFor } from '../../presentation';
 
 // TODO(burdon): Factor out.
@@ -246,7 +246,9 @@ export const RefField = (props: RefFieldProps) => {
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}
                 createFieldMap={createFieldMap}
-                onCreate={handleCreate}
+                // Only offer inline create when the caller wired a handler; a resolvable `createSchema`
+                // alone is not enough (e.g. operation refs, whose objects can't be created ad hoc).
+                onCreate={onCreate ? handleCreate : undefined}
                 onSelect={handleSelect}
               />
             </ObjectPicker.Portal>

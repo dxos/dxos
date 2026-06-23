@@ -73,10 +73,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-feed"
+      "path": "../plugin-integration"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-magazine"
     },
     {
       "path": "../plugin-space"

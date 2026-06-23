@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 
 import { promptRunExtension } from '../extensions';
 
@@ -34,7 +34,7 @@ export default Capability.makeModule(
 
         return promptRunExtension({
           onRun: (promptText) => {
-            void invokePromise(AutomationOperation.RunPromptInNewChat, { db, prompt: promptText });
+            void invokePromise(RoutineOperation.RunPromptInNewChat, { db, instructions: promptText });
           },
         });
       },

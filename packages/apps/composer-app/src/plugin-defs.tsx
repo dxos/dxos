@@ -11,7 +11,6 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
@@ -30,7 +29,6 @@ import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
-import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
@@ -42,6 +40,7 @@ import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
+import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
@@ -60,7 +59,9 @@ import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
+import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';
 import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
@@ -141,7 +142,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
-      FeedPlugin.meta.profile.key,
+      MagazinePlugin.meta.profile.key,
       GalleryPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
@@ -151,6 +152,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
+      SandboxPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
@@ -179,7 +181,6 @@ export const getPlugins = ({
   return [
     AssistantPlugin(),
     AttentionPlugin(),
-    AutomationPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     CallsPlugin(),
@@ -208,7 +209,7 @@ export const getPlugins = ({
     DoctorPlugin(),
     DuffelPlugin(),
     ExplorerPlugin(),
-    FeedPlugin(),
+    MagazinePlugin(),
     GamePlugin(),
     GeneratorPlugin(),
     GraphPlugin(),
@@ -239,7 +240,9 @@ export const getPlugins = ({
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
+    RoutinePlugin(),
     isLocal && SamplePlugin(),
+    SandboxPlugin(),
     ScriptPlugin(),
     SearchPlugin(),
     (isDev || isLabs) && SidekickPlugin(),

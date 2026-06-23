@@ -4,15 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Filter, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
@@ -20,18 +21,18 @@ import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
 
-type DefaultStoryProps<T extends AnyProperties> = {
-  schema?: Schema.Schema<T>;
-} & FormRootProps<T>;
+type DefaultStoryProps<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
+  json = true,
   ...props
 }: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
+
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);
@@ -48,7 +49,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   return (
     <Tooltip.Provider>
-      <TestLayout json={{ values, schema: schema?.ast }}>
+      <TestLayout json={json ? { values, schema: schema?.ast } : undefined}>
         <Form.Root
           schema={schema}
           defaultValues={values}
@@ -59,7 +60,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport scroll>
             <Form.Content>
-              <Form.Section label='Section' description='This is a section' />
+              <Form.Section title='Section' description='This is a [section description](https://dxos.org).' />
               <Form.FieldSet />
               <Form.Actions />
             </Form.Content>
@@ -80,11 +81,12 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, Organization, Person],
+      types: [Tag.Tag, Organization, Person, Text.Text],
       onCreateSpace: ({ space }) => {
         [
           ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
           ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
+          Obj.make(Text.Text, { content: '# Brief\n\nEdit this **inline** markdown text.' }),
         ].map((obj) => space.db.add(obj));
       },
     }),
@@ -97,8 +99,6 @@ const meta = {
 
 export default meta;
 
-type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
-
 const PersonSchema = Type.getSchema(Person);
 
 const values: Partial<Person> = {
@@ -109,6 +109,8 @@ const values: Partial<Person> = {
   meetingAt: '2026-06-01T15:30:00.000Z',
   reminderAt: '09:00:00',
 };
+
+type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
 /**
  * Build a data-entry surface by handing an Effect schema to `Form.Root` — the form derives its fields,
@@ -144,6 +146,88 @@ export const Static: Story<ExcludeId<typeof PersonSchema>> = {
     schema: omitId(PersonSchema),
     values,
     layout: 'static',
+  },
+};
+
+const SettingsSchema = Schema.mutable(
+  Schema.Struct({
+    viewMode: Schema.Literal('preview', 'readonly', 'source').annotations({
+      title: 'Default view mode',
+      description: 'Set whether documents open in editing or read-only mode.',
+    }),
+    toolbar: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Show toolbar',
+        description: 'Display a formatting toolbar above the editor.',
+      }),
+    ),
+    fontSize: Schema.optional(
+      Schema.Number.annotations({ title: 'Font size', description: 'Editor font size, in pixels.' }),
+    ),
+  }),
+);
+
+export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
+  render: (args) => (
+    <div className='grid grid-cols-2 w-full'>
+      <DefaultStory {...args} />
+      <DefaultStory {...args} variant='settings' />
+    </div>
+  ),
+  args: {
+    json: false,
+    schema: SettingsSchema,
+    values: {
+      viewMode: 'preview',
+      toolbar: true,
+      fontSize: 14,
+    },
+  },
+};
+
+const InlineMarkdownTextSchema = Schema.mutable(
+  Schema.Struct({
+    text: Schema.String,
+    instructions: Ref.Ref(Text.Text).pipe(
+      Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+      Annotation.FormInlineAnnotation.set(true),
+      Schema.annotations({
+        title: 'Instructions',
+        description: 'Ref to a Text object with both markdown and inline-ref annotations.',
+      }),
+    ),
+  }),
+);
+
+const InlineMarkdownTextStory = (args: DefaultStoryProps<any>) => {
+  const spaces = useSpaces();
+  const space = spaces[0];
+  const [text] = useQuery(space?.db, Filter.type(Text.Text));
+  const values = useMemo(() => (text ? { instructions: Ref.make(text) } : undefined), [text]);
+
+  if (!space || !values) {
+    return <Loading />;
+  }
+
+  return (
+    <DefaultStory
+      {...args}
+      schema={InlineMarkdownTextSchema}
+      values={values}
+      onCreate={(_type, props) => space.db.add(Obj.make(Text.Text, { content: '', ...props }))}
+    />
+  );
+};
+
+/**
+ * Exercises a `Ref<Text>` field carrying both `Format.TypeFormat.Markdown` and
+ * `FormInlineAnnotation` — the markdown editor should render inline rather than
+ * opening a ref picker or nested struct form.
+ */
+export const InlineMarkdownText: Story<any> = {
+  render: (args) => <InlineMarkdownTextStory {...args} />,
+  args: {
+    autoSave: true,
   },
 };
 

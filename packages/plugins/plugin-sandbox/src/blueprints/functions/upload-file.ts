@@ -8,7 +8,7 @@ import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { SandboxClient } from '../../services/SandboxClient';
+import { createSandboxClient } from '../../services/sandbox-url';
 import { UploadFile } from './definitions';
 
 export default UploadFile.pipe(
@@ -23,8 +23,7 @@ export default UploadFile.pipe(
       const content = fileToString(loadedFile);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url ?? '';
-      const sandboxClient = new SandboxClient(edgeUrl);
+      const sandboxClient = createSandboxClient(client);
 
       yield* Effect.promise(() => sandboxClient.writeFile(spaceId, sandboxId, path, content));
 

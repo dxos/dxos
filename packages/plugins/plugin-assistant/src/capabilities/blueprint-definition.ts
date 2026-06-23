@@ -29,7 +29,7 @@ import {
   makeDelegationStrategy,
   makePlanCompletionGuard,
 } from '@dxos/assistant-toolkit';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { RoutineCapabilities } from '@dxos/plugin-routine';
 
 import { AssistantBlueprint } from '#blueprints';
 
@@ -60,8 +60,8 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
-    Capability.contributes(AutomationCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
-    Capability.contributes(AutomationCapabilities.AgentCompletionGuard, makePlanCompletionGuard()),
+    Capability.contributes(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+    Capability.contributes(RoutineCapabilities.AgentCompletionGuard, makePlanCompletionGuard()),
   ]);
 
 export default blueprintDefinition;

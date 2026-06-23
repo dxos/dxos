@@ -211,6 +211,9 @@
       "path": "packages/core/echo/echo-client-e2e/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-doc/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-generator/tsconfig.json"
     },
     {
@@ -319,9 +322,6 @@
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-automation/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-bluesky/tsconfig.json"
     },
     {
@@ -376,9 +376,6 @@
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-feed/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
@@ -410,6 +407,9 @@
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-magazine/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-map/tsconfig.json"
@@ -464,6 +464,9 @@
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-routine/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
