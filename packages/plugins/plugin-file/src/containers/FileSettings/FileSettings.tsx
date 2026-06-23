@@ -38,7 +38,7 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title')}>
+          <Form.Section title={meta.profile.name}>
             <Form.Row
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
