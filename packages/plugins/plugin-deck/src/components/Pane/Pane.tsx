@@ -48,8 +48,6 @@ PaneRoot.displayName = 'Pane.Root';
 // Toolbar
 //
 
-// Toolbar rail: 48px (--dx-rail-content) header that vertically centers its items.
-// Provides `lg` density so buttons resolve to 40px (--dx-rail-action), matching the sigil.
 const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
   return (
@@ -60,7 +58,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
       })}
       ref={forwardedRef}
     >
-      {asChild ? children : <DensityProvider density='lg'>{children}</DensityProvider>}
+      <DensityProvider density='lg'>{children}</DensityProvider>
     </Comp>
   );
 });

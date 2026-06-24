@@ -27,7 +27,7 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
     return <ErrorFallback title='Plank Error' error={error} />;
   }
 
-  const errorString = error?.toString() ?? '';
+  // Show only a generic message to end users; raw error details stay in logs / the dev fallback above.
   return (
     <div
       role='alert'
@@ -35,9 +35,7 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
       className='dx-attention-surface overflow-y-auto p-8 grid place-items-center'
     >
       <div className='flex flex-col items-center gap-2'>
-        <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
-          {error ? errorString : t('error-fallback.message')}
-        </p>
+        <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>{t('error-fallback.message')}</p>
       </div>
     </div>
   );
