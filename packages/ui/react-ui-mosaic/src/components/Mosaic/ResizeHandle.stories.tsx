@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Axis } from '@dxos/react-ui';
+import { ScrollArea, type Axis } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/ui-theme';
 
 import { Mosaic, type MosaicTileProps } from './Mosaic';
 
@@ -40,12 +39,15 @@ const ResizableTile = ({ data, size, onResize, ...tileProps }: ResizableTileProp
   );
 };
 
-const ResizableStackStory = ({ orientation }: { orientation: Axis }) => {
+const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
   const initial = orientation === 'horizontal' ? DEFAULT_HORIZONTAL : DEFAULT_VERTICAL;
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const [sizes, setSizes] = useState<Record<string, Size>>(() =>
     Object.fromEntries(ITEMS.map((item) => [item.id, initial])),
   );
+
   const handleSizeChange = useCallback((id: string, size: Size) => setSizes((prev) => ({ ...prev, [id]: size })), []);
+
   const Tile = useMemo(
     () => (tileProps: MosaicTileProps<Item>) => (
       <ResizableTile {...tileProps} size={sizes[tileProps.data.id]} onResize={handleSizeChange} />
@@ -55,10 +57,23 @@ const ResizableStackStory = ({ orientation }: { orientation: Axis }) => {
 
   return (
     <Mosaic.Root>
-      <Mosaic.Container orientation={orientation} eventHandler={{ id: 'resize-demo', canDrop: () => false }}>
-        <div className={mx('flex overflow-auto', orientation === 'horizontal' ? 'h-full' : 'flex-col w-full')}>
-          <Mosaic.Stack orientation={orientation} items={ITEMS} getId={(item) => item.id} draggable={false} Tile={Tile} />
-        </div>
+      <Mosaic.Container
+        asChild
+        orientation={orientation}
+        autoScroll={viewport}
+        eventHandler={{ id: 'resize-demo', canDrop: () => false }}
+      >
+        <ScrollArea.Root orientation={orientation}>
+          <ScrollArea.Viewport ref={setViewport}>
+            <Mosaic.Stack
+              orientation={orientation}
+              getId={(item) => item.id}
+              items={ITEMS}
+              draggable={false}
+              Tile={Tile}
+            />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Mosaic.Container>
     </Mosaic.Root>
   );
@@ -67,17 +82,24 @@ const ResizableStackStory = ({ orientation }: { orientation: Axis }) => {
 const meta: Meta = {
   title: 'ui/react-ui-mosaic/ResizeHandle',
   decorators: [withLayout({ layout: 'fullscreen' }), withTheme()],
-  parameters: { layout: 'fullscreen' },
+  render: (args) => <DefaultStory {...args} />,
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Horizontal: Story = {
-  render: () => <ResizableStackStory orientation='horizontal' />,
+  args: {
+    orientation: 'horizontal',
+  },
 };
 
 export const Vertical: Story = {
-  render: () => <ResizableStackStory orientation='vertical' />,
+  args: {
+    orientation: 'vertical',
+  },
 };

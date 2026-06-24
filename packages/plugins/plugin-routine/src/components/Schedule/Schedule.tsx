@@ -350,7 +350,6 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   <label key={day} className='flex items-center gap-1'>
                     <Input.Root>
                       <Input.Checkbox
-                        size={4}
                         checked={checked}
                         onCheckedChange={(next) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
