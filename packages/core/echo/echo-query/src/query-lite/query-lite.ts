@@ -61,6 +61,22 @@ export { Order2 as Order };
 
 // Local filter-match helpers used by FilterClass.toPredicate.
 // Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
+
+// Relational operators only order same-typed primitives or dates; returns undefined when the operands
+// are not mutually comparable so the caller treats the comparison as a non-match.
+const orderedCompare = (left: unknown, right: unknown): number | undefined => {
+  if (typeof left === 'number' && typeof right === 'number') {
+    return left - right;
+  }
+  if (typeof left === 'string' && typeof right === 'string') {
+    return left < right ? -1 : left > right ? 1 : 0;
+  }
+  if (left instanceof Date && right instanceof Date) {
+    return left.getTime() - right.getTime();
+  }
+  return undefined;
+};
+
 const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolean => {
   switch (filter.type) {
     case 'compare': {
@@ -69,14 +85,22 @@ const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolea
           return value === filter.value;
         case 'neq':
           return value !== filter.value;
-        case 'gt':
-          return (value as any) > (filter.value as any);
-        case 'gte':
-          return (value as any) >= (filter.value as any);
-        case 'lt':
-          return (value as any) < (filter.value as any);
-        case 'lte':
-          return (value as any) <= (filter.value as any);
+        case 'gt': {
+          const order = orderedCompare(value, filter.value);
+          return order !== undefined && order > 0;
+        }
+        case 'gte': {
+          const order = orderedCompare(value, filter.value);
+          return order !== undefined && order >= 0;
+        }
+        case 'lt': {
+          const order = orderedCompare(value, filter.value);
+          return order !== undefined && order < 0;
+        }
+        case 'lte': {
+          const order = orderedCompare(value, filter.value);
+          return order !== undefined && order <= 0;
+        }
         default:
           return false;
       }
@@ -87,7 +111,7 @@ const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolea
       }
       if (filter.props) {
         for (const [key, vf] of Object.entries(filter.props)) {
-          if (!_filterMatchValueLocal(vf, (value as any)[key])) {
+          if (!_filterMatchValueLocal(vf, Reflect.get(value, key))) {
             return false;
           }
         }
@@ -96,8 +120,13 @@ const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolea
     }
     case 'in':
       return filter.values.includes(value);
-    case 'range':
-      return (value as any) >= filter.from && (value as any) <= filter.to;
+    case 'range': {
+      const lower = orderedCompare(value, filter.from);
+      const upper = orderedCompare(value, filter.to);
+      return lower !== undefined && lower >= 0 && upper !== undefined && upper <= 0;
+    }
+    case 'contains':
+      return Array.isArray(value) && value.includes(filter.value);
     case 'not':
       return !_filterMatchValueLocal(filter.filter, value);
     case 'and':
@@ -121,6 +150,11 @@ const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean 
       if (filter.id && filter.id.length > 0 && !filter.id.includes(entity?.id)) {
         return false;
       }
+      // Meta-key and foreign-key matching is not implemented here; fail loudly rather than
+      // silently returning a false-positive match for `Filter.key()` / `Filter.foreignKeys()`.
+      if ((filter.foreignKeys?.length ?? 0) > 0 || filter.metaKey !== undefined) {
+        throw new Error('Meta-key and foreign-key filters are not supported in query-lite toPredicate.');
+      }
       if (filter.props) {
         for (const [key, vf] of Object.entries(filter.props)) {
           if (key.startsWith('@')) {
@@ -140,7 +174,7 @@ const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean 
     case 'or':
       return filter.filters.some((f) => _filterMatchEntityLocal(f, entity));
     default:
-      throw new Error(`Filter type '${(filter as any).type}' is not supported in toPredicate.`);
+      throw new Error(`Filter type '${filter.type}' is not supported in toPredicate.`);
   }
 };
 
