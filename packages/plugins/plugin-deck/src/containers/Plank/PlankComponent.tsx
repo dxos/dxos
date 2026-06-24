@@ -9,12 +9,13 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
-import { Panel, mainIntrinsicSize } from '@dxos/react-ui';
+import { mainIntrinsicSize } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSize } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
+import { Plank } from '#components';
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
 
@@ -93,9 +94,10 @@ export const PlankComponent = memo(
       ? DEFAULT_COMPANION_SIZE
       : ((plankSizing?.[sizeKey] as number | undefined) ?? DEFAULT_SIZE);
     const handleSizeChange = useCallback(
-      debounce((nextSize: number) => {
-        const size = Math.round(nextSize);
-        onResize?.(sizeKey, size);
+      debounce((nextSize: StackItemSize) => {
+        if (typeof nextSize === 'number') {
+          onResize?.(sizeKey, Math.round(nextSize));
+        }
       }, 200),
       [sizeKey, onResize],
     );
@@ -195,8 +197,7 @@ export const PlankComponent = memo(
     // `Panel.Root`'s `toolbar/content` grid replaces the former `railGridHorizontal` template.
     if (part.startsWith('solo')) {
       return (
-        <Panel.Root
-          role='article'
+        <Plank.Root
           ref={rootElement}
           data-testid='deck.plank'
           data-popover-collision-boundary={true}
@@ -205,15 +206,14 @@ export const PlankComponent = memo(
             commonClassNames,
             isSolo && ['absolute inset-0', mainIntrinsicSize],
             part === 'solo-companion' && 'border-separator! border-s',
-            'min-w-0',
           )}
           {...sizeAttrs}
           {...(isAttendable ? attentionAttrs : {})}
           onKeyDown={handleKeyDown}
         >
-          {heading && <Panel.Toolbar>{heading}</Panel.Toolbar>}
-          <Panel.Content>{body}</Panel.Content>
-        </Panel.Root>
+          {heading && <Plank.Toolbar>{heading}</Plank.Toolbar>}
+          <Plank.Content>{body}</Plank.Content>
+        </Plank.Root>
       );
     }
 
