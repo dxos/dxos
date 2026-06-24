@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Icon, IconButton } from '@dxos/react-ui';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Plank, type PlankTab } from './Plank';
@@ -24,9 +24,9 @@ const SplitStory = () => {
     <div className='w-full grid grid-cols-2 px-3 gap-3 bg-deck-surface'>
       <Plank.Root>
         <Plank.Toolbar>
-          <AttentionSigilButton attendableId='plank-main'>
+          <Plank.Sigil attendableId='plank-main'>
             <Icon icon='ph--circle-dashed--regular' />
-          </AttentionSigilButton>
+          </Plank.Sigil>
           <Plank.Title attendableId='plank-main'>Main plank</Plank.Title>
           <IconButton iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
           <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
@@ -38,7 +38,7 @@ const SplitStory = () => {
 
       <Plank.Root>
         <Plank.Toolbar>
-          <Plank.Tabs tabs={TABS} value={tab} onValueChange={setTab} />
+          <Plank.Tabs tabs={TABS} value={tab} onValueChange={setTab} attendableId='plank-main' />
           <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
         </Plank.Toolbar>
         <Plank.Content classNames='grid place-items-center text-description'>
@@ -54,7 +54,7 @@ const SplitStory = () => {
 
 const meta: Meta = {
   title: 'plugins/plugin-deck/components/Plank',
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention('plank-main')],
   render: () => <SplitStory />,
   parameters: { layout: 'fullscreen' },
 };

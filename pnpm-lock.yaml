@@ -9924,6 +9924,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form

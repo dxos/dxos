@@ -5,6 +5,7 @@
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
+import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
@@ -27,7 +28,8 @@ const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, ...pro
   <div
     {...composableProps(props, {
       role: 'article',
-      classNames: 'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-lg min-w-0',
+      classNames:
+        'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-lg min-w-0',
     })}
     ref={forwardedRef}
   >
@@ -94,34 +96,43 @@ export type PlankTab = {
   label: string;
 };
 
-type PlankTabsProps = ThemedClassName<{
-  tabs: ReadonlyArray<PlankTab>;
-  value?: string;
-  onValueChange?: (id: string) => void;
-  /** Collapse inactive tabs to icon-only once the tab count exceeds this. */
-  maxLabels?: number;
-}>;
+type PlankTabsProps = ThemedClassName<
+  {
+    tabs: ReadonlyArray<PlankTab>;
+    value?: string;
+    onValueChange?: (id: string) => void;
+    /** Collapse inactive tabs to icon-only once the tab count exceeds this. */
+    maxLabels?: number;
+  } & AttendableId &
+    Related
+>;
 
 /** Full-height tab strip for a companion plank's toolbar; selects among available companions. */
 const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
-  ({ tabs, value, onValueChange, maxLabels = 5, classNames }, forwardedRef) => (
-    <div
-      className={mx('flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
-      ref={forwardedRef}
-    >
-      {tabs.map(({ id, icon, label }) => (
-        <IconButton
-          key={id}
-          data-id={id}
-          icon={icon}
-          iconOnly={tabs.length > maxLabels && value !== id}
-          label={label}
-          variant={value === id ? 'primary' : 'ghost'}
-          onClick={() => onValueChange?.(id)}
-        />
-      ))}
-    </div>
-  ),
+  ({ tabs, value, onValueChange, maxLabels = 5, attendableId, related, classNames }, forwardedRef) => {
+    // The active tab only reads as primary when the plank (shared with its companion) is attended.
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
+    const attended = (related && isRelated) || hasAttention || isAncestor;
+    return (
+      <div
+        className={mx('flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
+        ref={forwardedRef}
+      >
+        {tabs.map(({ id, icon, label }) => (
+          <IconButton
+            key={id}
+            data-id={id}
+            size={5}
+            icon={icon}
+            iconOnly={tabs.length > maxLabels && value !== id}
+            label={label}
+            variant={value === id && attended ? 'primary' : 'ghost'}
+            onClick={() => onValueChange?.(id)}
+          />
+        ))}
+      </div>
+    );
+  },
 );
 
 PlankTabs.displayName = 'Plank.Tabs';
@@ -129,9 +140,10 @@ PlankTabs.displayName = 'Plank.Tabs';
 export const Plank = {
   Root: PlankRoot,
   Toolbar: PlankToolbar,
-  Content: PlankContent,
+  Sigil: AttentionSigilButton,
   Title: PlankTitle,
   Tabs: PlankTabs,
+  Content: PlankContent,
 };
 
 export type { PlankRootProps, PlankTitleProps, PlankTabsProps };
