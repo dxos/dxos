@@ -25,13 +25,8 @@ import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import {
-  MAILBOXES_SECTION_TYPE,
-  MAILBOX_ALL_MAIL_TYPE,
-  MAILBOX_DRAFTS_NODE_DATA,
-  MAILBOX_DRAFTS_TYPE,
-} from '../constants';
-import { getAllMailId, getCalendarsPath, getDraftsId, getMailboxesSectionId, getMailboxesPath } from '../paths';
+import { MAILBOXES_SECTION_TYPE, MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE } from '../constants';
+import { getCalendarsPath, getDraftsId, getMailboxesSectionId, getMailboxesPath } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -184,27 +179,15 @@ export default Capability.makeModule(
               return Node.make({
                 id: mailboxSnapshot.id,
                 type: Type.getTypename(Mailbox.Mailbox),
-                data: null,
+                data: mailbox,
                 properties: {
                   label: mailboxSnapshot.name ?? ['object-name.placeholder', { ns: Type.getTypename(Mailbox.Mailbox) }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  mailbox,
                   modifiedCount,
                 },
                 nodes: [
-                  Node.make({
-                    id: getAllMailId(),
-                    type: MAILBOX_ALL_MAIL_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: ['all-mail.label', { ns: meta.profile.key }],
-                      icon: 'ph--envelope--regular',
-                      iconHue: 'rose',
-                      filter: null,
-                    },
-                  }),
                   Node.make({
                     id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
@@ -224,12 +207,26 @@ export default Capability.makeModule(
                       properties: {
                         label: name,
                         icon: 'ph--funnel--regular',
-                        iconHue: 'blue',
+                        iconHue: 'rose',
                         filter,
                       },
-                      nodes: [
+                      actions: [
                         Node.makeAction({
-                          id: `filter-${kebabize(name)}-delete`,
+                          id: 'rename-filter',
+                          data: (params?: Node.InvokeProps) =>
+                            Operation.invoke(InboxOperation.RenameFilter, {
+                              mailbox,
+                              name,
+                              caller: `${params?.caller}:${params?.parent?.id}`,
+                            }),
+                          properties: {
+                            label: ['rename-filter.label', { ns: meta.profile.key }],
+                            icon: 'ph--pencil-simple--regular',
+                            disposition: 'list-item',
+                          },
+                        }),
+                        Node.makeAction({
+                          id: 'delete-filter',
                           data: () =>
                             Effect.sync(() => {
                               Obj.update(mailbox, (mailbox) => {
@@ -368,31 +365,12 @@ export default Capability.makeModule(
 
       TypeSection.createTypeSectionExtension(Calendar.Calendar, {
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'calendarsSectionActions',
-        match: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === calendarTypename && space ? Option.some(space) : Option.none();
-        },
-        actions: (space) =>
-          Effect.succeed([
-            Node.makeAction({
-              id: 'create-calendar',
-              data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
-                  target: space.db,
-                  typename: calendarTypename,
-                  targetNodeId: getCalendarsPath(space.db.spaceId),
-                }),
-              properties: {
-                label: ['add-object.label', { ns: calendarTypename }],
-                icon: 'ph--plus--regular',
-                disposition: 'list-item-primary',
-              },
-            }),
-          ]),
+        createObject: (space) =>
+          Operation.invoke(SpaceOperation.OpenCreateObject, {
+            target: space.db,
+            typename: calendarTypename,
+            targetNodeId: getCalendarsPath(space.db.spaceId),
+          }),
       }),
 
       GraphBuilder.createExtension({
@@ -518,7 +496,11 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: 'syncMailbox',
-        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        // Filter nodes store the parent mailbox as node.data; exclude them so sync only appears on the mailbox itself.
+        match: (node) =>
+          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           if (!db) {

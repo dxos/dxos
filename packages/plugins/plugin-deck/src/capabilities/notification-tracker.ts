@@ -58,9 +58,7 @@ export default Capability.makeModule(
           continue;
         }
 
-        const notify = Annotation.getDictionary(process.params.annotations, Process.NotifyAnnotation).pipe(
-          Option.getOrUndefined,
-        );
+        const notify = Option.getOrNull(Annotation.getDictionary(process.params.annotations, Process.NotifyAnnotation));
         if (!notify) {
           continue;
         }

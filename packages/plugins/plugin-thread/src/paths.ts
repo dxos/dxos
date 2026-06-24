@@ -7,6 +7,7 @@ import { Channel } from '@dxos/types';
 
 const { getSectionPath: getChannelsPath, getObjectPath: getChannelPath } = Paths.createTypeSectionPaths(
   Channel.Channel,
+  { groupId: Paths.GroupSegments.communications },
 );
 
 export { getChannelsPath, getChannelPath };

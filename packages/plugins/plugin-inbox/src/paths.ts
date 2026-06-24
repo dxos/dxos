@@ -9,6 +9,7 @@ import { Calendar } from '#types';
 
 const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Paths.createTypeSectionPaths(
   Calendar.Calendar,
+  { groupId: Paths.GroupSegments.communications },
 );
 
 /** Well-known local segment names (private — use the path helpers below). */
@@ -22,7 +23,8 @@ const Segments = {
 export const getMailboxesSectionId = (): string => Segments.mailboxes;
 
 /** Canonical qualified path to the mailboxes section of a space. */
-export const getMailboxesPath = (spaceId: string): string => Paths.getSpacePath(spaceId, Segments.mailboxes);
+export const getMailboxesPath = (spaceId: string): string =>
+  Paths.getSpacePath(spaceId, Paths.GroupSegments.communications, Segments.mailboxes);
 
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>

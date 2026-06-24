@@ -860,6 +860,7 @@ const qualifyNodeArgs =
         ...node,
         id: qualified,
         nodes: node.nodes ? qualifyNodeArgs(qualified)(node.nodes) : undefined,
+        actions: node.actions ? qualifyNodeArgs(qualified)(node.actions) : undefined,
       };
     });
 
@@ -869,9 +870,12 @@ const qualifyNodeArgs =
  * already tracked via `_connectorPrevious`.
  */
 const collectAllInlineIds = (nodes: Node.NodeArg<any>[]): string[] =>
-  nodes.flatMap((node) =>
-    node.nodes ? [...node.nodes.map((child) => child.id), ...collectAllInlineIds(node.nodes)] : [],
-  );
+  nodes.flatMap((node) => {
+    const childNodes = node.nodes ?? [];
+    const actionNodes = node.actions ?? [];
+    const allInline = [...childNodes, ...actionNodes];
+    return allInline.length > 0 ? [...allInline.map((child) => child.id), ...collectAllInlineIds(allInline)] : [];
+  });
 
 const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 

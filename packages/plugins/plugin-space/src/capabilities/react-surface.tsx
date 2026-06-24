@@ -10,7 +10,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -44,6 +44,7 @@ import {
   SyncStatus,
   TypeCollectionArticle,
   ViewEditor,
+  type RenameSubject,
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -326,7 +327,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: RENAME_POPOVER,
-        filter: AppSurface.component<Space | Entity.Unknown>(AppSurface.Popover, RENAME_POPOVER),
+        filter: AppSurface.component<RenameSubject>(AppSurface.Popover, RENAME_POPOVER),
         component: ({ data }) => <RenamePopover subject={data.props} />,
       }),
       Surface.create({
