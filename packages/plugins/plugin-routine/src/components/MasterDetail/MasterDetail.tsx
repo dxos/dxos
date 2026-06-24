@@ -4,7 +4,16 @@
 
 import React, { type ReactNode, useCallback } from 'react';
 
-import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import {
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Tooltip,
+  type ThemedClassName,
+  toLocalizedString,
+  useTranslation,
+  type Label,
+} from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
@@ -14,6 +23,17 @@ import { mx } from '@dxos/ui-theme';
 // form, a draft form, etc.) and the selection state.
 
 export type MasterDetailRecord = { id: string };
+
+/** Icon + tooltip label shown after the row label, e.g. a status warning badge. */
+export type MasterDetailAdornment = { icon: string; label: Label };
+
+/** A single option in the create dropdown. */
+export type MasterDetailCreateOption = {
+  id: string;
+  label: Label;
+  icon?: string;
+  onClick: () => void;
+};
 
 export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   items: readonly T[];
@@ -25,7 +45,14 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   getLabel: (item: T) => ReactNode;
   /** Optional Phosphor icon name shown at the start of each row. */
   getIcon?: (item: T) => string;
-  /** Create affordance rendered in the header; omitted when not provided. */
+  /** Optional icon + tooltip label rendered after the row label (e.g. a status warning badge). */
+  getAdornment?: (item: T) => MasterDetailAdornment | undefined;
+  /**
+   * When provided, the `+` button opens a dropdown with these options. When omitted, the button
+   * calls `onCreate` directly (current default behaviour).
+   */
+  createOptions?: MasterDetailCreateOption[];
+  /** Direct-click create handler; used when `createOptions` is not provided. */
   onCreate?: () => void;
   createLabel?: string;
   /** Message shown when there are no items. */
@@ -43,18 +70,26 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   onDelete,
   getLabel,
   getIcon,
+  getAdornment,
+  createOptions,
   onCreate,
   createLabel,
   emptyLabel,
   detail,
 }: MasterDetailProps<T>) => {
+  const hasCreate = createOptions || (onCreate && createLabel);
   return (
     <div role='none' className={mx('flex flex-col min-bs-0', classNames)}>
-      {(onCreate || emptyLabel) && (
+      {(hasCreate || emptyLabel) && (
         <div role='none' className='flex items-center min-bs-[--dx-rail-item] pis-2'>
           <span className='grow truncate text-sm text-description'>{items.length === 0 ? emptyLabel : null}</span>
-          {onCreate && createLabel && (
-            <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={createLabel} onClick={onCreate} />
+          {createOptions ? (
+            <CreateDropdown options={createOptions} label={createLabel} />
+          ) : (
+            onCreate &&
+            createLabel && (
+              <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={createLabel} onClick={onCreate} />
+            )
           )}
         </div>
       )}
@@ -70,6 +105,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
                   selected={item.id === selectedId}
                   label={getLabel(item)}
                   icon={getIcon?.(item)}
+                  adornment={getAdornment?.(item)}
                   onSelect={onSelect}
                   onDelete={onDelete}
                 />
@@ -88,11 +124,36 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   );
 };
 
+const CreateDropdown = ({ options, label }: { options: MasterDetailCreateOption[]; label?: string }) => {
+  const { t } = useTranslation();
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={label ?? ''} />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            {options.map((option) => (
+              <DropdownMenu.Item key={option.id} onClick={option.onClick}>
+                {option.icon && <Icon icon={option.icon} size={4} />}
+                <span>{toLocalizedString(option.label, t)}</span>
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+};
+
 const MasterDetailRow = <T extends MasterDetailRecord>({
   item,
   selected,
   label,
   icon,
+  adornment,
   onSelect,
   onDelete,
 }: {
@@ -100,9 +161,11 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   selected: boolean;
   label: ReactNode;
   icon?: string;
+  adornment?: MasterDetailAdornment;
   onSelect?: (id: string | undefined) => void;
   onDelete?: (item: T) => void;
 }) => {
+  const { t } = useTranslation();
   const handleDelete = useCallback(() => onDelete?.(item), [onDelete, item]);
   return (
     <OrderedList.Item
@@ -116,6 +179,13 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
     >
       {icon && <Icon icon={icon} size={4} classNames='mie-2 shrink-0' />}
       <span className='grow truncate'>{label}</span>
+      {adornment && (
+        <Tooltip.Provider>
+          <Tooltip.Trigger asChild side='bottom' content={toLocalizedString(adornment.label, t)}>
+            <Icon icon={adornment.icon} size={4} classNames='shrink-0 mie-1' />
+          </Tooltip.Trigger>
+        </Tooltip.Provider>
+      )}
       {onDelete && (
         <OrderedList.DeleteButton
           autoHide

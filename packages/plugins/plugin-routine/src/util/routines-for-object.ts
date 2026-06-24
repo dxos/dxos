@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Trigger } from '@dxos/compute';
+import { Instructions, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { Routine } from '#types';
 
 /**
- * Reactive query for the routines connected to an object O — without a stored association field.
+ * Reactive query for the routines connected to an object O via its triggers — without a stored
+ * association field.
  *
  * Association is derived: a routine is connected when one of its triggers references O, either via a
  * `Ref` anywhere in the trigger's `input` (e.g. a magazine passed into RunInstructions's input) or via a feed
@@ -16,6 +17,9 @@ import { Routine } from '#types';
  * by reverse-reference traversal because ECHO's reverse-ref index is structural — it records every ref in a
  * document regardless of schema path (incl. untyped records and union-nested fields). The traversal is two
  * hops: O ← Trigger ← Routine.
+ *
+ * Supplement with {@link instructionsForObjectQuery} to also catch routines connected via their owned
+ * instructions' `objects` array (parent traversal is not queryable, so the companion merges both).
  */
 export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine.Routine> => {
   // Triggers referencing O directly (any path, incl. nested in the untyped `input` record).
@@ -25,6 +29,16 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
   const byFeed = Query.select(Filter.id(object.id)).reference('feed').referencedBy(Trigger.Trigger);
   return Query.all(byInput, byFeed).referencedBy(Routine.Routine, 'triggers');
 };
+
+/**
+ * Reactive query for Instructions objects that include O in their `objects` context array.
+ *
+ * The parent hop from Instructions to its owning Routine is not expressible as an ECHO query (the parent
+ * link is stored as a symbol, not a Ref field). Callers must resolve parent routines in JavaScript via
+ * {@link Obj.getParent} and merge with {@link connectedRoutinesQuery}.
+ */
+export const instructionsForObjectQuery = (object: Obj.Unknown): Query.Query<Instructions.Instructions> =>
+  Query.select(Filter.id(object.id)).referencedBy(Instructions.Instructions, 'objects');
 
 /**
  * Pure predicate equivalent of {@link connectedRoutinesQuery}, over a pre-queried list of routines.

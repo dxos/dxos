@@ -30,14 +30,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [
-      Routine.Routine,
-      Routine.AppliesTo,
-      Operation.PersistentOperation,
-      Instructions.Instructions,
-      Trigger.Trigger,
-      Trace.Message,
-    ],
+    schema: [Routine.Routine, Operation.PersistentOperation, Instructions.Instructions, Trigger.Trigger, Trace.Message],
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
