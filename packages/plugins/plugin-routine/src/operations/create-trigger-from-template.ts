@@ -18,18 +18,18 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
       Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
         const trigger = Trigger.make({ enabled, input });
 
-        // TODO(wittjosiah): Factor out function lookup by script name?
+        // TODO(wittjosiah): Factor out operation lookup by script name?
         if (scriptName) {
           const scripts = yield* Effect.promise(() => db.query(Filter.type(Script.Script, { name: scriptName })).run());
           const [script] = scripts;
           if (script) {
-            const functions = yield* Effect.promise(() =>
+            const operations = yield* Effect.promise(() =>
               db.query(Filter.type(Operation.PersistentOperation, { source: Ref.make(script) })).run(),
             );
-            const [fn] = functions;
-            if (fn) {
+            const [operation] = operations;
+            if (operation) {
               Obj.update(trigger, (trigger) => {
-                trigger.runnable = Ref.make(fn);
+                trigger.runnable = Ref.make(operation);
               });
             }
           }
