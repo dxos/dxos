@@ -75,8 +75,7 @@ const segmentClassNames =
   'data-[invalid]:text-rose-500 ' +
   'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
 
-const timeSegmentClassNames =
-  `${segmentClassNames} data-[type=dayPeriod]:text-xs data-[type=dayPeriod]:text-description`;
+const timeSegmentClassNames = `${segmentClassNames} data-[type=dayPeriod]:text-xs data-[type=dayPeriod]:text-description`;
 
 // Match bidi format characters (LRI/RLI/PDI/LRE/RLE/PDF/LRO/RLO) that React Aria inserts to
 // isolate locale-formatted portions. These are invisible glyphs but the browser still gives
