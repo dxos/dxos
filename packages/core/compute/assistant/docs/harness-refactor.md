@@ -43,12 +43,12 @@ turn the plan reminder into a real blueprint hook.
 Each communication path with a process has one job. Keeping them separate is the
 organizing principle of this refactor.
 
-| Plane             | Mechanism                         | Semantics                                  |
-| ----------------- | --------------------------------- | ------------------------------------------ |
-| Work queue        | `Handle.submitInput` / input events | Durable, ordered, replayed on hydrate      |
-| Control plane     | Process RPC (`@effect/rpc`)       | Transient, request/response, live-only     |
-| Durable state     | `StorageService`                  | Per-process persisted key/value            |
-| Identity / role   | `Process.Params.annotations`      | Set once at spawn, immutable, discoverable |
+| Plane           | Mechanism                           | Semantics                                  |
+| --------------- | ----------------------------------- | ------------------------------------------ |
+| Work queue      | `Handle.submitInput` / input events | Durable, ordered, replayed on hydrate      |
+| Control plane   | Process RPC (`@effect/rpc`)         | Transient, request/response, live-only     |
+| Durable state   | `StorageService`                    | Per-process persisted key/value            |
+| Identity / role | `Process.Params.annotations`        | Set once at spawn, immutable, discoverable |
 
 Consequences:
 
@@ -76,8 +76,8 @@ So Harness methods split by reachability:
 - **Tier B** (`setAlarm`, `enqueueMessage`) — mutate live `AgentProcess` state. Require a
   channel to the owning process. Return `NotSupportedError` when no live owner exists.
 
-Liveness is guaranteed by construction: a Tier-B-using operation is spawned *during the
-agent's turn*, which runs inside the live agent process. The owner is therefore always live
+Liveness is guaranteed by construction: a Tier-B-using operation is spawned _during the
+agent's turn_, which runs inside the live agent process. The owner is therefore always live
 when Tier B is invoked; `NotSupportedError` is a resolution-time concern (no agent owns this
 conversation — stories, standalone sessions), not a runtime race.
 
@@ -110,8 +110,12 @@ Process.make(
         // handlers run against the same StorageService / closed-over state as the
         // lifecycle callbacks.
         rpcHandlers: yield* rpcs.toHandlersContext({
-          getValue: Effect.fn(function* () { /* read storage */ }),
-          setValue: Effect.fn(function* ({ value }) { /* write storage */ }),
+          getValue: Effect.fn(function* () {
+            /* read storage */
+          }),
+          setValue: Effect.fn(function* ({ value }) {
+            /* write storage */
+          }),
         }),
       };
     }),
@@ -185,13 +189,14 @@ export const HarnessHostAnnotation = Annotation.make({
 `AgentProcess` stamps it at spawn (alongside `target`):
 
 ```ts
-yield* processManager.spawn(executable, {
-  name: 'Agent',
-  target,
-  annotations: Annotation.buildDictionary((d) => {
-    Annotation.setDictionary(d, Process.HarnessHostAnnotation, true);
-  }),
-});
+yield *
+  processManager.spawn(executable, {
+    name: 'Agent',
+    target,
+    annotations: Annotation.buildDictionary((d) => {
+      Annotation.setDictionary(d, Process.HarnessHostAnnotation, true);
+    }),
+  });
 ```
 
 `ProcessManager.list`/`Handle` must surface `params.annotations` (it already exposes `params`;
@@ -230,17 +235,14 @@ const owningHost = Effect.gen(function* () {
   const host = procs.find(
     (p) =>
       !isTerminal(p.status.state) &&
-      Option.getOrElse(
-        Annotation.getDictionary(p.params.annotations, Process.HarnessHostAnnotation),
-        () => false,
-      ),
+      Option.getOrElse(Annotation.getDictionary(p.params.annotations, Process.HarnessHostAnnotation), () => false),
   );
   return host ?? (yield* Effect.fail(new NotSupportedError()));
 });
 
 // HarnessService.setAlarm:
-const host = yield* owningHost;
-yield* host.rpc.setAlarm({ at, message });
+const host = yield * owningHost;
+yield * host.rpc.setAlarm({ at, message });
 ```
 
 The `host.rpc.setAlarm(...)` call runs the handler on the host's server fiber (§4.3), inside
@@ -367,7 +369,7 @@ additions, 4 is the breaking consolidation.
    `ContentBlock[]`. Decide whether the external work-queue API (`submitInput`) stays
    `string`-only while internal enqueue is rich content.
 4. **Ephemeral stop/continue check**: keep (inside the hook fn) or drop.
-5. **Tier-B accounting**: if a future Tier-B RPC can be issued *outside* an active turn (e.g. a
+5. **Tier-B accounting**: if a future Tier-B RPC can be issued _outside_ an active turn (e.g. a
    detached supervisor poking a hibernating agent), revisit whether `Handle.rpc` needs to bump
    `#activeHandlers` to prevent a race into `IDLE` before the durable effect persists.
 

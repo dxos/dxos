@@ -27,8 +27,7 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.provide(Effect.scoped(effect), TestLayer);
+const provideTestLayers = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.provide(Effect.scoped(effect), TestLayer);
 
 /**
  * Creates a conversation feed and a {@link AiContext.Binder} over it. Operations run against the

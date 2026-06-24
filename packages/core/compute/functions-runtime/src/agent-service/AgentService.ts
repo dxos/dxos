@@ -28,8 +28,7 @@ import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
-type AgentRpcs =
-  ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
+type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
 
 /** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
 type AgentHandle = ProcessManager.Handle<string, void, AgentRpcs>;
@@ -102,10 +101,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // The agent's model is bound to its process at spawn time, so the cache tracks the model
       // each session was created with. Requesting a different model for the same feed tears down
       // the old process and spawns a fresh one (see below).
-      const sessionCache = new Map<
-        string,
-        { model: ModelName | undefined; handle: AgentHandle; session: Session }
-      >();
+      const sessionCache = new Map<string, { model: ModelName | undefined; handle: AgentHandle; session: Session }>();
 
       const makeExecutable = (model?: ModelName) =>
         AgentProcess({
@@ -201,11 +197,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
     }),
   );
 
-const makeSession = (
-  process: AgentHandle,
-  feed: Feed.Feed,
-  releaseSession: () => void,
-): Session => ({
+const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () => void): Session => ({
   feed,
   getContext: () =>
     Effect.gen(function* () {

@@ -3,8 +3,8 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:executing-plans` (or
 > `superpowers:subagent-driven-development`) to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking. Read the design spec
-> [`harness-refactor.md`](./harness-refactor.md) first — it is the source of truth for *why*;
-> this document is the *how*.
+> [`harness-refactor.md`](./harness-refactor.md) first — it is the source of truth for _why_;
+> this document is the _how_.
 
 **Goal:** Consolidate the agent control plane into a single `HarnessService` reachable from
 child processes via process RPC, externalize the alarm toolkit and the plan-completion reminder
@@ -25,20 +25,20 @@ runtime, `LayerSpec`/`ServiceResolver` DI, ECHO `Annotation`, vitest.
 
 ## Orientation — key files
 
-| Area | File |
-| --- | --- |
-| Process definition + `Params` + annotations | `packages/core/compute/compute/src/Process.ts` |
-| Process runtime (spawn, list, handle) | `packages/core/compute/compute-runtime/src/ProcessManager.ts` |
-| Process handle impl | `packages/core/compute/compute-runtime/src/ProcessHandle.ts` |
-| Storage cells | `packages/core/compute/compute/src/StorageService.ts` |
-| Blueprint schema + hooks | `packages/core/compute/compute/src/Blueprint.ts` |
-| ECHO annotations API | `packages/core/echo/echo/src/Annotation.ts` |
-| Harness service (stub) | `packages/core/compute/assistant/src/session/Harness.ts` |
-| Deprecated services | `packages/core/compute/assistant/src/session/AiContext.ts`, `AiSession.ts` |
-| Agent process (alarm/queue/guard) | `packages/core/compute/functions-runtime/src/agent-service/agent-process.ts` |
-| Agent spawn site | `packages/core/compute/functions-runtime/src/agent-service/AgentService.ts:172` |
-| Completion guard (to remove) | `packages/core/compute/functions-runtime/src/agent-service/completion-guard.ts` |
-| Planning blueprint | `packages/core/compute/assistant-toolkit/src/blueprints/planning/` |
+| Area                                        | File                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------- |
+| Process definition + `Params` + annotations | `packages/core/compute/compute/src/Process.ts`                                  |
+| Process runtime (spawn, list, handle)       | `packages/core/compute/compute-runtime/src/ProcessManager.ts`                   |
+| Process handle impl                         | `packages/core/compute/compute-runtime/src/ProcessHandle.ts`                    |
+| Storage cells                               | `packages/core/compute/compute/src/StorageService.ts`                           |
+| Blueprint schema + hooks                    | `packages/core/compute/compute/src/Blueprint.ts`                                |
+| ECHO annotations API                        | `packages/core/echo/echo/src/Annotation.ts`                                     |
+| Harness service (stub)                      | `packages/core/compute/assistant/src/session/Harness.ts`                        |
+| Deprecated services                         | `packages/core/compute/assistant/src/session/AiContext.ts`, `AiSession.ts`      |
+| Agent process (alarm/queue/guard)           | `packages/core/compute/functions-runtime/src/agent-service/agent-process.ts`    |
+| Agent spawn site                            | `packages/core/compute/functions-runtime/src/agent-service/AgentService.ts:172` |
+| Completion guard (to remove)                | `packages/core/compute/functions-runtime/src/agent-service/completion-guard.ts` |
+| Planning blueprint                          | `packages/core/compute/assistant-toolkit/src/blueprints/planning/`              |
 
 ## Conventions (read before starting)
 
@@ -66,6 +66,7 @@ type-check. Finish it before adding features. Design: `target` and `notify` move
 `Params.annotations` via annotations (`TargetAnnotation` already exists at `Process.ts:160`).
 
 **Files:**
+
 - Modify: `packages/core/compute/compute/src/Process.ts` (add `NotifyAnnotation`)
 - Modify: `packages/core/compute/compute-runtime/src/ProcessManager.ts` (`SpawnOptions`,
   `ListOptions`, `matchesListOptions`, spawn params build ~`:437`, persistence reads ~`:594`,
@@ -89,7 +90,7 @@ Find the current `notify` schema (it was `Process.Params['notify']`); if it was 
 define a `NotifyOptions` `Schema.Struct` in `Process.ts` and use it here.
 
 - [ ] **Step 2: Route `target`/`notify` through annotations at spawn.** In `ProcessManager.spawn`
-  (`~:437`) build the dictionary from `SpawnOptions` and merge any caller-supplied `annotations`:
+      (`~:437`) build the dictionary from `SpawnOptions` and merge any caller-supplied `annotations`:
 
 ```ts
 const annotations = Annotation.buildDictionary((dict) => {
@@ -104,17 +105,17 @@ Add `readonly annotations?: Annotation.Dictionary;` to `SpawnOptions`. Keep `tar
 `SpawnOptions` as ergonomic shorthands that fold into the dictionary above.
 
 - [ ] **Step 3: Replace `params.target`/`params.notify` reads with annotation lookups.** At each
-  persistence/list site (`:594`, `:648`, `:856`, `:935`, `matchesListOptions` `:199`), derive the
-  value via `Annotation.getDictionary(params.annotations, Process.TargetAnnotation)` (returns
-  `Option`). Persist `annotations` (already JSON-encodable) instead of separate `target`/`notify`
-  columns; on hydrate, read them back from the persisted dictionary. The `list({ target })` filter
-  compares the decoded `TargetAnnotation` value.
+      persistence/list site (`:594`, `:648`, `:856`, `:935`, `matchesListOptions` `:199`), derive the
+      value via `Annotation.getDictionary(params.annotations, Process.TargetAnnotation)` (returns
+      `Option`). Persist `annotations` (already JSON-encodable) instead of separate `target`/`notify`
+      columns; on hydrate, read them back from the persisted dictionary. The `list({ target })` filter
+      compares the decoded `TargetAnnotation` value.
 
 - [ ] **Step 4: Fix `Handle` arity.** Replace every `ProcessManager.Handle<I, O>` with
-  `Handle<I, O, never>` (or the concrete RPC group where applicable). Change `Handle.Any` to
-  `Handle<any, any, any>` (so the implemented `rpc: RpcClient<any>` is assignable — see spec §4.4).
-  Add `readonly rpc: RpcClient.RpcClient<never>` (an empty client) to `DormantHandle`, built once
-  via `RpcTest.makeClient(RpcGroup.make())` provided an empty scope, or a shared empty constant.
+      `Handle<I, O, never>` (or the concrete RPC group where applicable). Change `Handle.Any` to
+      `Handle<any, any, any>` (so the implemented `rpc: RpcClient<any>` is assignable — see spec §4.4).
+      Add `readonly rpc: RpcClient.RpcClient<never>` (an empty client) to `DormantHandle`, built once
+      via `RpcTest.makeClient(RpcGroup.make())` provided an empty scope, or a shared empty constant.
 
 - [ ] **Step 5: Build clean + test.**
 
@@ -133,6 +134,7 @@ git commit -m "refactor(compute): finish Params.annotations migration (target/no
 ## Task 1: Annotations-based host discovery (spec Step 2)
 
 **Files:**
+
 - Modify: `packages/core/compute/compute/src/Process.ts`
 - Modify: `packages/core/compute/compute-runtime/src/ProcessManager.ts` (`list`/`Handle` surface
   `params.annotations` — already true once Task 0 lands)
@@ -151,9 +153,9 @@ describe('annotations', () => {
           Annotation.setDictionary(d, Process.HarnessHostAnnotation, true);
         }),
       });
-      expect(
-        Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
-      ).toBe(true);
+      expect(Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation))).toBe(
+        true,
+      );
       const listed = yield* manager.list();
       expect(listed.some((p) => p.pid === handle.pid)).toBe(true);
     }, Effect.provide(TestLayer)),
@@ -195,6 +197,7 @@ git commit -m "feat(compute): add HarnessHostAnnotation for process discovery"
 Give the agent process the `HarnessControl` RPC surface and stamp `HarnessHostAnnotation` at spawn.
 
 **Files:**
+
 - Modify: `packages/core/compute/functions-runtime/src/agent-service/agent-process.ts`
 - Modify: `packages/core/compute/functions-runtime/src/agent-service/AgentService.ts:172`
 - Test: `packages/core/compute/functions-runtime/src/agent-service/agent-process.test.ts`
@@ -220,11 +223,11 @@ const HarnessControl = RpcGroup.make(
 ```
 
 - [ ] **Step 2: Declare `rpcs` on the process** — add `rpcs: HarnessControl` to the
-  `Process.make({ ... })` options object for the agent process.
+      `Process.make({ ... })` options object for the agent process.
 
 - [ ] **Step 3: Provide handlers from `create()`** — return `rpcHandlers` alongside the existing
-  `onInput`/`onAlarm`. Place this where `inputQueue` and `alarmManager` are in scope (after
-  `:105`/`:119`):
+      `onInput`/`onAlarm`. Place this where `inputQueue` and `alarmManager` are in scope (after
+      `:105`/`:119`):
 
 ```ts
 rpcHandlers: yield* HarnessControl.toHandlersContext({
@@ -245,29 +248,35 @@ accept `ContentBlock[]` (spec §12.3) — see Step 5 below.
 - [ ] **Step 4: Stamp the host annotation at spawn** in `AgentService.ts:172`:
 
 ```ts
-handle = yield* processManager.spawn(executable, {
-  name: 'Agent',
-  target,
-  annotations: Annotation.buildDictionary((d) => {
-    Annotation.setDictionary(d, Process.HarnessHostAnnotation, true);
-  }),
-  environment: { ...(spaceId !== undefined ? { space: spaceId } : {}), conversation: target },
-  traceMeta: { conversationId: feed.id },
-});
+handle =
+  yield *
+  processManager.spawn(executable, {
+    name: 'Agent',
+    target,
+    annotations: Annotation.buildDictionary((d) => {
+      Annotation.setDictionary(d, Process.HarnessHostAnnotation, true);
+    }),
+    environment: { ...(spaceId !== undefined ? { space: spaceId } : {}), conversation: target },
+    traceMeta: { conversationId: feed.id },
+  });
 ```
 
 - [ ] **Step 5: Widen the `prompt` event + alarm message.** In the `AgentEvent` union, change the
-  `prompt` variant payload from `string` to `Schema.Array(ContentBlock.Any)` (or add a content
-  field), and update `wakeUpPrompt`/the self-wake path (`:243`) to carry the stored message. Make
-  `AlarmManager` persist `{ wakeAt, message }` — update `AgentAlarmKey` (`:584`) schema to
-  `Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) })))`
-  and thread `message` through `setWakeAt`/`#wakeAt`.
+      `prompt` variant payload from `string` to `Schema.Array(ContentBlock.Any)` (or add a content
+      field), and update `wakeUpPrompt`/the self-wake path (`:243`) to carry the stored message. Make
+      `AlarmManager` persist `{ wakeAt, message }` — update `AgentAlarmKey` (`:584`) schema to
+      `Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) })))`
+      and thread `message` through `setWakeAt`/`#wakeAt`.
 
 - [ ] **Step 6: Write a test** that spawns the agent process and drives the RPC:
 
 ```ts
-const handle = yield* manager.spawn(agentProcess /* AgentService executable */, { /* target */ });
-yield* handle.rpc.setAlarm({ at: DateTime.unsafeNow(), message: 'wake' });
+const handle =
+  yield *
+  manager.spawn(agentProcess /* AgentService executable */, {
+    /* target */
+  });
+yield * handle.rpc.setAlarm({ at: DateTime.unsafeNow(), message: 'wake' });
 // assert the process hibernates with a pending alarm / fires via TestClock
 ```
 
@@ -294,6 +303,7 @@ from the current `AiContext.Service` and wiring Tier B over RPC. Then delete the
 services and migrate all call sites.
 
 **Files:**
+
 - Modify: `packages/core/compute/assistant/src/session/Harness.ts`
 - Read for Tier A pattern: `packages/core/compute/assistant/src/session/AiContext.ts`
 - Modify: `packages/core/compute/assistant/src/session/AiSession.ts` (provide `HarnessService`
@@ -310,8 +320,8 @@ rg -l "AiContext\.Service|AiSession\.Service" packages | rg -v "docs/|AUDIT"
 ```
 
 - [ ] **Step 1: Implement Tier A.** Replace the `todo()` bodies in `Harness.ts`. Build the service
-  from a `LayerSpec` with conversation affinity, requiring `Database.Service` + `ProcessManager.Service`.
-  Copy the feed-resolution / `Binder` / history logic from `AiContext.ts`'s existing `LayerSpec`:
+      from a `LayerSpec` with conversation affinity, requiring `Database.Service` + `ProcessManager.Service`.
+      Copy the feed-resolution / `Binder` / history logic from `AiContext.ts`'s existing `LayerSpec`:
 
 ```ts
 binder: /* resolve feed from context.conversation, build Binder (from AiContext) */,
@@ -327,10 +337,7 @@ const owningHost = Effect.gen(function* () {
   const host = procs.find(
     (p) =>
       !isTerminalProcess(p.status.state) &&
-      Option.getOrElse(
-        Annotation.getDictionary(p.params.annotations, Process.HarnessHostAnnotation),
-        () => false,
-      ),
+      Option.getOrElse(Annotation.getDictionary(p.params.annotations, Process.HarnessHostAnnotation), () => false),
   );
   return host ?? (yield* new NotSupportedError());
 });
@@ -348,15 +355,15 @@ a shared location both `agent-process.ts` and `Harness.ts` import (preferred —
 `packages/core/compute/assistant/src/session/harness-control.ts` exporting `HarnessControl`).
 
 - [ ] **Step 3: Provide `HarnessService` from the request loop.** In `AiSession.ts`
-  `createRequest`, provide `HarnessService` into the request context where it currently provides
-  `AiContext.Service` (+ `AiSession.Service`).
+      `createRequest`, provide `HarnessService` into the request context where it currently provides
+      `AiContext.Service` (+ `AiSession.Service`).
 
 - [ ] **Step 4: Migrate every call site** from the grep in Step 0 to `HarnessService`
-  (`bindContext`/`findObjects`/`{ binder }` → `HarnessService.binder`/`queryContext`). Update the
-  test layer `assistant-test-layer.ts` and `plugin-doctor`.
+      (`bindContext`/`findObjects`/`{ binder }` → `HarnessService.binder`/`queryContext`). Update the
+      test layer `assistant-test-layer.ts` and `plugin-doctor`.
 
 - [ ] **Step 5: Delete the deprecated tags.** Remove `AiContext.Service` and `AiSession.Service`
-  class definitions (no shims). Keep `AiContext.Binder`.
+      class definitions (no shims). Keep `AiContext.Binder`.
 
 - [ ] **Step 6: Build + test the dependent packages.**
 
@@ -379,6 +386,7 @@ Replace `makeAlarmToolkit` (`agent-process.ts:771`) with operations that call `H
 bound as a blueprint. Read the `operations` and `blueprints` skills first.
 
 **Files:**
+
 - Create: `packages/core/compute/assistant-toolkit/src/blueprints/alarm/operations/set-alarm.ts`
 - Create: `packages/core/compute/assistant-toolkit/src/blueprints/alarm/operations/get-current-date.ts`
 - Create: `packages/core/compute/assistant-toolkit/src/blueprints/alarm/operations/definitions.ts`
@@ -388,26 +396,33 @@ bound as a blueprint. Read the `operations` and `blueprints` skills first.
   `makeAlarmToolkit`/`AlarmToolkit`; move `resolveWakeAt` into the operation)
 
 - [ ] **Step 1: Write the blueprint test first** (extend an existing blueprint suite pattern; see
-  `assistant-toolkit/src/blueprints/planning/blueprint.test.ts` for the shape):
+      `assistant-toolkit/src/blueprints/planning/blueprint.test.ts` for the shape):
 
 ```ts
 test('agent schedules a self-wake via the alarm blueprint', ({ expect }) =>
   Effect.gen(function* () {
     // bind alarm blueprint, drive a turn that calls set-alarm, advance TestClock, assert wake
-  }).pipe(Effect.provide(AssistantTestLayer({ /* ... */ })), runTest));
+  }).pipe(
+    Effect.provide(
+      AssistantTestLayer({
+        /* ... */
+      }),
+    ),
+    runTest,
+  ));
 ```
 
 - [ ] **Step 2: Implement `set-alarm` operation** — parse `{ in, at }` (move `resolveWakeAt`
-  here), convert to `DateTime`, then `yield* HarnessService.setAlarm({ at, message })`. Implement
-  `get-current-date` reading `Effect.clock`. Wire both into `definitions.ts` via
-  `OperationHandlerSet` (see `operations` skill).
+      here), convert to `DateTime`, then `yield* HarnessService.setAlarm({ at, message })`. Implement
+      `get-current-date` reading `Effect.clock`. Wire both into `definitions.ts` via
+      `OperationHandlerSet` (see `operations` skill).
 
 - [ ] **Step 3: Define the blueprint** in `blueprint.ts` referencing the two operations as tools
-  (mirror an existing `blueprints/*/blueprint.ts`).
+      (mirror an existing `blueprints/*/blueprint.ts`).
 
 - [ ] **Step 4: Remove the inline toolkit** — delete `AlarmToolkit`/`makeAlarmToolkit`, drop the
-  `alarmToolkit` argument from the `createRequest` call (`agent-process.ts:201`/`:258`). Bind the
-  alarm blueprint to the conversation wherever default blueprints are bound.
+      `alarmToolkit` argument from the `createRequest` call (`agent-process.ts:201`/`:258`). Bind the
+      alarm blueprint to the conversation wherever default blueprints are bound.
 
 - [ ] **Step 5: Build + test.**
 
@@ -428,6 +443,7 @@ git commit -m "feat(assistant-toolkit): externalize alarm toolkit as a blueprint
 Execute `Blueprint.hooks` and move the `CompletionGuard` into an `end-request` hook.
 
 **Files:**
+
 - Modify: where requests run — `AiSession.ts` (`begin-request`) and `agent-process.ts`
   (`end-request`, around the `maybeComplete`/end-of-turn point)
 - Create: planning hook operation under
@@ -440,20 +456,20 @@ Execute `Blueprint.hooks` and move the `CompletionGuard` into an `end-request` h
 - Test: extend planning `blueprint.test.ts`
 
 - [ ] **Step 1: Implement the hook engine.** At request begin (resolve bound blueprints, run each
-  hook whose `spec._tag === 'begin-request'`) and request end (same for `'end-request'`). For each
-  hook: resolve `hook.function` ref to its operation, template `hook.input`, invoke via the
-  operation invoker. Keep it small; firing points per spec §8.1.
+      hook whose `spec._tag === 'begin-request'`) and request end (same for `'end-request'`). For each
+      hook: resolve `hook.function` ref to its operation, template `hook.input`, invoke via the
+      operation invoker. Keep it small; firing points per spec §8.1.
 
 - [ ] **Step 2: Write the failing test** — an agent with an incomplete plan gets a continuation
-  reminder and continues; a clean plan completes. (Memoized LLM — see `regenerate-memoized-llm`.)
+      reminder and continues; a clean plan completes. (Memoized LLM — see `regenerate-memoized-llm`.)
 
 - [ ] **Step 3: Implement the planning hook operation** — read the plan; if incomplete tasks
-  exist, `yield* HarnessService.enqueueMessage({ content: [reminder] })` (same effect as today's
-  `plan_continue_reminder`). Decide the ephemeral stop/continue check per spec §12.4 (keep inside
-  the hook fn or drop).
+      exist, `yield* HarnessService.enqueueMessage({ content: [reminder] })` (same effect as today's
+      `plan_continue_reminder`). Decide the ephemeral stop/continue check per spec §12.4 (keep inside
+      the hook fn or drop).
 
 - [ ] **Step 4: Declare the hook** on the planning blueprint and remove `CompletionGuard` end to
-  end (file, capability, events, `getIncompletePlanSummary` calls).
+      end (file, capability, events, `getIncompletePlanSummary` calls).
 
 - [ ] **Step 5: Build + test.**
 
@@ -474,6 +490,7 @@ git commit -m "feat(compute): execute blueprint hooks; move plan reminder to pla
 Mechanical rename of the typed-key abstraction.
 
 **Files:**
+
 - Modify: `packages/core/compute/compute/src/StorageService.ts` (`Key`→`Cell`,
   `KeyWithDefault`→`CellWithDefault`, `key()`→`cell()`; keep `withDefault`)
 - Modify all usages: `AgentEventsKey`, `DelegationsKey`, `ToolCallStateKey`, `AgentAlarmKey`,
@@ -481,7 +498,7 @@ Mechanical rename of the typed-key abstraction.
   the variable names may stay or be renamed `*Cell` for consistency)
 
 - [ ] **Step 1: Rename in `StorageService.ts`** — `Key`→`Cell`, `KeyWithDefault`→`CellWithDefault`,
-  `export const key`→`export const cell`. Update the JSDoc.
+      `export const key`→`export const cell`. Update the JSDoc.
 
 - [ ] **Step 2: Update call sites.**
 
@@ -508,16 +525,17 @@ git commit -m "refactor(compute): rename StorageService.Key → Cell"
 ## Task 7: Composer planning skill fix (spec Step 8)
 
 **Files:**
+
 - Investigate: `packages/core/compute/assistant-toolkit/src/skills/planning/` vs
   `.../src/blueprints/planning/` (spec §10 — two parallel trees exist)
 
 - [ ] **Step 1: Determine the live copy.** Find which planning tree composer actually loads (grep
-  the plugin wiring in `packages/plugins/plugin-assistant/` for the planning blueprint/skill key).
-  Document the finding in the commit message.
+      the plugin wiring in `packages/plugins/plugin-assistant/` for the planning blueprint/skill key).
+      Document the finding in the commit message.
 
 - [ ] **Step 2: Apply the fix** to the active copy only (the original report that motivated "fix
-  Agent planning skill in composer"). If the inactive tree is dead, note it for a separate cleanup
-  — do not fix both.
+      Agent planning skill in composer"). If the inactive tree is dead, note it for a separate cleanup
+      — do not fix both.
 
 - [ ] **Step 3: Build + test.**
 

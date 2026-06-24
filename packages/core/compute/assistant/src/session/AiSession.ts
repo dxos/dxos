@@ -22,8 +22,8 @@ import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Message, type ContentBlock } from '@dxos/types';
 
-import { ToolExecutionServices } from '../tool-runtime';
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
+import { ToolExecutionServices } from '../tool-runtime';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
 import * as BlueprintHooks from './BlueprintHooks';

@@ -61,7 +61,10 @@ export interface Cell<T> extends Pipeable.Pipeable {
 /**
  * Create a typed cell in a storage service.
  */
-export const cell = <S extends Schema.Schema<any, string, any>>(schema: S, key: string): Cell<Schema.Schema.Type<S>> => {
+export const cell = <S extends Schema.Schema<any, string, any>>(
+  schema: S,
+  key: string,
+): Cell<Schema.Schema.Type<S>> => {
   return {
     key,
     get: get(schema, key),

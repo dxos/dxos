@@ -435,9 +435,10 @@ const ToolCallState = Schema.Struct({
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
-const ToolCallStateCell = StorageService.cell(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
-  StorageService.withDefault(() => ({ activeCalls: [] })),
-);
+const ToolCallStateCell = StorageService.cell(
+  Schema.parseJson(ToolCallState.pipe(Schema.mutable)),
+  'toolCallState',
+).pipe(StorageService.withDefault(() => ({ activeCalls: [] })));
 
 class ToolCallManager {
   #storageService: StorageService.Service;

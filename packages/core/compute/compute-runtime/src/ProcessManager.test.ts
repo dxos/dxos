@@ -858,9 +858,9 @@ describe('ProcessOperationInvoker invocations', () => {
       const manager = yield* ProcessManager.Service;
       const notify = { success: 'Done', error: 'Failed' };
       const handle = yield* manager.spawn(makeSumAggregator(), { notify });
-      expect(Option.getOrUndefined(Annotation.getDictionary(handle.params.annotations, Process.NotifyAnnotation))).toEqual(
-        notify,
-      );
+      expect(
+        Option.getOrUndefined(Annotation.getDictionary(handle.params.annotations, Process.NotifyAnnotation)),
+      ).toEqual(notify);
     }, Effect.provide(TestLayer)),
   );
 });
@@ -875,9 +875,9 @@ describe('annotations', () => {
           Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
         }),
       });
-      expect(
-        Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
-      ).toBe(true);
+      expect(Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation))).toBe(
+        true,
+      );
       const listed = yield* manager.list();
       expect(listed.some((process) => process.pid === handle.pid)).toBe(true);
       yield* handle.terminate();

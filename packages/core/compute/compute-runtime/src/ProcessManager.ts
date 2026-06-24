@@ -941,7 +941,9 @@ export class ProcessManagerImpl implements Manager {
           continue;
         }
         results.push(
-          new DormantHandle(record, (definition) => this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition)),
+          new DormantHandle(record, (definition) =>
+            this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition),
+          ),
         );
       }
 

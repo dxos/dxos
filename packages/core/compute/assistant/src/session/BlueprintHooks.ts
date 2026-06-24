@@ -63,7 +63,9 @@ export const runHooks = <R>({
           yield* invoke(operation, { ...hook.input });
         }).pipe(
           Effect.catchAllCause((cause) =>
-            Effect.sync(() => log.warn('blueprint hook failed', { phase, blueprint: Blueprint.getKey(blueprint), cause })),
+            Effect.sync(() =>
+              log.warn('blueprint hook failed', { phase, blueprint: Blueprint.getKey(blueprint), cause }),
+            ),
           ),
         );
       }

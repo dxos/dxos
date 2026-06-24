@@ -148,7 +148,12 @@ export const make = ({
       Effect.orDie,
     );
     const boundBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-    return makeService({ feed, runtime, binder: boundBinder, owningHost: lookupOwningHost(processManager, conversation) });
+    return makeService({
+      feed,
+      runtime,
+      binder: boundBinder,
+      owningHost: lookupOwningHost(processManager, conversation),
+    });
   });
 
 interface FromBinderOptions {
