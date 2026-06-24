@@ -47,6 +47,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
               BlueprintManagerBlueprint,
               AlarmBlueprint,
             ].map(({ key }) => Ref.fromURI(Blueprint.registryURI(key))),
+            objects: [Ref.make(chat)],
           }),
         ),
       );

@@ -47,7 +47,8 @@ describe('DelegateTask', () => {
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        const plan = yield* Database.load(agent.plan);
+        const chat = yield* Database.load(agent.chat!);
+        const plan = yield* Database.load(chat.plan!);
         expect(plan.tasks).toHaveLength(1);
         expect(plan.tasks[0]).toMatchObject({
           title: 'Research widgets',
@@ -68,7 +69,8 @@ describe('DelegateTask', () => {
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationBlueprint.make(),
         );
-        const plan = yield* Database.load(agent.plan);
+        const chat = yield* Database.load(agent.chat!);
+        const plan = yield* Chat.ensurePlan(chat);
         const taskId = Plan.TaskId.make('1-ab');
         Obj.update(plan, (plan) => {
           plan.tasks.push({ id: taskId, title: 'Research widgets', status: 'todo' });
@@ -80,7 +82,8 @@ describe('DelegateTask', () => {
 
         yield* invokeDelegateTask({ id: taskId }, chatFeed);
 
-        const updated = yield* Database.load(agent.plan);
+        const updatedChat = yield* Database.load(agent.chat!);
+        const updated = yield* Database.load(updatedChat.plan!);
         expect(updated.tasks).toHaveLength(1);
         expect(updated.tasks[0]).toMatchObject({
           id: taskId,

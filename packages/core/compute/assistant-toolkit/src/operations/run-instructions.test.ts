@@ -16,6 +16,7 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import * as Chat from '../types/Chat';
+import * as Plan from '../types/Plan';
 import { RunInstructions } from './definitions';
 import defaultAgentPrompt from './run-instructions';
 
@@ -25,7 +26,7 @@ const operationHandlerSet = OperationHandlerSet.make(defaultAgentPrompt);
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: operationHandlerSet,
-  types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text],
+  types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Plan.Plan],
   aiServicePreset: 'edge-remote',
 });
 

@@ -7,9 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Process } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-
-import * as Chat from './Chat';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 
 export const TaskId = Schema.String.pipe(Schema.brand('@dxos/assistant-toolkit/TaskId'));
 export type TaskId = Schema.Schema.Type<typeof TaskId>;
@@ -46,11 +44,6 @@ export const Task = Schema.Struct({
   parent: Schema.optional(TaskId).annotations({
     description: 'Parent task ID.',
   }),
-
-  /**
-   * Chat object that this task is associated with.
-   */
-  chat: Schema.optional(Ref.Ref(Chat.Chat)),
 });
 
 export type Task = Schema.Schema.Type<typeof Task>;
@@ -93,7 +86,7 @@ export const generateTaskId = (plan: Plan): TaskId => {
  */
 export const addTasks = (
   plan: Obj.Mutable<Plan>,
-  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat' | 'delegated'>>)[],
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'delegated'>>)[],
 ) => {
   for (const task of tasks) {
     const taskId = generateTaskId(plan);

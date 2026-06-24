@@ -101,7 +101,8 @@ const makePlan = (statuses: readonly Plan.TaskStatus[]): Plan.Plan =>
 const setupAgentWithLiveHost = (tasks: readonly Plan.Task[]) =>
   Effect.gen(function* () {
     const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningBlueprint.make());
-    const plan = yield* Database.load(agent.plan);
+    const chat = yield* Database.load(agent.chat!);
+    const plan = yield* Chat.ensurePlan(chat);
     Obj.update(plan, (plan) => {
       plan.tasks.push(...tasks);
     });

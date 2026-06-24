@@ -8,19 +8,19 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Plan, Agent } from '../../../types';
+import { Plan, Chat } from '../../../types';
 import { UpdateTasks } from './definitions';
 
 /**
- * Updates the planning document (Agent.plan) with the given tasks.
+ * Updates the planning document (Chat.plan) with the given tasks.
  */
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tasks: newTasks }) {
-      const agent = yield* Agent.getFromChatContext;
+      const chat = yield* Chat.getFromContext;
       // TODO(burdon): How to specify requirements/preconditions before calling?
       // TODO(burdon): How to report non-technical error?
-      const plan = yield* Database.load(agent.plan);
+      const plan = yield* Chat.ensurePlan(chat);
 
       Obj.update(plan, (plan) => {
         for (const task of newTasks) {

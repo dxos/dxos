@@ -13,11 +13,11 @@ import { Database } from '@dxos/echo';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Plan, Agent } from '../../../types';
+import { Plan, Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 
 /**
- * End-request hook for the planning blueprint. When the agent's plan still has open tasks, an
+ * End-request hook for the planning blueprint. When the session plan still has open tasks, an
  * ephemeral check asks the model — given the full conversation — whether the agent should keep
  * working: a deterministic reminder alone would trap an agent that legitimately finishes with open
  * tasks in an unbreakable re-prompt loop. On "continue" it enqueues a continuation reminder onto the
@@ -28,11 +28,14 @@ export default PlanReminder.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* () {
-        const agent = yield* Agent.getFromChatContext.pipe(Effect.orElseSucceed(() => undefined));
-        if (!agent) {
+        const chat = yield* Chat.getFromContext.pipe(Effect.orElseSucceed(() => undefined));
+        if (!chat) {
           return;
         }
-        const plan = yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined));
+        if (!chat?.plan) {
+          return;
+        }
+        const plan = yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined));
         if (!plan || !Plan.hasIncompleteTasks(plan)) {
           return;
         }

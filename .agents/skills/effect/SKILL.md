@@ -25,9 +25,11 @@ import { Effect, Context, Layer } from 'effect';
 // Effect<number, never, never> - succeeds with number, no errors, no deps
 const pure = Effect.succeed(42);
 
-// Effect<never, Error, never> - fails with Error
-const failure = Effect.fail(new Error('failed'));
+// Effect<never, HttpError, never> - fails with a typed domain error
+const failure = Effect.fail(new HttpError({ status: 404 }));
 ```
+
+Never use bare `Error` (or `unknown`) as the error type in `Effect<A, E, R>` — in DXOS, prefer `BaseError.extend` from `@dxos/errors` so failures are tagged and recoverable via `Effect.catchTag`.
 
 ### Two Types of Errors
 
@@ -124,10 +126,19 @@ const runnable = Effect.provide(program, AppLive);
 Effect.runPromise(runnable);
 ```
 
-**Typed error:**
+**Typed error (DXOS — prefer `BaseError`):**
 
 ```ts
-class HttpError extends Data.TaggedClass('HttpError')<{ readonly status: number }> {}
+import { BaseError } from '@dxos/errors';
+
+export class HttpError extends BaseError.extend('HttpError', 'HTTP request failed') {
+  constructor(context: { readonly status: number }) {
+    super({ context });
+  }
+}
+
+// Pure Effect boundaries may use Data.TaggedClass instead:
+class ValidationError extends Data.TaggedClass('ValidationError')<{ readonly field: string }> {}
 ```
 
 ## Documentation Index

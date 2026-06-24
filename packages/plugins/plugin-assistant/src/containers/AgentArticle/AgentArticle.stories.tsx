@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Plan, Agent } from '@dxos/assistant-toolkit';
+import { Agent } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -87,7 +87,6 @@ const meta = {
               space.db.add(
                 Obj.make(Agent.Agent, {
                   instructions: Ref.make(Text.make()),
-                  plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: artifacts.map((obj) => ({
                     name: Obj.getLabel(obj) ?? 'Artifact',
                     data: Ref.make(obj),

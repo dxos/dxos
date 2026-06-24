@@ -18,11 +18,29 @@ import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
 import { DelegationBlueprint } from '../skills';
-import { Agent } from '../types';
+import { Agent, Chat } from '../types';
+
+/**
+ * Resolves the chat backed by the given conversation feed, if any.
+ */
+const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
+    for (const chat of chats) {
+      const matches = yield* Effect.gen(function* () {
+        const chatFeed = yield* Database.load(chat.feed);
+        return chatFeed.id === feed.id;
+      }).pipe(Effect.orElseSucceed(() => false));
+      if (matches) {
+        return chat;
+      }
+    }
+    return undefined;
+  });
 
 /**
  * Resolves the agent whose chat is backed by the given conversation feed, if any. Plain (agentless)
- * chats yield `undefined`, so the strategy is a no-op for them.
+ * chats yield `undefined`, so artifact folding is skipped for them.
  */
 const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
   Effect.gen(function* () {
@@ -75,11 +93,13 @@ const extractArtifactIds = (value: unknown): string[] => {
 export const makeDelegationStrategy = (): DelegationStrategy => ({
   reconcile: (feed, activeIds) =>
     Effect.gen(function* () {
-      const agent = yield* findAgentForFeed(feed);
-      if (!agent) {
+      const chat = yield* findChatForFeed(feed);
+      if (!chat) {
         return [];
       }
-      const plan = yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined));
+      const plan = chat.plan
+        ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined))
+        : undefined;
       if (!plan) {
         return [];
       }
@@ -147,8 +167,12 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
   onComplete: (feed, id, exit) =>
     Effect.gen(function* () {
+      const chat = yield* findChatForFeed(feed);
       const agent = yield* findAgentForFeed(feed);
-      const plan = agent ? yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+      const plan =
+        chat?.plan != null
+          ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined))
+          : undefined;
 
       let title = id;
       if (plan) {

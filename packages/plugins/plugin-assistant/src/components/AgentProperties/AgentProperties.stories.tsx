@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Plan, Agent } from '@dxos/assistant-toolkit';
+import { Agent } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -53,7 +53,6 @@ const meta = {
         space.db.add(
           Obj.make(Agent.Agent, {
             instructions: Ref.make(Text.make()),
-            plan: Ref.make(Plan.makePlan({ tasks: [] })),
             artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
             subscriptions: [],
           }),

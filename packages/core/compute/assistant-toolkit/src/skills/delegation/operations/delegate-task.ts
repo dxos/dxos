@@ -11,7 +11,7 @@ import { Database, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { Agent, Plan } from '../../../types';
+import { Plan, Chat } from '../../../types';
 
 export const DelegateTask = Operation.make({
   meta: {
@@ -37,7 +37,7 @@ export const DelegateTask = Operation.make({
 });
 
 /**
- * Records delegated work as an in-progress task on the current agent's plan.
+ * Records delegated work as an in-progress task on the current session plan.
  */
 export default DelegateTask.pipe(
   Operation.withHandler(
@@ -50,8 +50,8 @@ export default DelegateTask.pipe(
         );
       }
 
-      const agent = yield* Agent.getFromChatContext;
-      const plan = yield* Database.load(agent.plan);
+      const chat = yield* Chat.getFromContext;
+      const plan = yield* Chat.ensurePlan(chat);
 
       if (hasId) {
         const existing = plan.tasks.find((task) => task.id === id);
