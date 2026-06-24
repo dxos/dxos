@@ -125,28 +125,26 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         {availableTargets.length === 0 ? (
           <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
         ) : (
-          <ScrollArea.Root classNames='max-bs-[24rem]' orientation='vertical'>
+          <ScrollArea.Root classNames='my-4' padding>
             <ScrollArea.Viewport>
-              <List>
+              <List classNames='flex flex-col gap-1'>
                 {availableTargets.map((target) => (
-                  <ListItem.Root key={target.id} classNames='px-2'>
-                    <ListItem.Endcap>
-                      {/* The checkbox carries an `aria-label` because the visible label is the row heading. */}
-                      <Input.Root>
+                  <ListItem.Root key={target.id} classNames='gap-1'>
+                    <Input.Root>
+                      <ListItem.Endcap>
+                        {/* The checkbox carries an `aria-label` because the visible label is the row heading. */}
                         <Input.Checkbox
                           checked={selected.has(target.id)}
                           onCheckedChange={() => handleToggle(target.id)}
                           disabled={submitting}
                           aria-label={target.name}
                         />
-                      </Input.Root>
-                    </ListItem.Endcap>
-                    <ListItem.Heading classNames='flex flex-col items-start grow truncate'>
-                      <div className='truncate'>{target.name}</div>
-                      {target.description && (
-                        <div className='text-description text-sm truncate'>{target.description}</div>
-                      )}
-                    </ListItem.Heading>
+                      </ListItem.Endcap>
+                      <div>
+                        <Input.Label classNames='pt-1 text-base text-base-text'>{target.name}</Input.Label>
+                        {target.description && <p className='text-description text-sm'>{target.description}</p>}
+                      </div>
+                    </Input.Root>
                   </ListItem.Root>
                 ))}
               </List>
