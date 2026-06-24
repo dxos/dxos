@@ -368,31 +368,12 @@ export default Capability.makeModule(
 
       TypeSection.createTypeSectionExtension(Calendar.Calendar, {
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'calendarsSectionActions',
-        match: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === calendarTypename && space ? Option.some(space) : Option.none();
-        },
-        actions: (space) =>
-          Effect.succeed([
-            Node.makeAction({
-              id: 'create-calendar',
-              data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
-                  target: space.db,
-                  typename: calendarTypename,
-                  targetNodeId: getCalendarsPath(space.db.spaceId),
-                }),
-              properties: {
-                label: ['add-object.label', { ns: calendarTypename }],
-                icon: 'ph--plus--regular',
-                disposition: 'list-item-primary',
-              },
-            }),
-          ]),
+        createObject: (space) =>
+          Operation.invoke(SpaceOperation.OpenCreateObject, {
+            target: space.db,
+            typename: calendarTypename,
+            targetNodeId: getCalendarsPath(space.db.spaceId),
+          }),
       }),
 
       GraphBuilder.createExtension({
