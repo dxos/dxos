@@ -22,9 +22,6 @@ export const ChatModule = ({ space }: ModuleProps) => {
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
 
-  const [plan] = useObject(chat?.plan?.target);
-  const hasPlan = (plan?.tasks?.length ?? 0) > 0;
-
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
   const processor = useChatProcessor({ runtime, space, chat, preset, registry });
@@ -62,9 +59,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            {hasPlan && (
-              <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
-            )}
+            <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
             <Chat.Prompt
               {...chatProps}
               classNames='border-none rounded-none'
