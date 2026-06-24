@@ -279,9 +279,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           autoscrollElement && [
             autoScrollForElements({
               element: autoscrollElement,
-              // canScroll: ({ element: _ }) => {
-              //   return true;
-              // },
+              // Only autoscroll for tile (reorder) drags. Resize-handle drags carry no tile data, so
+              // resizing a tile near a viewport edge must not scroll the container.
+              canScroll: ({ source }) => getSourceData(source) != null,
               getAllowedAxis: () => orientation,
               getConfiguration: () => ({
                 maxScrollSpeed: 'fast',

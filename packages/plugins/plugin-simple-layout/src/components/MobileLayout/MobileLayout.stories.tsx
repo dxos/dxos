@@ -91,7 +91,7 @@ const DefaultStory = () => {
     <WithKeyboard>
       <MobileLayout.Root onKeyboardOpenChange={setKeyboardOpen}>
         <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>
-          <Splitter.Root orientation='vertical' mode={splitterMode} ratio={0.5}>
+          <Splitter.Root orientation='vertical' mode={splitterMode} size={24}>
             <Splitter.Panel position='start'>
               <StoryPanel label='Main'>
                 {splitterMode === 'start' && (

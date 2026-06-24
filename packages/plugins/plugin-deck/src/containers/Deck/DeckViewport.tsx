@@ -20,20 +20,21 @@ import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { mainPaddingTransitions } from '@dxos/react-ui';
-import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
+import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
+import { DEFAULT_HORIZONTAL_SIZE, Stack } from '@dxos/react-ui-stack';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, getMode, Keyshortcuts } from '#types';
 
+import { Plank, PlankRootProps, type PlankComponentProps } from '../../tmp/Plank';
 import { layoutAppliesTopbar } from '../../util';
-import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
 } from '../Sidebar';
+import { DeckPlank } from './DeckPlank';
 import { useDeckContext } from './DeckRoot';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
@@ -146,21 +147,14 @@ export const DeckSoloMode = () => {
     <div className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
-      <StackContext.Provider
-        value={{
-          orientation: 'horizontal',
-          size: 'contain',
-          rail: true,
-        }}
-      >
-        <PlankContainer
-          id={solo}
-          part='solo'
-          layoutMode={layoutMode}
-          companionVariant={effectiveCompanionVariant}
-          settings={settings}
-        />
-      </StackContext.Provider>
+      <DeckPlank
+        id={solo}
+        part='solo'
+        layoutMode={layoutMode}
+        companionVariant={effectiveCompanionVariant}
+        settings={settings}
+        classNames={mx('absolute inset-0', mainIntrinsicSize)}
+      />
     </div>
   );
 };

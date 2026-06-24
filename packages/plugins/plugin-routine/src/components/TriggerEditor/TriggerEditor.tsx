@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Trigger } from '@dxos/compute';
 import { DXN, type Database, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -190,6 +190,7 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
     trigger,
   );
 
+  // TODO(burdon): Not persistent; need to memo
   return (
     <Form.Root
       // Remount when the bound trigger changes (picks up its spec) or on reset (reverts to the picker).
@@ -201,20 +202,26 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
       onValuesChanged={handleValuesChanged}
     >
       <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
-        {kind && (
-          <div className='flex items-center'>
-            <div className='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</div>
-            <IconButton
-              iconOnly
-              variant='ghost'
-              square
-              icon='ph--x--regular'
-              label={t('trigger-kind.clear.label')}
-              onClick={handleClose}
-            />
-          </div>
-        )}
-        <Form.FieldSet classNames='px-2' />
+        {/* TODO(burdon): Generalize indented section for discriminated unions. */}
+        {(kind && (
+          <>
+            <div className='flex items-center'>
+              <Input.Root>
+                <Input.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Input.Label>
+              </Input.Root>
+              <IconButton
+                iconOnly
+                variant='ghost'
+                square
+                icon='ph--x--regular'
+                label={t('trigger-kind.clear.label')}
+                onClick={handleClose}
+              />
+            </div>
+            <Form.FieldSet classNames='px-2' />
+          </>
+        )) || <Form.FieldSet />}
+
         {/* Email triggers have no configuration; surface an explanatory note instead of an empty body. */}
         {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
       </Form.Content>
@@ -297,6 +304,7 @@ const useTriggerForm = (db: Database.Database, automation: Routine.Routine, trig
     () => ({ ...triggerFormValues(trigger?.spec), enabled: trigger?.enabled }),
     [trigger, resetNonce],
   );
+
   // Mirror the active kind: gates the variant picker (shown only while unset) and the variant-specific notes.
   const [kind, setKind] = useState<TriggerKind | undefined>(() => triggerFormValues(trigger?.spec).kind);
 

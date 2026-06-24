@@ -12,11 +12,18 @@ import { type Node } from '@dxos/plugin-graph';
 import { mainIntrinsicSize } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
+import { StackItem, type StackItemSize } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
+import { Pane } from '#components';
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
+
+/**
+ * Two-row plank grid: a fixed-height heading rail above a `1fr` content area.
+ * (Replaces the former `railGridHorizontal` from `@dxos/react-ui-stack`.)
+ */
+export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
 
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
@@ -87,9 +94,10 @@ export const PlankComponent = memo(
       ? DEFAULT_COMPANION_SIZE
       : ((plankSizing?.[sizeKey] as number | undefined) ?? DEFAULT_SIZE);
     const handleSizeChange = useCallback(
-      debounce((nextSize: number) => {
-        const size = Math.round(nextSize);
-        onResize?.(sizeKey, size);
+      debounce((nextSize: StackItemSize) => {
+        if (typeof nextSize === 'number') {
+          onResize?.(sizeKey, Math.round(nextSize));
+        }
       }, 200),
       [sizeKey, onResize],
     );
@@ -148,76 +156,91 @@ export const PlankComponent = memo(
     // TODO(wittjosiah): Change prop to accept a component.
     const placeholder = useMemo(() => <PlankLoading />, []);
 
-    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
-    const classNames = [
+    const commonClassNames = [
       'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-lg',
-      isSolo && 'absolute inset-0',
-      isSolo && mainIntrinsicSize,
-      railGridHorizontal,
-      part.startsWith('solo') && 'grid',
-      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-w-0',
-      fullscreen && 'grid-rows-1',
-      part === 'multi' && (isCompanion ? 'border-separator! border-e' : 'border-separator! border-x'),
-      part === 'solo-companion' && 'border-separator! border-s',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
         'mx-(--main-spacing) border-separator! border rounded-sm overflow-hidden',
     ];
 
+    const heading = node && !fullscreen && (
+      <PlankHeading
+        id={id}
+        part={part.startsWith('solo-') ? 'solo' : part}
+        node={node}
+        layoutMode={layoutMode}
+        deckEnabled={settings?.enableDeck}
+        canIncrementStart={canIncrementStart}
+        canIncrementEnd={canIncrementEnd}
+        popoverAnchorId={popoverAnchorId}
+        primaryId={primary?.id}
+        companioned={companioned}
+        companions={companions}
+      />
+    );
+
+    const body = node ? (
+      <Surface.Surface
+        key={node.id}
+        type={AppSurface.Article}
+        data={data}
+        limit={1}
+        fallback={PlankErrorFallback}
+        placeholder={placeholder}
+      />
+    ) : (
+      <PlankError id={id} part={part} />
+    );
+
+    // Solo (and companion) planks render as a Panel: a toolbar rail above the content surface.
+    // `Panel.Root`'s `toolbar/content` grid replaces the former `railGridHorizontal` template.
+    if (part.startsWith('solo')) {
+      return (
+        <Pane.Root
+          ref={rootElement}
+          data-testid='deck.plank'
+          data-popover-collision-boundary={true}
+          tabIndex={0}
+          classNames={mx(
+            commonClassNames,
+            isSolo && ['absolute inset-0', mainIntrinsicSize],
+            part === 'solo-companion' && 'border-separator! border-s',
+          )}
+          {...sizeAttrs}
+          {...(isAttendable ? attentionAttrs : {})}
+          onKeyDown={handleKeyDown}
+        >
+          {heading && <Pane.Toolbar>{heading}</Pane.Toolbar>}
+          <Pane.Content>{body}</Pane.Content>
+        </Pane.Root>
+      );
+    }
+
+    // Multi planks render as resizable Stack items (pending the Mosaic.Stack migration).
     return (
-      <Root
+      <StackItem.Root
         ref={rootElement}
+        role='article'
         data-testid='deck.plank'
         data-popover-collision-boundary={true}
         tabIndex={0}
-        {...(part.startsWith('solo')
-          ? ({
-              className: mx(classNames),
-              ...sizeAttrs,
-            } as any)
-          : {
-              role: 'article',
-              item: { id },
-              classNames,
-              order,
-              size,
-              onSizeChange: handleSizeChange,
-            })}
+        item={{ id }}
+        classNames={[
+          ...commonClassNames,
+          railGridHorizontal,
+          isCompanion ? 'border-separator! border-e' : 'border-separator! border-x',
+        ]}
+        order={order}
+        size={size}
+        onSizeChange={handleSizeChange}
         {...(isAttendable ? attentionAttrs : {})}
         onKeyDown={handleKeyDown}
       >
-        {node ? (
-          <>
-            {!fullscreen && (
-              <PlankHeading
-                id={id}
-                part={part.startsWith('solo-') ? 'solo' : part}
-                node={node}
-                layoutMode={layoutMode}
-                deckEnabled={settings?.enableDeck}
-                canIncrementStart={canIncrementStart}
-                canIncrementEnd={canIncrementEnd}
-                popoverAnchorId={popoverAnchorId}
-                primaryId={primary?.id}
-                companioned={companioned}
-                companions={companions}
-              />
-            )}
-            <Surface.Surface
-              key={node.id}
-              type={AppSurface.Article}
-              data={data}
-              limit={1}
-              fallback={PlankErrorFallback}
-              placeholder={placeholder}
-            />
-          </>
-        ) : (
-          <PlankError id={id} part={part} />
-        )}
+        {heading}
+        {body}
         {canResize && <StackItem.ResizeHandle />}
-      </Root>
+      </StackItem.Root>
     );
   },
 );
