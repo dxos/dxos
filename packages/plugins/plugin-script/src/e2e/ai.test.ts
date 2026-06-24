@@ -27,11 +27,11 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deploy empty function', { timeout: 120_000 }, async () => {
-    const { space, functionsServiceClient } = await setup();
+    const { client, space, functionsServiceClient } = await setup();
 
     await sync(space);
     const func = await deployFunction(
-      space,
+      client.halo.identity.get()!.did,
       functionsServiceClient,
       new URL('../templates/ping.ts', import.meta.url).pathname,
     );
@@ -40,10 +40,10 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   });
 
   test('deploy and invoke anthropic function', { timeout: 120_000 }, async () => {
-    const { space, functionsServiceClient } = await setup();
+    const { client, space, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(
-      space,
+      client.halo.identity.get()!.did,
       functionsServiceClient,
       new URL('../templates/anthropic.ts', import.meta.url).pathname,
     );
@@ -74,20 +74,17 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
     });
   };
 
-  const deployFunction = async (space: Space, functionsServiceClient: FunctionsServiceClient, entryPoint: string) => {
+  const deployFunction = async (ownerUri: string, functionsServiceClient: FunctionsServiceClient, entryPoint: string) => {
     const artifact = await bundleFunction({
       entryPoint,
       verbose: true,
     });
-    const func = await functionsServiceClient.deploy(Context.default(), {
+    return functionsServiceClient.deploy(Context.default(), {
       version: '0.0.1',
-      ownerPublicKey: space.key,
+      ownerUri,
       entryPoint: artifact.entryPoint,
       assets: artifact.assets,
       runtime: FunctionRuntimeKind.enums.WORKER_LOADER,
     });
-
-    space.db.add(func);
-    return func;
   };
 });
