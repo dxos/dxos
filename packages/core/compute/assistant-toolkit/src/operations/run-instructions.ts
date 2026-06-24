@@ -116,7 +116,7 @@ export default RunInstructions.pipe(
         yield* Effect.promise(() =>
           session.context.bind({
             skills: skillRefs,
-            objects: objectRefs,
+            objects: data.chat ? [...objectRefs, data.chat] : objectRefs,
           }),
         );
 

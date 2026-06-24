@@ -6,7 +6,6 @@
 
 import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
@@ -18,7 +17,6 @@ import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService
 import { type Skill, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -216,62 +214,6 @@ export class Session extends Resource {
     );
   }
 }
-
-/**
- * Gives access to the ai session.
- */
-export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Service, Session>() {
-  /**
-   * Create a new session layer from options.
-   */
-  static layer = (options: Options): Layer.Layer<Service | AiContext.Service> =>
-    aiContextFromSession.pipe(
-      Layer.provideMerge(
-        Layer.scoped(
-          Service,
-          Effect.gen(function* () {
-            const session = yield* EffectEx.acquireReleaseResource(() => new Session(options));
-            return session;
-          }),
-        ),
-      ),
-    );
-
-  /**
-   * Create a new session with a new feed.
-   */
-  static layerNewFeed = (
-    options?: Omit<Options, 'feed' | 'runtime'>,
-  ): Layer.Layer<Service | AiContext.Service, never, Database.Service> =>
-    Layer.unwrapScoped(
-      Effect.gen(function* () {
-        const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Database.Service>();
-        return Service.layer({ ...options, feed, runtime });
-      }),
-    );
-
-  /**
-   * Run a prompt in the current session.
-   */
-  static run = <R = never>(
-    params: RunProps<R>,
-  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | Service | R> =>
-    Effect.gen(function* () {
-      const session = yield* Service;
-      return yield* session.createRequest(params);
-    });
-}
-
-const aiContextFromSession = Layer.effect(
-  AiContext.Service,
-  Effect.gen(function* () {
-    const session = yield* Service;
-    return {
-      binder: session.context,
-    };
-  }),
-);
 
 const connectMcpServers = (
   skills: readonly Skill.Skill[],

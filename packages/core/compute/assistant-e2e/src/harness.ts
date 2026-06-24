@@ -15,11 +15,11 @@ import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/a
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { RunInstructions, SkillManagerSkill, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
-import { Database, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
@@ -83,6 +83,11 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
    * When true, skip per-test entity ID seeding so IDs vary between runs (e.g. sandbox-service KV).
    */
   randomEntityIds?: boolean;
+
+  /**
+   * When true, provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work.
+   */
+  sessionChat?: boolean;
 }
 
 const STABLE_ENTITY_ID_EPOCH = new Date('2025-01-01').getTime();
@@ -170,10 +175,20 @@ const runInstructions = (
   instructions: Instructions.Instructions,
   model: ModelName,
   spaceId: SpaceId,
+  sessionChat?: boolean,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
+
+      let chatRef: Ref.Ref<Chat.Chat> | undefined;
+      if (sessionChat) {
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Agent E2E Chat' }));
+        yield* Database.flush();
+        chatRef = Ref.make(chat);
+      }
+
       return yield* Operation.invoke(
         RunInstructions,
         {
@@ -181,6 +196,7 @@ const runInstructions = (
           input: {},
           systemInstructions: INSTRUCTIONS,
           model,
+          ...(chatRef ? { chat: chatRef } : {}),
         },
         { spaceId },
       );
@@ -246,7 +262,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         );
         yield* logTraceEvents(harness, personalSpace.id);
 
-        const exit = yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id)).pipe(
+        const exit = yield* Effect.promise(() =>
+          runInstructions(harness, instructions, model, personalSpace.id, options.sessionChat),
+        ).pipe(
           Effect.flatMap((output: OutputSchema) => {
             const missedCriteria = pipe(
               output.completedCriteria,

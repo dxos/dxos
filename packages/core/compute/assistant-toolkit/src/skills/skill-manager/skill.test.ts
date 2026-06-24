@@ -3,15 +3,17 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiContext, AiSession } from '@dxos/assistant';
+import { AiContext, Harness } from '@dxos/assistant';
 import { Skill, Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { EntityId } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 
 import { DatabaseSkill, DiscordSkill, MemorySkill } from '../index';
 import { SkillManagerHandlers } from './operations';
@@ -27,14 +29,36 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
+/** Conversation DXN for the scoped test harness feed. */
+class TestConversation extends Context.Tag('@dxos/assistant-toolkit/TestConversation')<
+  TestConversation,
+  { conversation: URI.URI }
+>() {}
 
-/**
- * Gets the conversation DXN for passing to Operation.invoke options.
- */
+const ConversationHarnessLayer = Layer.unwrapScoped(
+  Effect.gen(function* () {
+    const feed = yield* Database.add(Feed.make());
+    const conversation = Obj.getURI(feed);
+    const runtime = yield* Effect.runtime<Database.Service>();
+    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    return Layer.mergeAll(
+      Layer.succeed(TestConversation, { conversation }),
+      Layer.succeed(Harness.HarnessService, Harness.fromBinder({ feed, runtime, binder })),
+    );
+  }),
+);
+
+const provideTestLayers = Effect.provide(ConversationHarnessLayer.pipe(Layer.provideMerge(TestLayer)));
+
 const getConversationDXN = Effect.gen(function* () {
-  const session = yield* AiSession.Service;
-  return Obj.getURI(session.feed);
+  const { conversation } = yield* TestConversation;
+  return conversation;
+});
+
+const getBoundSkills = Effect.gen(function* () {
+  const binder = yield* Harness.binder;
+  yield* Effect.promise(() => binder.sync());
+  return binder.getSkills();
 });
 
 describe('Skill Manager', () => {
@@ -70,8 +94,7 @@ describe('Skill Manager', () => {
         expect(Obj.getMeta(enabled[0]).key).toBe('org.dxos.skill.database');
         expect(rejected).toHaveLength(0);
 
-        const { binder } = yield* AiContext.Service;
-        const bound = binder.getSkills();
+        const bound = yield* getBoundSkills;
         expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.database')).toBe(true);
       },
       provideTestLayers,
@@ -94,8 +117,7 @@ describe('Skill Manager', () => {
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.skill.discord');
 
-        const { binder } = yield* AiContext.Service;
-        const bound = binder.getSkills();
+        const bound = yield* getBoundSkills;
         expect(bound.some((bp: Skill.Skill) => Obj.getMeta(bp).key === 'org.dxos.skill.discord')).toBe(false);
       },
       provideTestLayers,

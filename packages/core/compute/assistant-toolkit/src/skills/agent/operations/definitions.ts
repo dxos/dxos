@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { AiContext, Harness } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -71,7 +71,7 @@ export const GetContext = Operation.make({
       }),
     ),
   }),
-  services: [AiContext.Service, Database.Service],
+  services: [Harness.HarnessService, Database.Service],
 });
 
 export const AddArtifact = Operation.make({

@@ -13,6 +13,7 @@ const make = () =>
     key: SKILL_KEY,
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
+    agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations: [UpdateTasks] }),
   });
 

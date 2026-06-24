@@ -93,6 +93,18 @@ interface SetAlarmOptions {
 export const setAlarm = (options: SetAlarmOptions): Effect.Effect<void, NotSupportedError, HarnessService> =>
   Effect.flatMap(HarnessService, (service) => service.setAlarm(options));
 
+/**
+ * Binds skills and/or objects to the conversation context.
+ */
+export const bindContext = ({
+  skills,
+  objects,
+}: AiContext.BindingProps): Effect.Effect<void, NotSupportedError, HarnessService> =>
+  Effect.gen(function* () {
+    const sessionBinder = yield* binder;
+    yield* Effect.promise(() => sessionBinder.bind({ skills, objects }));
+  });
+
 export class NotSupportedError extends BaseError.extend('NotSupportedError', 'Operation not supported') {}
 
 /**
