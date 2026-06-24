@@ -267,6 +267,20 @@ export const SyncDraftEvents = Operation.make({
   services: [Database.Service, Credential.CredentialsService],
 });
 
+export const RenameFilter = Operation.make({
+  meta: {
+    key: makeKey('renameFilter'),
+    name: 'Rename Filter',
+    icon: 'ph--pencil-simple--regular',
+  },
+  input: Schema.Struct({
+    mailbox: Schema.Any,
+    name: Schema.String,
+    caller: Schema.optional(Schema.String),
+  }),
+  output: Schema.Void,
+});
+
 /**
  * Delete a calendar event. A draft (local) event is simply removed from the database; a synced
  * event is deleted on Google Calendar (by its foreign key) and removed from the calendar feed.
