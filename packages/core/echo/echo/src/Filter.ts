@@ -494,4 +494,5 @@ export const toPredicate: {
   <T extends Entity.Unknown>(filter: Filter<T>) => (entity: Entity.Unknown) => entity is T,
   <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>) => entity is T
 >(2, <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T =>
-  internal.filterMatchEntity(filter.ast, entity));
+  internal.filterMatchEntity(filter.ast, entity),
+);

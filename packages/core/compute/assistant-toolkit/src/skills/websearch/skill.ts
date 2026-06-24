@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { Fetch } from './operations/definitions';
-import { WebSearchToolkit, WebSearchToolkitOpaque } from './toolkit';
+import { WebSearchToolkit } from './toolkit';
 
 const SKILL_KEY = 'org.dxos.skill.webSearch';
 

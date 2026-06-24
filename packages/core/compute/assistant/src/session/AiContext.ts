@@ -6,7 +6,6 @@
 
 import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
-import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
+
 import { AsyncTask, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
@@ -21,7 +23,6 @@ import {
   type WorkerCoordinatorMessage,
   type WorkerOrPort,
 } from './types';
-import { Cause, Effect } from 'effect';
 
 export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
@@ -143,15 +144,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     log('dedicated-worker-client-services: leader watch started');
     this.#connectTask.open();
     log('dedicated-worker-client-services: running initial connect task');
-    await waitWithLockOrRpcTimeout(
-      this.#connectTask.runBlocking(),
-      'running dedicated worker initial connect task',
-    );
+    await waitWithLockOrRpcTimeout(this.#connectTask.runBlocking(), 'running dedicated worker initial connect task');
     log('dedicated-worker-client-services: initial connect task returned, awaiting initial connection');
-    await waitWithLockOrRpcTimeout(
-      this.#initialConnection.wait(),
-      'establishing initial dedicated worker connection',
-    );
+    await waitWithLockOrRpcTimeout(this.#initialConnection.wait(), 'establishing initial dedicated worker connection');
     log('dedicated-worker-client-services: initial connection established');
   }
 
@@ -194,7 +189,12 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
             sendHeartbeat();
             const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
 
-            this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
+            this.#leaderSession = new LeaderSession(
+              this.#createWorker,
+              this.#coordinator,
+              this.#config,
+              this.#clientId,
+            );
             const done = new Trigger();
             this.#leaderDone = done;
             this._ctx.onDispose(() => done.wake());
@@ -209,10 +209,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
             });
             try {
               log('dedicated-worker-client-services: opening leader session');
-              await waitWithLockOrRpcTimeout(
-                this.#leaderSession.open(),
-                'opening dedicated worker leader session',
-              );
+              await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening dedicated worker leader session');
               log('dedicated-worker-client-services: leader session opened');
               await done.wait(); // Hold until the leader session is closed.
               log('dedicated-worker-client-services: leader session done');
@@ -310,9 +307,12 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       );
 
       if (result === LEADER_TIMEOUT) {
-        log.warn(lockOrRpcTimeoutError('waiting for dedicated worker provide-port RPC reply', this.#leaderPortTimeout).message, {
-          clientId: this.#clientId,
-        });
+        log.warn(
+          lockOrRpcTimeoutError('waiting for dedicated worker provide-port RPC reply', this.#leaderPortTimeout).message,
+          {
+            clientId: this.#clientId,
+          },
+        );
         await this.#maybeStealStaleLeader();
         // Retry the connect; a fresh leader (this tab or another) is now being elected.
         this.#connectTask.schedule();
@@ -621,5 +621,4 @@ const requestExclusiveLockWithTimeout = async (
   }
 };
 
-
-Cause.interrupt
+Cause.interrupt;

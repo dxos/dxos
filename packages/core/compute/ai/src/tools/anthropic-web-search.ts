@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Generated } from '@effect/ai-anthropic';
+import * as Generated from '@effect/ai-anthropic/Generated';
 import * as Tool from '@effect/ai/Tool';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
