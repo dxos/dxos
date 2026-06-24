@@ -13,17 +13,7 @@ import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
-
-export const PlanReminder = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.planning.planReminder'),
-    name: 'Plan reminder',
-    description: 'Reminds the agent to continue when its plan still has incomplete tasks.',
-  },
-  input: Schema.Struct({}),
-  output: Schema.Void,
-  services: [Harness.HarnessService, Database.Service],
-});
+import { PlanReminder } from './definitions';
 
 /**
  * End-request hook for the planning blueprint. Reads the agent's plan and, when tasks remain open,
