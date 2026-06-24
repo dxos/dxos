@@ -82,10 +82,14 @@ const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolea
       }
     }
     case 'object': {
-      if (typeof value !== 'object' || value === null) return false;
+      if (typeof value !== 'object' || value === null) {
+        return false;
+      }
       if (filter.props) {
         for (const [key, vf] of Object.entries(filter.props)) {
-          if (!_filterMatchValueLocal(vf, (value as any)[key])) return false;
+          if (!_filterMatchValueLocal(vf, (value as any)[key])) {
+            return false;
+          }
         }
       }
       return true;
@@ -110,13 +114,21 @@ const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean 
     case 'object': {
       if (filter.typename !== null) {
         const typeURI: string | undefined = entity?.['@type'] ?? entity?.system?.type;
-        if (!typeURI || typeURI !== filter.typename) return false;
+        if (!typeURI || typeURI !== filter.typename) {
+          return false;
+        }
       }
-      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity?.id)) return false;
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity?.id)) {
+        return false;
+      }
       if (filter.props) {
         for (const [key, vf] of Object.entries(filter.props)) {
-          if (key.startsWith('@')) continue;
-          if (!_filterMatchValueLocal(vf, entity?.[key])) return false;
+          if (key.startsWith('@')) {
+            continue;
+          }
+          if (!_filterMatchValueLocal(vf, entity?.[key])) {
+            return false;
+          }
         }
       }
       return true;
