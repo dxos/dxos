@@ -214,8 +214,6 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  * Always use alongside {@link TypeSection.createTypeSectionExtension} and
  * {@link TypeSection.createTypeSectionPathResolver} — pass the same `groupId` to all three.
  *
- * @deprecated Moving away from the generic type-section pattern; top-level sections will all be
- * custom going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel, Automation.
  */
 export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId?: string }) => {
   const typename = Type.getTypename(type);
