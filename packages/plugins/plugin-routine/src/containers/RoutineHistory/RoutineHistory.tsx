@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { Icon, List, ListItem, Panel, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Routine } from '#types';
@@ -17,6 +16,12 @@ import { useRoutineHistory } from './useRoutineHistory';
 export type RoutineHistoryProps = {
   role?: string;
   subject: Routine.Routine;
+};
+
+const STATUS_ICONS: Record<RunStatus, string> = {
+  success: 'ph--check-circle--regular',
+  failure: 'ph--x-circle--regular',
+  pending: 'ph--clock--regular',
 };
 
 const STATUS_CLASSES: Record<RunStatus, string> = {
@@ -48,21 +53,25 @@ export const RoutineHistory = ({ role, subject }: RoutineHistoryProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='p-2 overflow-auto'>
+      <Panel.Content classNames='overflow-auto'>
         {runs.length === 0 ? (
           <p className='text-sm text-description p-2'>{t('history.empty.message')}</p>
         ) : (
-          <ul className='flex flex-col gap-1'>
+          <List>
             {runs.map((run) => (
-              <li key={run.pid} className='flex items-center gap-3 rounded px-3 py-2 text-sm hover:bg-hoverSurface'>
-                <span className={mx('w-16 shrink-0 font-medium', STATUS_CLASSES[run.status])}>
-                  {t(`history.status.${run.status}.label`)}
-                </span>
-                <span className='grow text-description truncate'>{formatTimestamp(run.startedAt)}</span>
-                <span className='shrink-0 text-description tabular-nums'>{formatDuration(run.duration)}</span>
-              </li>
+              <ListItem.Root key={run.pid} classNames='px-2'>
+                <ListItem.Endcap>
+                  <Icon icon={STATUS_ICONS[run.status]} size={5} classNames={STATUS_CLASSES[run.status]} />
+                </ListItem.Endcap>
+                <ListItem.Heading classNames='flex flex-col items-start grow truncate'>
+                  <div className='truncate'>{formatTimestamp(run.startedAt)}</div>
+                  <div className='text-description text-sm truncate'>
+                    {t(`history.status.${run.status}.label`)} · {formatDuration(run.duration)}
+                  </div>
+                </ListItem.Heading>
+              </ListItem.Root>
             ))}
-          </ul>
+          </List>
         )}
       </Panel.Content>
     </Panel.Root>
