@@ -38,7 +38,9 @@ const SPLITTER_NAME = 'Splitter';
 type SplitterContextValue = {
   orientation: Orientation;
   mode: SplitterMode;
-  /** Start panel extent in rem (the end panel fills the remainder). */
+  /** Which panel `size` measures; the other panel fills the remainder. */
+  anchor: Position;
+  /** The anchored panel's extent in rem. */
   size: number;
   transition: number;
   resizable: boolean;
@@ -62,11 +64,12 @@ const clampStyle = (minSize: number, orientation: Orientation): CSSProperties =>
 const endMinStyle = (minSize: number, orientation: Orientation): CSSProperties =>
   orientation === 'horizontal' ? { minInlineSize: `${minSize}rem` } : { minBlockSize: `${minSize}rem` };
 
-// In `split` mode the start panel is fixed at `size` rem (clamped) and the end panel fills the rest;
+// In `split` mode the anchored panel is fixed at `size` rem (clamped) and the other fills the rest;
 // otherwise one panel fills (flex-grow) and the other collapses to zero (content stays mounted, clipped).
 const panelStyle = (
   position: Position,
   mode: SplitterMode,
+  anchor: Position,
   size: number,
   minSize: number,
   orientation: Orientation,
@@ -76,9 +79,22 @@ const panelStyle = (
     return { flexGrow: fills ? 1 : 0, flexShrink: 1, flexBasis: 0 };
   }
 
-  return position === 'start'
+  return position === anchor
     ? { flexGrow: 0, flexShrink: 1, flexBasis: `${size}rem`, ...clampStyle(minSize, orientation) }
     : { flexGrow: 1, flexShrink: 1, flexBasis: 0, ...endMinStyle(minSize, orientation) };
+};
+
+// Absolute position for the handle, centered on the split point (`size` rem from the anchored edge).
+const handlePosition = (orientation: Orientation, anchor: Position, size: number): CSSProperties => {
+  const offset = `${size}rem`;
+  if (orientation === 'horizontal') {
+    return anchor === 'end'
+      ? { insetBlock: 0, insetInlineEnd: offset, transform: 'translateX(50%)' }
+      : { insetBlock: 0, insetInlineStart: offset, transform: 'translateX(-50%)' };
+  }
+  return anchor === 'end'
+    ? { insetInline: 0, insetBlockEnd: offset, transform: 'translateY(50%)' }
+    : { insetInline: 0, insetBlockStart: offset, transform: 'translateY(-50%)' };
 };
 
 //
@@ -90,7 +106,9 @@ const ROOT_NAME = 'Splitter.Root';
 type SplitterRootElementProps = {
   orientation?: Orientation;
   mode?: SplitterMode;
-  /** Start panel extent in rem (controlled). */
+  /** Which panel `size` measures (defaults to `start`); the other panel fills the remainder. */
+  anchor?: Position;
+  /** The anchored panel's extent in rem (controlled). */
   size?: number;
   defaultSize?: number;
   onSizeChange?: (size: number) => void;
@@ -109,6 +127,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
       children,
       orientation = 'vertical',
       mode = 'split',
+      anchor = 'start',
       size: sizeProp,
       defaultSize = 16,
       onSizeChange,
@@ -135,6 +154,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
       <SplitterProvider
         orientation={orientation}
         mode={mode}
+        anchor={anchor}
         size={size}
         transition={transition}
         resizable={resizable}
@@ -165,7 +185,7 @@ type SplitterPanelProps = SlottableProps<{ position: Position }>;
 const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
   ({ asChild, children, position, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { orientation, mode, size, minSize, transition, dragging } = useSplitterContext(PANEL_NAME);
+    const { orientation, mode, anchor, size, minSize, transition, dragging } = useSplitterContext(PANEL_NAME);
     const { className, style, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
 
@@ -178,7 +198,7 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
         ref={forwardedRef}
         className={tx('splitter.panel', {}, className)}
         style={{
-          ...panelStyle(position, mode, size, minSize, orientation),
+          ...panelStyle(position, mode, anchor, size, minSize, orientation),
           transition: animate ? `flex-grow ${transition}ms ease-out, flex-basis ${transition}ms ease-out` : undefined,
           ...style,
         }}
@@ -203,7 +223,8 @@ const getRem = (): number => parseFloat(getComputedStyle(document.documentElemen
 
 const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { orientation, size, resizable, minSize, rootRef, setSize, setDragging } = useSplitterContext(HANDLE_NAME);
+  const { orientation, anchor, size, resizable, minSize, rootRef, setSize, setDragging } =
+    useSplitterContext(HANDLE_NAME);
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
 
@@ -228,8 +249,8 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
     [setDragging],
   );
 
-  // Map the pointer position within the Root to the start panel's extent (rem), clamped so neither panel
-  // drops below `minSize`.
+  // Map the pointer position within the Root to the anchored panel's extent (rem), clamped so neither
+  // panel drops below `minSize`. For an `end` anchor the extent is measured from the far edge.
   const handlePointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -243,9 +264,10 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
       const rem = getRem();
       const offset = (orientation === 'horizontal' ? event.clientX - rect.left : event.clientY - rect.top) / rem;
       const extent = (orientation === 'horizontal' ? rect.width : rect.height) / rem;
-      setSize(Math.min(Math.max(offset, minSize), Math.max(minSize, extent - minSize)));
+      const next = anchor === 'end' ? extent - offset : offset;
+      setSize(Math.min(Math.max(next, minSize), Math.max(minSize, extent - minSize)));
     },
-    [orientation, minSize, rootRef, setSize],
+    [orientation, anchor, minSize, rootRef, setSize],
   );
 
   const handlePointerUp = useCallback(
@@ -297,6 +319,7 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
       aria-valuemin={Math.round(minSize)}
       aria-valuenow={Math.round(size)}
       className={tx('splitter.handle', { orientation }, className)}
+      style={handlePosition(orientation, anchor, size)}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
