@@ -274,6 +274,10 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   }, TestHelpers.provideTestContext);
 };
 
+// Memoized replays still initialize the test harness and process conversations — allow enough
+// headroom for slow CI nodes without enabling full LLM generation.
+const MEMOIZED_TEST_TIMEOUT = 60_000;
+
 // Use long timeout when generation is enabled or when running live (memoization disabled).
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
-  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : undefined;
+  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;
