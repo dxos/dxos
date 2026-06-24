@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
-
 import {
   type CreateAgentRequestBody,
   type DeleteIdentityRequest,
@@ -107,5 +105,3 @@ export type LegacyDeleteIdentityResponse = Omit<DeleteIdentityResponse, 'identit
   identityKey: string;
 };
 
-// Re-export SpaceId so consumers of the legacy shapes don't need a second import.
-export type { SpaceId };
