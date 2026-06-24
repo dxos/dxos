@@ -18,19 +18,26 @@ const ITEMS: Item[] = Array.from({ length: 6 }, (_, i) => ({ id: `tile-${i}`, la
 const DEFAULT_HORIZONTAL: Size = 24;
 const DEFAULT_VERTICAL: Size = 8;
 
+// Per-axis resize bounds (rem) declared on the tile.
+const BOUNDS = {
+  horizontal: { minSize: 12, maxSize: 40 },
+  vertical: { minSize: 4, maxSize: 16 },
+} as const;
+
 type ResizableTileProps = MosaicTileProps<Item> & {
   onResize: (id: string, size: Size) => void;
 };
 
 const ResizableTile = ({ data, size, onResize, ...tileProps }: ResizableTileProps) => {
   const handleSizeChange = useCallback((next: Size) => onResize(data.id, next), [data.id, onResize]);
+
   return (
     <Mosaic.Tile
       {...tileProps}
+      classNames='flex flex-col p-2 m-1 border border-separator rounded-sm bg-base-surface overflow-hidden'
       data={data}
       size={size}
       onSizeChange={handleSizeChange}
-      classNames='flex flex-col p-2 m-1 border border-separator rounded-sm bg-base-surface overflow-hidden'
     >
       <div className='font-medium'>{data.label}</div>
       <div className='text-xs text-description'>{typeof size === 'number' ? `${size}rem` : 'intrinsic'}</div>
@@ -48,11 +55,17 @@ const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
 
   const handleSizeChange = useCallback((id: string, size: Size) => setSizes((prev) => ({ ...prev, [id]: size })), []);
 
+  const bounds = BOUNDS[orientation];
   const Tile = useMemo(
     () => (tileProps: MosaicTileProps<Item>) => (
-      <ResizableTile {...tileProps} size={sizes[tileProps.data.id]} onResize={handleSizeChange} />
+      <ResizableTile
+        {...tileProps}
+        {...bounds}
+        size={sizes[tileProps.data.id]}
+        onResize={handleSizeChange}
+      />
     ),
-    [sizes, handleSizeChange],
+    [sizes, handleSizeChange, bounds],
   );
 
   return (

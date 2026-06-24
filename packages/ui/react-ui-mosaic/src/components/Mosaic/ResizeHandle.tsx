@@ -18,9 +18,9 @@ const MIN_HEIGHT = 3;
 const DEFAULT_EXTRINSIC_SIZE = 50;
 
 export type MosaicResizeHandleProps = {
-  /** Lower bound in rem; defaults to a sensible per-axis minimum. */
+  /** Lower bound in rem; overrides the tile's `minSize`, else a sensible per-axis minimum. */
   minSize?: number;
-  /** Upper bound in rem. */
+  /** Upper bound in rem; overrides the tile's `maxSize`. */
   maxSize?: number;
   /** Extent assumed before the subject is first measured. */
   fallbackSize?: number;
@@ -29,7 +29,8 @@ export type MosaicResizeHandleProps = {
 /**
  * Edge affordance that resizes the enclosing {@link MosaicTile}. The axis tracks the container
  * orientation (width when horizontal, height when vertical); the tile must be given a `size` so the
- * dragged extent is reflected and persisted via its `onSizeChange`.
+ * dragged extent is reflected and persisted via its `onSizeChange`. Resize bounds default to the
+ * tile's `minSize`/`maxSize` and can be overridden per handle.
  */
 export const MosaicResizeHandle = ({
   minSize,
@@ -37,15 +38,15 @@ export const MosaicResizeHandle = ({
   fallbackSize = DEFAULT_EXTRINSIC_SIZE,
 }: MosaicResizeHandleProps) => {
   const { orientation = 'vertical' } = useMosaicContainerContext(MOSAIC_RESIZE_HANDLE_NAME);
-  const { size, setSize } = useMosaicTileContext(MOSAIC_RESIZE_HANDLE_NAME);
+  const { size, setSize, minSize: tileMinSize, maxSize: tileMaxSize } = useMosaicTileContext(MOSAIC_RESIZE_HANDLE_NAME);
   const horizontal = orientation === 'horizontal';
 
   return (
     <ResizeHandle
       side={horizontal ? 'inline-end' : 'block-end'}
       fallbackSize={fallbackSize}
-      minSize={minSize ?? (horizontal ? MIN_WIDTH : MIN_HEIGHT)}
-      maxSize={maxSize}
+      minSize={minSize ?? tileMinSize ?? (horizontal ? MIN_WIDTH : MIN_HEIGHT)}
+      maxSize={maxSize ?? tileMaxSize}
       size={size}
       onSizeChange={setSize}
     />

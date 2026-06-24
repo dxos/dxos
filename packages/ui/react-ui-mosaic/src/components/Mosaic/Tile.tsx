@@ -48,6 +48,9 @@ type MosaicTileContextValue = {
   size?: Size;
   /** Update the tile extent. A `commit` (drop) propagates to the consumer's `onSizeChange`. */
   setSize: (size: Size, commit?: boolean) => void;
+  /** Resize bounds (rem) declared by the tile; consumed by `Mosaic.ResizeHandle`. */
+  minSize?: number;
+  maxSize?: number;
 };
 
 const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTileContextValue>('MosaicTile');
@@ -76,6 +79,10 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
     size?: Size;
     /** Called when the user commits a resize (on drop). */
     onSizeChange?: (size: Size) => void;
+    /** Lower bound for the resizable extent in rem; enforced during drag and as a CSS min constraint. */
+    minSize?: number;
+    /** Upper bound for the resizable extent in rem; enforced during drag and as a CSS max constraint. */
+    maxSize?: number;
     debug?: boolean;
   }>
 >;
@@ -95,6 +102,8 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       selected,
       size: sizeProp,
       onSizeChange,
+      minSize,
+      maxSize,
       debug: _,
       ...props
     },
@@ -231,19 +240,25 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
 
     const { className, ...rest } = composableProps(props, { classNames: 'relative outline-none' });
 
-    // Apply the resize subject marker + explicit extent only when sized, so unsized tiles keep
-    // their intrinsic layout. The axis follows the container orientation (width vs height).
+    // Apply the resize subject marker + explicit extent/bounds only when sized or bounded, so plain
+    // tiles keep their intrinsic layout. The axis follows the container orientation (width vs height).
+    const vertical = orientation === 'vertical';
     const sized = size != null;
-    const resizeStyle = sized ? sizeStyle(size, orientation === 'vertical' ? 'vertical' : 'horizontal') : undefined;
+    const bounded = sized || minSize != null || maxSize != null;
+    const sizeStyles = {
+      ...(sized && sizeStyle(size, vertical ? 'vertical' : 'horizontal')),
+      ...(minSize != null && { [vertical ? 'minBlockSize' : 'minInlineSize']: `${minSize}rem` }),
+      ...(maxSize != null && { [vertical ? 'maxBlockSize' : 'maxInlineSize']: `${maxSize}rem` }),
+    };
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
-      <MosaicTileContextProvider state={state} size={size} setSize={setSize}>
+      <MosaicTileContextProvider state={state} size={size} setSize={setSize} minSize={minSize} maxSize={maxSize}>
         <Comp
           {...rest}
-          {...(sized && resizeAttributes)}
-          {...(sized && { style: resizeStyle })}
+          {...(bounded && resizeAttributes)}
+          {...(bounded && { style: sizeStyles })}
           {...{
             'data-object-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
