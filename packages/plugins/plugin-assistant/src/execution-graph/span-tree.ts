@@ -4,6 +4,7 @@
 
 import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
+import { EID } from '@dxos/keys';
 
 /**
  * Synthetic id assigned to the root span.
@@ -54,8 +55,8 @@ const computeMeta = (rawMeta: Trace.Meta): SpanMeta => ({
   pid: rawMeta.pid,
   parentPid: rawMeta.parentPid,
   processName: rawMeta.processName,
-  conversationId: rawMeta.conversationId,
-  triggerId: rawMeta.triggerId,
+  conversationId: rawMeta.conversation ? EID.getEntityId(EID.parse(rawMeta.conversation.uri)) : undefined,
+  triggerId: rawMeta.trigger ? EID.getEntityId(EID.parse(rawMeta.trigger.uri)) : undefined,
   toolCallId: rawMeta.toolCallId,
   runtimeName: rawMeta.runtimeName,
 });

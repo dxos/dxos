@@ -80,7 +80,7 @@ const meta: Meta<SplitterRootProps> = {
   title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
   render: BasicStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
@@ -90,30 +90,51 @@ export default meta;
 
 type Story = StoryObj<SplitterRootProps>;
 
-export const Vertical: Story = {
+export const VerticalStart: Story = {
   args: {
+    orientation: 'vertical',
+    anchor: 'start',
     resizable: true,
-    defaultRatio: 0.4,
-    minRatio: 0.2,
-    maxRatio: 0.8,
+    defaultSize: 20,
+    minSize: 6,
+  },
+};
+
+export const VerticalEnd: Story = {
+  args: {
+    orientation: 'vertical',
+    anchor: 'end',
+    resizable: true,
+    defaultSize: 20,
+    minSize: 6,
   },
 };
 
 export const VerticalAnimated: Story = {
   render: ToolbarStory,
   args: {
+    orientation: 'vertical',
     transition: 250,
-    defaultRatio: 0.4,
   },
 };
 
-export const Horizontal: Story = {
+export const HorizontalStart: Story = {
   args: {
     orientation: 'horizontal',
+    anchor: 'start',
     resizable: true,
-    defaultRatio: 0.4,
-    minRatio: 0.2,
-    maxRatio: 0.8,
+    defaultSize: 30,
+    minSize: 6,
+  },
+};
+
+export const HorizontalEnd: Story = {
+  args: {
+    orientation: 'horizontal',
+    anchor: 'end',
+    resizable: true,
+    defaultSize: 30,
+    minSize: 6,
   },
 };
 
@@ -122,6 +143,5 @@ export const HorizontalAnimated: Story = {
   args: {
     orientation: 'horizontal',
     transition: 250,
-    defaultRatio: 0.4,
   },
 };

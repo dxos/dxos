@@ -39,7 +39,7 @@ export const SimpleLayout = () => {
             onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
           >
             <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>
-              <Splitter.Root orientation='vertical' mode={splitterMode} ratio={0.55}>
+              <Splitter.Root orientation='vertical' mode={splitterMode} size={24}>
                 <Splitter.Panel position='start'>
                   <Main />
                 </Splitter.Panel>

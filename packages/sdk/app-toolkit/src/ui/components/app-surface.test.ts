@@ -13,6 +13,12 @@ import * as AppSurface from './app-surface';
 
 const TypeA = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0')));
 
+// A class-based type (like real ECHO types declared via `Type.declareObj`); unlike `Type.makeObject` schemas
+// it is `typeof === 'function'`, exercising the companion guard's schema-vs-guard disambiguation.
+class TypeC extends Type.declareObj<TypeC>()(
+  Schema.Struct({ title: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeC', '0.1.0'))),
+) {}
+
 const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
   Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0')),
 );
@@ -241,6 +247,15 @@ describe('AppSurface', () => {
       const filter = AppSurface.companion(AppSurface.Article, 'feeds-root');
       expect(filter.bindings[0].guard({ companionTo: 'feeds-root' })).toBe(true);
       expect(filter.bindings[0].guard({ companionTo: 'other' })).toBe(false);
+    });
+
+    test('matches a class-based type companion (schema is typeof function)', ({ expect }) => {
+      const filter = AppSurface.companion(AppSurface.Article, TypeC);
+      const objectC = Obj.make(TypeC, { title: 'hello' });
+      const objectB = Obj.make(TypeB, { value: 42 });
+      // Must not invoke the schema class as a guard predicate (would throw "cannot be invoked without 'new'").
+      expect(filter.bindings[0].guard({ companionTo: objectC })).toBe(true);
+      expect(filter.bindings[0].guard({ companionTo: objectB })).toBe(false);
     });
   });
 
