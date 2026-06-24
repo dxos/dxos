@@ -72,7 +72,7 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
             {screenshots.length > 0 && (
-              <Carousel.Root count={screenshots.length}>
+              <Carousel.Root count={screenshots.length} transition='slide'>
                 <Carousel.Content classNames='w-full'>
                   <Carousel.Previous />
                   <Carousel.Viewport>

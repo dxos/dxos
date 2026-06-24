@@ -90,10 +90,22 @@ export default meta;
 
 type Story = StoryObj<SplitterRootProps>;
 
-export const Vertical: Story = {
+export const VerticalStart: Story = {
   args: {
+    orientation: 'vertical',
+    anchor: 'start',
     resizable: true,
-    defaultSize: 12,
+    defaultSize: 20,
+    minSize: 6,
+  },
+};
+
+export const VerticalEnd: Story = {
+  args: {
+    orientation: 'vertical',
+    anchor: 'end',
+    resizable: true,
+    defaultSize: 20,
     minSize: 6,
   },
 };
@@ -101,8 +113,8 @@ export const Vertical: Story = {
 export const VerticalAnimated: Story = {
   render: ToolbarStory,
   args: {
+    orientation: 'vertical',
     transition: 250,
-    defaultSize: 12,
   },
 };
 
@@ -111,7 +123,7 @@ export const HorizontalStart: Story = {
     orientation: 'horizontal',
     anchor: 'start',
     resizable: true,
-    defaultSize: 20,
+    defaultSize: 30,
     minSize: 6,
   },
 };
@@ -121,7 +133,7 @@ export const HorizontalEnd: Story = {
     orientation: 'horizontal',
     anchor: 'end',
     resizable: true,
-    defaultSize: 20,
+    defaultSize: 30,
     minSize: 6,
   },
 };

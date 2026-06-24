@@ -48,8 +48,8 @@ type SplitterContextValue = {
   /** Lower bound (rem) applied to both panels. */
   minSize: number;
   dragging: boolean;
-  /** True while the container itself is resizing; suppresses the panel transition to avoid jitter. */
-  resizing: boolean;
+  /** True only briefly after a `mode` change, so the collapse animates but layout reflows (resize) do not. */
+  animating: boolean;
   rootRef: RefObject<HTMLDivElement | null>;
   setSize: (size: number) => void;
   setDragging: (dragging: boolean) => void;
@@ -170,34 +170,23 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     });
     const [dragging, setDragging] = useState(false);
 
-    // Suppress the panel transition while the container itself is resizing (window/sidebar) so the panels
-    // track the new size instantly instead of animating/jittering. Observing the root distinguishes a
-    // container resize from an internal split change (which leaves the root size unchanged), so the
-    // collapse animation still plays.
-    const [resizing, setResizing] = useState(false);
+    // Animate ONLY for a brief window right after a `mode` change (the collapse). The rest of the time the
+    // transition is off, so layout reflows from a container/window resize never animate (no jitter) — this
+    // avoids relying on observing/throttling resize events at all.
+    const [animating, setAnimating] = useState(false);
+    const previousMode = useRef(mode);
     useEffect(() => {
-      const root = rootRef.current;
-      if (!root || typeof ResizeObserver === 'undefined') {
+      if (previousMode.current === mode) {
         return;
       }
-
-      let initial = true;
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const observer = new ResizeObserver(() => {
-        if (initial) {
-          initial = false;
-          return;
-        }
-        setResizing(true);
-        clearTimeout(timer);
-        timer = setTimeout(() => setResizing(false), 150);
-      });
-      observer.observe(root);
-      return () => {
-        observer.disconnect();
-        clearTimeout(timer);
-      };
-    }, []);
+      previousMode.current = mode;
+      if (transition <= 0) {
+        return;
+      }
+      setAnimating(true);
+      const timer = setTimeout(() => setAnimating(false), transition);
+      return () => clearTimeout(timer);
+    }, [mode, transition]);
 
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -211,7 +200,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
         transition={transition}
         resizable={resizable}
         minSize={minSize}
-        resizing={resizing}
+        animating={animating}
         dragging={dragging}
         rootRef={rootRef}
         setSize={setSize}
@@ -238,13 +227,14 @@ type SplitterPanelProps = SlottableProps<{ position: Position }>;
 const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
   ({ asChild, children, position, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { orientation, mode, anchor, size, minSize, transition, dragging, resizing } = useSplitterContext(PANEL_NAME);
+    const { orientation, mode, anchor, size, minSize, transition, dragging, animating } =
+      useSplitterContext(PANEL_NAME);
     const { className, style, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
 
-    // Disable the animation while dragging (track the pointer) or while the container resizes (avoid
-    // jitter); otherwise animate collapse.
-    const animate = transition > 0 && !dragging && !resizing;
+    // Only animate during the brief post-mode-change window (collapse), never while dragging or on a plain
+    // container/window resize — so the panels track layout reflows instantly without jitter.
+    const animate = transition > 0 && animating && !dragging;
 
     return (
       <Comp

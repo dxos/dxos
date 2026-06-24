@@ -335,19 +335,19 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='flex justify-between'>
+        <div className='flex justify-between overflow-hidden'>
           <Field label={t('schedule.at.label')}>
             <Input.Root>
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
             </Input.Root>
           </Field>
-          <div className='flex gap-2'>
+          <div className='flex gap-2 overflow-auto scrollbar-hidden'>
             <div className='flex items-center text-sm'>{t('schedule.on.label')}</div>
-            <div className='grid grid-cols-7 gap-2 w-fit pr-2'>
+            <div className='grid grid-cols-7 gap-2'>
               {Days.map(({ value: day, label }) => {
                 const checked = value.days.includes(day);
                 return (
-                  <label key={day} className='flex items-center gap-1'>
+                  <div key={day} className='flex items-center gap-1'>
                     <Input.Root>
                       <Input.Checkbox
                         checked={checked}
@@ -361,9 +361,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                           onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
                         }}
                       />
+                      <Input.Label classNames='text-sm whitespace-nowrap'>{label}</Input.Label>
                     </Input.Root>
-                    <span className='text-sm'>{label}</span>
-                  </label>
+                  </div>
                 );
               })}
             </div>
