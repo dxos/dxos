@@ -2,31 +2,59 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContextScope } from '@radix-ui/react-context';
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React from 'react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import React, { type PointerEvent, type RefObject, useCallback, useRef, useState } from 'react';
+
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
-import { ThemedClassName } from '../../util';
 
-type ScopedProps<P> = P & { __scopeSplitter?: any };
+type Orientation = 'horizontal' | 'vertical';
 
-// TODO(burdon): Generalize horizontal/vertical and change to start/end.
-type Mode = 'top' | 'bottom' | 'split';
+// Animated panel visibility: collapse to the start panel, the end panel, or show both at `ratio`.
+type SplitterMode = 'start' | 'end' | 'split';
 
-type SplitterContextValue = {
-  mode: Mode;
-  ratio?: number;
-  transition: number;
-};
+type Position = 'start' | 'end';
+
+//
+// Context
+//
 
 const SPLITTER_NAME = 'Splitter';
 
-const [createSplitterContext, createSplitterScope] = createContextScope(SPLITTER_NAME);
+type SplitterContextValue = {
+  orientation: Orientation;
+  mode: SplitterMode;
+  ratio: number;
+  transition: number;
+  resizable: boolean;
+  minRatio: number;
+  maxRatio: number;
+  dragging: boolean;
+  rootRef: RefObject<HTMLDivElement | null>;
+  setRatio: (ratio: number) => void;
+  setDragging: (dragging: boolean) => void;
+};
 
-const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterContextValue>(SPLITTER_NAME);
+const [SplitterProvider, useSplitterContext] = createContext<SplitterContextValue>(SPLITTER_NAME);
+
+// Flex-grow share allotted to a panel: governed by `ratio` when both are visible, otherwise 1/0 so the
+// collapsed panel shrinks to zero (its content stays mounted but clipped).
+const panelGrow = (position: Position, mode: SplitterMode, ratio: number): number => {
+  switch (mode) {
+    case 'start':
+      return position === 'start' ? 1 : 0;
+    case 'end':
+      return position === 'start' ? 0 : 1;
+    default:
+      return position === 'start' ? ratio : 1 - ratio;
+  }
+};
 
 //
 // Root
@@ -34,18 +62,65 @@ const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterCon
 
 const ROOT_NAME = 'Splitter.Root';
 
-type SplitterRootProps = Partial<SplitterContextValue>;
+type SplitterRootElementProps = {
+  orientation?: Orientation;
+  mode?: SplitterMode;
+  ratio?: number;
+  defaultRatio?: number;
+  onRatioChange?: (ratio: number) => void;
+  transition?: number;
+  resizable?: boolean;
+  minRatio?: number;
+  maxRatio?: number;
+};
 
-const SplitterRoot = slottable<HTMLDivElement, SplitterRootProps>(
-  ({ asChild, mode = 'top', ratio = 0.5, transition = 250, children, ...props }, forwardedRef) => {
+type SplitterRootProps = SlottableProps<SplitterRootElementProps>;
+
+const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
+  (
+    {
+      asChild,
+      children,
+      orientation = 'vertical',
+      mode = 'split',
+      ratio: ratioProp,
+      defaultRatio = 0.5,
+      onRatioChange,
+      transition = 250,
+      resizable = false,
+      minRatio = 0,
+      maxRatio = 1,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { tx } = useThemeContext();
-    const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
-    const { className, ...restProps } = composableProps(rest);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const composedRef = useComposedRefs(forwardedRef, rootRef);
+    const [ratio = defaultRatio, setRatio] = useControllableState({
+      prop: ratioProp,
+      defaultProp: defaultRatio,
+      onChange: onRatioChange,
+    });
+    const [dragging, setDragging] = useState(false);
+    const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
-        <Comp {...restProps} ref={forwardedRef} className={tx('splitter.root', {}, className)}>
+      <SplitterProvider
+        orientation={orientation}
+        mode={mode}
+        ratio={ratio}
+        transition={transition}
+        resizable={resizable}
+        minRatio={minRatio}
+        maxRatio={maxRatio}
+        dragging={dragging}
+        rootRef={rootRef}
+        setRatio={setRatio}
+        setDragging={setDragging}
+      >
+        <Comp {...rest} ref={composedRef} className={tx('splitter.root', { orientation }, className)}>
           {children}
         </Comp>
       </SplitterProvider>
@@ -61,42 +136,28 @@ SplitterRoot.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-type SplitterPanelProps = ThemedClassName<{
-  position: 'top' | 'bottom';
-}>;
+type SplitterPanelProps = SlottableProps<{ position: Position }>;
 
-const SplitterPanel = slottable<HTMLDivElement, SplitterPanelProps>(
-  ({ classNames, asChild, children, position, style, ...props }, forwardedRef) => {
+const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
+  ({ asChild, children, position, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
+    const { mode, ratio, transition, dragging } = useSplitterContext(PANEL_NAME);
+    const { className, style, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const { mode, ratio = 0.5, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
-    const { className, ...restProps } = composableProps(rest);
 
-    // Calculate position and height based on mode and ratio.
-    const isTopPanel = position === 'top';
-    const topOffset = isTopPanel ? '0%' : mode === 'top' ? '100%' : mode === 'bottom' ? '0%' : `${ratio * 100}%`;
-    const height = isTopPanel
-      ? mode === 'top'
-        ? '100%'
-        : mode === 'bottom'
-          ? '0%'
-          : `${ratio * 100}%`
-      : mode === 'bottom'
-        ? '100%'
-        : mode === 'top'
-          ? '0%'
-          : `${(1 - ratio) * 100}%`;
+    // Disable the animation while dragging so the panel tracks the pointer; otherwise animate collapse.
+    const animate = transition > 0 && !dragging;
 
     return (
       <Comp
-        {...restProps}
+        {...rest}
         ref={forwardedRef}
         className={tx('splitter.panel', {}, className)}
         style={{
-          top: topOffset,
-          height,
-          transition: `top ${transition}ms, height ${transition}ms ease-out`,
+          flexGrow: panelGrow(position, mode, ratio),
+          flexShrink: 1,
+          flexBasis: 0,
+          transition: animate ? `flex-grow ${transition}ms ease-out` : undefined,
           ...style,
         }}
       >
@@ -109,14 +170,101 @@ const SplitterPanel = slottable<HTMLDivElement, SplitterPanelProps>(
 SplitterPanel.displayName = PANEL_NAME;
 
 //
+// Handle
+//
+
+const HANDLE_NAME = 'Splitter.Handle';
+
+type SplitterHandleProps = SlottableProps;
+
+const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { orientation, resizable, minRatio, maxRatio, rootRef, setRatio, setDragging } =
+    useSplitterContext(HANDLE_NAME);
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) {
+        return;
+      }
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+    },
+    [setDragging],
+  );
+
+  // Map the pointer position within the Root into a ratio for the start panel, clamped to [min, max].
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+        return;
+      }
+      const root = rootRef.current;
+      if (!root) {
+        return;
+      }
+      const rect = root.getBoundingClientRect();
+      const next =
+        orientation === 'horizontal'
+          ? (event.clientX - rect.left) / rect.width
+          : (event.clientY - rect.top) / rect.height;
+      setRatio(Math.min(maxRatio, Math.max(minRatio, next)));
+    },
+    [orientation, minRatio, maxRatio, rootRef, setRatio],
+  );
+
+  const handlePointerUp = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      setDragging(false);
+    },
+    [setDragging],
+  );
+
+  if (!resizable) {
+    return null;
+  }
+
+  return (
+    <Comp
+      {...rest}
+      ref={forwardedRef}
+      role='separator'
+      aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
+      className={tx('splitter.handle', { orientation }, className)}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      {children}
+    </Comp>
+  );
+});
+
+SplitterHandle.displayName = HANDLE_NAME;
+
+//
 // Splitter
 //
 
 const Splitter = {
   Root: SplitterRoot,
   Panel: SplitterPanel,
+  Handle: SplitterHandle,
 };
 
-export { Splitter, createSplitterScope };
+export { Splitter };
 
-export type { Mode as SplitterMode, SplitterRootProps, SplitterPanelProps };
+export type {
+  Orientation as SplitterOrientation,
+  SplitterMode,
+  SplitterRootProps,
+  SplitterPanelProps,
+  SplitterHandleProps,
+};

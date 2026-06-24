@@ -80,33 +80,33 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
 };
 
 const DefaultStory = () => {
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('top');
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
-    setSplitterMode(splitterMode === 'split' ? 'bottom' : splitterMode);
+    setSplitterMode((current) => (current === 'split' ? 'end' : current));
   }, [keyboardOpen]);
 
   return (
     <WithKeyboard>
       <MobileLayout.Root onKeyboardOpenChange={setKeyboardOpen}>
-        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'top' }}>
-          <Splitter.Root mode={splitterMode} ratio={0.5}>
-            <Splitter.Panel position='top'>
+        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>
+          <Splitter.Root orientation='vertical' mode={splitterMode} ratio={0.5}>
+            <Splitter.Panel position='start'>
               <StoryPanel label='Main'>
-                {splitterMode === 'top' && (
+                {splitterMode === 'start' && (
                   <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
                 )}
               </StoryPanel>
             </Splitter.Panel>
-            <Splitter.Panel position='bottom'>
+            <Splitter.Panel position='end'>
               <StoryPanel label='Drawer'>
                 <Toolbar.IconButton
-                  icon={splitterMode === 'bottom' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
-                  label={splitterMode === 'bottom' ? 'Collapse' : 'Expand'}
-                  onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'split' ? 'bottom' : 'split'))}
+                  icon={splitterMode === 'end' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+                  label={splitterMode === 'end' ? 'Collapse' : 'Expand'}
+                  onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'split' ? 'end' : 'split'))}
                 />
-                <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('top')} />
+                <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
               </StoryPanel>
             </Splitter.Panel>
           </Splitter.Root>
