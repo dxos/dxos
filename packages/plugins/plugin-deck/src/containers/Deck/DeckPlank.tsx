@@ -87,7 +87,12 @@ export const DeckPlank = memo(
       <Surface.Surface type={AppSurface.MenuFooter} data={{ subject: node.data } satisfies AppSurface.MenuFooterData} />
     );
 
-    const main = (
+    // In fullscreen the toolbar is hidden so the content fills the viewport.
+    const headless = layoutMode === 'solo--fullscreen';
+
+    // Apply positioning `classNames` to whichever element is outermost (the Splitter when a companion is
+    // shown, otherwise the Plank itself).
+    const renderPlank = (plankClassNames?: DeckPlankProps['classNames']) => (
       <Plank
         node={node}
         attendableId={id}
@@ -101,18 +106,20 @@ export const DeckPlank = memo(
         sigilFooter={sigilFooter}
         fallback={PlankErrorFallback}
         placeholder={<PlankLoading />}
+        headless={headless}
         onKeyDown={handleKeyDown}
-        classNames={classNames}
+        classNames={plankClassNames}
       />
     );
 
     if (!hasCompanion) {
-      return main;
+      return renderPlank(classNames);
     }
 
     return (
       <Splitter
-        main={main}
+        classNames={classNames}
+        main={renderPlank()}
         companion={
           <Companion
             companions={companions}

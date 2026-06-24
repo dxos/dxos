@@ -41,6 +41,9 @@ export type PlankProps = ThemedClassName<{
   fallback?: SurfaceProps['fallback'];
   /** Loading placeholder for the content surface. */
   placeholder?: SurfaceProps['placeholder'];
+  /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
+  headless?: boolean;
+  // TODO(burdon): Why is this required?
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
 
@@ -51,6 +54,7 @@ export type PlankProps = ThemedClassName<{
  * slots so this component stays free of capabilities/operations.
  */
 export const Plank = ({
+  classNames,
   node,
   attendableId = node.id,
   actions,
@@ -64,14 +68,14 @@ export const Plank = ({
   articleData,
   fallback,
   placeholder,
+  headless,
   onKeyDown,
-  classNames,
 }: PlankProps) => {
   const { t } = useTranslation(meta.profile.key);
   const attentionAttrs = useAttentionAttributes(attendableId);
   const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
   const label = toLocalizedString(node.properties?.label ?? '', t);
-  const surfaceData = useMemo<AppSurface.ArticleData>(
+  const data = useMemo<AppSurface.ArticleData>(
     () => ({ attendableId, subject: node.data, properties: node.properties, popoverAnchorId, ...articleData }),
     [attendableId, node.data, node.properties, popoverAnchorId, articleData],
   );
@@ -81,37 +85,39 @@ export const Plank = ({
 
   return (
     <Pane.Root classNames={classNames} tabIndex={0} onKeyDown={onKeyDown} {...attentionAttrs}>
-      <Pane.Toolbar>
-        <ActionRoot>
-          {actions && actions.length > 0 ? (
-            <AttentionSigil
-              icon={icon}
-              related={related}
-              attendableId={attendableId}
-              actions={actions}
-              onAction={onAction}
-              triggerLabel={label}
-            >
-              {sigilFooter}
-            </AttentionSigil>
-          ) : (
-            <Pane.Sigil attendableId={attendableId}>
-              <span className='sr-only'>{label}</span>
-              <Icon icon={icon} />
-            </Pane.Sigil>
-          )}
-        </ActionRoot>
-        <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
-          {label}
-        </Pane.Title>
-        {navbarEnd}
-        {controls}
-      </Pane.Toolbar>
+      {!headless && (
+        <Pane.Toolbar>
+          <ActionRoot>
+            {actions && actions.length > 0 ? (
+              <AttentionSigil
+                icon={icon}
+                related={related}
+                attendableId={attendableId}
+                actions={actions}
+                onAction={onAction}
+                triggerLabel={label}
+              >
+                {sigilFooter}
+              </AttentionSigil>
+            ) : (
+              <Pane.Sigil attendableId={attendableId}>
+                <span className='sr-only'>{label}</span>
+                <Icon icon={icon} />
+              </Pane.Sigil>
+            )}
+          </ActionRoot>
+          <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+            {label}
+          </Pane.Title>
+          {navbarEnd}
+          {controls}
+        </Pane.Toolbar>
+      )}
       <Pane.Content>
         <Surface.Surface
           key={node.id}
           type={AppSurface.Article}
-          data={surfaceData}
+          data={data}
           limit={1}
           fallback={fallback}
           placeholder={placeholder}

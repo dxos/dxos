@@ -34,7 +34,7 @@ export type CompanionProps = ThemedClassName<{
   controls?: ReactNode;
 }>;
 
-export const Companion = ({ companions, value, onValueChange, attendableId, controls, classNames }: CompanionProps) => {
+export const Companion = ({ classNames, companions, value, onValueChange, attendableId, controls }: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
