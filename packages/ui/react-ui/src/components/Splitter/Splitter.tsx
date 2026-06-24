@@ -13,6 +13,7 @@ import React, {
   type PointerEvent,
   type RefObject,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -40,13 +41,15 @@ type SplitterContextValue = {
   mode: SplitterMode;
   /** Which panel `size` measures; the other panel fills the remainder. */
   anchor: Position;
-  /** The anchored panel's extent in rem. */
-  size: number;
+  /** The anchored panel's extent in rem, or `undefined` for an even (50/50) split. */
+  size: number | undefined;
   transition: number;
   resizable: boolean;
   /** Lower bound (rem) applied to both panels. */
   minSize: number;
   dragging: boolean;
+  /** True while the container itself is resizing; suppresses the panel transition to avoid jitter. */
+  resizing: boolean;
   rootRef: RefObject<HTMLDivElement | null>;
   setSize: (size: number) => void;
   setDragging: (dragging: boolean) => void;
@@ -66,13 +69,14 @@ const clampStyle = (minSize: number, orientation: SplitterOrientation): CSSPrope
 const endMinStyle = (minSize: number, orientation: SplitterOrientation): CSSProperties =>
   orientation === 'horizontal' ? { minInlineSize: `${minSize}rem` } : { minBlockSize: `${minSize}rem` };
 
-// In `split` mode the anchored panel is fixed at `size` rem (clamped) and the other fills the rest;
-// otherwise one panel fills (flex-grow) and the other collapses to zero (content stays mounted, clipped).
+// In `split` mode the anchored panel is fixed at `size` rem (clamped) and the other fills the rest; when
+// `size` is undefined both panels grow equally (50/50). Otherwise one panel fills (flex-grow) and the
+// other collapses to zero (content stays mounted, clipped).
 const panelStyle = (
   position: Position,
   mode: SplitterMode,
   anchor: Position,
-  size: number,
+  size: number | undefined,
   minSize: number,
   orientation: SplitterOrientation,
 ): CSSProperties => {
@@ -81,13 +85,29 @@ const panelStyle = (
     return { flexGrow: fills ? 1 : 0, flexShrink: 1, flexBasis: 0 };
   }
 
+  // No explicit size: split evenly.
+  if (size === undefined) {
+    return { flexGrow: 1, flexShrink: 1, flexBasis: 0, ...endMinStyle(minSize, orientation) };
+  }
+
   return position === anchor
     ? { flexGrow: 0, flexShrink: 1, flexBasis: `${size}rem`, ...clampStyle(minSize, orientation) }
     : { flexGrow: 1, flexShrink: 1, flexBasis: 0, ...endMinStyle(minSize, orientation) };
 };
 
-// Absolute position for the handle, centered on the split point (`size` rem from the anchored edge).
-const handlePosition = (orientation: SplitterOrientation, anchor: Position, size: number): CSSProperties => {
+// Absolute position for the handle, centered on the split point (`size` rem from the anchored edge, or
+// the middle for an even split).
+const handlePosition = (
+  orientation: SplitterOrientation,
+  anchor: Position,
+  size: number | undefined,
+): CSSProperties => {
+  if (size === undefined) {
+    return orientation === 'horizontal'
+      ? { insetBlock: 0, insetInlineStart: '50%', transform: 'translateX(-50%)' }
+      : { insetInline: 0, insetBlockStart: '50%', transform: 'translateY(-50%)' };
+  }
+
   const offset = `${size}rem`;
   if (orientation === 'horizontal') {
     return anchor === 'end'
@@ -131,7 +151,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
       mode = 'split',
       anchor = 'start',
       size: sizeProp,
-      defaultSize = 16,
+      defaultSize,
       onSizeChange,
       transition = 250,
       resizable = false,
@@ -143,12 +163,42 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs(forwardedRef, rootRef);
-    const [size = defaultSize, setSize] = useControllableState({
+    const [size, setSize] = useControllableState({
       prop: sizeProp,
       defaultProp: defaultSize,
       onChange: onSizeChange,
     });
     const [dragging, setDragging] = useState(false);
+
+    // Suppress the panel transition while the container itself is resizing (window/sidebar) so the panels
+    // track the new size instantly instead of animating/jittering. Observing the root distinguishes a
+    // container resize from an internal split change (which leaves the root size unchanged), so the
+    // collapse animation still plays.
+    const [resizing, setResizing] = useState(false);
+    useEffect(() => {
+      const root = rootRef.current;
+      if (!root || typeof ResizeObserver === 'undefined') {
+        return;
+      }
+
+      let initial = true;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const observer = new ResizeObserver(() => {
+        if (initial) {
+          initial = false;
+          return;
+        }
+        setResizing(true);
+        clearTimeout(timer);
+        timer = setTimeout(() => setResizing(false), 150);
+      });
+      observer.observe(root);
+      return () => {
+        observer.disconnect();
+        clearTimeout(timer);
+      };
+    }, []);
+
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
 
@@ -161,6 +211,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
         transition={transition}
         resizable={resizable}
         minSize={minSize}
+        resizing={resizing}
         dragging={dragging}
         rootRef={rootRef}
         setSize={setSize}
@@ -187,12 +238,13 @@ type SplitterPanelProps = SlottableProps<{ position: Position }>;
 const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
   ({ asChild, children, position, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { orientation, mode, anchor, size, minSize, transition, dragging } = useSplitterContext(PANEL_NAME);
+    const { orientation, mode, anchor, size, minSize, transition, dragging, resizing } = useSplitterContext(PANEL_NAME);
     const { className, style, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
 
-    // Disable the animation while dragging so the panel tracks the pointer; otherwise animate collapse.
-    const animate = transition > 0 && !dragging;
+    // Disable the animation while dragging (track the pointer) or while the container resizes (avoid
+    // jitter); otherwise animate collapse.
+    const animate = transition > 0 && !dragging && !resizing;
 
     return (
       <Comp
@@ -232,7 +284,7 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
   const extentRem = useCallback((): number => {
     const rect = rootRef.current?.getBoundingClientRect();
     if (!rect) {
-      return size + minSize;
+      return (size ?? minSize) + minSize;
     }
     return (orientation === 'horizontal' ? rect.width : rect.height) / getRem();
   }, [orientation, rootRef, size, minSize]);
@@ -286,11 +338,13 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
     (event: KeyboardEvent<HTMLDivElement>) => {
       const horizontal = orientation === 'horizontal';
       const step = event.shiftKey ? 4 : 1;
+      // Start from the current size, or the midpoint when the split is even (unsized).
+      const base = size ?? extentRem() / 2;
       let next: number | undefined;
       if (event.key === (horizontal ? 'ArrowRight' : 'ArrowDown')) {
-        next = size + step;
+        next = base + step;
       } else if (event.key === (horizontal ? 'ArrowLeft' : 'ArrowUp')) {
-        next = size - step;
+        next = base - step;
       } else if (event.key === 'Home') {
         next = minSize;
       } else if (event.key === 'End') {
@@ -317,7 +371,7 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
       tabIndex={0}
       aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
       aria-valuemin={Math.round(minSize)}
-      aria-valuenow={Math.round(size)}
+      aria-valuenow={size !== undefined ? Math.round(size) : undefined}
       className={tx('splitter.handle', { orientation }, className)}
       style={handlePosition(orientation, anchor, size)}
       onPointerDown={handlePointerDown}

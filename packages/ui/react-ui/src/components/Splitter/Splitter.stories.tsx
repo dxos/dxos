@@ -106,11 +106,22 @@ export const VerticalAnimated: Story = {
   },
 };
 
-export const Horizontal: Story = {
+export const HorizontalStart: Story = {
   args: {
     orientation: 'horizontal',
+    anchor: 'start',
     resizable: true,
-    defaultSize: 16,
+    defaultSize: 20,
+    minSize: 6,
+  },
+};
+
+export const HorizontalEnd: Story = {
+  args: {
+    orientation: 'horizontal',
+    anchor: 'end',
+    resizable: true,
+    defaultSize: 20,
     minSize: 6,
   },
 };
@@ -120,6 +131,5 @@ export const HorizontalAnimated: Story = {
   args: {
     orientation: 'horizontal',
     transition: 250,
-    defaultSize: 16,
   },
 };
