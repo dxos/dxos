@@ -18,7 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { fromCron, scheduleToCron } from './cron';
+import { describeCron, fromCron, scheduleToCron } from './cron';
 
 //
 // Value model.
@@ -449,6 +449,7 @@ const formatTime = (time: string): string => {
 const withZone = (text: string, timezone?: string): string => (timezone ? `${text} ${timezone}` : text);
 
 /** Human-readable summary of the schedule, suitable for the header. */
+// TODO(wittjosiah): Just use cronstrue for all cases?
 export const describeSchedule = (value: ScheduleValue, timezone?: string): string => {
   switch (value.kind) {
     // case 'once':
@@ -473,6 +474,6 @@ export const describeSchedule = (value: ScheduleValue, timezone?: string): strin
     case 'monthly':
       return withZone(`Runs monthly on day ${value.day} at ${formatTime(value.time)}`, timezone);
     case 'custom':
-      return `Runs on schedule ${value.cron}`;
+      return withZone(describeCron(value.cron), timezone);
   }
 };

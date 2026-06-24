@@ -17,7 +17,11 @@ const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 // so a single form edits them together.
 const INSTRUCTIONS_FIELDS = new Set(['text', 'skills', 'objects']);
 
-export type InstructionsEditorProps = { db?: Database.Database; instructions: Instructions.Instructions };
+export type InstructionsEditorProps = {
+  db?: Database.Database;
+  instructions: Instructions.Instructions;
+  readonly?: boolean;
+};
 
 /**
  * Sub-form: edits the owned Instructions in place — its `text` (Markdown), `skills`, and the
@@ -25,7 +29,7 @@ export type InstructionsEditorProps = { db?: Database.Database; instructions: In
  * FieldSet (no Viewport) keeps these fields left-aligned with the sibling general/action forms; the
  * rendered fields are written back so selections persist to the instructions.
  */
-export const InstructionsEditor = ({ db: dbProp, instructions }: InstructionsEditorProps) => {
+export const InstructionsEditor = ({ db: dbProp, instructions, readonly }: InstructionsEditorProps) => {
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
   const db = dbProp ?? Obj.getDatabase(instructions);
 
@@ -59,6 +63,7 @@ export const InstructionsEditor = ({ db: dbProp, instructions }: InstructionsEdi
       key={instructions.id}
       schema={INSTRUCTIONS_SCHEMA}
       db={db}
+      readonly={readonly}
       defaultValues={defaultValues}
       getOptions={getRefOptions}
       onValuesChanged={handleValuesChanged}

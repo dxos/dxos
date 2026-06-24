@@ -14,6 +14,7 @@ import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assista
 import { Process, Trace } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
+import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
@@ -345,7 +346,10 @@ export const collectProcessActivityLines = (
     if (!pid || !descendantPids.has(pid)) {
       return false;
     }
-    if (conversationId && message.meta.conversationId !== undefined && message.meta.conversationId !== conversationId) {
+    const metaConvId = message.meta.conversation
+      ? EID.getEntityId(EID.parse(message.meta.conversation.uri))
+      : undefined;
+    if (conversationId && metaConvId !== undefined && metaConvId !== conversationId) {
       return false;
     }
     return true;
@@ -383,7 +387,10 @@ export const deriveInFlightActivityLine = (
     if (!pid || !descendantPids.has(pid)) {
       return false;
     }
-    if (conversationId && message.meta.conversationId !== undefined && message.meta.conversationId !== conversationId) {
+    const metaConvId = message.meta.conversation
+      ? EID.getEntityId(EID.parse(message.meta.conversation.uri))
+      : undefined;
+    if (conversationId && metaConvId !== undefined && metaConvId !== conversationId) {
       return false;
     }
     return true;

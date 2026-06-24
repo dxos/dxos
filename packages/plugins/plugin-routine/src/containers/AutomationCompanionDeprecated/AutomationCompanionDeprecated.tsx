@@ -77,7 +77,7 @@ export const AutomationCompanionDeprecated = ({ db, object }: AutomationCompanio
                         )}
                       </Accordion.ItemHeader>
                       <Accordion.ItemBody>
-                        <RoutineForm automation={automation} db={db} />
+                        <RoutineForm routine={automation} db={db} />
                       </Accordion.ItemBody>
                     </Accordion.Item>
                   );

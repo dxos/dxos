@@ -23,7 +23,7 @@ import * as Struct from 'effect/Struct';
 
 import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -364,6 +364,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
           environment: { space: db.spaceId },
+          traceMeta: { trigger: Ref.make(trigger) },
         });
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(

@@ -224,13 +224,16 @@ export const companion: {
     if (schemaOrValueOrGuard === undefined) {
       return Obj.isObject(companionTo);
     }
+    if (Type.isType(schemaOrValueOrGuard)) {
+      return Entity.instanceOf(schemaOrValueOrGuard as Type.AnyEntity, companionTo);
+    }
     if (typeof schemaOrValueOrGuard === 'function') {
       return schemaOrValueOrGuard(companionTo);
     }
     if (typeof schemaOrValueOrGuard === 'string') {
       return companionTo === schemaOrValueOrGuard;
     }
-    return Entity.instanceOf(schemaOrValueOrGuard as Type.AnyObj | Type.AnyRelation, companionTo);
+    return false;
   };
   return { bindings: [{ role: token.role, guard }] };
 };

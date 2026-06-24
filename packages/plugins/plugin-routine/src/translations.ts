@@ -49,6 +49,7 @@ export const translations: Resource[] = [
         'run-prompt.label': 'Run prompt',
         'routine-running.label': 'Running…',
         'run.label': 'Run',
+        'edit.label': 'Edit',
         'run-error.message': 'Failed to run automation.',
 
         'automation-name.label': 'Name',
@@ -90,6 +91,12 @@ export const translations: Resource[] = [
         'remove-trigger.label': 'Remove',
         'select-action-first.message': 'Select an action first.',
         'automation-companion.label': 'Routine',
+        'routine-history.label': 'History',
+
+        'history.empty.message': 'No runs yet.',
+        'history.status.success.label': 'Success',
+        'history.status.failure.label': 'Failed',
+        'history.status.pending.label': 'Running',
         'no-automations.message': 'No automations for this object.',
         'automation-not-associated.message': 'Not yet associated with this object.',
         'automation-detached.message': 'No longer associated with this object.',
