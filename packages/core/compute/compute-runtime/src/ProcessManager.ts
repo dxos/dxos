@@ -6,6 +6,10 @@
 
 import { Atom, Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -20,6 +24,7 @@ import * as Stream from 'effect/Stream';
 import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
+import { Annotation } from '@dxos/echo';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -40,6 +45,35 @@ export {
 
 export { ProcessOperationInvoker };
 
+/**
+ * Builds the in-memory loopback RPC client for a process's declared control surface.
+ * The control plane is untyped at runtime (`RpcGroup`/`RpcClient` carry `any`; see design spec §4.4),
+ * so `definition.rpcs` and `rpcHandlers` introduce `any` into `makeClient`'s requirement set. Providing
+ * the handler context and scope here discharges them, pinning the residual to `never` for callers.
+ */
+const makeLoopbackRpcClient = (
+  rpcs: RpcGroup.RpcGroup<any>,
+  rpcHandlers: Context.Context<any>,
+  scope: Scope.Scope,
+): Effect.Effect<RpcClient.RpcClient<any>> =>
+  RpcTest.makeClient(rpcs).pipe(Effect.provide(rpcHandlers), Effect.provideService(Scope.Scope, scope));
+
+/**
+ * Shared no-op RPC client for handles that expose no live RPC surface (e.g. dormant persisted handles).
+ * Built from an empty group, so it serves no requests; the dedicated scope is never closed. The client
+ * is widened to the untyped `RpcClient<any>` surface stored on handles (`RpcClient` is invariant in its
+ * group, so a `RpcClient<never>` is not otherwise assignable; see design spec §4.4).
+ */
+const EMPTY_RPC_CLIENT: RpcClient.RpcClient<any> = Effect.runSync(
+  // `RpcGroup`/`RpcClient` are invariant in their group; the empty group is widened to the untyped
+  // `any` surface so the resulting client matches `Handle.rpc` (see design spec §4.4).
+  makeLoopbackRpcClient(
+    RpcGroup.make() as unknown as RpcGroup.RpcGroup<any>,
+    Context.empty() as Context.Context<any>,
+    Effect.runSync(Scope.make()),
+  ),
+);
+
 export interface Status {
   readonly state: Process.State;
   readonly exit: Option.Option<Exit.Exit<void>>;
@@ -48,7 +82,7 @@ export interface Status {
   readonly completedAt: Option.Option<Date>;
 }
 
-export interface Handle<I, O> {
+export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly pid: Process.ID;
   readonly parentId: Process.ID | null;
 
@@ -67,8 +101,8 @@ export interface Handle<I, O> {
    */
   readonly environment: Environment;
 
-  submitInput(input: I): Effect.Effect<void>;
-  subscribeOutputs(): Stream.Stream<O>;
+  submitInput(input: _Input): Effect.Effect<void>;
+  subscribeOutputs(): Stream.Stream<_Output>;
 
   /**
    * Subscribe to ephemeral trace messages for this process.
@@ -117,17 +151,21 @@ export interface Handle<I, O> {
    * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
    * or {@link Process.State.TERMINATED}.
    */
-  runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O>;
+  runAndExit(options: { readonly inputs: readonly _Input[] }): Stream.Stream<_Output>;
 
   /**
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>>;
+  hydrate(definition: Process.Process<_Input, _Output, any, any>): Effect.Effect<Handle<_Input, _Output, _Rpcs>>;
+
+  readonly rpc: RpcClient.RpcClient<_Rpcs>;
 }
 
 export namespace Handle {
-  export type Any = Handle<any, any>;
+  // Widened to `any` Rpcs so the implemented `rpc: RpcClient<any>` is assignable
+  // regardless of a handle's concrete RPC group (variance, see design spec §4.4).
+  export type Any = Handle<any, any, any>;
 }
 
 /**
@@ -152,6 +190,7 @@ export interface SpawnOptions {
 
   /**
    * Target object that this process is assigned to.
+   * Ergonomic shorthand folded into {@link Process.TargetAnnotation} on the process annotations.
    */
   // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
   readonly target?: URI.URI;
@@ -165,9 +204,15 @@ export interface SpawnOptions {
 
   /**
    * User-facing notifications requested for this process's lifecycle phases.
-   * Surfaced on {@link Process.Info} for the notification tracker.
+   * Ergonomic shorthand folded into {@link Process.NotifyAnnotation} on the process annotations.
    */
-  readonly notify?: Process.Params['notify'];
+  readonly notify?: Operation.NotifyOptions;
+
+  /**
+   * User-defined annotations to attach to the process.
+   * Caller-supplied entries are merged over the {@link target}/{@link notify} shorthands.
+   */
+  readonly annotations?: Annotation.Dictionary;
 }
 
 export interface ListOptions {
@@ -197,7 +242,7 @@ const matchesListOptions = (
     readonly key: string;
     readonly parentId: Process.ID | null;
     readonly state: Process.State;
-    readonly target: URI.URI | null;
+    readonly annotations: Annotation.Dictionary;
   },
   options?: ListOptions,
 ): boolean => {
@@ -210,8 +255,11 @@ const matchesListOptions = (
   if (options?.state !== undefined && fields.state !== options.state) {
     return false;
   }
-  if (options?.target !== undefined && fields.target !== options.target) {
-    return false;
+  if (options?.target !== undefined) {
+    const target = Annotation.getDictionary(fields.annotations, Process.TargetAnnotation);
+    if (Option.getOrUndefined(target) !== options.target) {
+      return false;
+    }
   }
   return true;
 };
@@ -223,12 +271,15 @@ export interface Manager {
   /**
    * Spawn a new process from a process definition.
    */
-  spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+  spawn<I, O, Rpcs extends Rpc.Any = never>(
+    definition: Process.Process<I, O, any, Rpcs>,
+    options?: SpawnOptions,
+  ): Effect.Effect<Handle<I, O, Rpcs>>;
 
   /**
    * Attach to an existing process.
    */
-  attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>>;
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>>;
 
   /**
    * Lists live processes and, when no live match exists, non-terminal processes
@@ -392,7 +443,10 @@ export class ProcessManagerImpl implements Manager {
     );
   }
 
-  spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
+  spawn<I, O, _Rpcs extends Rpc.Any>(
+    definition: Process.Process<I, O, any, _Rpcs>,
+    options?: SpawnOptions,
+  ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen(this, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const clock = yield* Effect.clock;
@@ -425,10 +479,20 @@ export class ProcessManagerImpl implements Manager {
 
       let handleRef: ProcessHandle.ProcessHandleImpl<I, O, any> | null = null;
 
+      const annotations = Annotation.buildDictionary((dictionary) => {
+        if (options?.target != null) {
+          Annotation.setDictionary(dictionary, Process.TargetAnnotation, options.target);
+        }
+        if (options?.notify != null) {
+          Annotation.setDictionary(dictionary, Process.NotifyAnnotation, options.notify);
+        }
+        if (options?.annotations) {
+          Object.assign(dictionary, options.annotations);
+        }
+      });
       const params: Process.Params = {
         name: options?.name ?? null,
-        target: options?.target ?? null,
-        ...(options?.notify ? { notify: options.notify } : {}),
+        annotations,
       };
 
       const ctx: Process.ProcessContext<I, O> = {
@@ -542,6 +606,10 @@ export class ProcessManagerImpl implements Manager {
           Effect.orElseSucceed(() => null),
         );
 
+      // In-memory RPC control plane: a no-serialization client/server pair bound to the
+      // process scope, dispatching to the handlers the process declared via `create()`.
+      const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
+
       const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
@@ -556,6 +624,7 @@ export class ProcessManagerImpl implements Manager {
         environment,
         this.#traceSink,
         clock,
+        rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -573,7 +642,7 @@ export class ProcessManagerImpl implements Manager {
       yield* this.#store.putProcess({
         id,
         key: definition.key,
-        params: { name: params.name ?? null, target: params.target ?? null, notify: params.notify ?? null },
+        params: { name: params.name ?? null, annotations: params.annotations },
         environment: { space: environment.space, conversation: environment.conversation },
         parentId: Option.getOrNull(parentOption),
         state: Process.State.RUNNING,
@@ -586,7 +655,10 @@ export class ProcessManagerImpl implements Manager {
       yield* handle.runOnSpawn(spawnSeq);
       log('lifecycle: started', { pid: id, key: definition.key });
 
-      return handle;
+      // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
+      // while the public surface is the precise `Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
+      // bridging the two requires a cast here (see design spec §4.4).
+      return handle as unknown as Handle<I, O, _Rpcs>;
     });
   }
 
@@ -595,7 +667,7 @@ export class ProcessManagerImpl implements Manager {
    */
   #rehydrate(
     record: PersistedProcess,
-    definition: Process.Process<any, any, any>,
+    definition: Process.Process<any, any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen(this, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
@@ -623,12 +695,9 @@ export class ProcessManagerImpl implements Manager {
 
       let handleRef: ProcessHandle.ProcessHandleImpl<any, any, any> | null = null;
 
-      // Deserialization boundary: schema stores target/notify as plain unknown values;
-      // cast back to their structural types.
       const params: Process.Params = {
         name: record.params.name,
-        target: record.params.target as URI.URI | null,
-        ...(record.params.notify != null ? { notify: record.params.notify as Process.Params['notify'] } : {}),
+        annotations: record.params.annotations,
       };
 
       const ctx: Process.ProcessContext<any, any> = {
@@ -724,6 +793,8 @@ export class ProcessManagerImpl implements Manager {
       const defRaw = definition as unknown as { input: Schema.Schema<any, any, never> };
       const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
 
+      const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
+
       const handle = new ProcessHandle.ProcessHandleImpl<any, any, any>(
         id,
         Option.getOrNull(parentOption),
@@ -738,6 +809,7 @@ export class ProcessManagerImpl implements Manager {
         environment,
         this.#traceSink,
         clock,
+        rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -771,12 +843,15 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-  #hydrateFromDefinition<I, O>(id: Process.ID, definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> {
+  #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
+    id: Process.ID,
+    definition: Process.Process<I, O, any, any>,
+  ): Effect.Effect<Handle<I, O, Rpcs>> {
     return Effect.gen(this, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
         log('lifecycle: hydrate skipped (already live)', { pid: id });
-        return existing as unknown as Handle<I, O>;
+        return existing as unknown as Handle<I, O, Rpcs>;
       }
 
       const record = yield* this.#store.getProcess(id);
@@ -801,11 +876,11 @@ export class ProcessManagerImpl implements Manager {
 
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
-      return handle as unknown as Handle<I, O>;
+      return handle as unknown as Handle<I, O, Rpcs>;
     });
   }
 
-  attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>> {
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
     return Effect.gen(this, function* () {
       const handle = this.#handles.get(id);
       if (!handle) {
@@ -813,7 +888,7 @@ export class ProcessManagerImpl implements Manager {
         return yield* Effect.die(new Error(`Process not found: ${id}`));
       }
       log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
-      return handle as unknown as Handle<I, O>;
+      return handle as unknown as Handle<I, O, Rpcs>;
     });
   }
 
@@ -829,7 +904,7 @@ export class ProcessManagerImpl implements Manager {
               key: handle.key,
               parentId: handle.parentId,
               state: handle.snapshotStatus().state,
-              target: handle.params.target,
+              annotations: handle.params.annotations,
             },
             options,
           )
@@ -858,14 +933,18 @@ export class ProcessManagerImpl implements Manager {
               key: record.key,
               parentId: record.parentId,
               state: record.state,
-              target: record.params.target as URI.URI | null,
+              annotations: record.params.annotations,
             },
             options,
           )
         ) {
           continue;
         }
-        results.push(new DormantHandle(record, (definition) => this.#hydrateFromDefinition(record.id, definition)));
+        results.push(
+          new DormantHandle(record, (definition) =>
+            this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition),
+          ),
+        );
       }
 
       return results;
@@ -888,7 +967,7 @@ export class ProcessManagerImpl implements Manager {
  * Read-only handle view of a persisted process that is not currently live.
  * Returned by {@link ProcessManagerImpl.list} until {@link Handle.hydrate} is called.
  */
-class DormantHandle<I, O> implements Handle<I, O> {
+class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly pid: Process.ID;
   readonly parentId: Process.ID | null;
   readonly key: string;
@@ -896,11 +975,14 @@ class DormantHandle<I, O> implements Handle<I, O> {
   readonly environment: Environment;
   readonly status: Status;
   readonly statusAtom: Atom.Atom<Status>;
-  readonly #rehydrate: (definition: Process.Process<I, O, any>) => Effect.Effect<Handle<I, O>>;
+  // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
+  // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
+  readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
+  readonly #rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>;
 
   constructor(
     record: PersistedProcess,
-    rehydrate: (definition: Process.Process<I, O, any>) => Effect.Effect<Handle<I, O>>,
+    rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>,
   ) {
     this.#rehydrate = rehydrate;
     this.pid = record.id;
@@ -908,8 +990,7 @@ class DormantHandle<I, O> implements Handle<I, O> {
     this.key = record.key;
     this.params = {
       name: record.params.name,
-      target: record.params.target as URI.URI | null,
-      ...(record.params.notify != null ? { notify: record.params.notify as Process.Params['notify'] } : {}),
+      annotations: record.params.annotations,
     };
     this.environment = {
       space: record.environment.space as SpaceId | undefined,
@@ -924,7 +1005,8 @@ class DormantHandle<I, O> implements Handle<I, O> {
     this.statusAtom = Atom.make(this.status);
   }
 
-  hydrate = (definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> => this.#rehydrate(definition);
+  hydrate = (definition: Process.Process<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>
+    this.#rehydrate(definition);
 
   submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 

@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Process } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
 
 // A child-exit event flattened to a JSON-serializable shape. Exit/Cause are not
 // directly serializable; on redelivery we reconstruct Exit.void / Exit.die(message).
@@ -47,8 +48,8 @@ export const PersistedProcess = Schema.Struct({
   key: Schema.String,
   params: Schema.Struct({
     name: Schema.NullOr(Schema.String),
-    target: Schema.NullOr(Schema.String),
-    notify: Schema.NullOr(Schema.Unknown),
+    // Annotation dictionary values are pre-encoded (JSON-safe); persisted verbatim.
+    annotations: Annotation.Dictionary,
   }),
   // Environment is { space?: SpaceId, conversation?: URI } — both string-serializable.
   environment: Schema.Struct({
@@ -109,7 +110,12 @@ export class ProcessStore {
       if (Option.isNone(raw)) {
         return undefined;
       }
-      return yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.orDie);
+      const decoded = yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.either);
+      if (decoded._tag === 'Left') {
+        yield* this.#purgeProcess(id);
+        return undefined;
+      }
+      return decoded.right;
     });
   }
 
@@ -143,16 +149,18 @@ export class ProcessStore {
 
   /** Removes the process record and its index entry, and frees in-memory seq/lock state. */
   deleteProcess(id: Process.ID): Effect.Effect<void> {
-    return this.#lock(id).withPermits(1)(
-      Effect.gen(this, function* () {
-        yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
-        const ids = yield* this.listProcessIds();
-        const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
-        yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
-        this.#seq.delete(id);
-        this.#locks.delete(id);
-      }),
-    );
+    return this.#lock(id).withPermits(1)(this.#purgeProcess(id));
+  }
+
+  #purgeProcess(id: Process.ID): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
+      const ids = yield* this.listProcessIds();
+      const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
+      yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
+      this.#seq.delete(id);
+      this.#locks.delete(id);
+    });
   }
 
   #modify(id: Process.ID, fn: (record: PersistedProcess) => PersistedProcess): Effect.Effect<void> {
