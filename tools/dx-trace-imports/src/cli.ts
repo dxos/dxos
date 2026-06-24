@@ -14,7 +14,8 @@ const DEFAULT_CONDITIONS = ['workerd', 'worker', 'node'] as const;
 type FailMode = 'present' | 'missing';
 
 interface ParsedArgs {
-  from: string;
+  from: string | null;
+  exportSubpath: string | null;
   to: string;
   maxChains: number;
   conditions: string[];
@@ -41,8 +42,12 @@ const parseConditions = (raw: string): string[] =>
 const parseArgs = async (): Promise<ParsedArgs> => {
   const argv: any = await yargs(hideBin(process.argv))
     .scriptName('dx-trace-imports')
-    .usage('$0 --from <entry.ts> --to <package-or-pattern-or-path> [options]')
-    .option('from', { type: 'string', demandOption: true, describe: 'Entry file (relative path or absolute)' })
+    .usage('$0 (--from <entry.ts> | --export <subpath>) --to <package-or-pattern-or-path> [options]')
+    .option('from', { type: 'string', describe: 'Entry file (relative path or absolute)' })
+    .option('export', {
+      type: 'string',
+      describe: 'Package export subpath resolved via package.json exports (e.g. ./plugin)',
+    })
     .option('to', {
       type: 'string',
       demandOption: true,
@@ -52,7 +57,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     .option('conditions', {
       type: 'string',
       default: DEFAULT_CONDITIONS.join(','),
-      describe: 'Comma-separated esbuild custom conditions',
+      describe: 'Comma-separated package.json export conditions',
     })
     .option('packages-only', {
       type: 'boolean',
@@ -64,6 +69,15 @@ const parseArgs = async (): Promise<ParsedArgs> => {
       choices: ['present', 'missing'] as const,
       describe: 'Exit non-zero if any chains are present or if no chains are found',
     })
+    .check((args) => {
+      if (!args.from && !args.export) {
+        throw new Error('Provide either --from <entry.ts> or --export <subpath>.');
+      }
+      if (args.from && args.export) {
+        throw new Error('Use only one of --from or --export.');
+      }
+      return true;
+    })
     .strict()
     .help().argv;
 
@@ -73,7 +87,8 @@ const parseArgs = async (): Promise<ParsedArgs> => {
   }
 
   return {
-    from: String(argv.from),
+    from: argv.from ? String(argv.from) : null,
+    exportSubpath: argv.export ? String(argv.export) : null,
     to: String(argv.to),
     maxChains,
     conditions: parseConditions(String(argv.conditions ?? '')),
@@ -82,24 +97,29 @@ const parseArgs = async (): Promise<ParsedArgs> => {
   };
 };
 
+const entryLabel = (args: ParsedArgs, entryPath: string): string =>
+  args.exportSubpath ? `${args.exportSubpath} (${entryPath})` : args.from ?? entryPath;
+
 const main = async () => {
   const args = await parseArgs();
 
   const result = await traceImports({
-    from: args.from,
+    from: args.from ?? undefined,
+    exportSubpath: args.exportSubpath ?? undefined,
     to: args.to,
     maxChains: args.maxChains,
     conditions: args.conditions,
     packagesOnly: args.packagesOnly,
   });
 
-  console.error(`metafile: ${result.metafilePath}`);
+  const label = entryLabel(args, result.entryPath);
+  console.error(`graph: ${result.metafilePath}`);
 
   if (result.labelChains.length === 0) {
-    console.log(`No import paths from "${args.from}" to "${args.to}".`);
+    console.log(`No import paths from "${label}" to "${args.to}".`);
     if (args.failOn === 'missing') {
       console.error('');
-      console.error(`Failed because "${args.from}" does not transitively import "${args.to}".`);
+      console.error(`Failed because "${label}" does not transitively import "${args.to}".`);
       process.exit(1);
     }
     process.exit(0);
@@ -111,7 +131,7 @@ const main = async () => {
 
   if (args.failOn === 'present') {
     console.error('');
-    console.error(`Failed because "${args.from}" transitively imports "${args.to}".`);
+    console.error(`Failed because "${label}" transitively imports "${args.to}".`);
     process.exit(1);
   }
   process.exit(0);
