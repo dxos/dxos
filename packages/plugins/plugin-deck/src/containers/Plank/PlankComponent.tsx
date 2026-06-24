@@ -12,11 +12,17 @@ import { type Node } from '@dxos/plugin-graph';
 import { mainIntrinsicSize } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
+import { StackItem, type StackItemSize } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
+
+/**
+ * Two-row plank grid: a fixed-height heading rail above a `1fr` content area.
+ * (Replaces the former `railGridHorizontal` from `@dxos/react-ui-stack`.)
+ */
+export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
 
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
