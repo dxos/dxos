@@ -10,7 +10,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
