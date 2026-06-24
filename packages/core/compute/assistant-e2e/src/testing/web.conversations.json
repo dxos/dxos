@@ -79,8 +79,14 @@
             "name": "AnthropicWebSearch",
             "inputSchema": {
               "type": "object",
-              "required": [],
-              "properties": {},
+              "required": [
+                "query"
+              ],
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
               "additionalProperties": false
             }
           }
@@ -110,9 +116,9 @@
       "response": [
         {
           "type": "response-metadata",
-          "id": "msg_01Ch4TZnQdGpG8tQenqQRqKG",
+          "id": "msg_016kU4AiXQ6irAup5Cbz975U",
           "modelId": "claude-opus-4-6",
-          "timestamp": "2026-06-24T14:28:45.962Z",
+          "timestamp": "2026-06-24T14:58:25.857Z",
           "metadata": {}
         },
         {
@@ -139,7 +145,7 @@
           "metadata": {
             "anthropic": {
               "type": "thinking",
-              "signature": "Er8CCmMIDxgCKkCkSbCCx7PfzxdJd3LC1+wrDVIXfju+Sl2ojtxrmb22edRL2kuQV05F2oN5IfCNfG046Z82jLjx+f9PfG6icQzjMg9jbGF1ZGUtb3B1cy00LTY4AEIIdGhpbmtpbmcSDMatNj7DFacIHT9srxoM808Fyml44xwvip9WIjAdsQXogBvY3v+bgoLM8u8NzE23yL+JuOWWKZp2tY3i9KetEGyH9DvCXFvl5WZR2VkqiQFw8PN1zabgJFMWGUQ5MrGD8kYVKe3MVMIVpP+kbZnxDcjecxJuivhKQoBeseJhIdKzE37FRfcaGOtOjL1rR/c3iWeYMWyvaL3YgupRvdAfeLUUI+9yMIVq79Y7pBBkgPsANm20IxU8AxcXaAFt7ZDffygMSDJOdhhYWLyuvluWu64/MbeuCT7LoxgB"
+              "signature": "Er8CCmMIDxgCKkCkSbCCx7PfzxdJd3LC1+wrDVIXfju+Sl2ojtxrmb22edRL2kuQV05F2oN5IfCNfG046Z82jLjx+f9PfG6icQzjMg9jbGF1ZGUtb3B1cy00LTY4AEIIdGhpbmtpbmcSDE0ubnwdzp3sd52pJBoMKWLMrC0lklMknj5kIjCGSeegbAw8DFdLKcLsXAB+9HjA5UONZHL9JvIF56agplNLUTM7NTTZ3Uv0i9gtbYIqiQFg5MIfLbuzRUtwFqQ77FGwoOOGTN9Qi1WpfvG0eV9SboUk716wncRYAg8FIqcWjGoiIGyPYv3MAPffqMztYmaVATG+kSjd1riySTWhX8T5JTw+NN+EusLG6tTulsJHZkgsb0k80XA7rjhQ5P/Cd0BsiE6k1Kqrgnd9FlmLvNtcdDb+aW/MQlLe7RgB"
             }
           }
         },
@@ -150,7 +156,7 @@
         },
         {
           "type": "tool-params-start",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
           "name": "AnthropicWebSearch",
           "providerName": "web_search",
           "providerExecuted": true,
@@ -158,38 +164,388 @@
         },
         {
           "type": "tool-params-delta",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
           "delta": "",
           "metadata": {}
         },
         {
           "type": "tool-params-delta",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
           "delta": "{\"quer",
           "metadata": {}
         },
         {
           "type": "tool-params-delta",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
-          "delta": "y\": \"capita",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+          "delta": "y\": \"ca",
           "metadata": {}
         },
         {
           "type": "tool-params-delta",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
-          "delta": "l of Fran",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+          "delta": "pital",
           "metadata": {}
         },
         {
           "type": "tool-params-delta",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
-          "delta": "ce\"}",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+          "delta": " of F",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+          "delta": "rance\"}",
           "metadata": {}
         },
         {
           "type": "tool-params-end",
-          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
           "metadata": {}
+        },
+        {
+          "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+          "type": "tool-result",
+          "providerName": "web_search",
+          "isFailure": false,
+          "name": "AnthropicWebSearch",
+          "result": [
+            {
+              "encrypted_content": "EpogCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDPDVRLCQc9jvIb9yYBoM7YMF9cNAhfWdBWd7IjDMkEGDqkV3tIraVSAZO7GUppKBLIybZLubQJYxY95FCeryIdjnVjgFGHAnKAp9MmgqnR/ZyvwDL7kEn/ckbc713RgWN7eW5U8uLDDTYX11ulyNUfCdMojC6FgN6UuDb1kkZEV3hTPsh0zGrPv1fB5HXjWXoOvQcwV5YSrRNe0z0wwMFc5yr3mGGEFK+fZBqIcTgO0KVm/EKryY+LKnALOJHzoekzSlRppEo6cyWaYgG63xcwoMc5RjAViJz7lziJUbcI/jvbeQBOLKyqoA2Y53ts/9SYVHkJpCvJkTvUROXe1nCf39BuDE1YZKHdkKOEPx99JwsKaRom586Lhec3yLm+dL30FCJrfm4HIOJ3YFTX1dGIr+rVQ6wAFJ0W5rLC6wQBrxAK9N+Muaht4c6O80fJODXEltwKpIWU50/o5jL8pzBmsO346P/eakkZvH/eqcirFuTMfX+nuN1fw85fwmbmPv2II+WcgT7StEbQVVXLvw8DQa0RXLZg56iGFrAh87OH8mC+M3PTiY8IqQEPiYslyZoPaFYA2OYuhcxlM6Q+uEWXncarf7j02ytJufSr3KJpLxJE/QoFd/61E0//MNF264OYLVHx8cuzw85SaF8/qnZC2gqMrLcZqQb3TGt0db3iz+cdSqfDLQy2rQ7OKX3foere+6FTRgR4DPwh9kjLU11OUjezsWfHC6xv3HpcIdxDsmt6LRzkVt+kX0wHFU5Ez/ohTW5mHdWQW0dE92iLsXEO07ht+J+ESf4AlW7BYtdpvD6lqeJBg3pcfj91iIB1YiOAYnrdggPAggxtX/5Pv32v0lWdqH+xRKkHGUCN8hC2VxtUq+NxulzQfgD3rCbQW822acf2a1UlOJZt/N27GJm/tmjSoA7ILO0DxMaZS09BSWk/cJZ3RBqyltIQDSQHbiYOz8+PpI6me3SaKoLAr11y8c00htadq9SyNKvKVy679WVOzUXR8rVjJlWRCC7Axpu61uvcBu58s7TBxNmm4uoDg/5oBp1L1VR72CLa1i/pM/EN0UR0oQ1rnz961ytrE7SWMq1OVlvV1lmpkmZCHIA3fLz6v1nI2RyoOaOdHWcW8TmbO0cBl+WF5z34pl3CcaEH5UIvwBtQM+a5beCajtqJDYz/AxaHsYwuziUwjPLej1kqgOFFJlyGVhsHHro0h2kecHndj+3JrtbWHxnJXd1kSCJoKjzY1KFHSHC/THzA7+XyRrHRv9p7GZgLh81GRLAChYHakhz/1iWcOxv+2WMQR3QejQ5Q0D0rens/DWkLLjfNX4pHYRAc5dSLkM+IYzBkv7yTZlEWRofCLu/SxwYhWslIKoBlrdUv2Ylx1DKhrMD44+sZzKlWhOaFqsAatdW3TceAx5P9pVOosOXJXuC4Y+6yzv3LkV8mtgv4iOBPyUitkhTjNAFI/bI96EzwMwg+jLISb0BLdosNVfzAAY5Ssi4chDm0yFY2El8J8xWE0EY9ua/CoL/+8cfG+tRAvBiuhu55dbpJKk2xT6pQaRrjmypiwJOczxpo/SqPMGxxjq1khVs1U7+Uw4iJvgoicMlJt9aU67yv76M3xJy3q3pR6X7YrQaP83+GjTAqt7x7VdzFZBXyY3WKc6iACdiAZmiTS6hRFLyGAVqXW2j/zR3uvxVZVr51189aqTvBip8I2MCwSx20jX0kt/8TAdbdFH4QLVqoHhbQ9wJ0EtYqZA6t1J+pfOm0Fef0MZOV81qf9y/2skhPxpHRplsnISE0q9SIA66nlu5W8ARFb1tvNh5bKOmC83TupGxRFgBV9PmFsY5JeE+cLqaNrMWfAzDEnBSz39FKUfHLxaPyBsdlDrcomiaWiwVPbYFh3BEbXYDNgg0x2RmqEXBV0eXzVTeE9IbgEoLrHpPuhbwkBOpS4neajiTG2QB3WwTXF/IRQtTVM7MHbVYrh5Q210C5EvygItfFd8DpdQXDOF0Ts6ckU9cTiKRsxRcmXrjAYocoU5A5F8FEn/fOg7OaGQWRU72vaLxErl2UNhuRPUv4XLP+BX7yEO4n/HkVJpOI75ooBP+T/YhYJx9udXTOsaeiRiDv2U1NNzzpa+wbC7kGPa92Zqyt3SvfHx/MyUG008s1MWGiqP77nOpv1Y0bpkw8iNSM7HvFS1mCFjiywAJKKPnCTqZdja6KAMis4zbH4qinlo1jvdwDj99tsBno4GsqggFgyMDQMzSyY60TwqLpUyXq7oo4VTRinLmIXiCfZiudqdKdwFw4je0IsXzvD3fOErDSC8lSVRdWpby58+eWu75OIbtjwl84KXDXRqjuItKvggwKdLsDT/U1+qzVRoid99TOo83I44zFnlmGFWhFh/BWjEOHzgeKfk71mA78BNpxj9dEniq1ivxANaD5eiW6q3KWuS4NC/ydJBDfZYo1yhPNtfdsWpqIdQBVhG2xmwzVpRbIa9ZyrcilPOYPBV50CQJ8PIG0eOTxUveKJyeBRDtLn8AGDXYBguxlhi4KXjldB6+U5EIiDN+IEuEenjWMy/rec9+bFOHx90A2GdtaSJXLqjGyvijYaNXIjgaCrNsyKfvg+6qZa1PY9x6RQnJkLfMFlBTzQpAe8z6xoGSRY1PCONQd736GzmPXjjQO45EhcZeLm75+1GbKSXr4rB9JsasmSceMYc1MYyF+B173YobGxa04RbvYjHYhisSxYolf7iFPJ7PgoaDwmFTe/2twSQiYjij/kVosfwfbws4V/hDpbNs4hYkL/XxGFbEIedM2WqhB91Pk5ZGZELRNgP+b4QtsRf7aCtzQ2Roe4qh8Q0phoys1NrGqWveEfZ/ow8Fku82E5+5GeZCcIDmJXMFMOi+P45btpZvYTzWCndqPlh8RErBtZ5A30eKtxOLQzBaUacc4dFzhaR69bqvc62S/MwM6F+HrfGcdpDkjhprDxNKxSPgUG3/DnTKX1evXcBm7B5yzY+dcCYhmifQURRruz1IvwUeV4NQhqKIorzS8Xbrc0mRH1d7hqzVL/w/XcgWJDlqSBE4/NBDMWfAqiZPmSaqslWP2H+tNudge1cX2ukgzY5TwLDu2iaPFW3st3M+4jeKOTW/SjkjleMAjSSF5oXBYl7+Niv5zL0btD2Gu/7tvmFDcKGE4qDsMfnQMZCx6o+5E9wTo0jIcus2Ie5aMvG2exX3At9Eoachzu2iAJKOrht5PJS8Kr7hbR38w7aUNTKhrCSLXiJEyp3xwZGBXchwsynpNiIkWXEGcbJZ55LgUkWBl+EG1YOMm2/2BB4CqW0fqlqZbT1xgXhIDxDwkq4fF+v+mj7mvJwjAn5kK28DYEWAYyThwjhwwgk37aWugiGDsL+BfPDTU22jMxDNifTcM5jUMnmxfWkIsKxV4E4nPq9BbMQMFX5cK/wB78x5cRgwwkUBtWvBJOrXXje0BVCMg2O52+/evcavDVKSADTaoD/ZzyQtcflp7T22GPGcjAYf1cv2Jor5f/XYJVS0Zr6WvKlj9+5ID74sPjWd4O6sjLASpr8hbV7ubqJ8xtglMYb0+SgPPfzI3un00WGLAsHYuLCBO3PvxWqnT0hBuVDlv+oyeMvKw7RjY7CW3+hI/78nPU/QfbxEyOJtzJg8dVrzvsvkHAwksBnhGAi5mp3EkNvG+K24bfl28Hw+LTL4vrSWVSHt+I9IMJNtTtIV+xU7VvWnlmP44cyXwzjbgK9tQzOZxC/w6i39qlSEXUq5NbFGeQm5bMBSjUDDFyqtBVpvdi+X+O1Ltr3XWuGXNpRojsUjw3BLBf69JH7z0H4iWNCW9fV7L8uvaNsR+hd2s3RTTIPhQTyljDjBmQWTbJpsBBxo//iyeZ+1tSNsW29+nt9adzPBsTS57A14jM18bzuZwaN8zD6q8y/VuqULpymrIYXg8983mvHxiQVdPObzEnWSSpgX0b2jp84K+U5fUlpqGg6mEfeluElsTAgGUjQpPJ30X9DBRGSYhc9GrZfcvl5C5giq1SIat6PQPEPoQFmHEuvH1LYfGZ0DMqfHl2i4VgXAd20Udb5cw1ZjC37pQyzJM2hAOzEP9gRZAV5v1RONVN0Bbg5ubW+fUphHpPlboTFZHJ7gLtgsNvlJqlRGnRYT44tPWeDWRScmLn/Kckzx/dl4s3rg/imbl/p3S2TRdXbk1sM4hlzjSl2YYDE7ippcwOd0VnGTVaLC4MwfkpL9SIrZH4Z5WOsDvR3sNURgGooLKHB5iNfVUGgIgAqVc3NLyXLw9GOv0+RKfY6uK2+ap0vbe3SOUSWanBNQcEa+qfk0HyKQ9UYgShG8BqUqbtNtQPFdAdQgVUaB/p9pdawkJziR1IZIx2Wk3NP7m0UmD6iyvC+vKy/Cll/5bLdYMssZu+WHICG9G46ZCQ4Lb0yrYW2GoZTfvCh092L8ukNcyf/aKut8AwW0+1u9Z3msQ36i8d6rMR5GFO96lMAay378FlDqI8nou0DFQzWKOF+/D4eHmX75SgkMO0LqcZhsKV955rWNYXuVy3GfrRBf0rmOI19rsDmXcZpOgLLiljsrb4nvUQ2mhL6IxeQ9jqKFBIWOwYecf4u9F8VbBsPLhUeeWYliu5Af7QO8mthREd6g3Z7GRbodmq/rjzgUII+pm9s3Hklm22CYs0/xcZaMtp21QZN80SiT33vZLSviYUBsTLjOZONVIQh0M3HE5j1JOOOuhCjLYHzNqyys3nLhFJUSoUcVdkOw23TrunyyoLDUA68wr+0SSNWFwHTk2BJE9gEpG/Jvh8t8SpDcDGZWkHTX9EyzyB1E2B67AD1ZpVqhLlW0SpIaW7XZlu6CHvLJmRZvtr4xlKpAcWsTTRgj9MNJIKhOvYx46l3GMrUUO20r/rs1xswhbHvSFlZytlKhgzOylRfFB99uD6SUqlFM+4YjLxllDUosiKBKTgf9STWOASyP3D7eh8qbC2biBAHqUmlvJSE8Bu8Xe5ZjkdWE6qq6aAY4NHlrGGdSB7D3XlCHC6xdJ7woFg9dNFIiKq4d5cbs2z1JwRxVKxYWPNe7EQOTLv4yjx3e256J5HG58+ldUv0EsJ/U4OZTn21f/8V8ULoQEM4xY64hGWlYLaDFnuKlHCOPNSMnXbY/N9USI44wWWk1tdIFeoWzvhB9wQDbi62eEbs0lzuYpTnnAqbKdCfjpjEUENHPTSm+nlIgq6QnjpeNSsvcDJLAZ36qwqyvErmBuTMyMyIlhkyEipk0sLaPlMb10zqaKIW+Xvx5xORvzSRLQml14HibaIE85YjyviYIA/ZCPwkMjLYqIiCGawM+SNoa20flhQQgMO5/wjXPSRqMZksNdHzU3ee13tHH51Zx/d+e3E4EDB8zxmS6pjoIKK1Q2N2gsA+GFotjawMGfelEU3hjBiBLPq+r7k9Kwm6jBHTCA0S9GUvmPwlqPzgGAM=",
+              "page_age": "1 week ago",
+              "title": "Paris - Wikipedia",
+              "type": "web_search_result",
+              "url": "https://en.wikipedia.org/wiki/Paris"
+            },
+            {
+              "encrypted_content": "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",
+              "page_age": "March 10, 2026",
+              "title": "List of capitals of France - Wikipedia",
+              "type": "web_search_result",
+              "url": "https://en.wikipedia.org/wiki/List_of_capitals_of_France"
+            },
+            {
+              "encrypted_content": "EsQDCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDDUPiWXs6h7V4e9/0RoMoo9Jw//t9Gl9ehzjIjAIUMn+IPT+g7D9fZ74qi+innsX7PuwXfei+Ovo/ZnofTtHtZPBd57AaIRO6GPp+84qxwKKFe8gLugLZI23urpTxAG+t2z0G2XmPiAZHcpj108WSo2WBZ3d33s49b1R2p5jdGzNek5WqCO+NxiGcsro2CmEJHT7TUUiSMKySJr2snA+OLgK+kg61q8BIi8u4w0m5WQ+VeQSvmVanXoZ7imlhOKIKx45y8XU37XPNQ30iemSkqKB9yEgJFWn8tlgsaOZmYXOB5NrdR4ILpiolXCG31Zt2eIFVUxf00CNUphAXj4FfxlnWrjudNsKqZakRO33oNgW/kbPfS9PUuXKFYfvLUqaQ2jBAnXK9+xBsE1A6S7JTqlqKV4aRqkLq/bdCmQxqjMzl00BcejQ48tROwMaCKd7qCoqg+dS/rG9c5QF9EtQcz4xT6JFwcJgi81bD1tK5VAEZhWI/TNWKyLj/IJ+fPLqeSu3xqY3ERktWZo8aAaoQtZQ45t9l1sYAw==",
+              "page_age": "September 16, 2025",
+              "title": "Paris, France - Intercultural City - Intercultural Cities Programme - www.coe.int",
+              "type": "web_search_result",
+              "url": "https://www.coe.int/en/web/interculturalcities/paris"
+            },
+            {
+              "encrypted_content": "Ev8HCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDPtxr6/hEBy6e25O/RoMy/2OW4rB5onp7iEPIjDrVapLgqihshtVsjjfzrY8WKXIcpsJIRLsG4/Rsbs9+FMAYuiKDcDUzIXs+YjvOzMqggeTi8IsSL1d/N/v57gNAYeC77sQsT2redKT3+r3DRi7FEORjo7DIxJMuFE/kLkqe9ZsJNnY9QnhEEqBzqh3sFmx7hjAaz6o1np8UKKj9H/asV3Thl0dssoXXQLkyaw9/tb0XcNL539h8v6VkOj6iymOVjMVwWXapWb/y5YXsypZX6+a2BF5vlEmYQp9F5A32pTgWidM6Y2xhTCExtAFNMry7AbydIlDFDwECye2bEW+9oo5C1E3F1TgWDkfWIlnOVGIC5TFz8KllW4tknyEBwYwy/zZq+NWqqkgN/fIJcGXxSDrLO3zDOvjHasiwXmbnlUWHLYhw3ES32oLVoElyZL7CpDU62AVv/k3Fi1nIJ3r5boWhefB2rSzU8FLBiHn1XXIDY8LhW565Tzr/xteLRvRjnc9o5hvYSlbC3aZ50WYhJIM96yKAVa4Pn9NkCggmBG66yIGb8TYLSfUUmxZcS04rWVJJlIjr1OpZEPNbyglpjlNQXiUikJyBFgLT7n3PXEI6ROi+j/vUqkOQpyGub28I7UF/e/BwFA2AY8dnek6gy5Tup4+glty8zf2Bqr60GEADaw/4QLx1T3T9qKJV4DBa19bDSJrX0iKyyz9UMEKWuH/zePNGLqBAybbYbGX1SNJQHoQMgfZwyhW4j0xWjQZpuJEN5235Ox1LtSRa0Ocw74eK/DNqZsDHuCrD77oqpqjk/pcsdYmwwozr62GEuFmYO6Si77MFW7yPAzQf0ZKCAmtiyTlJ/VNU/QKP1IHI9bYAvpcRMNdEXac+hu2GBa1XxdXX23lZ81gd/faKh0xZrQaFNXiy5JJ+2gO3/3S/uXL/3aBNYklIABhbKMVSxDlXuZL2Bm/DZhlhCX3LVVZD7j9Kji8VtV8II21vBEhXWeGhebDS02BMdeCVvhsOBmPXhtu8m7ilNcfSOWel1Jf1XGnf4a5v/4s1h62q/F64fHNeH0i84hAWck2lUjBGUvjkRipp7E/eWhD59Ke7eInqiNkpOt6Z5xGQowYSXO0a4+qje/2hpQTNbEOL2sQ5ASYtOnnNCK1erSZetgfvhqSuAi1LWWlDmr4jKWelsyx4fl0CkzuqpraN3D5T+StiNHPnOHh5KXkwT5/mc9RQNyfS+9Hy+DfswFrDtE4++Xp7SdKti4vs8cnF+vRgZ6as18uFkxs8NTxHkz09c0MJVsP1+JbGAM=",
+              "title": "Paris facts: the capital of France in history",
+              "type": "web_search_result",
+              "url": "https://home.adelphi.edu/~ca19535/page%204.html"
+            },
+            {
+              "encrypted_content": "Eo0CCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDGYrOqbRB5ZMRl6HUhoM7NleNNHdv3pUjoEQIjB2jIQCXaz1obS/+PVzXLBRGh/w2ecT9MDztADog7pzkWfEkEDT0AqZD0/obQNdjdkqkAG2OLpYwnXWm40ixEU8J8QbDAh4haHioXYzspvyjbZMb54GsO/Q27hPNWmbry5eInoInpevxttsf/W2kgEGOUx7POGzZAgTpdxJVWqa6rCJTq/+eIiDAQerBsZeXhTlJGdGaMlweneueaEziDpYbP5HyCGMAkwgXVuKEuXoOurTao97J6lA7zU7Ymj4SuH7wL0YAw==",
+              "page_age": "April 7, 2026",
+              "title": "What is the capital of FRANCE? - YouTube",
+              "type": "web_search_result",
+              "url": "https://www.youtube.com/shorts/doFTuSWo7rE"
+            },
+            {
+              "encrypted_content": "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",
+              "page_age": "2 days ago",
+              "title": "France | History, Maps, Flag, Population, Cities, Capital, & Facts | Britannica",
+              "type": "web_search_result",
+              "url": "https://www.britannica.com/place/France"
+            },
+            {
+              "encrypted_content": "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",
+              "title": "Paris, France | Geography and Cartography | Research Starters | EBSCO Research",
+              "type": "web_search_result",
+              "url": "https://www.ebsco.com/research-starters/geography-and-cartography/paris-france"
+            },
+            {
+              "encrypted_content": "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",
+              "page_age": "December 1, 2022",
+              "title": "Discover the city of Paris | Paris the capital city of France",
+              "type": "web_search_result",
+              "url": "https://www.cia-france.com/french-kids-teenage-courses/paris-school/visit-paris"
+            },
+            {
+              "encrypted_content": "EsUBCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDLnb1mjv14DVC0aRcxoMbX5tfULRQ+ssVdvxIjDq8e2rt9pdJTxLKAmW2lrofB3NJ8tgftnkEJs6RQ2eYRGVLcG4CLUo6Rf79XcRvTkqSYPOcX6cWQyQrJRC25ThTn8XTtDj3AUZ4WYApbolyUroAaQwtay2pKatH3OnyRQfRy/7QMZ+H6NgAhgn7IN5pwJJ+T9lXgotR9oYAw==",
+              "title": "Paris is the capital of France and one of the most visited ...",
+              "type": "web_search_result",
+              "url": "https://www.instagram.com/reel/DWluHvojeX8/?hl=en"
+            },
+            {
+              "encrypted_content": "EtwCCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDMcGOwYwLD3M1utzmRoMvYhu56ks1QCJPw2XIjC3J/aBYpyVNot3EWxcLGCZlriUuZcz4p+xXRniFjrIr7JQOoeJfLmM87CERtdZEkAq3wHYS9+RZCIOrot+eglu/j/LpCNWFOWOd4QXPwENXHSOLufZy3dNoadHhifwg4sJ1RXiFzc6klBVXee6vKu77zOas3Eb2GrZCiXuSe9d33/X5+OnsIv0ar4XhW8xvER8KNmka85oemLEsO9+hEHog5gpv6q7PsJ8G4ypjkQuuLgVAF9a7iMsBvk67xCZrDb+ZqnlTJkEeh2ZNqkQLF4KG/rrEO3CSFtkpMhqa2SCUKi8hiahs0P+Uf/ZXHXd0nhxuwPbcF0HGj/JJn80zp+EEPr2krraAP9Ws9iCkQHYHXJjGAM=",
+              "title": "What are the three official capitals of France and which one is the most commonly visited? - Quora",
+              "type": "web_search_result",
+              "url": "https://www.quora.com/What-are-the-three-official-capitals-of-France-and-which-one-is-the-most-commonly-visited"
+            }
+          ],
+          "providerExecuted": true,
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "3",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "3",
+          "delta": "The",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "3",
+          "delta": " search confirms that **Paris** is the capital of France. ",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "3",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "4",
+          "metadata": {}
+        },
+        {
+          "type": "source",
+          "sourceType": "url",
+          "id": "id_8J3QVX1KQYXsFLBK",
+          "url": "https://en.wikipedia.org/wiki/Paris",
+          "title": "Paris - Wikipedia",
+          "metadata": {
+            "anthropic": {
+              "source": "url",
+              "citedText": "Paris is the capital and largest city of France, with an estimated city population of 2.04 million in an area of 105.4 km2 (40.7 sq mi), and a metropo...",
+              "encryptedIndex": "Eo8BCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDEw7VLxQ7xdlJzgtMhoMvPMB3qReZK7YvbV8IjDz/i38IZjB83lOT5LUbO2DyERiDWJR6PFHb046QoVbI0z5kTYrJm4FMF/1lidfnaMqEzOKmUDuPT2KnwCXV1N6wqUHJEsYBA=="
+            }
+          }
+        },
+        {
+          "type": "text-delta",
+          "id": "4",
+          "delta": "Paris is the capital and",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "4",
+          "delta": " largest city of France, with an estimated city population of 2.04 million.",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "4",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "5",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "5",
+          "delta": " ",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "5",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "6",
+          "metadata": {}
+        },
+        {
+          "type": "source",
+          "sourceType": "url",
+          "id": "id_298FawraADWftn0H",
+          "url": "https://en.wikipedia.org/wiki/List_of_capitals_of_France",
+          "title": "List of capitals of France - Wikipedia",
+          "metadata": {
+            "anthropic": {
+              "source": "url",
+              "citedText": "The capital of France has been Paris since its liberation in 1944. ",
+              "encryptedIndex": "Eo8BCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDFi6qvkaIuJ6sRl7kRoMJXYaUR29JcMCOTpxIjAsQQdXWdFMFK+6mhNutHqQBiWJmIGLjim7I+TcEoTbZbV0zwXN4Jlw0Ay7O7amyMQqE3GYMSorU4g8TLI3dysdR8BtRZgYBA=="
+            }
+          }
+        },
+        {
+          "type": "text-delta",
+          "id": "6",
+          "delta": "The capital of France has been Paris since its liberation in 1944.",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "6",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-start",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "name": "completeJob",
+          "providerExecuted": false,
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "{\"succes",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "s\": {\"c",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "ompl",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "etedCriteri",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "a\":{\"Th",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "e ",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "capital ",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "of France",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": " is re",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "turned.\":",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "true",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": ",\"The web-s",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "earch t",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "ool was th",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "e only to",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "ol used",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": ".\"",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": ":t",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "rue}",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "delta": "}}",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-end",
+          "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "tool-calls",
+          "usage": {
+            "inputTokens": 2826,
+            "outputTokens": 269,
+            "totalTokens": 3095
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 0
+                },
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 2826,
+                "output_tokens": 35,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
         }
       ]
     },
@@ -272,8 +628,14 @@
             "name": "AnthropicWebSearch",
             "inputSchema": {
               "type": "object",
-              "required": [],
-              "properties": {},
+              "required": [
+                "query"
+              ],
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
               "additionalProperties": false
             }
           }
@@ -298,13 +660,144 @@
                 "type": "reasoning",
                 "text": "The user wants me to search for the capital of France using the web_search tool, and only use that tool. Let me do that.",
                 "options": {}
+              },
+              {
+                "type": "tool-call",
+                "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+                "name": "AnthropicWebSearch",
+                "params": {
+                  "query": "capital of France"
+                },
+                "providerExecuted": true,
+                "options": {}
+              },
+              {
+                "type": "tool-result",
+                "id": "srvtoolu_01EKXvWWghh51nV5Zwy2oQPe",
+                "name": "AnthropicWebSearch",
+                "isFailure": false,
+                "result": [
+                  {
+                    "encrypted_content": "EpogCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDPDVRLCQc9jvIb9yYBoM7YMF9cNAhfWdBWd7IjDMkEGDqkV3tIraVSAZO7GUppKBLIybZLubQJYxY95FCeryIdjnVjgFGHAnKAp9MmgqnR/ZyvwDL7kEn/ckbc713RgWN7eW5U8uLDDTYX11ulyNUfCdMojC6FgN6UuDb1kkZEV3hTPsh0zGrPv1fB5HXjWXoOvQcwV5YSrRNe0z0wwMFc5yr3mGGEFK+fZBqIcTgO0KVm/EKryY+LKnALOJHzoekzSlRppEo6cyWaYgG63xcwoMc5RjAViJz7lziJUbcI/jvbeQBOLKyqoA2Y53ts/9SYVHkJpCvJkTvUROXe1nCf39BuDE1YZKHdkKOEPx99JwsKaRom586Lhec3yLm+dL30FCJrfm4HIOJ3YFTX1dGIr+rVQ6wAFJ0W5rLC6wQBrxAK9N+Muaht4c6O80fJODXEltwKpIWU50/o5jL8pzBmsO346P/eakkZvH/eqcirFuTMfX+nuN1fw85fwmbmPv2II+WcgT7StEbQVVXLvw8DQa0RXLZg56iGFrAh87OH8mC+M3PTiY8IqQEPiYslyZoPaFYA2OYuhcxlM6Q+uEWXncarf7j02ytJufSr3KJpLxJE/QoFd/61E0//MNF264OYLVHx8cuzw85SaF8/qnZC2gqMrLcZqQb3TGt0db3iz+cdSqfDLQy2rQ7OKX3foere+6FTRgR4DPwh9kjLU11OUjezsWfHC6xv3HpcIdxDsmt6LRzkVt+kX0wHFU5Ez/ohTW5mHdWQW0dE92iLsXEO07ht+J+ESf4AlW7BYtdpvD6lqeJBg3pcfj91iIB1YiOAYnrdggPAggxtX/5Pv32v0lWdqH+xRKkHGUCN8hC2VxtUq+NxulzQfgD3rCbQW822acf2a1UlOJZt/N27GJm/tmjSoA7ILO0DxMaZS09BSWk/cJZ3RBqyltIQDSQHbiYOz8+PpI6me3SaKoLAr11y8c00htadq9SyNKvKVy679WVOzUXR8rVjJlWRCC7Axpu61uvcBu58s7TBxNmm4uoDg/5oBp1L1VR72CLa1i/pM/EN0UR0oQ1rnz961ytrE7SWMq1OVlvV1lmpkmZCHIA3fLz6v1nI2RyoOaOdHWcW8TmbO0cBl+WF5z34pl3CcaEH5UIvwBtQM+a5beCajtqJDYz/AxaHsYwuziUwjPLej1kqgOFFJlyGVhsHHro0h2kecHndj+3JrtbWHxnJXd1kSCJoKjzY1KFHSHC/THzA7+XyRrHRv9p7GZgLh81GRLAChYHakhz/1iWcOxv+2WMQR3QejQ5Q0D0rens/DWkLLjfNX4pHYRAc5dSLkM+IYzBkv7yTZlEWRofCLu/SxwYhWslIKoBlrdUv2Ylx1DKhrMD44+sZzKlWhOaFqsAatdW3TceAx5P9pVOosOXJXuC4Y+6yzv3LkV8mtgv4iOBPyUitkhTjNAFI/bI96EzwMwg+jLISb0BLdosNVfzAAY5Ssi4chDm0yFY2El8J8xWE0EY9ua/CoL/+8cfG+tRAvBiuhu55dbpJKk2xT6pQaRrjmypiwJOczxpo/SqPMGxxjq1khVs1U7+Uw4iJvgoicMlJt9aU67yv76M3xJy3q3pR6X7YrQaP83+GjTAqt7x7VdzFZBXyY3WKc6iACdiAZmiTS6hRFLyGAVqXW2j/zR3uvxVZVr51189aqTvBip8I2MCwSx20jX0kt/8TAdbdFH4QLVqoHhbQ9wJ0EtYqZA6t1J+pfOm0Fef0MZOV81qf9y/2skhPxpHRplsnISE0q9SIA66nlu5W8ARFb1tvNh5bKOmC83TupGxRFgBV9PmFsY5JeE+cLqaNrMWfAzDEnBSz39FKUfHLxaPyBsdlDrcomiaWiwVPbYFh3BEbXYDNgg0x2RmqEXBV0eXzVTeE9IbgEoLrHpPuhbwkBOpS4neajiTG2QB3WwTXF/IRQtTVM7MHbVYrh5Q210C5EvygItfFd8DpdQXDOF0Ts6ckU9cTiKRsxRcmXrjAYocoU5A5F8FEn/fOg7OaGQWRU72vaLxErl2UNhuRPUv4XLP+BX7yEO4n/HkVJpOI75ooBP+T/YhYJx9udXTOsaeiRiDv2U1NNzzpa+wbC7kGPa92Zqyt3SvfHx/MyUG008s1MWGiqP77nOpv1Y0bpkw8iNSM7HvFS1mCFjiywAJKKPnCTqZdja6KAMis4zbH4qinlo1jvdwDj99tsBno4GsqggFgyMDQMzSyY60TwqLpUyXq7oo4VTRinLmIXiCfZiudqdKdwFw4je0IsXzvD3fOErDSC8lSVRdWpby58+eWu75OIbtjwl84KXDXRqjuItKvggwKdLsDT/U1+qzVRoid99TOo83I44zFnlmGFWhFh/BWjEOHzgeKfk71mA78BNpxj9dEniq1ivxANaD5eiW6q3KWuS4NC/ydJBDfZYo1yhPNtfdsWpqIdQBVhG2xmwzVpRbIa9ZyrcilPOYPBV50CQJ8PIG0eOTxUveKJyeBRDtLn8AGDXYBguxlhi4KXjldB6+U5EIiDN+IEuEenjWMy/rec9+bFOHx90A2GdtaSJXLqjGyvijYaNXIjgaCrNsyKfvg+6qZa1PY9x6RQnJkLfMFlBTzQpAe8z6xoGSRY1PCONQd736GzmPXjjQO45EhcZeLm75+1GbKSXr4rB9JsasmSceMYc1MYyF+B173YobGxa04RbvYjHYhisSxYolf7iFPJ7PgoaDwmFTe/2twSQiYjij/kVosfwfbws4V/hDpbNs4hYkL/XxGFbEIedM2WqhB91Pk5ZGZELRNgP+b4QtsRf7aCtzQ2Roe4qh8Q0phoys1NrGqWveEfZ/ow8Fku82E5+5GeZCcIDmJXMFMOi+P45btpZvYTzWCndqPlh8RErBtZ5A30eKtxOLQzBaUacc4dFzhaR69bqvc62S/MwM6F+HrfGcdpDkjhprDxNKxSPgUG3/DnTKX1evXcBm7B5yzY+dcCYhmifQURRruz1IvwUeV4NQhqKIorzS8Xbrc0mRH1d7hqzVL/w/XcgWJDlqSBE4/NBDMWfAqiZPmSaqslWP2H+tNudge1cX2ukgzY5TwLDu2iaPFW3st3M+4jeKOTW/SjkjleMAjSSF5oXBYl7+Niv5zL0btD2Gu/7tvmFDcKGE4qDsMfnQMZCx6o+5E9wTo0jIcus2Ie5aMvG2exX3At9Eoachzu2iAJKOrht5PJS8Kr7hbR38w7aUNTKhrCSLXiJEyp3xwZGBXchwsynpNiIkWXEGcbJZ55LgUkWBl+EG1YOMm2/2BB4CqW0fqlqZbT1xgXhIDxDwkq4fF+v+mj7mvJwjAn5kK28DYEWAYyThwjhwwgk37aWugiGDsL+BfPDTU22jMxDNifTcM5jUMnmxfWkIsKxV4E4nPq9BbMQMFX5cK/wB78x5cRgwwkUBtWvBJOrXXje0BVCMg2O52+/evcavDVKSADTaoD/ZzyQtcflp7T22GPGcjAYf1cv2Jor5f/XYJVS0Zr6WvKlj9+5ID74sPjWd4O6sjLASpr8hbV7ubqJ8xtglMYb0+SgPPfzI3un00WGLAsHYuLCBO3PvxWqnT0hBuVDlv+oyeMvKw7RjY7CW3+hI/78nPU/QfbxEyOJtzJg8dVrzvsvkHAwksBnhGAi5mp3EkNvG+K24bfl28Hw+LTL4vrSWVSHt+I9IMJNtTtIV+xU7VvWnlmP44cyXwzjbgK9tQzOZxC/w6i39qlSEXUq5NbFGeQm5bMBSjUDDFyqtBVpvdi+X+O1Ltr3XWuGXNpRojsUjw3BLBf69JH7z0H4iWNCW9fV7L8uvaNsR+hd2s3RTTIPhQTyljDjBmQWTbJpsBBxo//iyeZ+1tSNsW29+nt9adzPBsTS57A14jM18bzuZwaN8zD6q8y/VuqULpymrIYXg8983mvHxiQVdPObzEnWSSpgX0b2jp84K+U5fUlpqGg6mEfeluElsTAgGUjQpPJ30X9DBRGSYhc9GrZfcvl5C5giq1SIat6PQPEPoQFmHEuvH1LYfGZ0DMqfHl2i4VgXAd20Udb5cw1ZjC37pQyzJM2hAOzEP9gRZAV5v1RONVN0Bbg5ubW+fUphHpPlboTFZHJ7gLtgsNvlJqlRGnRYT44tPWeDWRScmLn/Kckzx/dl4s3rg/imbl/p3S2TRdXbk1sM4hlzjSl2YYDE7ippcwOd0VnGTVaLC4MwfkpL9SIrZH4Z5WOsDvR3sNURgGooLKHB5iNfVUGgIgAqVc3NLyXLw9GOv0+RKfY6uK2+ap0vbe3SOUSWanBNQcEa+qfk0HyKQ9UYgShG8BqUqbtNtQPFdAdQgVUaB/p9pdawkJziR1IZIx2Wk3NP7m0UmD6iyvC+vKy/Cll/5bLdYMssZu+WHICG9G46ZCQ4Lb0yrYW2GoZTfvCh092L8ukNcyf/aKut8AwW0+1u9Z3msQ36i8d6rMR5GFO96lMAay378FlDqI8nou0DFQzWKOF+/D4eHmX75SgkMO0LqcZhsKV955rWNYXuVy3GfrRBf0rmOI19rsDmXcZpOgLLiljsrb4nvUQ2mhL6IxeQ9jqKFBIWOwYecf4u9F8VbBsPLhUeeWYliu5Af7QO8mthREd6g3Z7GRbodmq/rjzgUII+pm9s3Hklm22CYs0/xcZaMtp21QZN80SiT33vZLSviYUBsTLjOZONVIQh0M3HE5j1JOOOuhCjLYHzNqyys3nLhFJUSoUcVdkOw23TrunyyoLDUA68wr+0SSNWFwHTk2BJE9gEpG/Jvh8t8SpDcDGZWkHTX9EyzyB1E2B67AD1ZpVqhLlW0SpIaW7XZlu6CHvLJmRZvtr4xlKpAcWsTTRgj9MNJIKhOvYx46l3GMrUUO20r/rs1xswhbHvSFlZytlKhgzOylRfFB99uD6SUqlFM+4YjLxllDUosiKBKTgf9STWOASyP3D7eh8qbC2biBAHqUmlvJSE8Bu8Xe5ZjkdWE6qq6aAY4NHlrGGdSB7D3XlCHC6xdJ7woFg9dNFIiKq4d5cbs2z1JwRxVKxYWPNe7EQOTLv4yjx3e256J5HG58+ldUv0EsJ/U4OZTn21f/8V8ULoQEM4xY64hGWlYLaDFnuKlHCOPNSMnXbY/N9USI44wWWk1tdIFeoWzvhB9wQDbi62eEbs0lzuYpTnnAqbKdCfjpjEUENHPTSm+nlIgq6QnjpeNSsvcDJLAZ36qwqyvErmBuTMyMyIlhkyEipk0sLaPlMb10zqaKIW+Xvx5xORvzSRLQml14HibaIE85YjyviYIA/ZCPwkMjLYqIiCGawM+SNoa20flhQQgMO5/wjXPSRqMZksNdHzU3ee13tHH51Zx/d+e3E4EDB8zxmS6pjoIKK1Q2N2gsA+GFotjawMGfelEU3hjBiBLPq+r7k9Kwm6jBHTCA0S9GUvmPwlqPzgGAM=",
+                    "page_age": "1 week ago",
+                    "title": "Paris - Wikipedia",
+                    "type": "web_search_result",
+                    "url": "https://en.wikipedia.org/wiki/Paris"
+                  },
+                  {
+                    "encrypted_content": "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",
+                    "page_age": "March 10, 2026",
+                    "title": "List of capitals of France - Wikipedia",
+                    "type": "web_search_result",
+                    "url": "https://en.wikipedia.org/wiki/List_of_capitals_of_France"
+                  },
+                  {
+                    "encrypted_content": "EsQDCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDDUPiWXs6h7V4e9/0RoMoo9Jw//t9Gl9ehzjIjAIUMn+IPT+g7D9fZ74qi+innsX7PuwXfei+Ovo/ZnofTtHtZPBd57AaIRO6GPp+84qxwKKFe8gLugLZI23urpTxAG+t2z0G2XmPiAZHcpj108WSo2WBZ3d33s49b1R2p5jdGzNek5WqCO+NxiGcsro2CmEJHT7TUUiSMKySJr2snA+OLgK+kg61q8BIi8u4w0m5WQ+VeQSvmVanXoZ7imlhOKIKx45y8XU37XPNQ30iemSkqKB9yEgJFWn8tlgsaOZmYXOB5NrdR4ILpiolXCG31Zt2eIFVUxf00CNUphAXj4FfxlnWrjudNsKqZakRO33oNgW/kbPfS9PUuXKFYfvLUqaQ2jBAnXK9+xBsE1A6S7JTqlqKV4aRqkLq/bdCmQxqjMzl00BcejQ48tROwMaCKd7qCoqg+dS/rG9c5QF9EtQcz4xT6JFwcJgi81bD1tK5VAEZhWI/TNWKyLj/IJ+fPLqeSu3xqY3ERktWZo8aAaoQtZQ45t9l1sYAw==",
+                    "page_age": "September 16, 2025",
+                    "title": "Paris, France - Intercultural City - Intercultural Cities Programme - www.coe.int",
+                    "type": "web_search_result",
+                    "url": "https://www.coe.int/en/web/interculturalcities/paris"
+                  },
+                  {
+                    "encrypted_content": "Ev8HCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDPtxr6/hEBy6e25O/RoMy/2OW4rB5onp7iEPIjDrVapLgqihshtVsjjfzrY8WKXIcpsJIRLsG4/Rsbs9+FMAYuiKDcDUzIXs+YjvOzMqggeTi8IsSL1d/N/v57gNAYeC77sQsT2redKT3+r3DRi7FEORjo7DIxJMuFE/kLkqe9ZsJNnY9QnhEEqBzqh3sFmx7hjAaz6o1np8UKKj9H/asV3Thl0dssoXXQLkyaw9/tb0XcNL539h8v6VkOj6iymOVjMVwWXapWb/y5YXsypZX6+a2BF5vlEmYQp9F5A32pTgWidM6Y2xhTCExtAFNMry7AbydIlDFDwECye2bEW+9oo5C1E3F1TgWDkfWIlnOVGIC5TFz8KllW4tknyEBwYwy/zZq+NWqqkgN/fIJcGXxSDrLO3zDOvjHasiwXmbnlUWHLYhw3ES32oLVoElyZL7CpDU62AVv/k3Fi1nIJ3r5boWhefB2rSzU8FLBiHn1XXIDY8LhW565Tzr/xteLRvRjnc9o5hvYSlbC3aZ50WYhJIM96yKAVa4Pn9NkCggmBG66yIGb8TYLSfUUmxZcS04rWVJJlIjr1OpZEPNbyglpjlNQXiUikJyBFgLT7n3PXEI6ROi+j/vUqkOQpyGub28I7UF/e/BwFA2AY8dnek6gy5Tup4+glty8zf2Bqr60GEADaw/4QLx1T3T9qKJV4DBa19bDSJrX0iKyyz9UMEKWuH/zePNGLqBAybbYbGX1SNJQHoQMgfZwyhW4j0xWjQZpuJEN5235Ox1LtSRa0Ocw74eK/DNqZsDHuCrD77oqpqjk/pcsdYmwwozr62GEuFmYO6Si77MFW7yPAzQf0ZKCAmtiyTlJ/VNU/QKP1IHI9bYAvpcRMNdEXac+hu2GBa1XxdXX23lZ81gd/faKh0xZrQaFNXiy5JJ+2gO3/3S/uXL/3aBNYklIABhbKMVSxDlXuZL2Bm/DZhlhCX3LVVZD7j9Kji8VtV8II21vBEhXWeGhebDS02BMdeCVvhsOBmPXhtu8m7ilNcfSOWel1Jf1XGnf4a5v/4s1h62q/F64fHNeH0i84hAWck2lUjBGUvjkRipp7E/eWhD59Ke7eInqiNkpOt6Z5xGQowYSXO0a4+qje/2hpQTNbEOL2sQ5ASYtOnnNCK1erSZetgfvhqSuAi1LWWlDmr4jKWelsyx4fl0CkzuqpraN3D5T+StiNHPnOHh5KXkwT5/mc9RQNyfS+9Hy+DfswFrDtE4++Xp7SdKti4vs8cnF+vRgZ6as18uFkxs8NTxHkz09c0MJVsP1+JbGAM=",
+                    "title": "Paris facts: the capital of France in history",
+                    "type": "web_search_result",
+                    "url": "https://home.adelphi.edu/~ca19535/page%204.html"
+                  },
+                  {
+                    "encrypted_content": "Eo0CCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDGYrOqbRB5ZMRl6HUhoM7NleNNHdv3pUjoEQIjB2jIQCXaz1obS/+PVzXLBRGh/w2ecT9MDztADog7pzkWfEkEDT0AqZD0/obQNdjdkqkAG2OLpYwnXWm40ixEU8J8QbDAh4haHioXYzspvyjbZMb54GsO/Q27hPNWmbry5eInoInpevxttsf/W2kgEGOUx7POGzZAgTpdxJVWqa6rCJTq/+eIiDAQerBsZeXhTlJGdGaMlweneueaEziDpYbP5HyCGMAkwgXVuKEuXoOurTao97J6lA7zU7Ymj4SuH7wL0YAw==",
+                    "page_age": "April 7, 2026",
+                    "title": "What is the capital of FRANCE? - YouTube",
+                    "type": "web_search_result",
+                    "url": "https://www.youtube.com/shorts/doFTuSWo7rE"
+                  },
+                  {
+                    "encrypted_content": "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",
+                    "page_age": "2 days ago",
+                    "title": "France | History, Maps, Flag, Population, Cities, Capital, & Facts | Britannica",
+                    "type": "web_search_result",
+                    "url": "https://www.britannica.com/place/France"
+                  },
+                  {
+                    "encrypted_content": "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",
+                    "title": "Paris, France | Geography and Cartography | Research Starters | EBSCO Research",
+                    "type": "web_search_result",
+                    "url": "https://www.ebsco.com/research-starters/geography-and-cartography/paris-france"
+                  },
+                  {
+                    "encrypted_content": "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",
+                    "page_age": "December 1, 2022",
+                    "title": "Discover the city of Paris | Paris the capital city of France",
+                    "type": "web_search_result",
+                    "url": "https://www.cia-france.com/french-kids-teenage-courses/paris-school/visit-paris"
+                  },
+                  {
+                    "encrypted_content": "EsUBCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDLnb1mjv14DVC0aRcxoMbX5tfULRQ+ssVdvxIjDq8e2rt9pdJTxLKAmW2lrofB3NJ8tgftnkEJs6RQ2eYRGVLcG4CLUo6Rf79XcRvTkqSYPOcX6cWQyQrJRC25ThTn8XTtDj3AUZ4WYApbolyUroAaQwtay2pKatH3OnyRQfRy/7QMZ+H6NgAhgn7IN5pwJJ+T9lXgotR9oYAw==",
+                    "title": "Paris is the capital of France and one of the most visited ...",
+                    "type": "web_search_result",
+                    "url": "https://www.instagram.com/reel/DWluHvojeX8/?hl=en"
+                  },
+                  {
+                    "encrypted_content": "EtwCCioIERgCIiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDMcGOwYwLD3M1utzmRoMvYhu56ks1QCJPw2XIjC3J/aBYpyVNot3EWxcLGCZlriUuZcz4p+xXRniFjrIr7JQOoeJfLmM87CERtdZEkAq3wHYS9+RZCIOrot+eglu/j/LpCNWFOWOd4QXPwENXHSOLufZy3dNoadHhifwg4sJ1RXiFzc6klBVXee6vKu77zOas3Eb2GrZCiXuSe9d33/X5+OnsIv0ar4XhW8xvER8KNmka85oemLEsO9+hEHog5gpv6q7PsJ8G4ypjkQuuLgVAF9a7iMsBvk67xCZrDb+ZqnlTJkEeh2ZNqkQLF4KG/rrEO3CSFtkpMhqa2SCUKi8hiahs0P+Uf/ZXHXd0nhxuwPbcF0HGj/JJn80zp+EEPr2krraAP9Ws9iCkQHYHXJjGAM=",
+                    "title": "What are the three official capitals of France and which one is the most commonly visited? - Quora",
+                    "type": "web_search_result",
+                    "url": "https://www.quora.com/What-are-the-three-official-capitals-of-France-and-which-one-is-the-most-commonly-visited"
+                  }
+                ],
+                "providerExecuted": false,
+                "options": {}
+              },
+              {
+                "type": "text",
+                "text": "The search confirms that **Paris** is the capital of France. ",
+                "options": {}
+              },
+              {
+                "type": "text",
+                "text": "Paris is the capital and largest city of France, with an estimated city population of 2.04 million.",
+                "options": {}
+              },
+              {
+                "type": "text",
+                "text": " ",
+                "options": {}
+              },
+              {
+                "type": "text",
+                "text": "The capital of France has been Paris since its liberation in 1944.",
+                "options": {}
+              },
+              {
+                "type": "tool-call",
+                "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+                "name": "completeJob",
+                "params": {
+                  "success": {
+                    "completedCriteria": {
+                      "The capital of France is returned.": true,
+                      "The web-search tool was the only tool used.": true
+                    }
+                  }
+                },
+                "providerExecuted": false,
+                "options": {}
               }
             ],
             "options": {}
           },
           {
-            "role": "user",
-            "content": "You must signal task completion by calling [completeJob] with the output or failure reason.",
+            "role": "tool",
+            "content": [
+              {
+                "type": "tool-result",
+                "id": "toolu_01F7XHwfHBjejG6iTsidQ6Vk",
+                "name": "completeJob",
+                "isFailure": false,
+                "result": {},
+                "providerExecuted": false,
+                "options": {}
+              }
+            ],
             "options": {
               "anthropic": {
                 "cacheControl": {
@@ -319,86 +812,35 @@
       "response": [
         {
           "type": "response-metadata",
-          "id": "msg_01QcDgyjFVSFixT1yu6iarHc",
+          "id": "msg_01DVH7XXkwdQtzpQcvHpwTct",
           "modelId": "claude-opus-4-6",
-          "timestamp": "2026-06-24T14:28:48.138Z",
+          "timestamp": "2026-06-24T14:58:34.217Z",
           "metadata": {}
         },
         {
-          "type": "reasoning-start",
-          "id": "0",
-          "metadata": {}
-        },
-        {
-          "type": "reasoning-delta",
-          "id": "0",
-          "delta": "The",
-          "metadata": {}
-        },
-        {
-          "type": "reasoning-delta",
-          "id": "0",
-          "delta": " user wants me to run a web search for the capital of France, and only use the web-search tool. Let me do that.",
-          "metadata": {}
-        },
-        {
-          "type": "reasoning-delta",
-          "id": "0",
-          "delta": "",
+          "type": "finish",
+          "reason": "stop",
+          "usage": {
+            "inputTokens": 1,
+            "outputTokens": 2,
+            "totalTokens": 3
+          },
           "metadata": {
             "anthropic": {
-              "type": "thinking",
-              "signature": "ErkCCmMIDxgCKkAy2BdZevSF9I2dev5WhKvOgXX0bRpiJreVIBjAFo3+0YJvwHU+zSGYxTa5kL9OjgB5L0t8sLxn5Pxi+rVoQn3fMg9jbGF1ZGUtb3B1cy00LTY4AEIIdGhpbmtpbmcSDOl4EM+totgb5ktWvBoM/eOIiHJV530daAZvIjC5VDc8YqmXzq4iPqVW8LVWjE3It22wUe2kw+eGptqjp/Ux4uTvYVXjDI7w2TiNdXEqgwEePlNNMwXIzt2yA+pB7BAUPZGQ9EGP9BirnC1oAv+Ey/1wfHg0LGkeMdKRB/nuIN1B945tA8fxdNtV1LzxNq2EtrDNlw3ZfAY81II3IEiDZSwPa2aISIFaGpEMl7IVf1LupIf2OFcK73wj1i2oE450bBSrP+lbFcpPncrbl8vCPcog+RgB"
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 11844
+                },
+                "cache_creation_input_tokens": 11844,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 1,
+                "output_tokens": 2,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
             }
           }
-        },
-        {
-          "type": "reasoning-end",
-          "id": "0",
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-start",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "name": "AnthropicWebSearch",
-          "providerName": "web_search",
-          "providerExecuted": true,
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-delta",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "delta": "",
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-delta",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "delta": "{\"query\": \"",
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-delta",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "delta": "capita",
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-delta",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "delta": "l of Fr",
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-delta",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "delta": "ance\"}",
-          "metadata": {}
-        },
-        {
-          "type": "tool-params-end",
-          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
-          "metadata": {}
         }
       ]
     }
