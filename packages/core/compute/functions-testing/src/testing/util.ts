@@ -14,6 +14,7 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functi
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
+import { invariant } from '@dxos/invariant';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -53,6 +54,7 @@ export const deployFunction = async (
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
   runtime: FunctionRuntimeKind,
+  ownerUri: string,
 ): Promise<Operation.PersistentOperation> => {
   const artifact = await bundleFunction({
     entryPoint,
@@ -60,7 +62,7 @@ export const deployFunction = async (
   });
   const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
-    ownerPublicKey: space.key,
+    ownerUri,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
     runtime,
