@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
 import { ScrollArea } from '../ScrollArea';
 import { Toolbar } from '../Toolbar';
-import { Splitter, type SplitterRootProps } from './Splitter';
+import { Splitter, type SplitterMode, type SplitterRootProps } from './Splitter';
 
 const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
   ({ label, ...props }, forwardedRef) => (
@@ -32,29 +32,44 @@ const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> 
   ),
 );
 
-const DefaultStory = (props: SplitterRootProps) => {
-  const [mode, setMode] = useState(props.mode ?? 'split');
-  const [ratio, setRatio] = useState(props.ratio ?? 0.5);
+const Panes = () => (
+  <>
+    <Splitter.Panel position='start'>
+      <PanelContent label='A' />
+    </Splitter.Panel>
+    <Splitter.Handle />
+    <Splitter.Panel position='end'>
+      <PanelContent label='B' />
+    </Splitter.Panel>
+  </>
+);
 
+// Renders the splitter with no surrounding chrome (Panel.Root keeps the height chain without a toolbar).
+const BasicStory = (args: SplitterRootProps) => (
+  <Panel.Root>
+    <Panel.Content asChild>
+      <Splitter.Root {...args}>
+        <Panes />
+      </Splitter.Root>
+    </Panel.Content>
+  </Panel.Root>
+);
+
+// Toolbar drives the animated collapse via `mode`.
+const ToolbarStory = (args: SplitterRootProps) => {
+  const [mode, setMode] = useState<SplitterMode>(args.mode ?? 'split');
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Button onClick={() => setMode('top')}>A</Toolbar.Button>
+          <Toolbar.Button onClick={() => setMode('start')}>A</Toolbar.Button>
           <Toolbar.Button onClick={() => setMode('split')}>A+B</Toolbar.Button>
-          <Toolbar.Button onClick={() => setMode('bottom')}>B</Toolbar.Button>
-          <Toolbar.Separator />
-          <Toolbar.Button onClick={() => setRatio((r) => 1 - r)}>Toggle</Toolbar.Button>
+          <Toolbar.Button onClick={() => setMode('end')}>B</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <Splitter.Root mode={mode} ratio={ratio}>
-          <Splitter.Panel asChild position='top'>
-            <PanelContent label='A' />
-          </Splitter.Panel>
-          <Splitter.Panel asChild position='bottom'>
-            <PanelContent label='B' />
-          </Splitter.Panel>
+        <Splitter.Root {...args} mode={mode}>
+          <Panes />
         </Splitter.Root>
       </Panel.Content>
     </Panel.Root>
@@ -64,7 +79,7 @@ const DefaultStory = (props: SplitterRootProps) => {
 const meta: Meta<SplitterRootProps> = {
   title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
-  render: DefaultStory,
+  render: BasicStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
@@ -75,9 +90,38 @@ export default meta;
 
 type Story = StoryObj<SplitterRootProps>;
 
-export const Default: Story = {
+export const Vertical: Story = {
   args: {
-    mode: 'split',
-    ratio: 0.4,
+    resizable: true,
+    defaultRatio: 0.4,
+    minRatio: 0.2,
+    maxRatio: 0.8,
+  },
+};
+
+export const VerticalAnimated: Story = {
+  render: ToolbarStory,
+  args: {
+    transition: 250,
+    defaultRatio: 0.4,
+  },
+};
+
+export const Horizontal: Story = {
+  args: {
+    orientation: 'horizontal',
+    resizable: true,
+    defaultRatio: 0.4,
+    minRatio: 0.2,
+    maxRatio: 0.8,
+  },
+};
+
+export const HorizontalAnimated: Story = {
+  render: ToolbarStory,
+  args: {
+    orientation: 'horizontal',
+    transition: 250,
+    defaultRatio: 0.4,
   },
 };
