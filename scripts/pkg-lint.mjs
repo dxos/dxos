@@ -248,11 +248,7 @@ for (const { name, path: pkgPath } of packages) {
       for (const sourceFile of sourceEntries) {
         const sourcePath = join(pkgPath, sourceFile);
         if (!existsSync(sourcePath)) {
-          addDiagnostic(
-            'error',
-            'source-missing',
-            `export "${exportPath}": source file does not exist: ${sourceFile}`,
-          );
+          addDiagnostic('error', 'source-missing', `export "${exportPath}": source file does not exist: ${sourceFile}`);
         } else {
           addDiagnostic('conventional', 'source-exists', `export "${exportPath}": source file exists`);
         }
