@@ -30,8 +30,8 @@ import { usePlankContext } from './PlankRoot';
 
 const MAX_COMPANIONS = 5;
 
-// Plank heading rail: the fixed-height header row of a plank (horizontal stack semantics).
-const headingRail = 'flex items-center border-x-0! bg-header-surface border-subdued-separator h-(--dx-rail-size)';
+// Plank heading rail. Fills the enclosing slot (Panel toolbar row / Stack rail row), which sets the height.
+const headingRail = 'flex items-center border-x-0! bg-header-surface border-subdued-separator h-full';
 
 type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 
