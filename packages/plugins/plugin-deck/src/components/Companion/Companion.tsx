@@ -8,6 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
 import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -30,11 +31,21 @@ export type CompanionProps = ThemedClassName<{
   onValueChange?: (id: string) => void;
   /** Primary plank attendable id; the companion shares its attention. */
   attendableId?: string;
+  /** Primary plank subject; companion Article surfaces filter on (and operate against) `companionTo`. */
+  companionTo?: unknown;
   /** Toolbar controls rendered after the tabs (e.g. close). */
   controls?: ReactNode;
 }>;
 
-export const Companion = ({ classNames, companions, value, onValueChange, attendableId, controls }: CompanionProps) => {
+export const Companion = ({
+  classNames,
+  companions,
+  value,
+  onValueChange,
+  attendableId,
+  companionTo,
+  controls,
+}: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
@@ -60,7 +71,13 @@ export const Companion = ({ classNames, companions, value, onValueChange, attend
         <Pane.Content key={node.id} classNames={mx(node.id !== selected && 'hidden')}>
           <Surface.Surface
             type={AppSurface.Article}
-            data={{ attendableId, subject: node.data, properties: node.properties }}
+            data={{
+              attendableId,
+              subject: node.data,
+              companionTo,
+              variant: getLinkedVariant(node.id),
+              properties: node.properties,
+            }}
             limit={1}
           />
         </Pane.Content>

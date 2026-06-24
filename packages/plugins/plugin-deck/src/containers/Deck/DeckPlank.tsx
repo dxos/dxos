@@ -126,6 +126,7 @@ export const DeckPlank = memo(
             value={resolvedCompanionId}
             onValueChange={onUpdateCompanion}
             attendableId={id}
+            companionTo={node.data}
             controls={<PlankCompanionControls primary={id} />}
           />
         </Splitter.Panel>
