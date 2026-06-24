@@ -21,7 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { mainPaddingTransitions } from '@dxos/react-ui';
-import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
+import { DEFAULT_HORIZONTAL_SIZE, Stack } from '@dxos/react-ui-stack';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
@@ -146,21 +146,13 @@ export const DeckSoloMode = () => {
     <div className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
-      <StackContext.Provider
-        value={{
-          orientation: 'horizontal',
-          size: 'contain',
-          rail: true,
-        }}
-      >
-        <PlankContainer
-          id={solo}
-          part='solo'
-          layoutMode={layoutMode}
-          companionVariant={effectiveCompanionVariant}
-          settings={settings}
-        />
-      </StackContext.Provider>
+      <PlankContainer
+        id={solo}
+        part='solo'
+        layoutMode={layoutMode}
+        companionVariant={effectiveCompanionVariant}
+        settings={settings}
+      />
     </div>
   );
 };
