@@ -208,6 +208,10 @@ const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(
  * This hook is useful for aggregate computations like counts or filtering
  * across multiple refs without using .target directly.
  *
+ * @deprecated Subscribes the component to the whole list, re-rendering on any element's change. Prefer pushing
+ * the subscription down — derive the aggregate in an atom (reading each `Obj.atom(ref)`) and read it where it is
+ * needed, or subscribe to the individual ref/property closest to the consumer — to keep subscriptions granular.
+ *
  * @param refs - Array of Refs to dereference and subscribe to
  * @returns Array of loaded target snapshots (excludes unloaded refs)
  */

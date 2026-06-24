@@ -26,37 +26,43 @@ describe('saveRoutine', () => {
 
     const routine = db.add(Routine.make({ name: 'Digest', triggers: [] }));
 
-    await saveRoutine(db, routine, makeDraft(routine, 'first body', true));
+    await saveRoutine(db, routine, makeDraft(routine, 'first body'));
 
     // Exactly one owned instructions, with the saved body.
     const owned = ownedInstructions(await db.query(Filter.type(Instructions.Instructions)).run(), routine);
     expect(owned).toHaveLength(1);
     expect(owned[0].text?.target?.content).toBe('first body');
 
-    // The action runs through RunInstructions, and the trigger dispatches it with the instructions bound.
+    // The action runs through RunInstructions, and the trigger dispatches it with the instructions bound. A
+    // newly created trigger starts disabled (enabled is toggled for the routine as a whole from the toolbar).
     expect(isRunInstructions(routine.runnable)).toBe(true);
     const trigger = primaryTrigger(routine);
     expect(trigger).toBeDefined();
     expect(isRunInstructions(trigger!.function)).toBe(true);
-    expect(trigger!.enabled).toBe(true);
+    expect(trigger!.enabled).toBe(false);
     expect((trigger!.input?.instructions as Ref.Ref<any> | undefined)?.target?.id).toBe(owned[0].id);
 
-    // Re-saving edits in place: still exactly one instructions and one trigger.
-    await saveRoutine(db, routine, makeDraft(routine, 'second body', false));
+    // The toolbar owns `enabled`; re-saving must not reset it.
+    Obj.update(trigger!, (trigger) => {
+      trigger.enabled = true;
+    });
+
+    // Re-saving edits in place: still exactly one instructions and one trigger, with `enabled` preserved.
+    await saveRoutine(db, routine, makeDraft(routine, 'second body'));
 
     const ownedAfter = ownedInstructions(await db.query(Filter.type(Instructions.Instructions)).run(), routine);
     expect(ownedAfter).toHaveLength(1);
     expect(ownedAfter[0].id).toBe(owned[0].id);
     expect(ownedAfter[0].text?.target?.content).toBe('second body');
     expect(routine.triggers).toHaveLength(1);
-    expect(primaryTrigger(routine)!.enabled).toBe(false);
+    expect(primaryTrigger(routine)!.enabled).toBe(true);
   });
 });
 
-const makeDraft = (routine: Routine.Routine, body: string, enabled: boolean): RoutineDraft => ({
+const makeDraft = (routine: Routine.Routine, body: string): RoutineDraft => ({
   routine: Obj.clone(routine),
   instructions: Instructions.make({ name: routine.name, text: body }),
-  trigger: Trigger.make({ spec: Trigger.specTimer('0 9 * * *'), enabled }),
+  trigger: Trigger.make({ spec: Trigger.specTimer('0 9 * * *') }),
 });
 
 const ownedInstructions = (all: Instructions.Instructions[], routine: Routine.Routine): Instructions.Instructions[] =>

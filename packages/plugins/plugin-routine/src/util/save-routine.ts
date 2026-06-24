@@ -129,24 +129,24 @@ const saveTrigger = (
   const spec = deepMapValues(draft.trigger.spec, (value, recurse) =>
     Ref.isRef(value) ? value : recurse(value),
   ) as Trigger.Spec;
-  const enabled = draft.trigger.enabled ?? false;
   const runnable = routine.runnable;
   const input = instructions ? { instructions: Ref.make(instructions), input: {} } : undefined;
 
+  // `enabled` is owned by the routine-level toolbar toggle, not the edit session: an existing trigger keeps its
+  // current flag; a newly created trigger starts disabled until enabled from the toolbar.
   const existing = primaryTrigger(routine);
   if (existing) {
     Obj.update(existing, (existing) => {
       // `spec`'s subscription QueryAST is deeply readonly while the live `spec` field is mutable; the
       // structures are identical at runtime, so a readonly->mutable boundary coercion is required here.
       existing.spec = spec as typeof existing.spec;
-      existing.enabled = enabled;
       existing.function = runnable;
       existing.input = input;
     });
     return;
   }
 
-  const created = db.add(Trigger.make({ spec, enabled, function: runnable, input }));
+  const created = db.add(Trigger.make({ spec, enabled: false, function: runnable, input }));
   Obj.setParent(created, routine);
   Obj.update(routine, (routine) => {
     routine.triggers = [...routine.triggers, Ref.make(created)];

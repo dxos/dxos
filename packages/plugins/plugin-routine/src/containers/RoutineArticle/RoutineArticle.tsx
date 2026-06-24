@@ -10,8 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Instructions, Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Panel } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-ui';
+import { Button, Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
@@ -22,6 +21,9 @@ import { type RoutineDraft, saveRoutine } from '../../util';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 
+/** Whether a routine has any trigger, and whether all of its triggers are enabled. */
+type EnabledState = { hasTriggers: boolean; allEnabled: boolean };
+
 /**
  * Article surface for a {@link Routine}. Read-only by default; the toolbar's Edit action enters an edit
  * session that operates on in-memory clones of the routine, its instructions, and its trigger, persisting them
@@ -31,8 +33,8 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const registry = useContext(RegistryContext);
-  // Subscribe so derived state (action presence, primary trigger) tracks edits to the routine.
-  const [automation] = useObject(subject);
+  // Subscribe so the action's run/edit affordances track the routine's `runnable`.
+  const [routine] = useObject(subject);
   const db = Obj.getDatabase(subject);
 
   // Toolbar state as atoms, read reactively inside the builder via `get` (the reactive toolbar idiom).
@@ -40,28 +42,47 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const runningAtom = useMemo(() => Atom.make(false), []);
   const editing = useAtomValue(editingAtom);
 
+  // Derive the routine's enabled state in the atom graph, subscribing granularly to the routine (for trigger
+  // membership) and to each trigger (for its `enabled` flag) — rather than subscribing this component to the
+  // whole trigger list. The toolbar reads it via `get`, so only the toolbar updates when a flag flips.
+  const enabledAtom = useMemo(
+    () =>
+      Atom.make<EnabledState>((get) => {
+        // Subscribe to the routine's `triggers` (membership) and each trigger's `enabled` property only — these
+        // property atoms fire solely when that value changes, keeping the subscription as narrow as possible.
+        const refs = get(Obj.atomProperty(subject, 'triggers'));
+        const enabledStates = refs.map((ref) => get(Obj.atomProperty(ref, 'enabled')));
+        const hasTriggers = enabledStates.length > 0;
+        return { hasTriggers, allEnabled: hasTriggers && enabledStates.every((enabled) => enabled === true) };
+      }),
+    [subject],
+  );
+
   const [session, setSession] = useState<RoutineDraft | undefined>(undefined);
 
-  // A routine action stores no `runnable`; it is an Instructions parented to the automation, so query for one.
+  // A routine action stores no `runnable`; it is an Instructions parented to the routine, so query for one.
   const allInstructions = useQuery(db, Filter.type(Instructions.Instructions));
   const ownedInstructions = useMemo(
     () => allInstructions.find((instructions) => Obj.getParent(instructions)?.id === subject.id),
     [allInstructions, subject.id],
   );
-  const primaryTrigger = useMemo(() => {
-    for (const ref of automation.triggers) {
-      const target = ref.target;
-      if (Obj.instanceOf(Trigger.Trigger, target)) {
-        return target;
-      }
-    }
-    return undefined;
-  }, [automation.triggers]);
 
   const canRun = useMemo(
-    () => Boolean(automation.runnable) || ownedInstructions != null,
-    [automation.runnable, ownedInstructions],
+    () => Boolean(routine.runnable) || ownedInstructions != null,
+    [routine.runnable, ownedInstructions],
   );
+
+  const handleToggleEnabled = useCallback(() => {
+    const next = !registry.get(enabledAtom).allEnabled;
+    for (const ref of subject.triggers) {
+      const trigger = ref.target;
+      if (trigger) {
+        Obj.update(trigger, (trigger) => {
+          trigger.enabled = next;
+        });
+      }
+    }
+  }, [registry, enabledAtom, subject]);
 
   const handleRun = useCallback(() => {
     if (!invokePromise || !db) {
@@ -81,18 +102,22 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const handleEdit = useCallback(() => {
     // Build the edit session: detached in-memory clones so edits never touch the persisted aggregate until save.
     const instructions = Instructions.make({
-      name: ownedInstructions?.name ?? automation.name,
+      name: ownedInstructions?.name ?? subject.name,
       text: ownedInstructions?.text?.target?.content ?? '',
       skills: ownedInstructions ? [...ownedInstructions.skills] : [],
       objects: ownedInstructions?.objects ? [...ownedInstructions.objects] : undefined,
     });
+    const primaryTrigger = subject.triggers[0]?.target;
     setSession({
       routine: Obj.clone(subject),
       instructions,
-      trigger: primaryTrigger ? Obj.clone(primaryTrigger) : Trigger.make({}),
+      trigger:
+        primaryTrigger && Obj.instanceOf(Trigger.Trigger, primaryTrigger)
+          ? Obj.clone(primaryTrigger)
+          : Trigger.make({}),
     });
     registry.set(editingAtom, true);
-  }, [subject, automation.name, ownedInstructions, primaryTrigger, registry, editingAtom]);
+  }, [subject, ownedInstructions, registry, editingAtom]);
 
   const handleCancel = useCallback(() => {
     setSession(undefined);
@@ -109,17 +134,33 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 
   const menuActions = useMenuBuilder(
     (get) => {
-      const builder = MenuBuilder.make().action(
-        'run',
-        {
-          label: ['run.label', { ns: meta.profile.key }],
-          icon: 'ph--play--regular',
-          disabled: get(runningAtom) || !canRun || get(editingAtom),
-          disposition: 'toolbar',
-          testId: 'automation.toolbar.run',
-        },
-        () => handleRun(),
-      );
+      const { hasTriggers, allEnabled } = get(enabledAtom);
+      const builder = MenuBuilder.make()
+        .action(
+          'run',
+          {
+            label: ['run.label', { ns: meta.profile.key }],
+            icon: 'ph--play--regular',
+            disabled: get(runningAtom) || !canRun || get(editingAtom),
+            disposition: 'toolbar',
+            testId: 'routine.toolbar.run',
+          },
+          () => handleRun(),
+        )
+        // Routine-level enable toggle (available whether editing or not): flips every trigger together; disabled
+        // until at least one trigger exists. A plain toolbar action has no pressed state, so the icon shows on/off.
+        .action(
+          'enabled',
+          {
+            label: ['enabled.label', { ns: meta.profile.key }],
+            icon: allEnabled ? 'ph--toggle-right--fill' : 'ph--toggle-left--regular',
+            checked: allEnabled,
+            disabled: !hasTriggers,
+            disposition: 'toolbar',
+            testId: 'routine.toolbar.enabled',
+          },
+          () => handleToggleEnabled(),
+        );
       // The Edit action sits at the trailing edge; while editing, Cancel/Save take over (at the form's footer).
       if (!get(editingAtom)) {
         builder.separator().action(
@@ -128,14 +169,14 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
             label: ['edit.label', { ns: meta.profile.key }],
             icon: 'ph--pencil-simple--regular',
             disposition: 'toolbar',
-            testId: 'automation.toolbar.edit',
+            testId: 'routine.toolbar.edit',
           },
           () => handleEdit(),
         );
       }
       return builder.build();
     },
-    [canRun, handleRun, handleEdit, runningAtom, editingAtom],
+    [canRun, enabledAtom, handleRun, handleToggleEnabled, handleEdit, runningAtom, editingAtom],
   );
 
   if (!db) {
