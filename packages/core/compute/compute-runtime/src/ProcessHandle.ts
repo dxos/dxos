@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import { Atom, type Registry } from '@effect-atom/atom';
+import * as RpcClient from '@effect/rpc/RpcClient';
 import * as Cause from 'effect/Cause';
 import type * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';
@@ -95,10 +96,13 @@ const fromPersistedChildEvent = (event: {
  * on shutdown. ProcessManager.Status transitions are computed here from handler accounting
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
-export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
+export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, any> {
   readonly statusAtom: Atom.Writable<ProcessManager.Status>;
   readonly parentId: Process.ID | null;
   readonly environment: ProcessManager.Environment;
+
+  /** In-memory client for the process's declared RPC control surface. */
+  readonly rpc: RpcClient.RpcClient<any>;
 
   #currentStatus: ProcessManager.Status;
   #activeHandlers = 0;
@@ -116,7 +120,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
-  readonly #callbacks: Process.Callbacks<I, O, R>;
+  readonly #callbacks: Process.Callbacks<I, O, R, any>;
   readonly #scope: Scope.CloseableScope;
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
@@ -132,7 +136,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   constructor(
     readonly pid: Process.ID,
     parentId: Process.ID | null,
-    callbacks: Process.Callbacks<I, O, R>,
+    callbacks: Process.Callbacks<I, O, R, any>,
     scope: Scope.CloseableScope,
     services: Context.Context<R | Process.BaseServices>,
     registry: Registry.Registry,
@@ -143,6 +147,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     environment: ProcessManager.Environment,
     traceSink: Trace.Sink,
     clock: Clock.Clock,
+    rpc: RpcClient.RpcClient<any>,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
@@ -164,6 +169,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     this.#traceSink = traceSink;
     this.#storage = storage;
     this.#clock = clock;
+    this.rpc = rpc;
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
     this.#hasRunningChildren = hasRunningChildren ?? (() => false);
@@ -270,7 +276,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       this.#setStatus(Process.State.TERMINATED, Exit.void);
     });
   }
-  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<ProcessManager.Handle<I, O>> {
+  hydrate(definition: Process.Process<I, O, any, any>): Effect.Effect<ProcessManager.Handle<I, O, any>> {
     if (definition.key !== this.key) {
       return Effect.die(
         new Error(`Process definition key mismatch for ${this.pid}: expected "${this.key}", got "${definition.key}"`),
@@ -323,7 +329,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
    * Re-deliver a persisted event that never settled before shutdown.
    * Called by the manager during hydrate (forked on the process scope, in seq order).
    */
-  redeliver(event: PersistedEvent, definition: Process.Process<I, O, any>): Effect.Effect<void> {
+  redeliver(event: PersistedEvent, definition: Process.Process<I, O, any, any>): Effect.Effect<void> {
     switch (event._tag) {
       case 'spawn':
         return this.#runHandler('spawn', () => this.#callbacks.onSpawn(), event.seq).pipe(Effect.flatMap(Fiber.join));

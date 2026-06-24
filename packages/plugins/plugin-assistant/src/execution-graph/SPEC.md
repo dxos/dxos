@@ -392,7 +392,7 @@ process in `activeProcesses` (`execution-graph.ts#L397`):
 When **all** of:
 
 - `process.key === AGENT_PROCESS_KEY` (`'org.dxos.testing.process.agent'`),
-- `process.params.target` is truthy,
+- `process.params.annotations` carries a `Process.TargetAnnotation` value,
 - `process.state ∈ { RUNNING, HYBERNATING }`,
 
 emit:

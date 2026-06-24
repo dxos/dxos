@@ -5,12 +5,14 @@
 import * as Array from 'effect/Array';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Process, Trace } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
 import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
 import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
@@ -681,7 +683,7 @@ const spanTreeToCommits = (
   for (const process of activeProcesses) {
     if (
       process.key === AGENT_PROCESS_KEY &&
-      process.params.target &&
+      Option.isSome(Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation)) &&
       (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
     ) {
       builder.addCommit({

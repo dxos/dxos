@@ -156,6 +156,7 @@ export const translations = [
         'snapshot-by-schema.label': 'Snapshot of objects',
         'rename-collection.label': 'Rename collection',
         'rename-object.label': 'Rename object',
+        'delete-object.label': 'Delete object',
         'duplicate-object.label': 'Duplicate object',
         'object-deleted.label': 'Object deleted',
         'objects-deleted.label': 'Objects deleted',

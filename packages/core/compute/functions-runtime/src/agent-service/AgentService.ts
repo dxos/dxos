@@ -103,7 +103,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // the old process and spawns a fresh one (see below).
       const sessionCache = new Map<
         string,
-        { model: ModelName | undefined; handle: ProcessManager.Handle<string, void>; session: Session }
+        { model: ModelName | undefined; handle: ProcessManager.Handle<string, void, never>; session: Session }
       >();
 
       const makeExecutable = (model?: ModelName) =>
@@ -164,7 +164,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const processes = yield* processManager.list({ target, key: executable.key });
             const activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
 
-            let handle: ProcessManager.Handle<string, void>;
+            let handle: ProcessManager.Handle<string, void, never>;
             if (activeProcess) {
               yield* activeProcess.hydrate(executable);
               handle = activeProcess;
@@ -197,7 +197,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
   );
 
 const makeSession = (
-  process: ProcessManager.Handle<string, void>,
+  process: ProcessManager.Handle<string, void, never>,
   feed: Feed.Feed,
   releaseSession: () => void,
 ): Session => ({
