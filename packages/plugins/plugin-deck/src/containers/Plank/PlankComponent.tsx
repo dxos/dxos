@@ -15,7 +15,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSize } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
-import { Plank } from '#components';
+import { Pane } from '#components';
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
 
@@ -197,7 +197,7 @@ export const PlankComponent = memo(
     // `Panel.Root`'s `toolbar/content` grid replaces the former `railGridHorizontal` template.
     if (part.startsWith('solo')) {
       return (
-        <Plank.Root
+        <Pane.Root
           ref={rootElement}
           data-testid='deck.plank'
           data-popover-collision-boundary={true}
@@ -211,9 +211,9 @@ export const PlankComponent = memo(
           {...(isAttendable ? attentionAttrs : {})}
           onKeyDown={handleKeyDown}
         >
-          {heading && <Plank.Toolbar>{heading}</Plank.Toolbar>}
-          <Plank.Content>{body}</Plank.Content>
-        </Plank.Root>
+          {heading && <Pane.Toolbar>{heading}</Pane.Toolbar>}
+          <Pane.Content>{body}</Pane.Content>
+        </Pane.Root>
       );
     }
 

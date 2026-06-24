@@ -3,5 +3,5 @@
 //
 
 export { Matrix } from './Matrix';
-export { Plank, type PlankTab } from './Plank';
+export { Pane, type PaneTab } from './Pane';
 export { Splitter, type SplitterProps } from './Splitter';

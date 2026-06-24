@@ -12,11 +12,11 @@ import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
 
 //
-// Plank
+// Pane
 //
 // A presentational, radix-style component for a single deck pane: a toolbar rail above a content body.
 // A plank always has a toolbar, so it implements that layout directly rather than wrapping the
-// generalized `Panel`. A companion pane is just a Plank whose toolbar holds `Plank.Tabs` instead of a
+// generalized `Panel`. A companion pane is just a Pane whose toolbar holds `Pane.Tabs` instead of a
 // sigil/title. Intentionally free of app-framework concepts (capabilities, operations, Surface) —
 // containers compose the sigil, controls, tabs and content surface into the slots.
 //
@@ -27,9 +27,9 @@ import type { Merge } from '@dxos/util';
 
 // Root accepts arbitrary div attributes (the container wires tabIndex, data-* and key handlers), so it
 // is a plain forwarding div rather than the narrowly-typed `slottable` used by the toolbar/content slots.
-type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+type PaneRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
-const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, ...props }, forwardedRef) => (
+const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props }, forwardedRef) => (
   <div
     {...composableProps(props, {
       role: 'article',
@@ -42,7 +42,7 @@ const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, ...pro
   </div>
 ));
 
-PlankRoot.displayName = 'Plank.Root';
+PaneRoot.displayName = 'Pane.Root';
 
 //
 // Toolbar
@@ -50,7 +50,7 @@ PlankRoot.displayName = 'Plank.Root';
 
 // Toolbar rail: 48px (--dx-rail-content) header that vertically centers its items.
 // Provides `lg` density so buttons resolve to 40px (--dx-rail-action), matching the sigil.
-const PlankToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
   return (
     <Comp
@@ -65,13 +65,13 @@ const PlankToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props },
   );
 });
 
-PlankToolbar.displayName = 'Plank.Toolbar';
+PaneToolbar.displayName = 'Pane.Toolbar';
 
 //
 // Content
 //
 
-const PlankContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const PaneContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
   return (
     <Comp {...composableProps(props, { classNames: 'flex-1 min-h-0' })} ref={forwardedRef}>
@@ -80,16 +80,16 @@ const PlankContent = slottable<HTMLDivElement>(({ children, asChild, ...props },
   );
 });
 
-PlankContent.displayName = 'Plank.Content';
+PaneContent.displayName = 'Pane.Content';
 
 //
 // Title
 //
 
-type PlankTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
+type PaneTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 
 /** Attention-aware plank title; colors to the accent when the plank (or a related companion) is attended. */
-const PlankTitle = forwardRef<HTMLHeadingElement, PlankTitleProps>(
+const PaneTitle = forwardRef<HTMLHeadingElement, PaneTitleProps>(
   ({ attendableId, related, classNames, ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     return (
@@ -106,22 +106,22 @@ const PlankTitle = forwardRef<HTMLHeadingElement, PlankTitleProps>(
   },
 );
 
-PlankTitle.displayName = 'Plank.Title';
+PaneTitle.displayName = 'Pane.Title';
 
 //
 // Tabs
 //
 
-export type PlankTab = {
+export type PaneTab = {
   id: string;
   icon: string;
   /** Already-localized label. */
   label: string;
 };
 
-type PlankTabsProps = Merge<
+type PaneTabsProps = Merge<
   ThemedClassName<{
-    tabs: ReadonlyArray<PlankTab>;
+    tabs: ReadonlyArray<PaneTab>;
     value?: string;
     onValueChange?: (id: string) => void;
     /** Collapse inactive tabs to icon-only once the tab count exceeds this. */
@@ -132,7 +132,7 @@ type PlankTabsProps = Merge<
 >;
 
 /** Full-height tab strip for a companion plank's toolbar; selects among available companions. */
-const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
+const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
   ({ tabs, value, onValueChange, maxTabs = 5, attendableId, related, classNames }, forwardedRef) => {
     // The active tab only reads as primary when the plank (shared with its companion) is attended.
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
@@ -158,19 +158,19 @@ const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
   },
 );
 
-PlankTabs.displayName = 'Plank.Tabs';
+PaneTabs.displayName = 'Pane.Tabs';
 
 //
-// Plank
+// Pane
 //
 
-export const Plank = {
-  Root: PlankRoot,
-  Toolbar: PlankToolbar,
+export const Pane = {
+  Root: PaneRoot,
+  Toolbar: PaneToolbar,
   Sigil: AttentionSigilButton,
-  Title: PlankTitle,
-  Tabs: PlankTabs,
-  Content: PlankContent,
+  Title: PaneTitle,
+  Tabs: PaneTabs,
+  Content: PaneContent,
 };
 
-export type { PlankRootProps, PlankTitleProps, PlankTabsProps };
+export type { PaneRootProps, PaneTitleProps, PaneTabsProps };
