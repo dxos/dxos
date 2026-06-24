@@ -86,6 +86,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {

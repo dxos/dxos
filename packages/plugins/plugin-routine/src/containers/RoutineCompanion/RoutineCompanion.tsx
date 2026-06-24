@@ -6,22 +6,23 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Skill, Instructions } from '@dxos/compute';
 import { type Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { RoutineForm, MasterDetail } from '#components';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
 /** An in-memory draft routine (with its owned instructions) not yet added to the database. */
-type Draft = { routine: Routine.Routine; instructions: Instructions.Instructions };
-
-export type RoutineCompanionProps = {
-  db: Database.Database;
-  object: Obj.Unknown;
+type Draft = {
+  routine: Routine.Routine;
+  instructions: Instructions.Instructions;
 };
+
+export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
 /**
  * Per-object companion: a master-detail list of the automations anchored to the object via the
@@ -34,7 +35,18 @@ export type RoutineCompanionProps = {
  * automation appear in this list — is created only on Save; Cancel removes the draft. So an
  * abandoned draft leaves no association behind.
  */
-export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
+export const RoutineCompanion = ({ subject }: RoutineCompanionProps) => {
+  // The automations list and draft editor require a db-attached subject; the companion is only shown for
+  // persisted objects, so a missing database means there is nothing to render.
+  const db = Obj.getDatabase(subject);
+  if (!db) {
+    return null;
+  }
+
+  return <RoutineCompanionImpl db={db} object={subject} />;
+};
+
+const RoutineCompanionImpl = ({ db, object }: { db: Database.Database; object: Obj.Unknown }) => {
   const { t } = useTranslation(meta.profile.key);
 
   // Relations anchoring automations to this object; the master list is their sources.
@@ -75,6 +87,7 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
       // Remove the unsaved draft; its owned instructions cascade-deletes.
       db.remove(draft.routine);
     }
+
     setDraft(undefined);
   }, [draft, db]);
 
@@ -82,6 +95,7 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
     if (!draft) {
       return;
     }
+
     // Anchor the automation to the object; this is what surfaces it in the list.
     db.add(Routine.makeAppliesTo({ [Relation.Source]: draft.routine, [Relation.Target]: object }));
     setSelectedId(draft.routine.id);
@@ -109,20 +123,23 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
 
   return (
     <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <Panel.Content classNames='dx-document'>
         <MasterDetail<Routine.Routine>
           items={automations}
           selectedId={draft ? undefined : selectedId}
+          detail={detail}
+          onCreate={handleCreate}
           onSelect={handleSelect}
           onDelete={handleDelete}
+          getIcon={() => 'ph--lightning--regular'}
           getLabel={(routine) =>
             Obj.getLabel(routine) ?? t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) })
           }
-          getIcon={() => 'ph--lightning--regular'}
-          onCreate={handleCreate}
           createLabel={t('add-automation.label')}
           emptyLabel={t('no-automations.message')}
-          detail={detail}
         />
       </Panel.Content>
     </Panel.Root>

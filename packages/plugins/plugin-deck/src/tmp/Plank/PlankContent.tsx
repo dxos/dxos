@@ -5,9 +5,10 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { composable, composableProps, mainIntrinsicSize } from '@dxos/react-ui';
-import { railGridHorizontal } from '@dxos/react-ui-stack';
 
 import { useMainSize } from '#hooks';
+
+import { railGridHorizontal } from './PlankComponent';
 
 export type PlankContentProps = PropsWithChildren<{
   solo: boolean;
