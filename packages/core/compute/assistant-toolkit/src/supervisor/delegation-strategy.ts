@@ -97,9 +97,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       if (!chat) {
         return [];
       }
-      const plan = chat.plan
-        ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined))
-        : undefined;
+      const plan = chat.plan ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
       if (!plan) {
         return [];
       }
@@ -170,9 +168,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       const chat = yield* findChatForFeed(feed);
       const agent = yield* findAgentForFeed(feed);
       const plan =
-        chat?.plan != null
-          ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined))
-          : undefined;
+        chat?.plan != null ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
 
       let title = id;
       if (plan) {

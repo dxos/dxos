@@ -2,37 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as semver from 'semver';
+import { EntityStructure, type QueryAST } from '@dxos/echo-protocol';
+import {
+  ATTR_META,
+  compareTypenameStrings,
+  filterMatchEntity,
+  filterMatchValue,
+  matchMetaKey,
+  matchesTag,
+  type ObjectJSON,
+} from '@dxos/echo/internal';
+import { EntityId, SpaceId } from '@dxos/keys';
 
-import { Entity } from '@dxos/echo';
-import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+export { filterMatchEntity, filterMatchValue };
 
 export type MatchedDoc = {
   id: EntityId;
   spaceId: SpaceId;
   doc: EntityStructure;
-};
-
-/**
- * Matches a tag filter against an object's stored tags. Tags may be stored as encoded references or
- * (in legacy data) bare URI strings, and those URIs may be in legacy DXN form. Both sides are
- * normalized to the canonical EID before comparing, so a query by the modern id matches objects
- * tagged before the migration (and vice versa). Shared by the doc and JSON match paths.
- */
-const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
-  // Canonicalize a tag URI for comparison. For EIDs, compare by entity id so the local
-  // (`echo:/<id>`) and fully-qualified (`echo://<space>/<id>`) forms of the same object match, and
-  // legacy DXN ids normalize to the same id. Non-EID ids fall back to the raw string.
-  const canonical = (uri: string): string => {
-    const eid = EID.tryParse(uri);
-    return (eid && EID.getEntityId(eid)) || uri;
-  };
-  const normalize = (tag: unknown): string =>
-    canonical(isEncodedReference(tag) ? EncodedReference.toURI(tag) : (tag as string));
-  const target = canonical(filterTag);
-  return tags.some((tag) => normalize(tag) === target);
 };
 
 /**
@@ -125,33 +112,6 @@ export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc): boolea
   }
 };
 
-/**
- * Matches a meta `key` / `version` constraint against an object's meta `key` and `version`.
- * - `key` must match exactly.
- * - If `versionRange` is set, the object's `version` must satisfy it (semver).
- *   Objects without a `version` or with an invalid `version` do not match a version-constrained filter.
- */
-const matchMetaKey = (
-  key: string,
-  versionRange: string | undefined,
-  objKey: string | undefined,
-  objVersion: string | undefined,
-): boolean => {
-  if (objKey !== key) {
-    return false;
-  }
-  if (versionRange === undefined) {
-    return true;
-  }
-  if (objVersion === undefined || semver.valid(objVersion) === null) {
-    return false;
-  }
-  if (semver.validRange(versionRange) === null) {
-    return false;
-  }
-  return semver.satisfies(objVersion, versionRange, { includePrerelease: true });
-};
-
 // TODO(burdon): Reconcile with filterMatchDoc (automerge doc path).
 export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
   switch (filter.type) {
@@ -241,255 +201,4 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     default:
       return false;
   }
-};
-
-/**
- * Performs structural matching between a filter object and a target object.
- * This handles nested object comparison for array matching scenarios.
- */
-// TODO(wittjosiah): Add ast support for non-strict matching.
-const structuralMatch = (filterObj: any, targetObj: any, strict = true): boolean => {
-  if (typeof filterObj !== 'object' || filterObj === null) {
-    return filterObj === targetObj;
-  }
-
-  if (typeof targetObj !== 'object' || targetObj === null) {
-    return false;
-  }
-
-  // Prohibit extra keys in targetObj.
-  const filterKeys = Object.keys(filterObj);
-  const targetKeys = Object.keys(targetObj);
-  if (strict && filterKeys.length !== targetKeys.length) {
-    return false;
-  }
-
-  return filterKeys.every((key) => {
-    if (!(key in targetObj)) {
-      return false;
-    }
-    const filterValue = filterObj[key];
-    const targetValue = targetObj[key];
-
-    if (typeof filterValue === 'object' && filterValue !== null) {
-      return structuralMatch(filterValue, targetValue);
-    }
-
-    return filterValue === targetValue;
-  });
-};
-
-export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boolean => {
-  switch (filter.type) {
-    case 'compare': {
-      const compareValue = filter.value as any;
-      switch (filter.operator) {
-        case 'eq':
-          if (isEncodedReference(compareValue)) {
-            if (!isEncodedReference(value)) {
-              return false;
-            }
-            return EncodedReference.toURI(value) === EncodedReference.toURI(compareValue);
-          }
-          return value === compareValue;
-        case 'neq':
-          return value !== compareValue;
-        case 'gt':
-          return (value as any) > compareValue;
-        case 'gte':
-          return (value as any) >= compareValue;
-        case 'lt':
-          return (value as any) < compareValue;
-        case 'lte':
-          return (value as any) <= compareValue;
-        default:
-          return false;
-      }
-    }
-    case 'object': {
-      // Handle nested object filters for property matching
-      if (typeof value !== 'object' || value === null) {
-        return false;
-      }
-
-      // Check properties
-      if (filter.props) {
-        for (const [key, valueFilter] of Object.entries(filter.props)) {
-          const nestedValue = (value as any)[key];
-          if (!filterMatchValue(valueFilter, nestedValue)) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    }
-    case 'in': {
-      return filter.values.includes(value);
-    }
-    case 'contains': {
-      if (!Array.isArray(value)) {
-        return false;
-      }
-
-      return value.some((element) => {
-        if (typeof filter.value === 'object' && filter.value !== null && !Array.isArray(filter.value)) {
-          return structuralMatch(filter.value, element);
-        }
-
-        return element === filter.value;
-      });
-    }
-    case 'range': {
-      return (value as any) >= filter.from && (value as any) <= filter.to;
-    }
-    case 'not': {
-      return !filterMatchValue(filter.filter, value);
-    }
-    case 'and': {
-      return filter.filters.every((f) => filterMatchValue(f, value));
-    }
-    case 'or': {
-      return filter.filters.some((f) => filterMatchValue(f, value));
-    }
-    default:
-      return false;
-  }
-};
-
-/**
- * Matches a filter against an {@link Entity.Unknown} proxy without full JSON serialization.
- *
- * Checks typename, id, and meta via direct symbol-property access (O(1)) before falling
- * back to {@link Entity.toJSON} only when props-based filtering requires it. Avoids the
- * expensive deepMapValues traversal incurred by filterMatchObjectJSON for the common case of
- * type-based registry queries.
- */
-export const filterMatchEntity = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => {
-  switch (filter.type) {
-    case 'object': {
-      if (filter.typename !== null) {
-        const typeURI = Entity.getTypeURI(entity);
-        if (!typeURI || !compareTypenameStrings(filter.typename, typeURI)) {
-          return false;
-        }
-      }
-
-      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity.id)) {
-        return false;
-      }
-
-      if (filter.props) {
-        // Serialize to JSON only when props filtering is needed; serialization of complex
-        // static-type entities (e.g. those with class-instance schema fields) may throw.
-        let json: ObjectJSON | null = null;
-        try {
-          json = Entity.toJSON(entity);
-        } catch {}
-        if (json === null) {
-          return false;
-        }
-        for (const [key, valueFilter] of Object.entries(filter.props)) {
-          if (key.startsWith('@')) {
-            continue;
-          }
-          if (!filterMatchValue(valueFilter, (json as any)[key])) {
-            return false;
-          }
-        }
-      }
-
-      const meta = Entity.getMeta(entity);
-
-      if (filter.foreignKeys && filter.foreignKeys.length > 0) {
-        const hasKey = filter.foreignKeys.some((fk) => meta.keys.some((k) => k.source === fk.source && k.id === fk.id));
-        if (!hasKey) {
-          return false;
-        }
-      }
-
-      if (filter.metaKey !== undefined) {
-        if (!matchMetaKey(filter.metaKey, filter.metaVersion, meta.key, meta.version)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    case 'tag': {
-      // Live meta tags are Ref<Tag> instances; encode to EncodedReference for matchesTag.
-      const rawTags = Entity.getMeta(entity).tags;
-      const tags = rawTags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));
-      return matchesTag(tags, filter.tag);
-    }
-
-    case 'text-search': {
-      return false;
-    }
-
-    case 'timestamp': {
-      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
-    }
-
-    case 'child-of': {
-      throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
-    }
-
-    case 'not': {
-      return !filterMatchEntity(filter.filter, entity);
-    }
-
-    case 'and': {
-      return filter.filters.every((f) => filterMatchEntity(f, entity));
-    }
-
-    case 'or': {
-      return filter.filters.some((f) => filterMatchEntity(f, entity));
-    }
-
-    default:
-      return false;
-  }
-};
-
-/**
- * Compares a filter's type discriminator (`expectedStr`) against the value stored on an object's
- * `system.type` (`actualStr`).
- *
- * - `echo:` EIDs match by entity id; a bare (space-less) id matches the object in any space, while
- *   a space-qualified id matches only that space.
- * - `dxn:` DXNs match version-agnostically (a missing version on either side matches any version).
- * - Any other string is compared verbatim.
- */
-const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  const expectedEid = EID.tryParse(expectedStr);
-  if (expectedEid) {
-    const actualEid = EID.tryParse(actualStr);
-    if (!actualEid) {
-      return false;
-    }
-    if (EID.getEntityId(expectedEid) !== EID.getEntityId(actualEid)) {
-      return false;
-    }
-    const expectedSpaceId = EID.getSpaceId(expectedEid);
-    const actualSpaceId = EID.getSpaceId(actualEid);
-    return expectedSpaceId === undefined || actualSpaceId === undefined || expectedSpaceId === actualSpaceId;
-  }
-
-  const expectedDxn = DXN.tryMake(expectedStr);
-  if (expectedDxn) {
-    const actualDxn = DXN.tryMake(actualStr);
-    if (!actualDxn) {
-      return false;
-    }
-    if (DXN.getName(expectedDxn) !== DXN.getName(actualDxn)) {
-      return false;
-    }
-    const expectedVersion = DXN.getVersion(expectedDxn);
-    const actualVersion = DXN.getVersion(actualDxn);
-    return expectedVersion === undefined || actualVersion === undefined || expectedVersion === actualVersion;
-  }
-
-  return expectedStr === actualStr;
 };

@@ -59,7 +59,7 @@ export default GetContext.pipe(
           Effect.map((_) => _.content),
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No instructions found.')),
         ),
-        plan: yield* (chat ? formatPlan(chat) : Effect.succeed('No plan found.')),
+        plan: yield* chat ? formatPlan(chat) : Effect.succeed('No plan found.'),
         artifacts: yield* Effect.forEach(agent.artifacts, (artifact) =>
           Effect.gen(function* () {
             return {

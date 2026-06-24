@@ -245,7 +245,7 @@ export class AiChatProcessor {
         // Tier A only: system-prompt formatting runs operations that read the conversation context;
         // the live-host Tier B control surface is not reachable from this fiber.
         const runtime = yield* Effect.runtime<Database.Service>();
-        return yield*  formatSystemPrompt({ system: this._options.system, skills, objects }).pipe(
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects }).pipe(
           Effect.provideService(
             Harness.HarnessService,
             Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),

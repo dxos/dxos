@@ -100,10 +100,7 @@ export const Agent = Schema.Struct({
 
 export type Agent = Type.InstanceType<typeof Agent>;
 
-export type MakeProps = Omit<
-  Obj.MakeProps<typeof Agent>,
-  'instructions' | 'artifacts' | 'subscriptions' | 'chat'
-> &
+export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'artifacts' | 'subscriptions' | 'chat'> &
   Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
     instructions: string;
     skills?: Ref.Ref<Skill.Skill>[];
@@ -229,15 +226,14 @@ export const getFromChatContext: Effect.Effect<
   HarnessContextError | Harness.NotSupportedError,
   Harness.HarnessService
 > = Effect.gen(function* () {
-    const agents = yield* Harness.queryContext(Filter.type(Agent));
-    if (agents.length !== 1) {
-      return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
-    }
+  const agents = yield* Harness.queryContext(Filter.type(Agent));
+  if (agents.length !== 1) {
+    return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
+  }
 
-    const agent = agents[0];
-    return agent;
-  },
-);
+  const agent = agents[0];
+  return agent;
+});
 
 /**
  * Adds an object to the agent's artifacts (context), resolving it by id within the agent's space.

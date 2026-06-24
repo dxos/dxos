@@ -15,7 +15,7 @@ import type * as Scope from 'effect/Scope';
 
 import { LayerSpec, Process, ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Annotation, Database, EID, Feed, Filter, Obj, Type, type URI } from '@dxos/echo';
+import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -185,11 +185,8 @@ const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions):
   }).pipe(Effect.provide(runtime)),
   queryContext: <T extends Obj.Unknown>(filter: Filter.Filter<T>) =>
     Effect.sync(() => {
-      const typenames = extractFilterTypenames(filter);
-      return binder.getObjects().filter((object): object is T => {
-        const type = Obj.getType(object);
-        return type != null && typenames.includes(Type.getURI(type));
-      });
+      const match = Filter.toPredicate(filter);
+      return binder.getObjects().filter(match);
     }),
   enqueueMessage: ({ content }) => owningHost.pipe(Effect.flatMap((rpc) => rpc.enqueueMessage({ content }))),
   setAlarm: ({ at, message }) =>
@@ -227,18 +224,3 @@ const lookupOwningHost = (
 
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
-
-/** Typenames named by a {@link Filter.type} filter (single `object` or `or` of objects). */
-const extractFilterTypenames = (filter: Filter.Filter<any>): readonly string[] => {
-  const collect = (ast: Filter.Filter<any>['ast']): string[] => {
-    switch (ast.type) {
-      case 'object':
-        return ast.typename != null ? [ast.typename] : [];
-      case 'or':
-        return ast.filters.flatMap(collect);
-      default:
-        return [];
-    }
-  };
-  return collect(filter.ast);
-};

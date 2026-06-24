@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { Plan, Chat } from '../../../types';

@@ -145,10 +145,12 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "semver": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:"
   },
   "publishConfig": {
     "access": "public"

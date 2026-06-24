@@ -64,14 +64,13 @@ export const getFromContext: Effect.Effect<
   HarnessContextError | Harness.NotSupportedError,
   Harness.HarnessService
 > = Effect.gen(function* () {
-    const chats = yield* Harness.queryContext(Filter.type(Chat));
-    if (chats.length !== 1) {
-      return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
-    }
+  const chats = yield* Harness.queryContext(Filter.type(Chat));
+  if (chats.length !== 1) {
+    return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
+  }
 
-    return chats[0];
-  },
-);
+  return chats[0];
+});
 
 /** @deprecated Use CompanionTo instead. */
 export const LegacyCompanionTo = Schema.Struct({

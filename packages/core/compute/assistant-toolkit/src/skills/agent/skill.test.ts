@@ -359,9 +359,7 @@ const dumpAgent = async (agent: Agent.Agent) => {
   text += `============== Plan ==============\n\n`;
   if (agent.chat) {
     const chat = await agent.chat.load();
-    text += chat.plan
-      ? `${await chat.plan.load().then((plan) => Plan.formatPlan(plan))}\n`
-      : 'No plan found.\n';
+    text += chat.plan ? `${await chat.plan.load().then((plan) => Plan.formatPlan(plan))}\n` : 'No plan found.\n';
   } else {
     text += 'No plan found.\n';
   }
