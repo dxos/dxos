@@ -331,12 +331,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
         }
 
-        if (!trigger.function) {
-          return yield* Effect.dieMessage('Trigger has no function reference');
+        if (!trigger.runnable) {
+          return yield* Effect.dieMessage('Trigger has no runnable reference');
         }
 
         // Resolve the operation definition from the persistent record.
-        const serializedOperation = yield* Database.load(trigger.function!).pipe(Effect.orDie);
+        const serializedOperation = yield* Database.load(trigger.runnable).pipe(Effect.orDie);
         invariant(Obj.instanceOf(Operation.PersistentOperation, serializedOperation));
         const functionDef = Operation.deserialize(serializedOperation);
 

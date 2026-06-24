@@ -6,11 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trigger } from '@dxos/compute';
+import { Trigger, Runnable } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
-
-import * as Runnable from './Runnable';
 
 /**
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.
@@ -22,14 +20,14 @@ export class Routine extends Type.declareObj<Routine>()(
     description: Schema.String.pipe(Schema.optional),
 
     /**
-     * The action to run. A trigger's `function` Ref points directly at this (so EDGE/the dispatcher can run
+     * The action to run. A trigger's `runnable` Ref points directly at this (so EDGE/the dispatcher can run
      * it). `Runnable` is the type seam — currently just Operation; see Runnable.ts.
      */
     // TODO(burdon): Change to Array?
     runnable: Ref.Ref(Runnable.Runnable).pipe(Schema.optional),
 
     /**
-     * Explicit membership, bi-directional with `trigger.function → runnable`. Required (not derived by query)
+     * Explicit membership, bi-directional with `trigger.runnable → runnable`. Required (not derived by query)
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
      */

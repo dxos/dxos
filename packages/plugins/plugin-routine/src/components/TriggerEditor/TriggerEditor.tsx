@@ -320,10 +320,10 @@ const useTriggerForm = (db: Database.Database, automation: Routine.Routine, trig
 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
-      // The dispatcher dies on an enabled trigger with no function reference, so `enabled` is only honored
-      // when the function the trigger will actually carry is present: its own on edit (not backfilled here),
+      // The dispatcher dies on an enabled trigger with no runnable reference, so `enabled` is only honored
+      // when the runnable the trigger will actually carry is present: its own on edit (not backfilled here),
       // the automation's runnable wired in below on create.
-      const functionRef = trigger ? trigger.function : automation.runnable;
+      const functionRef = trigger ? trigger.runnable : automation.runnable;
       const enabled = values.enabled === true && functionRef != null;
       if (trigger) {
         Obj.update(trigger, (trigger) => {
@@ -334,10 +334,10 @@ const useTriggerForm = (db: Database.Database, automation: Routine.Routine, trig
           trigger.enabled = enabled;
         });
       } else {
-        // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
-        // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
+        // Create the trigger on first edit; `runnable` is wired by the action section, and it stays disabled
+        // until an action is set, so a runnable-less trigger never dispatches. The trigger is owned by the
         // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
-        const created = db.add(Trigger.make({ function: functionRef, enabled, spec }));
+        const created = db.add(Trigger.make({ runnable: functionRef, enabled, spec }));
         Obj.setParent(created, automation);
         Obj.update(automation, (automation) => {
           automation.triggers = [...automation.triggers, Ref.make(created)];

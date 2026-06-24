@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
             const [fn] = functions;
             if (fn) {
               Obj.update(trigger, (trigger) => {
-                trigger.function = Ref.make(fn);
+                trigger.runnable = Ref.make(fn);
               });
             }
           }

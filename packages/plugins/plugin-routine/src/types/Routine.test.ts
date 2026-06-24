@@ -4,12 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import { Operation, Runnable } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 
 import { blank } from '../templates';
 import * as Routine from './Routine';
-import * as Runnable from './Runnable';
 
 describe('Routine', () => {
   test('make produces a typed Routine', ({ expect }) => {

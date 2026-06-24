@@ -103,7 +103,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
         });
@@ -127,7 +127,7 @@ describe('TriggerDispatcher', () => {
         const { db } = yield* Database.Service;
         db.registry.add([Operation.serialize(Reply)]);
         const trigger = Trigger.make({
-          function: Ref.fromURI(Reply.meta.key),
+          runnable: Ref.fromURI(Reply.meta.key),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
         });
@@ -149,7 +149,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('* * * * *'), // Every minute - should trigger immediately
         });
@@ -175,13 +175,13 @@ describe('TriggerDispatcher', () => {
         const functionObj = yield* registerOperation(Reply);
 
         const enabledTrigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('* * * * *'),
         });
 
         const disabledTrigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: false,
           spec: Trigger.specTimer('* * * * *'),
         });
@@ -210,7 +210,7 @@ describe('TriggerDispatcher', () => {
 
         // cron every 5 minutes
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
         });
@@ -255,7 +255,7 @@ describe('TriggerDispatcher', () => {
           db.registry.add([badFn]);
 
           const trigger = Trigger.make({
-            function: Ref.make(badFn) as any,
+            runnable: Ref.make(badFn) as any,
             enabled: true,
             spec: Trigger.specTimer('* * * * *'),
           });
@@ -304,7 +304,7 @@ describe('TriggerDispatcher', () => {
         // Add a trigger dynamically
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('* * * * *'), // Every minute
         });
@@ -336,7 +336,7 @@ describe('TriggerDispatcher', () => {
         // Test that valid patterns can be invoked
         for (const cron of validPatterns) {
           const trigger = Trigger.make({
-            function: Ref.make(functionObj),
+            runnable: Ref.make(functionObj),
             enabled: true,
             spec: Trigger.specTimer(cron),
           });
@@ -355,7 +355,7 @@ describe('TriggerDispatcher', () => {
 
         // Test with an invalid pattern
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('invalid-cron'),
         });
@@ -393,7 +393,7 @@ describe('TriggerDispatcher', () => {
 
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specFeed(feed),
         });
@@ -419,7 +419,7 @@ describe('TriggerDispatcher', () => {
 
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specFeed(feed),
         });
@@ -463,7 +463,7 @@ describe('TriggerDispatcher', () => {
 
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
@@ -502,7 +502,7 @@ describe('TriggerDispatcher', () => {
 
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           concurrency: 2,
           spec: Trigger.specFeed(feed),
@@ -545,7 +545,7 @@ describe('TriggerDispatcher', () => {
 
         // Create a subscription trigger that watches for Person objects
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
         });
@@ -583,7 +583,7 @@ describe('TriggerDispatcher', () => {
 
         // Create a subscription trigger
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
         });
@@ -617,7 +617,7 @@ describe('TriggerDispatcher', () => {
 
         // Create a subscription trigger first
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
         });
@@ -663,7 +663,7 @@ describe('TriggerDispatcher', () => {
 
         // Create a subscription trigger that only watches for Task objects
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Task.Task))),
         });
@@ -706,7 +706,7 @@ describe('TriggerDispatcher', () => {
 
         // Create a subscription trigger with input pattern
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
           input: {
@@ -827,7 +827,7 @@ describe('TriggerDispatcher', () => {
         const functionObj = yield* registerOperation(ProbeOp);
 
         const trigger = Trigger.make({
-          function: Ref.make(functionObj),
+          runnable: Ref.make(functionObj),
           enabled: true,
           spec: Trigger.specTimer('* * * * *'),
         });

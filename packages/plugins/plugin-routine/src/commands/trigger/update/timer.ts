@@ -68,8 +68,8 @@ export const timer = Command.make(
  * @returns The current function (either original or newly assigned)
  */
 const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionIdOption: Option.Option<string>) {
-  let currentFn: Operation.PersistentOperation | undefined = trigger.function
-    ? yield* Database.load(trigger.function) as any
+  let currentFn: Operation.PersistentOperation | undefined = trigger.runnable
+    ? yield* Database.load(trigger.runnable)
     : undefined;
   if (currentFn && !Obj.instanceOf(Operation.PersistentOperation, currentFn)) {
     currentFn = undefined;
@@ -94,15 +94,15 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
     Obj.update(trigger, (trigger) => {
-      trigger.function = Ref.make(foundFn);
+      trigger.runnable = Ref.make(foundFn);
     });
     currentFn = foundFn;
   }
 
   if (!currentFn) {
-    const functionId =
-      (trigger.function ? EID.getEntityId(EID.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
-    return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
+    const runnableId =
+      (trigger.runnable ? EID.getEntityId(EID.tryParse(trigger.runnable.uri)!) : undefined) ?? 'unknown';
+    return yield* Effect.fail(new Error(`Invalid reference for ${runnableId}`));
   }
 
   return currentFn;
