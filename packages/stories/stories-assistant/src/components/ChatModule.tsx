@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { Agent } from '@dxos/assistant-toolkit';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
@@ -22,12 +21,6 @@ export const ChatModule = ({ space }: ModuleProps) => {
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
-
-  // TODO(burdon): Better way to get the agent?
-  const parent = chat ? Obj.getParent(chat) : undefined;
-  const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
-  const [plan] = useObject(agent?.plan.target);
-  const hasPlan = (plan?.tasks?.length ?? 0) > 0;
 
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
@@ -66,9 +59,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            {hasPlan && (
-              <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
-            )}
+            <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
             <Chat.Prompt
               {...chatProps}
               classNames='border-none rounded-none'

@@ -31,7 +31,7 @@ import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { getOperationFromTool } from '../functions/services';
+import { getOperationFromTool } from '../tool-runtime/services';
 import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
@@ -95,6 +95,12 @@ export type TurnProps<R = never> = {
 export type TurnResult = {
   messages: Message.Message[];
   done: boolean;
+  /**
+   * Provider finish reason for this turn. `pause` means the provider paused a server-tool turn
+   * mid-execution (e.g. Anthropic `pause_turn`) and the turn must be resumed by issuing another
+   * request without mutating the trailing assistant content.
+   */
+  finishReason?: ContentBlock.FinishReason;
 };
 
 /**
@@ -232,6 +238,7 @@ export class Request {
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null;
+      let finishReason: ContentBlock.FinishReason | undefined;
 
       const messages = yield* LanguageModel.streamText({
         prompt,
@@ -250,6 +257,9 @@ export class Request {
         Stream.mapEffect(
           (block) =>
             Effect.gen(this, function* () {
+              if (block._tag === 'stats' && block.finishReason !== undefined) {
+                finishReason = block.finishReason;
+              }
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
                 log('emit ephemeral message', { id: currentMessageId, type: block._tag });
@@ -281,16 +291,23 @@ export class Request {
       );
       log('messages', { messages });
 
+      // A paused server-tool turn (e.g. Anthropic `pause_turn`) is not complete: the provider
+      // expects the assistant content to be resent so it can finish executing the server tool.
+      // No local tool execution is needed — just another request.
+      if (finishReason === 'pause') {
+        return { messages, done: false, finishReason };
+      }
+
       const toolCalls = this.getToolCalls();
 
       if (toolCalls.length === 0) {
         this._ended = Date.now();
-        return { messages, done: true };
+        return { messages, done: true, finishReason };
       } else if (!toolkit) {
         throw new Error('No toolkit provided');
       }
 
-      return { messages, done: false };
+      return { messages, done: false, finishReason };
     }).pipe(Effect.withSpan('AiRequest.runAgentTurn'));
 
   runTools = <const R = never>({
@@ -336,9 +353,13 @@ export class Request {
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects }).pipe(Effect.orDie);
 
       do {
-        const { done } = yield* this.runAgentTurn({ system, toolkit });
+        const { done, finishReason } = yield* this.runAgentTurn({ system, toolkit });
         if (done) {
           break;
+        }
+        // A paused server-tool turn resumes with another request and no local tool execution.
+        if (finishReason === 'pause') {
+          continue;
         }
         yield* this.runTools({ toolkit });
       } while (true);

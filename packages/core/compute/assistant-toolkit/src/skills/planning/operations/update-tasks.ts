@@ -3,46 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Plan, Agent } from '../../../types';
-import INSTRUCTIONS from './update-tasks.md?raw';
-
-// Omit `chat`, `delegated`, and `agentPid` from the LLM-facing schema: these are set by the
-// delegation tool / runtime, never by ordinary planning, and keeping them out leaves the tool
-// schema unchanged.
-const SimpleTask = Plan.Task.omit('chat', 'delegated', 'agentPid');
-
-export const UpdateTasks = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.planning.updateTasks'),
-    name: 'Update tasks',
-    description: INSTRUCTIONS,
-    icon: 'ph--check-square-offset--regular',
-  },
-  input: Schema.Struct({
-    tasks: Schema.Array(SimpleTask),
-  }),
-  output: Schema.Any,
-  services: [AiContext.Service, Database.Service],
-});
+import { Plan, Chat } from '../../../types';
+import { UpdateTasks } from './definitions';
 
 /**
- * Updates the planning document (Agent.plan) with the given tasks.
+ * Updates the planning document (Chat.plan) with the given tasks.
  */
 export default UpdateTasks.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ tasks: newTasks }) {
-      const agent = yield* Agent.getFromChatContext;
+    Effect.fnUntraced(function* ({ tasks: newTasks }) {
+      const chat = yield* Chat.getFromContext;
       // TODO(burdon): How to specify requirements/preconditions before calling?
       // TODO(burdon): How to report non-technical error?
-      const plan = yield* Database.load(agent.plan);
+      const plan = yield* Chat.ensurePlan(chat);
 
       Obj.update(plan, (plan) => {
         for (const task of newTasks) {
@@ -67,6 +45,7 @@ export default UpdateTasks.pipe(
           ${Plan.formatPlan(plan)}
         </plan>
       `;
-    }) as any,
+    }),
   ),
+  Operation.opaqueHandler,
 );

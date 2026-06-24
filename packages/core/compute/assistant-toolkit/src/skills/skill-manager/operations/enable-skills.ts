@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
-import { AiContext } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Skill, Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 
@@ -35,7 +35,7 @@ export default EnableSkills.pipe(
       }
 
       if (enabled.length > 0) {
-        yield* AiContext.Service.bindContext({
+        yield* Harness.bindContext({
           skills: enabled.map(Ref.make),
         });
       }

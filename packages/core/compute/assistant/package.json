@@ -37,6 +37,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -60,6 +61,7 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },

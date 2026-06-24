@@ -23,8 +23,10 @@ import {
   Agent,
   AgentSkill,
   AgentHandlers,
+  Chat,
   DelegationSkill,
   DelegationHandlers,
+  Plan,
   PlanningSkill,
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
@@ -106,6 +108,7 @@ const buildPluginManagerOptions = ({
       types: [
         AccessToken.AccessToken,
         Assistant.Chat,
+        Plan.Plan,
         Skill.Skill,
         Operation.PersistentOperation,
         Markdown.Document,
@@ -367,22 +370,22 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
               invariant(space, 'Space not found');
 
               const feed = space.db.add(Feed.make());
-              const chat = Obj.make(Assistant.Chat, {
-                name,
-                feed: Ref.make(feed),
-              });
+              const chat = Chat.make({ name, feed: Ref.make(feed) });
+              Obj.setParent(feed, chat);
               const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
               const binder = new AiContext.Binder({ feed, runtime, registry });
 
-              // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
               yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
+              yield* Effect.tryPromise(() => binder.open());
+              yield* Effect.tryPromise(() => binder.bind({ objects: [Ref.make(chat)] }));
+
               if (onChatCreated) {
-                yield* Effect.tryPromise(() => binder.open());
                 yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-                yield* Effect.tryPromise(() => binder.close());
               }
+
+              yield* Effect.tryPromise(() => binder.close());
 
               return {
                 object: chat,

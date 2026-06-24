@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
@@ -334,13 +335,27 @@ type ChatTaskListProps = {
 
 const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: planProp, ...props }, forwardedRef) => {
   const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
-  const parent = chat ? Obj.getParent(chat) : undefined;
-  const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
-  const plan = planProp ?? agent?.plan.target;
+
+  const plan = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make(
+          (get) =>
+            planProp ??
+            Option.fromNullable(chat).pipe(
+              Option.map((_) => get(Obj.atom(_))),
+              Option.flatMapNullable((_) => _?.plan?.atom),
+              Option.map(get),
+              Option.getOrUndefined,
+            ),
+        ),
+      [chat, planProp],
+    ),
+  );
   const space = chat ? getSpace(chat) : undefined;
   const traceMessages = useTraceMessages(space);
   const conversationId = chat?.feed?.target?.id;
-  if (!plan) {
+  if (!plan || !(plan.tasks?.length ?? 0)) {
     return null;
   }
 
