@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Cause, Effect } from 'effect';
+import * as Cause from 'effect/Cause';
 
 import { AsyncTask, Event, Trigger, asyncTimeout } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
