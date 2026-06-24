@@ -395,7 +395,7 @@ All three ship in Phase 2.
   Implemented as a `MessageActions` surface in plugin-inbox that queries
   the `MessageExtractor` capability registry.
 - **agent-assisted** — the `ExtractMessage` operation is exposed as a
-  tool via the inbox blueprint's `toolDefinitions`. The agent invokes
+  tool via the inbox skill's `toolDefinitions`. The agent invokes
   it with `{ message, extractorId?, target? }`; when `extractorId` is
   omitted, the operation picks the highest-confidence match.
 - **auto-on-arrival** — gated by `Mailbox.extractors`. After each
@@ -412,7 +412,7 @@ user-facing toast is shown.
 op ExtractMessage
   desc: >
     Dispatches a Message to a registered MessageExtractor and persists
-    the result. Used by the manual menu, the inbox blueprint tool, and
+    the result. Used by the manual menu, the inbox skill tool, and
     the auto-on-arrival ingestion hook.
   inputs:
     message: Message                # the source message
@@ -429,7 +429,7 @@ op ExtractMessage
     - On success, all `created` objects and `relations` are written
       atomically via the Database service in the handler's Effect.
     - The handler exposes itself as an agent tool through the inbox
-      blueprint's toolDefinitions.
+      skill's toolDefinitions.
 ```
 
 ## Implementations contributed by this plugin
@@ -493,7 +493,7 @@ packages/plugins/plugin-inbox/src/
   operations/
     extract-message.ts          # operation handler used by all three modes (new)
     google/gmail/sync.ts        # auto-on-arrival dispatch hook (edit)
-  blueprints/
+  skills/
     inbox.ts                    # append ExtractMessage to toolDefinitions (edit)
   components/
     MessageActions.tsx          # menu surface; queries MessageExtractor registry (new)

@@ -28,7 +28,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
       instructions: trim`
         The database starts empty. The sandbox service is available at http://localhost:8792.
 
-        Enable the sandbox blueprint (key: org.dxos.blueprint.sandbox) using the blueprint manager.
+        Enable the sandbox skill (key: org.dxos.skill.sandbox) using the skill manager.
 
         Use CreateSandbox (org.dxos.function.sandbox.create) to create a sandbox named "assistant-e2e-test".
 
@@ -37,7 +37,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
         Report the exec result in your completion output.
       `,
       completionCriteria: [
-        'The sandbox blueprint (org.dxos.blueprint.sandbox) is enabled.',
+        'The sandbox skill (org.dxos.skill.sandbox) is enabled.',
         'A Sandbox object exists in the database.',
         'CreateSandbox completes successfully.',
         'Exec completes with exit code 0 and stdout containing "hello world".',

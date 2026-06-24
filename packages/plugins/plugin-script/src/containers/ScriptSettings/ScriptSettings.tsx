@@ -31,7 +31,7 @@ export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: S
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
             {/* TODO(wittjosiah): Hide outside of dev environments. */}
             <Form.Row label={t('authenticate-action.label')} description={t('authenticate-action.description')}>
               <Button disabled={!onSettingsChange} onClick={onAuthenticate}>

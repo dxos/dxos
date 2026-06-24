@@ -15,6 +15,8 @@ const formStyles = tv({
     viewport: '',
     content: 'pb-3',
     section: 'flex flex-col py-form-section-gap first:pt-0',
+    group: 'flex flex-col gap-3 p-trim-md border border-separator rounded-sm',
+    sectionHeader: '',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
     fieldSet: '',
@@ -32,7 +34,8 @@ const formStyles = tv({
         content: 'dx-document',
         // Gap on the section spaces its direct children — section title/description and, for action
         // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
-        section: 'py-form-section-gap!',
+        section: 'py-form-section-gap! gap-trim-md',
+        sectionHeader: 'pb-form-section-gap',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.
@@ -40,13 +43,13 @@ const formStyles = tv({
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
-          'md:grid-cols-2 md:[grid-template-areas:"header_control""description_description""validation_validation"]',
+          'md:grid-cols-2 md:[grid-template-areas:"header_header""description_control""validation_validation"]',
           'gap-x-trim-lg gap-y-0 p-trim-md border border-input-separator rounded-md',
         ),
         fieldLabel: '[grid-area:header]',
         fieldLabelText: 'text-base-fg text-lg',
-        fieldDescription: '[grid-area:description] pt-trim-md text-description',
-        fieldControl: '[grid-area:control] flex items-center md:justify-end pt-3 md:pt-0',
+        fieldDescription: '[grid-area:description] pt-1 text-description',
+        fieldControl: '[grid-area:control] flex justify-end items-start md:text-right pt-3 md:pt-0',
         fieldValidation: '[grid-area:validation]',
       },
     },

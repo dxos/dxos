@@ -14,7 +14,7 @@ per-space `TriggerDispatcher` that runs locally in the browser or is delegated t
 the DXOS edge when the space `computeEnvironment` is `edge`.
 
 The plugin integrates with the `@dxos/compute` operation registry and the
-`@dxos/functions-runtime` execution layer. Blueprint, operation-handler, and
+`@dxos/functions-runtime` execution layer. Skill, operation-handler, and
 toolkit contributions from other plugins are gathered at application scope and
 merged before being offered to space-level operation registries, so any plugin
 that contributes a `Capabilities.OperationHandler` automatically becomes
@@ -57,7 +57,7 @@ New types defined by this plugin:
 type TriggerTemplate
   desc: |
     Lightweight description of a trigger's spec used when creating a trigger
-    from a pre-defined template (e.g. from a Blueprint action).
+    from a pre-defined template (e.g. from a Skill action).
   literals: timer | feed
   fields:
     type: timer | feed
@@ -152,8 +152,8 @@ component TemplateEditor
   desc: |
     Markdown + Handlebars source editor backed by a Ref<Text>. Decorates
     Handlebars tags, DXN/URL tokens, and XML nodes. Reused by Routine and
-    Blueprint article surfaces and by downstream plugins (plugin-script,
-    plugin-magazine) via the `@dxos/plugin-automation/components` export.
+    Skill article surfaces and by downstream plugins (plugin-script,
+    plugin-magazine) via the `@dxos/plugin-routine/components` export.
   props:
     id: string
     source?: Ref<Text>
@@ -170,7 +170,7 @@ component RoutineProperties
 ## Surfaces
 
 ```mdl
-surface blueprint     -> BlueprintArticle    # article for Blueprint objects
+surface skill     -> SkillArticle    # article for Skill objects
 surface prompt        -> RoutineArticle      # article for Routine objects (template editor + run)
 surface prompts       -> RoutineList         # space-home prompt list; dispatches RunPromptInNewChat
 ```
@@ -202,11 +202,11 @@ op CreateTriggerFromTemplate
 
 ```mdl
 op RunPromptInNewChat
-  desc: Creates a new chat, binds context objects and blueprints, then runs a prompt.
+  desc: Creates a new chat, binds context objects and skills, then runs a prompt.
   input:
     db: Database
     objects?: Obj[]
-    blueprints?: string[]
+    skills?: string[]
     prompt: string | RoutineRef
     background?: boolean
   output: Chat
@@ -289,7 +289,7 @@ feat F-4: Operation Registry
     then: all Capabilities.OperationHandler contributions are merged into a single OperationHandlerProvider
 
   req F-4.2: OperationRegistry per space resolves operations from the merged OperationHandlerProvider.
-  req F-4.3: Blueprint registry is populated from AppCapabilities.BlueprintDefinition contributions.
+  req F-4.3: Skill registry is populated from AppCapabilities.SkillDefinition contributions.
   req F-4.4: OpaqueToolkit aggregates AppCapabilities.Toolkit contributions for agent invocation.
 ```
 

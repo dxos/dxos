@@ -28,7 +28,7 @@ export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: S
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
             {onShowWelcome && (
               <Form.Row label={t('show-welcome.label')}>
                 <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>

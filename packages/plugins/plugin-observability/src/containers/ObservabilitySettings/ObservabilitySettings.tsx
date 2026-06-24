@@ -26,7 +26,7 @@ export const ObservabilitySettings = ({ settings, onSettingsChange }: Observabil
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Message.Root valence='info'>
               <Message.Content>{t('observability.description')}</Message.Content>
             </Message.Root>

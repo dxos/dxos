@@ -12,7 +12,7 @@ import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -44,58 +44,70 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
 
   return (
     <Clipboard.Provider>
-      <Settings.Viewport>
-        <Settings.Section
-          title={t('devices-verbose.label', { ns: meta.profile.key })}
-          description={t('devices.description', { ns: meta.profile.key })}
-        >
-          <Settings.Panel>
-            <div role='group' className='min-w-0'>
-              <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
-              <List>
-                {devices.map((device: Device) => (
-                  <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
-                ))}
-              </List>
-            </div>
-            {createInvitationUrl && (
-              <div role='group' className='min-w-0'>
-                <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
-                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-              </div>
-            )}
-          </Settings.Panel>
-        </Settings.Section>
-        <Settings.Section
-          title={t('danger-zone.title', { ns: meta.profile.key })}
-          description={t('danger-zone.description', { ns: meta.profile.key })}
-        >
-          <Settings.Item
-            title={t('reset-device.label')}
-            description={t('reset-device.description', { ns: meta.profile.key })}
-          >
-            <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
-              {t('reset-device.label')}
-            </Button>
-          </Settings.Item>
-          <Settings.Item
-            title={t('recover-identity.label')}
-            description={t('recover-identity.description', { ns: meta.profile.key })}
-          >
-            <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-              {t('recover-identity.label')}
-            </Button>
-          </Settings.Item>
-          <Settings.Item
-            title={t('join-new-identity.label')}
-            description={t('join-new-identity.description', { ns: meta.profile.key })}
-          >
-            <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
-              {t('join-new-identity.label')}
-            </Button>
-          </Settings.Item>
-        </Settings.Section>
-      </Settings.Viewport>
+      <Form.Root variant='settings'>
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Section
+              title={t('devices-verbose.label', { ns: meta.profile.key })}
+              description={t('devices.description', { ns: meta.profile.key })}
+            >
+              <Form.Group>
+                <div role='group' className='min-w-0'>
+                  <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
+                  <List>
+                    {devices.map((device: Device) => (
+                      <DeviceListItem
+                        key={device.deviceKey.toHex()}
+                        device={device}
+                        connectionState={connectionState}
+                      />
+                    ))}
+                  </List>
+                </div>
+                {createInvitationUrl && (
+                  <div role='group' className='min-w-0'>
+                    <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
+                    <DeviceInvitation createInvitationUrl={createInvitationUrl} />
+                  </div>
+                )}
+              </Form.Group>
+            </Form.Section>
+            <Form.Section
+              title={t('danger-zone.title', { ns: meta.profile.key })}
+              description={t('danger-zone.description', { ns: meta.profile.key })}
+            >
+              <Form.Row
+                label={t('reset-device.label')}
+                description={t('reset-device.description', { ns: meta.profile.key })}
+              >
+                <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
+                  {t('reset-device.label')}
+                </Button>
+              </Form.Row>
+              <Form.Row
+                label={t('recover-identity.label')}
+                description={t('recover-identity.description', { ns: meta.profile.key })}
+              >
+                <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                  {t('recover-identity.label')}
+                </Button>
+              </Form.Row>
+              <Form.Row
+                label={t('join-new-identity.label')}
+                description={t('join-new-identity.description', { ns: meta.profile.key })}
+              >
+                <Button
+                  variant='destructive'
+                  onClick={handleJoinNewIdentity}
+                  data-testid='devicesContainer.joinExisting'
+                >
+                  {t('join-new-identity.label')}
+                </Button>
+              </Form.Row>
+            </Form.Section>
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Clipboard.Provider>
   );
 };

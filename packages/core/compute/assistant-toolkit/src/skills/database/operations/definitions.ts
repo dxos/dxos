@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -234,7 +234,7 @@ export const ContextAdd = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [Harness.HarnessService],
+  services: [AiContext.Service],
 });
 
 export const ContextRemove = Operation.make({
@@ -253,7 +253,7 @@ export const ContextRemove = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [Harness.HarnessService],
+  services: [AiContext.Service],
 });
 
 export const RelationCreate = Operation.make({

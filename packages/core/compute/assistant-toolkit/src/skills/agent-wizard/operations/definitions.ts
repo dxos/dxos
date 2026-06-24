@@ -36,9 +36,9 @@ export const CreateAgent = Operation.make({
       description:
         'The goal of the agent. Be specific but not too verbose. The agent will use this as a core objective and set of rules to follow.',
     }),
-    blueprints: Schema.Array(Schema.String).annotations({
-      description: 'The blueprint keys to use for the agent.',
-      examples: [['org.dxos.blueprint.markdown', 'org.dxos.blueprint.database']],
+    skills: Schema.Array(Schema.String).annotations({
+      description: 'The skill keys to use for the agent.',
+      examples: [['org.dxos.skill.markdown', 'org.dxos.skill.database']],
     }),
     subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
       description: 'The objects to subscribe to for the agent. Can be references to mailboxes.',

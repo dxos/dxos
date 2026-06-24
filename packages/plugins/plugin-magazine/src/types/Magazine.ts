@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
@@ -16,12 +16,12 @@ import { trim } from '@dxos/util';
 
 import * as Subscription from './Subscription';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
+export const SKILL_KEY = 'org.dxos.skill.magazine';
 
 /**
  * Default editorial methodology seeded into a Magazine's curation Routine. Describes WHAT to curate
  * (selection, dedup, snippet, hero image). The HOW (candidate input shape, tool usage, output
- * contract) lives in the Magazine blueprint, not here.
+ * contract) lives in the Magazine skill, not here.
  */
 export const DEFAULT_INSTRUCTIONS = trim`
   You curate articles for a Magazine around the Topic described below.
@@ -52,7 +52,7 @@ export type PostState = Schema.Schema.Type<typeof PostState>;
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
  * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): its
- * instructions hold the editorial brief and it references the Magazine blueprint (the tool/output
+ * instructions hold the editorial brief and it references the Magazine skill (the tool/output
  * contract). {@link CurateMagazine} runs the Routine to select matching Posts.
  */
 export const Magazine = Schema.Struct({
@@ -62,6 +62,13 @@ export const Magazine = Schema.Struct({
   feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+  /**
+   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
+   * references the Magazine skill. Rendered inline by the properties form (the Instructions'
+   * own fields), so the brief is edited there without a custom surface.
+   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
+   */
+  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
   /**
    * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
@@ -80,17 +87,10 @@ export const Magazine = Schema.Struct({
     }),
     Schema.optional,
   ),
-  /**
-   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
-   * references the Magazine blueprint. Rendered inline by the properties form (the Instructions'
-   * own fields), so the brief is edited there without a custom surface.
-   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
-   */
-  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.magazine', '0.2.0')),
 );
 
@@ -109,8 +109,8 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' |
 /**
  * Creates a Magazine plus its curation Routine and per-Post state map as hidden children (all
  * cascade-deleted with the magazine). The Routine holds the editorial brief (its instructions,
- * seeded from {@link composeInstructions}) and references the Magazine blueprint by its registry DXN;
- * {@link CurateMagazine} runs it and the agent resolves the blueprint at run time.
+ * seeded from {@link composeInstructions}) and references the Magazine skill by its registry DXN;
+ * {@link CurateMagazine} runs it and the agent resolves the skill at run time.
  */
 export const make = (props: MakeProps = {}): Magazine => {
   const postState = StateMap.make();
@@ -125,7 +125,7 @@ export const make = (props: MakeProps = {}): Magazine => {
   const instructions = Instructions.make({
     name: props.name ? `${props.name} curation` : 'Magazine curation',
     text: composeInstructions(props.instructions),
-    blueprints: [Ref.fromURI(Blueprint.registryURI(BLUEPRINT_KEY))],
+    skills: [Ref.fromURI(Skill.registryURI(SKILL_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
   });

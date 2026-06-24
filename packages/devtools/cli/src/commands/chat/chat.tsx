@@ -55,8 +55,8 @@ export const chat = Command.make(
       Options.withSchema(ModelName),
       Options.optional,
     ),
-    blueprints: Options.text('blueprint').pipe(
-      Options.withDescription('Blueprints to include in the chat context.'),
+    skills: Options.text('skill').pipe(
+      Options.withDescription('Skills to include in the chat context.'),
       Options.withAlias('b'),
       Options.repeated,
     ),
@@ -123,7 +123,7 @@ export const chat = Command.make(
         // }
       };
 
-      // TODO(burdon): Update message history, blueprints, etc.
+      // TODO(burdon): Update message history, skills, etc.
       const handleChatSelect = async (chat: Assistant.Chat) => {
         const current = conversation();
         await current?.close();
@@ -134,12 +134,12 @@ export const chat = Command.make(
         return next;
       };
 
-      const handleChatCreate = async (blueprints: string[]) => {
+      const handleChatCreate = async (skills: string[]) => {
         const current = conversation();
         await current?.close();
 
-        log.info('creating conversation', { blueprints });
-        const next = await processor.createSession(space, blueprints);
+        log.info('creating conversation', { skills });
+        const next = await processor.createSession(space, skills);
         setConversation(next);
         return next;
       };
@@ -153,7 +153,7 @@ export const chat = Command.make(
           await runNonInteractive({
             space,
             processor,
-            blueprints: [...options.blueprints],
+            skills: [...options.skills],
             prompt: nonInteractivePrompt,
             model,
             json,
@@ -163,9 +163,9 @@ export const chat = Command.make(
       }
 
       yield* Effect.promise(async () => {
-        log.info('initializing', { blueprints: options.blueprints.length });
-        if (options.blueprints.length) {
-          await handleChatCreate(options.blueprints);
+        log.info('initializing', { skills: options.skills.length });
+        if (options.skills.length) {
+          await handleChatCreate(options.skills);
         } else {
           await handleChatLoad();
         }
@@ -189,7 +189,7 @@ export const chat = Command.make(
                 model={model}
                 verbose={verbose}
                 onChatSelect={(chat) => handleChatSelect(chat)}
-                onChatCreate={({ blueprints }) => handleChatCreate(blueprints)}
+                onChatCreate={({ skills }) => handleChatCreate(skills)}
               />
             )}
           </App>

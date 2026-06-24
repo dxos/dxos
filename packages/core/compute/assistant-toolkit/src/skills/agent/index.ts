@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as AgentBlueprint } from './blueprint';
-export { AgentBlueprintHandlers, AgentBlueprintOperations } from './operations';
+export { default as AgentSkill } from './skill';
+export { AgentSkillHandlers, AgentSkillOperations } from './operations';

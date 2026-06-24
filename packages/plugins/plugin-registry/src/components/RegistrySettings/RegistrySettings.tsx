@@ -91,7 +91,7 @@ export const RegistrySettings = ({
       : t('dev-plugin.enable.label');
 
   return (
-    <Form.Root schema={RegistrySettingsSchema} values={settings} variant='settings' readonly={!onSettingsChange}>
+    <Form.Root variant='settings' readonly={!onSettingsChange} schema={RegistrySettingsSchema} values={settings}>
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('dev-plugin.section.title')}>

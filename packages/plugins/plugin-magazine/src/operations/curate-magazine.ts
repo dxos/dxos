@@ -115,7 +115,7 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
 /**
  * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
  * The magazine's persisted Instructions (created with the magazine) carries the editorial brief and
- * references the Magazine blueprint, which RunInstructions resolves at run time. No instructions → no selection.
+ * references the Magazine skill, which RunInstructions resolves at run time. No instructions → no selection.
  * Tolerates agent/parse failures (logs → no selection).
  */
 const selectPostIds = (

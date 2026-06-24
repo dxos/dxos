@@ -4,7 +4,7 @@ name: DoctorPlugin
 version: 0.1.0
 ---
 
-Self-introspection blueprint for Composer. Contributes one AI tool,
+Self-introspection skill for Composer. Contributes one AI tool,
 `queryComposerLogs`, that reads the browser tab's own NDJSON log store
 (populated by `@dxos/log-store-idb`) and lets the assistant filter, project,
 aggregate, and count entries.
@@ -60,10 +60,10 @@ op queryComposerLogs
 ## Features
 
 ```mdl
-feat F-1: Self-introspection from blueprint
+feat F-1: Self-introspection from skill
 
   req F-1.1:
-    when: assistant has the Doctor blueprint loaded
+    when: assistant has the Doctor skill loaded
     then: queryComposerLogs is offered as a tool
 
   req F-1.2:

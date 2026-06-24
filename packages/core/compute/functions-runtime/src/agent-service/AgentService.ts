@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import type { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
-import { Blueprint, McpServer, Process } from '@dxos/compute';
+import { Skill, McpServer, Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
@@ -25,6 +25,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
+import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
@@ -37,7 +38,7 @@ const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 
 export interface CreateSessionOptions {
-  readonly blueprints?: Blueprint.Blueprint[];
+  readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
   readonly model?: ModelName;
   readonly systemPrompt?: string;
@@ -45,11 +46,11 @@ export interface CreateSessionOptions {
 
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<Session, Blueprint.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
+) => Effect.Effect<Session, Skill.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
   'createSession',
 )(function* (opts) {
-  const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
-    Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
+  const skills = yield* Effect.forEach(opts?.skills ?? [], (skill) =>
+    Skill.upsert(Skill.getKey(skill)).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());
@@ -58,7 +59,7 @@ export const createSession: (
 
   yield* Effect.promise(() =>
     binder.bind({
-      blueprints,
+      skills,
       objects: opts?.context ?? [],
     }),
   );
@@ -91,6 +92,12 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * When provided, inspects session plan state before `ctx.succeed()` and may run an ephemeral
+   * stop/continue check when open tasks remain.
+   */
+  completionGuard?: CompletionGuard;
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
@@ -110,6 +117,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
+          completionGuard: opts?.completionGuard,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {
@@ -211,7 +219,7 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({
-          blueprints: [],
+          skills: [],
           objects: context,
         }),
       );

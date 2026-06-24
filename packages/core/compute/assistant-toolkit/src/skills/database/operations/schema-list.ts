@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Instructions, Blueprint, Operation } from '@dxos/compute';
+import { Instructions, Skill, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Query, Scope, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
 
 // TODO(dmaretskyi): This is a balance between not filling the agent's context with too many types and not excluding important types.
-const EXCLUDED_TYPES = [Type.Type, View.View, Instructions.Instructions, Blueprint.Blueprint, Feed.Feed];
+const EXCLUDED_TYPES = [Type.Type, View.View, Instructions.Instructions, Skill.Skill, Feed.Feed];
 const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 
 export default SchemaList.pipe(

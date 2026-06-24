@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as DelegationBlueprint } from './blueprint';
+export { default as DelegationSkill } from './skill';
 export { DelegationHandlers, DelegationOperations } from './operations';

@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem } from '../StackItem';
 import { type StackItemData } from '../types';
@@ -27,7 +27,7 @@ const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   );
 };
 
-const DefaultStory = () => {
+const DefaultStory = ({ orientation }: { orientation: 'horizontal' | 'vertical' }) => {
   const [columns, setColumns] = useState<StoryStackItem[]>(
     random.helpers.multiple(
       () =>
@@ -129,8 +129,13 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/Stack',
   component: DefaultStory,
-  argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  argTypes: {
+    orientation: {
+      control: 'radio',
+      options: ['horizontal', 'vertical'],
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -138,7 +143,17 @@ export default meta;
 type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {
+  args: {},
+};
+
+export const Horizontal: Story = {
   args: {
     orientation: 'horizontal',
+  },
+};
+
+export const Vertical: Story = {
+  args: {
+    orientation: 'vertical',
   },
 };

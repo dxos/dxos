@@ -342,18 +342,6 @@ export const makeDeckCompanion = <TData = any>({
 // Group helpers.
 //
 
-// Stable identifiers for navtree section groups; kept in app-toolkit so any plugin can
-// reference them without depending on plugin-navtree.
-// ID constants are the node `id` values (used as path segments); TYPE constants are node `type` values.
-export const NAV_TREE_GROUP_AI_ID = 'ai';
-export const NAV_TREE_GROUP_AI_TYPE = 'org.dxos.navtree.group.ai';
-export const NAV_TREE_GROUP_CONTENT_ID = 'content';
-export const NAV_TREE_GROUP_CONTENT_TYPE = 'org.dxos.navtree.group.content';
-export const NAV_TREE_GROUP_COMM_ID = 'communications';
-export const NAV_TREE_GROUP_COMM_TYPE = 'org.dxos.navtree.group.communications';
-export const NAV_TREE_GROUP_SYSTEM_ID = 'system';
-export const NAV_TREE_GROUP_SYSTEM_TYPE = 'org.dxos.navtree.group.system';
-
 /**
  * Build a navtree section-group node.
  * Group nodes render as a dense uppercase label with their children always

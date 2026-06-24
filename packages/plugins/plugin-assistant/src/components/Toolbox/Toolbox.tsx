@@ -4,7 +4,7 @@
 
 import React, { Fragment, useEffect, useState } from 'react';
 
-import { type Blueprint } from '@dxos/compute';
+import { type Skill } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { type Database, Filter, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -21,19 +21,19 @@ export type ToolboxProps = {
   services?: { service: ServiceType }[];
   functions?: Operation.PersistentOperation[];
   // TODO(burdon): Combine into single array.
-  blueprints?: readonly Blueprint.Blueprint[];
-  activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
+  skills?: readonly Skill.Skill[];
+  activeSkills?: readonly Ref.Ref<Skill.Skill>[];
 };
 
 export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
-  ({ functions, services, blueprints, activeBlueprints, ...props }, forwardedRef) => {
+  ({ functions, services, skills, activeSkills, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root {...composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          {blueprints && blueprints.length > 0 && (
+          {skills && skills.length > 0 && (
             <Section
-              title='Blueprints'
-              items={blueprints.map(({ name, description, tools }) => ({
+              title='Skills'
+              items={skills.map(({ name, description, tools }) => ({
                 name,
                 description,
                 subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
@@ -41,10 +41,10 @@ export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
             />
           )}
 
-          {activeBlueprints && activeBlueprints.length > 0 && (
+          {activeSkills && activeSkills.length > 0 && (
             <Section
-              title='Blueprints'
-              items={activeBlueprints.map(({ target }) => ({
+              title='Skills'
+              items={activeSkills.map(({ target }) => ({
                 name: target?.name ?? '',
                 description: target?.description ?? '',
                 subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
@@ -136,7 +136,7 @@ export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) =
   return (
     <Toolbox
       classNames={classNames}
-      blueprints={processor?.context.getBlueprints()}
+      skills={processor?.context.getSkills()}
       services={serviceTools}
       functions={functions}
     />

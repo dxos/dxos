@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Blueprint, Instructions, Trigger } from '@dxos/compute';
+import { Skill, Instructions, Trigger } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
@@ -21,27 +21,27 @@ import { Routine } from '#types';
 
 import { RoutineArticle } from './RoutineArticle';
 
-const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, Blueprint.Blueprint];
+const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, Skill.Skill];
 
-/** Seed a few fake blueprints so the routine action's Blueprints picker has options. */
-const seedBlueprints = (space: Space) => {
+/** Seed a few fake skills so the routine action's Skills picker has options. */
+const seedSkills = (space: Space) => {
   space.db.add(
-    Blueprint.make({
-      key: 'example.com/blueprint/research',
+    Skill.make({
+      key: 'example.com/skill/research',
       name: 'Research',
       description: 'Research an organization.',
     }),
   );
   space.db.add(
-    Blueprint.make({
-      key: 'example.com/blueprint/summarize',
+    Skill.make({
+      key: 'example.com/skill/summarize',
       name: 'Summarize',
       description: 'Summarize the selected content.',
     }),
   );
   space.db.add(
-    Blueprint.make({
-      key: 'example.com/blueprint/translate',
+    Skill.make({
+      key: 'example.com/skill/translate',
       name: 'Translate',
       description: 'Translate text to another language.',
     }),
@@ -50,13 +50,13 @@ const seedBlueprints = (space: Space) => {
 
 /** Empty automation — no trigger or action yet. */
 const seedDefault = (space: Space) => {
-  seedBlueprints(space);
+  seedSkills(space);
   space.db.add(Routine.make({ name: 'Morning Report', triggers: [] }));
 };
 
 /** Automation with a timer trigger pre-configured for a daily 9 AM schedule. */
 const seedWithTimerTrigger = (space: Space) => {
-  seedBlueprints(space);
+  seedSkills(space);
   const trigger = space.db.add(Trigger.make({ enabled: false, spec: { kind: 'timer', cron: '0 9 * * *' } }));
   const automation = space.db.add(Routine.make({ name: 'Daily Digest', triggers: [] }));
   // Wire the trigger into the automation after both are in the db.

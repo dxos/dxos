@@ -16,7 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { Connection } from '@dxos/plugin-connector';
 
 import { TRELLO_API_BASE } from '../constants';
 import { InvalidTrelloAccessTokenError } from '../errors';
@@ -122,7 +122,7 @@ export const credentialsFromAccessToken = (record: {
  * Layer-based credentials service. Mirrors the `GoogleCredentials` pattern in
  * plugin-inbox: every API call pulls creds from this service rather than
  * threading them through as an explicit parameter, so callers compose a
- * single `Effect.provide(TrelloApi.TrelloCredentials.fromIntegration(ref))`
+ * single `Effect.provide(TrelloApi.TrelloCredentials.fromConnection(ref))`
  * (with `{ TrelloApi }` from `../services`) at the operation boundary instead
  * of plumbing creds through every call site.
  */
@@ -130,13 +130,13 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
   TrelloCredentials,
   TrelloCredentialsValue
 >() {
-  /** Loads the integration's access token and parses it into `TrelloCredentials`. */
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>) =>
+  /** Loads the connection's access token and parses it into `TrelloCredentials`. */
+  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       TrelloCredentials,
       Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const connection = yield* Database.load(connectionRef);
+        const accessToken = yield* Database.load(connection.accessToken);
         return yield* credentialsFromAccessToken(accessToken);
       }),
     );

@@ -4,7 +4,7 @@
 
 import { meta } from '#meta';
 
-/** Tool id strings for inbox operations (matches {@link Blueprint.toolDefinitions} output from operation defs). */
+/** Tool id strings for inbox operations (matches {@link Skill.toolDefinitions} output from operation defs). */
 const operation = (name: string): string => `${meta.profile.key}.operation.${name}`;
 
 export const ToolIds = {

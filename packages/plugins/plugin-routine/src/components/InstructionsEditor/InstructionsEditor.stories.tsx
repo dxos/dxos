@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Filter, Ref } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -16,7 +16,7 @@ import { translations } from '#translations';
 
 import { InstructionsEditor } from './InstructionsEditor';
 
-const types = [Instructions.Instructions, Blueprint.Blueprint, Text.Text];
+const types = [Instructions.Instructions, Skill.Skill, Text.Text];
 
 const DefaultStory = () => {
   const { space } = useClientStory();
@@ -49,7 +49,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A routine with no blueprints or context objects: the form shows empty add affordances. */
+/** A routine with no skills or context objects: the form shows empty add affordances. */
 export const Default: Story = {
   decorators: [
     withSeededSpace((space) => {

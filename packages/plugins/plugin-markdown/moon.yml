@@ -14,7 +14,7 @@ tasks:
       - '--entryPoint=src/MarkdownPlugin.tsx'
       - '--entryPoint=src/MarkdownPlugin.node.ts'
       - '--entryPoint=src/MarkdownPlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/capabilities/node.ts'
       - '--entryPoint=src/components/index.ts'

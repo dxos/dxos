@@ -36,7 +36,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.title', { ns: meta.profile.key })}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Form.FieldSet fieldMap={fieldMap} />
           </Form.Section>
         </Form.Content>

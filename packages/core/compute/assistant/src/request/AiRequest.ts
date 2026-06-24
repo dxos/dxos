@@ -26,7 +26,7 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint, Trace, Operation } from '@dxos/compute';
+import { type Skill, Trace, Operation } from '@dxos/compute';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
@@ -75,7 +75,7 @@ export type RunProps<R = never> = {
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
-  blueprints?: readonly Blueprint.Blueprint[];
+  skills?: readonly Skill.Skill[];
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
@@ -84,7 +84,7 @@ export type BeginProps = {
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
-  blueprints?: readonly Blueprint.Blueprint[];
+  skills?: readonly Skill.Skill[];
 };
 
 export type TurnProps<R = never> = {
@@ -183,7 +183,7 @@ export class Request {
     prompt,
     system,
     history = [],
-    blueprints = [],
+    skills = [],
     objects = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen(this, function* () {
@@ -191,7 +191,7 @@ export class Request {
       this._history = [...history];
       this._pending = [];
 
-      const systemPrompt = yield* formatSystemPrompt({ system, blueprints, objects }).pipe(Effect.orDie);
+      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects }).pipe(Effect.orDie);
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -210,7 +210,7 @@ export class Request {
 
   /**
    * Execute a single turn: one LLM generation followed by tool execution.
-   * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled blueprints).
+   * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled skills).
    */
   runAgentTurn = <const R = never>({
     system,
@@ -327,13 +327,13 @@ export class Request {
     system: systemTemplate,
     history = [],
     objects = [],
-    blueprints = [],
+    skills = [],
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
+      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills });
 
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+      const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects }).pipe(Effect.orDie);
 
       do {
         const { done } = yield* this.runAgentTurn({ system, toolkit });

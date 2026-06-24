@@ -22,7 +22,7 @@ export default Config2.make({
 
       AI orchestration is a first-class concern: the GPT node connects to plugin-assistant's AiService
       and supports tool calling, streaming replies, and configurable system prompts.
-      Function nodes can invoke any Blueprint operation registered in the space, making it straightforward
+      Function nodes can invoke any Skill operation registered in the space, making it straightforward
       to compose multi-step agent workflows visually and share them across teams.
     `,
     icon: { key: 'ph--infinity--regular', hue: 'sky' },

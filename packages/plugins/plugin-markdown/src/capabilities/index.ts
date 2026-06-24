@@ -8,7 +8,7 @@ import type { OperationHandlerSet } from '@dxos/compute';
 export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
 export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

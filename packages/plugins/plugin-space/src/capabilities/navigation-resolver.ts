@@ -59,9 +59,9 @@ export default Capability.makeModule(
       })) as AppCaps.NavigationTargetResolver;
 
     // Parse object paths into EIDs (structure only; existence is checked by the caller).
-    // Handles canonical database paths (root/<spaceId>/database/<typeSlug>/<objectId>)
-    // and collection paths (root/<spaceId>/collections/<collectionId>/<objectId>): the space id
-    // is the first segment and the object id the last.
+    // Handles canonical database paths (root/<spaceId>/system/database/<typeSlug>/<objectId>)
+    // and collection paths (root/<spaceId>/content/collections/<collectionId>/<objectId>): the space
+    // id is the first segment and the object id the last, regardless of intervening group segments.
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
       const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);

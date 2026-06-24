@@ -4,7 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseSkill } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -24,7 +24,7 @@ describe('Local AI', () => {
         Create a new organization called "Cyberdyne Systems".
         Query the database to confirm that the organization is created and the query tool is working.
       `,
-      blueprints: [Ref.make(DatabaseBlueprint.make())],
+      skills: [Ref.make(DatabaseSkill.make())],
     }),
     { timeout: agentTestTimeout({ disableLlmMemoization: true }), tags: ['llm'] },
   );

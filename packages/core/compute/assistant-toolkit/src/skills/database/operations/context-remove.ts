@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 
 import { ContextRemove } from './definitions';
@@ -12,10 +12,10 @@ import { ContextRemove } from './definitions';
 export default ContextRemove.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ obj }) {
-      const binder = yield* Harness.binder;
+      const { binder } = yield* AiContext.Service;
       yield* Effect.promise(() =>
         binder.unbind({
-          blueprints: [],
+          skills: [],
           objects: [obj],
         }),
       );

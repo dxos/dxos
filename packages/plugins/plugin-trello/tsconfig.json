@@ -58,10 +58,10 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-connector"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-kanban"

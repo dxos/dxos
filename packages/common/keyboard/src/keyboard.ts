@@ -57,6 +57,20 @@ class KeyboardContext {
 
 const ROOT = '';
 
+/** Graph root segment; matches `@dxos/plugin-graph` `Node.RootId`. */
+export const GRAPH_ROOT_ID = 'root';
+
+/**
+ * Nest an attendable segment under the graph root so plank context inherits root-level bindings.
+ * An empty/absent segment resolves to the graph root itself.
+ */
+export const nestKeyboardContext = (segment?: string): string =>
+  segment
+    ? segment === GRAPH_ROOT_ID || segment.startsWith(`${GRAPH_ROOT_ID}/`)
+      ? segment
+      : `${GRAPH_ROOT_ID}/${segment}`
+    : GRAPH_ROOT_ID;
+
 /**
  * Manages context-aware key bindings.
  */

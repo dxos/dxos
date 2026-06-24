@@ -17,7 +17,7 @@ export default Config2.make({
 
       The editor integrates with the rest of the workspace through @ references that link to any ECHO object, image and file uploads stored in the active space, and anchored comment threads on text ranges. Comments can optionally be routed to an AI agent on every message or only on @mention.
 
-      A built-in blueprint exposes create, open, and update operations as tools for AI agents. Updates are applied as compact find-and-replace diffs against the document, making it safe for agents to edit large documents incrementally while you continue collaborating.
+      A built-in skill exposes create, open, and update operations as tools for AI agents. Updates are applied as compact find-and-replace diffs against the document, making it safe for agents to edit large documents incrementally while you continue collaborating.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
     icon: { key: 'ph--text-aa--regular', hue: 'indigo' },

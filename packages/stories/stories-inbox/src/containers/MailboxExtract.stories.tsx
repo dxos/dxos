@@ -182,7 +182,7 @@ const FeedExtractHarness = () => {
     }
     for (const message of messages) {
       await invoker
-        .invokePromise(InboxOperation.ExtractMessage, { db, source: message })
+        .invokePromise(InboxOperation.ExtractMessage, { db, source: message }, { spaceId: db.spaceId })
         .catch((err) => log.warn('extract failed', { err, messageId: message.id }));
     }
     setRuns((count) => count + 1);

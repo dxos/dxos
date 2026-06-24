@@ -4,3 +4,4 @@
 
 export * from './StackContext';
 export * from './StackSection';
+export * from './StackTile';

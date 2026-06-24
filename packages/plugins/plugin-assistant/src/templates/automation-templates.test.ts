@@ -22,8 +22,8 @@ const dbLayer = TestDatabaseLayer({
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
 
 const templates = [
-  { template: researchBrief, blueprintCount: 4 },
-  { template: dailyDigest, blueprintCount: 3 },
+  { template: researchBrief, skillCount: 4 },
+  { template: dailyDigest, skillCount: 3 },
 ];
 
 describe('scheduled routine templates', () => {
@@ -33,7 +33,7 @@ describe('scheduled routine templates', () => {
     expect(dailyDigest.appliesTo).toBeUndefined();
   });
 
-  for (const { template, blueprintCount } of templates) {
+  for (const { template, skillCount } of templates) {
     test(`${template.label} scaffolds a Routine, a disabled timer Trigger, and Instructions`, async ({ expect }) => {
       await Effect.gen(function* () {
         const routine = yield* template.scaffold({});
@@ -45,7 +45,7 @@ describe('scheduled routine templates', () => {
 
         const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
         expect(routines).toHaveLength(1);
-        expect(routines[0]?.blueprints).toHaveLength(blueprintCount);
+        expect(routines[0]?.skills).toHaveLength(skillCount);
 
         const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
         expect(triggers).toHaveLength(1);

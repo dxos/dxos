@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as MemoryBlueprint } from './blueprint';
+export { default as MemorySkill } from './skill';
 export { MemoryHandlers, MemoryOperations } from './operations';

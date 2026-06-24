@@ -186,6 +186,9 @@ typedoc
 # aider assistant temp files
 .aider*
 
+# codex agent local state
+.codex/
+
 # playwright MCP temp files
 .playwright-mcp/
 

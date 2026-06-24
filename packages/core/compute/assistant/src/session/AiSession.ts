@@ -6,6 +6,7 @@
 
 import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
@@ -14,9 +15,10 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, McpServer, Operation, Trace } from '@dxos/compute';
+import { type Skill, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -26,7 +28,6 @@ import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../reque
 import { ToolExecutionServices } from '../tool-runtime';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
-import * as BlueprintHooks from './BlueprintHooks';
 import * as Harness from './Harness';
 import { SessionLoader } from './SessionLoader';
 import { createToolkit } from './toolkit';
@@ -38,7 +39,7 @@ export type RunProps<R = never> = {
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 
   /**
-   * Space-level MCP servers to connect alongside blueprint-defined ones.
+   * Space-level MCP servers to connect alongside skill-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
 
@@ -69,7 +70,7 @@ const SUMMARY_THRESHOLD = 80_000;
  */
 export class Session extends Resource {
   /**
-   * Blueprints and objects bound to the session.
+   * Skills and objects bound to the session.
    */
   private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
@@ -114,7 +115,7 @@ export class Session extends Resource {
     ToolExecutionService | ToolResolverService
   > {
     return Effect.gen(this, function* () {
-      const toolkit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
+      const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
   }
@@ -140,12 +141,12 @@ export class Session extends Resource {
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
-      const blueprints = this.context.getBlueprints();
+      const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
       log('run', {
         history: history.length,
-        blueprints: blueprints.length,
+        skills: skills.length,
         objects: objects.length,
       });
 
@@ -159,35 +160,27 @@ export class Session extends Resource {
 
       yield* request.begin({
         history,
-        blueprints,
+        skills,
         objects,
         prompt: params.prompt,
         system: params.system,
       });
 
-      // Fire begin-request hooks declared by the bound blueprints. These run in the agent's turn
-      // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
-      yield* BlueprintHooks.runHooks({
-        blueprints,
-        phase: 'begin-request',
-        invoke: (operation, input) => Operation.invoke(operation, input).pipe(Effect.asVoid, Effect.orDie),
-      });
-
-      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled blueprints.
+      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       do {
         yield* Effect.promise(() => this.context.sync());
-        const currentBlueprints = this.context.getBlueprints();
-        const mcps = yield* connectMcpServers(currentBlueprints, params.mcpServers);
+        const currentSkills = this.context.getSkills();
+        const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
-          blueprints: currentBlueprints,
+          skills: currentSkills,
           opaqueToolkits: mcps,
         });
 
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
-          blueprints: currentBlueprints,
+          skills: currentSkills,
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
@@ -224,12 +217,68 @@ export class Session extends Resource {
   }
 }
 
+/**
+ * Gives access to the ai session.
+ */
+export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Service, Session>() {
+  /**
+   * Create a new session layer from options.
+   */
+  static layer = (options: Options): Layer.Layer<Service | AiContext.Service> =>
+    aiContextFromSession.pipe(
+      Layer.provideMerge(
+        Layer.scoped(
+          Service,
+          Effect.gen(function* () {
+            const session = yield* EffectEx.acquireReleaseResource(() => new Session(options));
+            return session;
+          }),
+        ),
+      ),
+    );
+
+  /**
+   * Create a new session with a new feed.
+   */
+  static layerNewFeed = (
+    options?: Omit<Options, 'feed' | 'runtime'>,
+  ): Layer.Layer<Service | AiContext.Service, never, Database.Service> =>
+    Layer.unwrapScoped(
+      Effect.gen(function* () {
+        const feed = yield* Database.add(Feed.make());
+        const runtime = yield* Effect.runtime<Database.Service>();
+        return Service.layer({ ...options, feed, runtime });
+      }),
+    );
+
+  /**
+   * Run a prompt in the current session.
+   */
+  static run = <R = never>(
+    params: RunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | Service | R> =>
+    Effect.gen(function* () {
+      const session = yield* Service;
+      return yield* session.createRequest(params);
+    });
+}
+
+const aiContextFromSession = Layer.effect(
+  AiContext.Service,
+  Effect.gen(function* () {
+    const session = yield* Service;
+    return {
+      binder: session.context,
+    };
+  }),
+);
+
 const connectMcpServers = (
-  blueprints: readonly Blueprint.Blueprint[],
+  skills: readonly Skill.Skill[],
   spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
-    blueprints,
+  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+    skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
@@ -238,7 +287,7 @@ const connectMcpServers = (
     protocol,
     apiKey,
   }));
-  const allServers = [...blueprintServers, ...spaceServers];
+  const allServers = [...skillServers, ...spaceServers];
 
   return pipe(
     allServers,

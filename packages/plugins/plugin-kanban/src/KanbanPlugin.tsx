@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { BlueprintDefinition, CreateObject, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
+import { SkillDefinition, CreateObject, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Kanban } from '#types';
@@ -14,7 +14,7 @@ import { Kanban } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),

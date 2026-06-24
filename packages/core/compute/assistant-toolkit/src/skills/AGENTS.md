@@ -1,13 +1,13 @@
-# Blueprint Structure
+# Skill Structure
 
 ```ts
-// <blueprint>/index.ts — thin re-export
-export { default as XBlueprint } from './blueprint';
-export { XBlueprintHandlers, XBlueprintOperations } from './operations';
+// <skill>/index.ts — thin re-export
+export { default as XSkill } from './skill';
+export { XSkillHandlers, XSkillOperations } from './operations';
 ```
 
 ```ts
-// <blueprint>/operations/index.ts — single source of both aggregates
-export * as XBlueprintOperations from './definitions';
+// <skill>/operations/index.ts — single source of both aggregates
+export * as XSkillOperations from './definitions';
 export const XHandlers = OperationHandlerSet.lazy(...);
 ```

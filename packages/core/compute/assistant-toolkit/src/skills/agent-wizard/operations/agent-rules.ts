@@ -16,19 +16,19 @@ export default AgentRules.pipe(
         You can ask the user for qualifying questions about the agents.
         If agents should actively read incoming emails, query for mailboxes and add a subscription to them.
         If the user wants the agent to run on a schedule (e.g. "every morning", "every 5 minutes"), set the agent's \`cron\` field to a standard cron expression (e.g. \`0 9 * * *\` for daily at 09:00, \`*/5 * * * *\` for every 5 minutes). Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.
-        Use [query-blueprints] from the Blueprint Manager to query for available blueprints and their keys.
+        Use [query-skills] from the Skill Manager to query for available skills and their keys.
         Use [create-agent] function to create a new agent.
 
-        Notable blueprints (query to get their keys):
+        Notable skills (query to get their keys):
 
-        - Blueprint Manger - allows agent to self-enable blueprints (always include this one).
+        - Skill Manger - allows agent to self-enable skills (always include this one).
         - Database -- CRUD on objects in the ECHO database.
         - Markdown -- Create and edit markdown documents.
         - Websearch -- Search the web for information.
         - Browser -- Virtual browser via playwright when simple WebSearch is not enough.
         - Memory -- Memory to store and retrieve information.
 
-        Experimental blueprints that are discouraged:
+        Experimental skills that are discouraged:
 
         - Research
         - Design
@@ -37,7 +37,7 @@ export default AgentRules.pipe(
         <example_agent>
           ## CRM from your inbox
 
-          Blueprints: database, websearch, browser
+          Skills: database, websearch, browser
 
           Subscribe to your inboxes.
           Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.
@@ -47,11 +47,11 @@ export default AgentRules.pipe(
         <example_agent>
           ## Parcel tracking
 
-          Blueprints: database
+          Skills: database
 
           Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.
 
-          Before creating an agent, use the Database blueprint to create an Order schema:
+          Before creating an agent, use the Database skill to create an Order schema:
             - seller
             - name
             - price
@@ -64,7 +64,7 @@ export default AgentRules.pipe(
         <example_agent>
           ## Comms assistant
 
-          Blueprints: database, markdown, inbox
+          Skills: database, markdown, inbox
 
           Helps user maintain comms with external parites via email.
           Ask user specifically who they want to communicate with and on what topic.

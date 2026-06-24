@@ -16,7 +16,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Harness } from '@dxos/assistant';
 import {
   AgentService,
-  Blueprint,
+  Skill,
   Credential,
   Operation,
   OperationHandlerSet,
@@ -51,7 +51,7 @@ interface TestLayerOptions {
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
   types?: Type.AnyEntity[];
-  blueprints?: Blueprint.Blueprint[];
+  skills?: Skill.Skill[];
   credentials?: Credential.ServiceCredential[];
 
   /**
@@ -209,14 +209,14 @@ export const AssistantTestBaseLayer = ({
   toolkits = [],
   types = [],
   credentials = [],
-  blueprints = [],
-}: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'blueprints' | 'tracing' | 'credentials'>) => {
+  skills = [],
+}: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'skills' | 'tracing' | 'credentials'>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
   types.push(
-    Blueprint.Blueprint,
+    Skill.Skill,
     Instructions.Instructions,
     Operation.PersistentOperation,
     Feed.Feed,
@@ -245,7 +245,7 @@ export const AssistantTestBaseLayer = ({
         }),
       ),
     ),
-    Layer.provideMerge(registryLayer({ initial: blueprints })),
+    Layer.provideMerge(registryLayer({ initial: skills })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),

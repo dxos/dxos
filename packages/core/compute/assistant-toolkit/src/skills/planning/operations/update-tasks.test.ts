@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
-import { Blueprint, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../../types';
-import PlanningBlueprint from '../blueprint';
+import PlanningSkill from '../skill';
 import { UpdateTasks } from './definitions';
 import { PlanningHandlers } from './index';
 
@@ -22,8 +22,8 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Blueprint.Blueprint, Feed.Feed],
-  blueprints: [PlanningBlueprint.make()],
+  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
+  skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 });
 
@@ -32,10 +32,7 @@ describe('UpdateTasks', () => {
     'adds tasks to the plan',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
-          { name: 'Planner', instructions: 'Test.' },
-          PlanningBlueprint.make(),
-        );
+        const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
         yield* Database.flush();
 
         const chatFeed = agent.chat?.target?.feed?.target;

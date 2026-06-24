@@ -9,7 +9,7 @@ import { TagIndex } from '@dxos/schema';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from './capabilities';
+import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Provider, Result, Search } from './types';
@@ -19,7 +19,7 @@ export const CommercePlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Provider.Provider, Search.Search, Result.Result, TagIndex.TagIndex] }),

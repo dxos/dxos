@@ -13,7 +13,7 @@ tasks:
       - '--entryPoint=src/SequencerPlugin.tsx'
       - '--entryPoint=src/SequencerPlugin.node.ts'
       - '--entryPoint=src/SequencerPlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'

@@ -4,6 +4,7 @@
 
 import React, { useCallback } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { Icon, Select, type SelectRootProps } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -87,8 +88,13 @@ export const createSelectField = ({
 }: CreateSelectFieldOptions): FormFieldRenderer => {
   const normalized = options.map((option) => (typeof option === 'string' ? { value: option, label: option } : option));
   const hasDefault = defaultLabel !== null;
-  // The sentinel maps to `undefined`; '' is a value Select.Root treats as "no selection".
-  const sentinel = '';
+  // The sentinel maps to `undefined`. Radix forbids an empty-string `Select.Item` value, so use a
+  // non-empty placeholder; reserved (a real option with this value would be unrepresentable).
+  const sentinel = '__default__';
+  invariant(
+    !normalized.some((option) => option.value === sentinel),
+    `createSelectField: option value '${sentinel}' is reserved.`,
+  );
   return ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<string | undefined>) => (
     <FormRow<string>
       readonly={readonly}

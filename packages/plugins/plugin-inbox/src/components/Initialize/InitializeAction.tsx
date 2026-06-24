@@ -7,19 +7,17 @@ import React from 'react';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { type Obj, Ref } from '@dxos/echo';
-import { IntegrationAuth } from '@dxos/plugin-integration';
+import { ConnectorAuth } from '@dxos/plugin-connector';
 import { IconButton } from '@dxos/react-ui';
 
-import { useTargetSync } from './useTargetIntegration';
+import { useTargetSync } from './useTargetConnection';
 
 export type InitializeActionProps<T extends Obj.Any> = {
-  /** The object whose Integration we're connecting / syncing. */
+  /** The object whose Connection we're connecting / syncing. */
   target: T;
-  /** Key under which `target` is passed to `operation`'s payload (e.g. `'mailbox'`, `'calendar'`). */
-  targetKey: string;
-  /** Provider id forwarded to the auth Surface (`'gmail'`, `'google-calendar'`, …). */
-  providerId: string;
-  /** Operation invoked when the user clicks sync. Must accept `{ integration, [targetKey]: target }`. */
+  /** Connector id forwarded to the auth Surface (`'gmail'`, `'google-calendar'`, …). */
+  connectorId: string;
+  /** Operation invoked when the user clicks sync. Must accept `{ binding }`. */
   operation: Operation.Definition<any, any>;
   /** Already-translated label for the sync action. */
   syncLabel: string;
@@ -29,24 +27,23 @@ export type InitializeActionProps<T extends Obj.Any> = {
 
 /**
  * Toolbar action for the "initialize / connect this thing" empty state.
- * When an `Integration` targets `target` we render an `IconButton` that
- * invokes `operation`; otherwise we render the `IntegrationAuth` Surface
- * (if registered) so the user can connect a provider.
+ * When a `Connection` is bound to `target` (via a `SyncBinding`) we render an
+ * `IconButton` that invokes `operation`; otherwise we render the `ConnectorAuth`
+ * Surface (if registered) so the user can connect a connector.
  *
  * Used by `InitializeMailboxAction` and `InitializeCalendarAction`.
  */
 export const InitializeAction = <T extends Obj.Any>({
   target,
-  targetKey,
-  providerId,
+  connectorId,
   operation,
   syncLabel,
   notify,
 }: InitializeActionProps<T>) => {
   const pluginManager = usePluginManager();
-  const { integration, sync, syncing } = useTargetSync(target, operation, targetKey, notify);
+  const { connection, sync, syncing } = useTargetSync(target, operation, notify);
 
-  if (integration) {
+  if (connection) {
     return (
       <IconButton
         disabled={syncing}
@@ -59,8 +56,8 @@ export const InitializeAction = <T extends Obj.Any>({
     );
   }
 
-  const data = { providerId, existingTarget: Ref.make(target) };
-  return Surface.isAvailable(pluginManager.capabilities, { type: IntegrationAuth, data }) ? (
-    <Surface.Surface type={IntegrationAuth} data={data} limit={1} />
+  const data = { connectorId, existingTarget: Ref.make(target) };
+  return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data }) ? (
+    <Surface.Surface type={ConnectorAuth} data={data} limit={1} />
   ) : null;
 };

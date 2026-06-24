@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContext, Harness } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/compute';
+import { type Skill } from '@dxos/compute';
 import { DXN, Annotation, Database, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -106,21 +106,21 @@ export type MakeProps = Omit<
 > &
   Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
     instructions: string;
-    blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+    skills?: Ref.Ref<Skill.Skill>[];
     contextObjects?: Ref.Ref<Obj.Any>[];
   };
 
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
- * @param props - Agent properties including spec, blueprints, and context objects.
- * @param blueprint - The blueprint to use for the agent context.
+ * @param props - Agent properties including spec, skills, and context objects.
+ * @param skill - The skill to use for the agent context.
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
   props: MakeProps,
-  // TODO(burdon): Reconcile with props.blueprints.
-  blueprint: Blueprint.Blueprint,
+  // TODO(burdon): Reconcile with props.skills.
+  skill: Skill.Skill,
 ): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
     const agent = yield* Database.add(
@@ -136,8 +136,8 @@ export const makeInitialized = (
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Database.Service>();
     const contextBinder = new AiContext.Binder({ feed, runtime });
-    // TODO(dmaretskyi): Blueprint registry.
-    const agentBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
+    // TODO(dmaretskyi): Skill registry.
+    const agentSkill = yield* Database.add(Obj.clone(skill, { deep: true }));
 
     const chat = yield* Database.add(
       Chat.make({
@@ -148,7 +148,7 @@ export const makeInitialized = (
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
-        blueprints: [Ref.make(agentBlueprint), ...(props.blueprints ?? [])],
+        skills: [Ref.make(agentSkill), ...(props.skills ?? [])],
         objects: [Ref.make(agent), Ref.make(chat), ...(props.contextObjects ?? [])],
       }),
     );
@@ -170,7 +170,7 @@ export const makeInitialized = (
 
 /**
  * Resets the agent chat history by rebuilding the chat context.
- * Preserves the existing blueprints and objects from the current chat context.
+ * Preserves the existing skills and objects from the current chat context.
  *
  * @param agent - The agent whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
@@ -191,7 +191,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
           runtime,
         }),
     );
-    const blueprints = existingContextBinder.getBlueprints().map((blueprint) => Ref.make(blueprint));
+    const skills = existingContextBinder.getSkills().map((skill) => Ref.make(skill));
     const objects = existingContextBinder
       .getObjects()
       .filter((object) => !Obj.instanceOf(Chat.Chat, object))
@@ -208,7 +208,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
-        blueprints,
+        skills,
         objects: [...objects, Ref.make(chat)],
       }),
     );

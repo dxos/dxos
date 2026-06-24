@@ -16,7 +16,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { SandboxPlugin } from '#plugin';
 import { Sandbox } from '#types';
 
-import { CreateSandbox, Exec } from './blueprints/functions';
+import { CreateSandbox, Exec } from './skills/functions';
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).

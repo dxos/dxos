@@ -87,7 +87,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-collapsible": "catalog:",
@@ -95,7 +95,9 @@
   },
   "devDependencies": {
     "@babel/core": "catalog:",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

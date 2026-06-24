@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
-import { DelegationBlueprint } from '../skills';
+import { DelegationSkill } from '../skills';
 import { Agent, Chat } from '../types';
 
 /**
@@ -113,20 +113,20 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         return [];
       }
 
-      // Sub-agents inherit the supervisor's bound blueprints (so they have the same tools/
-      // capabilities), minus the delegation blueprint itself — otherwise a sub-agent could
+      // Sub-agents inherit the supervisor's bound skills (so they have the same tools/
+      // capabilities), minus the delegation skill itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
-      const inheritedBlueprints = yield* Effect.gen(function* () {
+      const inheritedSkills = yield* Effect.gen(function* () {
         const runtime = yield* Effect.runtime<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-        return binder.getBlueprints().filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
+        return binder.getSkills().filter((skill) => Obj.getMeta(skill).key !== DelegationSkill.key);
       }).pipe(Effect.scoped);
-      const blueprints = inheritedBlueprints.map((blueprint) => Ref.make(blueprint));
+      const skills = inheritedSkills.map((skill) => Ref.make(skill));
 
       const delegations: Delegation[] = [];
       for (const task of pending) {
         // Synthesize a minimal instructions whose goal is the task; the sub-agent runs it via RunInstructions
-        // with the inherited blueprints bound.
+        // with the inherited skills bound.
         const instructions = yield* Database.add(
           Instructions.make({
             name: task.title,
@@ -139,7 +139,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
               Task: ${task.title}
             `,
-            blueprints,
+            skills,
           }),
         );
 

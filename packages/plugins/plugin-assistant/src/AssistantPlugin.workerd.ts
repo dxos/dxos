@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Blueprint, Instructions } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -21,7 +21,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     schema: [
       Chat.Chat,
       Chat.CompanionTo,
-      Blueprint.Blueprint,
+      Skill.Skill,
       AiContext.Binding,
       Feed.Feed,
       HasSubject.HasSubject,

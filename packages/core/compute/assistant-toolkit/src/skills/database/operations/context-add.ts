@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 
 import { ContextAdd } from './definitions';
@@ -12,10 +12,10 @@ import { ContextAdd } from './definitions';
 export default ContextAdd.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ obj }) {
-      const binder = yield* Harness.binder;
+      const { binder } = yield* AiContext.Service;
       yield* Effect.promise(() =>
         binder.bind({
-          blueprints: [],
+          skills: [],
           objects: [obj],
         }),
       );
