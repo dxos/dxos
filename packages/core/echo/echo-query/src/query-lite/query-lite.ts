@@ -5,7 +5,6 @@
 import type * as Schema from 'effect/Schema';
 
 import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
-import { Filter as EchoFilter } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -340,9 +339,6 @@ class FilterClass implements Filter$.Any {
   static pretty(filter: Filter$.Any): string {
     return prettyFilter(filter.ast);
   }
-
-  /** Create a predicate from a filter. */
-  static toPredicate = EchoFilter.toPredicate;
 
   private constructor(public readonly ast: QueryAST.Filter) {}
 
