@@ -525,7 +525,7 @@ class Slice {
   /**
    * Materialises layer specs needed to satisfy `tags`. Specs whose factories were not
    * run yet are merged into the slice runtime on demand so unrelated providers (e.g.
-   * conversation-scoped `AiContext.Service`) do not execute during slice init.
+   * conversation-scoped `HarnessService`) do not execute during slice init.
    */
   materialize(
     tags: Context.Tag<any, any>[],

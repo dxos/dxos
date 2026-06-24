@@ -4,6 +4,8 @@
 
 import { Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
@@ -13,6 +15,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
@@ -233,6 +236,40 @@ const makeWaitingExecutable = () =>
       onChildEvent: () => Effect.void,
     }),
   );
+
+const rpcs = RpcGroup.make(
+  Rpc.make('getValue', {
+    success: Schema.Number,
+  }),
+  Rpc.make('setValue', {
+    payload: Schema.Struct({ value: Schema.Number }),
+    success: Schema.Void,
+  }),
+);
+
+const ProcessWithRpcs = Process.make(
+  {
+    key: 'test.process-with-rpcs',
+    input: Schema.Void,
+    output: Schema.Void,
+    services: [],
+    rpcs,
+  },
+  (ctx) =>
+    Effect.gen(function* () {
+      const storage = yield* StorageService.StorageService;
+      return {
+        rpcHandlers: yield* rpcs.toHandlersContext({
+          getValue: Effect.fn(function* () {
+            return yield* storage.get(Schema.NumberFromString, 'acc').pipe(Effect.map(Option.getOrElse(() => 0)));
+          }),
+          setValue: Effect.fn(function* ({ value }) {
+            yield* storage.set(Schema.NumberFromString, 'acc', value);
+          }),
+        }),
+      };
+    }),
+);
 
 const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
@@ -525,6 +562,19 @@ describe('ManagerImpl', () => {
   );
 });
 
+describe('rpcs', () => {
+  it.effect(
+    'spawn and use rpcs',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(ProcessWithRpcs);
+      expect(yield* handle.rpc.getValue()).toEqual(0);
+      yield* handle.rpc.setValue({ value: 20 });
+      expect(yield* handle.rpc.getValue()).toEqual(20);
+    }, Effect.provide(TestLayer)),
+  );
+});
+
 describe('ProcessOperationInvoker', () => {
   it.effect(
     'spawns a process and produces output',
@@ -808,7 +858,29 @@ describe('ProcessOperationInvoker invocations', () => {
       const manager = yield* ProcessManager.Service;
       const notify = { success: 'Done', error: 'Failed' };
       const handle = yield* manager.spawn(makeSumAggregator(), { notify });
-      expect(handle.params.notify).toEqual(notify);
+      expect(
+        Option.getOrUndefined(Annotation.getDictionary(handle.params.annotations, Process.NotifyAnnotation)),
+      ).toEqual(notify);
+    }, Effect.provide(TestLayer)),
+  );
+});
+
+describe('annotations', () => {
+  it.effect(
+    'surfaces spawn annotations on the handle and via list',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSumAggregator(), {
+        annotations: Annotation.buildDictionary((dictionary) => {
+          Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+        }),
+      });
+      expect(Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation))).toBe(
+        true,
+      );
+      const listed = yield* manager.list();
+      expect(listed.some((process) => process.pid === handle.pid)).toBe(true);
+      yield* handle.terminate();
     }, Effect.provide(TestLayer)),
   );
 });

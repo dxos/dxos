@@ -4,13 +4,15 @@
 
 export {
   StorageService,
+  cell,
   clear,
   deleteKey,
   get,
-  key,
   list,
   set,
   withDefault,
+  type Cell,
+  type CellWithDefault,
   type Service,
 } from '@dxos/compute/StorageService';
 

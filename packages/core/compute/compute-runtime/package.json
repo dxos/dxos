@@ -48,6 +48,7 @@
     "@dxos/operation": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

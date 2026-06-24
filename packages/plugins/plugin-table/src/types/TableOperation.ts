@@ -22,7 +22,6 @@ export const CreateTableSchema = Schema.Struct({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),
-    Schema.optional,
   ),
 });
 
