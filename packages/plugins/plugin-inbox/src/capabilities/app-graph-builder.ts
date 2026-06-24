@@ -217,7 +217,7 @@ export default Capability.makeModule(
                             Operation.invoke(InboxOperation.RenameFilter, {
                               mailbox,
                               name,
-                              caller: params?.caller,
+                              caller: `${params?.caller}:${params?.parent?.id}`,
                             }),
                           properties: {
                             label: ['rename-filter.label', { ns: meta.profile.key }],
