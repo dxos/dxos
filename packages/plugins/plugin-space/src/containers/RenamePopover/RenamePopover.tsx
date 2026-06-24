@@ -40,6 +40,9 @@ const setName = (subject: RenameSubject, name: string): void => {
 
 export type RenamePopoverProps = { subject: RenameSubject };
 
+// TODO(wittjosiah): Move RenamePopover, RenameSubject, RenameCallback, and RENAME_POPOVER to @dxos/app-toolkit
+//   so any plugin can use the rename popover without depending on plugin-space.
+
 /**
  * Inline rename popover anchored to a navtree row. Commits on Enter or when dismissed; Escape cancels.
  */
