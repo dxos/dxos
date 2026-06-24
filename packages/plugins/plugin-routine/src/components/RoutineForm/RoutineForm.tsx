@@ -171,9 +171,23 @@ const ActionEditor = ({
     [updateAuto],
   );
 
+  const handleKindChange = useCallback(
+    (next: ActionKind) => {
+      setKind(next);
+      // Switching to an instructions action must drop any bound operation, otherwise `saveRoutine` still sees a
+      // (non-RunInstructions) runnable and persists this as an operation action — discarding the instructions.
+      if (next === 'instructions') {
+        updateAuto((automation) => {
+          automation.runnable = undefined;
+        });
+      }
+    },
+    [updateAuto],
+  );
+
   return (
     <div role='none' className='flex flex-col'>
-      {!readonly && <ActionKindToggle value={kind} onChange={setKind} />}
+      {!readonly && <ActionKindToggle value={kind} onChange={handleKindChange} />}
       {kind === 'operation' ? (
         <OperationEditor
           db={db}

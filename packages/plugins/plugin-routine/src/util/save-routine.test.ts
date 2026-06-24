@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Instructions, Trigger } from '@dxos/compute';
-import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
+import { Instructions, Operation, Trigger } from '@dxos/compute';
+import { type Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -17,7 +18,13 @@ import { Routine } from '#types';
 import { isRunInstructions } from './run-instructions';
 import { type RoutineDraft, saveRoutine } from './save-routine';
 
-const types = [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Text.Text];
+const types = [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Operation.PersistentOperation, Text.Text];
+
+const TestOperation = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.reportOperation'), name: 'Report' },
+  input: Schema.Struct({}),
+  output: Schema.Struct({}),
+});
 
 describe('saveRoutine', () => {
   test('promotes an instructions action + trigger, then merges without duplicating on re-save', async ({ expect }) => {
@@ -56,6 +63,36 @@ describe('saveRoutine', () => {
     expect(ownedAfter[0].text?.target?.content).toBe('second body');
     expect(routine.triggers).toHaveLength(1);
     expect(primaryTrigger(routine)!.enabled).toBe(true);
+  });
+
+  test('switching an operation action to instructions replaces the runnable and adds owned instructions', async ({
+    expect,
+  }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    // An existing operation routine: `runnable` is a (non-RunInstructions) operation, with no owned instructions.
+    const operation = db.add(Operation.serialize(TestOperation));
+    const routine = db.add(Routine.make({ name: 'Report', runnable: Ref.make(operation), triggers: [] }));
+
+    // Edit session after switching the action to instructions: the operation runnable is cleared (as the form
+    // does on switch) and a body is written.
+    const draft: RoutineDraft = {
+      routine: Obj.clone(routine),
+      instructions: Instructions.make({ name: 'Report', text: 'summarize the inbox' }),
+    };
+    Obj.update(draft.routine, (routine) => {
+      routine.runnable = undefined;
+    });
+
+    await saveRoutine(db, routine, draft);
+
+    // The action now runs through RunInstructions over a freshly-created owned instructions; the operation
+    // runnable is gone.
+    expect(isRunInstructions(routine.runnable)).toBe(true);
+    const owned = ownedInstructions(await db.query(Filter.type(Instructions.Instructions)).run(), routine);
+    expect(owned).toHaveLength(1);
+    expect(owned[0].text?.target?.content).toBe('summarize the inbox');
   });
 });
 
