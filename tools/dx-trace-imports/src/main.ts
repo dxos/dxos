@@ -17,6 +17,7 @@ import {
   normalizeFsPath,
   packageNameFromPath,
 } from './matcher.ts';
+import { augmentGraphWithParsedImports } from './parse-imports.ts';
 
 export interface TraceImportsOptions {
   /** Absolute or relative entry file passed to madge. */
@@ -412,6 +413,10 @@ export const traceImports = async (options: TraceImportsOptions): Promise<TraceI
   if (!graph.has(entryKey)) {
     graph.set(entryKey, []);
   }
+
+  augmentGraphWithParsedImports(graph, (dependency, knownKeys) =>
+    resolveGraphKey(dependency, absWorkingDir, knownKeys),
+  );
 
   const metafilePath = path.join(os.tmpdir(), `trace-imports-graph-${process.pid}-${Date.now()}.json`);
   fs.writeFileSync(
