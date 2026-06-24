@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { type Space } from '@dxos/client/echo';
+import { isSpace, type Space } from '@dxos/client/echo';
 import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
@@ -51,14 +51,12 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
  * typename and annotations — no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
- * Requires five coordinated pieces: Paths.createTypeSectionPaths, the section
- * extension (this function), a {@link SpaceCapabilities.CreateObjectEntry} with
- * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)` (the ?? fallback ensures
- * both the section "+" button and the space-level create dialog navigate to the section path),
- * a section action that passes `targetNodeId`, and a {@link createTypeSectionPathResolver}
- * registered via {@link AppCapabilities.NavigationPathResolver} for deep-link support.
+ * Requires four coordinated pieces: {@link Paths.createTypeSectionPaths}, this extension,
+ * a {@link SpaceCapabilities.CreateObjectEntry} with
+ * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)`, and a
+ * {@link createTypeSectionPathResolver} registered via {@link AppCapabilities.NavigationPathResolver}.
  *
- * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
+ * Pass `createObject` to add a "+" action on the section header automatically.
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
@@ -76,6 +74,11 @@ export const createTypeSectionExtension = (
      * The match must still return `Option<Space>` so the connector can query the space db.
      */
     match?: (node: Node.Node) => Option.Option<Space>;
+    /**
+     * If provided, a "+" action is added to the section header that runs this effect when clicked.
+     * The action label is resolved from `add-object.label` in the type's i18n namespace.
+     */
+    createObject?: (space: Space) => Effect.Effect<any, any, any>;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -93,7 +96,7 @@ export const createTypeSectionExtension = (
   const canDropSameType = (source: TreeData) =>
     Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename;
 
-  return GraphBuilder.createExtension({
+  const sectionExtension = GraphBuilder.createExtension({
     id: typename,
     match: options?.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
@@ -157,6 +160,34 @@ export const createTypeSectionExtension = (
       ]);
     },
   });
+
+  if (!options?.createObject) {
+    return sectionExtension;
+  }
+
+  const { createObject } = options;
+
+  const actionsExtension = GraphBuilder.createExtension({
+    id: `${typename}.sectionCreate`,
+    match: (node) => {
+      const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+      return node.type === typename && space ? Option.some(space) : Option.none();
+    },
+    actions: (space) =>
+      Effect.succeed([
+        Node.makeAction({
+          id: 'create',
+          data: () => createObject(space),
+          properties: {
+            label: ['add-object.label', { ns: typename }],
+            icon: 'ph--plus--regular',
+            disposition: 'list-item-primary',
+          },
+        }),
+      ]),
+  });
+
+  return Effect.map(Effect.all([sectionExtension, actionsExtension]), ([section, actions]) => [...section, ...actions]);
 };
 
 /**
