@@ -15,7 +15,7 @@ export const blank: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.blank',
   label: 'Blank',
   icon: 'ph--lightning--regular',
-  scaffold: ({ name }) => Effect.succeed(Routine.make({ name, triggers: [] })),
+  scaffold: ({ name }) => Effect.succeed({ routine: Routine.make({ name, triggers: [] }) }),
 };
 
 /** Templates contributed by plugin-routine itself. */

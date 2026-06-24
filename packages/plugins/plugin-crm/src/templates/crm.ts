@@ -4,9 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Operation, Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Skill, Instructions, Trigger } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
@@ -49,44 +48,24 @@ export const crm: RoutineCapabilities.Template = {
       const instructionsName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
       const skillRefs = SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
-      const instructions = yield* Database.add(
-        Instructions.make({
-          name: instructionsName,
-          text: DEFAULT_INSTRUCTIONS,
-          skills: skillRefs,
-        }),
-      );
-
-      // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's
-      // RunInstructions (key: org.dxos.function.runInstructions) or persist it on first use.
-      const existingFns = yield* Database.query(
-        Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.runInstructions')),
-      ).run;
-      const runInstructionsFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
-
-      const feed = yield* Database.load(mailbox.feed);
-      const trigger = yield* Database.add(
-        Obj.make(Trigger.Trigger, {
-          enabled: false,
-          function: Ref.make(runInstructionsFn),
-          spec: Trigger.specFeed(feed),
-          input: {
-            instructions: Ref.make(instructions),
-            input: '{{event.item}}',
-          },
-          concurrency: 1,
-        }),
-      );
-
-      const routine = Routine.make({
-        name: name ?? instructionsName,
-        runnable: Ref.make(runInstructionsFn),
-        triggers: [Ref.make(trigger)],
+      const instructions = Instructions.make({
+        name: instructionsName,
+        text: DEFAULT_INSTRUCTIONS,
+        skills: skillRefs,
       });
-      // The trigger is owned by the routine (reachable only via it) so it cascade-deletes with it; the
-      // instructions stays independent, since it is edited separately and may be reused.
-      Obj.setParent(trigger, routine);
 
-      return routine;
+      // The feed spec requires the live feed object; Database.load is a read-only DB operation.
+      const feed = yield* Database.load(mailbox.feed);
+      const trigger = Trigger.make({
+        enabled: false,
+        spec: Trigger.specFeed(feed),
+        // The raw trigger event item is passed as the agent's input; the instructions ref is merged in at
+        // save time by saveRoutine (which also sets the trigger's function to RunInstructions).
+        input: { input: '{{event.item}}' },
+        concurrency: 1,
+      });
+
+      const routine = Routine.make({ name: name ?? instructionsName, triggers: [] });
+      return { routine, instructions, trigger };
     }),
 };

@@ -8,7 +8,14 @@ import { Instructions } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  AutomationTemplates,
+  SkillDefinition,
+  CreateObject,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
@@ -34,6 +41,11 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       StateMap.StateMap,
       TagIndex.TagIndex,
     ],
+  }),
+  Plugin.addModule({
+    id: 'magazine-automation-templates',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: AutomationTemplates,
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

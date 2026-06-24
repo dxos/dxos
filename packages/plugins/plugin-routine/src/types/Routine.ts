@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trigger } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Instructions, Trigger } from '@dxos/compute';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Runnable from './Runnable';
@@ -45,21 +45,9 @@ export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(R
 
 export const make = (props: Obj.MakeProps<typeof Routine>) => Obj.make(Routine, props);
 
-/**
- * @deprecated Relation anchoring a Routine (source) to an object it applies to (target). The per-object
- * companion lists the routines for an object by querying the sources of this relation; mirrors `Chat.CompanionTo`.
- */
-export const AppliesTo = Schema.Struct({
-  id: Obj.ID,
-}).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('org.dxos.relation.automation.appliesTo', '0.1.0'),
-    source: Routine,
-    target: Obj.Unknown,
-  }),
-);
-
-export type AppliesTo = Type.InstanceType<typeof AppliesTo>;
-
-/** Create an {@link AppliesTo} relation linking a routine (source) to a target object. */
-export const makeAppliesTo = (props: Relation.MakeProps<typeof AppliesTo>) => Relation.make(AppliesTo, props);
+/** In-memory edit session for a Routine plus its owned Instructions and primary Trigger before they are persisted. */
+export type RoutineDraft = {
+  routine: Routine;
+  instructions?: Instructions.Instructions;
+  trigger?: Trigger.Trigger;
+};

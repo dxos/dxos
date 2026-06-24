@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Instructions, Trace, Trigger } from '@dxos/compute';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -19,14 +19,7 @@ import { crm } from './crm';
 const SKILL_COUNT = 4;
 
 const dbLayer = TestDatabaseLayer({
-  types: [
-    Routine.Routine,
-    Instructions.Instructions,
-    Trigger.Trigger,
-    Operation.PersistentOperation,
-    Mailbox.Mailbox,
-    Feed.Feed,
-  ],
+  types: [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Mailbox.Mailbox, Feed.Feed],
 });
 
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
@@ -38,40 +31,37 @@ describe('crm routine template', () => {
     expect(crm.appliesTo?.(undefined)).toBe(false);
   });
 
-  test('scaffolds a Routine, a disabled feed Trigger, and an Instructions wiring them together', async ({ expect }) => {
+  test('scaffolds a RoutineDraft with Instructions, a feed Trigger, and the event-item input binding', async ({
+    expect,
+  }) => {
     await Effect.gen(function* () {
       const mailbox = Mailbox.make({ name: 'Test Mailbox' });
       yield* Database.add(mailbox);
       yield* Database.flush();
 
-      const routine = yield* crm.scaffold({ subject: mailbox });
-      yield* Database.add(routine);
-      yield* Database.flush();
+      const draft = yield* crm.scaffold({ subject: mailbox });
 
-      expect(routine.triggers).toHaveLength(1);
-      expect(routine.runnable).toBeDefined();
+      // Routine shell with a recognisable name.
+      expect(Obj.instanceOf(Routine.Routine, draft.routine)).toBe(true);
+      expect(draft.routine.name).toContain('Test Mailbox');
+      expect(draft.routine.runnable).toBeUndefined();
 
-      const routines = yield* Database.query(Filter.type(Instructions.Instructions)).run;
-      expect(routines).toHaveLength(1);
-      expect(routines[0]?.name).toContain('Test Mailbox');
-      expect(routines[0]?.skills).toHaveLength(SKILL_COUNT);
+      // Instructions wired with the right number of skills.
+      expect(Obj.instanceOf(Instructions.Instructions, draft.instructions)).toBe(true);
+      expect(draft.instructions?.name).toContain('Test Mailbox');
+      expect(draft.instructions?.skills).toHaveLength(SKILL_COUNT);
 
-      const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
-      expect(triggers).toHaveLength(1);
-      const trigger = triggers[0];
-      expect(trigger?.enabled).toBe(false);
-      expect(trigger?.spec?.kind).toBe('feed');
-      const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
+      // Feed trigger pointing at the mailbox's feed.
+      expect(Obj.instanceOf(Trigger.Trigger, draft.trigger)).toBe(true);
+      expect(draft.trigger?.enabled).toBe(false);
+      expect(draft.trigger?.spec?.kind).toBe('feed');
+      const triggerFeedUri = draft.trigger?.spec?.kind === 'feed' ? draft.trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);
-      expect(trigger?.input?.instructions).toBeDefined();
-      expect(trigger?.input?.input).toBe('{{event.item}}');
-      // The trigger is owned by the routine (cascade-deletes with it); the instructions stays independent.
-      expect(trigger && Obj.getParent(trigger)?.id).toBe(routine.id);
-      expect(routines[0] && Obj.getParent(routines[0])).toBeUndefined();
 
-      const operations = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
-      expect(operations).toHaveLength(1);
-      expect(routine.runnable?.uri).toBe(trigger?.function?.uri);
+      // The `instructions` ref is NOT in the draft trigger's input — saveRoutine merges it at persist time.
+      // The event-item binding should already be present.
+      expect(draft.trigger?.input?.input).toBe('{{event.item}}');
+      expect(draft.trigger?.input?.instructions).toBeUndefined();
     }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 });

@@ -12,6 +12,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getRoutinesPath } from '../paths';
 import { RoutineCapabilities, RoutineOperation } from '../types';
+import { saveRoutine } from '../util';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
@@ -20,13 +21,17 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
       const template = templates.find((entry) => entry.id === templateId);
       invariant(template, `Unknown routine template: ${templateId}`);
 
-      const object = yield* template
+      const draft = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
+      // Add the routine shell, then let saveRoutine persist the owned instructions and trigger.
+      const routine = db.add(draft.routine);
+      yield* Effect.promise(() => saveRoutine(db, routine, draft));
+
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object,
+        object: routine,
         target: db,
         targetNodeId,
       });

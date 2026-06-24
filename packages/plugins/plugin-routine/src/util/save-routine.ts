@@ -11,12 +11,8 @@ import { Routine } from '#types';
 
 import { isRunInstructions, runInstructionsRef } from './run-instructions';
 
-/** In-memory edit session: the detached clones the routine article edits before they are saved. */
-export type RoutineDraft = {
-  routine: Routine.Routine;
-  instructions?: Instructions.Instructions;
-  trigger?: Trigger.Trigger;
-};
+// Re-export so callers can import from util without reaching into types directly.
+export type RoutineDraft = Routine.RoutineDraft;
 
 /**
  * Merges an edit session's draft clones back into the persisted routine aggregate: general fields, the action,
@@ -26,7 +22,7 @@ export type RoutineDraft = {
 export const saveRoutine = async (
   db: Database.Database,
   routine: Routine.Routine,
-  draft: RoutineDraft,
+  draft: Routine.RoutineDraft,
 ): Promise<void> => {
   saveGeneralFields(routine, draft);
   const instructions = await saveAction(db, routine, draft);
@@ -35,7 +31,7 @@ export const saveRoutine = async (
 };
 
 /** Write the general (name/description) fields back to the persisted routine. */
-const saveGeneralFields = (routine: Routine.Routine, draft: RoutineDraft): void => {
+const saveGeneralFields = (routine: Routine.Routine, draft: Routine.RoutineDraft): void => {
   Obj.update(routine, (routine) => {
     routine.name = draft.routine.name;
     routine.description = draft.routine.description;
@@ -50,7 +46,7 @@ const saveGeneralFields = (routine: Routine.Routine, draft: RoutineDraft): void 
 const saveAction = async (
   db: Database.Database,
   routine: Routine.Routine,
-  draft: RoutineDraft,
+  draft: Routine.RoutineDraft,
 ): Promise<Instructions.Instructions | undefined> => {
   // The only runnables are operations, so any non-RunInstructions runnable is an operation action.
   const isOperationAction = draft.routine.runnable != null && !isRunInstructions(draft.routine.runnable);
@@ -111,13 +107,14 @@ const upsertInstructions = async (
 
 /**
  * Persist the routine's primary trigger once a kind (spec) has been chosen, wiring its `function` to the
- * routine's runnable and binding `instructions` as input for an instructions action. Reuses the existing
- * trigger if present.
+ * routine's runnable. For instruction-based actions the instructions ref is merged into the trigger input;
+ * for operation actions the draft trigger's input is used as-is (so it can carry operation-specific bindings
+ * such as `{ magazine: Ref }`). Reuses the existing trigger if present.
  */
 const saveTrigger = (
   db: Database.Database,
   routine: Routine.Routine,
-  draft: RoutineDraft,
+  draft: Routine.RoutineDraft,
   instructions: Instructions.Instructions | undefined,
 ): void => {
   if (!draft.trigger?.spec) {
@@ -130,7 +127,11 @@ const saveTrigger = (
     Ref.isRef(value) ? value : recurse(value),
   ) as Trigger.Spec;
   const runnable = routine.runnable;
-  const input = instructions ? { instructions: Ref.make(instructions), input: {} } : undefined;
+
+  // For instructions actions, merge the persisted instructions ref into the draft's input (preserving any
+  // template-provided fields like `input: '{{event.item}}'`). For operation actions, pass the draft input
+  // through unchanged so operation-specific bindings are preserved.
+  const input = instructions ? { ...draft.trigger.input, instructions: Ref.make(instructions) } : draft.trigger.input;
 
   // `enabled` is owned by the routine-level toolbar toggle, not the edit session: an existing trigger keeps its
   // current flag; a newly created trigger starts disabled until enabled from the toolbar.
