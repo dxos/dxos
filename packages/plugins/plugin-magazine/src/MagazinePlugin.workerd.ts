@@ -6,12 +6,14 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-// import { OperationHandler } from '#capabilities';
+import OperationHandler from './capabilities/operation-handler';
+import SkillDefinition from './capabilities/skill-definition';
 import { meta } from '#meta';
 import { Magazine, Subscription } from '#types';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
-  // AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({ id: 'skill-definition', activate: SkillDefinition }),
+  AppPlugin.addOperationHandlerModule({ id: 'operation-handler', activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
       Subscription.Subscription,

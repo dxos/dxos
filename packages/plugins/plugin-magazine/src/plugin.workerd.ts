@@ -3,4 +3,3 @@
 //
 
 export { MagazinePlugin, default } from './MagazinePlugin.workerd';
-export { MagazineOperationHandlerSet } from './operations';

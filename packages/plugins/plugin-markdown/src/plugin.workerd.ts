@@ -3,4 +3,3 @@
 //
 
 export { MarkdownPlugin, default } from './MarkdownPlugin.workerd';
-export { MarkdownOperationHandlerSet } from './operations';

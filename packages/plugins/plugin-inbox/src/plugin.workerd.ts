@@ -3,4 +3,3 @@
 //
 
 export { InboxPlugin, default } from './InboxPlugin.workerd';
-export { InboxOperationHandlerSet } from './operations';

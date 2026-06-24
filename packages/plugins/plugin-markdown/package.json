@@ -99,6 +99,10 @@
       "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
+    "./plugin/workerd": {
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.workerd.mjs"
+    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
