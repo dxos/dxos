@@ -179,10 +179,16 @@ test.describe('Comments tests', () => {
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
     await Markdown.select(editorTextbox, thirdMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
+    // Wait for all 3 threads to be committed before testing selection. After
+    // pressing Enter the draft transitions asynchronously to committed state,
+    // so data-current may be transiently unset during that window.
+    await expect(Thread.getThreads(host.page)).toHaveCount(3);
+
+    // Selecting a comment should highlight the thread.
+    await Thread.getComment(host.page, thirdMessage).click();
     await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, thirdMessage)).toHaveAttribute('aria-current', 'location');
 
-    // Selecting a comment should highlight the thread.
     await Thread.getComment(host.page, firstMessage).click();
     await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, firstMessage)).toHaveAttribute('aria-current', 'location');

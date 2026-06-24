@@ -41,9 +41,16 @@ export const Stack = {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
 
+    // After type selection the first dialog closes asynchronously and a
+    // create-object-form may appear for additional details. isVisible() is a
+    // point-in-time check that races with async dialog rendering; use waitFor
+    // so we properly detect the form if it appears with a slight delay.
     const objectForm = page.getByTestId('create-object-form');
-    if (await objectForm.isVisible()) {
+    try {
+      await objectForm.waitFor({ state: 'visible', timeout: 3_000 });
       await objectForm.getByTestId('save-button').click();
+    } catch {
+      // No form appeared; the object was created directly from the type selection.
     }
   },
 };
