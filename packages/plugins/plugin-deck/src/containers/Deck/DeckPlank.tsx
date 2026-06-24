@@ -117,14 +117,7 @@ export const DeckPlank = memo(
     }
 
     return (
-      <Splitter.Root
-        orientation='horizontal'
-        resizable
-        defaultRatio={0.66}
-        minRatio={0.3}
-        maxRatio={0.85}
-        classNames={classNames}
-      >
+      <Splitter.Root orientation='horizontal' resizable defaultSize={48} minSize={20} classNames={classNames}>
         <Splitter.Panel position='start'>{renderPlank()}</Splitter.Panel>
         <Splitter.Handle />
         <Splitter.Panel position='end'>

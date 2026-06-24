@@ -80,7 +80,7 @@ const meta: Meta<SplitterRootProps> = {
   title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
   render: BasicStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
@@ -93,9 +93,8 @@ type Story = StoryObj<SplitterRootProps>;
 export const Vertical: Story = {
   args: {
     resizable: true,
-    defaultRatio: 0.4,
-    minRatio: 0.2,
-    maxRatio: 0.8,
+    defaultSize: 12,
+    minSize: 6,
   },
 };
 
@@ -103,7 +102,7 @@ export const VerticalAnimated: Story = {
   render: ToolbarStory,
   args: {
     transition: 250,
-    defaultRatio: 0.4,
+    defaultSize: 12,
   },
 };
 
@@ -111,9 +110,8 @@ export const Horizontal: Story = {
   args: {
     orientation: 'horizontal',
     resizable: true,
-    defaultRatio: 0.4,
-    minRatio: 0.2,
-    maxRatio: 0.8,
+    defaultSize: 16,
+    minSize: 6,
   },
 };
 
@@ -122,6 +120,6 @@ export const HorizontalAnimated: Story = {
   args: {
     orientation: 'horizontal',
     transition: 250,
-    defaultRatio: 0.4,
+    defaultSize: 16,
   },
 };
