@@ -28,8 +28,8 @@ import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } fro
 import { meta } from '#meta';
 import { DeckOperation, getMode, Keyshortcuts } from '#types';
 
+import { Plank, PlankRootProps, type PlankComponentProps } from '../../tmp/Plank';
 import { layoutAppliesTopbar } from '../../util';
-import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { PlankControls } from '../Deck/PlankControls';
+import { PlankControls } from '../../containers/Deck/PlankControls';
 import { PlankComponent, PlankComponentProps } from './PlankComponent';
 import { PlankContent, PlankContentProps } from './PlankContent';
 import { PlankHeading } from './PlankHeading';

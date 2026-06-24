@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
-import { PlankErrorFallback, PlankLoading } from '../Plank';
+import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
 const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
