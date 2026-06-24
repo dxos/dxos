@@ -20,11 +20,12 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composableProps, slottable } from '@dxos/react-ui';
+import { type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -43,6 +44,10 @@ type MosaicTileState =
 
 type MosaicTileContextValue = {
   state: MosaicTileState;
+  /** Current extent (rem) during/after resize; undefined when the tile is not sized. */
+  size?: Size;
+  /** Update the tile extent. A `commit` (drop) propagates to the consumer's `onSizeChange`. */
+  setSize: (size: Size, commit?: boolean) => void;
 };
 
 const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTileContextValue>('MosaicTile');
@@ -63,6 +68,14 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
     current?: boolean;
     /** Whether this tile is selected (aria-selected). */
     selected?: boolean;
+    /**
+     * Initial extent in rem (width when the container is horizontal, height when vertical).
+     * Pair with a child `Mosaic.ResizeHandle` to make the tile user-resizable; the consumer
+     * persists committed sizes via {@link MosaicTileProps.onSizeChange}.
+     */
+    size?: Size;
+    /** Called when the user commits a resize (on drop). */
+    onSizeChange?: (size: Size) => void;
     debug?: boolean;
   }>
 >;
@@ -80,6 +93,8 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       draggable: draggableProp,
       current,
       selected,
+      size: sizeProp,
+      onSizeChange,
       debug: _,
       ...props
     },
@@ -98,6 +113,19 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_TILE_NAME);
     const [state, setState] = useState<MosaicTileState>({ type: 'idle' });
+
+    // Live extent during a resize drag. Seeded from the prop; the consumer persists committed
+    // sizes via `onSizeChange` and feeds the result back as `size` on the next render.
+    const [size, setInternalSize] = useState<Size | undefined>(sizeProp);
+    const setSize = useCallback(
+      (nextSize: Size, commit?: boolean) => {
+        setInternalSize(nextSize);
+        if (commit) {
+          onSizeChange?.(nextSize);
+        }
+      },
+      [onSizeChange],
+    );
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
@@ -203,12 +231,19 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
 
     const { className, ...rest } = composableProps(props, { classNames: 'relative outline-none' });
 
+    // Apply the resize subject marker + explicit extent only when sized, so unsized tiles keep
+    // their intrinsic layout. The axis follows the container orientation (width vs height).
+    const sized = size != null;
+    const resizeStyle = sized ? sizeStyle(size, orientation === 'vertical' ? 'vertical' : 'horizontal') : undefined;
+
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
-      <MosaicTileContextProvider state={state}>
+      <MosaicTileContextProvider state={state} size={size} setSize={setSize}>
         <Comp
           {...rest}
+          {...(sized && resizeAttributes)}
+          {...(sized && { style: resizeStyle })}
           {...{
             'data-object-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
