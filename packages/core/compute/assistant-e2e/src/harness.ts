@@ -36,6 +36,9 @@ import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
+// Memoized replays still initialize the test harness and process conversations — allow enough
+// headroom for slow CI nodes without enabling full LLM generation.
+const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
 
@@ -273,10 +276,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     );
   }, TestHelpers.provideTestContext);
 };
-
-// Memoized replays still initialize the test harness and process conversations — allow enough
-// headroom for slow CI nodes without enabling full LLM generation.
-const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 /**
  * Returns the appropriate e2e test timeout: full generation timeout when LLM generation is

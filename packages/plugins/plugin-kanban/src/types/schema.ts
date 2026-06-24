@@ -51,6 +51,7 @@ export const CreateKanbanSchema = Schema.Struct({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),
+    Schema.optional,
   ),
   initialPivotColumn: Schema.optional(
     Schema.String.annotations({
