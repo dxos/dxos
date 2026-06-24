@@ -58,7 +58,7 @@ const DefaultStory = () => {
   if (!subject || !space?.db) {
     return <Loading />;
   }
-  return <RoutineCompanion db={space.db} object={subject} />;
+  return <RoutineCompanion attendableId={subject.id} subject={subject} />;
 };
 
 const meta = {
