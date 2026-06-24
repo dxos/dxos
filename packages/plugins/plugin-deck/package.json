@@ -120,6 +120,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",
     "immer": "catalog:"
   },
