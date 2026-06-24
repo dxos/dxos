@@ -12,10 +12,11 @@ import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
+import { meta } from '#meta';
+
 import OperationHandler from './capabilities/operation-handler';
 import SkillDefinition from './capabilities/skill-definition';
 import Toolkit from './capabilities/toolkit';
-import { meta } from '#meta';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSkillDefinitionModule({ id: 'skill-definition', activate: SkillDefinition }),

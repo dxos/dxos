@@ -10,7 +10,11 @@ import fs from 'node:fs';
  */
 export const parseModuleSpecifiers = (source: string): string[] => {
   const specifiers = new Set<string>();
-  const patterns = [/\bfrom\s+['"]([^'"]+)['"]/g, /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g, /\bimport\s+['"]([^'"]+)['"]/g];
+  const patterns = [
+    /\bfrom\s+['"]([^'"]+)['"]/g,
+    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+    /\bimport\s+['"]([^'"]+)['"]/g,
+  ];
   for (const pattern of patterns) {
     for (const match of source.matchAll(pattern)) {
       specifiers.add(match[1]);

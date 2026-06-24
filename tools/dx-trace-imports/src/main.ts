@@ -206,10 +206,7 @@ const resolveGraphKey = (dependency: string, absWorkingDir: string, knownKeys: S
 };
 
 /** Normalize madge's dependency object into absolute-path adjacency lists. */
-const normalizeGraph = (
-  rawGraph: Record<string, string[]>,
-  absWorkingDir: string,
-): Map<string, string[]> => {
+const normalizeGraph = (rawGraph: Record<string, string[]>, absWorkingDir: string): Map<string, string[]> => {
   const keyByNormalized = new Map<string, string>();
   for (const rawKey of Object.keys(rawGraph)) {
     const normalizedKey = isExternalDependency(rawKey)
@@ -224,7 +221,9 @@ const normalizeGraph = (
     const currentKey = isExternalDependency(rawKey)
       ? `[external] ${rawKey}`
       : normalizeFsPath(path.resolve(absWorkingDir, rawKey));
-    const deps = rawDeps.map((dep) => resolveGraphKey(dep, absWorkingDir, knownKeys)).filter((dep): dep is string => dep !== null);
+    const deps = rawDeps
+      .map((dep) => resolveGraphKey(dep, absWorkingDir, knownKeys))
+      .filter((dep): dep is string => dep !== null);
     graph.set(currentKey, deps);
     for (const dep of deps) {
       if (!graph.has(dep)) {
@@ -361,7 +360,11 @@ const collectChains = (
   dfs(entryKey, [], stackSet);
 };
 
-const resolveEntryPath = (options: TraceImportsOptions, absWorkingDir: string, conditions: readonly string[]): string => {
+const resolveEntryPath = (
+  options: TraceImportsOptions,
+  absWorkingDir: string,
+  conditions: readonly string[],
+): string => {
   if (options.exportSubpath) {
     return resolvePackageExport(absWorkingDir, options.exportSubpath, conditions);
   }
@@ -419,11 +422,7 @@ export const traceImports = async (options: TraceImportsOptions): Promise<TraceI
   );
 
   const metafilePath = path.join(os.tmpdir(), `trace-imports-graph-${process.pid}-${Date.now()}.json`);
-  fs.writeFileSync(
-    metafilePath,
-    JSON.stringify(Object.fromEntries(graph.entries()), null, 2),
-    'utf8',
-  );
+  fs.writeFileSync(metafilePath, JSON.stringify(Object.fromEntries(graph.entries()), null, 2), 'utf8');
 
   const seenOutputs = new Set<string>();
   const labelChains: string[][] = [];

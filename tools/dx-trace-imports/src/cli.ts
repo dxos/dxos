@@ -98,7 +98,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
 };
 
 const entryLabel = (args: ParsedArgs, entryPath: string): string =>
-  args.exportSubpath ? `${args.exportSubpath} (${entryPath})` : args.from ?? entryPath;
+  args.exportSubpath ? `${args.exportSubpath} (${entryPath})` : (args.from ?? entryPath);
 
 const main = async () => {
   const args = await parseArgs();
