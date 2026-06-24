@@ -8,14 +8,18 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { type ListActiveIdentitiesResponse } from '@dxos/protocols';
+import { type LegacyListActiveIdentitiesResponse, type ListActiveIdentitiesResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util';
 
-const formatIdentityRow = (identity: ListActiveIdentitiesResponse['identities'][number]): string => {
+type IdentityItem =
+  | ListActiveIdentitiesResponse['identities'][number]
+  | LegacyListActiveIdentitiesResponse['identities'][number];
+
+const formatIdentityRow = (identity: IdentityItem): string => {
   const recovery = identity.hasRecovery ? 'recovery' : 'no-recovery';
   const created = identity.createdAt ? new Date(identity.createdAt).toLocaleString() : 'n/a';
-  return `  ${identity.identityKey}  ${recovery.padEnd(12)} ${created}`;
+  return `  ${readIdentityDid(identity)}  ${recovery.padEnd(12)} ${created}`;
 };
 
 export const list = Command.make(
@@ -33,7 +37,11 @@ export const list = Command.make(
       query.cursor = cursor.value;
     }
 
-    const result = yield* adminRequest<ListActiveIdentitiesResponse>('GET', '/admin/identities', { query }).pipe(
+    const result = yield* adminRequest<ListActiveIdentitiesResponse | LegacyListActiveIdentitiesResponse>(
+      'GET',
+      '/admin/identities',
+      { query },
+    ).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
