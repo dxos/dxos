@@ -8,7 +8,8 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/ui-theme';
+import { iconSize, mx } from '@dxos/ui-theme';
+import type { Merge } from '@dxos/util';
 
 //
 // Plank
@@ -18,6 +19,10 @@ import { mx } from '@dxos/ui-theme';
 // generalized `Panel`. A companion pane is just a Plank whose toolbar holds `Plank.Tabs` instead of a
 // sigil/title. Intentionally free of app-framework concepts (capabilities, operations, Surface) —
 // containers compose the sigil, controls, tabs and content surface into the slots.
+//
+
+//
+// Root
 //
 
 // Root accepts arbitrary div attributes (the container wires tabIndex, data-* and key handlers), so it
@@ -39,15 +44,22 @@ const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, ...pro
 
 PlankRoot.displayName = 'Plank.Root';
 
-// Toolbar rail: 48px (--dx-rail-content) header that vertically centers its items. Provides `lg`
-// density so buttons resolve to 40px (--dx-rail-action), matching the sigil.
+//
+// Toolbar
+//
+
+// Toolbar rail: 48px (--dx-rail-content) header that vertically centers its items.
+// Provides `lg` density so buttons resolve to 40px (--dx-rail-action), matching the sigil.
 const PlankToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
-  const { className, ...rest } = composableProps(props, {
-    classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) bg-header-surface',
-  });
   return (
-    <Comp {...rest} className={className} ref={forwardedRef}>
+    <Comp
+      {...composableProps(props, {
+        style: iconSize(5),
+        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) bg-header-surface',
+      })}
+      ref={forwardedRef}
+    >
       {asChild ? children : <DensityProvider density='lg'>{children}</DensityProvider>}
     </Comp>
   );
@@ -55,17 +67,24 @@ const PlankToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props },
 
 PlankToolbar.displayName = 'Plank.Toolbar';
 
+//
+// Content
+//
+
 const PlankContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
-  const { className, ...rest } = composableProps(props, { classNames: 'flex-1 min-h-0' });
   return (
-    <Comp {...rest} className={className} ref={forwardedRef}>
+    <Comp {...composableProps(props, { classNames: 'flex-1 min-h-0' })} ref={forwardedRef}>
       {children}
     </Comp>
   );
 });
 
 PlankContent.displayName = 'Plank.Content';
+
+//
+// Title
+//
 
 type PlankTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
 
@@ -89,6 +108,10 @@ const PlankTitle = forwardRef<HTMLHeadingElement, PlankTitleProps>(
 
 PlankTitle.displayName = 'Plank.Title';
 
+//
+// Tabs
+//
+
 export type PlankTab = {
   id: string;
   icon: string;
@@ -96,20 +119,21 @@ export type PlankTab = {
   label: string;
 };
 
-type PlankTabsProps = ThemedClassName<
-  {
+type PlankTabsProps = Merge<
+  ThemedClassName<{
     tabs: ReadonlyArray<PlankTab>;
     value?: string;
     onValueChange?: (id: string) => void;
     /** Collapse inactive tabs to icon-only once the tab count exceeds this. */
-    maxLabels?: number;
-  } & AttendableId &
-    Related
+    maxTabs?: number;
+  }>,
+  AttendableId,
+  Related
 >;
 
 /** Full-height tab strip for a companion plank's toolbar; selects among available companions. */
 const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
-  ({ tabs, value, onValueChange, maxLabels = 5, attendableId, related, classNames }, forwardedRef) => {
+  ({ tabs, value, onValueChange, maxTabs = 5, attendableId, related, classNames }, forwardedRef) => {
     // The active tab only reads as primary when the plank (shared with its companion) is attended.
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     const attended = (related && isRelated) || hasAttention || isAncestor;
@@ -123,7 +147,7 @@ const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
             key={id}
             data-id={id}
             icon={icon}
-            iconOnly={tabs.length > maxLabels && value !== id}
+            iconOnly={tabs.length > maxTabs && value !== id}
             label={label}
             variant={value === id && attended ? 'primary' : 'ghost'}
             onClick={() => onValueChange?.(id)}
@@ -135,6 +159,10 @@ const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
 );
 
 PlankTabs.displayName = 'Plank.Tabs';
+
+//
+// Plank
+//
 
 export const Plank = {
   Root: PlankRoot,
