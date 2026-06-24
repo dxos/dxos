@@ -275,5 +275,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
 };
 
 // Use long timeout when generation is enabled or when running live (memoization disabled).
+// Memoized replay still needs breathing room for harness setup — 30s avoids flaky timeouts
+// when plugin surface area grows (e.g. after merging inbox plugin changes).
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
-  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : undefined;
+  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : 30_000;

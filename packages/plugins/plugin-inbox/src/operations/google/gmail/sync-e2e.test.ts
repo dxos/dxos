@@ -16,7 +16,7 @@ import { Feed, Filter, Obj, Query, Relation, Scope, Ref } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
