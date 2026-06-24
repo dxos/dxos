@@ -16,7 +16,7 @@ import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../types';
 import PlanningBlueprint from './blueprint';
-import { PlanReminder, PlanningHandlers } from './operations';
+import { PlanningHandlers, PlanningOperations } from './operations';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -24,7 +24,6 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
   types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Blueprint.Blueprint, Feed.Feed],
   blueprints: [PlanningBlueprint.make()],
-  disableLlmMemoization: true,
 });
 
 describe('Planning blueprint', () => {
@@ -42,11 +41,12 @@ describe('Planning blueprint', () => {
     });
   });
 
-  // The end-request hook reaches the live host through HarnessService Tier B (like the alarm
-  // blueprint's set-alarm). Spawning a host on the agent's chat feed and invoking the plan-reminder
-  // operation against that conversation dispatches over the process RPC loopback into the host's
-  // input queue — no LLM turn required. A void result proves the Tier A plan read and the Tier B
-  // enqueue resolved end-to-end; the host staying live proves the enqueue did not fail the process.
+  // The end-request hook reads the plan (Tier A), runs an ephemeral stop/continue check over the
+  // conversation history (LanguageModel, memoized), and on "continue" reaches the live host through
+  // HarnessService Tier B (like the alarm blueprint's set-alarm) to enqueue a reminder. Spawning a
+  // host on the agent's chat feed and invoking the operation against that conversation dispatches
+  // over the process RPC loopback; the host staying live proves the read, the check, and the enqueue
+  // resolved end-to-end without failing the process.
   describe('plan-reminder hook (end-request, Tier B)', () => {
     it.scoped(
       'enqueues a continuation reminder when the plan has incomplete tasks',
@@ -57,7 +57,7 @@ describe('Planning blueprint', () => {
             { id: Plan.TaskId.make('task-2'), title: 'Crack eggs', status: 'in-progress' },
           ]);
 
-          yield* Operation.invoke(PlanReminder, {}).pipe(
+          yield* Operation.invoke(PlanningOperations.PlanReminder, {}).pipe(
             Effect.provide(Operation.withInvocationOptions({ conversation })),
           );
 
@@ -77,7 +77,7 @@ describe('Planning blueprint', () => {
             { id: Plan.TaskId.make('task-1'), title: 'Buy eggs', status: 'done' },
           ]);
 
-          yield* Operation.invoke(PlanReminder, {}).pipe(
+          yield* Operation.invoke(PlanningOperations.PlanReminder, {}).pipe(
             Effect.provide(Operation.withInvocationOptions({ conversation })),
           );
 

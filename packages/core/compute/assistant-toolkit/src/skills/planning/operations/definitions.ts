@@ -2,17 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { ContentBlock } from '@dxos/types';
-import { trim } from '@dxos/util';
 
-import { Plan, Agent } from '../../../types';
+import { Plan } from '../../../types';
 import INSTRUCTIONS from './update-tasks.md?raw';
 
 // Omit `chat`, `delegated`, and `agentPid` from the LLM-facing schema: these are set by the
@@ -42,5 +40,5 @@ export const PlanReminder = Operation.make({
   },
   input: Schema.Struct({}),
   output: Schema.Void,
-  services: [Harness.HarnessService, Database.Service],
+  services: [Harness.HarnessService, Database.Service, AiService.AiService],
 });

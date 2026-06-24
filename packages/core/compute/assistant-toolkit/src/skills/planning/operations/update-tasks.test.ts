@@ -14,8 +14,8 @@ import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../../types';
 import PlanningBlueprint from '../blueprint';
+import { UpdateTasks } from './definitions';
 import { PlanningHandlers } from './index';
-import { UpdateTasks } from './update-tasks';
 
 EntityId.dangerouslyDisableRandomness();
 
