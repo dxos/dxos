@@ -54,7 +54,7 @@ export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoke
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
 >() {}
 
-const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
+const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     // `forkDaemon` so the collector fiber's lifetime is independent of whichever
     // scope originated the `invoke`/`attach` call. Otherwise, subsequent

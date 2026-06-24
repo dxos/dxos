@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
@@ -429,20 +430,46 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export type Label = string | [string, { ns: string | readonly string[]; count?: number; defaultValue?: string }];
+export const Label = Schema.Union(
+  Schema.String,
+  // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
+  // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
+  Schema.mutable(
+    Schema.Tuple(
+      Schema.String,
+      Schema.mutable(
+        Schema.Struct({
+          ns: Schema.String,
+          count: Schema.optional(Schema.Number),
+          defaultValue: Schema.optional(Schema.String),
+        }),
+      ),
+    ),
+  ),
+);
+export type Label = Schema.Schema.Type<typeof Label>;
 
 /**
  * Per-phase user notification messages for an invocation.
  * A phase is notified to the user iff its message is provided; messages are translatable {@link Label}s.
  */
-export interface NotifyOptions {
+export const NotifyOptions = Schema.Struct({
   /** Shown when the invocation starts. */
-  start?: Label;
+  start: Schema.optional(Label),
   /** Shown when the invocation succeeds. */
-  success?: Label;
+  success: Schema.optional(Label),
   /** Shown when the invocation fails. */
-  error?: Label;
-}
+  error: Schema.optional(Label),
+});
+export type NotifyOptions = Schema.Schema.Type<typeof NotifyOptions>;
+
+/**
+ * Annotation that configures the process to notify the user at the given invocation phases.
+ */
+export const NotifyOptionsAnnotation = Annotation.make({
+  id: 'org.dxos.operation.notify-options',
+  schema: NotifyOptions,
+});
 
 /**
  * Options for operation invocation.
@@ -460,7 +487,7 @@ export interface InvokeOptions {
    * URI of the conversation feed (queue) — today always an EID, but typed as
    * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
    * at the point of use.
-   * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
+   * Passed to the process environment so nested operations can resolve HarnessService and related services.
    */
   conversation?: URI.URI;
   /**
