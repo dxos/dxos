@@ -24,7 +24,7 @@ const SplitStory = () => {
     <div className='w-full grid grid-cols-2 px-3 gap-3 bg-deck-surface'>
       <Plank.Root>
         <Plank.Toolbar>
-          <AttentionSigilButton attendableId='plank-main' classNames='h-full'>
+          <AttentionSigilButton attendableId='plank-main'>
             <Icon icon='ph--circle-dashed--regular' />
           </AttentionSigilButton>
           <Plank.Title attendableId='plank-main'>Main plank</Plank.Title>

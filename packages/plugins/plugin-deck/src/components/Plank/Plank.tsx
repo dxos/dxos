@@ -5,7 +5,7 @@
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
+import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,15 +37,16 @@ const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, ...pro
 
 PlankRoot.displayName = 'Plank.Root';
 
-// Toolbar rail: fixed-height header whose direct icon buttons fill the rail height.
+// Toolbar rail: 48px (--dx-rail-content) header that vertically centers its items. Provides `lg`
+// density so buttons resolve to 40px (--dx-rail-action), matching the sigil.
 const PlankToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
   const { className, ...rest } = composableProps(props, {
-    classNames: 'flex items-stretch gap-1 px-1 shrink-0 h-(--dx-rail-size) bg-header-surface [&>button]:h-full',
+    classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) bg-header-surface',
   });
   return (
     <Comp {...rest} className={className} ref={forwardedRef}>
-      {children}
+      {asChild ? children : <DensityProvider density='lg'>{children}</DensityProvider>}
     </Comp>
   );
 });
@@ -105,7 +106,7 @@ type PlankTabsProps = ThemedClassName<{
 const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
   ({ tabs, value, onValueChange, maxLabels = 5, classNames }, forwardedRef) => (
     <div
-      className={mx('flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-stretch gap-1', classNames)}
+      className={mx('flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
       ref={forwardedRef}
     >
       {tabs.map(({ id, icon, label }) => (
@@ -117,7 +118,6 @@ const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
           label={label}
           variant={value === id ? 'primary' : 'ghost'}
           onClick={() => onValueChange?.(id)}
-          classNames='h-full'
         />
       ))}
     </div>
