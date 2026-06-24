@@ -37,7 +37,7 @@ describe('Planning', () => {
         'Exactly 3 tasks exist in the plan for the three haiku topics.',
         'All 3 tasks are marked done.',
         'A 3-line haiku was written for each topic (spring rain, ocean waves, night stars).',
-        'Agent used "update-tasks" tool and did not manupulate the objects directly.',
+        'Agent used "update-tasks" tool and did not manipulate the objects directly.',
       ],
     }),
     { timeout: agentTestTimeout() },

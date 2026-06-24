@@ -199,6 +199,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
 
     const chat = yield* Database.add(
       Chat.make({
+        [Obj.Parent]: agent,
         feed: Ref.make(feed),
       }),
     );
