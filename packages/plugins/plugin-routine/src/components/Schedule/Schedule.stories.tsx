@@ -18,9 +18,9 @@ const DefaultStory = ({ initial }: { initial: ScheduleValue }) => {
     <div className='p-4 flex flex-col gap-3'>
       <Schedule.Root
         classNames='bg-card-surface border border-separator rounded-sm p-2'
+        timezone='EDT'
         value={value}
         onValueChange={setValue}
-        timezone='EDT'
       >
         <Schedule.Header />
         <Schedule.Kind />

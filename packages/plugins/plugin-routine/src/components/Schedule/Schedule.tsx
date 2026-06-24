@@ -234,7 +234,12 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <ToggleGroup type='single' value={value.kind} onValueChange={handleKindChange}>
+    <ToggleGroup
+      classNames='overflow-x-auto scrollbar-none'
+      type='single'
+      value={value.kind}
+      onValueChange={handleKindChange}
+    >
       {kinds.map((kind) => (
         <ToggleGroupItem key={kind} value={kind}>
           {t(KIND_LABEL_KEYS[kind])}
@@ -275,8 +280,8 @@ export const Schedule = {
 // Per-kind editors.
 //
 
-const Field = ({ label, children }: PropsWithChildren<{ label: string }>) => (
-  <label className='flex items-center gap-2'>
+const Field = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
+  <label className={mx('flex items-center gap-2 shrink-0', classNames)}>
     <span className='text-sm'>{label}</span>
     {children}
   </label>
@@ -335,19 +340,19 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='flex justify-between overflow-hidden'>
+        <div className='@container dx-inline-size-container min-w-0 flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <Field label={t('schedule.at.label')}>
             <Input.Root>
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
             </Input.Root>
           </Field>
-          <div className='flex gap-2 overflow-auto scrollbar-hidden'>
-            <div className='flex items-center text-sm'>{t('schedule.on.label')}</div>
-            <div className='grid grid-cols-7 gap-2'>
+          <div className='flex shrink-0 items-center gap-2'>
+            <span className='shrink-0 text-sm'>{t('schedule.on.label')}</span>
+            <div className='grid w-max shrink-0 grid-cols-7 gap-x-2'>
               {Days.map(({ value: day, label }) => {
                 const checked = value.days.includes(day);
                 return (
-                  <div key={day} className='flex items-center gap-1'>
+                  <div key={day} className='flex shrink-0 items-center gap-1'>
                     <Input.Root>
                       <Input.Checkbox
                         checked={checked}
@@ -361,7 +366,8 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                           onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
                         }}
                       />
-                      <Input.Label classNames='text-sm whitespace-nowrap'>{label}</Input.Label>
+                      <Input.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Input.Label>
+                      <Input.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Input.Label>
                     </Input.Root>
                   </div>
                 );

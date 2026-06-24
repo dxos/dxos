@@ -71,7 +71,7 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
 
   return (
     <Listbox.Root onValueChange={handleValueChange}>
-      <Listbox.Content aria-label={t('trigger-kind.placeholder')} classNames='gap-1'>
+      <Listbox.Content classNames='gap-1' aria-label={t('trigger-kind.placeholder')}>
         {OPTIONS.map(({ kind, icon, disabled }) => (
           <Listbox.Item
             key={kind}
