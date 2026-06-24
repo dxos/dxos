@@ -13,6 +13,10 @@ import type * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+// #region DEBUG
+import { log } from '@dxos/log';
+// #endregion DEBUG
+
 /**
  * Removes the `tool-call` parts from the stream that contain parsed tool call parameters.
  * The streamed `tool-params-start`, `tool-params-delta`, and `tool-params-end` parts are not affected.
@@ -25,6 +29,17 @@ export const withoutToolCallParising = <Tools extends Record<string, Tool.Any>, 
     Stream.filter((part) => part.type !== 'tool-call'),
     Stream.catchTag('MalformedOutput', (err) => {
       const actual = (err.cause as any)?.issue?.actual;
+      // #region DEBUG
+      log('[DEBUG H1] withoutToolCallParising caught MalformedOutput', {
+        message: err.message,
+        actualIsChunk: Chunk.isChunk(actual),
+        actualLength: Chunk.isChunk(actual) ? Chunk.size(actual) : undefined,
+        partTypes: Chunk.isChunk(actual)
+          ? Chunk.toArray(actual).map((part: any) => part?.type)
+          : undefined,
+        issue: String((err.cause as any)?.issue ?? err.cause).slice(0, 2000),
+      });
+      // #endregion DEBUG
       if (Chunk.isChunk(actual)) {
         // Assuming the error is always caused by decoding the stream parts.
         const partsEncoded = Chunk.toArray(actual) as Response.StreamPartEncoded[];
@@ -43,6 +58,9 @@ export const withoutToolCallParising = <Tools extends Record<string, Tool.Any>, 
         );
       }
 
+      // #region DEBUG
+      log('[DEBUG H1] withoutToolCallParising re-failing (actual not a chunk)', { message: err.message });
+      // #endregion DEBUG
       return Stream.fail(err);
     }),
   );

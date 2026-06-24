@@ -1,0 +1,406 @@
+{
+  "conversations": [
+    {
+      "parameters": {
+        "model": "ai.claude.model.claude-opus-4-6",
+        "stream": true,
+        "tools": [
+          {
+            "name": "completeJob",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "success": {
+                  "type": "object",
+                  "required": [
+                    "completedCriteria"
+                  ],
+                  "properties": {
+                    "completedCriteria": {
+                      "type": "object",
+                      "required": [
+                        "The capital of France is returned.",
+                        "The web-search tool was the only tool used."
+                      ],
+                      "properties": {
+                        "The capital of France is returned.": {
+                          "type": "boolean"
+                        },
+                        "The web-search tool was the only tool used.": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "True/false for passed or not passed completion criteria."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "failure": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Short message describing the error."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Optional longer message describing in detail what went wrong"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "fetch-web-page",
+            "description": "Fetches the content of a web page and returns the HTML. \nUse this to get the content of a web page.",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "url"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "The URL of the web page to fetch."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "AnthropicWebSearch",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {},
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "system",
+            "content": "You are an agent running in the non-interactive mode.\nThe user is unable to see what you are doing, and cannot answer any questions.\nDo not ask questions.\nComplete the task before you, and at the end call [completeJob] with the output.\nIf you are unable to complete the task, call [completeJob] with the failure reason.\nIf no output is required, call [completeJob] with an empty object: {}\nDo not stop until you call [completeJob].\nYou are running within a test environment.\nThe prompt is the specification for the test.\nPerform the instructions precisely and do not deviate.\nDo not fake any work if the provided tools don't work.\nThe goal is to test the system, so be honest about the results.\nIf available tools prevented you from completing the task fully, report the failure.\nDo not fall back on your own knowledge, only use the tools provided.\n\n## Skills Definitions\n\n<skill>\n  \n</skill>",
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "Run a web search for the capital of France. I'm testing that the tool works, call \"web-search\" only.\n\nCompletion criteria:\n- The capital of France is returned.\n- The web-search tool was the only tool used.\n<input>{}</input>",
+            "options": {
+              "anthropic": {
+                "cacheControl": {
+                  "ttl": "5m",
+                  "type": "ephemeral"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01Ch4TZnQdGpG8tQenqQRqKG",
+          "modelId": "claude-opus-4-6",
+          "timestamp": "2026-06-24T14:28:45.962Z",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-delta",
+          "id": "0",
+          "delta": "The user wants me to search for the capital of France using the web_search tool, and only use that tool. Let me do",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-delta",
+          "id": "0",
+          "delta": " that.",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-delta",
+          "id": "0",
+          "delta": "",
+          "metadata": {
+            "anthropic": {
+              "type": "thinking",
+              "signature": "Er8CCmMIDxgCKkCkSbCCx7PfzxdJd3LC1+wrDVIXfju+Sl2ojtxrmb22edRL2kuQV05F2oN5IfCNfG046Z82jLjx+f9PfG6icQzjMg9jbGF1ZGUtb3B1cy00LTY4AEIIdGhpbmtpbmcSDMatNj7DFacIHT9srxoM808Fyml44xwvip9WIjAdsQXogBvY3v+bgoLM8u8NzE23yL+JuOWWKZp2tY3i9KetEGyH9DvCXFvl5WZR2VkqiQFw8PN1zabgJFMWGUQ5MrGD8kYVKe3MVMIVpP+kbZnxDcjecxJuivhKQoBeseJhIdKzE37FRfcaGOtOjL1rR/c3iWeYMWyvaL3YgupRvdAfeLUUI+9yMIVq79Y7pBBkgPsANm20IxU8AxcXaAFt7ZDffygMSDJOdhhYWLyuvluWu64/MbeuCT7LoxgB"
+            }
+          }
+        },
+        {
+          "type": "reasoning-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-start",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "name": "AnthropicWebSearch",
+          "providerName": "web_search",
+          "providerExecuted": true,
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "delta": "",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "delta": "{\"quer",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "delta": "y\": \"capita",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "delta": "l of Fran",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "delta": "ce\"}",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-end",
+          "id": "srvtoolu_0188P7cBsgmvoRqakqzzptGn",
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "model": "ai.claude.model.claude-opus-4-6",
+        "stream": true,
+        "tools": [
+          {
+            "name": "completeJob",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "success": {
+                  "type": "object",
+                  "required": [
+                    "completedCriteria"
+                  ],
+                  "properties": {
+                    "completedCriteria": {
+                      "type": "object",
+                      "required": [
+                        "The capital of France is returned.",
+                        "The web-search tool was the only tool used."
+                      ],
+                      "properties": {
+                        "The capital of France is returned.": {
+                          "type": "boolean"
+                        },
+                        "The web-search tool was the only tool used.": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "True/false for passed or not passed completion criteria."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "failure": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Short message describing the error."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Optional longer message describing in detail what went wrong"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "fetch-web-page",
+            "description": "Fetches the content of a web page and returns the HTML. \nUse this to get the content of a web page.",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "url"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "The URL of the web page to fetch."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "AnthropicWebSearch",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {},
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "system",
+            "content": "You are an agent running in the non-interactive mode.\nThe user is unable to see what you are doing, and cannot answer any questions.\nDo not ask questions.\nComplete the task before you, and at the end call [completeJob] with the output.\nIf you are unable to complete the task, call [completeJob] with the failure reason.\nIf no output is required, call [completeJob] with an empty object: {}\nDo not stop until you call [completeJob].\nYou are running within a test environment.\nThe prompt is the specification for the test.\nPerform the instructions precisely and do not deviate.\nDo not fake any work if the provided tools don't work.\nThe goal is to test the system, so be honest about the results.\nIf available tools prevented you from completing the task fully, report the failure.\nDo not fall back on your own knowledge, only use the tools provided.\n\n## Skills Definitions\n\n<skill>\n  \n</skill>",
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "Run a web search for the capital of France. I'm testing that the tool works, call \"web-search\" only.\n\nCompletion criteria:\n- The capital of France is returned.\n- The web-search tool was the only tool used.\n<input>{}</input>",
+            "options": {}
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "reasoning",
+                "text": "The user wants me to search for the capital of France using the web_search tool, and only use that tool. Let me do that.",
+                "options": {}
+              }
+            ],
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "You must signal task completion by calling [completeJob] with the output or failure reason.",
+            "options": {
+              "anthropic": {
+                "cacheControl": {
+                  "ttl": "5m",
+                  "type": "ephemeral"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01QcDgyjFVSFixT1yu6iarHc",
+          "modelId": "claude-opus-4-6",
+          "timestamp": "2026-06-24T14:28:48.138Z",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-delta",
+          "id": "0",
+          "delta": "The",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-delta",
+          "id": "0",
+          "delta": " user wants me to run a web search for the capital of France, and only use the web-search tool. Let me do that.",
+          "metadata": {}
+        },
+        {
+          "type": "reasoning-delta",
+          "id": "0",
+          "delta": "",
+          "metadata": {
+            "anthropic": {
+              "type": "thinking",
+              "signature": "ErkCCmMIDxgCKkAy2BdZevSF9I2dev5WhKvOgXX0bRpiJreVIBjAFo3+0YJvwHU+zSGYxTa5kL9OjgB5L0t8sLxn5Pxi+rVoQn3fMg9jbGF1ZGUtb3B1cy00LTY4AEIIdGhpbmtpbmcSDOl4EM+totgb5ktWvBoM/eOIiHJV530daAZvIjC5VDc8YqmXzq4iPqVW8LVWjE3It22wUe2kw+eGptqjp/Ux4uTvYVXjDI7w2TiNdXEqgwEePlNNMwXIzt2yA+pB7BAUPZGQ9EGP9BirnC1oAv+Ey/1wfHg0LGkeMdKRB/nuIN1B945tA8fxdNtV1LzxNq2EtrDNlw3ZfAY81II3IEiDZSwPa2aISIFaGpEMl7IVf1LupIf2OFcK73wj1i2oE450bBSrP+lbFcpPncrbl8vCPcog+RgB"
+            }
+          }
+        },
+        {
+          "type": "reasoning-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-start",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "name": "AnthropicWebSearch",
+          "providerName": "web_search",
+          "providerExecuted": true,
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "delta": "",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "delta": "{\"query\": \"",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "delta": "capita",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "delta": "l of Fr",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "delta": "ance\"}",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-end",
+          "id": "srvtoolu_01HteHLA9s4nT6G4KQNWPQLH",
+          "metadata": {}
+        }
+      ]
+    }
+  ]
+}

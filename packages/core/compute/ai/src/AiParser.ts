@@ -371,6 +371,7 @@ export const parseResponse =
               const { inputTokens, outputTokens, totalTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
+              stats.finishReason = part.reason;
               stats.toolCalls = toolCalls;
               stats.usage = {
                 inputTokens,

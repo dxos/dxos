@@ -182,9 +182,14 @@ export class Session extends Resource {
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* request.runAgentTurn({ system, toolkit });
+        const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
           break;
+        }
+        // A paused server-tool turn (e.g. Anthropic `pause_turn`) resumes with another request and
+        // no local tool execution; the trailing server tool call must be left intact for the provider.
+        if (finishReason === 'pause') {
+          continue;
         }
 
         yield* request.runTools({ toolkit });

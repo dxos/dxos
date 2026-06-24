@@ -180,6 +180,23 @@ export const isContentBlockResult = (result: unknown): result is ContentBlockRes
 };
 
 /**
+ * Why the model stopped generating a turn. Mirrors the provider-agnostic finish reasons surfaced by
+ * `@effect/ai`. `pause` signals a server-tool turn that the provider paused mid-execution and which
+ * must be resumed by resending the assistant content verbatim (e.g. Anthropic `pause_turn`).
+ */
+export const FinishReason = Schema.Literal(
+  'stop',
+  'length',
+  'content-filter',
+  'tool-calls',
+  'error',
+  'pause',
+  'other',
+  'unknown',
+);
+export type FinishReason = Schema.Schema.Type<typeof FinishReason>;
+
+/**
  * GPT Summary
  */
 export const Stats = Schema.TaggedStruct('stats', {
@@ -199,6 +216,7 @@ export const Stats = Schema.TaggedStruct('stats', {
   duration: Schema.optional(Schema.Number).annotations({
     description: 'Duration in ms.',
   }),
+  finishReason: Schema.optional(FinishReason),
   ...Base.fields,
 });
 
