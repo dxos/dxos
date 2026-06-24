@@ -59,6 +59,79 @@ namespace Order1 {
 const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
 
+// Local filter-match helpers used by FilterClass.toPredicate.
+// Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
+const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolean => {
+  switch (filter.type) {
+    case 'compare': {
+      switch (filter.operator) {
+        case 'eq':
+          return value === filter.value;
+        case 'neq':
+          return value !== filter.value;
+        case 'gt':
+          return (value as any) > (filter.value as any);
+        case 'gte':
+          return (value as any) >= (filter.value as any);
+        case 'lt':
+          return (value as any) < (filter.value as any);
+        case 'lte':
+          return (value as any) <= (filter.value as any);
+        default:
+          return false;
+      }
+    }
+    case 'object': {
+      if (typeof value !== 'object' || value === null) return false;
+      if (filter.props) {
+        for (const [key, vf] of Object.entries(filter.props)) {
+          if (!_filterMatchValueLocal(vf, (value as any)[key])) return false;
+        }
+      }
+      return true;
+    }
+    case 'in':
+      return filter.values.includes(value);
+    case 'range':
+      return (value as any) >= filter.from && (value as any) <= filter.to;
+    case 'not':
+      return !_filterMatchValueLocal(filter.filter, value);
+    case 'and':
+      return filter.filters.every((f) => _filterMatchValueLocal(f, value));
+    case 'or':
+      return filter.filters.some((f) => _filterMatchValueLocal(f, value));
+    default:
+      return false;
+  }
+};
+
+const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean => {
+  switch (filter.type) {
+    case 'object': {
+      if (filter.typename !== null) {
+        const typeURI: string | undefined = entity?.['@type'] ?? entity?.system?.type;
+        if (!typeURI || typeURI !== filter.typename) return false;
+      }
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity?.id)) return false;
+      if (filter.props) {
+        for (const [key, vf] of Object.entries(filter.props)) {
+          if (key.startsWith('@')) continue;
+          if (!_filterMatchValueLocal(vf, entity?.[key])) return false;
+        }
+      }
+      return true;
+    }
+    case 'not':
+      return !_filterMatchEntityLocal(filter.filter, entity);
+    case 'and':
+      return filter.filters.every((f) => _filterMatchEntityLocal(f, entity));
+    case 'or':
+      return filter.filters.some((f) => _filterMatchEntityLocal(f, entity));
+    default:
+      throw new Error(`Filter type '${(filter as any).type}' is not supported in toPredicate.`);
+  }
+};
+
 class FilterClass implements Filter$.Any {
   private static 'variance': Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
 
@@ -339,6 +412,16 @@ class FilterClass implements Filter$.Any {
   static pretty(filter: Filter$.Any): string {
     return prettyFilter(filter.ast);
   }
+
+  /** Create a predicate from a filter. */
+  // Cast required: TypeScript cannot verify a plain overloaded function satisfies a type-predicate
+  // overload signature without the cast; Effect's dual() has the same limitation here.
+  static toPredicate = ((entityOrFilter: any, filter?: any): any => {
+    if (filter === undefined) {
+      return (entity: any) => _filterMatchEntityLocal(entityOrFilter.ast, entity);
+    }
+    return _filterMatchEntityLocal(filter.ast, entityOrFilter);
+  }) as typeof Filter$.toPredicate;
 
   private constructor(public readonly ast: QueryAST.Filter) {}
 

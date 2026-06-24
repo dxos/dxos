@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
 import { type LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Process } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -56,7 +58,7 @@ export default Capability.makeModule(
           continue;
         }
 
-        const notify = process.params.notify;
+        const notify = Option.getOrNull(Annotation.getDictionary(process.params.annotations, Process.NotifyAnnotation));
         if (!notify) {
           continue;
         }
