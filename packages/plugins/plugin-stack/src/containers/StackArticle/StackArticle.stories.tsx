@@ -65,9 +65,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  // `subject` is omitted here and supplied by `render()` from the queried collection.
   args: {
     role: AppSurface.Article.role,
-    // The required `subject` is supplied by `render()` from the queried collection; this is just an args placeholder.
-    subject: undefined as any,
   },
 };

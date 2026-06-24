@@ -21,8 +21,8 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
-import { FieldHeader } from '../../FieldHeader';
 import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
+import { FormFieldHeader } from '../../FormFieldHeader';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form
 // values have no stable identity, so drag-and-drop (which requires a stable key
@@ -195,7 +195,7 @@ export const ArrayField = ({
   };
 
   const header = (layout !== 'static' || (values && values.length > 0)) && (
-    <FieldHeader
+    <FormFieldHeader
       label={label}
       path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}

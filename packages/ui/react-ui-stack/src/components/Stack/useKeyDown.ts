@@ -99,9 +99,13 @@ export const useKeyDown = (stackId: string, circularFocus?: boolean, onKeyDown?:
                   adjacentStack = siblingStacks[nextStackIndex] as HTMLElement | undefined;
                 }
               }
-              const adjacentStackSelfItem = adjacentStack?.closest(
-                `[data-dx-stack-item=${ancestorStack.getAttribute('data-dx-stack')}]`,
-              ) as HTMLElement | undefined;
+              const ancestorStackId = ancestorStack.getAttribute('data-dx-stack');
+              const adjacentStackSelfItem =
+                adjacentStack && ancestorStackId
+                  ? ((adjacentStack.closest(
+                      `[data-dx-stack-item="${CSS.escape(ancestorStackId)}"]`,
+                    ) as HTMLElement | null) ?? undefined)
+                  : undefined;
               const adjacentStackItems = adjacentStack
                 ? (Array.from(
                     adjacentStack.querySelectorAll(

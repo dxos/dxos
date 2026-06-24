@@ -4,7 +4,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { Keyboard } from './keyboard';
+import { Keyboard, nestKeyboardContext } from './keyboard';
 
 describe('keyboard', () => {
   test('binds shortcuts on the active context', () => {
@@ -30,5 +30,13 @@ describe('keyboard', () => {
     } as unknown as KeyboardEvent);
 
     expect(handler).toHaveBeenCalledOnce();
+  });
+
+  test('nestKeyboardContext nests attendable ids under graph root', ({ expect }) => {
+    expect(nestKeyboardContext(undefined)).to.equal('root');
+    expect(nestKeyboardContext('')).to.equal('root');
+    expect(nestKeyboardContext('root')).to.equal('root');
+    expect(nestKeyboardContext('plank-1')).to.equal('root/plank-1');
+    expect(nestKeyboardContext('root/plank-1')).to.equal('root/plank-1');
   });
 });

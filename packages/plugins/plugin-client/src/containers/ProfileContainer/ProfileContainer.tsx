@@ -9,7 +9,7 @@ import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldMap, type FormUpdateMeta, Settings } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
@@ -101,14 +101,16 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Settings.Item title={label} description={t('display-name.description')}>
-            <Input.TextInput
-              value={getValue()}
-              onChange={handleChange}
-              placeholder={t('display-name-input.placeholder')}
-              classNames='min-w-64'
-            />
-          </Settings.Item>
+          <Form.Row label={label} description={t('display-name.description')}>
+            <Input.Root>
+              <Input.TextInput
+                value={getValue()}
+                onChange={handleChange}
+                placeholder={t('display-name-input.placeholder')}
+                classNames='min-w-64'
+              />
+            </Input.Root>
+          </Form.Row>
         );
       },
       emoji: ({ type, label, getValue, onValueChange }) => {
@@ -119,7 +121,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Settings.Item title={label} description={t('icon.description')}>
+          <Form.Row label={label} description={t('icon.description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
@@ -127,7 +129,7 @@ export const ProfileContainer = () => {
               onClickClear={handleEmojiReset}
               classNames='justify-self-end'
             />
-          </Settings.Item>
+          </Form.Row>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
@@ -138,22 +140,24 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Settings.Item title={label} description={t('hue.description')}>
+          <Form.Row label={label} description={t('hue.description')}>
             <div className='flex justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </div>
-          </Settings.Item>
+          </Form.Row>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ label, getValue }) => {
         return (
-          <Settings.Item title={label} description={t('did.description')}>
-            <ButtonGroup classNames='w-full'>
-              <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
-              <Clipboard.IconButton value={getValue() ?? ''} />
-            </ButtonGroup>
-          </Settings.Item>
+          <Form.Row label={label} description={t('did.description')}>
+            <Input.Root>
+              <ButtonGroup classNames='w-full'>
+                <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
+                <Clipboard.IconButton value={getValue() ?? ''} />
+              </ButtonGroup>
+            </Input.Root>
+          </Form.Row>
         );
       },
     }),
@@ -162,15 +166,21 @@ export const ProfileContainer = () => {
 
   return (
     <Clipboard.Provider>
-      <Settings.Viewport>
-        <Settings.Section title={t('profile.label')} description={t('profile.description')}>
-          <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
-            <Form.Content classNames='gap-form-gap'>
+      <Form.Root
+        variant='settings'
+        schema={UserProfile}
+        values={values}
+        fieldMap={fieldMap}
+        onValuesChanged={handleChange}
+      >
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Section title={t('profile.label')} description={t('profile.description')}>
               <Form.FieldSet />
-            </Form.Content>
-          </Form.Root>
-        </Settings.Section>
-      </Settings.Viewport>
+            </Form.Section>
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Clipboard.Provider>
   );
 };

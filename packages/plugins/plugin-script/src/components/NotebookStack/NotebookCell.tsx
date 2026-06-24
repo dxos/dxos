@@ -198,7 +198,7 @@ const NotebookTextEditor = ({
       decorateMarkdown(),
       extensionsProp,
     ].filter(isNonNullable);
-  }, [extensionsProp]);
+  }, [extensionsProp, readOnly, themeMode, t]);
 
   return (
     <Editor.Root>

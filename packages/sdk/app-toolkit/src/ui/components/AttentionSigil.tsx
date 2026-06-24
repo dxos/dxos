@@ -91,6 +91,8 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
 
     const button = (
       <AttentionSigilButton
+        // With no actions there is no DropdownMenu.Trigger, so forward the ref to the button directly.
+        ref={!hasActions ? forwardedRef : undefined}
         attendableId={attendableId}
         related={related}
         isMenu={hasActions}

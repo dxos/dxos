@@ -37,7 +37,8 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
     const eventHandler = useMemo<MosaicEventHandler<Notebook.Cell>>(
       () => ({
         id: notebook?.id ?? 'notebook',
-        canDrop: () => true,
+        // Only the notebook's own cells are droppable; onDrop only reorders within this notebook.
+        canDrop: ({ source }) => !!notebook && notebook.cells.some((cell) => cell.id === source.id),
         onDrop: ({ source, target }) => {
           if (!notebook || !target) {
             return;
