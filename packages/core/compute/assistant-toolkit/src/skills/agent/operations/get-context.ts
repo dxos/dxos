@@ -37,7 +37,13 @@ export default GetContext.pipe(
         return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
       }
 
-      const chat = chats.length === 1 ? chats[0] : undefined;
+      // Prefer the directly bound chat; fall back to the agent's own chat ref when no chat is bound.
+      const directChat = chats.length === 1 ? chats[0] : undefined;
+      const chat =
+        directChat ??
+        (agents.length > 0 && agents[0].chat
+          ? yield* agents[0].chat.pipe(Database.load).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)))
+          : undefined);
 
       if (agents.length === 0) {
         invariant(chat, 'Expected a bound chat when no agent is in context.');

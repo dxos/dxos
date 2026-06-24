@@ -123,6 +123,9 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
       HarnessService,
       Effect.gen(function* () {
         if (!context.conversation) {
+          // LayerSpec.make requires a never-failing layer (error channel = never), so typed failure
+          // is not possible here. Die with ServiceNotAvailableError to signal a programming error
+          // (missing 'conversation' in spawn environment) that callers cannot recover from.
           return yield* Effect.die(
             new ServiceNotAvailableError(HarnessService.key, {
               message: `Service not available: ${HarnessService.key} — process spawn is missing 'conversation' in environment (set via Operation.withInvocationOptions or ProcessManager.spawn environment)`,

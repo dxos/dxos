@@ -117,7 +117,7 @@ export const formatPlan = (plan: Plan): string => {
 };
 
 /**
- * True when the plan has any task that is not yet `done` (i.e. `todo` or `in-progress`).
+ * True when the plan has any task that is not yet `done`.
  */
 export const hasIncompleteTasks = (plan: Plan): boolean =>
-  plan.tasks.some((task) => task.status === 'todo' || task.status === 'in-progress');
+  plan.tasks.some((task) => task.status !== 'done');
