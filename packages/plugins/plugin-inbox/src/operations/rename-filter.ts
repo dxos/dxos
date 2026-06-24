@@ -19,8 +19,8 @@ export default InboxOperation.RenameFilter.pipe(
         props: {
           initialValue: name,
           onRename: (newName: string) => {
-            Obj.update(mailbox, (m) => {
-              const filter = m.filters?.find((f: any) => f.name === name);
+            Obj.update(mailbox, (draft) => {
+              const filter = draft.filters?.find((entry: { name: string }) => entry.name === name);
               if (filter) {
                 filter.name = newName;
               }
