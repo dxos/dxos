@@ -7,7 +7,15 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type CSSProperties, type PointerEvent, type RefObject, useCallback, useRef, useState } from 'react';
+import React, {
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type RefObject,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
@@ -195,9 +203,18 @@ const getRem = (): number => parseFloat(getComputedStyle(document.documentElemen
 
 const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { orientation, resizable, minSize, rootRef, setSize, setDragging } = useSplitterContext(HANDLE_NAME);
+  const { orientation, size, resizable, minSize, rootRef, setSize, setDragging } = useSplitterContext(HANDLE_NAME);
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
+
+  // Container extent (rem) along the split axis; the upper bound is `extent - minSize`.
+  const extentRem = useCallback((): number => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return size + minSize;
+    }
+    return (orientation === 'horizontal' ? rect.width : rect.height) / getRem();
+  }, [orientation, rootRef, size, minSize]);
 
   const handlePointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -241,6 +258,31 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
     [setDragging],
   );
 
+  // Arrow keys nudge the start panel's size (rem); Home/End jump to the bounds. Keeps the resize affordance
+  // usable without a pointer.
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const horizontal = orientation === 'horizontal';
+      const step = event.shiftKey ? 4 : 1;
+      let next: number | undefined;
+      if (event.key === (horizontal ? 'ArrowRight' : 'ArrowDown')) {
+        next = size + step;
+      } else if (event.key === (horizontal ? 'ArrowLeft' : 'ArrowUp')) {
+        next = size - step;
+      } else if (event.key === 'Home') {
+        next = minSize;
+      } else if (event.key === 'End') {
+        next = extentRem() - minSize;
+      }
+      if (next === undefined) {
+        return;
+      }
+      event.preventDefault();
+      setSize(Math.min(Math.max(next, minSize), Math.max(minSize, extentRem() - minSize)));
+    },
+    [orientation, size, minSize, extentRem, setSize],
+  );
+
   if (!resizable) {
     return null;
   }
@@ -250,12 +292,16 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
       {...rest}
       ref={forwardedRef}
       role='separator'
+      tabIndex={0}
       aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
+      aria-valuemin={Math.round(minSize)}
+      aria-valuenow={Math.round(size)}
       className={tx('splitter.handle', { orientation }, className)}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </Comp>
