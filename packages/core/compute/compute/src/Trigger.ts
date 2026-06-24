@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Annotation, Feed, Migration, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
+import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 
@@ -198,48 +198,8 @@ export class Trigger extends Type.declareObj<Trigger>()(
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
     HiddenAnnotation.set(true),
-    Type.makeObject(DXN.make('org.dxos.type.trigger', '0.2.0')),
+    Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
   ),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
-
-//
-// Legacy schemas and migrations.
-//
-
-/**
- * Trigger schema v0.1.0 — `function` field held an untyped Ref.
- * @deprecated Use {@link Trigger} (v0.2.0) instead; the field is now `runnable` with a typed Ref.
- */
-export const Trigger_v0_1_0 = Schema.Struct({
-  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
-  spec: Schema.optional(Spec),
-  enabled: Schema.optional(Schema.Boolean),
-  concurrency: Schema.optional(Schema.Number),
-  inputNodeId: Schema.optional(Schema.String),
-  input: InputTemplate.pipe(Schema.optional),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')));
-export type Trigger_v0_1_0 = Type.InstanceType<typeof Trigger_v0_1_0>;
-
-/**
- * Migration from {@link Trigger_v0_1_0} (v0.1.0) to {@link Trigger} (v0.2.0).
- * Renames the `function` field to `runnable`.
- */
-const _migration = Migration.define({
-  from: Trigger_v0_1_0,
-  to: Trigger,
-  transform: async (from) => ({
-    runnable: from.function as any,
-    spec: from.spec,
-    enabled: from.enabled,
-    concurrency: from.concurrency,
-    inputNodeId: from.inputNodeId,
-    input: from.input,
-  }),
-});
-
-/**
- * Schema migrations exported by this module.
- */
-export const migrations = [_migration];
