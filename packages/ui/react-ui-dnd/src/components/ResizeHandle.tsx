@@ -135,9 +135,11 @@ export const ResizeHandle = ({
       className={mx(
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
+        // The hover line (`before`, w-1/h-1) is offset by half its thickness (-0.5) so it is centered on
+        // the underlying edge (straddling it) rather than sitting flush inside the pane.
         orientation === 'horizontal'
-          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:end-0 data-[side=inline-end]:before:end-0 data-[side=inline-start]:start-0 data-[side=inline-start]:before:start-0 border-b-0! before:inset-y-0 before:w-1'
-          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:bottom-0 data-[side=block-end]:before:bottom-0 data-[side=block-start]:top-0 data-[side=block-start]:before:top-0 border-x-0! before:inset-x-0 before:h-1',
+          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:end-0 data-[side=inline-end]:before:-end-0.5 data-[side=inline-start]:start-0 data-[side=inline-start]:before:-start-0.5 border-b-0! before:inset-y-0 before:w-1'
+          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:bottom-0 data-[side=block-end]:before:-bottom-0.5 data-[side=block-start]:top-0 data-[side=block-start]:before:-top-0.5 border-x-0! before:inset-x-0 before:h-1',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'
