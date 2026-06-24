@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.inbox-send';
+const SKILL_KEY = 'org.dxos.skill.inboxSend';
 
 const make = () =>
   Skill.make({

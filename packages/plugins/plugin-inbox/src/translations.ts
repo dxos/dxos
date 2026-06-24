@@ -133,6 +133,7 @@ export const translations = [
 
         'save-filter.placeholder': 'Filter name',
         'save-filter.button': 'Save',
+        'rename-filter.label': 'Rename filter',
         'delete-filter.label': 'Delete filter',
 
         'mailboxes-section.label': 'Mailboxes',
