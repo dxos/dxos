@@ -10,7 +10,7 @@ import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
-  AutomationTemplates,
+  RoutineTemplates,
   SkillDefinition,
   CreateObject,
   OperationHandler,
@@ -45,7 +45,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'magazine-automation-templates',
     activatesOn: AppActivationEvents.SetupSchema,
-    activate: AutomationTemplates,
+    activate: RoutineTemplates,
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
