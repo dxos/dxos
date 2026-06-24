@@ -36,7 +36,7 @@ const SplitterStory = ({ orientation }: Pick<SplitterProps, 'orientation'>) => {
         <IconButton
           iconOnly
           variant='ghost'
-          icon='ph--sidebar-simple--regular'
+          icon={orientation === 'vertical' ? 'ph--square-split-vertical--regular' : 'ph--square-split-horizontal--regular'}
           label='Toggle companion'
           onClick={() => setOpen((value) => !value)}
         />
