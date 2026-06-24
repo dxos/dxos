@@ -24,9 +24,6 @@ const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, 
     return undefined;
   });
 
-const hasIncompleteTasks = (plan: Plan.Plan): boolean =>
-  plan.tasks.some((task) => task.status === 'todo' || task.status === 'in-progress');
-
 /**
  * Returns a markdown plan summary when the conversation still has open plan tasks.
  */
@@ -38,7 +35,7 @@ export const makePlanCompletionGuard = (): CompletionGuard => ({
         return undefined;
       }
       const plan = yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined));
-      if (!plan || !hasIncompleteTasks(plan)) {
+      if (!plan || !Plan.hasIncompleteTasks(plan)) {
         return undefined;
       }
       return Plan.formatPlan(plan);

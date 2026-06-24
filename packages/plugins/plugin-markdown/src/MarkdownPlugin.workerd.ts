@@ -6,12 +6,15 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Text } from '@dxos/schema';
 
-import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
+import OperationHandler from './capabilities/operation-handler';
+import SkillDefinition from './capabilities/skill-definition';
+
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({ id: 'skill-definition', activate: SkillDefinition }),
+  AppPlugin.addOperationHandlerModule({ id: 'operation-handler', activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   Plugin.make,
 );

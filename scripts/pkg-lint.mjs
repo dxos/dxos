@@ -240,16 +240,18 @@ for (const { name, path: pkgPath } of packages) {
     if (!conditions.includes('source')) {
       addDiagnostic('warning', 'no-source-export', `export "${exportPath}" has no "source" condition`);
     } else {
-      // Source export points to a non-existent file - error.
-      const sourcePath = join(pkgPath, exportValue.source);
-      if (!existsSync(sourcePath)) {
-        addDiagnostic(
-          'error',
-          'source-missing',
-          `export "${exportPath}": source file does not exist: ${exportValue.source}`,
-        );
-      } else {
-        addDiagnostic('conventional', 'source-exists', `export "${exportPath}": source file exists`);
+      // Source may be a string or a nested condition object (e.g. { workerd: "...", default: "..." }).
+      const sourceEntries =
+        typeof exportValue.source === 'string'
+          ? [exportValue.source]
+          : Object.values(exportValue.source).filter((v) => typeof v === 'string');
+      for (const sourceFile of sourceEntries) {
+        const sourcePath = join(pkgPath, sourceFile);
+        if (!existsSync(sourcePath)) {
+          addDiagnostic('error', 'source-missing', `export "${exportPath}": source file does not exist: ${sourceFile}`);
+        } else {
+          addDiagnostic('conventional', 'source-exists', `export "${exportPath}": source file exists`);
+        }
       }
     }
 
