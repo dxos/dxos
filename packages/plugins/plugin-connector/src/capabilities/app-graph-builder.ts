@@ -105,7 +105,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['space-panel.name', { ns: meta.profile.key }],
                 icon: 'ph--plugs--regular',
-                iconHue: 'indigo',
+                iconHue: 'emerald',
                 draggable: false,
                 droppable: false,
                 space,
