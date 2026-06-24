@@ -53,7 +53,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
           [Obj.Parent]: subject,
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
-          function: Ref.make(operation),
+          runnable: Ref.make(operation),
           input: { feed: db.makeRef(Obj.getURI(subject)) },
         }),
       );

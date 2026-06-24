@@ -113,7 +113,8 @@ const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
   Obj.update(functionTrigger, (functionTrigger) => {
-    functionTrigger.function = Ref.make(graph.root);
+    // ComputeGraph is a valid runnable but not yet in the Runnable union type.
+    functionTrigger.runnable = Ref.make(graph.root) as any;
     functionTrigger.inputNodeId = computeNode.id;
   });
 };

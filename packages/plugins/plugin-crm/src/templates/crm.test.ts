@@ -71,7 +71,7 @@ describe('crm routine template', () => {
 
       const operations = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       expect(operations).toHaveLength(1);
-      expect(routine.runnable?.uri).toBe(trigger?.function?.uri);
+      expect(routine.runnable?.uri).toBe(trigger?.runnable?.uri);
     }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 });

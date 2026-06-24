@@ -75,7 +75,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
         input: { binding: Ref.make(binding), restrictedMode: true },
       }),
@@ -100,7 +100,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
         input: { binding: Ref.make(binding), restrictedMode: true },
       }),
@@ -123,7 +123,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('*/3 * * * * *'),
         input: { binding: Ref.make(binding), restrictedMode: true },
       }),

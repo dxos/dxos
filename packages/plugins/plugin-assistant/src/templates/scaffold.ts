@@ -51,7 +51,7 @@ export const makeScheduledRoutine = ({
     const trigger = yield* Database.add(
       Obj.make(Trigger.Trigger, {
         enabled: false,
-        function: Ref.make(runInstructionsFn),
+        runnable: Ref.make(runInstructionsFn),
         spec: Trigger.specTimer(cron),
         input: { instructions: Ref.make(instructions), input: {} },
         concurrency: 1,

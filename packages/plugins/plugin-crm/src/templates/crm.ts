@@ -68,7 +68,7 @@ export const crm: RoutineCapabilities.Template = {
       const trigger = yield* Database.add(
         Obj.make(Trigger.Trigger, {
           enabled: false,
-          function: Ref.make(runInstructionsFn),
+          runnable: Ref.make(runInstructionsFn),
           spec: Trigger.specFeed(feed),
           input: {
             instructions: Ref.make(instructions),
