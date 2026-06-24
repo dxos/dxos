@@ -36,6 +36,9 @@ import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
+// Memoized replays still initialize the test harness and process conversations — allow enough
+// headroom for slow CI nodes without enabling full LLM generation.
+const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
 
@@ -274,6 +277,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   }, TestHelpers.provideTestContext);
 };
 
-// Use long timeout when generation is enabled or when running live (memoization disabled).
+/**
+ * Returns the appropriate e2e test timeout: full generation timeout when LLM generation is
+ * enabled or memoization is disabled, and a shorter replay timeout for memoized runs.
+ */
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
-  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : undefined;
+  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;
