@@ -44,6 +44,7 @@ import {
   SyncStatus,
   TypeCollectionArticle,
   ViewEditor,
+  type RenameSubject,
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -326,7 +327,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: RENAME_POPOVER,
-        filter: AppSurface.component<Space | Entity.Unknown>(AppSurface.Popover, RENAME_POPOVER),
+        filter: AppSurface.component<RenameSubject>(AppSurface.Popover, RENAME_POPOVER),
         component: ({ data }) => <RenamePopover subject={data.props} />,
       }),
       Surface.create({

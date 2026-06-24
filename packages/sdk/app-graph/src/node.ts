@@ -96,7 +96,7 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
   nodes?: NodeArg<unknown>[];
 
   /** Will automatically add actions with an edge from this node to each. */
-  actions?: NodeArg<ActionData>[];
+  actions?: NodeArg<ActionData<any>>[];
 
   /** Will automatically add specified edges. */
   edges?: [string, RelationInput][];
