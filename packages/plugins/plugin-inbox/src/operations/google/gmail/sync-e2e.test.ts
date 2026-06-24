@@ -45,7 +45,12 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('deploy function', { timeout: 120_000 }, async () => {
     const { client, space, feed: _feed, functionsServiceClient } = await setup();
     const ownerUri = client.halo.identity.get()?.did ?? failedInvariant('identity not found');
-    const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname, ownerUri);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      new URL('./sync.ts', import.meta.url).pathname,
+      ownerUri,
+    );
     console.log(func);
   });
 
@@ -53,7 +58,12 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     const { client, space, binding, feed, functionsServiceClient } = await setup();
     await sync(space);
     const ownerUri = client.halo.identity.get()?.did ?? failedInvariant('identity not found');
-    const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname, ownerUri);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      new URL('./sync.ts', import.meta.url).pathname,
+      ownerUri,
+    );
     const result = await functionsServiceClient.invoke(
       Context.default(),
       func,
@@ -74,7 +84,12 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     await sync(space);
     const ownerUri = client.halo.identity.get()?.did ?? failedInvariant('identity not found');
 
-    const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname, ownerUri);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      new URL('./sync.ts', import.meta.url).pathname,
+      ownerUri,
+    );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
@@ -100,7 +115,12 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     const { client, space, binding, feed, functionsServiceClient } = await setup();
     await sync(space);
     const ownerUri = client.halo.identity.get()?.did ?? failedInvariant('identity not found');
-    const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname, ownerUri);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      new URL('./sync.ts', import.meta.url).pathname,
+      ownerUri,
+    );
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
@@ -124,7 +144,12 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
     const { client, space, binding, feed, functionsServiceClient } = await setup();
     const ownerUri = client.halo.identity.get()?.did ?? failedInvariant('identity not found');
-    const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname, ownerUri);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      new URL('./sync.ts', import.meta.url).pathname,
+      ownerUri,
+    );
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,

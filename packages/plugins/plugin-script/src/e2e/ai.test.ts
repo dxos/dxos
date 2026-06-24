@@ -74,7 +74,11 @@ describe.skip('Function', { tags: ['functions-e2e'] }, () => {
     });
   };
 
-  const deployFunction = async (ownerUri: string, functionsServiceClient: FunctionsServiceClient, entryPoint: string) => {
+  const deployFunction = async (
+    ownerUri: string,
+    functionsServiceClient: FunctionsServiceClient,
+    entryPoint: string,
+  ) => {
     const artifact = await bundleFunction({
       entryPoint,
       verbose: true,

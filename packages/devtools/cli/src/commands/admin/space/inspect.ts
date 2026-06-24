@@ -36,9 +36,10 @@ export const inspect = Command.make(
       if (result.metadata) {
         yield* Console.log(`  Status:   ${result.metadata.status ?? 'unknown'}`);
         yield* Console.log(`  Created:  ${result.metadata.createdAt}`);
-        const metaIdentity = ('identityDid' in result.metadata && result.metadata.identityDid)
-          || ('identityKey' in result.metadata && result.metadata.identityKey)
-          || undefined;
+        const metaIdentity =
+          ('identityDid' in result.metadata && result.metadata.identityDid) ||
+          ('identityKey' in result.metadata && result.metadata.identityKey) ||
+          undefined;
         if (metaIdentity) {
           yield* Console.log(`  Identity: ${metaIdentity}`);
         }
