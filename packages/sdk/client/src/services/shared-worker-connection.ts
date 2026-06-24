@@ -13,6 +13,8 @@ import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
+
+const RPC_TIMEOUT = 5_000;
 export type SharedWorkerConnectionOptions = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
@@ -61,9 +63,7 @@ export class SharedWorkerConnection {
         BridgeService: this._transportService,
       },
       port: this._systemPort,
-      // TODO(wittjosiah): Make longer and factor out to constant.
-      // TODO(wittjosiah): If this is too long then it breaks the reset flows in Composer.
-      timeout: 200,
+      timeout: RPC_TIMEOUT,
     });
 
     // TODO(dmaretskyi): Replace with injected locks interface.

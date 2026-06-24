@@ -40,7 +40,7 @@ export default Capability.makeModule(
               type: `${meta.profile.key}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
-              iconHue: 'indigo',
+              iconHue: 'emerald',
               position: Position.last,
             }),
           ]);

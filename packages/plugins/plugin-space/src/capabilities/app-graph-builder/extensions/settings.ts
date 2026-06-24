@@ -34,7 +34,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           type: SETTINGS_SECTION_TYPE,
           label: ['settings-section.label', { ns: meta.profile.key }],
           icon: 'ph--sliders--regular',
-          iconHue: 'indigo',
+          iconHue: 'emerald',
           space,
           position: Position.first,
           testId: 'spacePlugin.settings',
@@ -55,7 +55,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           properties: {
             label: ['space-settings-properties.label', { ns: meta.profile.key }],
             icon: 'ph--brackets-curly--regular',
-            iconHue: 'indigo',
+            iconHue: 'emerald',
             space,
             position: Position.first,
             testId: 'spacePlugin.general',
@@ -70,7 +70,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                 properties: {
                   label: ['members-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--users--regular',
-                  iconHue: 'indigo',
+                  iconHue: 'emerald',
                   space,
                   position: Position.first,
                   testId: 'spacePlugin.members',

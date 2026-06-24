@@ -18,7 +18,7 @@ export const Chat = Schema.Struct({
   viewType: Schema.String.pipe(Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'sky' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' }),
   Type.makeObject(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
 );
 
