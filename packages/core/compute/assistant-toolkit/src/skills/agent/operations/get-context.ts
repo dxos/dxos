@@ -42,7 +42,9 @@ export default GetContext.pipe(
       const chat =
         directChat ??
         (agents.length > 0 && agents[0].chat
-          ? yield* agents[0].chat.pipe(Database.load).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)))
+          ? yield* agents[0].chat
+              .pipe(Database.load)
+              .pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)))
           : undefined);
 
       if (agents.length === 0) {

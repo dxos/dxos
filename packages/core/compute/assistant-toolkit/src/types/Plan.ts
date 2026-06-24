@@ -119,5 +119,4 @@ export const formatPlan = (plan: Plan): string => {
 /**
  * True when the plan has any task that is not yet `done`.
  */
-export const hasIncompleteTasks = (plan: Plan): boolean =>
-  plan.tasks.some((task) => task.status !== 'done');
+export const hasIncompleteTasks = (plan: Plan): boolean => plan.tasks.some((task) => task.status !== 'done');
