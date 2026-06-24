@@ -5,9 +5,9 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
+import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -19,6 +19,7 @@ import {
   AiSession,
   AgentRequestBegin,
   AgentRequestEnd,
+  HarnessControl,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -30,7 +31,7 @@ import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation, Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Message, ContentBlock } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type CompletionGuard } from './completion-guard';
@@ -63,7 +64,7 @@ interface AgentProcessOptions {
   delegationStrategy?: DelegationStrategy;
 
   /**
-   * When provided, inspects agent-attached plan state before `ctx.succeed()` and may run an ephemeral
+   * When provided, inspects session plan state before `ctx.succeed()` and may run an ephemeral
    * stop/continue check when open tasks remain.
    */
   completionGuard?: CompletionGuard;
@@ -92,17 +93,20 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
         Credential.CredentialsService,
       ],
+      rpcs: HarnessControl,
     },
     (ctx) =>
       Effect.gen(function* () {
-        const feedDxn = Option.getOrNull(Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation));
+        const feedDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
+          Option.getOrUndefined,
+        );
         if (feedDxn == null) {
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
-        let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
+        let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -116,7 +120,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           now: () => clock.unsafeCurrentTimeMillis(),
         });
         yield* alarmManager.load();
-        const alarmToolkit = makeAlarmToolkit(alarmManager);
         // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
         // execution path are stale after reload and would cause onAlarm to drop them.
         yield* toolCallManager.reconcileWithInputQueue(inputQueue);
@@ -127,7 +130,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // conversational agent.
         const strategy = Option.fromNullable(options.delegationStrategy);
         const completionGuard = Option.fromNullable(options.completionGuard);
-        let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
+        let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
 
@@ -141,7 +144,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             if (planSummary != null) {
               log('agent scheduling plan completion check', { planLength: planSummary.length });
               inputQueue.push({ _tag: 'completion_check', planSummary });
-              yield* AgentEventsKey.set(inputQueue);
+              yield* AgentEventsCell.set(inputQueue);
               alarmManager.reconcile(true);
               return;
             }
@@ -152,11 +155,24 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         });
 
         return {
+          // Control plane (§4.3): handlers run on the host process's server fiber, closing over the
+          // live `alarmManager`/`inputQueue` and persisting their durable effect inline.
+          rpcHandlers: yield* HarnessControl.toHandlersContext({
+            setAlarm: Effect.fn(function* ({ at, message }) {
+              yield* alarmManager.setWakeAt(DateTime.toEpochMillis(at), message);
+              alarmManager.reconcile(inputQueue.length > 0);
+            }),
+            enqueueMessage: Effect.fn(function* ({ content }) {
+              inputQueue.push({ _tag: 'prompt', content });
+              yield* AgentEventsCell.set(inputQueue);
+              alarmManager.reconcile(true);
+            }),
+          }),
           onInput: Effect.fnUntraced(function* (prompt: string) {
             log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
-            inputQueue.push({ _tag: 'prompt', content: prompt });
+            inputQueue.push({ _tag: 'prompt', content: [ContentBlock.Text.make({ text: prompt })] });
             log('agent onInput persisting queue', { depth: inputQueue.length });
-            yield* AgentEventsKey.set(inputQueue);
+            yield* AgentEventsCell.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });
             alarmManager.reconcile(true);
             log('agent onInput alarm scheduled');
@@ -166,11 +182,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('agent onAlarm fired', { pending: inputQueue.length });
 
               // If the agent scheduled a self-wake that has come due, enqueue a wake-up prompt.
-              const firedAt = yield* alarmManager.takeFiredAlarm();
-              if (firedAt != null) {
-                log('agent onAlarm self-wake', { firedAt });
-                inputQueue.push({ _tag: 'alarm', firedAt });
-                yield* AgentEventsKey.set(inputQueue);
+              const fired = yield* alarmManager.takeFiredAlarm();
+              if (fired != null) {
+                log('agent onAlarm self-wake', { firedAt: fired.firedAt });
+                inputQueue.push({ _tag: 'alarm', firedAt: fired.firedAt, message: fired.message });
+                yield* AgentEventsCell.set(inputQueue);
               }
 
               // Skip reported tool results at head of queue (stale after reload).
@@ -188,7 +204,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               if (!item) {
                 log('agent onAlarm empty queue', {});
                 alarmManager.reconcile(false);
-                yield* AgentEventsKey.set(inputQueue);
+                yield* AgentEventsCell.set(inputQueue);
                 yield* maybeComplete;
                 return;
               }
@@ -212,7 +228,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const reply = messages.map(Message.extractText).join(' ').toLowerCase();
                 if (parseContinueDecision(reply)) {
                   inputQueue.push({ _tag: 'plan_continue_reminder', planSummary: item.planSummary });
-                  yield* AgentEventsKey.set(inputQueue);
+                  yield* AgentEventsCell.set(inputQueue);
                   alarmManager.reconcile(true);
                   log('agent plan completion check: continue');
                   return;
@@ -223,7 +239,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
 
               const prompt: ContentBlock.Any[] = Match.value(item).pipe(
-                Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
+                Match.tag('prompt', (item) => [...item.content]),
                 Match.tag('tool_result', (item) =>
                   item.isError
                     ? [
@@ -240,7 +256,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       ],
                 ),
                 Match.tag('alarm', (item) => [
-                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt), disposition: 'synthetic' }),
+                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt, item.message), disposition: 'synthetic' }),
                 ]),
                 Match.tag('plan_continue_reminder', (item) => [
                   ContentBlock.Text.make({
@@ -259,7 +275,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
-                  toolkit: alarmToolkit,
+                  // The alarm tools (set-alarm/get-current-date) now arrive as a bound blueprint whose
+                  // operations reach this host's AlarmManager over HarnessService Tier B.
                   system: options.systemPrompt,
                   mcpServers: options.getMcpServers?.(),
                 })
@@ -272,7 +289,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   ),
                 );
               log('end request');
-              yield* AgentEventsKey.set(inputQueue);
+              yield* AgentEventsCell.set(inputQueue);
 
               // Reconcile outstanding work into linked child processes (supervisor behaviour). The
               // children are linked, so their exits wake `onChildEvent` below.
@@ -285,7 +302,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   log('delegated work', { pid, id: delegation.id });
                 }
                 if (pending.length > 0) {
-                  yield* DelegationsKey.set(delegations);
+                  yield* DelegationsCell.set(delegations);
                 }
               }
 
@@ -316,7 +333,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               const delegation = delegations.find((delegation) => delegation.pid === event.pid);
               if (delegation) {
                 delegations = delegations.filter((other) => other.pid !== event.pid);
-                yield* DelegationsKey.set(delegations);
+                yield* DelegationsCell.set(delegations);
                 const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
@@ -362,7 +379,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 );
                 inputQueue.push(result);
                 log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
-                yield* AgentEventsKey.set(inputQueue);
+                yield* AgentEventsCell.set(inputQueue);
                 alarmManager.reconcile(true);
                 log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
               } else {
@@ -395,7 +412,7 @@ interface ToolExecutionServiceOptions {
 
 const AgentEvent = Schema.Union(
   Schema.TaggedStruct('prompt', {
-    content: Schema.String,
+    content: Schema.Array(ContentBlock.Any),
   }),
   Schema.TaggedStruct('tool_result', {
     pid: Process.ID,
@@ -404,6 +421,8 @@ const AgentEvent = Schema.Union(
   }),
   Schema.TaggedStruct('alarm', {
     firedAt: Schema.Number,
+    // Optional reminder carried from the self-wake; surfaced to the agent when the alarm fires.
+    message: Schema.NullOr(Schema.String),
   }),
   Schema.TaggedStruct('completion_check', {
     planSummary: Schema.String,
@@ -414,7 +433,7 @@ const AgentEvent = Schema.Union(
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
-const AgentEventsKey = StorageService.cell(
+const AgentEventsCell = StorageService.cell(
   Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
   'inputQueue',
 ).pipe(StorageService.withDefault(() => []));
@@ -426,7 +445,7 @@ const AgentEventsKey = StorageService.cell(
 const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).pipe(Schema.mutable);
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
-const DelegationsKey = StorageService.cell(
+const DelegationsCell = StorageService.cell(
   Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
@@ -443,7 +462,7 @@ const ToolCallState = Schema.Struct({
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
-const ToolCallStateKey = StorageService.cell(
+const ToolCallStateCell = StorageService.cell(
   Schema.parseJson(ToolCallState.pipe(Schema.mutable)),
   'toolCallState',
 ).pipe(StorageService.withDefault(() => ({ activeCalls: [] })));
@@ -458,14 +477,14 @@ class ToolCallManager {
 
   load() {
     return Effect.gen(this, function* () {
-      this.#state = yield* ToolCallStateKey.get;
+      this.#state = yield* ToolCallStateCell.get;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   beginCall(pid: Process.ID) {
     return Effect.gen(this, function* () {
       this.#state.activeCalls.push({ pid, reported: false });
-      yield* ToolCallStateKey.set(this.#state);
+      yield* ToolCallStateCell.set(this.#state);
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -476,7 +495,7 @@ class ToolCallManager {
         return;
       }
       call.reported = true;
-      yield* ToolCallStateKey.set(this.#state);
+      yield* ToolCallStateCell.set(this.#state);
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -512,7 +531,7 @@ class ToolCallManager {
         }
       }
       if (changed) {
-        yield* ToolCallStateKey.set(this.#state);
+        yield* ToolCallStateCell.set(this.#state);
       }
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
@@ -580,48 +599,13 @@ export const parseContinueDecision = (reply: string): boolean => {
 //
 
 /**
- * Persisted UNIX timestamp (ms) of the next agent-scheduled self-wake, or `null` when none is set.
+ * Persisted next agent-scheduled self-wake: the UNIX timestamp (ms) and an optional reminder
+ * message delivered when it fires, or `null` when no self-wake is set.
  */
-const AgentAlarmKey = StorageService.cell(Schema.parseJson(Schema.NullOr(Schema.Number)), 'agentAlarm').pipe(
-  StorageService.withDefault(() => null),
-);
-
-interface ResolveAlarmInput {
-  /** Duration from now, e.g. `'30 seconds'`, `'5 minutes'`, `'1 hour'`. */
-  in?: string;
-  /** Absolute ISO-8601 timestamp, e.g. `'2026-06-04T18:00:00.000Z'`. */
-  at?: string;
-}
-
-/**
- * Resolves an alarm specification into an absolute UNIX timestamp (ms).
- * Returns a {@link Either.left} with a human-readable message describing invalid input.
- */
-export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Either.Either<number, string> => {
-  const { in: inDuration, at } = input;
-  if (inDuration != null && at != null) {
-    return Either.left('Specify either "in" or "at", not both.');
-  }
-  if (at != null) {
-    const timestamp = new Date(at).getTime();
-    if (Number.isNaN(timestamp)) {
-      return Either.left(`Invalid "at" timestamp: "${at}". Provide an ISO-8601 date-time string.`);
-    }
-    return Either.right(timestamp);
-  }
-  if (inDuration != null) {
-    let millis: number;
-    try {
-      // `DurationInput` narrows strings to a `${number} ${unit}` template; the LLM-provided value is an
-      // arbitrary string validated at runtime by `Duration.decode` (throws on malformed input).
-      millis = Duration.toMillis(Duration.decode(inDuration as Duration.DurationInput));
-    } catch {
-      return Either.left(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
-    }
-    return Either.right(now + millis);
-  }
-  return Either.left('Specify either "in" (a duration from now) or "at" (an absolute time).');
-};
+const AgentAlarmCell = StorageService.cell(
+  Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
+  'agentAlarm',
+).pipe(StorageService.withDefault(() => null));
 
 /**
  * Computes the timeout to pass to `ctx.setAlarm`, reconciling pending queue work with the agent's
@@ -658,14 +642,16 @@ interface AlarmManagerOptions {
 
 /**
  * Tracks the next agent-scheduled self-wake and keeps it in sync with the process alarm
- * (`ctx.setAlarm`). The agent sets alarms via the {@link AlarmToolkit}; the process reconciles
- * the underlying single-shot alarm timer to fire at the earliest of pending work or the self-wake.
+ * (`ctx.setAlarm`). The agent sets alarms via the alarm blueprint, which dispatches to this manager
+ * through the `HarnessControl` RPC surface; the process reconciles the underlying single-shot alarm
+ * timer to fire at the earliest of pending work or the self-wake.
  */
 export class AlarmManager {
   readonly #storageService: StorageService.Service;
   readonly #setAlarm: (timeout?: number) => void;
   readonly #now: () => number;
   #wakeAt: number | null = null;
+  #message: string | null = null;
 
   constructor({ storageService, setAlarm, now = () => Date.now() }: AlarmManagerOptions) {
     this.#storageService = storageService;
@@ -678,6 +664,11 @@ export class AlarmManager {
     return this.#wakeAt;
   }
 
+  /** Reminder message delivered when the current self-wake fires, or `null` when none is set. */
+  get message(): string | null {
+    return this.#message;
+  }
+
   now(): number {
     return this.#now();
   }
@@ -685,31 +676,36 @@ export class AlarmManager {
   /** Restores the persisted alarm state. */
   load(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      this.#wakeAt = yield* AgentAlarmKey.get;
+      const persisted = yield* AgentAlarmCell.get;
+      this.#wakeAt = persisted?.wakeAt ?? null;
+      this.#message = persisted?.message ?? null;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
-  /** Records a new self-wake target and persists it. */
-  setWakeAt(wakeAt: number): Effect.Effect<void> {
+  /** Records a new self-wake target (with an optional reminder message) and persists it. */
+  setWakeAt(wakeAt: number, message: string | null = null): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       this.#wakeAt = wakeAt;
-      yield* AgentAlarmKey.set(wakeAt);
+      this.#message = message;
+      yield* AgentAlarmCell.set({ wakeAt, message });
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   /**
-   * Clears the self-wake alarm if it is due, returning the timestamp it was scheduled for
-   * (or `null` if no alarm was due).
+   * Clears the self-wake alarm if it is due, returning the timestamp it was scheduled for and the
+   * reminder message it carried (or `null` if no alarm was due).
    */
-  takeFiredAlarm(): Effect.Effect<number | null> {
+  takeFiredAlarm(): Effect.Effect<{ firedAt: number; message: string | null } | null> {
     return Effect.gen(this, function* () {
       if (this.#wakeAt == null || this.#now() < this.#wakeAt) {
         return null;
       }
       const firedAt = this.#wakeAt;
+      const message = this.#message;
       this.#wakeAt = null;
-      yield* AgentAlarmKey.set(null);
-      return firedAt;
+      this.#message = null;
+      yield* AgentAlarmCell.set(null);
+      return { firedAt, message };
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
@@ -726,65 +722,19 @@ export class AlarmManager {
 }
 
 /**
- * Prompt delivered to the agent when a self-scheduled alarm fires.
+ * Prompt delivered to the agent when a self-scheduled alarm fires. When the alarm carried a
+ * reminder message it is surfaced verbatim, otherwise a generic continuation prompt is used.
  */
-const wakeUpPrompt = (firedAt: number): string => trim`
-  Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
-  Continue with whatever you intended to do when you scheduled this wake-up.
-`;
-
-/**
- * Tools that let the agent schedule a self-wake and inspect the current time.
- */
-export const AlarmToolkit = Toolkit.make(
-  Tool.make('set-alarm', {
-    description: trim`
-      Schedule an alarm to wake yourself up in the future.
-      Provide exactly one of "in" (a duration from now) or "at" (an absolute time).
-      When the alarm fires you will receive a prompt and can continue working.
-      Setting a new alarm replaces any previously scheduled one.
-    `,
-    parameters: {
-      in: Schema.optional(Schema.String).annotations({
-        description: 'Duration from now expressed as "<number> <unit>", e.g. "30 seconds", "5 minutes", "2 hours".',
-      }),
-      at: Schema.optional(Schema.String).annotations({
-        description: 'Absolute ISO-8601 timestamp to wake at, e.g. "2026-06-04T18:00:00.000Z".',
-      }),
-    },
-    success: Schema.String,
-  }),
-  Tool.make('get-current-date', {
-    description: 'Get the current date and time as an ISO-8601 string.',
-    // Anthropic requires `input_schema.type: object`; an empty parameter bag encodes as `anyOf` and is rejected.
-    parameters: {
-      timezone: Schema.optional(Schema.String).annotations({
-        description: 'Optional IANA timezone name. Defaults to the process clock when omitted.',
-      }),
-    },
-    success: Schema.String,
-  }),
-);
-
-/**
- * Builds an opaque toolkit whose handlers drive the given {@link AlarmManager}.
- */
-export const makeAlarmToolkit = (alarmManager: AlarmManager): OpaqueToolkit.OpaqueToolkit =>
-  OpaqueToolkit.make(
-    AlarmToolkit,
-    AlarmToolkit.toLayer({
-      'set-alarm': ({ in: inDuration, at }) =>
-        Effect.gen(function* () {
-          const resolved = resolveWakeAt({ in: inDuration, at }, alarmManager.now());
-          if (Either.isLeft(resolved)) {
-            return resolved.left;
-          }
-          yield* alarmManager.setWakeAt(resolved.right);
-          return `Alarm scheduled to wake you at ${new Date(resolved.right).toISOString()}.`;
-        }),
-      'get-current-date': () => Effect.sync(() => new Date(alarmManager.now()).toISOString()),
-    }),
-  );
+const wakeUpPrompt = (firedAt: number, message: string | null): string =>
+  message != null
+    ? trim`
+      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
+      ${message}
+    `
+    : trim`
+      Your scheduled alarm fired (it was set for ${new Date(firedAt).toISOString()}).
+      Continue with whatever you intended to do when you scheduled this wake-up.
+    `;
 
 const ToolExecutionService = ({
   enableBackgrounding,

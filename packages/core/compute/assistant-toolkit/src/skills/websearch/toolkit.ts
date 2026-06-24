@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Layer from 'effect/Layer';
 
-import { OpaqueToolkit } from '@dxos/ai';
+import { AnthropicWebSearchTool, OpaqueToolkit } from '@dxos/ai';
 
-export const WebSearchToolkit = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
+export const WebSearchToolkit = Toolkit.make(AnthropicWebSearchTool);
 
 export const WebSearchToolkitOpaque = OpaqueToolkit.make(WebSearchToolkit, Layer.empty);

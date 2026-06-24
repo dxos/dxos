@@ -20,6 +20,7 @@ import {
   DiscordSkill,
   LinearSkill,
   PlanningSkill,
+  PlanningHandlers,
   WebSearchSkill,
   WebSearchHandlers,
   MemorySkill,
@@ -56,6 +57,7 @@ const skillDefinition = () =>
     Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
     Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
+    Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).

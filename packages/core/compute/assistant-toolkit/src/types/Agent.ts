@@ -5,12 +5,11 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContext } from '@dxos/assistant';
+import { AiContext, Harness } from '@dxos/assistant';
 import { type Skill } from '@dxos/compute';
-import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';
@@ -18,8 +17,8 @@ import { invariant } from '@dxos/invariant';
 import { EID, type EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
+import { HarnessContextError } from '../errors';
 import * as Chat from './Chat';
-import * as Plan from './Plan';
 
 /**
  * Agent schema definition.
@@ -48,10 +47,6 @@ export const Agent = Schema.Struct({
    */
   // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
   chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
-
-  // TODO(burdon): Is this used? Should it be an artifact?
-  // Format.FormatAnnotation.set(Format.TypeFormat.Markdown)
-  plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
   // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
   artifacts: Schema.Array(
@@ -105,10 +100,7 @@ export const Agent = Schema.Struct({
 
 export type Agent = Type.InstanceType<typeof Agent>;
 
-export type MakeProps = Omit<
-  Obj.MakeProps<typeof Agent>,
-  'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'
-> &
+export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'artifacts' | 'subscriptions' | 'chat'> &
   Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
     instructions: string;
     skills?: Ref.Ref<Skill.Skill>[];
@@ -118,7 +110,7 @@ export type MakeProps = Omit<
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
- * @param props - Agent properties including spec, plan, skills, and context objects.
+ * @param props - Agent properties including spec, skills, and context objects.
  * @param skill - The skill to use for the agent context.
  * @returns An Effect that yields the initialized Agent.
  */
@@ -132,7 +124,6 @@ export const makeInitialized = (
       Obj.make(Agent, {
         ...props,
         instructions: Ref.make(Text.make({ content: props.instructions })),
-        plan: Ref.make(Plan.makePlan({ tasks: [] })),
         artifacts: props.artifacts ?? [],
         subscriptions: props.subscriptions ?? [],
         filterEvents: props.filterEvents ?? true,
@@ -144,12 +135,6 @@ export const makeInitialized = (
     const contextBinder = new AiContext.Binder({ feed, runtime });
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: true }));
-    yield* Effect.promise(() =>
-      contextBinder.bind({
-        skills: [Ref.make(agentSkill), ...(props.skills ?? [])],
-        objects: [Ref.make(agent), ...(props.contextObjects ?? [])],
-      }),
-    );
 
     const chat = yield* Database.add(
       Chat.make({
@@ -158,6 +143,12 @@ export const makeInitialized = (
       }),
     );
     Obj.setParent(feed, chat);
+    yield* Effect.promise(() =>
+      contextBinder.bind({
+        skills: [Ref.make(agentSkill), ...(props.skills ?? [])],
+        objects: [Ref.make(agent), Ref.make(chat), ...(props.contextObjects ?? [])],
+      }),
+    );
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
@@ -198,23 +189,27 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
         }),
     );
     const skills = existingContextBinder.getSkills().map((skill) => Ref.make(skill));
-    const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
+    const objects = existingContextBinder
+      .getObjects()
+      .filter((object) => !Obj.instanceOf(Chat.Chat, object))
+      .map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
     const contextBinder = new AiContext.Binder({ feed, runtime });
-    yield* Effect.promise(() =>
-      contextBinder.bind({
-        skills,
-        objects,
-      }),
-    );
 
     const chat = yield* Database.add(
       Chat.make({
+        [Obj.Parent]: agent,
         feed: Ref.make(feed),
       }),
     );
     Obj.setParent(feed, chat);
+    yield* Effect.promise(() =>
+      contextBinder.bind({
+        skills,
+        objects: [...objects, Ref.make(chat)],
+      }),
+    );
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
@@ -227,10 +222,14 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> = Effect.gen(function* () {
-  const agents = yield* Function.pipe(AiContext.Service.findObjects(Agent));
+export const getFromChatContext: Effect.Effect<
+  Agent,
+  HarnessContextError | Harness.NotSupportedError,
+  Harness.HarnessService
+> = Effect.gen(function* () {
+  const agents = yield* Harness.queryContext(Filter.type(Agent));
   if (agents.length !== 1) {
-    return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
+    return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
   }
 
   const agent = agents[0];

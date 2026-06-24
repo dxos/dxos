@@ -3,25 +3,26 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Clock from 'effect/Clock';
+import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as TestClock from 'effect/TestClock';
 import { expect } from 'vitest';
 
-import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
+import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
 import { Skill, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message, Organization } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 import { ProcessManager } from '../index';
 import * as ResearchService from '../testing/ResearchService';
@@ -392,58 +393,8 @@ describe('Agent Service', () => {
     );
   });
 
-  //
-  // Alarm e2e (memoized LLM).
-  //
-
-  const ALARM_SYSTEM_PROMPT = trim`
-You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).
-When asked to set an alarm, you MUST call the set-alarm tool with the requested duration.
-Do not pretend to set an alarm in text — always use the set-alarm tool.
-After the tool succeeds, briefly confirm the alarm was scheduled and stop.
-When you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.
-`;
-
-  const AlarmTestLayer = AssistantTestLayer({
-    types: [Organization.Organization, Feed.Feed],
-    agent: { systemPrompt: ALARM_SYSTEM_PROMPT },
-    aiServicePreset: 'edge-remote',
-    model: 'ai.claude.model.claude-opus-4-6',
-    // Alarm fire times are derived from the TestClock and vary between generation and replay runs
-    // (the number of TestClock advances before the tool executes differs). Normalizing ISO timestamps
-    // so any stored conversation matches regardless of the exact millisecond value.
-    dynamicValuePatterns: [MemoizedLanguageModel.ISO_TIMESTAMP_PATTERN],
-  });
-
-  describe('alarms', () => {
-    it.scoped(
-      'agent schedules a self-wake and resumes when its alarm fires (TestClock)',
-      Effect.fnUntraced(
-        function* (_) {
-          const agent = yield* AgentService.createSession({});
-
-          yield* agent.submitPrompt('Use the set-alarm tool to schedule a wake-up in 1 hour.');
-
-          // First request: the agent calls `set-alarm` then finishes, leaving a self-wake armed ~1h out.
-          yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ setAlarmCalls }) => setAlarmCalls >= 1)));
-          expect((yield* countBlocks(agent.feed)).setAlarmCalls).toBe(1);
-
-          // The process is hibernating until the self-wake fires. Advancing the clock past it resumes
-          // the agent, which produces a second response.
-          yield* TestClock.adjust(Duration.hours(1));
-          yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ assistantTexts }) => assistantTexts >= 2)));
-          yield* agent.waitForCompletion();
-
-          const final = yield* countBlocks(agent.feed);
-          expect(final.setAlarmCalls).toBe(1);
-          expect(final.assistantTexts).toBeGreaterThanOrEqual(2);
-        },
-        Effect.provide(AlarmTestLayer),
-        TestHelpers.provideTestContext,
-      ),
-      { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 60_000 },
-    );
-  });
+  // The agent's self-wake (set-alarm/get-current-date) flow lives with the alarm blueprint that now
+  // provides those tools: `assistant-toolkit/src/skills/alarm/blueprint.test.ts`.
 
   // Placed last so it does not perturb the shared deterministic ID stream of the tests above
   // (memoized conversations are keyed per file and depend on prior execution order).
@@ -532,46 +483,41 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
+
+  // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
+  // tests above to avoid perturbing their shared deterministic ID stream.
+  it.scoped(
+    'setAlarm over the process control surface reaches the live agent and arms a self-wake',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        // createSession spawns the agent process (no LLM turn yet) bound to a stamped host marker.
+        const agent = yield* AgentService.createSession();
+        const target = Obj.getURI(agent.feed);
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
+        ).toBe(true);
+
+        // A Tier-B caller reaches the live AlarmManager over the process RPC loopback. The handler
+        // runs on the host's server fiber against the real closed-over AlarmManager; a successful
+        // void result proves the control-plane wiring end-to-end (persistence semantics are covered
+        // by the AlarmManager unit tests).
+        const now = yield* Clock.currentTimeMillis;
+        const at = DateTime.unsafeMake(now + Duration.toMillis(Duration.hours(1)));
+        yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
+
+        // The RPC did not fail the process; it remains live and ready for the conversation to resume.
+        expect(handle.status.state).not.toBe(Process.State.FAILED);
+        expect(handle.status.state).not.toBe(Process.State.TERMINATED);
+
+        yield* handle.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
-
-/**
- * Summarizes assistant text blocks and tool-call blocks persisted to the conversation feed.
- */
-const countBlocks = (feed: Feed.Feed) =>
-  Effect.gen(function* () {
-    const queryResult = yield* Feed.query(feed, Filter.type(Message.Message));
-    const messages = (yield* Effect.promise(() => queryResult.run())).filter(Obj.instanceOf(Message.Message));
-    let assistantTexts = 0;
-    let setAlarmCalls = 0;
-    for (const message of messages) {
-      for (const block of message.blocks) {
-        if (message.sender.role === 'assistant' && block._tag === 'text') {
-          assistantTexts++;
-        }
-        if (block._tag === 'toolCall' && block.name === 'set-alarm') {
-          setAlarmCalls++;
-        }
-      }
-    }
-    return { assistantTexts, setAlarmCalls };
-  });
-
-/**
- * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling).
- * Live LLM generation needs real wall time between polls; memoized runs flush the event loop
- * via a 0ms timer so Promise-based ECHO operations can complete between checks.
- */
-const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
-  Effect.gen(function* () {
-    const waitForAsyncWork = MemoizedAiService.isGenerationEnabled()
-      ? Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)))
-      : Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
-    for (let step = 0; step < 240; step++) {
-      if (yield* predicate) {
-        return;
-      }
-      yield* TestClock.adjust(Duration.millis(50));
-      yield* waitForAsyncWork;
-    }
-    return yield* Effect.dieMessage('driveUntil: condition not reached');
-  });

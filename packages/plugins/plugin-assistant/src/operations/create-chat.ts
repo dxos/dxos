@@ -43,6 +43,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
             skills: [AssistantSkill, DatabaseSkill, AgentWizardSkill, SkillManagerSkill].map(({ key }) =>
               Ref.fromURI(Skill.registryURI(key)),
             ),
+            objects: [Ref.make(chat)],
           }),
         ),
       );

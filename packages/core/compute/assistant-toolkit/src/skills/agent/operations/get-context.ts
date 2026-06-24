@@ -4,26 +4,60 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AiContext } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 
-import { Plan, Agent } from '../../../types';
+import { HarnessContextError } from '../../../errors';
+import { Plan, Agent, Chat } from '../../../types';
 import { GetContext } from './definitions';
+
+const formatPlan = (chat: Chat.Chat) =>
+  chat.plan
+    ? chat.plan.pipe(Database.load).pipe(
+        Effect.map(Plan.formatPlan),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
+      )
+    : Effect.succeed('No plan found.');
 
 export default GetContext.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      // This runs unconditionally during system-prompt formatting. A delegated sub-agent has no
-      // agent bound to its context, so degrade gracefully for the zero-agent case — but still
-      // surface the "more than one agent" invariant rather than masking every failure.
-      const agents = yield* AiContext.Service.findObjects(Agent.Agent);
-      if (agents.length === 0) {
+      const agents = yield* Harness.queryContext(Filter.type(Agent.Agent));
+      const chats = yield* Harness.queryContext(Filter.type(Chat.Chat));
+
+      if (agents.length === 0 && chats.length === 0) {
         return { id: '', name: '', instructions: 'No agent context.', plan: 'No plan found.', artifacts: [] };
       }
       if (agents.length > 1) {
-        return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
+        return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
       }
+      if (chats.length > 1) {
+        return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
+      }
+
+      // Prefer the directly bound chat; fall back to the agent's own chat ref when no chat is bound.
+      const directChat = chats.length === 1 ? chats[0] : undefined;
+      const chat =
+        directChat ??
+        (agents.length > 0 && agents[0].chat
+          ? yield* agents[0].chat
+              .pipe(Database.load)
+              .pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)))
+          : undefined);
+
+      if (agents.length === 0) {
+        invariant(chat, 'Expected a bound chat when no agent is in context.');
+        return {
+          id: chat.id,
+          name: chat.name ?? '',
+          instructions: 'No agent context.',
+          plan: yield* formatPlan(chat),
+          artifacts: [],
+        };
+      }
+
       const agent = agents[0];
 
       return {
@@ -33,12 +67,7 @@ export default GetContext.pipe(
           Effect.map((_) => _.content),
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No instructions found.')),
         ),
-        plan: yield* (
-          agent.plan?.pipe(Database.load).pipe(
-            Effect.map(Plan.formatPlan),
-            Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
-          ) ?? Effect.succeed('No plan found.')
-        ),
+        plan: yield* chat ? formatPlan(chat) : Effect.succeed('No plan found.'),
         artifacts: yield* Effect.forEach(agent.artifacts, (artifact) =>
           Effect.gen(function* () {
             return {

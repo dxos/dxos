@@ -162,7 +162,6 @@ export const Default: Story = {
 export const WithPlanning: Story = {
   decorators: getDecorators({
     config: config.remote,
-    createAgent: true,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
