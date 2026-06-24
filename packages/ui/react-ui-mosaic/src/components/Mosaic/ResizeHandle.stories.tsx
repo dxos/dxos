@@ -20,8 +20,14 @@ const DEFAULT_VERTICAL: Size = 8;
 
 // Per-axis resize bounds (rem) declared on the tile.
 const BOUNDS = {
-  horizontal: { minSize: 12, maxSize: 40 },
-  vertical: { minSize: 4, maxSize: 16 },
+  horizontal: {
+    minSize: 12,
+    maxSize: 40,
+  },
+  vertical: {
+    minSize: 4,
+    maxSize: 16,
+  },
 } as const;
 
 type ResizableTileProps = MosaicTileProps<Item> & {
@@ -58,12 +64,7 @@ const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
   const bounds = BOUNDS[orientation];
   const Tile = useMemo(
     () => (tileProps: MosaicTileProps<Item>) => (
-      <ResizableTile
-        {...tileProps}
-        {...bounds}
-        size={sizes[tileProps.data.id]}
-        onResize={handleSizeChange}
-      />
+      <ResizableTile {...tileProps} {...bounds} size={sizes[tileProps.data.id]} onResize={handleSizeChange} />
     ),
     [sizes, handleSizeChange, bounds],
   );
