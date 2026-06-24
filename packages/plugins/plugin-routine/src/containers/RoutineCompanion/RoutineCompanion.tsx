@@ -111,7 +111,7 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
   const detail = draft ? (
     <DraftEditor db={db} draft={draft} onSave={handleSave} onCancel={handleCancel} />
   ) : selected ? (
-    <RoutineForm db={db} automation={selected} />
+    <RoutineForm db={db} routine={selected} />
   ) : null;
 
   return (
@@ -151,7 +151,7 @@ const DraftEditor = ({
   const { t } = useTranslation(meta.profile.key);
   return (
     <div role='none' className='flex flex-col min-bs-0'>
-      <RoutineForm db={db} automation={draft.routine} instructions={draft.instructions} />
+      <RoutineForm db={db} routine={draft.routine} instructions={draft.instructions} />
       <div role='none' className='flex justify-end gap-2 p-2 border-bs border-subdued-separator'>
         <Button onClick={onCancel}>{t('cancel.label')}</Button>
         <Button variant='primary' onClick={onSave}>

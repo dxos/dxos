@@ -159,7 +159,7 @@ const triggerFormSpec = (values: TriggerFormInput): Trigger.Spec => {
 
 export type TriggerEditorProps = ThemedClassName<{
   db: Database.Database;
-  automation: Routine.Routine;
+  routine: Routine.Routine;
   trigger?: Trigger.Trigger;
   /** Input bound to the trigger's function (e.g. the instructions a RunInstructions action runs). */
   triggerInput?: Record<string, unknown>;
@@ -167,11 +167,11 @@ export type TriggerEditorProps = ThemedClassName<{
   readonly?: boolean;
 }>;
 
-export const TriggerEditor = ({ classNames, db, automation, trigger, triggerInput, readonly }: TriggerEditorProps) => {
+export const TriggerEditor = ({ classNames, db, routine, trigger, triggerInput, readonly }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
     db,
-    automation,
+    routine,
     trigger,
     triggerInput,
   );
@@ -263,7 +263,7 @@ CronField.displayName = 'TriggerEditor.CronField';
 /** Form state for the Trigger section: the chosen variant spec, plus create-on-first-edit handler. */
 const useTriggerForm = (
   db: Database.Database,
-  automation: Routine.Routine,
+  routine: Routine.Routine,
   trigger?: Trigger.Trigger,
   triggerInput?: Record<string, unknown>,
 ) => {
@@ -323,7 +323,7 @@ const useTriggerForm = (
       // input. Sourcing from `runnable` (rather than the trigger's own `function`) backfills a trigger created
       // before the action was configured. `enabled` is not set here — it is toggled for the routine as a whole
       // from the toolbar.
-      const functionRef = automation.runnable;
+      const functionRef = routine.runnable;
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -335,15 +335,15 @@ const useTriggerForm = (
         });
       } else {
         // Create the trigger on first edit (disabled until enabled from the toolbar). The trigger is owned by
-        // the automation (it is only reachable via it), so it is parented and cascade-deletes with it.
+        // the routine (it is only reachable via it), so it is parented and cascade-deletes with it.
         const created = db.add(Trigger.make({ function: functionRef, spec, input: triggerInput }));
-        Obj.setParent(created, automation);
-        Obj.update(automation, (automation) => {
-          automation.triggers.push(Ref.make(created));
+        Obj.setParent(created, routine);
+        Obj.update(routine, (routine) => {
+          routine.triggers.push(Ref.make(created));
         });
       }
     },
-    [db, automation, trigger, triggerInput],
+    [db, routine, trigger, triggerInput],
   );
 
   return { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged };

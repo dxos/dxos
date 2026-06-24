@@ -28,21 +28,21 @@ type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 
 export type RoutineFormProps = {
   db: Database.Database;
-  automation: Routine.Routine;
+  routine: Routine.Routine;
   /**
-   * Draft owned instructions for an automation being edited in memory (the article's edit session or the
+   * Draft owned instructions for a routine being edited in memory (the article's edit session or the
    * companion's create flow). When supplied, the action editor edits it directly instead of querying for one,
    * so an in-memory draft can be configured before it is persisted.
    */
   instructions?: Instructions.Instructions;
-  /** Draft trigger to edit (the article's edit session); overrides the automation's primary trigger. */
+  /** Draft trigger to edit (the article's edit session); overrides the routine's primary trigger. */
   trigger?: Trigger.Trigger;
   /** Render the form for display only (the article's default, non-editing view). */
   readonly?: boolean;
 };
 
 /**
- * Composite automation form: the general fields (name + description) are the outer {@link Form},
+ * Composite routine form: the general fields (name + description) are the outer {@link Form},
  * with the Actions and Triggers sections rendered as sub-forms inside its content:
  * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
@@ -52,16 +52,16 @@ export type RoutineFormProps = {
  */
 export const RoutineForm = ({
   db,
-  automation,
+  routine,
   instructions,
   trigger: triggerProp,
   readonly = false,
 }: RoutineFormProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [auto, updateAuto] = useObject(automation);
-  const primaryTrigger = usePrimaryTrigger(automation);
+  const [auto, updateAuto] = useObject(routine);
+  const primaryTrigger = usePrimaryTrigger(routine);
   const trigger = triggerProp ?? primaryTrigger;
-  const queriedInstructions = useOwnedRoutine(db, automation);
+  const queriedInstructions = useOwnedRoutine(db, routine);
   const ownedInstructions = instructions ?? queriedInstructions;
 
   // An instructions action runs the routine's instructions through the RunInstructions operation (the
@@ -75,16 +75,16 @@ export const RoutineForm = ({
     [auto.runnable, ownedInstructions],
   );
 
-  // Read once per automation identity; the uncontrolled form owns edits after mount.
+  // Read once per routine identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralForm>>(
     () => ({ name: auto.name, description: auto.description }),
-    [automation],
+    [routine],
   );
   const handleValuesChanged = useCallback(
     (values: Partial<GeneralForm>) => {
-      updateAuto((automation) => {
-        automation.name = values.name;
-        automation.description = values.description;
+      updateAuto((routine) => {
+        routine.name = values.name;
+        routine.description = values.description;
       });
     },
     [updateAuto],
@@ -102,13 +102,13 @@ export const RoutineForm = ({
           <Form.FieldSet />
 
           <Section title={t('actions.title')}>
-            <ActionEditor db={db} automation={automation} instructions={instructions} readonly={readonly} />
+            <ActionEditor db={db} routine={routine} instructions={instructions} readonly={readonly} />
           </Section>
 
           <Section title={t('triggers.title')}>
             <TriggerEditor
               db={db}
-              automation={automation}
+              routine={routine}
               trigger={trigger}
               triggerInput={triggerInput}
               readonly={readonly}
@@ -137,25 +137,25 @@ type ActionKind = (typeof ActionKinds)[number];
 const isActionKind = (value: string): value is ActionKind => (ActionKinds as readonly string[]).includes(value);
 
 /**
- * Single action: an Operation ref (written to `automation.runnable`) or an owned Instructions edited inline.
+ * Single action: an Operation ref (written to the routine's `runnable`) or an owned Instructions edited inline.
  * The instructions object and `runnable` wiring are established on save (see `saveRoutine`), not on mount — the
  * editor only reads/edits what it is given (a draft in an edit session, or the live owned instructions).
  */
 const ActionEditor = ({
   db,
-  automation,
+  routine,
   instructions: draftRoutine,
   readonly,
 }: {
   db: Database.Database;
-  automation: Routine.Routine;
+  routine: Routine.Routine;
   instructions?: Instructions.Instructions;
   readonly?: boolean;
 }) => {
-  const [auto, updateAuto] = useObject(automation);
+  const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
-  // A draft (in-memory) automation supplies its owned instructions directly; otherwise resolve it by query.
-  const queriedRoutine = useOwnedRoutine(db, automation);
+  // A draft (in-memory) routine supplies its owned instructions directly; otherwise resolve it by query.
+  const queriedRoutine = useOwnedRoutine(db, routine);
   const ownedRoutine = draftRoutine ?? queriedRoutine;
   // An operation action is a user-bound operation runnable; the registry RunInstructions runnable backs an
   // instructions action, so it is not treated as an operation selection. Default to instructions when neither.
@@ -164,8 +164,8 @@ const ActionEditor = ({
 
   const handleOperationChange = useCallback(
     (operation?: Ref.Ref<Operation.PersistentOperation>) => {
-      updateAuto((automation) => {
-        automation.runnable = operation;
+      updateAuto((routine) => {
+        routine.runnable = operation;
       });
     },
     [updateAuto],
@@ -177,8 +177,8 @@ const ActionEditor = ({
       // Switching to an instructions action must drop any bound operation, otherwise `saveRoutine` still sees a
       // (non-RunInstructions) runnable and persists this as an operation action — discarding the instructions.
       if (next === 'instructions') {
-        updateAuto((automation) => {
-          automation.runnable = undefined;
+        updateAuto((routine) => {
+          routine.runnable = undefined;
         });
       }
     },
@@ -289,18 +289,18 @@ const useOperations = (db: Database.Database) =>
     ),
   );
 
-/** The Routine owned by (parented to) this automation, used for the inline instructions action. */
-const useOwnedRoutine = (db: Database.Database, automation: Routine.Routine): Instructions.Instructions | undefined => {
+/** The Instructions owned by (parented to) this routine, used for the inline instructions action. */
+const useOwnedRoutine = (db: Database.Database, routine: Routine.Routine): Instructions.Instructions | undefined => {
   const routines = useQuery(db, Query.select(Filter.type(Instructions.Instructions)).from(Scope.space()));
   return useMemo(
-    () => routines.find((instructions) => Obj.getParent(instructions)?.id === automation.id),
-    [routines, automation],
+    () => routines.find((instructions) => Obj.getParent(instructions)?.id === routine.id),
+    [routines, routine],
   );
 };
 
-/** Subscribe to the automation and derive its primary (first) trigger. */
-const usePrimaryTrigger = (automation: Routine.Routine): Trigger.Trigger | undefined => {
-  const [snapshot] = useObject(automation);
+/** Subscribe to the routine and derive its primary (first) trigger. */
+const usePrimaryTrigger = (routine: Routine.Routine): Trigger.Trigger | undefined => {
+  const [snapshot] = useObject(routine);
   return useMemo(() => {
     for (const ref of snapshot.triggers) {
       const target = ref.target;

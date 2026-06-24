@@ -194,7 +194,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
             <div role='none' className='flex flex-col min-bs-0'>
               <RoutineForm
                 db={db}
-                automation={session.routine}
+                routine={session.routine}
                 instructions={session.instructions}
                 trigger={session.trigger}
               />
@@ -206,7 +206,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
               </div>
             </div>
           ) : (
-            <RoutineForm db={db} automation={subject} readonly />
+            <RoutineForm db={db} routine={subject} readonly />
           )}
         </Panel.Content>
       </Panel.Root>
