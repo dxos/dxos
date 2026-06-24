@@ -15,6 +15,8 @@ import { RoutineForm, MasterDetail } from '#components';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
+import { runInstructionsRef } from '../../util';
+
 /** An in-memory draft routine (with its owned instructions) not yet added to the database. */
 type Draft = { routine: Routine.Routine; instructions: Instructions.Instructions };
 
@@ -82,7 +84,12 @@ export const RoutineCompanion = ({ db, object }: RoutineCompanionProps) => {
     if (!draft) {
       return;
     }
-    // Anchor the automation to the object; this is what surfaces it in the list.
+    // Wire the action to run the owned instructions through the registry RunInstructions operation (previously
+    // done lazily in the form; now established once, on save), then anchor the automation to the object — the
+    // relation is what surfaces it in the list.
+    Obj.update(draft.routine, (routine) => {
+      routine.runnable = runInstructionsRef();
+    });
     db.add(Routine.makeAppliesTo({ [Relation.Source]: draft.routine, [Relation.Target]: object }));
     setSelectedId(draft.routine.id);
     setDraft(undefined);

@@ -49,6 +49,7 @@ export const translations: Resource[] = [
         'run-prompt.label': 'Run prompt',
         'routine-running.label': 'Running…',
         'run.label': 'Run',
+        'edit.label': 'Edit',
         'run-error.message': 'Failed to run automation.',
 
         'automation-name.label': 'Name',

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { Operation, Instructions, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
@@ -14,6 +14,7 @@ import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
+import { isRunInstructions } from '../../util';
 import { InstructionsEditor } from '../InstructionsEditor';
 import { TriggerEditor } from '../TriggerEditor';
 
@@ -29,11 +30,15 @@ export type RoutineFormProps = {
   db: Database.Database;
   automation: Routine.Routine;
   /**
-   * Draft owned instructions for an automation not yet added to the database (the companion's create flow).
-   * When supplied, the action editor edits it directly instead of querying for / eagerly creating one,
+   * Draft owned instructions for an automation being edited in memory (the article's edit session or the
+   * companion's create flow). When supplied, the action editor edits it directly instead of querying for one,
    * so an in-memory draft can be configured before it is persisted.
    */
   instructions?: Instructions.Instructions;
+  /** Draft trigger to edit (the article's edit session); overrides the automation's primary trigger. */
+  trigger?: Trigger.Trigger;
+  /** Render the form for display only (the article's default, non-editing view). */
+  readonly?: boolean;
 };
 
 /**
@@ -41,11 +46,34 @@ export type RoutineFormProps = {
  * with the Actions and Triggers sections rendered as sub-forms inside its content:
  * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
+ *
+ * `readonly` displays the bound objects without edit affordances. The article passes in-memory draft clones
+ * (`instructions`/`trigger`) while editing and persists them on save; the companion edits live objects.
  */
-export const RoutineForm = ({ db, automation, instructions }: RoutineFormProps) => {
+export const RoutineForm = ({
+  db,
+  automation,
+  instructions,
+  trigger: triggerProp,
+  readonly = false,
+}: RoutineFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(automation);
-  const trigger = usePrimaryTrigger(automation);
+  const primaryTrigger = usePrimaryTrigger(automation);
+  const trigger = triggerProp ?? primaryTrigger;
+  const queriedInstructions = useOwnedRoutine(db, automation);
+  const ownedInstructions = instructions ?? queriedInstructions;
+
+  // An instructions action runs the routine's instructions through the RunInstructions operation (the
+  // `runnable`), so the trigger that fires it must carry the instructions as bound input. An operation action
+  // takes the trigger event directly, so it binds no input.
+  const triggerInput = useMemo<Record<string, unknown> | undefined>(
+    () =>
+      isRunInstructions(auto.runnable) && ownedInstructions
+        ? { instructions: Ref.make(ownedInstructions), input: {} }
+        : undefined,
+    [auto.runnable, ownedInstructions],
+  );
 
   // Read once per automation identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralForm>>(
@@ -63,17 +91,28 @@ export const RoutineForm = ({ db, automation, instructions }: RoutineFormProps) 
   );
 
   return (
-    <Form.Root schema={GeneralForm} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+    <Form.Root
+      schema={GeneralForm}
+      readonly={readonly}
+      defaultValues={defaultValues}
+      onValuesChanged={handleValuesChanged}
+    >
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet />
 
           <Section title={t('actions.title')}>
-            <ActionEditor db={db} automation={automation} instructions={instructions} />
+            <ActionEditor db={db} automation={automation} instructions={instructions} readonly={readonly} />
           </Section>
 
           <Section title={t('triggers.title')}>
-            <TriggerEditor db={db} automation={automation} trigger={trigger} />
+            <TriggerEditor
+              db={db}
+              automation={automation}
+              trigger={trigger}
+              triggerInput={triggerInput}
+              readonly={readonly}
+            />
           </Section>
         </Form.Content>
       </Form.Viewport>
@@ -97,38 +136,31 @@ const ActionKinds = ['instructions', 'operation'] as const;
 type ActionKind = (typeof ActionKinds)[number];
 const isActionKind = (value: string): value is ActionKind => (ActionKinds as readonly string[]).includes(value);
 
-/** Single action: an Operation ref (written to `automation.runnable`) or an owned Routine edited inline. */
+/**
+ * Single action: an Operation ref (written to `automation.runnable`) or an owned Instructions edited inline.
+ * The instructions object and `runnable` wiring are established on save (see `saveRoutine`), not on mount — the
+ * editor only reads/edits what it is given (a draft in an edit session, or the live owned instructions).
+ */
 const ActionEditor = ({
   db,
   automation,
   instructions: draftRoutine,
+  readonly,
 }: {
   db: Database.Database;
   automation: Routine.Routine;
   instructions?: Instructions.Instructions;
+  readonly?: boolean;
 }) => {
   const [auto, updateAuto] = useObject(automation);
   const operations = useOperations(db);
-  // A draft (not-yet-persisted) automation supplies its owned instructions directly; otherwise resolve it by query.
+  // A draft (in-memory) automation supplies its owned instructions directly; otherwise resolve it by query.
   const queriedRoutine = useOwnedRoutine(db, automation);
   const ownedRoutine = draftRoutine ?? queriedRoutine;
-  const runnableTarget = auto.runnable?.target;
-  // Default to a instructions action unless an operation is already bound.
-  const [kind, setKind] = useState<ActionKind>(
-    Obj.instanceOf(Operation.PersistentOperation, runnableTarget) ? 'operation' : 'instructions',
-  );
-
-  // A instructions action edits an owned Routine; create one on first use (the initial default or a toggle).
-  // The ref guards the gap before `useOwnedRoutine`'s query reflects the new object, avoiding a double create.
-  // Skipped for a draft automation — it owns an in-memory instructions that is persisted on save.
-  const createdRoutineRef = useRef(false);
-  useEffect(() => {
-    if (!draftRoutine && kind === 'instructions' && !queriedRoutine && !createdRoutineRef.current) {
-      createdRoutineRef.current = true;
-      const instructions = db.add(Instructions.make({ name: auto.name }));
-      Obj.setParent(instructions, automation);
-    }
-  }, [draftRoutine, kind, queriedRoutine, db, automation, auto.name]);
+  // An operation action is a user-bound operation runnable; the registry RunInstructions runnable backs an
+  // instructions action, so it is not treated as an operation selection. Default to instructions when neither.
+  const isOperationAction = auto.runnable != null && !isRunInstructions(auto.runnable);
+  const [kind, setKind] = useState<ActionKind>(isOperationAction ? 'operation' : 'instructions');
 
   const handleOperationChange = useCallback(
     (operation?: Ref.Ref<Operation.PersistentOperation>) => {
@@ -141,16 +173,17 @@ const ActionEditor = ({
 
   return (
     <div role='none' className='flex flex-col'>
-      <ActionKindToggle value={kind} onChange={setKind} />
+      {!readonly && <ActionKindToggle value={kind} onChange={setKind} />}
       {kind === 'operation' ? (
         <OperationEditor
           db={db}
           operations={operations}
-          operation={Obj.instanceOf(Operation.PersistentOperation, runnableTarget) ? auto.runnable : undefined}
+          operation={isOperationAction ? auto.runnable : undefined}
           onChange={handleOperationChange}
+          readonly={readonly}
         />
       ) : ownedRoutine ? (
-        <InstructionsEditor db={db} instructions={ownedRoutine} />
+        <InstructionsEditor db={db} instructions={ownedRoutine} readonly={readonly} />
       ) : null}
     </div>
   );
@@ -192,11 +225,13 @@ const OperationEditor = ({
   operations,
   operation,
   onChange,
+  readonly,
 }: {
   db: Database.Database;
   operations: ReturnType<typeof useOperations>;
   operation?: Ref.Ref<Operation.PersistentOperation>;
   onChange?: (operation?: Ref.Ref<Operation.PersistentOperation>) => void;
+  readonly?: boolean;
 }) => {
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
@@ -216,6 +251,7 @@ const OperationEditor = ({
     <Form.Root
       schema={OperationActionForm}
       db={db}
+      readonly={readonly}
       defaultValues={defaultValues}
       fieldMap={fieldMap}
       onValuesChanged={handleValuesChanged}

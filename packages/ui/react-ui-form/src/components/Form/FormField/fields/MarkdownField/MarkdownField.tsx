@@ -60,7 +60,7 @@ export const MarkdownField = ({
     if (isRef) {
       const reference = value as Ref.Ref<any> | undefined;
       if (reference) {
-        return <RefMarkdownEditor reference={reference} placeholder={placeholder} />;
+        return <RefMarkdownEditor reference={reference} placeholder={placeholder} readonly={!!readonly} />;
       }
 
       if (readonly) {
@@ -100,15 +100,16 @@ const RefStaticText = ({ reference }: { reference: Ref.Ref<any> }) => {
 type RefMarkdownEditorProps = {
   reference: Ref.Ref<any>;
   placeholder?: string;
+  readonly?: boolean;
 };
 
-const RefMarkdownEditor = ({ reference, placeholder }: RefMarkdownEditorProps) => {
+const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEditorProps) => {
   const text = useAtomValue(useMemo(() => reference.atom, [reference]));
   const dataExtensions = useMemo(
     () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
-  const extensions = useBasicMarkdownExtensions({ placeholder, extensions: dataExtensions });
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: dataExtensions });
   if (!text) {
     return null;
   }
@@ -128,7 +129,7 @@ type StringMarkdownEditorProps = {
 };
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
-  const extensions = useBasicMarkdownExtensions({ placeholder });
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
   const handleChange = useCallback((next: string) => onChange(next), [onChange]);
 
   return (

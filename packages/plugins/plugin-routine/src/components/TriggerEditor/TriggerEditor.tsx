@@ -22,6 +22,7 @@ import {
   type ScheduleKind,
   type ScheduleValue,
   cronToSchedule,
+  describeCron,
   scheduleToCron,
   toCron,
 } from '../Schedule';
@@ -180,14 +181,19 @@ export type TriggerEditorProps = ThemedClassName<{
   db: Database.Database;
   automation: Routine.Routine;
   trigger?: Trigger.Trigger;
+  /** Input bound to the trigger's function (e.g. the instructions a RunInstructions action runs). */
+  triggerInput?: Record<string, unknown>;
+  /** Render the trigger for display only (no variant picker, clear, or field edits). */
+  readonly?: boolean;
 }>;
 
-export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEditorProps) => {
+export const TriggerEditor = ({ classNames, db, automation, trigger, triggerInput, readonly }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
     db,
     automation,
     trigger,
+    triggerInput,
   );
 
   return (
@@ -196,6 +202,7 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
       key={`${trigger?.id ?? 'new'}:${resetNonce}`}
       schema={TriggerForm}
       db={db}
+      readonly={readonly}
       fieldMap={fieldMap}
       defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
@@ -204,14 +211,16 @@ export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEd
         {kind && (
           <div className='flex items-center'>
             <div className='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</div>
-            <IconButton
-              iconOnly
-              variant='ghost'
-              square
-              icon='ph--x--regular'
-              label={t('trigger-kind.clear.label')}
-              onClick={handleClose}
-            />
+            {!readonly && (
+              <IconButton
+                iconOnly
+                variant='ghost'
+                square
+                icon='ph--x--regular'
+                label={t('trigger-kind.clear.label')}
+                onClick={handleClose}
+              />
+            )}
           </div>
         )}
         <Form.FieldSet classNames='px-2' />
@@ -255,6 +264,11 @@ const CronField = (props: FormFieldRendererProps) => {
     [props.type, props.onValueChange],
   );
 
+  // The Schedule picker is interactive-only; render a human-readable description for the read-only view.
+  if (props.readonly) {
+    return <p className='px-2 text-sm text-description'>{describeCron(cron)}</p>;
+  }
+
   return (
     <Schedule.Root kinds={RECURRING_KINDS} defaultValue={initial} onValueChange={handleChange}>
       <Schedule.Header />
@@ -267,7 +281,12 @@ const CronField = (props: FormFieldRendererProps) => {
 CronField.displayName = 'TriggerEditor.CronField';
 
 /** Form state for the Trigger section: the chosen variant spec, plus create-on-first-edit handler. */
-const useTriggerForm = (db: Database.Database, automation: Routine.Routine, trigger?: Trigger.Trigger) => {
+const useTriggerForm = (
+  db: Database.Database,
+  automation: Routine.Routine,
+  trigger?: Trigger.Trigger,
+  triggerInput?: Record<string, unknown>,
+) => {
   const methodOptions = useMemo(
     () => [
       { value: 'GET', label: 'GET' },
@@ -320,11 +339,13 @@ const useTriggerForm = (db: Database.Database, automation: Routine.Routine, trig
 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
-      // The dispatcher dies on an enabled trigger with no function reference, so `enabled` is only honored
-      // when the function the trigger will actually carry is present: its own on edit (not backfilled here),
-      // the automation's runnable wired in below on create.
-      const functionRef = trigger ? trigger.function : automation.runnable;
-      const enabled = values.enabled === true && functionRef != null;
+      // The trigger dispatches the routine's action: its `function` is the routine's `runnable` (the chosen
+      // operation, or RunInstructions for an instructions action) and `triggerInput` is the action's bound
+      // input. Sourcing from `runnable` (rather than the trigger's own `function`) backfills a trigger created
+      // before the action was configured. `enabled` records the user's intent regardless of whether a function
+      // is wired yet — `saveRoutine` wires `function` before persisting, so a dispatched trigger always has one.
+      const functionRef = automation.runnable;
+      const enabled = values.enabled === true;
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -332,19 +353,20 @@ const useTriggerForm = (db: Database.Database, automation: Routine.Routine, trig
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
           trigger.enabled = enabled;
+          trigger.function = functionRef;
+          trigger.input = triggerInput;
         });
       } else {
-        // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
-        // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
-        // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
-        const created = db.add(Trigger.make({ function: functionRef, enabled, spec }));
+        // Create the trigger on first edit. The trigger is owned by the automation (it is only reachable via
+        // it), so it is parented and cascade-deletes with the automation.
+        const created = db.add(Trigger.make({ function: functionRef, enabled, spec, input: triggerInput }));
         Obj.setParent(created, automation);
         Obj.update(automation, (automation) => {
-          automation.triggers = [...automation.triggers, Ref.make(created)];
+          automation.triggers.push(Ref.make(created));
         });
       }
     },
-    [db, automation, trigger],
+    [db, automation, trigger, triggerInput],
   );
 
   return { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged };
