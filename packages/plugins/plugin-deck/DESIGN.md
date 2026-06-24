@@ -173,6 +173,23 @@ Items 8,10 are layout polish; 12,13 are minor.
 8. **Delete** `containers/Plank/*` and remove `@dxos/react-ui-stack` from `package.json`; update all
    imports; run build + lint + the deck storybook.
 
+### 6a. Plank-capability gaps found while reading the old container
+
+The old `PlankHeading`/`PlankComponent` carry more than the new `Plank` currently exposes; the rewrite
+must feed these through. The chosen approach is to **keep using the higher-level `Plank` and pass the
+deck/framework pieces in via slots + a surface-data override** (consistent with the locked
+"deck-container `PlankControls`" decision — the container composes, `Plank` stays slot-driven):
+
+- **NavbarEnd surface** (`AppSurface.NavbarEnd`) — extra toolbar content → new `navbarEnd?: ReactNode` slot on `Plank`.
+- **Sigil menu footer** (`AppSurface.MenuFooter`) — sigil-menu children → new `sigilFooter?: ReactNode` slot.
+- **Surface-data extras** (`companionTo`, `variant`, `path`, `popoverAnchorId`) → new `articleData?: Partial<AppSurface.ArticleData>` merged into the computed `data`.
+- **`popoverAnchorId` `Popover.Anchor`** wrapping the sigil when `popoverAnchorId === \`${meta.key}:${node.id}\``→ handled inside`Plank`from the`popoverAnchorId`.
+- **Error fallback + loading placeholder** → `fallback?`/`placeholder?` passthrough to the Article `Surface` (port `PlankError`/`PlankLoading`).
+- **`related?`** (complementary) and **`pending?`** → `Plank` props (forwarded to `Pane.Title`).
+- **Sigil actions** are resolved in `useDeckPlank` (combine passed `actions` + `Graph.getActions(node.id)` filtered by disposition) and passed to `Plank`'s `actions`/`onAction`.
+
+These are additive to `Plank` (defaults preserve current behaviour for the Matrix/Pane stories).
+
 Sequencing keeps the build green: 1–2 (additive), 3–4 (solo first, verify), 5 (multi), 6–7 (polish),
 8 (delete + dependency removal last).
 
