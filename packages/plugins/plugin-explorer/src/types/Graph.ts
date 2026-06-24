@@ -10,7 +10,7 @@ import { ViewAnnotation } from '@dxos/schema';
 
 const GraphSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
-  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
@@ -26,7 +26,7 @@ export interface Graph extends Type.InstanceType<typeof GraphSchema> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {
-  view: View.View;
+  view?: View.View;
 };
 
 /**
@@ -36,6 +36,6 @@ export const make = ({
   name,
   query = { raw: '', ast: Query.select(Filter.nothing()).ast },
   view,
-}: MakeProps): Graph => {
-  return Obj.make(Graph, { name, view: Ref.make(view), query });
+}: MakeProps = {}): Graph => {
+  return Obj.make(Graph, { name, view: view && Ref.make(view), query });
 };
