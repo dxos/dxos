@@ -91,6 +91,11 @@
       "types": "./dist/types/src/components/index.d.ts",
       "default": "./dist/lib/neutral/components/index.mjs"
     },
+    "./constants": {
+      "source": "./src/constants.ts",
+      "types": "./dist/types/src/constants.d.ts",
+      "default": "./dist/lib/neutral/constants.mjs"
+    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
