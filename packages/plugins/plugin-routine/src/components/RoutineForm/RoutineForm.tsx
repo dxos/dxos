@@ -39,6 +39,10 @@ export type RoutineFormProps = {
   trigger?: Trigger.Trigger;
   /** Render the form for display only (the article's default, non-editing view). */
   readonly?: boolean;
+  /** Commit the edit session; when set, the form renders a Save/Cancel action row. */
+  onSave?: () => void;
+  /** Discard the edit session. */
+  onCancel?: () => void;
 };
 
 /**
@@ -56,6 +60,8 @@ export const RoutineForm = ({
   instructions,
   trigger: triggerProp,
   readonly = false,
+  onSave,
+  onCancel,
 }: RoutineFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(routine);
@@ -96,6 +102,8 @@ export const RoutineForm = ({
       readonly={readonly}
       defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
+      onSave={onSave}
+      onCancel={onCancel}
     >
       <Form.Viewport scroll>
         <Form.Content>
@@ -114,6 +122,9 @@ export const RoutineForm = ({
               readonly={readonly}
             />
           </Section>
+
+          {/* Save/Cancel for the edit session (the sub-forms autosave to the in-memory clones as they change). */}
+          {onSave && <Form.Actions />}
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

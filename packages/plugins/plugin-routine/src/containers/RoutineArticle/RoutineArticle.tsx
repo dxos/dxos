@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Instructions, Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, useTranslation } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
@@ -30,7 +30,6 @@ type EnabledState = { hasTriggers: boolean; allEnabled: boolean };
  * via {@link saveRoutine} on save (so merely viewing never mutates the persisted aggregate).
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const registry = useContext(RegistryContext);
   // Subscribe so the action's run/edit affordances track the routine's `runnable`.
@@ -183,6 +182,9 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     return null;
   }
 
+  // Edit mode renders the routine's in-memory clones (with Save/Cancel); otherwise the live routine, read-only.
+  const editSession = editing ? session : undefined;
+
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
@@ -190,24 +192,15 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
           <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content classNames='dx-document'>
-          {editing && session ? (
-            <div role='none' className='flex flex-col min-bs-0'>
-              <RoutineForm
-                db={db}
-                routine={session.routine}
-                instructions={session.instructions}
-                trigger={session.trigger}
-              />
-              <div role='none' className='flex justify-end gap-2 p-2 border-bs border-subdued-separator'>
-                <Button onClick={handleCancel}>{t('cancel.label')}</Button>
-                <Button variant='primary' onClick={() => void handleSave()}>
-                  {t('save.label')}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <RoutineForm db={db} routine={subject} readonly />
-          )}
+          <RoutineForm
+            db={db}
+            routine={editSession?.routine ?? subject}
+            instructions={editSession?.instructions}
+            trigger={editSession?.trigger}
+            readonly={!editSession}
+            onSave={editSession ? () => void handleSave() : undefined}
+            onCancel={editSession ? handleCancel : undefined}
+          />
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>
