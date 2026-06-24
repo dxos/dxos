@@ -110,7 +110,12 @@ export class ProcessStore {
       if (Option.isNone(raw)) {
         return undefined;
       }
-      return yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.orDie);
+      const decoded = yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.either);
+      if (decoded._tag === 'Left') {
+        yield* this.#purgeProcess(id);
+        return undefined;
+      }
+      return decoded.right;
     });
   }
 
@@ -144,16 +149,18 @@ export class ProcessStore {
 
   /** Removes the process record and its index entry, and frees in-memory seq/lock state. */
   deleteProcess(id: Process.ID): Effect.Effect<void> {
-    return this.#lock(id).withPermits(1)(
-      Effect.gen(this, function* () {
-        yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
-        const ids = yield* this.listProcessIds();
-        const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
-        yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
-        this.#seq.delete(id);
-        this.#locks.delete(id);
-      }),
-    );
+    return this.#lock(id).withPermits(1)(this.#purgeProcess(id));
+  }
+
+  #purgeProcess(id: Process.ID): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
+      const ids = yield* this.listProcessIds();
+      const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
+      yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
+      this.#seq.delete(id);
+      this.#locks.delete(id);
+    });
   }
 
   #modify(id: Process.ID, fn: (record: PersistedProcess) => PersistedProcess): Effect.Effect<void> {
