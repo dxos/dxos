@@ -12,7 +12,7 @@ import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
