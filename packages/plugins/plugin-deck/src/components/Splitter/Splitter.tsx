@@ -8,6 +8,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Move to react-ui.
+
 //
 // Splitter
 //
