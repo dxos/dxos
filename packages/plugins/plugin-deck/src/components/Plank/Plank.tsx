@@ -122,7 +122,6 @@ const PlankTabs = forwardRef<HTMLDivElement, PlankTabsProps>(
           <IconButton
             key={id}
             data-id={id}
-            size={5}
             icon={icon}
             iconOnly={tabs.length > maxLabels && value !== id}
             label={label}

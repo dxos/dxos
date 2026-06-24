@@ -62,7 +62,7 @@ export const Splitter = ({
       <div className='flex-1 min-w-0 min-h-0'>{main}</div>
       {companion && (
         <div
-          className='relative shrink-0 min-w-0 min-h-0'
+          className='relative shrink-0 min-w-0 min-h-0 border-l border-separator'
           {...resizeAttributes}
           style={sizeStyle(size, horizontal ? 'horizontal' : 'vertical')}
         >
