@@ -104,4 +104,3 @@ export type LegacyDeleteIdentityResponse = Omit<DeleteIdentityResponse, 'identit
   /** @deprecated Hex identity key; read `identityDid`. */
   identityKey: string;
 };
-
