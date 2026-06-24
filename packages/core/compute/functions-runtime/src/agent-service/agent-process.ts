@@ -27,7 +27,7 @@ import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, Feed, Obj, Registry } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Message, ContentBlock } from '@dxos/types';
@@ -95,7 +95,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const feedDxn = ctx.params.target;
+        const feedDxn = Option.getOrNull(Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation));
         if (feedDxn == null) {
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
@@ -414,7 +414,7 @@ const AgentEvent = Schema.Union(
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
-const AgentEventsKey = StorageService.key(
+const AgentEventsKey = StorageService.cell(
   Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
   'inputQueue',
 ).pipe(StorageService.withDefault(() => []));
@@ -426,7 +426,7 @@ const AgentEventsKey = StorageService.key(
 const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).pipe(Schema.mutable);
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
-const DelegationsKey = StorageService.key(
+const DelegationsKey = StorageService.cell(
   Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
@@ -443,7 +443,7 @@ const ToolCallState = Schema.Struct({
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
-const ToolCallStateKey = StorageService.key(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
+const ToolCallStateKey = StorageService.cell(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
   StorageService.withDefault(() => ({ activeCalls: [] })),
 );
 
@@ -581,7 +581,7 @@ export const parseContinueDecision = (reply: string): boolean => {
 /**
  * Persisted UNIX timestamp (ms) of the next agent-scheduled self-wake, or `null` when none is set.
  */
-const AgentAlarmKey = StorageService.key(Schema.parseJson(Schema.NullOr(Schema.Number)), 'agentAlarm').pipe(
+const AgentAlarmKey = StorageService.cell(Schema.parseJson(Schema.NullOr(Schema.Number)), 'agentAlarm').pipe(
   StorageService.withDefault(() => null),
 );
 
