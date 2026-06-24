@@ -9,6 +9,12 @@ import fs from 'node:fs';
  * Madge can omit unresolved package imports; parsing source keeps those edges.
  */
 export const parseModuleSpecifiers = (source: string): string[] => {
+  // Strip comments so commented-out imports are not treated as live edges.
+  const noComments = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+
+  // Remove top-level `import type ...` statements — they have no runtime dependency edge.
+  const noTypeImports = noComments.replace(/\bimport\s+type\s+[^;]+;/g, '');
+
   const specifiers = new Set<string>();
   const patterns = [
     /\bfrom\s+['"]([^'"]+)['"]/g,
@@ -16,7 +22,7 @@ export const parseModuleSpecifiers = (source: string): string[] => {
     /\bimport\s+['"]([^'"]+)['"]/g,
   ];
   for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) {
+    for (const match of noTypeImports.matchAll(pattern)) {
       specifiers.add(match[1]);
     }
   }
