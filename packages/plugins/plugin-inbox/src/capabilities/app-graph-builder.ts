@@ -212,6 +212,20 @@ export default Capability.makeModule(
                       },
                       actions: [
                         Node.makeAction({
+                          id: 'rename-filter',
+                          data: (params?: Node.InvokeProps) =>
+                            Operation.invoke(InboxOperation.RenameFilter, {
+                              mailbox,
+                              name,
+                              caller: params?.caller,
+                            }),
+                          properties: {
+                            label: ['rename-filter.label', { ns: meta.profile.key }],
+                            icon: 'ph--pencil-simple--regular',
+                            disposition: 'list-item',
+                          },
+                        }),
+                        Node.makeAction({
                           id: 'delete-filter',
                           data: () =>
                             Effect.sync(() => {
