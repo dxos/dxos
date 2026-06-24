@@ -2,15 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  Fragment,
+  type MouseEvent,
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, AttentionSigil, AttentionSigilButton, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
-import { Icon, IconButton, Popover, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack';
-import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
+import { Icon, IconButton, Popover, TextTooltip, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type AttendableId, type Related, getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
+import { hoverableControls, hoverableFocusedWithinControls, iconSize, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
@@ -21,6 +29,29 @@ import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { usePlankContext } from './PlankRoot';
 
 const MAX_COMPANIONS = 5;
+
+// Plank heading rail: the fixed-height header row of a plank (horizontal stack semantics).
+const headingRail = 'flex items-center border-x-0! bg-header-surface border-subdued-separator h-(--dx-rail-size)';
+
+type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
+
+// Attention-aware plank title; colors to the accent when the plank (or a related companion) is attended.
+const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>(
+  ({ attendableId, related, classNames, ...props }, forwardedRef) => {
+    const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
+    return (
+      <h1
+        {...props}
+        data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
+        className={mx(
+          'px-1 min-w-0 w-0 grow truncate font-medium text-base-fg data-[attention=true]:text-accent-text self-center',
+          classNames,
+        )}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 export type PlankHeadingProps = {
   id: string;
@@ -137,26 +168,26 @@ export const PlankHeading = memo(
     );
 
     return (
-      <StackItem.Heading
+      <div
+        role='heading'
         data-tauri-drag-region
         data-plank-heading
         style={iconSize(5)}
-        classNames={[
+        className={mx(
+          headingRail,
           'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-lg',
           part === 'solo'
             ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
             : 'px-1',
-          ...(layoutMode === 'solo--fullscreen'
-            ? [
-                hoverableControls,
-                hoverableFocusedWithinControls,
-                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent',
-                'border-transparent transition-[background-color,border-color]',
-                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface',
-                'hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
-              ]
-            : []),
-        ]}
+          layoutMode === 'solo--fullscreen' && [
+            hoverableControls,
+            hoverableFocusedWithinControls,
+            '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent',
+            'border-transparent transition-[background-color,border-color]',
+            'hover-hover:hover:bg-header-surface focus-within:bg-header-surface',
+            'hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
+          ],
+        )}
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
@@ -198,14 +229,14 @@ export const PlankHeading = memo(
               )}
             </ActionRoot>
             <TextTooltip text={label} onlyWhenTruncating>
-              <StackItem.HeadingLabel
+              <PlankHeadingLabel
                 data-tauri-drag-region
                 attendableId={attendableId}
                 related={part === 'complementary'}
                 {...(pending && { classNames: 'text-description' })}
               >
                 {label}
-              </StackItem.HeadingLabel>
+              </PlankHeadingLabel>
             </TextTooltip>
           </>
         )}
@@ -230,7 +261,7 @@ export const PlankHeading = memo(
             onClick={handlePlankAction}
           />
         )}
-      </StackItem.Heading>
+      </div>
     );
   },
 );
