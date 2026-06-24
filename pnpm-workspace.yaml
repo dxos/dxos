@@ -594,7 +594,7 @@ catalog:
   safe-compare: ~1.1.4
   scheduler: ^0.27.0
   seedrandom: ^3.0.5
-  semver: ^7.7.3
+  semver: ^7.7.4
   serve: ^14.2.5
   sharp: ^0.34.5
   sodium-javascript: ~0.8.0

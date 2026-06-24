@@ -1600,7 +1600,7 @@ catalogs:
       specifier: ^3.0.5
       version: 3.0.5
     semver:
-      specifier: ^7.7.3
+      specifier: ^7.7.4
       version: 7.7.4
     serve:
       specifier: ^14.2.5
@@ -4556,58 +4556,6 @@ importers:
         specifier: 'catalog:'
         version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
 
-  packages/core/compute-runtime:
-    dependencies:
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../compute/compute
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../compute/operation
-      '@effect-atom/atom':
-        specifier: 'catalog:'
-        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.96.1(effect@3.21.3)
-      effect:
-        specifier: 3.21.3
-        version: 3.21.3
-    devDependencies:
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../echo/echo-client
-      '@dxos/kv-store':
-        specifier: workspace:*
-        version: link:../../common/kv-store
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 0.29.0(effect@3.21.3)(vitest@4.1.8)
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
   packages/core/compute/ai:
     dependencies:
       '@dxos/async':
@@ -4945,7 +4893,7 @@ importers:
         version: link:../compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../compute-runtime
+        version: link:../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -5061,6 +5009,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.3)
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -5123,6 +5074,61 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7
+
+  packages/core/compute/compute-runtime:
+    dependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.96.1(effect@3.21.3)
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.3)(vitest@4.1.8)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/core/compute/conductor:
     dependencies:
@@ -5318,7 +5324,7 @@ importers:
         version: link:../compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../compute-runtime
+        version: link:../compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5655,10 +5661,16 @@ importers:
       effect:
         specifier: 3.21.3
         version: 3.21.3
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.4
     devDependencies:
       '@types/node':
         specifier: 22.10.2
         version: 22.10.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.7.1
 
   packages/core/echo/echo-client:
     dependencies:
@@ -6877,7 +6889,7 @@ importers:
         version: link:../../core/compute/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute-runtime
+        version: link:../../core/compute/compute-runtime
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -7987,7 +7999,7 @@ importers:
         version: link:../../core/compute/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute-runtime
+        version: link:../../core/compute/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
@@ -13199,7 +13211,7 @@ importers:
         version: link:../../core/compute/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute-runtime
+        version: link:../../core/compute/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
@@ -16604,7 +16616,7 @@ importers:
         version: link:../../core/compute/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute-runtime
+        version: link:../../core/compute/compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -17951,7 +17963,7 @@ importers:
         version: link:../../core/compute/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute-runtime
+        version: link:../../core/compute/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
@@ -19218,7 +19230,7 @@ importers:
         version: link:../../core/compute/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute-runtime
+        version: link:../../core/compute/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
@@ -38836,11 +38848,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.7.3:
-    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.7.4:
@@ -60785,8 +60792,6 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.7.3: {}
-
   semver@7.7.4: {}
 
   semver@7.8.1: {}
@@ -61006,7 +61011,7 @@ snapshots:
     dependencies:
       '@img/colour': 1.0.0
       detect-libc: 2.1.2
-      semver: 7.7.3
+      semver: 7.8.1
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.5
       '@img/sharp-darwin-x64': 0.34.5
@@ -61425,7 +61430,7 @@ snapshots:
       esbuild: 0.28.0
       open: 10.2.0
       recast: 0.23.9
-      semver: 7.7.3
+      semver: 7.8.1
       use-sync-external-store: 1.6.0(react@19.2.6)
       ws: 8.18.3
     optionalDependencies:
