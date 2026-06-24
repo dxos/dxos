@@ -109,9 +109,20 @@ export const useDeckPlank = ({
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
       fullscreen: !isCompanionNode,
-      companion: layoutMode !== 'multi' && !isCompanionNode && companions.length > 0,
+      // Offer to open the companion only when one exists and is not already shown.
+      companion: layoutMode !== 'multi' && !isCompanionNode && companions.length > 0 && !hasCompanion,
     }),
-    [deckEnabled, breakpoint, part, canIncrementStart, canIncrementEnd, isCompanionNode, layoutMode, companions.length],
+    [
+      deckEnabled,
+      breakpoint,
+      part,
+      canIncrementStart,
+      canIncrementEnd,
+      isCompanionNode,
+      layoutMode,
+      companions.length,
+      hasCompanion,
+    ],
   );
 
   // Load the node's child actions so the sigil menu is populated.
