@@ -9,18 +9,11 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type DeckAction, type LayoutMode } from '#types';
+import { type DeckOperation, type LayoutMode } from '#types';
 
-export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
+import { type PlankCapabilities } from './useDeckPlank';
 
-export type PlankCapabilities = {
-  incrementStart?: boolean;
-  incrementEnd?: boolean;
-  deck?: boolean;
-  solo?: boolean;
-  fullscreen?: boolean;
-  companion?: boolean;
-};
+export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;
 
 //
 // Controls

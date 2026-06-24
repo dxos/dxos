@@ -36,6 +36,7 @@ export type CompanionProps = ThemedClassName<{
 
 export const Companion = ({ companions, value, onValueChange, attendableId, controls, classNames }: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
+
   // Fall back to the first companion when uncontrolled so a panel is always visible.
   const selected = value ?? companions[0]?.id;
   const tabs = useMemo<PaneTab[]>(

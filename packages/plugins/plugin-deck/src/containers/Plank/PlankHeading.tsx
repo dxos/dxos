@@ -33,7 +33,7 @@ import { meta } from '#meta';
 import { DeckOperation } from '#types';
 import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
-import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { PlankCompanionControls, PlankControls } from '../Deck/PlankControls';
 import { usePlankContext } from './PlankRoot';
 
 const MAX_COMPANIONS = 5;
