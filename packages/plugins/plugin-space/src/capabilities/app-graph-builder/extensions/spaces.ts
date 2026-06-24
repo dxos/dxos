@@ -58,7 +58,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             properties: {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
-              iconHue: 'cyan',
+              iconHue: 'emerald',
               position: Position.first,
               draggable: false,
               droppable: false,
