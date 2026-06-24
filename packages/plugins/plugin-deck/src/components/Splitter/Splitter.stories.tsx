@@ -36,7 +36,9 @@ const SplitterStory = ({ orientation }: Pick<SplitterProps, 'orientation'>) => {
         <IconButton
           iconOnly
           variant='ghost'
-          icon={orientation === 'vertical' ? 'ph--square-split-vertical--regular' : 'ph--square-split-horizontal--regular'}
+          icon={
+            orientation === 'vertical' ? 'ph--square-split-vertical--regular' : 'ph--square-split-horizontal--regular'
+          }
           label='Toggle companion'
           onClick={() => setOpen((value) => !value)}
         />
@@ -74,7 +76,9 @@ const SplitterStory = ({ orientation }: Pick<SplitterProps, 'orientation'>) => {
     </Pane.Root>
   );
 
-  return <Splitter classNames='bg-deck-surface' orientation={orientation} main={main} companion={companion} open={open} />;
+  return (
+    <Splitter classNames='bg-deck-surface' orientation={orientation} main={main} companion={companion} open={open} />
+  );
 };
 
 const meta: Meta<typeof SplitterStory> = {

@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data }) => {
-          return <RoutineCompanion subject={data.companionTo} />;
+          return <RoutineCompanion attendableId={data.attendableId} subject={data.companionTo} />;
         },
       }),
       Surface.create({

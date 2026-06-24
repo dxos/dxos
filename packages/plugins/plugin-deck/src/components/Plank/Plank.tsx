@@ -14,15 +14,6 @@ import { meta } from '#meta';
 
 import { Pane } from '../Pane';
 
-//
-// Plank
-//
-// A higher-level deck pane bound to a graph {@link Node}: renders the node's sigil, title and content
-// Surface inside a {@link Pane}, and makes itself the node's attendable region. Toolbar controls
-// (close/solo/etc.) are supplied by the container as `controls` so this component stays free of
-// capabilities/operations.
-//
-
 export type PlankProps = ThemedClassName<{
   node: Node.Node;
   /** Attendable id; defaults to the node id. */
@@ -34,6 +25,12 @@ export type PlankProps = ThemedClassName<{
   controls?: ReactNode;
 }>;
 
+/**
+ * A higher-level deck pane bound to a graph {@link Node}: renders the node's sigil, title and content
+ * Surface inside a {@link Pane}, and makes itself the node's attendable region. Toolbar controls
+ * (close/solo/etc.) are supplied by the container as `controls` so this component stays free of
+ * capabilities/operations.
+ */
 export const Plank = ({ node, attendableId = node.id, actions, onAction, controls, classNames }: PlankProps) => {
   const { t } = useTranslation(meta.profile.key);
   const attentionAttrs = useAttentionAttributes(attendableId);

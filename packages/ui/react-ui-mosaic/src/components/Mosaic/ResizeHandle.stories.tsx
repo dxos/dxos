@@ -13,7 +13,7 @@ import { Mosaic, type MosaicTileProps } from './Mosaic';
 
 type Item = { id: string; label: string };
 
-const ITEMS: Item[] = Array.from({ length: 6 }, (_, i) => ({ id: `tile-${i}`, label: `Tile ${i + 1}` }));
+const ITEMS: Item[] = Array.from({ length: 6 }, (_, index) => ({ id: `tile-${index}`, label: `Tile ${index + 1}` }));
 
 const DEFAULT_HORIZONTAL: Size = 24;
 const DEFAULT_VERTICAL: Size = 8;

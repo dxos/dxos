@@ -139,12 +139,16 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
     const attended = (related && isRelated) || hasAttention || isAncestor;
     return (
       <div
+        role='tablist'
         className={mx('flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label }) => (
           <IconButton
             key={id}
+            role='tab'
+            aria-selected={value === id}
+            tabIndex={value === id ? 0 : -1}
             data-id={id}
             icon={icon}
             iconOnly={tabs.length > maxTabs && value !== id}

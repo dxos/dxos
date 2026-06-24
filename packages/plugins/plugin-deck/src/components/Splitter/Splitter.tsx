@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type CSSProperties, type ReactNode, useState } from 'react';
+import React, { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
@@ -42,6 +42,11 @@ export type SplitterProps = ThemedClassName<{
   maxSize?: number;
 }>;
 
+/**
+ * Lays out a main pane beside (or above) an optional resizable companion pane, with a draggable
+ * divider and a `minSize` lower bound applied to both panes. The companion stays mounted when `open`
+ * is false (state preserved) but hidden.
+ */
 export const Splitter = ({
   main,
   companion,
@@ -56,7 +61,13 @@ export const Splitter = ({
 }: SplitterProps) => {
   const horizontal = orientation === 'horizontal';
   const [internalSize, setInternalSize] = useState<Size>(sizeProp ?? defaultSize);
-  const size = sizeProp ?? internalSize;
+  // Mirror a controlled `size` into local state so drag updates render live while external changes still apply.
+  useEffect(() => {
+    if (sizeProp !== undefined) {
+      setInternalSize(sizeProp);
+    }
+  }, [sizeProp]);
+  const size = internalSize;
   const setSize = (next: Size, commit?: boolean) => {
     setInternalSize(next);
     if (commit) {

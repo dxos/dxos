@@ -16,7 +16,15 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, AttentionSigil, AttentionSigilButton, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
-import { Icon, IconButton, Popover, TextTooltip, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Icon,
+  IconButton,
+  Popover,
+  TextTooltip,
+  type ThemedClassName,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type AttendableId, type Related, getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize, mx } from '@dxos/ui-theme';
 

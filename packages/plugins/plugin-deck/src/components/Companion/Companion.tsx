@@ -36,6 +36,8 @@ export type CompanionProps = ThemedClassName<{
 
 export const Companion = ({ companions, value, onValueChange, attendableId, controls, classNames }: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // Fall back to the first companion when uncontrolled so a panel is always visible.
+  const selected = value ?? companions[0]?.id;
   const tabs = useMemo<PaneTab[]>(
     () =>
       companions.map((node) => ({
@@ -49,12 +51,12 @@ export const Companion = ({ companions, value, onValueChange, attendableId, cont
   return (
     <Pane.Root classNames={classNames}>
       <Pane.Toolbar>
-        <Pane.Tabs tabs={tabs} value={value} onValueChange={onValueChange} attendableId={attendableId} related />
+        <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
         {controls}
       </Pane.Toolbar>
       {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state. */}
       {companions.map((node) => (
-        <Pane.Content key={node.id} classNames={mx(node.id !== value && 'hidden')}>
+        <Pane.Content key={node.id} classNames={mx(node.id !== selected && 'hidden')}>
           <Surface.Surface
             type={AppSurface.Article}
             data={{ attendableId, subject: node.data, properties: node.properties }}

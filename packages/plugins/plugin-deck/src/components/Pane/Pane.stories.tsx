@@ -42,6 +42,7 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
 // A presentational preview of the solo split: a main Pane beside a companion Pane (tabs + close).
 const SplitStory = () => {
   const [tab, setTab] = useState('notes');
+  const activeTab = TABS.find((entry) => entry.id === tab);
   return (
     <div className='w-full grid grid-cols-2 px-3 gap-3 bg-deck-surface'>
       <MainPane id='plank-main' label='Main plank' />
@@ -52,7 +53,7 @@ const SplitStory = () => {
         </Pane.Toolbar>
         <Pane.Content classNames='grid place-items-center text-description'>
           <span className='flex items-center gap-1'>
-            <Icon icon={TABS.find((entry) => entry.id === tab)!.icon} />
+            {activeTab && <Icon icon={activeTab.icon} />}
             {tab}
           </span>
         </Pane.Content>
