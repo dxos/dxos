@@ -7,9 +7,9 @@ import React, { type KeyboardEvent, memo, useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Splitter, type ThemedClassName } from '@dxos/react-ui';
 
-import { Companion, Plank, Splitter } from '#components';
+import { Companion, Plank } from '#components';
 import { type LayoutMode, type ResolvedPart, type Settings } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -117,10 +117,17 @@ export const DeckPlank = memo(
     }
 
     return (
-      <Splitter
+      <Splitter.Root
+        orientation='horizontal'
+        resizable
+        defaultRatio={0.66}
+        minRatio={0.3}
+        maxRatio={0.85}
         classNames={classNames}
-        main={renderPlank()}
-        companion={
+      >
+        <Splitter.Panel position='start'>{renderPlank()}</Splitter.Panel>
+        <Splitter.Handle />
+        <Splitter.Panel position='end'>
           <Companion
             companions={companions}
             value={resolvedCompanionId}
@@ -128,8 +135,8 @@ export const DeckPlank = memo(
             attendableId={id}
             controls={<PlankCompanionControls primary={id} />}
           />
-        }
-      />
+        </Splitter.Panel>
+      </Splitter.Root>
     );
   },
 );
