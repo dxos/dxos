@@ -143,7 +143,7 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
       <Card.Root fullWidth classNames={['dx-hover cursor-pointer', current && 'dx-current']}>
         <Card.Header>
           <Card.Block>
-            <Icon icon={icon} classNames={iconStyles?.fg} />
+            <Icon icon={icon} classNames={iconStyles?.text} />
           </Card.Block>
           <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
