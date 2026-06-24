@@ -21,7 +21,7 @@ export const Function = Schema.Struct({
   // TODO(dmaretskyi): Consider making it part of ECHO meta.
   // TODO(dmaretskyi): Make required.
   key: Schema.optional(Schema.String).annotations({
-    description: 'Unique registration key for the blueprint',
+    description: 'Unique registration key for the skill',
   }),
 
   name: Schema.NonEmptyString,

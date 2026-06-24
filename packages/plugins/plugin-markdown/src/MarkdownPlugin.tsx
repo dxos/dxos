@@ -10,7 +10,7 @@ import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  BlueprintDefinition,
+  SkillDefinition,
   CommentConfig,
   CreateObject,
   MarkdownSettings,
@@ -23,7 +23,7 @@ import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

@@ -15,7 +15,7 @@ import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint, Credential, Operation } from '@dxos/compute';
+import type { Skill, Credential, Operation } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { EID } from '@dxos/keys';
@@ -160,9 +160,7 @@ export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capabil
 /**
  * @category Capability
  */
-export const BlueprintDefinition = Capability$.make<Blueprint.Definition>(
-  'org.dxos.app-framework.capability.blueprintDefinition',
-);
+export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
 
 /**
  * A static asset bundled with a plugin's published package, exposed for

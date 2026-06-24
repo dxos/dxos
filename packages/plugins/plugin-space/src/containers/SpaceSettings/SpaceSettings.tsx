@@ -26,10 +26,7 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings }: SpaceSettingsProp
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-            <Form.Row
-              label={t('settings.space-list.label')}
-              description=' asdjlkfja sdlfkjas dlfkja sdlfkaj sdlfkajs dflkajsd flaksjd flaskdjf alskdfj asldkj'
-            >
+            <Form.Row label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
               <List classNames='flex flex-col w-full gap-trim-sm'>
                 {spaces?.map((space) => (
                   <ListItem.Root key={space.id} classNames='w-full items-center'>

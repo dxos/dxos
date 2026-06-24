@@ -143,13 +143,14 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 
 /**
  * Helper to define the implementation of a capability.
+ * Returns the opaque base type so callers cannot discriminate on capability kind,
+ * keeping d.ts emit portable across packages.
  */
-// TODO(dmaretskyi): Make the return type non-generic so capabilities are non-discernable.
 export const contributes = <I extends InterfaceDef<any>>(
   interfaceDef: I,
   implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
-): Capability<I> => {
+): Any => {
   return {
     interface: interfaceDef,
     implementation,

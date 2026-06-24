@@ -17,7 +17,7 @@ export default Config2.make({
 
       Saved filters and labels narrow the message list to the conversations that matter, and an optional conversation view groups responses together. Each selected message surfaces related contacts, events, and conversation history alongside the reading pane so context is always one click away.
 
-      An Inbox blueprint gives AI agents tools to read, draft, classify, and sync mail, plus message extractors that parse confirmation emails (flights, hotels, reservations) into structured Trip and Event objects in the space.
+      An Inbox skill gives AI agents tools to read, draft, classify, and sync mail, plus message extractors that parse confirmation emails (flights, hotels, reservations) into structured Trip and Event objects in the space.
     `,
     icon: { key: 'ph--mailbox--regular', hue: 'rose' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',

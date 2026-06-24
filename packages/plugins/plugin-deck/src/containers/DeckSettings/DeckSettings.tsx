@@ -28,7 +28,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) 
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Form.FieldSet
               filter={(properties) =>
                 isSocket ? properties.filter((property) => property.name !== 'enableNativeRedirect') : properties

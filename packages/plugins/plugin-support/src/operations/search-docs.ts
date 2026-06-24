@@ -38,6 +38,6 @@ const DOCS_INDEX: ReadonlyArray<{ title: string; url: string; excerpt: string }>
   {
     title: 'Plugins',
     url: 'https://docs.dxos.org/guide/plugins',
-    excerpt: 'Plugins contribute surfaces, operations, schemas and blueprints to Composer.',
+    excerpt: 'Plugins contribute surfaces, operations, schemas and skills to Composer.',
   },
 ];

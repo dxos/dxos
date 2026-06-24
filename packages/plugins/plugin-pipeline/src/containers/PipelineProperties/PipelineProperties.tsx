@@ -12,7 +12,7 @@ import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { FieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
+import { FormFieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -150,7 +150,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
 
   return (
     <Form.Section>
-      <FieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
+      <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}

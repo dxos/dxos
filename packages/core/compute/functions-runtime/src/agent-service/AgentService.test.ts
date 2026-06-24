@@ -14,7 +14,7 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Blueprint, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
+import { Skill, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -77,18 +77,18 @@ const handlers = OperationHandlerSet.make(
   ),
 );
 
-const ResearchBlueprint = Blueprint.make({
-  key: 'org.dxos.blueprint.research',
+const ResearchSkill = Skill.make({
+  key: 'org.dxos.skill.research',
   name: 'Research',
-  tools: Blueprint.toolDefinitions({ operations: [Research] }),
+  tools: Skill.toolDefinitions({ operations: [Research] }),
 });
 
 const assistantTestLayerOptions = {
-  types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
+  types: [Organization.Organization, Feed.Feed, Skill.Skill],
   tracing: 'pretty' as const,
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
-  blueprints: [ResearchBlueprint],
+  skills: [ResearchSkill],
   extraServices: ResearchService.layer,
 };
 
@@ -167,7 +167,7 @@ describe('Agent Service', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          blueprints: [ResearchBlueprint],
+          skills: [ResearchSkill],
         });
         yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
@@ -187,7 +187,7 @@ describe('Agent Service', () => {
     Effect.fnUntraced(
       function* (_) {
         let agent = yield* AgentService.createSession({
-          blueprints: [ResearchBlueprint],
+          skills: [ResearchSkill],
         });
         yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
@@ -206,7 +206,7 @@ describe('Agent Service', () => {
     Effect.fnUntraced(
       function* (_) {
         let agent = yield* AgentService.createSession({
-          blueprints: [ResearchBlueprint],
+          skills: [ResearchSkill],
         });
         yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
@@ -237,7 +237,7 @@ describe('Agent Service', () => {
     Effect.fnUntraced(
       function* (_) {
         let agent = yield* AgentService.createSession({
-          blueprints: [ResearchBlueprint],
+          skills: [ResearchSkill],
         });
         yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
@@ -319,7 +319,7 @@ describe('Agent Service', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          blueprints: [ResearchBlueprint],
+          skills: [ResearchSkill],
         });
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});

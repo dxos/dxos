@@ -42,7 +42,7 @@ import { translationKey } from '#translations';
 import { type FormFieldRenderer, type FormFieldRendererProps, type FormFieldMap } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
-import { CompactIconButton, FieldHeader, Form, FormFieldLabel, type FormRootProps } from '../Form';
+import { CompactIconButton, FormFieldHeader, Form, FormFieldLabel, type FormRootProps } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -352,7 +352,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     >
       {({ items: fields }) => (
         <>
-          <FieldHeader
+          <FormFieldHeader
             label={t('fields.label')}
             readonly={readonly}
             add={{

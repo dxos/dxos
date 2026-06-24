@@ -18,11 +18,11 @@ export default Config2.make({
       so edits are CRDT-merged and fully reactive — the same space can be shared
       with collaborators or an AI agent without any special sync infrastructure.
 
-      The Coder blueprint drives the authoring loop: the assistant refines the
+      The Coder skill drives the authoring loop: the assistant refines the
       spec with the user, then calls the introspect-mcp server to look up live
       DXOS and Composer APIs before writing source files. A full file-CRUD
       operation set (scaffold, list, read, write, delete, reset, helloWorld) is
-      exposed as blueprint tools, letting the agent build up a project
+      exposed as skill tools, letting the agent build up a project
       incrementally and correct mistakes without leaving the chat. An Anthropic
       API key can be stored securely as an AccessToken in the user's HALO space
       via the plugin's settings panel.

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, Paths, TypeSection, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import { AppCapabilities, Paths, TypeSection, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
@@ -108,7 +108,7 @@ export default Capability.makeModule(
       ),
       Capability.contributes(
         AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Calendar.Calendar, { groupId: AppNode.NAV_TREE_GROUP_COMM_ID }),
+        TypeSection.createTypeSectionPathResolver(Calendar.Calendar, { groupId: Paths.GroupSegments.communications }),
       ),
     ];
   }),

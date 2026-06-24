@@ -10,7 +10,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery, useRegistry } from '@dxos/react-client/echo';
@@ -27,7 +27,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const space = getSpace(companionTo);
-    useBlueprints({ subject: chat, companionTo });
+    useSkills({ subject: chat, companionTo });
 
     // Persist (and flush) a transient chat before the first request so the agent can resolve
     // the now-durable conversation feed; subsequent submits are a no-op once persisted.
@@ -67,32 +67,32 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 );
 
 /**
- * Bind blueprints to the context.
+ * Bind skills to the context.
  */
 // TODO(burdon): Why is this only in the companion?
-const useBlueprints = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'subject' | 'companionTo'>) => {
+const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'subject' | 'companionTo'>) => {
   const registry = useRegistry();
   const space = getSpace(companionTo);
   const feedTarget = chat?.feed.target;
   const binder = useContextBinder(space, feedTarget);
 
-  const blueprintKeys = useMemo(() => {
+  const skillKeys = useMemo(() => {
     const schema = companionTo ? Obj.getType(companionTo) : undefined;
     if (!schema) {
       return [] as string[];
     }
 
-    return Option.getOrElse(() => [] as string[])(AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(schema)));
+    return Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(schema)));
   }, [companionTo]);
 
-  const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
-  const pluginBlueprints = useMemo(
+  const existingSkills = useQuery(space?.db, Filter.type(Skill.Skill));
+  const pluginSkills = useMemo(
     () =>
-      existingBlueprints.filter((blueprint) => {
-        const key = Obj.getMeta(blueprint).key;
-        return key !== undefined && blueprintKeys.includes(key);
+      existingSkills.filter((skill) => {
+        const key = Obj.getMeta(skill).key;
+        return key !== undefined && skillKeys.includes(key);
       }),
-    [existingBlueprints, blueprintKeys],
+    [existingSkills, skillKeys],
   );
 
   useAsyncEffect(async () => {
@@ -100,27 +100,27 @@ const useBlueprints = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 
       return;
     }
 
-    // Bind annotated blueprints: use key URI for registry blueprints (no DB clone needed).
-    if (blueprintKeys.length > 0) {
-      const registryKeys = blueprintKeys.filter((key) => {
+    // Bind annotated skills: use key URI for registry skills (no DB clone needed).
+    if (skillKeys.length > 0) {
+      const registryKeys = skillKeys.filter((key) => {
         const candidate = registry.list().find((e) => Entity.getMeta(e)?.key === key);
-        return candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate);
+        return candidate != null && Obj.instanceOf(Skill.Skill, candidate);
       });
 
-      // DB-forked blueprints (in space but not in registry).
-      const dbForks = pluginBlueprints.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
+      // DB-forked skills (in space but not in registry).
+      const dbForks = pluginSkills.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
       if (registryKeys.length > 0) {
-        await binder.bind({ blueprints: registryKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key))) });
+        await binder.bind({ skills: registryKeys.map((key) => Ref.fromURI(Skill.registryURI(key))) });
       }
       if (dbForks.length > 0) {
-        await binder.bind({ blueprints: dbForks.map((blueprint) => Ref.make(blueprint)) });
+        await binder.bind({ skills: dbForks.map((skill) => Ref.make(skill)) });
       }
     }
 
-    if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {
-      await binder.bind({ blueprints: [Ref.make(companionTo)] });
+    if (Obj.instanceOf(Skill.Skill, companionTo)) {
+      await binder.bind({ skills: [Ref.make(companionTo)] });
     } else {
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
-  }, [binder, blueprintKeys, pluginBlueprints, companionTo]);
+  }, [binder, skillKeys, pluginSkills, companionTo]);
 };

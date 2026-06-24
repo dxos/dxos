@@ -239,9 +239,9 @@ export class AiChatProcessor {
   async getSystemPrompt(): Promise<string> {
     return this._runtime.runPromise(
       Effect.gen(this, function* () {
-        const blueprints = this.context.getBlueprints();
+        const skills = this.context.getSkills();
         const objects = this.context.getObjects();
-        return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects });
       }).pipe(
         Effect.provideService(AiContext.Service, { binder: this.context }),
         Effect.provide(this._spaceLayer),

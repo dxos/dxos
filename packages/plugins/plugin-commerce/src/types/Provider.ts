@@ -8,7 +8,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-export const BLUEPRINT_KEY = 'org.dxos.plugin.commerce/blueprint/provider';
+export const SKILL_KEY = 'org.dxos.plugin.commerce/skill/provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
 export const FieldBinding = Schema.Struct({
@@ -54,7 +54,7 @@ export const Provider = Schema.Struct({
   url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
   description: Schema.optional(Schema.String),
   kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
-  // Raw JSONSchema of the typed search fields; authored by the blueprint and hidden from forms
+  // Raw JSONSchema of the typed search fields; authored by the skill and hidden from forms
   // (it is converted to an Effect Schema to drive the Search criteria form).
   searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),
   // Mapping structs are Effect Schemas and render as nested form fields in the Provider editor.
@@ -63,7 +63,7 @@ export const Provider = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.commerce.Provider', '0.1.0')),
 );
 export type Provider = Type.InstanceType<typeof Provider>;

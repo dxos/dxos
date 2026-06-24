@@ -17,15 +17,15 @@ export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provid
 
 /**
  * Article view for a {@link Provider}. The editable template fields live in the properties
- * companion; this surface previews the blueprint-derived search fields (read-only) and exposes the
- * Provider node's graph actions (e.g. Regenerate, which runs the blueprint agent) in the toolbar.
+ * companion; this surface previews the skill-derived search fields (read-only) and exposes the
+ * Provider node's graph actions (e.g. Regenerate, which runs the skill agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
-  // Read-only preview of the blueprint-derived search fields, read directly from the schema's
+  // Read-only preview of the skill-derived search fields, read directly from the schema's
   // `properties` and rendered as a plain list (a preview, not an editable form). Keyed on the
   // SERIALIZED schema, not the object reference: ECHO keeps the nested `searchSchema` proxy reference
   // stable when a Regenerate (run in another context) populates it, so a reference-keyed memo would

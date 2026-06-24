@@ -21,9 +21,9 @@ export default Config2.make({
       any time in Settings. Each provider can be configured with a preferred model, and the runtime
       automatically falls back when a provider is unavailable.
 
-      Blueprints give every chat a specialised identity. Built-in blueprints cover general assistance,
+      Skills give every chat a specialised identity. Built-in skills cover general assistance,
       web browsing, database interaction, web search, Discord and Linear integration, autonomous agents,
-      planning, memory, automation, and a wizard for authoring new blueprints. Binding a blueprint
+      planning, memory, automation, and a wizard for authoring new skills. Binding a skill
       changes the system instructions and the tool set exposed to the model in a single step.
 
       Tool execution runs through the DXOS compute runtime so every AI action — opening a document,

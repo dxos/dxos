@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { Blueprint, Template } from '@dxos/compute';
+import { Skill, Template } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
@@ -29,12 +29,12 @@ const TEMPLATE = trim`
 
 const DefaultStory = () => {
   const client = useClient();
-  const [blueprint] = useState(() => {
+  const [skill] = useState(() => {
     const space = client.spaces.get()[0];
     invariant(space, 'TemplateForm story requires at least one space');
     return space.db.add(
-      Blueprint.make({
-        key: 'com.example.blueprint.test',
+      Skill.make({
+        key: 'com.example.skill.test',
         name: 'Test',
         instructions: Template.make({ source: TEMPLATE }),
       }),
@@ -43,12 +43,12 @@ const DefaultStory = () => {
 
   const handleChange: TemplateChangeCallback = useCallback(
     (mutate) => {
-      Obj.update(blueprint, (blueprint) => mutate(blueprint.instructions));
+      Obj.update(skill, (skill) => mutate(skill.instructions));
     },
-    [blueprint],
+    [skill],
   );
 
-  return <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />;
+  return <TemplateForm id={skill.id} template={skill.instructions} onChange={handleChange} />;
 };
 
 const meta = {
@@ -59,7 +59,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [Blueprint.Blueprint],
+      types: [Skill.Skill],
       createIdentity: true,
       createSpace: true,
     }),

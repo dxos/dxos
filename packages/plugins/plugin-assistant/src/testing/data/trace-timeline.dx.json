@@ -30,7 +30,7 @@
       "id": "01K2J2FZWH39F55CS7B26GP1Q3",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": { "keys": [] },
-      "content": "{{! System Prompt }}\n\n- You are a helpful assistant called Kai. \n- Your name is Kai and you are powered by different language models.\n- You were created by DXOS and operate inside of Composer and on the DXOS EDGE network.\n- In your initial greeting state your name and make some suggestions based on the current context objects.\n- You are an advanced AI assistant capable of creating and managing artifacts from provided data and tools.\n- Your task is to process user commands and questions and decide how best to respond.\n- In general be concise and direct.\n- Follow all instructions carefully.\n\n## Planning\n\n- Analyze the structure and type of the content in the user's message.\n- Determine if you complete the task using the available blueprint definitions?\n- If you can't complete the task using the available blueprint definitions, query the list of available blueprint definitions using the appropriate tool.\n- Identify which blueprint definitions are relevant to the user's request.\n- Evaluate the potential benefits of creating an artifact vs. normal processing for each identified element.\n- Make a final decision on whether to create an artifact and explain your reasoning.\n- Are the required blueprint definitions already available?\n- If not, select which blueprint definition(s) will be the most relevant and require them using the require_artifact_definitions tool.\n- The require'd artifact tools will be available for use after require.\n- If creating an artifact, outline how you will structure it within the response.\n- Decide if the artifact needs to be shown to the user.\n- Call the show tool to show the artifact to the user.\n- Your reasoning must include: whether to use artifacts or not, to create one or query, whether to show the artifact to the user, and how to structure the response.\n\n## Blueprints and Artifacts\n\n- Determine if the interaction involves an artifact. Prefer artifacts for tables, lists, spreadsheets, kanbans, games, images, and other structured data.\n- Determine if the user is explicitly talking about creating a new artifact, or wants to use an existing artifact.\n- If it is ambiguous, query for existing artifacts first and then decide.\n- If you decide to create an artifact, call the associated tool to create the artifact.\n- Artifacts are stored in the database. Tools are used to create and query artifacts.\n- If you are unsure about creating an artifact ask the user for clarification.\n- Artifacts are mutable objects that can change over the course of the conversation.\n- Always re-query the artifact using the tool (like query or inspect) to get the latest state of the artifact before answering the user.\n- You must never generate the id of the artifact; only recall the ids that are already in the history.\n- Artifacts are created by requiring the specific artifact using the require_artifact tool and creating it by calling the associated tool.\n- You can add suggested actions at the end of your response.\n- Suggested actions should be very concise and start with a verb and be phrased as a command to an agent -- not a question to the user.\n- Suggested actions must be in the form of a user instruction that you can follow.\n- Suggested actions could include actions that create artifacts.\n- After creating an artifact use a tool to add it to the chat context.\n\n## Navigation\n\n- When the user asks to open, go to, navigate to, or show a specific document, page, or object, use the navigation tools instead of loading content inline.\n- First, call the Resolve navigation targets tool to find the navigation path for the requested item.\n  - Without arguments, it returns available pages that can be navigated to.\n  - With a DXN in the query, it resolves that specific object to a navigation path.\n- If you know the object's DXN (e.g. from a database query or context objects), pass it in the query to get the exact navigation path.\n- Then, call the Open tool with the resolved navigation path(s) in the subject array to navigate the user to that item.\n- Do not respond with the document's content when the user asks to open it — open it in the main content area instead.\n- If multiple targets match, present the options to the user and let them choose which to open.\n\n## Response format\n\n- When updating the user about the progress of the work you are doing, put the update in a <status> XML tag.\n- Only when you need to show the result to the user or ask a question use a text block without status tags.\n\n<example>\n// reasoning...\n<status>Looking for emails from Depot</status>\n// tool call..\n<status>Found 2 emails from Depot.</status>\n<status>Loading email details</status>\n// tool call\n<status>Located mailbox</status>\nI found **2 emails from Depot**:\n</example>\n\nDo not do (no status tags):\n\n<incorrect_example>\n// reasoning...\n// tool call..\nI found 2 emails from Depot. Let me load their details:\n// tool call\nI found **2 emails from Depot**:\n</incorrect_example>\n\n- Avoid using plain text to tell the user what you are about to do; instead, use status blocks.\n- WRONG: Let me get...\n- CORRECT: <status>Getting...</status>"
+      "content": "{{! System Prompt }}\n\n- You are a helpful assistant called Kai. \n- Your name is Kai and you are powered by different language models.\n- You were created by DXOS and operate inside of Composer and on the DXOS EDGE network.\n- In your initial greeting state your name and make some suggestions based on the current context objects.\n- You are an advanced AI assistant capable of creating and managing artifacts from provided data and tools.\n- Your task is to process user commands and questions and decide how best to respond.\n- In general be concise and direct.\n- Follow all instructions carefully.\n\n## Planning\n\n- Analyze the structure and type of the content in the user's message.\n- Determine if you complete the task using the available skill definitions?\n- If you can't complete the task using the available skill definitions, query the list of available skill definitions using the appropriate tool.\n- Identify which skill definitions are relevant to the user's request.\n- Evaluate the potential benefits of creating an artifact vs. normal processing for each identified element.\n- Make a final decision on whether to create an artifact and explain your reasoning.\n- Are the required skill definitions already available?\n- If not, select which skill definition(s) will be the most relevant and require them using the require_artifact_definitions tool.\n- The require'd artifact tools will be available for use after require.\n- If creating an artifact, outline how you will structure it within the response.\n- Decide if the artifact needs to be shown to the user.\n- Call the show tool to show the artifact to the user.\n- Your reasoning must include: whether to use artifacts or not, to create one or query, whether to show the artifact to the user, and how to structure the response.\n\n## Skills and Artifacts\n\n- Determine if the interaction involves an artifact. Prefer artifacts for tables, lists, spreadsheets, kanbans, games, images, and other structured data.\n- Determine if the user is explicitly talking about creating a new artifact, or wants to use an existing artifact.\n- If it is ambiguous, query for existing artifacts first and then decide.\n- If you decide to create an artifact, call the associated tool to create the artifact.\n- Artifacts are stored in the database. Tools are used to create and query artifacts.\n- If you are unsure about creating an artifact ask the user for clarification.\n- Artifacts are mutable objects that can change over the course of the conversation.\n- Always re-query the artifact using the tool (like query or inspect) to get the latest state of the artifact before answering the user.\n- You must never generate the id of the artifact; only recall the ids that are already in the history.\n- Artifacts are created by requiring the specific artifact using the require_artifact tool and creating it by calling the associated tool.\n- You can add suggested actions at the end of your response.\n- Suggested actions should be very concise and start with a verb and be phrased as a command to an agent -- not a question to the user.\n- Suggested actions must be in the form of a user instruction that you can follow.\n- Suggested actions could include actions that create artifacts.\n- After creating an artifact use a tool to add it to the chat context.\n\n## Navigation\n\n- When the user asks to open, go to, navigate to, or show a specific document, page, or object, use the navigation tools instead of loading content inline.\n- First, call the Resolve navigation targets tool to find the navigation path for the requested item.\n  - Without arguments, it returns available pages that can be navigated to.\n  - With a DXN in the query, it resolves that specific object to a navigation path.\n- If you know the object's DXN (e.g. from a database query or context objects), pass it in the query to get the exact navigation path.\n- Then, call the Open tool with the resolved navigation path(s) in the subject array to navigate the user to that item.\n- Do not respond with the document's content when the user asks to open it — open it in the main content area instead.\n- If multiple targets match, present the options to the user and let them choose which to open.\n\n## Response format\n\n- When updating the user about the progress of the work you are doing, put the update in a <status> XML tag.\n- Only when you need to show the result to the user or ask a question use a text block without status tags.\n\n<example>\n// reasoning...\n<status>Looking for emails from Depot</status>\n// tool call..\n<status>Found 2 emails from Depot.</status>\n<status>Loading email details</status>\n// tool call\n<status>Located mailbox</status>\nI found **2 emails from Depot**:\n</example>\n\nDo not do (no status tags):\n\n<incorrect_example>\n// reasoning...\n// tool call..\nI found 2 emails from Depot. Let me load their details:\n// tool call\nI found **2 emails from Depot**:\n</incorrect_example>\n\n- Avoid using plain text to tell the user what you are about to do; instead, use status blocks.\n- WRONG: Let me get...\n- CORRECT: <status>Getting...</status>"
     },
     {
       "id": "01KQJ35ZRP2PH34G7XJ72XMF7W",
@@ -93,7 +93,7 @@
       "id": "01KQJ35ZT51BXEFD9PS9VXTXD3",
       "@type": "dxn:type:org.dxos.type.function:0.1.0",
       "@meta": { "keys": [] },
-      "description": "Agentic worker that executes a provided prompt using blueprints and tools.",
+      "description": "Agentic worker that executes a provided prompt using skills and tools.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false,
@@ -179,10 +179,10 @@
     },
     {
       "id": "01KQJ35ZTTRP6ZM7YZ1F5443AN",
-      "@type": "dxn:type:org.dxos.type.blueprint:0.1.0",
+      "@type": "dxn:type:org.dxos.type.skill:0.1.0",
       "@meta": { "keys": [] },
       "instructions": { "inputs": [], "source": { "/": "dxn:echo:@:01K2J2FZWH39F55CS7B26GP1Q3" } },
-      "key": "org.dxos.blueprint.assistant",
+      "key": "org.dxos.skill.assistant",
       "name": "Assistant",
       "tools": [
         "org.dxos.plugin.layout.operation.open",
@@ -197,12 +197,12 @@
     },
     {
       "id": "01KQJ35ZV2T5PN3824XYM2TG98",
-      "@type": "dxn:type:org.dxos.type.blueprint:0.1.0",
+      "@type": "dxn:type:org.dxos.type.skill:0.1.0",
       "@meta": { "keys": [] },
       "agentCanEnable": true,
       "description": "Query and manipulate objects in the ECHO database.",
       "instructions": { "source": { "/": "dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG97" } },
-      "key": "org.dxos.blueprint.database",
+      "key": "org.dxos.skill.database",
       "name": "Database",
       "tools": [
         "org.dxos.function.database.context-add",
@@ -224,16 +224,16 @@
       "id": "01KQJ35ZV7RKRG3YT3HTC6DKYW",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": { "keys": [] },
-      "content": "You are a wizard that helps the user create a new agent.\n\nAgents are goal oriented and autonomously driven.\nEach agent has instructions - the goal of the agent.\nThe instructions also typically describe what actions to perform in reaction to events (emails).\nThe agent has a number of associated artifacts to work with.\nAgents can subscribe to emails.\n\nAgents have a `cron` field: when set, the agent runs on a timer on that schedule (standard cron syntax).\nUse `cron` when the user wants the agent to run periodically (e.g. \"every morning\", \"once a day\", \"every 5 minutes\").\nExamples: `0 9 * * *` for daily at 09:00, or `*/5 * * * *` for every 5 minutes.\nTimer triggers bypass the qualifier and invoke the agent worker directly on the schedule.\n\nThe agent itself is an ECHO object and can be edited like any other object using the database blueprint.\nYou can edit the agent's instructions, name, and other properties directly.\nIf you edit the agent's `enabled` field, `filterEvents` field, subscriptions array, or `cron` field, you MUST call the sync-triggers function afterward to synchronize the triggers (`enabled` is applied to all triggers).\n\nIMPORTANT: Before attempting to create an agent call the [agent-rules] tool to get the rules for creating an agent."
+      "content": "You are a wizard that helps the user create a new agent.\n\nAgents are goal oriented and autonomously driven.\nEach agent has instructions - the goal of the agent.\nThe instructions also typically describe what actions to perform in reaction to events (emails).\nThe agent has a number of associated artifacts to work with.\nAgents can subscribe to emails.\n\nAgents have a `cron` field: when set, the agent runs on a timer on that schedule (standard cron syntax).\nUse `cron` when the user wants the agent to run periodically (e.g. \"every morning\", \"once a day\", \"every 5 minutes\").\nExamples: `0 9 * * *` for daily at 09:00, or `*/5 * * * *` for every 5 minutes.\nTimer triggers bypass the qualifier and invoke the agent worker directly on the schedule.\n\nThe agent itself is an ECHO object and can be edited like any other object using the database skill.\nYou can edit the agent's instructions, name, and other properties directly.\nIf you edit the agent's `enabled` field, `filterEvents` field, subscriptions array, or `cron` field, you MUST call the sync-triggers function afterward to synchronize the triggers (`enabled` is applied to all triggers).\n\nIMPORTANT: Before attempting to create an agent call the [agent-rules] tool to get the rules for creating an agent."
     },
     {
       "id": "01KQJ35ZV7RKRG3YT3HTC6DKYX",
-      "@type": "dxn:type:org.dxos.type.blueprint:0.1.0",
+      "@type": "dxn:type:org.dxos.type.skill:0.1.0",
       "@meta": { "keys": [] },
       "agentCanEnable": true,
       "description": "Help the user create a new agent (subscriptions, optional cron timer, sync-triggers after edits).",
       "instructions": { "inputs": [], "source": { "/": "dxn:echo:@:01KQJ35ZV7RKRG3YT3HTC6DKYW" } },
-      "key": "org.dxos.blueprint.agent-wizard",
+      "key": "org.dxos.skill.agent-wizard",
       "name": "Agent Wizard",
       "tools": [
         "org.dxos.function.agent-wizard.agent-rules",
@@ -245,29 +245,29 @@
       "id": "01KQJ35ZVT8C5X45VEB81X5NDW",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": { "keys": [] },
-      "content": "You can query available blueprints and enable them in the current conversation.\nUse [query-blueprints] to refresh the list of available blueprints.\nUse [refresh-blueprints] to update blueprint objects stored in the database from the built-in registry when they have drifted.\nUse [enable-blueprints] to enable blueprints by their keys. Always call [query-blueprints] first.\nOnly blueprints with agentCanEnable=true can be enabled by the agent.\n\n<available_blueprints>\n{{#each blueprints}}\n- {{key}} \"{{name}}\"{{#if description}} -- {{description}}{{/if}}{{#if agentCanEnable}} [agent-can-enable]{{/if}}\n{{/each}}\n</available_blueprints>\n\nNOTE: You must enable the blueprint to use it, only then the tools from that blueprint will appear."
+      "content": "You can query available skills and enable them in the current conversation.\nUse [query-skills] to refresh the list of available skills.\nUse [refresh-skills] to update skill objects stored in the database from the built-in registry when they have drifted.\nUse [enable-skills] to enable skills by their keys. Always call [query-skills] first.\nOnly skills with agentCanEnable=true can be enabled by the agent.\n\n<available_skills>\n{{#each skills}}\n- {{key}} \"{{name}}\"{{#if description}} -- {{description}}{{/if}}{{#if agentCanEnable}} [agent-can-enable]{{/if}}\n{{/each}}\n</available_skills>\n\nNOTE: You must enable the skill to use it, only then the tools from that skill will appear."
     },
     {
       "id": "01KQJ35ZVT8C5X45VEB81X5NDX",
-      "@type": "dxn:type:org.dxos.type.blueprint:0.1.0",
+      "@type": "dxn:type:org.dxos.type.skill:0.1.0",
       "@meta": { "keys": [] },
-      "description": "Query and enable blueprints in the current conversation.",
+      "description": "Query and enable skills in the current conversation.",
       "instructions": {
         "inputs": [
           {
-            "function": "org.dxos.function.blueprint-manager.query-blueprints",
+            "function": "org.dxos.function.skill-manager.query-skills",
             "kind": "function",
-            "name": "blueprints"
+            "name": "skills"
           }
         ],
         "source": { "/": "dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDW" }
       },
-      "key": "org.dxos.blueprint.blueprint-manager",
-      "name": "Blueprint Manager",
+      "key": "org.dxos.skill.skill-manager",
+      "name": "Skill Manager",
       "tools": [
-        "org.dxos.function.blueprint-manager.query-blueprints",
-        "org.dxos.function.blueprint-manager.enable-blueprints",
-        "org.dxos.function.blueprint-manager.refresh-blueprints"
+        "org.dxos.function.skill-manager.query-skills",
+        "org.dxos.function.skill-manager.enable-skills",
+        "org.dxos.function.skill-manager.refresh-skills"
       ]
     },
     {
@@ -320,11 +320,11 @@
     },
     {
       "id": "01KQJ3N5RWJADS95EAYV8WVX8M",
-      "@type": "dxn:type:org.dxos.type.blueprint:0.1.0",
+      "@type": "dxn:type:org.dxos.type.skill:0.1.0",
       "@meta": { "keys": [] },
       "description": "Work with markdown documents. Preferred over raw database operations.",
       "instructions": { "inputs": [], "source": { "/": "dxn:echo:@:01KQJ3N5RVY70GDSYPFWF5HHVM" } },
-      "key": "org.dxos.blueprint.markdown",
+      "key": "org.dxos.skill.markdown",
       "name": "Markdown",
       "tools": [
         "org.dxos.function.markdown.create",
@@ -354,7 +354,7 @@
           "name": "Database Object Count"
         }
       ],
-      "blueprints": [
+      "skills": [
         { "/": "dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX" },
         { "/": "dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98" },
         { "/": "dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M" }
@@ -383,14 +383,14 @@
     },
     {
       "id": "01KQJ3N5SGACFQ2JJ0HVXSX1A8",
-      "@type": "dxn:type:org.dxos.type.blueprint:0.1.0",
+      "@type": "dxn:type:org.dxos.type.skill:0.1.0",
       "@meta": { "keys": [] },
       "instructions": {
         "inputs": [{ "function": "org.dxos.function.agent.get-context", "kind": "function", "name": "agent" }],
         "source": { "/": "dxn:echo:@:01KQJ3N5SGACFQ2JJ0HVXSX1A7" }
       },
-      "key": "org.dxos.blueprint.agent",
-      "name": "Agent blueprint",
+      "key": "org.dxos.skill.agent",
+      "name": "Agent skill",
       "tools": ["org.dxos.function.agent.add-artifact"]
     },
     {
@@ -826,7 +826,7 @@
           "@type": "dxn:type:org.dxos.type.contextBinding:0.1.0",
           "@meta": { "keys": [{ "source": "org.dxos.key.queue-position", "id": "0" }] },
           "@dxn": "dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTM5S1QYV0P5MC93ZP8:01KQJ35ZWCSC5S19CC0Y9D1Y1J",
-          "blueprints": {
+          "skills": {
             "added": [
               { "/": "dxn:echo:@:01KQJ35ZTTRP6ZM7YZ1F5443AN" },
               { "/": "dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98" },
@@ -864,14 +864,14 @@
           "meta": {
             "pid": "ff12f227-488a-46e8-ab24-9d8761bd9ab9",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650057034,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -883,7 +883,7 @@
           "meta": {
             "pid": "ff12f227-488a-46e8-ab24-9d8761bd9ab9",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -891,8 +891,8 @@
               "type": "operation.end",
               "timestamp": 1777650057035,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -929,14 +929,14 @@
           "meta": {
             "pid": "93b73b3d-6e54-4c99-88ed-bfaeb1a32b0e",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650057220,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -948,7 +948,7 @@
           "meta": {
             "pid": "93b73b3d-6e54-4c99-88ed-bfaeb1a32b0e",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -956,8 +956,8 @@
               "type": "operation.end",
               "timestamp": 1777650057221,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1119,14 +1119,14 @@
           "meta": {
             "pid": "304e85ac-cc38-4a35-8626-6593be897083",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650369809,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1138,7 +1138,7 @@
           "meta": {
             "pid": "304e85ac-cc38-4a35-8626-6593be897083",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1146,8 +1146,8 @@
               "type": "operation.end",
               "timestamp": 1777650369810,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1184,14 +1184,14 @@
           "meta": {
             "pid": "ed314e30-ad21-4a8b-9332-9cfe986b5858",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650370036,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1203,7 +1203,7 @@
           "meta": {
             "pid": "ed314e30-ad21-4a8b-9332-9cfe986b5858",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1211,8 +1211,8 @@
               "type": "operation.end",
               "timestamp": 1777650370037,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1308,14 +1308,14 @@
           "meta": {
             "pid": "2e3a9ed8-79db-4e93-99c5-22b6faad446c",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650376415,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1327,7 +1327,7 @@
           "meta": {
             "pid": "2e3a9ed8-79db-4e93-99c5-22b6faad446c",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1335,8 +1335,8 @@
               "type": "operation.end",
               "timestamp": 1777650376416,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1373,14 +1373,14 @@
           "meta": {
             "pid": "4f30af4e-2276-4fb0-95ec-c972fd3d10a3",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650376637,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1392,7 +1392,7 @@
           "meta": {
             "pid": "4f30af4e-2276-4fb0-95ec-c972fd3d10a3",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1400,8 +1400,8 @@
               "type": "operation.end",
               "timestamp": 1777650376638,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1497,14 +1497,14 @@
           "meta": {
             "pid": "094a7a60-21e4-4326-bb0b-c5034bd95a99",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650526214,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1516,7 +1516,7 @@
           "meta": {
             "pid": "094a7a60-21e4-4326-bb0b-c5034bd95a99",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1524,8 +1524,8 @@
               "type": "operation.end",
               "timestamp": 1777650526216,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1565,14 +1565,14 @@
           "meta": {
             "pid": "000a9b1f-23fb-4bc2-b912-d9bff7e71135",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650526482,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1584,7 +1584,7 @@
           "meta": {
             "pid": "000a9b1f-23fb-4bc2-b912-d9bff7e71135",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1592,8 +1592,8 @@
               "type": "operation.end",
               "timestamp": 1777650526484,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1773,7 +1773,7 @@
                   "_tag": "toolResult",
                   "toolCallId": "toolu_01MPiMFnBzLasVrP7WDa2igw",
                   "name": "agent-rules",
-                  "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":\"You can ask the user for qualifying questions about the agents.\\nIf agents should actively read incoming emails, query for mailboxes and add a subscription to them.\\nIf the user wants the agent to run on a schedule (e.g. \\\"every morning\\\", \\\"every 5 minutes\\\"), set the agent's `cron` field to a standard cron expression (e.g. `0 9 * * *` for daily at 09:00, `*/5 * * * *` for every 5 minutes). Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.\\nUse [query-blueprints] from the Blueprint Manager to query for available blueprints and their keys.\\nUse [create-agent] function to create a new agent.\\n\\nNotable blueprints (query to get their keys):\\n\\n- Blueprint Manger - allows agent to self-enable blueprints (always include this one).\\n- Database -- CRUD on objects in the ECHO database.\\n- Markdown -- Create and edit markdown documents.\\n- Websearch -- Search the web for information.\\n- Browser -- Virtual browser via playwright when simple WebSearch is not enough.\\n- Memory -- Memory to store and retrieve information.\\n\\nExperimental blueprints that are discouraged:\\n\\n- Research\\n- Design\\n- Agent (not wizard) -- those are agent internals, they are auto-added to every new agent.\\n\\n<example_agent>\\n  ## CRM from your inbox\\n\\n  Blueprints: database, websearch, browser\\n\\n  Subscribe to your inboxes.\\n  Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.\\n  Also run a quick research on the web to find more information about the person or organization and save it to the database.\\n</example_agent>\\n\\n<example_agent>\\n  ## Parcel tracking\\n\\n  Blueprints: database\\n\\n  Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.\\n\\n  Before creating an agent, use the Database blueprint to create an Order schema:\\n    - seller\\n    - name\\n    - price\\n    - status (enum of: pending, shipped, waiting for pickup, delivered, cancelled, returned)\\n    - tracking numbers/notes\\n    - date of delivery\\n    - shipping address\\n</example_agent>\\n\\n<example_agent>\\n  ## Comms assistant\\n\\n  Blueprints: database, markdown, inbox\\n\\n  Helps user maintain comms with external parites via email.\\n  Ask user specifically who they want to communicate with and on what topic.\\n  Agent should keep a markdown document in artifacts outlining the current state of the comms.\\n  Agent should propose drafts to follow up on the comms. Only propose sensible drafts, do not propose drafts that are not relevant or actionable.\\n</example_agent>\"}",
+                  "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":\"You can ask the user for qualifying questions about the agents.\\nIf agents should actively read incoming emails, query for mailboxes and add a subscription to them.\\nIf the user wants the agent to run on a schedule (e.g. \\\"every morning\\\", \\\"every 5 minutes\\\"), set the agent's `cron` field to a standard cron expression (e.g. `0 9 * * *` for daily at 09:00, `*/5 * * * *` for every 5 minutes). Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.\\nUse [query-skills] from the Skill Manager to query for available skills and their keys.\\nUse [create-agent] function to create a new agent.\\n\\nNotable skills (query to get their keys):\\n\\n- Skill Manger - allows agent to self-enable skills (always include this one).\\n- Database -- CRUD on objects in the ECHO database.\\n- Markdown -- Create and edit markdown documents.\\n- Websearch -- Search the web for information.\\n- Browser -- Virtual browser via playwright when simple WebSearch is not enough.\\n- Memory -- Memory to store and retrieve information.\\n\\nExperimental skills that are discouraged:\\n\\n- Research\\n- Design\\n- Agent (not wizard) -- those are agent internals, they are auto-added to every new agent.\\n\\n<example_agent>\\n  ## CRM from your inbox\\n\\n  Skills: database, websearch, browser\\n\\n  Subscribe to your inboxes.\\n  Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.\\n  Also run a quick research on the web to find more information about the person or organization and save it to the database.\\n</example_agent>\\n\\n<example_agent>\\n  ## Parcel tracking\\n\\n  Skills: database\\n\\n  Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.\\n\\n  Before creating an agent, use the Database skill to create an Order schema:\\n    - seller\\n    - name\\n    - price\\n    - status (enum of: pending, shipped, waiting for pickup, delivered, cancelled, returned)\\n    - tracking numbers/notes\\n    - date of delivery\\n    - shipping address\\n</example_agent>\\n\\n<example_agent>\\n  ## Comms assistant\\n\\n  Skills: database, markdown, inbox\\n\\n  Helps user maintain comms with external parites via email.\\n  Ask user specifically who they want to communicate with and on what topic.\\n  Agent should keep a markdown document in artifacts outlining the current state of the comms.\\n  Agent should propose drafts to follow up on the comms. Only propose sensible drafts, do not propose drafts that are not relevant or actionable.\\n</example_agent>\"}",
                   "providerExecuted": false
                 }
               }
@@ -1788,14 +1788,14 @@
           "meta": {
             "pid": "cf4e800c-670f-4226-8fa9-1aafdc559eee",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650530150,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -1807,7 +1807,7 @@
           "meta": {
             "pid": "cf4e800c-670f-4226-8fa9-1aafdc559eee",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -1815,8 +1815,8 @@
               "type": "operation.end",
               "timestamp": 1777650530151,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -1842,7 +1842,7 @@
                 "role": "assistant",
                 "block": {
                   "_tag": "reasoning",
-                  "reasoningText": "The user wants an example agent that prints the number of database objects every minute. This agent should:\n1. Run on a cron schedule: `*/1 * * * *` (every minute)\n2. Use the database blueprint to query objects\n3. Use markdown blueprint to log/print results\n\nLet me create this agent with the appropriate blueprints."
+                  "reasoningText": "The user wants an example agent that prints the number of database objects every minute. This agent should:\n1. Run on a cron schedule: `*/1 * * * *` (every minute)\n2. Use the database skill to query objects\n3. Use markdown skill to log/print results\n\nLet me create this agent with the appropriate skills."
                 }
               }
             }
@@ -1893,7 +1893,7 @@
                   "_tag": "toolCall",
                   "toolCallId": "toolu_01UgmkhhnD4FKPwpGZBhLW9a",
                   "name": "create-agent",
-                  "input": "{\"name\": \"Object Counter\", \"instructions\": \"You are a simple monitoring agent that counts database objects.\\n\\nEvery time you are triggered (every minute), do the following:\\n1. Query the database for all objects (no filters).\\n2. Count the total number of objects returned.\\n3. Update your markdown document with the latest count and a timestamp.\\n4. Keep a running log of the last 10 counts in the document so the user can see trends.\\n\\nFormat the document like:\\n# Database Object Count\\n\\n**Latest:** [count] objects at [timestamp]\\n\\n## Recent History\\n| Time | Count |\\n|------|-------|\\n| ... | ... |\\n\", \"blueprints\": [\"org.dxos.blueprint.blueprint-manager\",\"org.dxos.blueprint.database\",\"org.dxos.blueprint.markdown\"], \"subscriptions\": []}",
+                  "input": "{\"name\": \"Object Counter\", \"instructions\": \"You are a simple monitoring agent that counts database objects.\\n\\nEvery time you are triggered (every minute), do the following:\\n1. Query the database for all objects (no filters).\\n2. Count the total number of objects returned.\\n3. Update your markdown document with the latest count and a timestamp.\\n4. Keep a running log of the last 10 counts in the document so the user can see trends.\\n\\nFormat the document like:\\n# Database Object Count\\n\\n**Latest:** [count] objects at [timestamp]\\n\\n## Recent History\\n| Time | Count |\\n|------|-------|\\n| ... | ... |\\n\", \"skills\": [\"org.dxos.skill.skill-manager\",\"org.dxos.skill.database\",\"org.dxos.skill.markdown\"], \"subscriptions\": []}",
                   "providerExecuted": false
                 }
               }
@@ -2034,7 +2034,7 @@
                   "_tag": "toolResult",
                   "toolCallId": "toolu_01UgmkhhnD4FKPwpGZBhLW9a",
                   "name": "create-agent",
-                  "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"artifacts\":[],\"blueprints\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"}}}",
+                  "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"artifacts\":[],\"skills\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"}}}",
                   "providerExecuted": false
                 }
               }
@@ -2049,14 +2049,14 @@
           "meta": {
             "pid": "c3c7374e-ac91-433b-900c-e55984aa8bda",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650538774,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -2068,7 +2068,7 @@
           "meta": {
             "pid": "c3c7374e-ac91-433b-900c-e55984aa8bda",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -2076,8 +2076,8 @@
               "type": "operation.end",
               "timestamp": 1777650538776,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -2257,7 +2257,7 @@
                   "_tag": "toolResult",
                   "toolCallId": "toolu_01CS8wqHpU67z9v8CrTqcJx9",
                   "name": "update-object",
-                  "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"blueprints\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}}",
+                  "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"skills\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}}",
                   "providerExecuted": false
                 }
               }
@@ -2272,14 +2272,14 @@
           "meta": {
             "pid": "3a103c08-2255-4f8a-9ed1-f96888dbefa1",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650542671,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -2291,7 +2291,7 @@
           "meta": {
             "pid": "3a103c08-2255-4f8a-9ed1-f96888dbefa1",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -2299,8 +2299,8 @@
               "type": "operation.end",
               "timestamp": 1777650542672,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -2442,14 +2442,14 @@
           "meta": {
             "pid": "d7b1d853-7bd4-4e2a-8a0c-a67269422d4b",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650545850,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -2461,7 +2461,7 @@
           "meta": {
             "pid": "d7b1d853-7bd4-4e2a-8a0c-a67269422d4b",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -2469,8 +2469,8 @@
               "type": "operation.end",
               "timestamp": 1777650545852,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -2616,14 +2616,14 @@
           "meta": {
             "pid": "6d2ffd9f-aeea-42f9-be31-e098c49f0167",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650548689,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -2635,7 +2635,7 @@
           "meta": {
             "pid": "6d2ffd9f-aeea-42f9-be31-e098c49f0167",
             "parentPid": "021e3393-6b0c-48f9-a940-532a3c6fbfdc",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -2643,8 +2643,8 @@
               "type": "operation.end",
               "timestamp": 1777650548690,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -2787,14 +2787,14 @@
           "meta": {
             "pid": "e53ab8ac-a19f-45a6-9bd7-6c551206c9fa",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650601085,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -2806,7 +2806,7 @@
           "meta": {
             "pid": "e53ab8ac-a19f-45a6-9bd7-6c551206c9fa",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -2814,8 +2814,8 @@
               "type": "operation.end",
               "timestamp": 1777650601086,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -2893,14 +2893,14 @@
           "meta": {
             "pid": "d40f5a0e-0a0f-4140-9c00-c2dbe8b05ee1",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650601344,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -2912,7 +2912,7 @@
           "meta": {
             "pid": "d40f5a0e-0a0f-4140-9c00-c2dbe8b05ee1",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -2920,8 +2920,8 @@
               "type": "operation.end",
               "timestamp": 1777650601345,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -3134,7 +3134,7 @@
                   "_tag": "toolResult",
                   "toolCallId": "toolu_01FG9BsVnHs8MJGmwRTEiTGv",
                   "name": "query",
-                  "result": "[{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01K2J2FZWH39F55CS7B26GP1Q3\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z0PZGSK94YJYFZ12EGR\",\"typename\":\"org.dxos.type.spaceProperties\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z2XWAGB6WS4SGGEATJR\",\"typename\":\"org.dxos.type.expando\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z4RW6QCBSB9731XJ464\",\"typename\":\"org.dxos.type.collection\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRP2PH34G7XJ72XMF7W\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRQ9BXCHMH5V69DYSXJ\",\"typename\":\"org.dxos.type.mailbox\",\"label\":\"Mail\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRV4CDS1780TC9FJ893\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRW7S1RGGK3MMHYZT2R\",\"typename\":\"org.dxos.type.calendar\",\"label\":\"Calendar\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSP2YJHQCQ43WK713J3\",\"typename\":\"org.dxos.type.view\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSVREP9H119ZWT66K8J\",\"typename\":\"org.dxos.type.table\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZT51BXEFD9PS9VXTXD3\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTM5S1QYV0P5MC93ZP8\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTPCW09F2C39QDSHSWN\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTTRP6ZM7YZ1F5443AN\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Assistant\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG97\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG98\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Database\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYX\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Agent Wizard\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDX\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Blueprint Manager\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYC9XKQ77QYVZJRW775\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYDD86GXSHHZDNGJZZT\",\"typename\":\"org.dxos.type.document\",\"label\":\"README\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYMQD7FQV4RBQ1C6EKR\",\"typename\":\"org.dxos.type.collection\",\"label\":\"Getting Started\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3640F8GREHF39SHV9D0J3\",\"typename\":\"org.dxos.type.feed\",\"label\":\"Execution Trace\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4S4KFWTMMVHVT9Q1QW\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4WVN7H1Z5S586KRE73\",\"typename\":\"org.dxos.type.assistant.chat\",\"label\":\"New Chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RVY70GDSYPFWF5HHVM\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RWJADS95EAYV8WVX8M\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Markdown\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEVZ\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW0\",\"typename\":\"org.dxos.type.plan\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"typename\":\"org.dxos.type.agent\",\"label\":\"Object Counter\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SE00EQPJG2RGX1XVQG\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A7\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A8\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Agent blueprint\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5T9Q10J08E1RAVPV2A2\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TCMSGHXYWPCYZ0RQAW\",\"typename\":\"org.dxos.relation.assistant.companionTo\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5VRZDJBGWGVTHVVZ043\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT5Y1950MH57GZHTDH9\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT84JYFZ0M7TVY20EQ3\",\"typename\":\"org.dxos.type.trigger\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCV8MK9HHX7CGSJFQB8M\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCVB1CBJD9XFG5DZPFTZ\",\"typename\":\"org.dxos.type.trigger\"}]",
+                  "result": "[{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01K2J2FZWH39F55CS7B26GP1Q3\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z0PZGSK94YJYFZ12EGR\",\"typename\":\"org.dxos.type.spaceProperties\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z2XWAGB6WS4SGGEATJR\",\"typename\":\"org.dxos.type.expando\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z4RW6QCBSB9731XJ464\",\"typename\":\"org.dxos.type.collection\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRP2PH34G7XJ72XMF7W\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRQ9BXCHMH5V69DYSXJ\",\"typename\":\"org.dxos.type.mailbox\",\"label\":\"Mail\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRV4CDS1780TC9FJ893\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRW7S1RGGK3MMHYZT2R\",\"typename\":\"org.dxos.type.calendar\",\"label\":\"Calendar\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSP2YJHQCQ43WK713J3\",\"typename\":\"org.dxos.type.view\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSVREP9H119ZWT66K8J\",\"typename\":\"org.dxos.type.table\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZT51BXEFD9PS9VXTXD3\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTM5S1QYV0P5MC93ZP8\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTPCW09F2C39QDSHSWN\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTTRP6ZM7YZ1F5443AN\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Assistant\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG97\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG98\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Database\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYX\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Agent Wizard\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDX\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Skill Manager\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYC9XKQ77QYVZJRW775\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYDD86GXSHHZDNGJZZT\",\"typename\":\"org.dxos.type.document\",\"label\":\"README\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYMQD7FQV4RBQ1C6EKR\",\"typename\":\"org.dxos.type.collection\",\"label\":\"Getting Started\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3640F8GREHF39SHV9D0J3\",\"typename\":\"org.dxos.type.feed\",\"label\":\"Execution Trace\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4S4KFWTMMVHVT9Q1QW\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4WVN7H1Z5S586KRE73\",\"typename\":\"org.dxos.type.assistant.chat\",\"label\":\"New Chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RVY70GDSYPFWF5HHVM\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RWJADS95EAYV8WVX8M\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Markdown\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEVZ\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW0\",\"typename\":\"org.dxos.type.plan\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"typename\":\"org.dxos.type.agent\",\"label\":\"Object Counter\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SE00EQPJG2RGX1XVQG\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A7\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A8\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Agent skill\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5T9Q10J08E1RAVPV2A2\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TCMSGHXYWPCYZ0RQAW\",\"typename\":\"org.dxos.relation.assistant.companionTo\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5VRZDJBGWGVTHVVZ043\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT5Y1950MH57GZHTDH9\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT84JYFZ0M7TVY20EQ3\",\"typename\":\"org.dxos.type.trigger\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCV8MK9HHX7CGSJFQB8M\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCVB1CBJD9XFG5DZPFTZ\",\"typename\":\"org.dxos.type.trigger\"}]",
                   "providerExecuted": false
                 }
               }
@@ -3162,7 +3162,7 @@
                   "_tag": "toolResult",
                   "toolCallId": "toolu_01LUu4fSqKeVVBbWBDeekyJS",
                   "name": "load-object",
-                  "result": "[{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"blueprints\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}]",
+                  "result": "[{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"skills\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}]",
                   "providerExecuted": false
                 }
               }
@@ -3219,14 +3219,14 @@
           "meta": {
             "pid": "a4216234-853f-4e5e-9c48-be703c51eab9",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650607176,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -3238,7 +3238,7 @@
           "meta": {
             "pid": "a4216234-853f-4e5e-9c48-be703c51eab9",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -3246,8 +3246,8 @@
               "type": "operation.end",
               "timestamp": 1777650607177,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -3476,14 +3476,14 @@
           "meta": {
             "pid": "5beeeba9-e645-4c6a-bef8-9252f8558daf",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650622748,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -3495,7 +3495,7 @@
           "meta": {
             "pid": "5beeeba9-e645-4c6a-bef8-9252f8558daf",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -3503,8 +3503,8 @@
               "type": "operation.end",
               "timestamp": 1777650622748,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -3682,14 +3682,14 @@
           "meta": {
             "pid": "ba13b711-f40e-4e61-a399-95240a0e0b9a",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
             {
               "type": "operation.start",
               "timestamp": 1777650626431,
-              "data": { "key": "org.dxos.function.blueprint-manager.query-blueprints", "name": "Query blueprints" }
+              "data": { "key": "org.dxos.function.skill-manager.query-skills", "name": "Query skills" }
             }
           ]
         },
@@ -3701,7 +3701,7 @@
           "meta": {
             "pid": "ba13b711-f40e-4e61-a399-95240a0e0b9a",
             "parentPid": "e80d7832-c3f5-4c5e-bb64-aec9897ebfd2",
-            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+            "processName": "Query skills (org.dxos.function.skill-manager.query-skills)"
           },
           "isEphemeral": false,
           "events": [
@@ -3709,8 +3709,8 @@
               "type": "operation.end",
               "timestamp": 1777650626432,
               "data": {
-                "key": "org.dxos.function.blueprint-manager.query-blueprints",
-                "name": "Query blueprints",
+                "key": "org.dxos.function.skill-manager.query-skills",
+                "name": "Query skills",
                 "outcome": "success"
               }
             }
@@ -3824,7 +3824,7 @@
           "@type": "dxn:type:org.dxos.type.contextBinding:0.1.0",
           "@meta": { "keys": [{ "source": "org.dxos.key.queue-position", "id": "1" }] },
           "@dxn": "dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4S4KFWTMMVHVT9Q1QW:01KQJ36D7T6W1PJ7V12CZAAJSB",
-          "blueprints": {
+          "skills": {
             "added": [
               { "/": "dxn:echo:@:01KQJ35ZTTRP6ZM7YZ1F5443AN" },
               { "/": "dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98" },
@@ -4053,7 +4053,7 @@
               "_tag": "toolResult",
               "toolCallId": "toolu_01MPiMFnBzLasVrP7WDa2igw",
               "name": "agent-rules",
-              "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":\"You can ask the user for qualifying questions about the agents.\\nIf agents should actively read incoming emails, query for mailboxes and add a subscription to them.\\nIf the user wants the agent to run on a schedule (e.g. \\\"every morning\\\", \\\"every 5 minutes\\\"), set the agent's `cron` field to a standard cron expression (e.g. `0 9 * * *` for daily at 09:00, `*/5 * * * *` for every 5 minutes). Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.\\nUse [query-blueprints] from the Blueprint Manager to query for available blueprints and their keys.\\nUse [create-agent] function to create a new agent.\\n\\nNotable blueprints (query to get their keys):\\n\\n- Blueprint Manger - allows agent to self-enable blueprints (always include this one).\\n- Database -- CRUD on objects in the ECHO database.\\n- Markdown -- Create and edit markdown documents.\\n- Websearch -- Search the web for information.\\n- Browser -- Virtual browser via playwright when simple WebSearch is not enough.\\n- Memory -- Memory to store and retrieve information.\\n\\nExperimental blueprints that are discouraged:\\n\\n- Research\\n- Design\\n- Agent (not wizard) -- those are agent internals, they are auto-added to every new agent.\\n\\n<example_agent>\\n  ## CRM from your inbox\\n\\n  Blueprints: database, websearch, browser\\n\\n  Subscribe to your inboxes.\\n  Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.\\n  Also run a quick research on the web to find more information about the person or organization and save it to the database.\\n</example_agent>\\n\\n<example_agent>\\n  ## Parcel tracking\\n\\n  Blueprints: database\\n\\n  Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.\\n\\n  Before creating an agent, use the Database blueprint to create an Order schema:\\n    - seller\\n    - name\\n    - price\\n    - status (enum of: pending, shipped, waiting for pickup, delivered, cancelled, returned)\\n    - tracking numbers/notes\\n    - date of delivery\\n    - shipping address\\n</example_agent>\\n\\n<example_agent>\\n  ## Comms assistant\\n\\n  Blueprints: database, markdown, inbox\\n\\n  Helps user maintain comms with external parites via email.\\n  Ask user specifically who they want to communicate with and on what topic.\\n  Agent should keep a markdown document in artifacts outlining the current state of the comms.\\n  Agent should propose drafts to follow up on the comms. Only propose sensible drafts, do not propose drafts that are not relevant or actionable.\\n</example_agent>\"}",
+              "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":\"You can ask the user for qualifying questions about the agents.\\nIf agents should actively read incoming emails, query for mailboxes and add a subscription to them.\\nIf the user wants the agent to run on a schedule (e.g. \\\"every morning\\\", \\\"every 5 minutes\\\"), set the agent's `cron` field to a standard cron expression (e.g. `0 9 * * *` for daily at 09:00, `*/5 * * * *` for every 5 minutes). Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.\\nUse [query-skills] from the Skill Manager to query for available skills and their keys.\\nUse [create-agent] function to create a new agent.\\n\\nNotable skills (query to get their keys):\\n\\n- Skill Manger - allows agent to self-enable skills (always include this one).\\n- Database -- CRUD on objects in the ECHO database.\\n- Markdown -- Create and edit markdown documents.\\n- Websearch -- Search the web for information.\\n- Browser -- Virtual browser via playwright when simple WebSearch is not enough.\\n- Memory -- Memory to store and retrieve information.\\n\\nExperimental skills that are discouraged:\\n\\n- Research\\n- Design\\n- Agent (not wizard) -- those are agent internals, they are auto-added to every new agent.\\n\\n<example_agent>\\n  ## CRM from your inbox\\n\\n  Skills: database, websearch, browser\\n\\n  Subscribe to your inboxes.\\n  Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.\\n  Also run a quick research on the web to find more information about the person or organization and save it to the database.\\n</example_agent>\\n\\n<example_agent>\\n  ## Parcel tracking\\n\\n  Skills: database\\n\\n  Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.\\n\\n  Before creating an agent, use the Database skill to create an Order schema:\\n    - seller\\n    - name\\n    - price\\n    - status (enum of: pending, shipped, waiting for pickup, delivered, cancelled, returned)\\n    - tracking numbers/notes\\n    - date of delivery\\n    - shipping address\\n</example_agent>\\n\\n<example_agent>\\n  ## Comms assistant\\n\\n  Skills: database, markdown, inbox\\n\\n  Helps user maintain comms with external parites via email.\\n  Ask user specifically who they want to communicate with and on what topic.\\n  Agent should keep a markdown document in artifacts outlining the current state of the comms.\\n  Agent should propose drafts to follow up on the comms. Only propose sensible drafts, do not propose drafts that are not relevant or actionable.\\n</example_agent>\"}",
               "providerExecuted": false
             }
           ]
@@ -4068,7 +4068,7 @@
           "blocks": [
             {
               "_tag": "reasoning",
-              "reasoningText": "The user wants an example agent that prints the number of database objects every minute. This agent should:\n1. Run on a cron schedule: `*/1 * * * *` (every minute)\n2. Use the database blueprint to query objects\n3. Use markdown blueprint to log/print results\n\nLet me create this agent with the appropriate blueprints."
+              "reasoningText": "The user wants an example agent that prints the number of database objects every minute. This agent should:\n1. Run on a cron schedule: `*/1 * * * *` (every minute)\n2. Use the database skill to query objects\n3. Use markdown skill to log/print results\n\nLet me create this agent with the appropriate skills."
             }
           ]
         },
@@ -4093,7 +4093,7 @@
               "_tag": "toolCall",
               "toolCallId": "toolu_01UgmkhhnD4FKPwpGZBhLW9a",
               "name": "create-agent",
-              "input": "{\"name\": \"Object Counter\", \"instructions\": \"You are a simple monitoring agent that counts database objects.\\n\\nEvery time you are triggered (every minute), do the following:\\n1. Query the database for all objects (no filters).\\n2. Count the total number of objects returned.\\n3. Update your markdown document with the latest count and a timestamp.\\n4. Keep a running log of the last 10 counts in the document so the user can see trends.\\n\\nFormat the document like:\\n# Database Object Count\\n\\n**Latest:** [count] objects at [timestamp]\\n\\n## Recent History\\n| Time | Count |\\n|------|-------|\\n| ... | ... |\\n\", \"blueprints\": [\"org.dxos.blueprint.blueprint-manager\",\"org.dxos.blueprint.database\",\"org.dxos.blueprint.markdown\"], \"subscriptions\": []}",
+              "input": "{\"name\": \"Object Counter\", \"instructions\": \"You are a simple monitoring agent that counts database objects.\\n\\nEvery time you are triggered (every minute), do the following:\\n1. Query the database for all objects (no filters).\\n2. Count the total number of objects returned.\\n3. Update your markdown document with the latest count and a timestamp.\\n4. Keep a running log of the last 10 counts in the document so the user can see trends.\\n\\nFormat the document like:\\n# Database Object Count\\n\\n**Latest:** [count] objects at [timestamp]\\n\\n## Recent History\\n| Time | Count |\\n|------|-------|\\n| ... | ... |\\n\", \"skills\": [\"org.dxos.skill.skill-manager\",\"org.dxos.skill.database\",\"org.dxos.skill.markdown\"], \"subscriptions\": []}",
               "providerExecuted": false
             }
           ]
@@ -4128,7 +4128,7 @@
               "_tag": "toolResult",
               "toolCallId": "toolu_01UgmkhhnD4FKPwpGZBhLW9a",
               "name": "create-agent",
-              "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"artifacts\":[],\"blueprints\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"}}}",
+              "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"artifacts\":[],\"skills\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"}}}",
               "providerExecuted": false
             }
           ]
@@ -4203,7 +4203,7 @@
               "_tag": "toolResult",
               "toolCallId": "toolu_01CS8wqHpU67z9v8CrTqcJx9",
               "name": "update-object",
-              "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"blueprints\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}}",
+              "result": "{\"_id\":\"Exit\",\"_tag\":\"Success\",\"value\":{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"skills\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}}",
               "providerExecuted": false
             }
           ]
@@ -4300,7 +4300,7 @@
           "@type": "dxn:type:org.dxos.type.contextBinding:0.1.0",
           "@meta": { "keys": [{ "source": "org.dxos.key.queue-position", "id": "34" }] },
           "@dxn": "dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4S4KFWTMMVHVT9Q1QW:01KQJ3NFJECJW3QWVKQ2K0MFGT",
-          "blueprints": { "added": [], "removed": [] },
+          "skills": { "added": [], "removed": [] },
           "objects": { "added": [{ "/": "dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW1" }], "removed": [] }
         },
         {
@@ -4363,7 +4363,7 @@
           "@type": "dxn:type:org.dxos.type.contextBinding:0.1.0",
           "@meta": { "keys": [{ "source": "org.dxos.key.queue-position", "id": "22" }] },
           "@dxn": "dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SE00EQPJG2RGX1XVQG:01KQJ3N5SQ36GJRR4BMWAZYAF3",
-          "blueprints": {
+          "skills": {
             "added": [
               { "/": "dxn:echo:@:01KQJ3N5SGACFQ2JJ0HVXSX1A8" },
               { "/": "dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX" },
@@ -4461,14 +4461,14 @@
               "_tag": "toolResult",
               "toolCallId": "toolu_01FG9BsVnHs8MJGmwRTEiTGv",
               "name": "query",
-              "result": "[{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01K2J2FZWH39F55CS7B26GP1Q3\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z0PZGSK94YJYFZ12EGR\",\"typename\":\"org.dxos.type.spaceProperties\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z2XWAGB6WS4SGGEATJR\",\"typename\":\"org.dxos.type.expando\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z4RW6QCBSB9731XJ464\",\"typename\":\"org.dxos.type.collection\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRP2PH34G7XJ72XMF7W\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRQ9BXCHMH5V69DYSXJ\",\"typename\":\"org.dxos.type.mailbox\",\"label\":\"Mail\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRV4CDS1780TC9FJ893\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRW7S1RGGK3MMHYZT2R\",\"typename\":\"org.dxos.type.calendar\",\"label\":\"Calendar\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSP2YJHQCQ43WK713J3\",\"typename\":\"org.dxos.type.view\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSVREP9H119ZWT66K8J\",\"typename\":\"org.dxos.type.table\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZT51BXEFD9PS9VXTXD3\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTM5S1QYV0P5MC93ZP8\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTPCW09F2C39QDSHSWN\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTTRP6ZM7YZ1F5443AN\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Assistant\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG97\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG98\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Database\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYX\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Agent Wizard\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDX\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Blueprint Manager\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYC9XKQ77QYVZJRW775\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYDD86GXSHHZDNGJZZT\",\"typename\":\"org.dxos.type.document\",\"label\":\"README\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYMQD7FQV4RBQ1C6EKR\",\"typename\":\"org.dxos.type.collection\",\"label\":\"Getting Started\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3640F8GREHF39SHV9D0J3\",\"typename\":\"org.dxos.type.feed\",\"label\":\"Execution Trace\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4S4KFWTMMVHVT9Q1QW\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4WVN7H1Z5S586KRE73\",\"typename\":\"org.dxos.type.assistant.chat\",\"label\":\"New Chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RVY70GDSYPFWF5HHVM\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RWJADS95EAYV8WVX8M\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Markdown\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEVZ\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW0\",\"typename\":\"org.dxos.type.plan\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"typename\":\"org.dxos.type.agent\",\"label\":\"Object Counter\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SE00EQPJG2RGX1XVQG\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A7\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A8\",\"typename\":\"org.dxos.type.blueprint\",\"label\":\"Agent blueprint\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5T9Q10J08E1RAVPV2A2\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TCMSGHXYWPCYZ0RQAW\",\"typename\":\"org.dxos.relation.assistant.companionTo\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5VRZDJBGWGVTHVVZ043\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT5Y1950MH57GZHTDH9\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT84JYFZ0M7TVY20EQ3\",\"typename\":\"org.dxos.type.trigger\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCV8MK9HHX7CGSJFQB8M\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCVB1CBJD9XFG5DZPFTZ\",\"typename\":\"org.dxos.type.trigger\"}]",
+              "result": "[{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01K2J2FZWH39F55CS7B26GP1Q3\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z0PZGSK94YJYFZ12EGR\",\"typename\":\"org.dxos.type.spaceProperties\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z2XWAGB6WS4SGGEATJR\",\"typename\":\"org.dxos.type.expando\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35Z4RW6QCBSB9731XJ464\",\"typename\":\"org.dxos.type.collection\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRP2PH34G7XJ72XMF7W\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRQ9BXCHMH5V69DYSXJ\",\"typename\":\"org.dxos.type.mailbox\",\"label\":\"Mail\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRV4CDS1780TC9FJ893\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZRW7S1RGGK3MMHYZT2R\",\"typename\":\"org.dxos.type.calendar\",\"label\":\"Calendar\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSP2YJHQCQ43WK713J3\",\"typename\":\"org.dxos.type.view\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZSVREP9H119ZWT66K8J\",\"typename\":\"org.dxos.type.table\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZT51BXEFD9PS9VXTXD3\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTM5S1QYV0P5MC93ZP8\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTPCW09F2C39QDSHSWN\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZTTRP6ZM7YZ1F5443AN\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Assistant\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG97\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV2T5PN3824XYM2TG98\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Database\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZV7RKRG3YT3HTC6DKYX\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Agent Wizard\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDW\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZVT8C5X45VEB81X5NDX\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Skill Manager\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYC9XKQ77QYVZJRW775\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYDD86GXSHHZDNGJZZT\",\"typename\":\"org.dxos.type.document\",\"label\":\"README\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ35ZYMQD7FQV4RBQ1C6EKR\",\"typename\":\"org.dxos.type.collection\",\"label\":\"Getting Started\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3640F8GREHF39SHV9D0J3\",\"typename\":\"org.dxos.type.feed\",\"label\":\"Execution Trace\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4S4KFWTMMVHVT9Q1QW\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ36D4WVN7H1Z5S586KRE73\",\"typename\":\"org.dxos.type.assistant.chat\",\"label\":\"New Chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RVY70GDSYPFWF5HHVM\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5RWJADS95EAYV8WVX8M\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Markdown\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEVZ\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW0\",\"typename\":\"org.dxos.type.plan\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"typename\":\"org.dxos.type.agent\",\"label\":\"Object Counter\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SE00EQPJG2RGX1XVQG\",\"typename\":\"org.dxos.type.feed\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A7\",\"typename\":\"org.dxos.type.text\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5SGACFQ2JJ0HVXSX1A8\",\"typename\":\"org.dxos.type.skill\",\"label\":\"Agent skill\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5T9Q10J08E1RAVPV2A2\",\"typename\":\"org.dxos.type.assistant.chat\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TCMSGHXYWPCYZ0RQAW\",\"typename\":\"org.dxos.relation.assistant.companionTo\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5VRZDJBGWGVTHVVZ043\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT5Y1950MH57GZHTDH9\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCT84JYFZ0M7TVY20EQ3\",\"typename\":\"org.dxos.type.trigger\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCV8MK9HHX7CGSJFQB8M\",\"typename\":\"org.dxos.type.function\",\"label\":\"Agent Worker\"},{\"dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3NCVB1CBJD9XFG5DZPFTZ\",\"typename\":\"org.dxos.type.trigger\"}]",
               "providerExecuted": false
             },
             {
               "_tag": "toolResult",
               "toolCallId": "toolu_01LUu4fSqKeVVBbWBDeekyJS",
               "name": "load-object",
-              "result": "[{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"blueprints\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}]",
+              "result": "[{\"id\":\"01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"@type\":\"dxn:type:org.dxos.type.agent:0.1.0\",\"@meta\":{\"keys\":[]},\"@dxn\":\"dxn:echo:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5S4H1FWZ9DM10QGSEW1\",\"artifacts\":[],\"skills\":[{\"/\":\"dxn:echo:@:01KQJ35ZVT8C5X45VEB81X5NDX\"},{\"/\":\"dxn:echo:@:01KQJ35ZV2T5PN3824XYM2TG98\"},{\"/\":\"dxn:echo:@:01KQJ3N5RWJADS95EAYV8WVX8M\"}],\"enabled\":true,\"filterEvents\":true,\"instructions\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEVZ\"},\"name\":\"Object Counter\",\"plan\":{\"/\":\"dxn:echo:@:01KQJ3N5S4H1FWZ9DM10QGSEW0\"},\"subscriptions\":[],\"chat\":{\"/\":\"dxn:echo:@:01KQJ3N5T9Q10J08E1RAVPV2A2\"},\"queue\":{\"/\":\"dxn:queue:data:B2HUGD4AA23LZ36SJJ6SSO5X7G2HYUPKI:01KQJ3N5TG1A318FABT06PKFWV\"},\"cron\":\"*/1 * * * *\"}]",
               "providerExecuted": false
             }
           ]

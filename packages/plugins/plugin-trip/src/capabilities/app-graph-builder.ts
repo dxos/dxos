@@ -97,7 +97,7 @@ export default Capability.makeModule(
 
     // Context-menu action written into the calendar's menu: create a trip + itinerary from the events
     // in the calendar's currently-selected date range (or the next N days from today when nothing is
-    // selected). The Trip is created and opened immediately while the planning blueprint runs.
+    // selected). The Trip is created and opened immediately while the planning skill runs.
     const planTripExtension = yield* GraphBuilder.createExtension({
       id: 'calendarPlanTrip',
       match: (node) =>

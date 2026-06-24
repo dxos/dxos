@@ -20,7 +20,7 @@ export default Config2.make({
       Entries render newest-first in a scrollable list so recent notes are always at hand.
 
       A Quick Journal Entry dialog (accessible as a global operation) lets you append a checkbox bullet to today's entry without leaving your current context.
-      Invoking the operation from an AI blueprint or keyboard shortcut creates the Journal and today's entry automatically if they do not yet exist.
+      Invoking the operation from an AI skill or keyboard shortcut creates the Journal and today's entry automatically if they do not yet exist.
     `,
     icon: { key: 'ph--tree-structure--regular', hue: 'indigo' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',

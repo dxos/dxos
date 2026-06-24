@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 
 export default Capability.makeModule(
@@ -13,7 +13,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(
         AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Chat.Chat, { groupId: AppNode.NAV_TREE_GROUP_AI_ID }),
+        TypeSection.createTypeSectionPathResolver(Chat.Chat, { groupId: Paths.GroupSegments.ai }),
       ),
     ];
   }),

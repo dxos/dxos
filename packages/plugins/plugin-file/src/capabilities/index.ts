@@ -5,7 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const FileUploader = Capability.lazy('FileUploader', () => import('./file-uploader'));
 export const InlineBackend = Capability.lazy('InlineBackend', () => import('./inline-backend'));

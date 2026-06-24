@@ -42,7 +42,7 @@ export const findRefOption = (value: unknown, options: RefOption[]): RefOption |
     return undefined;
   }
   const valueUri = isRef ? value.uri : value['/'];
-  // Keyed/registry entities (blueprints, operations) are referenced by a named DXN rather than an
+  // Keyed/registry entities (skills, operations) are referenced by a named DXN rather than an
   // entity-id, so they carry no parseable EID; match those by direct URI equality against the option id.
   const directMatch = options.find((option) => option.id === valueUri);
   if (directMatch) {
@@ -94,7 +94,7 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
       : typename === ANY_OBJECT_TYPENAME
         ? // Untyped refs show space objects only; the registry is too broad for "any".
           Query.select(Filter.everything())
-        : // Include registry scope so keyed entities (blueprints, operations) appear as options.
+        : // Include registry scope so keyed entities (skills, operations) appear as options.
           Query.select(Filter.type(DXN.make(typename))).from(Scope.space(), Scope.registry()),
   );
 

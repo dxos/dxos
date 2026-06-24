@@ -31,7 +31,7 @@ export default Config2.make({
       optimally on a 3x3 board. The AI thinking state is shown in the UI during
       computation so the turn transition feels intentional rather than instant.
 
-      The assistant can also participate via blueprint integration: the create,
+      The assistant can also participate via skill integration: the create,
       makeMove, aiMove, and print operations are exposed as tools so the assistant
       can start a game, analyse the board as ASCII art, play moves, or act as an
       AI opponent in a conversation. The TicTacToeCard component provides a

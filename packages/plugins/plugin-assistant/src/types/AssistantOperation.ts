@@ -118,7 +118,7 @@ export const EnsureCompanionChat = Operation.make({
   }),
 });
 
-export const BlueprintForm = Schema.Struct({
+export const SkillForm = Schema.Struct({
   key: Schema.String,
   name: Schema.String,
   description: Schema.optional(Schema.String),

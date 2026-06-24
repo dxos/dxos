@@ -7,7 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
+  SkillDefinition,
   BuildRunState,
   CreateObject,
   OperationHandler,
@@ -23,7 +23,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CodePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile] }),

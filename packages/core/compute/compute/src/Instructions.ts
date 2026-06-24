@@ -9,11 +9,11 @@ import * as Schema from 'effect/Schema';
 import { DXN, Annotation, JsonSchema, Obj, Ref, Type, Format } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Blueprint from './Blueprint';
+import * as Skill from './Skill';
 
 /**
  * Prompt-based operation.
- * May reference blueprints and additional context.
+ * May reference skills and additional context.
  * Hidden from the navtree and object picker — accessed only through Routines.
  */
 export const Instructions = Schema.Struct({
@@ -29,9 +29,9 @@ export const Instructions = Schema.Struct({
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'Instructions', description: 'Describe what the agent should do in each session.' }),
   ),
-  blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
+  skills: Schema.Array(Ref.Ref(Skill.Skill)),
   /**
-   * Context objects bound to the agent's session when this routine runs (sibling of `blueprints`).
+   * Context objects bound to the agent's session when this routine runs (sibling of `skills`).
    * Generic `Ref.Ref(Obj.Unknown)` so any space object qualifies. Honored on every run path that
    * executes a routine through the agent prompt, not only triggered automations.
    */
@@ -51,17 +51,17 @@ export type MakeProps = {
   input?: Schema.Schema.AnyNoContext;
   output?: Schema.Schema.AnyNoContext;
   text?: string;
-  blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+  skills?: Ref.Ref<Skill.Skill>[];
   objects?: Ref.Ref<Obj.Unknown>[];
 };
 
-export const make = ({ name, description, input, output, text, blueprints = [], objects }: MakeProps): Instructions =>
+export const make = ({ name, description, input, output, text, skills = [], objects }: MakeProps): Instructions =>
   Obj.make(Instructions, {
     name,
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
     text: Ref.make(Text.make({ content: text ?? '' })),
-    blueprints,
+    skills,
     objects,
   });
