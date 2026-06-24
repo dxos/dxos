@@ -7,7 +7,7 @@ import { Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-const SKILL_KEY = 'dxos.org/skill/automation';
+const SKILL_KEY = 'org.dxos.skill.automation';
 
 const instructions = trim`
   Automation allows you to automatically initiate actions based on events.
