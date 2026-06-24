@@ -3,7 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import React, { type KeyboardEvent, memo, useCallback } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useEffect, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -35,6 +35,7 @@ export type DeckPlankProps = ThemedClassName<{
 export const DeckPlank = memo(
   ({ id, part, layoutMode, active, companionVariant, settings, path, classNames }: DeckPlankProps) => {
     const { findFirstFocusable } = useFocusFinders();
+    const rootRef = useRef<HTMLDivElement>(null);
     const {
       node,
       companions,
@@ -43,10 +44,21 @@ export const DeckPlank = memo(
       capabilities,
       sigilActions,
       popoverAnchorId,
+      scrollIntoView,
       onAction,
       onAdjust,
+      onScrollIntoView,
       onUpdateCompanion,
     } = useDeckPlank({ id, part, layoutMode, active, companionVariant, deckEnabled: settings?.enableDeck });
+
+    // Newly opened/navigated planks are flagged via `scrollIntoView`; focus the pane so it gains
+    // attention, then clear the one-shot flag.
+    useEffect(() => {
+      if (scrollIntoView === id) {
+        rootRef.current?.focus();
+        onScrollIntoView(undefined);
+      }
+    }, [scrollIntoView, id, onScrollIntoView]);
 
     // Tabster's focus group should move focus to Main on Escape, but something blocks it; handle directly.
     const handleKeyDown = useCallback(
@@ -94,6 +106,7 @@ export const DeckPlank = memo(
     // shown, otherwise the Plank itself).
     const renderPlank = (plankClassNames?: DeckPlankProps['classNames']) => (
       <Plank
+        ref={rootRef}
         node={node}
         attendableId={id}
         related={part === 'complementary'}

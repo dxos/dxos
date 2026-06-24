@@ -22,7 +22,7 @@ import { type SlottableProps } from '@dxos/ui-types';
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
 
-type Orientation = 'horizontal' | 'vertical';
+type SplitterOrientation = 'horizontal' | 'vertical';
 
 // Animated panel visibility: collapse to the start panel, the end panel, or show both split at `size`.
 type SplitterMode = 'start' | 'end' | 'split';
@@ -36,7 +36,7 @@ type Position = 'start' | 'end';
 const SPLITTER_NAME = 'Splitter';
 
 type SplitterContextValue = {
-  orientation: Orientation;
+  orientation: SplitterOrientation;
   mode: SplitterMode;
   /** Which panel `size` measures; the other panel fills the remainder. */
   anchor: Position;
@@ -54,14 +54,16 @@ type SplitterContextValue = {
 
 const [SplitterProvider, useSplitterContext] = createContext<SplitterContextValue>(SPLITTER_NAME);
 
+const getRem = (): number => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+
 // Lower-bound clamp applied to both panels: the start panel can't drop below `minSize` nor exceed the
 // container minus `minSize` (reserving room for the end panel, which also carries the min).
-const clampStyle = (minSize: number, orientation: Orientation): CSSProperties =>
+const clampStyle = (minSize: number, orientation: SplitterOrientation): CSSProperties =>
   orientation === 'horizontal'
     ? { minInlineSize: `${minSize}rem`, maxInlineSize: `calc(100% - ${minSize}rem)` }
     : { minBlockSize: `${minSize}rem`, maxBlockSize: `calc(100% - ${minSize}rem)` };
 
-const endMinStyle = (minSize: number, orientation: Orientation): CSSProperties =>
+const endMinStyle = (minSize: number, orientation: SplitterOrientation): CSSProperties =>
   orientation === 'horizontal' ? { minInlineSize: `${minSize}rem` } : { minBlockSize: `${minSize}rem` };
 
 // In `split` mode the anchored panel is fixed at `size` rem (clamped) and the other fills the rest;
@@ -72,7 +74,7 @@ const panelStyle = (
   anchor: Position,
   size: number,
   minSize: number,
-  orientation: Orientation,
+  orientation: SplitterOrientation,
 ): CSSProperties => {
   if (mode !== 'split') {
     const fills = (mode === 'start' && position === 'start') || (mode === 'end' && position === 'end');
@@ -85,7 +87,7 @@ const panelStyle = (
 };
 
 // Absolute position for the handle, centered on the split point (`size` rem from the anchored edge).
-const handlePosition = (orientation: Orientation, anchor: Position, size: number): CSSProperties => {
+const handlePosition = (orientation: SplitterOrientation, anchor: Position, size: number): CSSProperties => {
   const offset = `${size}rem`;
   if (orientation === 'horizontal') {
     return anchor === 'end'
@@ -104,7 +106,7 @@ const handlePosition = (orientation: Orientation, anchor: Position, size: number
 const ROOT_NAME = 'Splitter.Root';
 
 type SplitterRootElementProps = {
-  orientation?: Orientation;
+  orientation?: SplitterOrientation;
   mode?: SplitterMode;
   /** Which panel `size` measures (defaults to `start`); the other panel fills the remainder. */
   anchor?: Position;
@@ -219,8 +221,6 @@ const HANDLE_NAME = 'Splitter.Handle';
 
 type SplitterHandleProps = SlottableProps;
 
-const getRem = (): number => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-
 const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { orientation, anchor, size, resizable, minSize, rootRef, setSize, setDragging } =
@@ -280,8 +280,8 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
     [setDragging],
   );
 
-  // Arrow keys nudge the start panel's size (rem); Home/End jump to the bounds. Keeps the resize affordance
-  // usable without a pointer.
+  // Arrow keys nudge the start panel's size (rem); Home/End jump to the bounds.
+  // Keeps the resize affordance usable without a pointer.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       const horizontal = orientation === 'horizontal';
@@ -345,10 +345,4 @@ const Splitter = {
 
 export { Splitter };
 
-export type {
-  Orientation as SplitterOrientation,
-  SplitterMode,
-  SplitterRootProps,
-  SplitterPanelProps,
-  SplitterHandleProps,
-};
+export type { SplitterOrientation, SplitterMode, SplitterRootProps, SplitterPanelProps, SplitterHandleProps };

@@ -2,7 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentProps, Fragment, type KeyboardEventHandler, type ReactNode, useMemo } from 'react';
+import React, {
+  type ComponentProps,
+  forwardRef,
+  Fragment,
+  type KeyboardEventHandler,
+  type ReactNode,
+  useMemo,
+} from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
@@ -53,76 +60,83 @@ export type PlankProps = ThemedClassName<{
  * (close/solo/etc.) and framework surfaces (NavbarEnd/MenuFooter) are supplied by the container via
  * slots so this component stays free of capabilities/operations.
  */
-export const Plank = ({
-  classNames,
-  node,
-  attendableId = node.id,
-  actions,
-  onAction,
-  controls,
-  navbarEnd,
-  sigilFooter,
-  related,
-  pending,
-  popoverAnchorId,
-  articleData,
-  fallback,
-  placeholder,
-  headless,
-  onKeyDown,
-}: PlankProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const attentionAttrs = useAttentionAttributes(attendableId);
-  const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
-  const label = toLocalizedString(node.properties?.label ?? '', t);
-  const data = useMemo<AppSurface.ArticleData>(
-    () => ({ attendableId, subject: node.data, properties: node.properties, popoverAnchorId, ...articleData }),
-    [attendableId, node.data, node.properties, popoverAnchorId, articleData],
-  );
+export const Plank = forwardRef<HTMLDivElement, PlankProps>(
+  (
+    {
+      classNames,
+      node,
+      attendableId = node.id,
+      actions,
+      onAction,
+      controls,
+      navbarEnd,
+      sigilFooter,
+      related,
+      pending,
+      popoverAnchorId,
+      articleData,
+      fallback,
+      placeholder,
+      headless,
+      onKeyDown,
+    },
+    forwardedRef,
+  ) => {
+    const { t } = useTranslation(meta.profile.key);
+    const attentionAttrs = useAttentionAttributes(attendableId);
+    const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
+    const label = toLocalizedString(node.properties?.label ?? '', t);
+    const data = useMemo<AppSurface.ArticleData>(
+      () => ({ attendableId, subject: node.data, properties: node.properties, popoverAnchorId, ...articleData }),
+      [attendableId, node.data, node.properties, popoverAnchorId, articleData],
+    );
 
-  // Anchor the sigil's popover only when this plank's menu is the active popover target.
-  const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
+    // Anchor the sigil's popover only when this plank's menu is the active popover target.
+    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
-  return (
-    <Pane.Root classNames={classNames} tabIndex={0} onKeyDown={onKeyDown} {...attentionAttrs}>
-      {!headless && (
-        <Pane.Toolbar>
-          <ActionRoot>
-            {actions && actions.length > 0 ? (
-              <AttentionSigil
-                icon={icon}
-                related={related}
-                attendableId={attendableId}
-                actions={actions}
-                onAction={onAction}
-                triggerLabel={label}
-              >
-                {sigilFooter}
-              </AttentionSigil>
-            ) : (
-              <Pane.Sigil attendableId={attendableId}>
-                <span className='sr-only'>{label}</span>
-                <Icon icon={icon} />
-              </Pane.Sigil>
-            )}
-          </ActionRoot>
-          <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
-            {label}
-          </Pane.Title>
-          {navbarEnd}
-          {controls}
-        </Pane.Toolbar>
-      )}
-      <Pane.Content>
-        <Surface.Surface
-          key={node.id}
-          type={AppSurface.Article}
-          data={data}
-          limit={1}
-          fallback={fallback}
-          placeholder={placeholder}
-        />
-      </Pane.Content>
-    </Pane.Root>
-  );
-};
+    return (
+      <Pane.Root ref={forwardedRef} classNames={classNames} tabIndex={0} onKeyDown={onKeyDown} {...attentionAttrs}>
+        {!headless && (
+          <Pane.Toolbar>
+            <ActionRoot>
+              {actions && actions.length > 0 ? (
+                <AttentionSigil
+                  icon={icon}
+                  related={related}
+                  attendableId={attendableId}
+                  actions={actions}
+                  onAction={onAction}
+                  triggerLabel={label}
+                >
+                  {sigilFooter}
+                </AttentionSigil>
+              ) : (
+                <Pane.Sigil attendableId={attendableId}>
+                  <span className='sr-only'>{label}</span>
+                  <Icon icon={icon} />
+                </Pane.Sigil>
+              )}
+            </ActionRoot>
+            <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+              {label}
+            </Pane.Title>
+            {navbarEnd}
+            {controls}
+          </Pane.Toolbar>
+        )}
+        <Pane.Content>
+          <Surface.Surface
+            key={node.id}
+            type={AppSurface.Article}
+            data={data}
+            limit={1}
+            fallback={fallback}
+            placeholder={placeholder}
+          />
+        </Pane.Content>
+      </Pane.Root>
+    );
+  },
+);
+
+Plank.displayName = 'Plank';
