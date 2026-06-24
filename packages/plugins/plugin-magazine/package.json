@@ -77,9 +77,18 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
-      "source": "./src/plugin.ts",
+      "source": {
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.ts"
+      },
       "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
       "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./plugin/workerd": {
+      "source": "./src/plugin.workerd.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.workerd.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

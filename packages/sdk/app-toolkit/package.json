@@ -19,8 +19,13 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
+      "workerd": "./dist/lib/browser/index.mjs",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./workerd": {
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/browser/index.mjs"
     },
     "./events": {
       "source": "./src/app-framework/AppActivationEvents.ts",
