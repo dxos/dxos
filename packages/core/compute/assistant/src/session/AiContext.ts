@@ -6,8 +6,6 @@
 
 import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
@@ -397,24 +395,4 @@ export class Binder extends Resource {
       })
       .filter(isNonNullable);
   }
-}
-
-export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
-  Service,
-  {
-    binder: Binder;
-  }
->() {
-  static bindContext = ({ skills, objects }: BindingProps): Effect.Effect<void, never, Service> =>
-    Effect.gen(function* () {
-      const { binder } = yield* Service;
-      yield* Effect.promise(() => binder.bind({ skills, objects }));
-    });
-
-  static findObjects = <T extends Type.AnyObj>(type: T): Effect.Effect<Type.InstanceType<T>[], never, Service> => {
-    return Effect.gen(function* () {
-      const { binder } = yield* Service;
-      return binder.getObjects().filter(Obj.instanceOf(type));
-    });
-  };
 }

@@ -19,7 +19,7 @@
     "dx-trace-imports": "cli.js"
   },
   "dependencies": {
-    "esbuild": "catalog:",
+    "madge": "catalog:",
     "picomatch": "catalog:",
     "yargs": "catalog:"
   },

@@ -403,7 +403,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'devtools',
+              id: 'devtoolsOverview',
               label: ['devtools-overview.label', { ns: meta.profile.key }],
               icon: 'ph--equalizer--regular',
               data: 'devtools' as const,

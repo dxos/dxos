@@ -34,8 +34,6 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
   const currentId = useSelection(attendableId, 'single');
 
   const objects = useQuery(space.db, Filter.type(typeUri));
-  // Parented objects belong to a collection and surface there, not in the type's list.
-  const visible = useMemo(() => objects.filter((object) => !Obj.getParent(object)), [objects]);
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -50,21 +48,26 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
     [attendableId, invokePromise],
   );
 
+  const handleDelete = useCallback((object: Obj.Unknown) => {
+    Obj.getDatabase(object)?.remove(object);
+  }, []);
+
   const tileItems = useMemo<TileData[]>(
     () =>
-      visible.map((object) => ({
+      objects.map((object) => ({
         object,
         current: Obj.getURI(object) === currentId,
         onOpen: handleOpen,
+        onDelete: Obj.getParent(object) ? undefined : handleDelete,
       })),
-    [visible, currentId, handleOpen],
+    [objects, currentId, handleOpen, handleDelete],
   );
 
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar />
       <Panel.Content>
-        {visible.length === 0 ? (
+        {objects.length === 0 ? (
           <div className='flex items-center justify-center bs-full text-subdued text-sm'>
             {t('type-collection-empty.message')}
           </div>
@@ -84,6 +87,7 @@ type TileData = {
   object: Obj.Unknown;
   current: boolean;
   onOpen: (object: Obj.Unknown) => void;
+  onDelete?: (object: Obj.Unknown) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -91,13 +95,15 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <TypeCollectionTile object={data.object} current={data.current} onOpen={data.onOpen} />;
+  return (
+    <TypeCollectionTile object={data.object} current={data.current} onOpen={data.onOpen} onDelete={data.onDelete} />
+  );
 };
 
 type TypeCollectionTileProps = TileData;
 
 /** Selectable header-only card for a single object. */
-const TypeCollectionTile = ({ object, current, onOpen }: TypeCollectionTileProps) => {
+const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectionTileProps) => {
   const { t } = useTranslation(meta.profile.key);
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
@@ -115,14 +121,32 @@ const TypeCollectionTile = ({ object, current, onOpen }: TypeCollectionTileProps
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   const handleCurrentChange = useCallback(() => onOpen(object), [onOpen, object]);
 
+  const menuItems = useMemo(
+    () => [
+      ...(onDelete
+        ? [
+            {
+              label: t('delete-object.label', {
+                ns: typename ?? meta.profile.key,
+                defaultValue: t('delete-object.label'),
+              }),
+              onClick: () => onDelete?.(object),
+            },
+          ]
+        : []),
+    ],
+    [t, typename, onDelete, object],
+  );
+
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
       <Card.Root fullWidth classNames={['dx-hover cursor-pointer', current && 'dx-current']}>
         <Card.Header>
           <Card.Block>
-            <Icon icon={icon} classNames={iconStyles?.fg} />
+            <Icon icon={icon} classNames={iconStyles?.text} />
           </Card.Block>
           <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
+          {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
       </Card.Root>
     </Focus.Item>

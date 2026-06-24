@@ -7,6 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { Fetch } from './operations/definitions';
+import { WebSearchToolkit } from './toolkit';
 
 const SKILL_KEY = 'org.dxos.skill.webSearch';
 
@@ -19,7 +20,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make()),
     },
-    tools: Skill.toolDefinitions({ operations: [Fetch] }),
+    tools: Skill.toolDefinitions({ operations: [Fetch], tools: [WebSearchToolkit.tools.AnthropicWebSearch.name] }),
   });
 
 const skill: Skill.Definition = {

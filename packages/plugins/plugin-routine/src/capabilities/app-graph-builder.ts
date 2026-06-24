@@ -6,19 +6,29 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
+import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Routine } from '#types';
 
+import { getRoutinesPath } from '../paths';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        createObject: (space) =>
+          Operation.invoke(SpaceOperation.OpenCreateObject, {
+            target: space.db,
+            typename: Type.getTypename(Routine.Routine),
+            targetNodeId: getRoutinesPath(space.db.spaceId),
+          }),
       }),
       GraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
@@ -30,7 +40,7 @@ export default Capability.makeModule(
               type: `${meta.profile.key}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
-              iconHue: 'indigo',
+              iconHue: 'emerald',
               position: Position.last,
             }),
           ]);

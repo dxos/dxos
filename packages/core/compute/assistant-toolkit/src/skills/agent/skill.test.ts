@@ -357,7 +357,12 @@ const dumpAgent = async (agent: Agent.Agent) => {
   text += `============== Instructions ==============\n\n`;
   text += `${await agent.instructions.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
-  text += `${await agent.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
+  if (agent.chat) {
+    const chat = await agent.chat.load();
+    text += chat.plan ? `${await chat.plan.load().then((plan) => Plan.formatPlan(plan))}\n` : 'No plan found.\n';
+  } else {
+    text += 'No plan found.\n';
+  }
   text += `============== Artifacts ==============\n\n`;
   for (const artifact of agent.artifacts) {
     const data = await artifact.data.load();

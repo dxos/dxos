@@ -4,7 +4,7 @@
 
 import { Skill } from '@dxos/compute';
 
-import { UpdateTasks } from './operations/update-tasks';
+import { UpdateTasks } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.planning';
 
@@ -13,6 +13,7 @@ const make = () =>
     key: SKILL_KEY,
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
+    agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations: [UpdateTasks] }),
   });
 

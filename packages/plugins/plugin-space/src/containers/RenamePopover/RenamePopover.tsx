@@ -13,13 +13,23 @@ import { Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export type RenameSubject = Space | Entity.Unknown;
+export type RenameCallback = { initialValue: string; onRename: (name: string) => void };
+export type RenameSubject = Space | Entity.Unknown | RenameCallback;
 
-const getName = (subject: RenameSubject): string =>
-  (isSpace(subject) ? subject.properties.name : Entity.getLabel(subject)) ?? '';
+const isRenameCallback = (subject: RenameSubject): subject is RenameCallback =>
+  typeof (subject as RenameCallback).onRename === 'function';
+
+const getName = (subject: RenameSubject): string => {
+  if (isRenameCallback(subject)) {
+    return subject.initialValue;
+  }
+  return (isSpace(subject) ? subject.properties.name : Entity.getLabel(subject)) ?? '';
+};
 
 const setName = (subject: RenameSubject, name: string): void => {
-  if (isSpace(subject)) {
+  if (isRenameCallback(subject)) {
+    subject.onRename(name);
+  } else if (isSpace(subject)) {
     Obj.update(subject.properties, (properties) => {
       properties.name = name;
     });
@@ -30,12 +40,15 @@ const setName = (subject: RenameSubject, name: string): void => {
 
 export type RenamePopoverProps = { subject: RenameSubject };
 
+// TODO(wittjosiah): Move RenamePopover, RenameSubject, RenameCallback, and RENAME_POPOVER to @dxos/app-toolkit
+//   so any plugin can use the rename popover without depending on plugin-space.
+
 /**
  * Inline rename popover anchored to a navtree row. Commits on Enter or when dismissed; Escape cancels.
  */
 export const RenamePopover = ({ subject }: RenamePopoverProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const space = isSpace(subject);
+  const space = !isRenameCallback(subject) && isSpace(subject);
   const { invokePromise } = useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));
 

@@ -75,13 +75,20 @@ export const Skill = Schema.Struct({
  */
 export type Skill = Type.InstanceType<typeof Skill>;
 
-type MakeProps = { key: string; version?: string; name: string } & Partial<Skill>;
-
 /**
  * Create a new Skill.
  * The `key` (and optional `version`) are stored in the object meta.
+ * `key` must be a valid DXN name (e.g. `org.dxos.skill.mySkill`).
  */
-export const make = ({ key, version, tools = [], instructions = Template.make(), ...props }: MakeProps) =>
+export const make: {
+  <T extends string>(
+    props: {
+      key: [DXN.Name<T>] extends [never] ? `Invalid DXN name "${T}": final segment must be camelCase (no hyphens)` : T;
+      version?: string;
+      name: string;
+    } & Partial<Skill>,
+  ): Skill;
+} = ({ key, version, tools = [], instructions = Template.make(), ...props }) =>
   Obj.make(Skill, {
     [Obj.Meta]: { key, version },
     tools,
@@ -120,18 +127,17 @@ export const toolDefinitions = ({
  * Factory for the skills.
  */
 export type Definition = {
-  key: string;
+  key: DXN.Name<string>;
   make: () => Skill;
 };
 
 /**
  * Returns the canonical URI used to reference this skill in the registry.
- * Valid DXN keys produce `dxn:<key>`; other keys use the raw key as a URI.
  * Use this URI with `Ref.fromURI` to bind a skill without cloning it to the DB.
  *
  * TODO(wittjosiah): Should use Obj.getURI instead once it supports options to prefer meta key over EID.
  */
-export const registryURI = (key: string): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
+export const registryURI = (key: DXN.Name<string>): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
 
 /**
  * Resolves a skill from the registry by its meta key.

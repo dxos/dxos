@@ -237,3 +237,20 @@ export const setDictionary: {
 >(3, (values, annotation, value) => {
   return internalAnnotations.setDictionary(values, annotation, value);
 });
+
+/**
+ * Build a dictionary by mutating it in a callback.
+ *
+ * @example
+ * ```ts
+ * const dictionary = Annotation.buildDictionary((dictionary) => {
+ *   Annotation.setDictionary(dictionary, ColorAnnotation, 'red');
+ *   Annotation.setDictionary(dictionary, SizeAnnotation, '10px');
+ * });
+ * ```
+ */
+export const buildDictionary = (build: (dictionary: Types.Mutable<Dictionary>) => void): Dictionary => {
+  const dictionary = Schema.encodeSync(Dictionary)({});
+  build(dictionary);
+  return dictionary;
+};

@@ -30,7 +30,7 @@ export const Connection = Schema.Struct({
   accessToken: Ref.Ref(AccessToken.AccessToken),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'indigo' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'emerald' }),
   Type.makeObject(DXN.make('org.dxos.type.connection', '0.1.0')),
 );
 
