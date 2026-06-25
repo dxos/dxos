@@ -85,11 +85,6 @@
       "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
-    "./plugin/workerd": {
-      "source": "./src/plugin.workerd.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.workerd.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
