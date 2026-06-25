@@ -100,8 +100,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const runnableId =
-      (trigger.runnable ? EID.getEntityId(EID.tryParse(trigger.runnable.uri)!) : undefined) ?? 'unknown';
+    const runnableId = trigger.runnable?.uri.toString() ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${runnableId}`));
   }
 
