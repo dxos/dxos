@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { type ReactNode, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -33,7 +33,7 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
    * Build the row's label reactively. Run inside an atom so it can subscribe to the item's state via `get`
    * (e.g. the object's name) and update live when it changes.
    */
-  getLabel: (get: Atom.Context, item: T) => ReactNode;
+  getLabel: (get: Atom.Context, item: T) => string;
   /**
    * Build the row's leading icon reactively. Run inside an atom so it can subscribe to the item's state via
    * `get` (e.g. colour the icon by an `enabled` flag); returns the icon name and optional colour classes.
@@ -48,7 +48,7 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   /** Message shown when there are no items. */
   emptyLabel?: string;
   /** Detail pane content (selected item's form, draft form, …); rendered below the list. */
-  detail?: ReactNode;
+  detail?: string;
 }>;
 
 /** Selectable master list (with an optional per-row overflow menu) above a parent-supplied detail pane. */
@@ -110,7 +110,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
 }: {
   item: T;
   selected: boolean;
-  getLabel: (get: Atom.Context, item: T) => ReactNode;
+  getLabel: (get: Atom.Context, item: T) => string;
   getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
   getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
   onSelect?: (id: string | undefined) => void;
