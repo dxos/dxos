@@ -32,5 +32,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
