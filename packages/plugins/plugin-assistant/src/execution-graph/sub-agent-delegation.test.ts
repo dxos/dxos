@@ -24,26 +24,26 @@ describe('sub-agent delegation fixture', () => {
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
       ●        [atom] Agent processing request...
-      ├──●     [info] Get Agent Context - Success
-      │  ●     [user] create a sub-agent that creates a haiku in a new document
-      │  ●     [info] Get Agent Context - Success
-      │  ●     [check-square-offset] Update tasks - Success
-      │  ●     [info] Get Agent Context - Success
-      │  ●     [share-network] Delegate task - Success
-      │  ●     [info] Get Agent Context - Success
-      ◆──╯     [atom] Agent completed request
+      ├──●     [info] Get Agent Context
+      │  ●     [info] Get Agent Context
+      │  ●     [check-square-offset] Update tasks
+      │  ●     [info] Get Agent Context
+      │  ●     [share-network] Delegate task
+      │  ●     [info] Get Agent Context
       │  ├──●  [brain] Run Routine
-      │     ●  [info] Get Agent Context - Success
-      │     ●  [user] Complete the following task and report the result concisely.
-      │     ●  [info] Get Agent Context - Success
-      ●     │  [pencil] Update Chat Name - Success
-      │     ●  [file-text] Create - Success
-      │     ●  [info] Get Agent Context - Success
-      │     ●  [plus] Add artifact - Error
-      │     ●  [info] Get Agent Context - Success
-      │     ●  [wrench] completeJob - Success
-      │     ●  [info] Get Agent Context - Success
-      ◆─────╯  [brain] Run Routine - Success
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [file-text] Create
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [plus] Add artifact - Error
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [user] Complete the following task and report the result concisely.
+      │  │  ●  [wrench] completeJob
+      ◆──┼──╯  [brain] Run Routine
+      │  ●     [user] create a sub-agent that creates a haiku in a new document
+      ◆──╯     [atom] Agent completed request
+      ●        [pencil] Update Chat Name
       "
     `);
   });
@@ -53,7 +53,7 @@ describe('sub-agent delegation fixture', () => {
     const lines = collectProcessActivityLines(messages, subAgentPid);
     expect(lines.length).toBeGreaterThan(0);
     expect(lines).toContain('Run Routine');
-    expect(lines[lines.length - 1]).toMatch(/Run Routine - Success/);
+    expect(lines[lines.length - 1]).toBe('Run Routine');
   });
 
   test('derives in-flight operation before completion', ({ expect }) => {

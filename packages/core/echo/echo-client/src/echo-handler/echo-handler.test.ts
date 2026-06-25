@@ -522,7 +522,7 @@ describe('Reactive Object with ECHO database', () => {
         name: 'John',
         organization: Ref.make(Obj.make(Organization, { name: 'DXOS' })),
       });
-      const cloned = Obj.clone(original, { deep: true });
+      const cloned = Obj.clone(original, { deep: 'all' });
       const person = db.add(cloned);
 
       expect(cloned.organization.target?.id).not.to.eq(original.organization.target?.id);

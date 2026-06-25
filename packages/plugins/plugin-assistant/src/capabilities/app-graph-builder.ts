@@ -58,7 +58,7 @@ export default Capability.makeModule(
               type: Paths.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
               space,
-              position: 100,
+              position: 300,
             }),
           ]),
       }),
