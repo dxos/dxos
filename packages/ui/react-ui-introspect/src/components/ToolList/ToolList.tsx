@@ -59,11 +59,15 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
         <Listbox.Content aria-label={t('tools.label')}>
           {entries.map(([name, tool]) => (
             <Listbox.Item key={name} id={name}>
-              <div className='font-mono text-xs text-info-text'>{name}</div>
-              <div className='font-medium'>{tool.title}</div>
-              {tool.description && (
-                <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
-              )}
+              {/* `Listbox.Item` is a horizontal row (`flex items-center`); wrap the stacked lines in a
+                  single column child so they don't lay out side-by-side. */}
+              <div className='flex flex-col grow overflow-hidden'>
+                <div className='font-mono text-xs text-info-text'>{name}</div>
+                <div className='font-medium'>{tool.title}</div>
+                {tool.description && (
+                  <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
+                )}
+              </div>
             </Listbox.Item>
           ))}
         </Listbox.Content>
