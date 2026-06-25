@@ -11,7 +11,6 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
-import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
@@ -60,19 +59,29 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         yield* Operation.invoke(LayoutOperation.Open, { subject: [soloOperation.entryId] });
       }
 
-      if (input.type === 'companion') {
-        const companion = Function.pipe(
-          Graph.getNode(graph, input.id),
-          Option.map((node) =>
-            Graph.getConnections(graph, node.id, 'child')
-              .filter((n) => n.type === PLANK_COMPANION_TYPE)
-              .toSorted((a, b) => Position.compare(a.properties, b.properties)),
-          ),
-          Option.flatMap((companions) => (companions.length > 0 ? Option.some(companions[0]) : Option.none())),
+      if (input.type === 'companion' || input.type === 'companion-vertical') {
+        const orientation = input.type === 'companion-vertical' ? 'vertical' : 'horizontal';
+
+        // Set the orientation first so an already-open companion re-orients in place (the Splitter stays
+        // mounted and only its `orientation` prop changes — panels are never unmounted).
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+          updateActiveDeck(state, { companionOrientation: orientation }),
         );
 
-        if (Option.isSome(companion)) {
-          yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion.value.id });
+        // Open the companion when one is available; the selected variant lives in global view state and is
+        // resolved at render time, so opening restores the last-selected tab rather than forcing the first.
+        if (!deck.companionOpen) {
+          const hasCompanion = Function.pipe(
+            Graph.getNode(graph, input.id),
+            Option.map((node) => Graph.getConnections(graph, node.id, 'child').some((n) => n.type === PLANK_COMPANION_TYPE)),
+            Option.getOrElse(() => false),
+          );
+
+          if (hasCompanion) {
+            yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+              updateActiveDeck(state, { companionOpen: true }),
+            );
+          }
         }
       }
     }),
