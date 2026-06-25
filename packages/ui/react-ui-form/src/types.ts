@@ -84,6 +84,18 @@ export type FormFieldProvider = (props: {
 //
 
 /**
+ * Per-typename override for the ref-field inline create form and its submission handler.
+ * The type parameter S links the form schema's decoded type to the createObject values argument,
+ * ensuring the schema and the handler agree on the shape of the form data.
+ */
+export type CreateEntryOverride<S extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext> = {
+  /** Replaces the raw ECHO type schema for the inline create form. */
+  inputSchema?: S;
+  /** Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema. */
+  createObject?: (values: Schema.Schema.Type<S>, db: Database.Database) => Promise<Obj.Unknown>;
+};
+
+/**
  * Configuration for the inline "create a new referenced object" affordance, shared by every
  * surface that can spawn a ref target (the picker, `RefField`, and the `Form*` props that forward
  * to them). `onCreate` is intentionally NOT part of this group: its signature differs per consumer
@@ -129,6 +141,13 @@ export type RefFieldDataProps = {
    * `onCreate(schema, values)` before the object is persisted.
    */
   getCreateDefaults?: (props: { jsonPath: string; schema: Type.AnyEntity }) => Record<string, unknown> | undefined;
+  /**
+   * Optional resolver that maps a ref's typename to a {@link CreateEntryOverride}, replacing the
+   * raw ECHO type schema and/or the default `onCreate` path with plugin-registered create logic
+   * (e.g. `SpaceCapabilities.CreateObjectEntry`). When absent or returning `undefined` for a given
+   * typename the existing fallback behaviour is preserved.
+   */
+  resolveCreateEntry?: (typename: string) => CreateEntryOverride | undefined;
 };
 
 /**
@@ -154,7 +173,10 @@ export type FormFieldOptions = {
  * The subset of {@link RefFieldDataProps} that is forwarded down the field recursion. `useResults`
  * is consumed only by `RefField` itself (it defaults internally), so it is not threaded.
  */
-export type RefThreadedProps = Pick<RefFieldDataProps, 'useType' | 'getOptions' | 'onCreate' | 'getCreateDefaults'>;
+export type RefThreadedProps = Pick<
+  RefFieldDataProps,
+  'useType' | 'getOptions' | 'onCreate' | 'getCreateDefaults' | 'resolveCreateEntry'
+>;
 
 /**
  * Form-wide configuration threaded unchanged down the entire field recursion. This is the single

@@ -54,7 +54,7 @@ export default Capability.makeModule(
           }
           const feedRefs = get(Obj.atomProperty(magazine, 'feeds'));
           const feeds = feedRefs
-            .map((ref) => get(ref.atom) as Subscription.Subscription | undefined)
+            .map((ref) => get(ref.atom))
             .filter((feed): feed is Subscription.Subscription => Subscription.instanceOf(feed));
           return Effect.succeed(
             feeds
@@ -113,15 +113,6 @@ export default Capability.makeModule(
               properties: {
                 label: ['sync-feed.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
-                disposition: 'list-item',
-              },
-            },
-            {
-              id: 'delete',
-              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
-              properties: {
-                label: ['delete-object.label', { ns: Type.getTypename(Subscription.Subscription) }],
-                icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },
             },

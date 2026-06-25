@@ -20,6 +20,7 @@ import { subscribe } from '../common/proxy/reactive';
 import { isEntity, getDatabase } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
 import { loadRefTarget } from '../Ref/utils';
+import { isDeleted } from './deleted';
 import { getSnapshot } from './snapshot';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>
@@ -64,8 +65,9 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
       unsubscribeTarget?.();
       unsubscribeTarget = subscribe(target, () => {
+        // Deleted objects resolve to undefined so callers don't need to inspect isDeleted.
         // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-        get.setSelf(getSnapshot(target) as unknown as Obj.Snapshot<T>);
+        get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
       });
       return getSnapshot(target) as unknown as Obj.Snapshot<T>;
     };
