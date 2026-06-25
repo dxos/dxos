@@ -138,8 +138,10 @@ const ActionEditor = ({
       updateRoutine((routine) => {
         routine.spec = operation ? { kind: 'runnable', runnable: operation } : undefined;
       });
+      // Keep the owned trigger's `function`/`input` in sync with the new action.
+      Routine.wireTriggers(routineProp);
     },
-    [updateRoutine],
+    [updateRoutine, routineProp],
   );
 
   const handleKindChange = useCallback(
@@ -156,8 +158,10 @@ const ActionEditor = ({
           routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
         }
       });
+      // Re-wire the owned trigger to dispatch the new action (RunInstructions vs the operation).
+      Routine.wireTriggers(routineProp);
     },
-    [updateRoutine],
+    [updateRoutine, routineProp],
   );
 
   return (
@@ -181,7 +185,17 @@ const ActionEditor = ({
 const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <ToggleGroup type='single' value={value} onValueChange={onChange}>
+    // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
+    // other non-kind value so it can't fall through and overwrite the current action.
+    <ToggleGroup
+      type='single'
+      value={value}
+      onValueChange={(next) => {
+        if (next === 'instructions' || next === 'runnable') {
+          onChange(next);
+        }
+      }}
+    >
       <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
       <ToggleGroupItem value='runnable'>{t('action-kind.operation.label')}</ToggleGroupItem>
     </ToggleGroup>

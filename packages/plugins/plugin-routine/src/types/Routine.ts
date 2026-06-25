@@ -39,11 +39,11 @@ export class Routine extends Type.declareObj<Routine>()(
     description: Schema.String.pipe(Schema.optional),
 
     /**
-     * The action to run: either an Operation (bound directly) or the routine's own owned Instructions.
-     * For an Operation action the trigger's `function` points at this Operation. For an Instructions action
-     * `runnable` is the owned Instructions object (the operation is implicitly the static RunInstructions, so
-     * no separate operation ref is stored), and the trigger's `function` is RunInstructions with this
-     * instructions bound as its input.
+     * The action to run: either an Operation (`spec.runnable`, bound directly) or the routine's own owned
+     * Instructions (`spec.instructions`). For an Operation action the trigger's `function` points at this
+     * Operation. For an Instructions action `spec.instructions` is the owned Instructions object (the operation
+     * is implicitly the static RunInstructions, so no separate operation ref is stored), and the trigger's
+     * `function` is RunInstructions with this instructions bound as its input.
      */
     // TODO(burdon): Change to Array? Or handle that case with a ComputeGraph runnable.
     spec: RoutineSpec.pipe(Schema.optional),
@@ -75,6 +75,37 @@ export const instructionsRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Instruc
 export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Runnable.Runnable> | undefined =>
   routine.spec?.kind === 'runnable' ? routine.spec.runnable : undefined;
 
+/** Strip a stale `instructions` binding from a trigger input. */
+const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
+  if (!input || !('instructions' in input)) {
+    return input;
+  }
+  const { instructions: _drop, ...rest } = input;
+  return rest;
+};
+
+/**
+ * Wire the routine's owned triggers to dispatch its current action (`spec`): an instructions action sets each
+ * trigger's `function` to RunInstructions with the owned instructions bound into `input`; an operation action
+ * binds the operation directly and drops any stale instructions binding. Call after the action (`spec`) changes
+ * so a trigger never keeps a binding for the previous action.
+ */
+export const wireTriggers = (routine: Routine): void => {
+  const instructions = instructionsRef(routine);
+  const fn = instructions ? runInstructionsRef() : runnableRef(routine);
+  for (const ref of routine.triggers) {
+    const trigger = ref.target;
+    if (!trigger) {
+      continue;
+    }
+    Obj.update(trigger, (trigger) => {
+      trigger.function = fn;
+      const base = withoutInstructions(trigger.input);
+      trigger.input = instructions ? { input: {}, ...base, instructions } : base;
+    });
+  }
+};
+
 /**
  * Creates a fully-wired in-memory routine graph. `instructions` and `trigger` are optional extras beyond the
  * schema fields: when provided they are parented under the routine and wired together (runnable, trigger
@@ -100,18 +131,11 @@ export const make = ({
   }
   if (trigger) {
     Obj.setParent(trigger, routine);
-    Obj.update(trigger, (trigger) => {
-      // An instructions action dispatches through RunInstructions with the owned instructions bound into the
-      // trigger input (preserving any template-provided input fields); an operation action binds the operation
-      // directly, with its input supplied by the template.
-      trigger.function = instructions ? runInstructionsRef() : runnableRef(routine);
-      if (instructions) {
-        trigger.input = { input: {}, ...trigger.input, instructions: Ref.make(instructions) };
-      }
-    });
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });
+    // Wire the trigger's `function`/`input` from the action (`spec`); preserves any template-provided input.
+    wireTriggers(routine);
   }
   return routine;
 };

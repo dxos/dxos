@@ -55,6 +55,7 @@ export type MakeProps = {
   objects?: Ref.Ref<Obj.Unknown>[];
 };
 
+/** Creates an Instructions object with an owned Markdown `text` body (parented so it cascades and deep-clones). */
 export const make = ({ name, description, input, output, text, skills = [], objects }: MakeProps): Instructions => {
   const body = Text.make({ content: text ?? '' });
   const instructions = Obj.make(Instructions, {

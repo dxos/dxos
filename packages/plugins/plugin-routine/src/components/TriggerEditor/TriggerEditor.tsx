@@ -16,7 +16,6 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
-import { runInstructionsRef } from '../../util';
 import {
   FrequencyDefaults,
   Schedule,
@@ -349,12 +348,14 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const fn = Routine.instructionsRef(routine) ? runInstructionsRef() : Routine.runnableRef(routine);
-        const created = Trigger.make({ function: fn, spec, enabled });
+        const created = Trigger.make({ spec, enabled });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));
         });
+        // Wire the new trigger's `function`/`input` to dispatch the routine's action (RunInstructions binds the
+        // owned instructions; an operation binds directly).
+        Routine.wireTriggers(routine);
       }
     },
     [routine, trigger],
