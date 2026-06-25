@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -68,14 +68,6 @@ const RoutineCompanionImpl = ({
     () => items.find((routine) => routine.id === selectedId) ?? savedRoutine,
     [items, selectedId, savedRoutine],
   );
-
-  // Editability of the selected (already-persisted) routine is derived from its enabled state — editable while
-  // disabled, locked read-only once enabled (mirroring the article). Reactive so toggling enable flips it live.
-  const selectedEnabledAtom = useMemo(
-    () => Atom.make((get) => (selected ? get(routineEnabled(selected)).enabled : false)),
-    [selected],
-  );
-  const selectedEnabled = useAtomValue(selectedEnabledAtom);
 
   const handleSelect = useCallback(
     (id: string | undefined) => {
@@ -148,24 +140,9 @@ const RoutineCompanionImpl = ({
     [invokePromise, db],
   );
 
-  // Flip every trigger of the routine together (its on/off state), reading the current state at click time.
-  const handleToggleEnabled = useCallback((routine: Routine.Routine) => {
-    const next = !getRoutineEnabled(routine);
-    for (const ref of routine.triggers) {
-      const trigger = ref.target;
-      if (trigger) {
-        Obj.update(trigger, (trigger) => {
-          trigger.enabled = next;
-        });
-      }
-    }
-  }, []);
-
-  // Per-row overflow menu: enable/disable (disabled until a trigger exists) and delete. Built reactively per row
-  // (see MasterDetail) — `get` subscribes to this routine's triggers' `enabled` flags, so the enable/disable
-  // label tracks the live state without re-rendering the whole list. (Editing is in place: disable a routine to
-  // edit it, so there is no separate edit action.)
-  const getMenu = useGetMenu({ t, handleToggleEnabled, handleDelete });
+  // Per-row overflow menu: delete. (A routine's on/off state is toggled per-trigger inline in the form, not
+  // from the list.)
+  const getMenu = useGetMenu({ t, handleDelete });
 
   // Row icon, reactive per row: an enabled routine takes its type's hue (amber); disabled uses the default
   // icon colour. Subscribes (via `get`) only to this routine's triggers' `enabled` flags.
@@ -192,18 +169,16 @@ const RoutineCompanionImpl = ({
     [statusFor, t],
   );
 
-  // One form for both flows. A selected (persisted) routine is edited in place — editable while disabled,
-  // read-only once enabled — with no Save/Cancel. The create-from-template draft is the only Save/Cancel flow:
-  // an in-memory routine shown editable, discarded on Cancel and persisted by a single `Database.add` on Save.
-  // The `key` (the routine id) remounts the uncontrolled form when the shown routine changes; the draft carries
-  // a fresh id, so no edits leak between rows.
+  // One form for both flows. A selected (persisted) routine is edited in place. The create-from-template draft
+  // is the only Save/Cancel flow: an in-memory routine shown editable, discarded on Cancel and persisted by a
+  // single `Database.add` on Save. The `key` (the routine id) remounts the uncontrolled form when the shown
+  // routine changes; the draft carries a fresh id, so no edits leak between rows.
   const shown = draft ?? selected;
   const detail = shown ? (
     <RoutineForm
       key={shown.id}
       db={db}
       routine={shown}
-      readonly={draft ? false : selectedEnabled}
       onSave={draft ? () => void handleSave() : undefined}
       onCancel={draft ? handleCancel : undefined}
     />
@@ -284,16 +259,9 @@ const useConnectedRoutines = (
   return { items, statusFor };
 };
 
-/** Whether a routine has at least one trigger and all of its triggers are enabled (its on/off state). */
-const getRoutineEnabled = (routine: Routine.Routine): boolean => {
-  const triggers = routine.triggers.flatMap((ref) => (ref.target ? [ref.target] : []));
-  return triggers.length > 0 && triggers.every((trigger) => trigger.enabled === true);
-};
-
 /**
- * Reactive family for a routine's on/off state — subscribes (via `get`) to its triggers' `enabled` flags so a
- * consumer (the per-row menu, the row icon, the detail's read-only gate) re-derives when a flag flips. Keyed by
- * the routine instance.
+ * Reactive family for a routine's on/off state — subscribes (via `get`) to its triggers' `enabled` flags so the
+ * row icon re-derives when a flag flips. Keyed by the routine instance.
  */
 const routineEnabled = Atom.family(
   (routine: Routine.Routine): Atom.Atom<{ hasTriggers: boolean; enabled: boolean }> =>
@@ -309,25 +277,13 @@ const routineEnabled = Atom.family(
 
 type GetMenuOptions = {
   t: ReturnType<typeof useTranslation>['t'];
-  handleToggleEnabled: (routine: Routine.Routine) => void;
   handleDelete: (routine: Routine.Routine) => void;
 };
 
-const useGetMenu = ({ t, handleToggleEnabled, handleDelete }: GetMenuOptions) =>
+const useGetMenu = ({ t, handleDelete }: GetMenuOptions) =>
   useCallback(
-    (get: Atom.Context, routine: Routine.Routine): ActionGraphProps => {
-      const { hasTriggers, enabled } = get(routineEnabled(routine));
-      return MenuBuilder.make()
-        .action(
-          'toggle-enabled',
-          {
-            label: enabled ? t('enabled.label') : t('disabled.label'),
-            icon: enabled ? 'ph--check-square--regular' : 'ph--square--regular',
-            disabled: !hasTriggers,
-            testId: 'routine.companion.toggle-enabled',
-          },
-          () => handleToggleEnabled(routine),
-        )
+    (_get: Atom.Context, routine: Routine.Routine): ActionGraphProps =>
+      MenuBuilder.make()
         .action(
           'delete',
           {
@@ -337,9 +293,8 @@ const useGetMenu = ({ t, handleToggleEnabled, handleDelete }: GetMenuOptions) =>
           },
           () => handleDelete(routine),
         )
-        .build();
-    },
-    [t, handleToggleEnabled, handleDelete],
+        .build(),
+    [t, handleDelete],
   );
 
 type CompanionMenuActionsOptions = {
