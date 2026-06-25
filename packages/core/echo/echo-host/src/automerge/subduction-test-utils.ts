@@ -51,8 +51,8 @@ export const NEGATIVE_ASSERTION_DELAY_MS = 500;
 // `node_modules/.../subduction/network.d.ts:SUBDUCTION_MESSAGE_TYPE`.
 export const SUBDUCTION_MESSAGE_TYPE = 'subduction-connection';
 
-export const waitForQueryState = async (
-  progress: DocumentProgress<unknown>,
+export const waitForQueryState = async <T>(
+  progress: DocumentProgress<T>,
   awaitStates: readonly QueryStateName[],
   { timeout }: { timeout?: number } = {},
 ): Promise<void> => {

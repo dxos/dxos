@@ -166,7 +166,7 @@ export const upsert = (key: string): Effect.Effect<Skill, NotFoundError, Registr
     if (local.length > 0) {
       return local[0];
     }
-    return yield* Database.add(Obj.clone(yield* resolve(key), { deep: true }));
+    return yield* Database.add(Obj.clone(yield* resolve(key), { deep: 'all' }));
   });
 
 export class NotFoundError extends BaseError.extend('SkillNotFound', 'Skill not found') {}

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Skill, Instructions } from '@dxos/compute';
-import { Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Instructions, Skill } from '@dxos/compute';
+import { Filter, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -21,16 +21,18 @@ import { Routine } from '#types';
 
 import { RoutineCompanion } from './RoutineCompanion';
 
-const types = [Routine.Routine, Routine.AppliesTo, Instructions.Instructions, Skill.Skill, Text.Text];
+const types = [Routine.Routine, Instructions.Instructions, Skill.Skill, Text.Text];
 
-/** Seed a companion-subject object plus one automation anchored to it via an AppliesTo relation. */
+/** Seed a companion-subject object plus one automation connected via instructions.objects. */
 const seed = (space: Space) => {
   const subject = space.db.add(Text.make({ content: 'Meeting notes' }));
 
-  const routine = space.db.add(Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }));
-  const automation = space.db.add(Routine.make({ name: 'Summarize Notes', triggers: [] }));
-  Obj.setParent(routine, automation);
-  space.db.add(Routine.makeAppliesTo({ [Relation.Source]: automation, [Relation.Target]: subject }));
+  space.db.add(
+    Routine.make({
+      name: 'Summarize Notes',
+      instructions: Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }),
+    }),
+  );
 };
 
 const withCompanion = () =>

@@ -736,9 +736,6 @@
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-stack/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-syntax-highlighter/tsconfig.json"
     },
     {

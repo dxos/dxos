@@ -6,9 +6,28 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trigger, Runnable } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Instructions, Trigger } from '@dxos/compute';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
+
+import { runInstructionsRef } from '../util/run-instructions';
+import * as Runnable from './Runnable';
+
+const Kinds = ['runnable', 'instructions'] as const;
+export const Kind = Schema.Literal(...Kinds);
+export type Kind = (typeof Kinds)[number];
+
+const RunnableSpec = Schema.Struct({
+  kind: Schema.Literal('runnable'),
+  runnable: Ref.Ref(Runnable.Runnable),
+});
+
+const InstructionsSpec = Schema.Struct({
+  kind: Schema.Literal('instructions'),
+  instructions: Ref.Ref(Instructions.Instructions),
+});
+
+const RoutineSpec = Schema.Union(RunnableSpec, InstructionsSpec);
 
 /**
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.
@@ -20,11 +39,14 @@ export class Routine extends Type.declareObj<Routine>()(
     description: Schema.String.pipe(Schema.optional),
 
     /**
-     * The action to run. A trigger's `runnable` Ref points directly at this (so EDGE/the dispatcher can run
-     * it). `Runnable` is the type seam — currently just Operation; see Runnable.ts.
+     * The action to run: either an Operation (`spec.runnable`, bound directly) or the routine's own owned
+     * Instructions (`spec.instructions`). For an Operation action the trigger's `function` points at this
+     * Operation. For an Instructions action `spec.instructions` is the owned Instructions object (the operation
+     * is implicitly the static RunInstructions, so no separate operation ref is stored), and the trigger's
+     * `function` is RunInstructions with this instructions bound as its input.
      */
-    // TODO(burdon): Change to Array?
-    runnable: Ref.Ref(Runnable.Runnable).pipe(Schema.optional),
+    // TODO(burdon): Change to Array? Or handle that case with a ComputeGraph runnable.
+    spec: RoutineSpec.pipe(Schema.optional),
 
     /**
      * Explicit membership, bi-directional with `trigger.runnable → runnable`. Required (not derived by query)
@@ -35,29 +57,85 @@ export class Routine extends Type.declareObj<Routine>()(
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
-    Type.makeObject(DXN.make('org.dxos.type.routine', '0.1.0')),
+    Type.makeObject(DXN.make('org.dxos.type.routine', '0.2.0')),
   ),
 ) {}
 
 export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(Routine, value);
 
-export const make = (props: Obj.MakeProps<typeof Routine>) => Obj.make(Routine, props);
+/**
+ * The owned Instructions ref of an instructions-action routine, or undefined for an operation action.
+ * Classification is explicit in `spec.kind`, so this needs no `.target` dereference; callers resolve the ref
+ * reactively (`useObject`) or asynchronously (`Database.load`) as appropriate.
+ */
+export const instructionsRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Instructions.Instructions> | undefined =>
+  routine.spec?.kind === 'instructions' ? routine.spec.instructions : undefined;
+
+/** The Operation (runnable) ref of an operation-action routine, or undefined for an instructions action. */
+export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Runnable.Runnable> | undefined =>
+  routine.spec?.kind === 'runnable' ? routine.spec.runnable : undefined;
+
+/** Strip a stale `instructions` binding from a trigger input. */
+const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
+  if (!input || !('instructions' in input)) {
+    return input;
+  }
+  const { instructions: _drop, ...rest } = input;
+  return rest;
+};
 
 /**
- * @deprecated Relation anchoring a Routine (source) to an object it applies to (target). The per-object
- * companion lists the routines for an object by querying the sources of this relation; mirrors `Chat.CompanionTo`.
+ * Wire the routine's owned triggers to dispatch its current action (`spec`): an instructions action sets each
+ * trigger's `function` to RunInstructions with the owned instructions bound into `input`; an operation action
+ * binds the operation directly and drops any stale instructions binding. Call after the action (`spec`) changes
+ * so a trigger never keeps a binding for the previous action.
  */
-export const AppliesTo = Schema.Struct({
-  id: Obj.ID,
-}).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('org.dxos.relation.automation.appliesTo', '0.1.0'),
-    source: Routine,
-    target: Obj.Unknown,
-  }),
-);
+export const wireTriggers = (routine: Routine): void => {
+  const instructions = instructionsRef(routine);
+  const fn = instructions ? runInstructionsRef() : runnableRef(routine);
+  for (const ref of routine.triggers) {
+    const trigger = ref.target;
+    if (!trigger) {
+      continue;
+    }
+    Obj.update(trigger, (trigger) => {
+      trigger.runnable = fn;
+      const base = withoutInstructions(trigger.input);
+      trigger.input = instructions ? { input: {}, ...base, instructions } : base;
+    });
+  }
+};
 
-export type AppliesTo = Type.InstanceType<typeof AppliesTo>;
-
-/** Create an {@link AppliesTo} relation linking a routine (source) to a target object. */
-export const makeAppliesTo = (props: Relation.MakeProps<typeof AppliesTo>) => Relation.make(AppliesTo, props);
+/**
+ * Creates a fully-wired in-memory routine graph. `instructions` and `trigger` are optional extras beyond the
+ * schema fields: when provided they are parented under the routine and wired together (runnable, trigger
+ * function, the trigger's instructions input binding, and the `triggers` ref) so that a single `Database.add`
+ * cascades the whole graph. `triggers` defaults to `[]` so callers that supply a `trigger` need not provide it.
+ */
+export const make = ({
+  instructions,
+  trigger,
+  triggers = [],
+  ...props
+}: Omit<Obj.MakeProps<typeof Routine>, 'triggers'> & {
+  triggers?: ReadonlyArray<Ref.Ref<Trigger.Trigger>>;
+  instructions?: Instructions.Instructions;
+  trigger?: Trigger.Trigger;
+}): Routine => {
+  const routine = Obj.make(Routine, { ...props, triggers });
+  if (instructions) {
+    Obj.setParent(instructions, routine);
+    Obj.update(routine, (routine) => {
+      routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
+    });
+  }
+  if (trigger) {
+    Obj.setParent(trigger, routine);
+    Obj.update(routine, (routine) => {
+      routine.triggers.push(Ref.make(trigger));
+    });
+    // Wire the trigger's `function`/`input` from the action (`spec`); preserves any template-provided input.
+    wireTriggers(routine);
+  }
+  return routine;
+};

@@ -4,7 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import {
+  Input,
+  Toolbar as NaturalToolbar,
+  Tooltip,
+  type ToolbarRootProps,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
@@ -87,6 +94,48 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
     <NaturalToolbar.Button key={action.id} {...commonProps}>
       <ActionLabel action={action} />
     </NaturalToolbar.Button>
+  );
+};
+
+const SwitchToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
+  const { onAction } = useMenuScoped('SwitchToolbarItem', __menuScope);
+  const { t } = useTranslation(translationKey);
+  const { label, iconOnly, disabled, testId, hidden, checked } = action.properties;
+  const labelStr = toLocalizedString(label, t);
+
+  const handleCheckedChange = useCallback(() => {
+    if (onAction) {
+      onAction(action, {});
+    } else {
+      void executeMenuAction(action);
+    }
+  }, [action, onAction]);
+
+  if (hidden) {
+    return null;
+  }
+
+  const switchInput = (
+    <Input.Switch
+      checked={checked}
+      disabled={disabled}
+      aria-label={iconOnly ? labelStr : undefined}
+      onCheckedChange={handleCheckedChange}
+      {...(testId && { 'data-testid': testId })}
+    />
+  );
+
+  return (
+    <Input.Root>
+      {!iconOnly && <Input.Label>{labelStr}</Input.Label>}
+      {iconOnly ? (
+        <Tooltip.Trigger asChild content={labelStr}>
+          <Input.Block>{switchInput}</Input.Block>
+        </Tooltip.Trigger>
+      ) : (
+        <Input.Block>{switchInput}</Input.Block>
+      )}
+    </Input.Root>
   );
 };
 
@@ -257,5 +306,10 @@ const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem
     );
   }
 
-  return <ActionToolbarItem __menuScope={__menuScope} action={item as MenuAction} />;
+  const action = item as MenuAction;
+  if (action.properties?.variant === 'switch') {
+    return <SwitchToolbarItem __menuScope={__menuScope} action={action} />;
+  }
+
+  return <ActionToolbarItem __menuScope={__menuScope} action={action} />;
 };

@@ -7,7 +7,6 @@ import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/react-client/echo';
 import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
@@ -35,26 +34,23 @@ export type SummaryProps = {
 export const Summary = composable<HTMLDivElement, SummaryProps>(
   ({ classNames, id, source, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
-    // loads asynchronously and isn't reactive on its own.
-    const [resolved] = useObject(source);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;
-      if (!resolved || !target) {
+      if (!target) {
         return {};
       }
 
       return {
         initialValue: target.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
           createBasicExtensions({ lineWrapping: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
+          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
           createMarkdownExtensions(),
           decorateMarkdown(),
         ],
       };
-    }, [themeMode, id, resolved]);
+    }, [themeMode, id, source?.target]);
 
     return (
       <div

@@ -50,8 +50,8 @@ const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 /**
  * Block until the {@link DocumentProgress} reports a state in `awaitStates`.
  */
-const waitForQueryState = async (
-  progress: DocumentProgress<unknown>,
+const waitForQueryState = async <T>(
+  progress: DocumentProgress<T>,
   awaitStates: readonly HandleQueryState[],
   { timeout }: { timeout?: number } = {},
 ): Promise<void> => {
@@ -434,6 +434,9 @@ describe('AutomergeRepo', () => {
 
       serverHandle.on('change', ({ doc }) => {
         // Note: This is mock of a sync protocol between client and server.
+        if (!doc) {
+          return;
+        }
         const blob = saveSince(doc, syncedHeads);
         syncedHeads = getHeads(doc);
         receiveByClient(blob);

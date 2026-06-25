@@ -89,8 +89,7 @@ type NotebookSectionProps = MosaicTileProps<Notebook.Cell> &
   Pick<NotebookCellProps, 'db' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete' | 'env'>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-// TODO(burdon): Section resize was provided by react-ui-stack's ResizeHandle; reinstate a Mosaic-native
-//   resize affordance for query cells (currently a fixed min-height).
+// TODO(burdon): Reinstate a Mosaic-native resize affordance for query cells (currently a fixed min-height).
 const NotebookSection = ({
   data: cell,
   db,

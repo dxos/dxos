@@ -4,13 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Operation, Instructions, Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Skill, Instructions, Trigger } from '@dxos/compute';
+import { Ref } from '@dxos/echo';
 import { Routine } from '@dxos/plugin-routine/types';
-
-/** Registry key of the persisted RunInstructions operation a trigger dispatches. */
-const RUN_INSTRUCTIONS_KEY = 'org.dxos.function.runInstructions';
 
 export type ScheduledRoutineOptions = {
   name: string;
@@ -20,49 +16,24 @@ export type ScheduledRoutineOptions = {
 };
 
 /**
- * Scaffold a timer-driven routine: a Routine (instructions + skills) run by the shared RunInstructions
- * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
- * instructions before activating, and is owned by the routine (cascade-deletes with it); the instructions
- * stays independent, since it is edited separately and may be reused.
+ * Scaffold a timer-driven routine as an in-memory {@link Routine.Routine} draft graph. The caller's save
+ * flow (the companion's Save button) persists it; nothing is added to the database here, so the function is
+ * always safe to call without DB access.
+ *
+ * The trigger starts disabled so the user can review the schedule and instructions before activating.
  */
 export const makeScheduledRoutine = ({
   name,
   text,
   skillKeys,
   cron,
-}: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, Error, Database.Service> =>
-  Effect.gen(function* () {
-    const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
-    const instructions = yield* Database.add(
-      Instructions.make({
-        name,
-        text,
-        skills,
-      }),
-    );
-
-    // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's RunInstructions
-    // or persist it on first use.
-    const existingFns = yield* Database.query(
-      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(RUN_INSTRUCTIONS_KEY)),
-    ).run;
-    const runInstructionsFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(RunInstructions)));
-
-    const trigger = yield* Database.add(
-      Obj.make(Trigger.Trigger, {
-        enabled: false,
-        runnable: Ref.make(runInstructionsFn),
-        spec: Trigger.specTimer(cron),
-        input: { instructions: Ref.make(instructions), input: {} },
-        concurrency: 1,
-      }),
-    );
-
-    const routine = Routine.make({
+}: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, never, never> => {
+  const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
+  return Effect.succeed(
+    Routine.make({
       name,
-      runnable: Ref.make(runInstructionsFn),
-      triggers: [Ref.make(trigger)],
-    });
-    Obj.setParent(trigger, routine);
-    return routine;
-  });
+      instructions: Instructions.make({ name, text, skills }),
+      trigger: Trigger.make({ spec: Trigger.specTimer(cron), enabled: false }),
+    }),
+  );
+};

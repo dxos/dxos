@@ -65,7 +65,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
               <Form.Viewport>
                 <Form.Content>
-                  <Form.Section>
+                  <Form.Section title={t('connections.label')} description={t('connections.description')}>
                     <Form.Row label={t('add-connection.label')} description={t('connect-service.description')}>
                       <Button onClick={handleAdd}>{t('connect.label')}</Button>
                     </Form.Row>

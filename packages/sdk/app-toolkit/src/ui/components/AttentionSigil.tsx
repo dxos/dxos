@@ -21,10 +21,19 @@ export type KeyBinding = {
 
 export type AttentionSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
 
+export type AttentionSigilButtonSize = 'md' | 'lg';
+
+const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
+  md: 'w-(--dx-rail-item) h-(--dx-rail-item)',
+  lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
+};
+
 export type AttentionSigilButtonProps = Omit<ButtonProps, 'variant'> &
   AttendableId &
   Related & {
     isMenu?: boolean;
+    /** Button dimensions: `md` (32px) or `lg` (40px, default). */
+    size?: AttentionSigilButtonSize;
   };
 
 /**
@@ -46,7 +55,7 @@ const MenuSignifierHorizontal = () => (
 );
 
 export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigilButtonProps>(
-  ({ attendableId, classNames, related, isMenu = true, children, ...props }, forwardedRef) => {
+  ({ children, attendableId, classNames, related, isMenu = true, size = 'lg', ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     // TODO(wittjosiah): Disable hover styles when isMenu is false.
@@ -54,10 +63,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
       <Button
         {...props}
         variant={variant}
-        classNames={[
-          'shrink-0 px-0 min-h-0 w-(--dx-rail-action) h-(--dx-rail-action) relative dx-app-no-drag',
-          classNames,
-        ]}
+        classNames={['shrink-0 px-0 min-h-0 relative dx-app-no-drag', sigilSizeClassNames[size], classNames]}
         ref={forwardedRef}
       >
         {isMenu && <MenuSignifierHorizontal />}
@@ -73,6 +79,8 @@ export type AttentionSigilProps = PropsWithChildren<
     triggerLabel: string;
     actions?: AttentionSigilAction[][];
     icon: string;
+    /** Button dimensions: `md` (32px) or `lg` (40px, default). */
+    size?: AttentionSigilButtonSize;
     onAction?: (action: AttentionSigilAction) => void;
   } & Related
 >;
@@ -82,7 +90,7 @@ export type AttentionSigilProps = PropsWithChildren<
  * The button reflects attention state (primary when attended/ancestor/related, ghost otherwise).
  */
 export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
-  ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, children }, forwardedRef) => {
+  ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, size, children }, forwardedRef) => {
     const { t } = useTranslation(osTranslations);
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
@@ -95,6 +103,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
         ref={!hasActions ? forwardedRef : undefined}
         attendableId={attendableId}
         related={related}
+        size={size}
         isMenu={hasActions}
         // TODO(wittjosiah): Better disabling of interactive styles when no action are available.
         //   Remove underscore icon when no actions are available?
