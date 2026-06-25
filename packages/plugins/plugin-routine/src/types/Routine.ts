@@ -76,7 +76,7 @@ export const make = ({
       trigger.function = instructions ? runInstructionsRef() : routine.runnable;
     });
     Obj.update(routine, (routine) => {
-      routine.triggers = [...routine.triggers, Ref.make(trigger)];
+      routine.triggers.push(Ref.make(trigger));
     });
   }
   return routine;

@@ -334,7 +334,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
         const created = Trigger.make({ function: routine.runnable, spec });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
-          routine.triggers = [...routine.triggers, Ref.make(created)];
+          routine.triggers.push(Ref.make(created));
         });
       }
     },

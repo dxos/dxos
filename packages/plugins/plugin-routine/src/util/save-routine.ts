@@ -182,7 +182,7 @@ const saveTrigger = (
   const created = db.add(Trigger.make({ spec, enabled: enabledByDefault, function: fn, input }));
   Obj.setParent(created, routine);
   Obj.update(routine, (routine) => {
-    routine.triggers = [...routine.triggers, Ref.make(created)];
+    routine.triggers.push(Ref.make(created));
   });
 };
 
