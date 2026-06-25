@@ -95,7 +95,14 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root ref={forwardedRef} classNames={classNames} tabIndex={0} onKeyDown={onKeyDown} {...attentionAttrs} data-testid='deck.plank'>
+      <Pane.Root
+        ref={forwardedRef}
+        classNames={classNames}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        {...attentionAttrs}
+        data-testid='deck.plank'
+      >
         {!headless && (
           <Pane.Toolbar>
             <ActionRoot>
