@@ -237,8 +237,14 @@ const useConnectedRoutines = (
   const byId = useMemo(() => new Map(all.map((routine) => [routine.id, routine])), [all]);
 
   // Session-stable, append-only: a routine seen connected this session is remembered so its row never reorders
-  // or disappears on disconnect.
+  // or disappears on disconnect. Scoped to the current subject — reset if this instance is reused for another
+  // object so the previous subject's rows don't leak in.
   const seenOrder = useRef<string[]>([]);
+  const seenForObject = useRef(object.id);
+  if (seenForObject.current !== object.id) {
+    seenForObject.current = object.id;
+    seenOrder.current = [];
+  }
   for (const id of connectedIds) {
     if (!seenOrder.current.includes(id)) {
       seenOrder.current.push(id);
