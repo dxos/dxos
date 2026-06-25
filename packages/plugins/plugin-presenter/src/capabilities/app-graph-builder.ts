@@ -40,6 +40,7 @@ export default Capability.makeModule(
         if (!isPresentable) {
           return Effect.succeed([]);
         }
+        console.log('+++');
 
         return Effect.succeed([
           AppNode.makeCompanion({

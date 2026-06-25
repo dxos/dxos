@@ -167,10 +167,10 @@ const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>
 );
 
 export {
-  RootAttentionProvider,
   AttendableContainer,
-  useAttentionContext,
-  useAttention,
+  RootAttentionProvider,
   useAttended,
+  useAttention,
+  useAttentionContext,
   useAttentionAttributes,
 };

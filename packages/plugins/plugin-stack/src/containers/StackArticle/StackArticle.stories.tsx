@@ -29,7 +29,7 @@ import { StackArticle, type StackArticleProps } from './StackArticle';
 
 // A minimal tldraw (schema `tldraw.com/2`) snapshot: a single labelled rectangle, used as a test image.
 const SKETCH_CONTENT = {
-  'document:document': { gridSize: 10, name: '', meta: {}, id: 'document:document', typeName: 'document' },
+  'document:document': { gridSize: 10, name: 'Test', meta: {}, id: 'document:document', typeName: 'document' },
   'page:page': { meta: {}, id: 'page:page', name: 'Page 1', index: 'a1', typeName: 'page' },
   'shape:rect': {
     x: 0,

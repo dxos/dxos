@@ -19,7 +19,7 @@ export const MarkdownSlide = ({ document }: MarkdownSlideProps) => {
   }
 
   return (
-    <Panel>
+    <Panel classNames='border'>
       <Slide content={content} />
     </Panel>
   );
