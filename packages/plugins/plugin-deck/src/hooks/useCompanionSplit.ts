@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
 import * as Schema from 'effect/Schema';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type SplitterOrientation } from '@dxos/react-ui';
 import { type AspectDef, defineViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';

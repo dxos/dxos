@@ -73,7 +73,9 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         if (!deck.companionOpen) {
           const hasCompanion = Function.pipe(
             Graph.getNode(graph, input.id),
-            Option.map((node) => Graph.getConnections(graph, node.id, 'child').some((n) => n.type === PLANK_COMPANION_TYPE)),
+            Option.map((node) =>
+              Graph.getConnections(graph, node.id, 'child').some((n) => n.type === PLANK_COMPANION_TYPE),
+            ),
             Option.getOrElse(() => false),
           );
 

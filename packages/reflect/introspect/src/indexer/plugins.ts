@@ -300,11 +300,7 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
 };
 
 /** Read `obj.<name>.<key>` when `<name>` is an object-literal property (e.g. `icon: { key, hue }`). */
-const readNestedStringProperty = (
-  obj: ObjectLiteralExpression,
-  name: string,
-  key: string,
-): string | undefined => {
+const readNestedStringProperty = (obj: ObjectLiteralExpression, name: string, key: string): string | undefined => {
   const nested = obj
     .getProperty(name)
     ?.asKind(SyntaxKind.PropertyAssignment)

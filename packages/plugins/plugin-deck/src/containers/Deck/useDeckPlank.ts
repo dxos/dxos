@@ -11,13 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner, useNode } from '@dxos/plugin-graph';
 import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
-import {
-  useBreakpoints,
-  useCompanions,
-  useDeckState,
-  useSelectedCompanion,
-  useSelectedCompanionVariant,
-} from '#hooks';
+import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
