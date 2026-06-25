@@ -52,6 +52,11 @@ describe('deserializePlanks', () => {
     const url = new URL('http://localhost/?plank=%2Fa&plank=%2Fb&plank=%2Fc');
     expect(deserializePlanks(url)).toEqual(['root/a', 'root/b', 'root/c']);
   });
+
+  test('drops duplicate planks, preserving first occurrence', ({ expect }) => {
+    const url = new URL('http://localhost/?plank=%2Fa&plank=%2Fb&plank=%2Fa');
+    expect(deserializePlanks(url)).toEqual(['root/a', 'root/b']);
+  });
 });
 
 describe('stripPlanks', () => {
