@@ -50,7 +50,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 100 },
       }),
@@ -71,7 +71,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 1_000_000_000 },
       }),
@@ -108,7 +108,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 1_000_000 },
       }),
@@ -128,7 +128,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 100 },
       }),

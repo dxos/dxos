@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Operation, Instructions, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
@@ -14,7 +14,6 @@ import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
-import { isRunInstructions } from '../../util';
 import { InstructionsEditor } from '../InstructionsEditor';
 import { TriggerEditor } from '../TriggerEditor';
 
@@ -29,17 +28,9 @@ type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 export type RoutineFormProps = {
   db: Database.Database;
   routine: Routine.Routine;
-  /**
-   * Draft owned instructions for a routine being edited in memory (the article's edit session or the
-   * companion's create flow). When supplied, the action editor edits it directly instead of querying for one,
-   * so an in-memory draft can be configured before it is persisted.
-   */
-  instructions?: Instructions.Instructions;
-  /** Draft trigger to edit (the article's edit session); overrides the routine's primary trigger. */
-  trigger?: Trigger.Trigger;
-  /** Render the form for display only (the article's default, non-editing view). */
+  /** Render the form for display only (e.g. an enabled routine, locked until disabled). */
   readonly?: boolean;
-  /** Commit the edit session; when set, the form renders a Save/Cancel action row. */
+  /** Commit the edit session; when set, the form renders a Save/Cancel action row (the companion's create flow). */
   onSave?: () => void;
   /** Discard the edit session. */
   onCancel?: () => void;
@@ -48,38 +39,17 @@ export type RoutineFormProps = {
 /**
  * Composite routine form: the general fields (name + description) are the outer {@link Form},
  * with the Actions and Triggers sections rendered as sub-forms inside its content:
- * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
+ * - Actions — Operation/Instructions variants chosen via a button group (single action; `spec` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
  *
- * `readonly` displays the bound objects without edit affordances. The article passes in-memory draft clones
- * (`instructions`/`trigger`) while editing and persists them on save; the companion edits live objects.
+ * The sub-forms read and autosave the routine's owned instructions and primary trigger directly off the
+ * `routine` graph (live editing); `readonly` displays them without edit affordances. The optional Save/Cancel
+ * row is used only by the companion's create-from-template flow.
  */
-export const RoutineForm = ({
-  db,
-  routine,
-  instructions,
-  trigger: triggerProp,
-  readonly = false,
-  onSave,
-  onCancel,
-}: RoutineFormProps) => {
+export const RoutineForm = ({ db, routine, readonly = false, onSave, onCancel }: RoutineFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(routine);
-  const primaryTrigger = usePrimaryTrigger(routine);
-  const trigger = triggerProp ?? primaryTrigger;
-  const queriedInstructions = useOwnedRoutine(db, routine);
-  const ownedInstructions = instructions ?? queriedInstructions;
-
-  // An instructions action runs the routine's instructions through the RunInstructions operation (the
-  // `runnable`), so the trigger that fires it must carry the instructions as bound input. An operation action
-  // takes the trigger event directly, so it binds no input.
-  const triggerInput = useMemo<Record<string, unknown> | undefined>(
-    () =>
-      isRunInstructions(auto.runnable) && ownedInstructions
-        ? { instructions: Ref.make(ownedInstructions), input: {} }
-        : undefined,
-    [auto.runnable, ownedInstructions],
-  );
+  const trigger = usePrimaryTrigger(routine);
 
   // Read once per routine identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralForm>>(
@@ -110,17 +80,11 @@ export const RoutineForm = ({
           <Form.FieldSet />
 
           <Section title={t('actions.title')}>
-            <ActionEditor db={db} routine={routine} instructions={instructions} readonly={readonly} />
+            <ActionEditor db={db} routine={routine} readonly={readonly} />
           </Section>
 
           <Section title={t('triggers.title')}>
-            <TriggerEditor
-              db={db}
-              routine={routine}
-              trigger={trigger}
-              triggerInput={triggerInput}
-              readonly={readonly}
-            />
+            <TriggerEditor db={db} routine={routine} trigger={trigger} readonly={readonly} />
           </Section>
 
           {/* Save/Cancel for the edit session (the sub-forms autosave to the in-memory clones as they change). */}
@@ -143,83 +107,97 @@ const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
 // Actions
 //
 
-const ActionKinds = ['instructions', 'operation'] as const;
-type ActionKind = (typeof ActionKinds)[number];
-const isActionKind = (value: string): value is ActionKind => (ActionKinds as readonly string[]).includes(value);
-
 /**
- * Single action: an Operation ref (written to the routine's `runnable`) or an owned Instructions edited inline.
- * The instructions object and `runnable` wiring are established on save (see `saveRoutine`), not on mount — the
- * editor only reads/edits what it is given (a draft in an edit session, or the live owned instructions).
+ * Single action: an Operation (the routine's `spec.runnable`) or an owned Instructions edited inline. The
+ * action kind is derived from the routine's `spec` — an absent spec means "operation, none chosen yet" (a
+ * scaffolded routine always carries an instructions spec, so the only way to clear it is switching to an
+ * operation). `Routine.make` establishes the owned-instructions wiring when the routine is scaffolded.
  */
 const ActionEditor = ({
   db,
-  routine,
-  instructions: draftRoutine,
+  routine: routineProp,
   readonly,
 }: {
   db: Database.Database;
   routine: Routine.Routine;
-  instructions?: Instructions.Instructions;
   readonly?: boolean;
 }) => {
-  const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
-  // A draft (in-memory) routine supplies its owned instructions directly; otherwise resolve it by query.
-  const queriedRoutine = useOwnedRoutine(db, routine);
-  const ownedRoutine = draftRoutine ?? queriedRoutine;
-  // An operation action is a user-bound operation runnable; the registry RunInstructions runnable backs an
-  // instructions action, so it is not treated as an operation selection. Default to instructions when neither.
-  const isOperationAction = auto.runnable != null && !isRunInstructions(auto.runnable);
-  const [kind, setKind] = useState<ActionKind>(isOperationAction ? 'operation' : 'instructions');
+  const [routine, updateRoutine] = useObject(routineProp);
+
+  // Classification is read off `spec.kind` (no dereference); the owned instructions object is then resolved in
+  // place to hand to the editor (an owned ref is always locally resolvable, and the parent `useObject` re-renders
+  // this when `spec` changes). An absent spec means "runnable, none chosen yet" — a scaffolded routine always
+  // carries an instructions spec, so the only way to clear it is switching to a runnable action.
+  const kind = routine.spec?.kind ?? 'runnable';
+  const operationRef = Routine.runnableRef(routine);
+  const instructions = Routine.instructionsRef(routine)?.target;
 
   const handleOperationChange = useCallback(
     (operation?: Ref.Ref<Operation.PersistentOperation>) => {
-      updateAuto((routine) => {
-        routine.runnable = operation;
+      updateRoutine((routine) => {
+        routine.spec = operation ? { kind: 'runnable', runnable: operation } : undefined;
       });
+      // Keep the owned trigger's `function`/`input` in sync with the new action.
+      Routine.wireTriggers(routineProp);
     },
-    [updateAuto],
+    [updateRoutine, routineProp],
   );
 
   const handleKindChange = useCallback(
-    (next: ActionKind) => {
-      setKind(next);
-      // Switching to an instructions action must drop any bound operation, otherwise `saveRoutine` still sees a
-      // (non-RunInstructions) runnable and persists this as an operation action — discarding the instructions.
-      if (next === 'instructions') {
-        updateAuto((routine) => {
-          routine.runnable = undefined;
-        });
-      }
+    (next: Routine.Kind) => {
+      updateRoutine((routine) => {
+        if (next === 'runnable') {
+          // Switch to an operation action; the operation is chosen via the picker below. A previously-owned
+          // instructions stays parented to the routine (cascade-deleted with it) but is no longer the action.
+          routine.spec = undefined;
+        } else if (routine.spec?.kind !== 'instructions') {
+          // Seed an owned instructions action (the executing operation is the implicit RunInstructions).
+          const instructions = Instructions.make({});
+          Obj.setParent(instructions, routine);
+          routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
+        }
+      });
+      // Re-wire the owned trigger to dispatch the new action (RunInstructions vs the operation).
+      Routine.wireTriggers(routineProp);
     },
-    [updateAuto],
+    [updateRoutine, routineProp],
   );
 
   return (
     <div role='none' className='flex flex-col'>
       {!readonly && <ActionKindToggle value={kind} onChange={handleKindChange} />}
-      {kind === 'operation' ? (
+      {kind === 'runnable' ? (
         <OperationEditor
           db={db}
           operations={operations}
-          operation={isOperationAction ? auto.runnable : undefined}
+          operation={operationRef}
           onChange={handleOperationChange}
           readonly={readonly}
         />
-      ) : ownedRoutine ? (
-        <InstructionsEditor db={db} instructions={ownedRoutine} readonly={readonly} />
+      ) : instructions ? (
+        <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}
     </div>
   );
 };
 
-const ActionKindToggle = ({ value, onChange }: { value: ActionKind; onChange: (kind: ActionKind) => void }) => {
+const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <ToggleGroup type='single' value={value} onValueChange={(next) => isActionKind(next) && onChange(next)}>
+    // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
+    // other non-kind value so it can't fall through and overwrite the current action.
+    <ToggleGroup
+      type='single'
+      value={value}
+      onValueChange={(next) => {
+        if (next === 'instructions' || next === 'runnable') {
+          onChange(next);
+        }
+      }}
+    >
       <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
-      <ToggleGroupItem value='operation'>{t('action-kind.operation.label')}</ToggleGroupItem>
+      <ToggleGroupItem value='runnable'>{t('action-kind.operation.label')}</ToggleGroupItem>
     </ToggleGroup>
   );
 };
@@ -299,15 +277,6 @@ const useOperations = (db: Database.Database) =>
       Scope.registry(),
     ),
   );
-
-/** The Instructions owned by (parented to) this routine, used for the inline instructions action. */
-const useOwnedRoutine = (db: Database.Database, routine: Routine.Routine): Instructions.Instructions | undefined => {
-  const routines = useQuery(db, Query.select(Filter.type(Instructions.Instructions)).from(Scope.space()));
-  return useMemo(
-    () => routines.find((instructions) => Obj.getParent(instructions)?.id === routine.id),
-    [routines, routine],
-  );
-};
 
 /** Subscribe to the routine and derive its primary (first) trigger. */
 const usePrimaryTrigger = (routine: Routine.Routine): Trigger.Trigger | undefined => {

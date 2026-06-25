@@ -174,7 +174,7 @@ describe.skip('Trace timeline', () => {
           );
           yield* Database.add(
             Trigger.make({
-              function: Ref.make(Operation.serialize(RunInstructions)),
+              runnable: Ref.make(Operation.serialize(RunInstructions)),
               enabled: true,
               spec: Trigger.specFeed(feed),
               input: {

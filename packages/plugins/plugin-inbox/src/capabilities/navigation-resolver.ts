@@ -15,7 +15,7 @@ import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
 
-import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
+import { getMailboxPath, getMailboxesSectionId } from '../paths';
 
 /**
  * Creates a path resolver for feed-object navigation paths of the form
@@ -72,7 +72,7 @@ export default Capability.makeModule(
 
         return [
           {
-            path: getMailboxAllMailPath(db.spaceId, object.id),
+            path: getMailboxPath(db.spaceId, object.id),
             label: (object as Mailbox.Mailbox).name ?? '',
             type: Type.getTypename(Mailbox.Mailbox),
           },

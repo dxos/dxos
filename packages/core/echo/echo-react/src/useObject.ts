@@ -65,7 +65,7 @@ export const useObject: {
    * @param objOrRef - The Echo object or Ref to subscribe to
    * @returns The current object snapshot (or undefined) and update callback
    */
-  <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T>): [Obj.Snapshot<T> | undefined, ObjectUpdateCallback<T>];
+  <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): [Obj.Snapshot<T> | undefined, ObjectUpdateCallback<T>];
 
   /**
    * Hook to subscribe to a specific property of an Echo object.

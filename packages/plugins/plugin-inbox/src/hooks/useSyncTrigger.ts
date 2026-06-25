@@ -104,7 +104,7 @@ export const useSyncTrigger = ({
       const trigger = Trigger.make({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
-        function: Ref.make(fn),
+        runnable: Ref.make(fn),
         input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
       });
 

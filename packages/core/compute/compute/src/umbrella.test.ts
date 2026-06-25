@@ -12,6 +12,7 @@ import {
   OperationHandlerSet,
   OperationRegistry,
   Process,
+  Runnable,
   Instructions,
   Script,
   ServiceResolver,
@@ -37,6 +38,7 @@ describe('umbrella re-exports', () => {
 
     // Function primitives.
     expect(Process).toBeDefined();
+    expect(Runnable).toBeDefined();
     expect(Trigger).toBeDefined();
     expect(TriggerEvent).toBeDefined();
     expect(Script).toBeDefined();

@@ -8,7 +8,14 @@ import { Instructions } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  RoutineTemplates,
+  SkillDefinition,
+  CreateObject,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
@@ -21,9 +28,11 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   AppPlugin.addSchemaModule({
     schema: [
       Subscription.Subscription,
@@ -35,10 +44,13 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       TagIndex.TagIndex,
     ],
   }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  Plugin.addModule({
+    id: 'magazine-automation-templates',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: RoutineTemplates,
   }),
   Plugin.make,
 );
