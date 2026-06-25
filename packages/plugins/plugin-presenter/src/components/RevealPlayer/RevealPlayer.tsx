@@ -17,6 +17,7 @@ import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
 
 import { useAsyncEffect } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 const styles = `
 <style type="text/css">
@@ -148,7 +149,10 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: ['dx-container grid place-items-center bg-black', fullscreen && 'absolute inset-0'],
+          classNames: [
+            'dx-container grid place-items-center bg-scrim-surface border',
+            fullscreen && 'absolute inset-0',
+          ],
         })}
         ref={forwardedRef}
       >
@@ -156,15 +160,14 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
           <div ref={deckDivRef} className='absolute inset-0 reveal'>
             {/* NOTE: Must be in head. */}
             <style>
-              <link rel='preconnect' href='https://fonts.googleapis.com' />
               <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
+              <link rel='preconnect' href='https://fonts.googleapis.com' />
               <link
                 rel='stylesheet'
                 href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
               />
             </style>
-            <div className='slides'>
-              <div className='text-center!' />
+            <div className={mx('slides', !fullscreen && 'bg-base-surface p-8')}>
               <section {...{ 'data-markdown': [] }}>
                 <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
               </section>

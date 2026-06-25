@@ -14,9 +14,9 @@ import { PresenterContext } from '#types';
 
 import { useExitPresenter } from '../../useExitPresenter';
 
-export type CollectionPresenterArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
+export type CollectionArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
-export const CollectionPresenterArticle = ({ role, subject: collection }: CollectionPresenterArticleProps) => {
+export const CollectionArticle = ({ role, subject: collection }: CollectionArticleProps) => {
   const [slide, setSlide] = useState(0);
   const { running } = useContext(PresenterContext);
   const handleExit = useExitPresenter(collection);
