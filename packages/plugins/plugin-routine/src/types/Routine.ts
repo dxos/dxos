@@ -66,17 +66,17 @@ export const make = ({
   const routine = Obj.make(Routine, { ...props, triggers });
   if (instructions) {
     Obj.setParent(instructions, routine);
-    Obj.update(routine, (r) => {
-      r.runnable = Ref.make(instructions);
+    Obj.update(routine, (routine) => {
+      routine.runnable = Ref.make(instructions);
     });
   }
   if (trigger) {
     Obj.setParent(trigger, routine);
-    Obj.update(trigger, (t) => {
-      t.function = instructions ? runInstructionsRef() : routine.runnable;
+    Obj.update(trigger, (trigger) => {
+      trigger.function = instructions ? runInstructionsRef() : routine.runnable;
     });
-    Obj.update(routine, (r) => {
-      r.triggers = [...r.triggers, Ref.make(trigger)];
+    Obj.update(routine, (routine) => {
+      routine.triggers = [...routine.triggers, Ref.make(trigger)];
     });
   }
   return routine;
