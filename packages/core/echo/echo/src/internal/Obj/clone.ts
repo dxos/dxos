@@ -18,9 +18,27 @@ import { Ref } from '../Ref';
  * to recurse into refs (see {@link Obj.CloneOptions}).
  * @returns A new object with the same schema and properties.
  */
-export const clone = <T extends Obj.Any>(obj: T, opts?: Obj.CloneOptions): T => cloneInner(obj, opts, obj);
+export const clone = <T extends Obj.Any>(obj: T, opts?: Obj.CloneOptions): T =>
+  cloneInner(obj, opts, obj, new Map(), new Set());
 
-const cloneInner = <T extends Obj.Any>(obj: T, opts: Obj.CloneOptions | undefined, root: Obj.Any): T => {
+/**
+ * Recursive clone worker threaded with two cycle-guard structures:
+ * - `cache`: id → already-finished clone; reused when the same object appears more than once in a DAG.
+ * - `inProgress`: ids of objects whose clone is currently being computed; a ref back into this set means
+ *   a true cycle — the original ref is kept rather than recursing forever.
+ */
+const cloneInner = <T extends Obj.Any>(
+  obj: T,
+  opts: Obj.CloneOptions | undefined,
+  root: Obj.Any,
+  cache: Map<string, Obj.Any>,
+  inProgress: Set<string>,
+): T => {
+  if (cache.has(obj.id)) {
+    return cache.get(obj.id) as T;
+  }
+  inProgress.add(obj.id);
+
   const { id, ...data } = obj;
   // Prefer cloning through the type entity so the cloned instance preserves
   // `Obj.getType` identity. Falls back to the raw schema for older instances
@@ -32,9 +50,13 @@ const cloneInner = <T extends Obj.Any>(obj: T, opts: Obj.CloneOptions | undefine
   const mapRef = (value: unknown, recurse: (value: unknown) => unknown): unknown => {
     if (Ref.isRef(value)) {
       const target = value.target;
-      // TODO(dmaretskyi): Will break on circular references.
-      if (target != null && (opts?.deep === 'all' || (opts?.deep === 'owned' && isOwnedBy(target, root)))) {
-        return Ref.make(cloneInner(target, opts, root));
+      // A ref back to an in-progress object means a cycle — keep the original ref to break it.
+      if (
+        target != null &&
+        !inProgress.has(target.id) &&
+        (opts?.deep === 'all' || (opts?.deep === 'owned' && isOwnedBy(target, root)))
+      ) {
+        return Ref.make(cloneInner(target, opts, root, cache, inProgress));
       }
       return value;
     }
@@ -46,8 +68,11 @@ const cloneInner = <T extends Obj.Any>(obj: T, opts: Obj.CloneOptions | undefine
     props.id = id;
   }
   const meta = deepMapValues(getMeta(obj), mapRef);
+  const result = makeObject(schema, props, meta, typeEntity as object | undefined);
 
-  return makeObject(schema, props, meta, typeEntity as object | undefined);
+  inProgress.delete(obj.id);
+  cache.set(obj.id, result);
+  return result;
 };
 
 /**
