@@ -8,12 +8,24 @@ import { EID } from '@dxos/keys';
 
 export type RunStatus = 'success' | 'failure' | 'pending';
 
+export type RunEvent = {
+  type: string;
+  timestamp: number;
+  data: unknown;
+  /** Process id that emitted this event; present when a run spawns child processes. */
+  pid?: string;
+  /** Human-readable process name, if provided by the runtime. */
+  processName?: string;
+};
+
 export type RoutineRun = {
   /** Root process id. */
   pid: string;
   startedAt: number;
   duration: number;
   status: RunStatus;
+  /** All trace events for this run, sorted chronologically. */
+  events: RunEvent[];
   /** Ref to the conversation (chat feed) created for this run, if any. */
   conversation?: Ref.Ref<Obj.Unknown>;
 };
@@ -106,7 +118,15 @@ export const groupIntoRuns = (
     // Grab the conversation ref from any message in this run that has one.
     const conversation = msgs.find((msg) => msg.meta.conversation)?.meta.conversation;
 
-    runs.push({ pid, startedAt, duration, status, conversation });
+    const events: RunEvent[] = allEvents.map((evt) => ({
+      type: evt.type,
+      timestamp: evt.timestamp,
+      data: evt.data,
+      ...(evt.meta.pid && { pid: evt.meta.pid }),
+      ...(evt.meta.processName && { processName: evt.meta.processName }),
+    }));
+
+    runs.push({ pid, startedAt, duration, status, events, conversation });
   }
 
   // Newest first.
