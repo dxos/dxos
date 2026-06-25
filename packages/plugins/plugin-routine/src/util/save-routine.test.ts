@@ -17,7 +17,7 @@ import { Text } from '@dxos/schema';
 import { Routine } from '#types';
 
 import { isRunInstructions, runnableInstructions } from './run-instructions';
-import { makeRoutineDraft, primaryTrigger, saveRoutine } from './save-routine';
+import { primaryTrigger, saveRoutine } from './save-routine';
 
 const types = [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Operation.PersistentOperation, Text.Text];
 
@@ -28,16 +28,17 @@ const TestOperation = Operation.make({
 });
 
 describe('saveRoutine', () => {
-  // The draft is a single in-memory routine graph (built by makeRoutineDraft); saveRoutine persists it on
-  // create (a single add cascades the owned children) and reconciles it on edit (a deep 'owned' clone).
+  // The draft is a single in-memory routine graph (built by Routine.make); saveRoutine persists it on
+  // create (a single add cascades the parented children) and reconciles it on edit (a deep 'parent' clone).
 
   test('operation-action draft with a trigger spec persists the trigger and its input binding', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
     const operation = db.add(Operation.serialize(TestOperation));
-    const draft = makeRoutineDraft({
-      routine: Routine.make({ name: 'Magazine', runnable: Ref.make(operation), triggers: [] }),
+    const draft = Routine.make({
+      name: 'Magazine',
+      runnable: Ref.make(operation),
       trigger: Trigger.make({ spec: Trigger.specTimer('0 9 * * *'), input: {} }),
     });
 
@@ -54,8 +55,8 @@ describe('saveRoutine', () => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
 
-    const draft = makeRoutineDraft({
-      routine: Routine.make({ name: 'Blank', triggers: [] }),
+    const draft = Routine.make({
+      name: 'Blank',
       instructions: Instructions.make({ name: 'Blank', text: 'do something' }),
       trigger: Trigger.make({}),
     });
@@ -89,8 +90,8 @@ describe('saveRoutine', () => {
 
     const routine = await saveRoutine(
       db,
-      makeRoutineDraft({
-        routine: Routine.make({ name: 'Digest', triggers: [] }),
+      Routine.make({
+        name: 'Digest',
         instructions: Instructions.make({ name: 'Digest', text: 'first body' }),
         trigger: Trigger.make({ spec: Trigger.specTimer('0 9 * * *') }),
       }),
@@ -138,8 +139,9 @@ describe('saveRoutine', () => {
     const operation = db.add(Operation.serialize(TestOperation));
     const routine = await saveRoutine(
       db,
-      makeRoutineDraft({
-        routine: Routine.make({ name: 'Report', runnable: Ref.make(operation), triggers: [] }),
+      Routine.make({
+        name: 'Report',
+        runnable: Ref.make(operation),
         trigger: Trigger.make({ spec: Trigger.specTimer('0 9 * * *') }),
       }),
     );

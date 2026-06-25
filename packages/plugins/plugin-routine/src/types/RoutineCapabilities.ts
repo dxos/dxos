@@ -48,7 +48,7 @@ export type Template = {
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
    * Build the automation as an in-memory {@link Routine.Routine} draft graph — the routine plus its owned
-   * trigger and instructions, wired with `makeRoutineDraft`. The create flow persists the graph via
+   * trigger and instructions, assembled by `Routine.make`. The create flow persists the graph via
    * `saveRoutine`; scaffold must NOT call `Database.add` itself. `Database.Service` may still be used for
    * read-only lookups (e.g. loading a feed ref). `subject` is set when scaffolding from an object's companion.
    */

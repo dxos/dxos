@@ -11,45 +11,6 @@ import { Routine } from '#types';
 
 import { runInstructionsRef, runnableInstructions } from './run-instructions';
 
-/**
- * Wire scaffolded pieces into a single in-memory routine draft graph. For an instructions action the
- * instructions becomes the routine's owned `runnable` (parented, so a `deep: 'parent'` clone captures it and it
- * cascade-deletes with the routine); for an operation action the routine's `runnable` is the operation. The
- * trigger is parented and its `function` wired (RunInstructions for an instructions action, else the
- * operation). The trigger's instructions input binding is written at save time, so the draft graph holds only
- * one reference to the instructions (via `runnable`). The returned routine is the edit subject the form reads
- * and {@link saveRoutine} persists; it is not yet in the database.
- */
-export const makeRoutineDraft = ({
-  routine,
-  instructions,
-  trigger,
-}: {
-  routine: Routine.Routine;
-  instructions?: Instructions.Instructions;
-  trigger?: Trigger.Trigger;
-}): Routine.Routine => {
-  if (instructions) {
-    // An instructions action stores its owned instructions as the runnable; the executing operation is the
-    // implicit static RunInstructions.
-    Obj.setParent(instructions, routine);
-    Obj.update(routine, (routine) => {
-      routine.runnable = Ref.make(instructions);
-    });
-  }
-  if (trigger) {
-    Obj.setParent(trigger, routine);
-    Obj.update(trigger, (trigger) => {
-      // Instructions action dispatches via the static RunInstructions; an operation action via the operation.
-      trigger.function = instructions ? runInstructionsRef() : routine.runnable;
-    });
-    Obj.update(routine, (routine) => {
-      routine.triggers = [...routine.triggers, Ref.make(trigger)];
-    });
-  }
-  return routine;
-};
-
 /** The routine's primary (first) owned trigger, resolved from its `triggers` refs. */
 export const primaryTrigger = (routine: Routine.Routine): Trigger.Trigger | undefined => {
   for (const ref of routine.triggers) {

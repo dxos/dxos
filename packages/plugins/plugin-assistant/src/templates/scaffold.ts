@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Skill, Instructions, Trigger } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
-import { makeRoutineDraft } from '@dxos/plugin-routine';
 import { Routine } from '@dxos/plugin-routine/types';
 
 export type ScheduledRoutineOptions = {
@@ -21,8 +20,7 @@ export type ScheduledRoutineOptions = {
  * flow (the companion's Save button) persists it; nothing is added to the database here, so the function is
  * always safe to call without DB access.
  *
- * The trigger starts disabled so the user can review the schedule and instructions before activating, and is
- * wired as an owned child of the routine by {@link makeRoutineDraft} (so it cascade-deletes with it).
+ * The trigger starts disabled so the user can review the schedule and instructions before activating.
  */
 export const makeScheduledRoutine = ({
   name,
@@ -31,8 +29,11 @@ export const makeScheduledRoutine = ({
   cron,
 }: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, never, never> => {
   const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
-  const instructions = Instructions.make({ name, text, skills });
-  const trigger = Trigger.make({ spec: Trigger.specTimer(cron), enabled: false });
-  const routine = Routine.make({ name, triggers: [] });
-  return Effect.succeed(makeRoutineDraft({ routine, instructions, trigger }));
+  return Effect.succeed(
+    Routine.make({
+      name,
+      instructions: Instructions.make({ name, text, skills }),
+      trigger: Trigger.make({ spec: Trigger.specTimer(cron), enabled: false }),
+    }),
+  );
 };

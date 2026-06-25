@@ -11,8 +11,6 @@ import { Obj, Ref, Type } from '@dxos/echo';
 
 import { Routine, type RoutineCapabilities } from '#types';
 
-import { makeRoutineDraft } from '../util';
-
 /**
  * Blank template: an instructions-action routine draft with an empty trigger; the action kind, schedule, and
  * body are configured in the form. In an object companion the instructions are seeded with the subject (in
@@ -25,8 +23,8 @@ export const blank: RoutineCapabilities.Template = {
   icon: 'ph--lightning--regular',
   scaffold: ({ name, subject }) =>
     Effect.succeed(
-      makeRoutineDraft({
-        routine: Routine.make({ name, triggers: [] }),
+      Routine.make({
+        name,
         instructions: Instructions.make({
           skills: subject ? skillRefsForObject(subject) : [],
           objects: subject ? [Ref.make(subject)] : undefined,

@@ -10,6 +10,7 @@ import { Instructions, Trigger } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
+import { runInstructionsRef } from '../util/run-instructions';
 import * as Runnable from './Runnable';
 
 /**
@@ -46,4 +47,37 @@ export class Routine extends Type.declareObj<Routine>()(
 
 export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(Routine, value);
 
-export const make = (props: Obj.MakeProps<typeof Routine>) => Obj.make(Routine, props);
+/**
+ * Creates an in-memory routine draft graph. `instructions` and `trigger` are optional extras beyond the
+ * schema fields: when provided they are parented under the routine, wired (runnable, trigger function,
+ * triggers ref), and included in a `deep: 'parent'` clone so `saveRoutine` captures them atomically.
+ * `triggers` defaults to `[]` so callers that supply a `trigger` param need not provide it.
+ */
+export const make = ({
+  instructions,
+  trigger,
+  triggers = [],
+  ...props
+}: Omit<Obj.MakeProps<typeof Routine>, 'triggers'> & {
+  triggers?: ReadonlyArray<Ref.Ref<Trigger.Trigger>>;
+  instructions?: Instructions.Instructions;
+  trigger?: Trigger.Trigger;
+}): Routine => {
+  const routine = Obj.make(Routine, { ...props, triggers });
+  if (instructions) {
+    Obj.setParent(instructions, routine);
+    Obj.update(routine, (r) => {
+      r.runnable = Ref.make(instructions);
+    });
+  }
+  if (trigger) {
+    Obj.setParent(trigger, routine);
+    Obj.update(trigger, (t) => {
+      t.function = instructions ? runInstructionsRef() : routine.runnable;
+    });
+    Obj.update(routine, (r) => {
+      r.triggers = [...r.triggers, Ref.make(trigger)];
+    });
+  }
+  return routine;
+};

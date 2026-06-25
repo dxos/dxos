@@ -8,7 +8,6 @@ import { Skill, Instructions, Trigger } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { makeRoutineDraft } from '@dxos/plugin-routine';
 import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
@@ -49,24 +48,23 @@ export const crm: RoutineCapabilities.Template = {
       const instructionsName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
       const skillRefs = SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
-      const instructions = Instructions.make({
-        name: instructionsName,
-        text: DEFAULT_INSTRUCTIONS,
-        skills: skillRefs,
-      });
 
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
-      const trigger = Trigger.make({
-        enabled: false,
-        spec: Trigger.specFeed(feed),
-        // The raw trigger event item is passed as the agent's input; the instructions ref is bound by
-        // makeRoutineDraft (which also sets the trigger's function to RunInstructions).
-        input: { input: '{{event.item}}' },
-        concurrency: 1,
+      return Routine.make({
+        name: name ?? instructionsName,
+        instructions: Instructions.make({
+          name: instructionsName,
+          text: DEFAULT_INSTRUCTIONS,
+          skills: skillRefs,
+        }),
+        trigger: Trigger.make({
+          enabled: false,
+          spec: Trigger.specFeed(feed),
+          // The raw trigger event item is passed as the agent's input.
+          input: { input: '{{event.item}}' },
+          concurrency: 1,
+        }),
       });
-
-      const routine = Routine.make({ name: name ?? instructionsName, triggers: [] });
-      return makeRoutineDraft({ routine, instructions, trigger });
     }),
 };

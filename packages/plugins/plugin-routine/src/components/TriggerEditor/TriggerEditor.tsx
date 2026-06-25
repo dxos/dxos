@@ -319,7 +319,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       setKind(spec.kind);
       // Edit only the spec on the in-memory draft trigger; the trigger's `function` and `input` (including the
       // instructions binding and any operation-specific bindings like `{ magazine }`) are wired by
-      // `makeRoutineDraft` and finalized by `saveRoutine`, so they are not re-derived here. `enabled` is owned
+      // `Routine.make` and finalized by `saveRoutine`, so they are not re-derived here. `enabled` is owned
       // by the routine-level toolbar toggle.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
@@ -329,7 +329,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           trigger.spec = spec as typeof trigger.spec;
         });
       } else {
-        // Defensive: the draft normally carries an owned trigger already (see `makeRoutineDraft`). If absent,
+        // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
         const created = Trigger.make({ function: routine.runnable, spec });
         Obj.setParent(created, routine);
