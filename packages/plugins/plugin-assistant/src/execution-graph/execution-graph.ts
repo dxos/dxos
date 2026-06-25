@@ -782,7 +782,8 @@ const spanTreeToCommits = (
   const finishSpan = (span: Span): void => {
     const pid = span.meta.pid;
     if (pid) {
-      emitRunningIndicator(pid);
+      // Trace.Meta.pid is plain string (avoids circular dep); construct brand here.
+      emitRunningIndicator(Process.ID.make(pid));
     }
 
     if (span.id === ROOT_SPAN_ID || isCompletedSpan(span)) {
