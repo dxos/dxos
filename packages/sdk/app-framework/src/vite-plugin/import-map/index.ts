@@ -122,7 +122,6 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   // `@playwright/test` (and transitive playwright-core) into the browser bundle.
   '@dxos/lit-grid': new Set(['testing']),
   '@dxos/react-ui-mosaic': new Set(['playwright']),
-  '@dxos/react-ui-stack': new Set(['playwright']),
   '@dxos/react-ui-table': new Set(['playwright']),
   '@dxos/ui-theme': new Set(['plugin']),
   // `solid-js/web/storage` is a server-only helper that pulls
