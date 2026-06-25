@@ -39,10 +39,10 @@ export class Routine extends Type.declareObj<Routine>()(
 
     /**
      * The action to run: either an Operation (`spec.runnable`, bound directly) or the routine's own owned
-     * Instructions (`spec.instructions`). For an Operation action the trigger's `function` points at this
+     * Instructions (`spec.instructions`). For an Operation action the trigger's `runnable` points at this
      * Operation. For an Instructions action `spec.instructions` is the owned Instructions object (the operation
      * is implicitly the static RunInstructions, so no separate operation ref is stored), and the trigger's
-     * `function` is RunInstructions with this instructions bound as its input.
+     * `runnable` is RunInstructions with this instructions bound as its input.
      */
     // TODO(burdon): Change to Array? Or handle that case with a ComputeGraph runnable.
     spec: RoutineSpec.pipe(Schema.optional),
@@ -60,6 +60,7 @@ export class Routine extends Type.declareObj<Routine>()(
   ),
 ) {}
 
+/** Returns true when value is a Routine object. */
 export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(Routine, value);
 
 /**
