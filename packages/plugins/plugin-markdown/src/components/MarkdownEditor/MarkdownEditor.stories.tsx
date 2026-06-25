@@ -2,15 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
+import { type Client } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -19,16 +22,54 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor/transl
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { useLinkQuery } from '#hooks';
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
 import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
+
+// A minimal tldraw (schema `tldraw.com/2`) snapshot: a single labelled rectangle, used as a test sketch.
+const SKETCH_CONTENT = {
+  'document:document': { gridSize: 10, name: 'Test', meta: {}, id: 'document:document', typeName: 'document' },
+  'page:page': { meta: {}, id: 'page:page', name: 'Page 1', index: 'a1', typeName: 'page' },
+  'shape:rect': {
+    x: 0,
+    y: 0,
+    rotation: 0,
+    isLocked: false,
+    opacity: 1,
+    meta: {},
+    id: 'shape:rect',
+    type: 'geo',
+    props: {
+      w: 160,
+      h: 120,
+      geo: 'rectangle',
+      color: 'blue',
+      labelColor: 'black',
+      fill: 'solid',
+      dash: 'draw',
+      size: 'l',
+      font: 'draw',
+      text: 'DXOS',
+      align: 'middle',
+      verticalAlign: 'middle',
+      growY: 0,
+      url: '',
+      scale: 1,
+    },
+    parentId: 'page:page',
+    index: 'a1',
+    typeName: 'shape',
+  },
+};
 
 type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
+  const handleLinkQuery = useLinkQuery(space?.db, doc);
   const id = doc && Obj.getURI(doc);
   if (!id) {
     return <Loading data={{ id }} />;
@@ -36,15 +77,19 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
   return (
     <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
-      <MarkdownEditorProvider id={id} object={doc} {...props}>
+      <MarkdownEditorProvider id={id} attendableId={id} object={doc} onLinkQuery={handleLinkQuery} {...props}>
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
-            <Panel.Root>
-              <Panel.Toolbar asChild>
-                <MarkdownEditor.Toolbar />
+            {/* Mirror MarkdownArticle: Panel.Toolbar/Content are NOT `asChild` (MarkdownEditor.Toolbar is not
+                composable, so asChild wraps it in a dx-slot-warning div that breaks the grid-area layout). */}
+            <Panel.Root role='article'>
+              <Panel.Toolbar classNames='bg-toolbar-surface'>
+                <MarkdownEditor.Toolbar classNames='dx-document' />
               </Panel.Toolbar>
-              <Panel.Content asChild>
+              <Panel.Content>
                 <MarkdownEditor.Content />
+                {/* Embedded objects (transclusions) portal into block-container elements created by the editor. */}
+                <MarkdownEditor.Blocks />
               </Panel.Content>
             </Panel.Root>
           </Editor.Root>
@@ -54,28 +99,49 @@ const DefaultStory = (props: DefaultStoryProps) => {
   );
 };
 
+const withClient = (seed: (client: Client) => Effect.Effect<void>): Decorator =>
+  withPluginManager({
+    // SketchPlugin's section surface reads its Settings atom, contributed on SetupSettings.
+    setupEvents: [AppActivationEvents.SetupSettings],
+    plugins: [
+      ...corePlugins(),
+      SketchPlugin(),
+      ClientPlugin({
+        types: [Markdown.Document, Text.Text, Sketch.Sketch, Sketch.Canvas],
+        onClientInitialized: ({ client }) => seed(client),
+      }),
+    ],
+  });
+
+const seedPlainDocument = (client: Client) =>
+  Effect.gen(function* () {
+    const { personalSpace } = yield* initializeIdentity(client);
+    personalSpace.db.add(Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }));
+  });
+
+const seedEmbeddedSketch = (client: Client) =>
+  Effect.gen(function* () {
+    const { personalSpace } = yield* initializeIdentity(client);
+    const sketch = personalSpace.db.add(Sketch.make({ name: 'Test Sketch', canvas: { content: SKETCH_CONTENT } }));
+    const uri = Obj.getURI(sketch);
+    personalSpace.db.add(
+      Markdown.make({
+        content: [
+          '# Test Document',
+          '',
+          'The sketch below renders inline as a block surface:',
+          '',
+          `![${sketch.name}](${uri})`,
+          '',
+        ].join('\n'),
+      }),
+    );
+  });
+
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/components/MarkdownEditor',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        // TODO(burdon): Try to write story without ClientPlugin.
-        ClientPlugin({
-          types: [Markdown.Document, Text.Text],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(
-                Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
-              );
-            }),
-        }),
-      ],
-    }),
-  ],
+  decorators: [withLayout({ layout: 'column' })],
   parameters: {
     translations: [...translations, ...editorTranslations],
   },
@@ -85,4 +151,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withClient(seedPlainDocument)],
+};
+
+export const WithEmbeddedSketch: Story = {
+  decorators: [withClient(seedEmbeddedSketch)],
+};

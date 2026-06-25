@@ -11640,6 +11640,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

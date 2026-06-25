@@ -72,22 +72,26 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
           <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
-        <SearchList.Viewport classNames='max-h-[24rem]'>
-          {allResults.map((result) => (
-            <SearchList.Item
-              key={result.id}
-              classNames='flex gap-2 items-center'
-              value={result.id}
-              label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
-              icon={result.icon}
-              onSelect={() => void handleSelect(result)}
-            />
-          ))}
-          {query && allResults.length === 0 && <SearchList.Empty />}
-        </SearchList.Viewport>
-      </SearchList.Root>
+      {/* Dialog.Body is the column propagator; without it the SearchList input/viewport are direct
+          children of Dialog.Content's Column grid and land in the gutter (misplaced searchbox). */}
+      <Dialog.Body>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+          <SearchList.Viewport classNames='max-h-[24rem]'>
+            {allResults.map((result) => (
+              <SearchList.Item
+                key={result.id}
+                classNames='flex gap-2 items-center'
+                value={result.id}
+                label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
+                icon={result.icon}
+                onSelect={() => void handleSelect(result)}
+              />
+            ))}
+            {query && allResults.length === 0 && <SearchList.Empty />}
+          </SearchList.Viewport>
+        </SearchList.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

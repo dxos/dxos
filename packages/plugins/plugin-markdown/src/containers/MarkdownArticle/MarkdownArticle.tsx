@@ -90,7 +90,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     }, [db, upload]);
 
     // Query for @ refs.
-    const handleLinkQuery = useLinkQuery(db);
+    const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();

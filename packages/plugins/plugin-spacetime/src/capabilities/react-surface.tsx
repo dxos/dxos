@@ -17,7 +17,10 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'scene',
-        filter: AppSurface.object(AppSurface.Article, Scene.Scene),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Scene.Scene),
+          AppSurface.object(AppSurface.Section, Scene.Scene),
+        ),
         component: ({ data, role }) => {
           return <SpacetimeArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
