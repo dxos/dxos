@@ -163,7 +163,10 @@ type UseExecutionGraphOptions = {
   eventLimit?: number;
 };
 
-const useExecutionGraph = (space: Space, { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+const useExecutionGraph = (
+  space: Space,
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
+): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 

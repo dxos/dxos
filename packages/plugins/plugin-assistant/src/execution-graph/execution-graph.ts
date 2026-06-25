@@ -19,14 +19,7 @@ import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 
-import {
-  ROOT_SPAN_ID,
-  type Span,
-  buildSpanTree,
-  isSpanBeginEvent,
-  isSpanEndEvent,
-  walkSpanTree,
-} from './span-tree';
+import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
 
 /**
  * Branch name for top-level operation invocations.
@@ -632,7 +625,7 @@ const spanTreeToCommits = (
   const insertedRunningPids = new Set<string>();
   const activeProcessByPid = new Map(activeProcesses.map((process) => [process.pid, process]));
 
-  const emitRunningIndicator = (pid: string): void => {
+  const emitRunningIndicator = (pid: Process.ID): void => {
     if (insertedRunningPids.has(pid)) {
       return;
     }
@@ -713,9 +706,7 @@ const spanTreeToCommits = (
     // mid-stream would flash a throwaway lane.
     const ownPid = span.meta.pid;
     const parentPid = parentSpan?.meta.pid;
-    const spanHasMiddle = span.events.some(
-      (spanEvent) => !isSpanBeginEvent(spanEvent) && !isSpanEndEvent(spanEvent),
-    );
+    const spanHasMiddle = span.events.some((spanEvent) => !isSpanBeginEvent(spanEvent) && !isSpanEndEvent(spanEvent));
     const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid && spanHasMiddle;
 
     let branch: string;

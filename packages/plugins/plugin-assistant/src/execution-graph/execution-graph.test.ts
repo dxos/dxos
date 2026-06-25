@@ -991,9 +991,12 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
 describe('buildExecutionGraph in-progress shimmer tags', () => {
   test('pending agent begin → effect:shimmer', ({ expect }) => {
     const messages = collectTraceEvents(
-      withMeta({ pid: 'agent-1' }, Effect.gen(function* () {
-        yield* Trace.write(AgentRequestBegin, {});
-      })),
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+        }),
+      ),
     );
 
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -1030,10 +1033,13 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
 
   test('completed operation end → no effect:shimmer', ({ expect }) => {
     const messages = collectTraceEvents(
-      withMeta({ pid: 'worker' }, Effect.gen(function* () {
-        yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
-        yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Lookup', outcome: 'success' });
-      })),
+      withMeta(
+        { pid: 'worker' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
+          yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Lookup', outcome: 'success' });
+        }),
+      ),
     );
 
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -1042,21 +1048,24 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
 
   test('active running process → Running... has effect:shimmer after span subtree', ({ expect }) => {
     const messages = collectTraceEvents(
-      withMeta({ pid: 'worker' }, Effect.gen(function* () {
-        yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
-        yield* Trace.write(CompleteBlock, {
-          messageId: MESSAGE_ID,
-          role: 'assistant',
-          block: { _tag: 'status', statusText: 'searching', pending: false },
-        });
-      })),
+      withMeta(
+        { pid: 'worker' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'assistant',
+            block: { _tag: 'status', statusText: 'searching', pending: false },
+          });
+        }),
+      ),
     );
 
     const { commits } = buildExecutionGraph({
       traceMessages: messages,
       activeProcesses: [
         makeActiveProcess({
-          pid: 'worker',
+          pid: Process.ID.make('worker'),
           key: 'worker',
           state: Process.State.RUNNING,
         }),
