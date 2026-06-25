@@ -161,19 +161,15 @@ export type TriggerEditorProps = ThemedClassName<{
   db: Database.Database;
   routine: Routine.Routine;
   trigger?: Trigger.Trigger;
-  /** Input bound to the trigger's function (e.g. the instructions a RunInstructions action runs). */
-  triggerInput?: Record<string, unknown>;
   /** Render the trigger for display only (no variant picker, clear, or field edits). */
   readonly?: boolean;
 }>;
 
-export const TriggerEditor = ({ classNames, db, routine, trigger, triggerInput, readonly }: TriggerEditorProps) => {
+export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
-    db,
     routine,
     trigger,
-    triggerInput,
   );
 
   // TODO(burdon): Not persistent; need to memo
@@ -268,12 +264,7 @@ const CronField = (props: FormFieldRendererProps) => {
 CronField.displayName = 'TriggerEditor.CronField';
 
 /** Form state for the Trigger section: the chosen variant spec, plus create-on-first-edit handler. */
-const useTriggerForm = (
-  db: Database.Database,
-  routine: Routine.Routine,
-  trigger?: Trigger.Trigger,
-  triggerInput?: Record<string, unknown>,
-) => {
+const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => {
   const methodOptions = useMemo(
     () => [
       { value: 'GET', label: 'GET' },
@@ -326,32 +317,28 @@ const useTriggerForm = (
 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
-      // The trigger dispatches the routine's action: its `function` is the routine's `runnable` (the chosen
-      // operation, or RunInstructions for an instructions action) and `triggerInput` is the action's bound
-      // input. Sourcing from `runnable` (rather than the trigger's own `function`) backfills a trigger created
-      // before the action was configured. `enabled` is not set here — it is toggled for the routine as a whole
-      // from the toolbar.
-      const functionRef = routine.runnable;
+      // Edit only the spec on the in-memory draft trigger; the trigger's `function` and `input` (including the
+      // instructions binding and any operation-specific bindings like `{ magazine }`) are wired by
+      // `makeRoutineDraft` and finalized by `saveRoutine`, so they are not re-derived here. `enabled` is owned
+      // by the routine-level toolbar toggle.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
           // the structures are identical at runtime, so a readonly->mutable boundary coercion is required here
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
-          trigger.function = functionRef;
-          trigger.input = triggerInput;
         });
       } else {
-        // Create the trigger on first edit (disabled until enabled from the toolbar). The trigger is owned by
-        // the routine (it is only reachable via it), so it is parented and cascade-deletes with it.
-        const created = db.add(Trigger.make({ function: functionRef, spec, input: triggerInput }));
+        // Defensive: the draft normally carries an owned trigger already (see `makeRoutineDraft`). If absent,
+        // create one in memory and attach it to the routine graph — nothing is persisted until save.
+        const created = Trigger.make({ function: routine.runnable, spec });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
-          routine.triggers.push(Ref.make(created));
+          routine.triggers = [...routine.triggers, Ref.make(created)];
         });
       }
     },
-    [db, routine, trigger, triggerInput],
+    [routine, trigger],
   );
 
   return { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged };

@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { Instructions, Trace, Trigger } from '@dxos/compute';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -31,7 +31,7 @@ describe('crm routine template', () => {
     expect(crm.appliesTo?.(undefined)).toBe(false);
   });
 
-  test('scaffolds a RoutineDraft with Instructions, a feed Trigger, and the event-item input binding', async ({
+  test('scaffolds a routine draft graph with instructions, a feed trigger, and the event-item input binding', async ({
     expect,
   }) => {
     await Effect.gen(function* () {
@@ -41,27 +41,32 @@ describe('crm routine template', () => {
 
       const draft = yield* crm.scaffold({ subject: mailbox });
 
-      // Routine shell with a recognisable name.
-      expect(Obj.instanceOf(Routine.Routine, draft.routine)).toBe(true);
-      expect(draft.routine.name).toContain('Test Mailbox');
-      expect(draft.routine.runnable).toBeUndefined();
+      // The draft is a routine graph with a recognisable name, wired for an instructions action.
+      expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
+      expect(draft.name).toContain('Test Mailbox');
+      expect(draft.runnable).toBeDefined();
 
-      // Instructions wired with the right number of skills.
-      expect(Obj.instanceOf(Instructions.Instructions, draft.instructions)).toBe(true);
-      expect(draft.instructions?.name).toContain('Test Mailbox');
-      expect(draft.instructions?.skills).toHaveLength(SKILL_COUNT);
-
-      // Feed trigger pointing at the mailbox's feed.
-      expect(Obj.instanceOf(Trigger.Trigger, draft.trigger)).toBe(true);
-      expect(draft.trigger?.enabled).toBe(false);
-      expect(draft.trigger?.spec?.kind).toBe('feed');
-      const triggerFeedUri = draft.trigger?.spec?.kind === 'feed' ? draft.trigger.spec.feed?.uri : undefined;
+      // Feed trigger pointing at the mailbox's feed, owned by the routine.
+      const trigger = draft.triggers[0]?.target;
+      expect(trigger != null && Obj.instanceOf(Trigger.Trigger, trigger)).toBe(true);
+      expect(trigger?.enabled).toBe(false);
+      expect(trigger?.spec?.kind).toBe('feed');
+      const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);
 
-      // The `instructions` ref is NOT in the draft trigger's input — saveRoutine merges it at persist time.
-      // The event-item binding should already be present.
-      expect(draft.trigger?.input?.input).toBe('{{event.item}}');
-      expect(draft.trigger?.input?.instructions).toBeUndefined();
+      // The event-item input binding is preserved (the instructions ref is wired into the trigger input at
+      // save time, not on the draft).
+      expect(trigger?.input?.input).toBe('{{event.item}}');
+
+      // The owned instructions is the routine's runnable (an instructions action).
+      const instructions = Ref.isRef(draft.runnable) ? draft.runnable.target : undefined;
+      expect(Obj.instanceOf(Instructions.Instructions, instructions)).toBe(true);
+      expect(Obj.instanceOf(Instructions.Instructions, instructions) ? instructions.name : undefined).toContain(
+        'Test Mailbox',
+      );
+      expect(Obj.instanceOf(Instructions.Instructions, instructions) ? instructions.skills : []).toHaveLength(
+        SKILL_COUNT,
+      );
     }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 });

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Trigger } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { makeRoutineDraft } from '@dxos/plugin-routine';
 import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 
 import { FeedOperation, Magazine } from '#types';
@@ -25,7 +26,10 @@ export const magazineCuration: RoutineCapabilities.Template = {
   appliesTo: (subject) => subject != null && Magazine.instanceOf(subject),
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
-      invariant(subject != null && Magazine.instanceOf(subject), 'Magazine curation template requires a Magazine subject.');
+      invariant(
+        subject != null && Magazine.instanceOf(subject),
+        'Magazine curation template requires a Magazine subject.',
+      );
 
       const magazine = subject;
       const routine = Routine.make({
@@ -42,6 +46,6 @@ export const magazineCuration: RoutineCapabilities.Template = {
         input: { magazine: Ref.make(magazine) },
       });
 
-      return { routine, trigger };
+      return makeRoutineDraft({ routine, trigger });
     }),
 };

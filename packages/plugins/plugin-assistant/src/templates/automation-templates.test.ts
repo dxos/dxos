@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { Instructions, Trigger } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Routine } from '@dxos/plugin-routine';
 
@@ -28,24 +28,28 @@ describe('scheduled routine templates', () => {
   });
 
   for (const { template, skillCount } of templates) {
-    test(`${template.label} scaffolds an in-memory RoutineDraft with a disabled timer Trigger and Instructions`, async ({
+    test(`${template.label} scaffolds an in-memory routine draft graph with a disabled timer trigger and instructions`, async ({
       expect,
     }) => {
       // Templates are in-memory (no DB calls); Database.notAvailable surfaces any accidental DB access.
       const draft = await EffectEx.runPromise(template.scaffold({}).pipe(Effect.provide(Database.notAvailable)));
 
-      // Routine shell — the runnable is set at save time via RunInstructions.
-      expect(Obj.instanceOf(Routine.Routine, draft.routine)).toBe(true);
-      expect(draft.routine.runnable).toBeUndefined();
+      // The draft is a routine graph wired for an instructions action (runnable → RunInstructions).
+      expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
+      expect(draft.runnable).toBeDefined();
 
-      // Instructions with the right skill set.
-      expect(Obj.instanceOf(Instructions.Instructions, draft.instructions)).toBe(true);
-      expect(draft.instructions?.skills).toHaveLength(skillCount);
+      // Timer trigger, disabled by default, owned by the routine.
+      const trigger = draft.triggers[0]?.target;
+      expect(trigger != null && Obj.instanceOf(Trigger.Trigger, trigger)).toBe(true);
+      expect(trigger?.enabled).toBe(false);
+      expect(trigger?.spec?.kind).toBe('timer');
 
-      // Timer trigger, disabled by default.
-      expect(Obj.instanceOf(Trigger.Trigger, draft.trigger)).toBe(true);
-      expect(draft.trigger?.enabled).toBe(false);
-      expect(draft.trigger?.spec?.kind).toBe('timer');
+      // The owned instructions is the routine's runnable (an instructions action), with the right skill set.
+      const instructions = Ref.isRef(draft.runnable) ? draft.runnable.target : undefined;
+      expect(Obj.instanceOf(Instructions.Instructions, instructions)).toBe(true);
+      expect(Obj.instanceOf(Instructions.Instructions, instructions) ? instructions.skills : []).toHaveLength(
+        skillCount,
+      );
     });
   }
 });

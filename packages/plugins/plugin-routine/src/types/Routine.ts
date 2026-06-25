@@ -22,11 +22,14 @@ export class Routine extends Type.declareObj<Routine>()(
     description: Schema.String.pipe(Schema.optional),
 
     /**
-     * The action to run. A trigger's `function` Ref points directly at this (so EDGE/the dispatcher can run
-     * it). `Runnable` is the type seam — currently just Operation; see Runnable.ts.
+     * The action to run: either an Operation (bound directly) or the routine's own owned Instructions.
+     * For an Operation action the trigger's `function` points at this Operation. For an Instructions action
+     * `runnable` is the owned Instructions object (the operation is implicitly the static RunInstructions, so
+     * no separate operation ref is stored), and the trigger's `function` is RunInstructions with this
+     * instructions bound as its input.
      */
     // TODO(burdon): Change to Array?
-    runnable: Ref.Ref(Runnable.Runnable).pipe(Schema.optional),
+    runnable: Schema.Union(Ref.Ref(Runnable.Runnable), Ref.Ref(Instructions.Instructions)).pipe(Schema.optional),
 
     /**
      * Explicit membership, bi-directional with `trigger.function → runnable`. Required (not derived by query)
@@ -44,10 +47,3 @@ export class Routine extends Type.declareObj<Routine>()(
 export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(Routine, value);
 
 export const make = (props: Obj.MakeProps<typeof Routine>) => Obj.make(Routine, props);
-
-/** In-memory edit session for a Routine plus its owned Instructions and primary Trigger before they are persisted. */
-export type RoutineDraft = {
-  routine: Routine;
-  instructions?: Instructions.Instructions;
-  trigger?: Trigger.Trigger;
-};

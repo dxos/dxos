@@ -8,6 +8,7 @@ import { Skill, Instructions, Trigger } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { makeRoutineDraft } from '@dxos/plugin-routine';
 import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
@@ -59,13 +60,13 @@ export const crm: RoutineCapabilities.Template = {
       const trigger = Trigger.make({
         enabled: false,
         spec: Trigger.specFeed(feed),
-        // The raw trigger event item is passed as the agent's input; the instructions ref is merged in at
-        // save time by saveRoutine (which also sets the trigger's function to RunInstructions).
+        // The raw trigger event item is passed as the agent's input; the instructions ref is bound by
+        // makeRoutineDraft (which also sets the trigger's function to RunInstructions).
         input: { input: '{{event.item}}' },
         concurrency: 1,
       });
 
       const routine = Routine.make({ name: name ?? instructionsName, triggers: [] });
-      return { routine, instructions, trigger };
+      return makeRoutineDraft({ routine, instructions, trigger });
     }),
 };

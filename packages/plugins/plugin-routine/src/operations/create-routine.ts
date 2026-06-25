@@ -25,9 +25,8 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      // Add the routine shell, then let saveRoutine persist the owned instructions and trigger.
-      const routine = db.add(draft.routine);
-      yield* Effect.promise(() => saveRoutine(db, routine, draft));
+      // saveRoutine persists the draft graph (the routine plus its owned instructions and trigger).
+      const routine = yield* Effect.promise(() => saveRoutine(db, draft));
 
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {

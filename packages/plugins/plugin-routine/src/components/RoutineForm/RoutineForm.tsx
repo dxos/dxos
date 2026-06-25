@@ -14,7 +14,7 @@ import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
-import { isRunInstructions } from '../../util';
+import { runnableInstructions, runnableOperation } from '../../util';
 import { InstructionsEditor } from '../InstructionsEditor';
 import { TriggerEditor } from '../TriggerEditor';
 
@@ -67,19 +67,6 @@ export const RoutineForm = ({
   const [auto, updateAuto] = useObject(routine);
   const primaryTrigger = usePrimaryTrigger(routine);
   const trigger = triggerProp ?? primaryTrigger;
-  const queriedInstructions = useOwnedRoutine(db, routine);
-  const ownedInstructions = instructions ?? queriedInstructions;
-
-  // An instructions action runs the routine's instructions through the RunInstructions operation (the
-  // `runnable`), so the trigger that fires it must carry the instructions as bound input. An operation action
-  // takes the trigger event directly, so it binds no input.
-  const triggerInput = useMemo<Record<string, unknown> | undefined>(
-    () =>
-      isRunInstructions(auto.runnable) && ownedInstructions
-        ? { instructions: Ref.make(ownedInstructions), input: {} }
-        : undefined,
-    [auto.runnable, ownedInstructions],
-  );
 
   // Read once per routine identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralForm>>(
@@ -114,13 +101,7 @@ export const RoutineForm = ({
           </Section>
 
           <Section title={t('triggers.title')}>
-            <TriggerEditor
-              db={db}
-              routine={routine}
-              trigger={trigger}
-              triggerInput={triggerInput}
-              readonly={readonly}
-            />
+            <TriggerEditor db={db} routine={routine} trigger={trigger} readonly={readonly} />
           </Section>
 
           {/* Save/Cancel for the edit session (the sub-forms autosave to the in-memory clones as they change). */}
@@ -155,7 +136,7 @@ const isActionKind = (value: string): value is ActionKind => (ActionKinds as rea
 const ActionEditor = ({
   db,
   routine,
-  instructions: draftRoutine,
+  instructions: instructionsProp,
   readonly,
 }: {
   db: Database.Database;
@@ -165,12 +146,12 @@ const ActionEditor = ({
 }) => {
   const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
-  // A draft (in-memory) routine supplies its owned instructions directly; otherwise resolve it by query.
-  const queriedRoutine = useOwnedRoutine(db, routine);
-  const ownedRoutine = draftRoutine ?? queriedRoutine;
-  // An operation action is a user-bound operation runnable; the registry RunInstructions runnable backs an
-  // instructions action, so it is not treated as an operation selection. Default to instructions when neither.
-  const isOperationAction = auto.runnable != null && !isRunInstructions(auto.runnable);
+  // The action is read off `runnable`: an Instructions runnable is an instructions action, an Operation
+  // runnable is an operation action. The owned instructions to edit is the one on `runnable` (a draft passes
+  // it in directly; both resolve to the same object).
+  const operationRunnable = runnableOperation(auto.runnable);
+  const ownedInstructions = instructionsProp ?? runnableInstructions(auto.runnable);
+  const isOperationAction = operationRunnable != null;
   const [kind, setKind] = useState<ActionKind>(isOperationAction ? 'operation' : 'instructions');
 
   const handleOperationChange = useCallback(
@@ -185,13 +166,18 @@ const ActionEditor = ({
   const handleKindChange = useCallback(
     (next: ActionKind) => {
       setKind(next);
-      // Switching to an instructions action must drop any bound operation, otherwise `saveRoutine` still sees a
-      // (non-RunInstructions) runnable and persists this as an operation action — discarding the instructions.
-      if (next === 'instructions') {
-        updateAuto((routine) => {
+      updateAuto((routine) => {
+        if (next === 'operation') {
+          // Drop the instructions runnable; the operation is chosen via the picker below. `saveRoutine` deletes
+          // the now-orphaned instructions when persisting an operation action.
           routine.runnable = undefined;
-        });
-      }
+        } else if (!runnableInstructions(routine.runnable)) {
+          // Seed an owned instructions as the runnable (the executing operation is the implicit RunInstructions).
+          const instructions = Instructions.make({});
+          Obj.setParent(instructions, routine);
+          routine.runnable = Ref.make(instructions);
+        }
+      });
     },
     [updateAuto],
   );
@@ -203,12 +189,12 @@ const ActionEditor = ({
         <OperationEditor
           db={db}
           operations={operations}
-          operation={isOperationAction ? auto.runnable : undefined}
+          operation={operationRunnable}
           onChange={handleOperationChange}
           readonly={readonly}
         />
-      ) : ownedRoutine ? (
-        <InstructionsEditor db={db} instructions={ownedRoutine} readonly={readonly} />
+      ) : ownedInstructions ? (
+        <InstructionsEditor db={db} instructions={ownedInstructions} readonly={readonly} />
       ) : null}
     </div>
   );
@@ -299,15 +285,6 @@ const useOperations = (db: Database.Database) =>
       Scope.registry(),
     ),
   );
-
-/** The Instructions owned by (parented to) this routine, used for the inline instructions action. */
-const useOwnedRoutine = (db: Database.Database, routine: Routine.Routine): Instructions.Instructions | undefined => {
-  const routines = useQuery(db, Query.select(Filter.type(Instructions.Instructions)).from(Scope.space()));
-  return useMemo(
-    () => routines.find((instructions) => Obj.getParent(instructions)?.id === routine.id),
-    [routines, routine],
-  );
-};
 
 /** Subscribe to the routine and derive its primary (first) trigger. */
 const usePrimaryTrigger = (routine: Routine.Routine): Trigger.Trigger | undefined => {

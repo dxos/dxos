@@ -2,27 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Skill, Instructions, Trigger } from '@dxos/compute';
-import { Database, type Database as DatabaseNS, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar, useTranslation, type Label } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
+import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
+import { getStyles } from '@dxos/ui-theme';
 
-import { RoutineForm, MasterDetail, type MasterDetailCreateOption } from '#components';
+import { RoutineForm, MasterDetail, type MasterDetailIcon } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 
-import { connectedRoutinesQuery, instructionsForObjectQuery, type RoutineDraft, saveRoutine } from '../../util';
-
-/** Association state of a row relative to the companion's object. */
-type Status = 'associated' | 'detached';
+import { connectedRoutinesQuery, instructionsForObjectQuery, saveRoutine } from '../../util';
 
 export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
@@ -32,72 +30,107 @@ export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  * context objects ({@link instructionsForObjectQuery}). The parent traversal from Instructions to Routine
  * is resolved in JS via {@link Obj.getParent}.
  *
- * Rows persist across disconnection via a session-stable append-only list; detached rows are flagged with
- * a warning badge. The create button opens a template picker (contributed via {@link RoutineCapabilities.Template},
- * filtered by `appliesTo`). Each template's `scaffold` is run in-memory (via `Database.notAvailable`, so
- * templates that access the DB will throw at this stage by design); the resulting draft is shown in
- * `DraftEditor` and committed atomically on Save via {@link saveRoutine}.
+ * Only currently-connected routines are listed; a routine that loses its association elsewhere drops out.
+ * The toolbar create menu offers a template picker (contributed via {@link RoutineCapabilities.Template},
+ * filtered by `appliesTo`). Each template's `scaffold` returns an in-memory routine draft (a deep 'owned'
+ * clone for edits); it is shown editable in {@link RoutineForm} and committed atomically on Save via
+ * {@link saveRoutine}.
  */
-export const RoutineCompanion = ({ subject }: RoutineCompanionProps) => {
+export const RoutineCompanion = ({ subject, attendableId }: RoutineCompanionProps) => {
   const db = Obj.getDatabase(subject);
   if (!db) {
     return null;
   }
 
-  return <RoutineCompanionImpl db={db} object={subject} />;
+  return <RoutineCompanionImpl db={db} object={subject} attendableId={attendableId} />;
 };
 
-const RoutineCompanionImpl = ({ db, object }: { db: DatabaseNS.Database; object: Obj.Unknown }) => {
+const RoutineCompanionImpl = ({
+  db,
+  object,
+  attendableId,
+}: {
+  db: Database.Database;
+  object: Obj.Unknown;
+  attendableId?: string;
+}) => {
   const { t } = useTranslation(meta.profile.key);
-  const { items, statusFor, addToList } = useConnectedAutomations(db, object);
+  const { invokePromise } = useOperationInvoker();
+  const items = useConnectedAutomations(db, object);
 
   const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [draft, setDraft] = useState<RoutineDraft | undefined>();
-  const selected = useMemo(() => items.find((routine) => routine.id === selectedId), [items, selectedId]);
+  const [draft, setDraft] = useState<Routine.Routine | undefined>();
+  // After saving a draft, hold the persisted routine directly so the detail panel renders immediately
+  // before the reactive queries catch up to include the newly-connected routine.
+  const [savedRoutine, setSavedRoutine] = useState<Routine.Routine | undefined>();
+  const selected = useMemo(
+    () => items.find((routine) => routine.id === selectedId) ?? savedRoutine,
+    [items, selectedId, savedRoutine],
+  );
 
-  const handleSelect = useCallback((id: string | undefined) => {
-    setDraft(undefined);
-    setSelectedId(id);
-  }, []);
+  const handleSelect = useCallback(
+    (id: string | undefined) => {
+      // Ignore selection changes while a draft is active — the edit (or create) must be saved or cancelled first.
+      if (draft) {
+        return;
+      }
+      setSavedRoutine(undefined);
+      setSelectedId(id);
+    },
+    [draft],
+  );
 
   const handleCreateFromTemplate = useCallback(
     async (template: RoutineCapabilities.Template) => {
-      const scaffoldDraft = await EffectEx.runPromise(
+      // The scaffold returns a fully-wired in-memory routine draft graph (its owned trigger/instructions
+      // bound and parented); nothing is persisted until Save.
+      const scaffolded = await EffectEx.runPromise(
         template.scaffold({ subject: object }).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
       );
 
+      setSavedRoutine(undefined);
       setSelectedId(undefined);
-      // For instruction-based routines, default instructions from the object's skills when the template
-      // doesn't provide its own. Operation-action templates (runnable already set) skip instructions.
-      const isOperationAction = scaffoldDraft.routine.runnable != null;
-      setDraft(
-        isOperationAction
-          ? { ...scaffoldDraft, trigger: scaffoldDraft.trigger ?? Trigger.make({}) }
-          : {
-              ...scaffoldDraft,
-              instructions:
-                scaffoldDraft.instructions ??
-                Instructions.make({ skills: skillRefsForObject(object), objects: [Ref.make(object)] }),
-              trigger: scaffoldDraft.trigger ?? Trigger.make({}),
-            },
-      );
+      setDraft(scaffolded);
     },
     [db, object],
   );
 
   // Templates filtered to those applicable to this companion's subject.
   const allTemplates = useCapabilities(RoutineCapabilities.Template);
-  const createOptions = useMemo<MasterDetailCreateOption[]>(
+  const templates = useMemo(
+    () => allTemplates.filter((template) => template.appliesTo?.(object) ?? true),
+    [allTemplates, object],
+  );
+
+  // Toolbar create menu: a `+` dropdown of applicable templates, pushed to the trailing edge by a growing gap
+  // separator (disabled while a draft is in progress so it can't be silently replaced).
+  const menuActions = useMenuBuilder(
     () =>
-      allTemplates
-        .filter((template) => template.appliesTo?.(object) ?? true)
-        .map((template) => ({
-          id: template.id,
-          label: template.label as Label,
-          icon: template.icon ?? 'ph--lightning--regular',
-          onClick: () => void handleCreateFromTemplate(template),
-        })),
-    [allTemplates, object, handleCreateFromTemplate],
+      MenuBuilder.make()
+        .separator('gap')
+        .group(
+          'create',
+          {
+            variant: 'dropdownMenu',
+            label: t('add-routine.label'),
+            icon: 'ph--plus--regular',
+            iconOnly: true,
+            caretDown: false,
+            disabled: draft != null || templates.length === 0,
+            testId: 'routine.companion.create',
+          },
+          (group) => {
+            for (const template of templates) {
+              group.action(
+                template.id,
+                { label: template.label, icon: template.icon ?? 'ph--lightning--regular' },
+                () => void handleCreateFromTemplate(template),
+              );
+            }
+          },
+        )
+        .build(),
+    [t, templates, draft, handleCreateFromTemplate],
   );
 
   const handleCancel = useCallback(() => {
@@ -110,87 +143,139 @@ const RoutineCompanionImpl = ({ db, object }: { db: DatabaseNS.Database; object:
       return;
     }
 
-    // Add the routine to the database then delegate the rest to saveRoutine, which upserts the owned
-    // instructions (carrying the subject in `objects` — the structural connection the query finds) and
-    // the primary trigger.
-    const persistedRoutine = db.add(draft.routine);
-    await saveRoutine(db, persistedRoutine, draft);
-    addToList(persistedRoutine.id);
+    // saveRoutine persists the draft graph (adding the routine and its owned trigger/instructions, the
+    // subject carried in `objects` — the structural connection the query finds).
+    const persistedRoutine = await saveRoutine(db, draft);
     setSelectedId(persistedRoutine.id);
+    // Provide the persisted routine directly so the detail panel renders before the reactive queries
+    // catch up to include the newly-connected routine.
+    setSavedRoutine(persistedRoutine);
     setDraft(undefined);
-  }, [draft, db, addToList]);
+  }, [draft, db]);
 
   const handleDelete = useCallback(
     (routine: Routine.Routine) => {
-      db.remove(routine);
+      setSavedRoutine((current) => (current?.id === routine.id ? undefined : current));
       setSelectedId((current) => (current === routine.id ? undefined : current));
+      // Route through the space operation so the deletion is undoable (toast + RestoreObjects), rather than
+      // mutating the database directly.
+      void invokePromise?.(SpaceOperation.RemoveObjects, { objects: [routine] }, { spaceId: db.spaceId });
     },
-    [db],
+    [invokePromise, db],
   );
 
-  const detail = draft ? (
-    <DraftEditor db={db} draft={draft} onSave={() => void handleSave()} onCancel={handleCancel} />
-  ) : selected ? (
-    <RoutineForm db={db} routine={selected} />
+  // Edit an isolated deep 'owned' clone (retained ids) so changes don't touch the live routine until Save;
+  // the detail panel then shows the editable form (saveRoutine reconciles by id).
+  const handleEdit = useCallback((routine: Routine.Routine) => {
+    setSavedRoutine(undefined);
+    setSelectedId(routine.id);
+    setDraft(Obj.clone(routine, { deep: 'owned', retainId: true }));
+  }, []);
+
+  // Flip every trigger of the routine together (its on/off state), reading the current state at click time.
+  const handleToggleEnabled = useCallback((routine: Routine.Routine) => {
+    const next = !routineEnabled(routine);
+    for (const ref of routine.triggers) {
+      const trigger = ref.target;
+      if (trigger) {
+        Obj.update(trigger, (trigger) => {
+          trigger.enabled = next;
+        });
+      }
+    }
+  }, []);
+
+  // Per-row overflow menu: edit, enable/disable (disabled until a trigger exists), and delete. Built reactively
+  // per row (see MasterDetail) — `get` subscribes to this routine's triggers' `enabled` flags, so the
+  // enable/disable label tracks the live state without re-rendering the whole list.
+  const getMenu = useCallback(
+    (get: Atom.Context, routine: Routine.Routine): ActionGraphProps => {
+      const { hasTriggers, enabled } = getRoutineEnabled(get, routine);
+      return MenuBuilder.make()
+        .action(
+          'toggle-enabled',
+          {
+            label: enabled ? t('enabled.label') : t('disabled.label'),
+            icon: enabled ? 'ph--check-square--regular' : 'ph--square--regular',
+            disabled: !hasTriggers,
+            testId: 'routine.companion.toggle-enabled',
+          },
+          () => handleToggleEnabled(routine),
+        )
+        .action(
+          'edit',
+          {
+            label: t('edit.label'),
+            icon: 'ph--pencil-simple--regular',
+            testId: 'routine.companion.edit',
+          },
+          () => handleEdit(routine),
+        )
+        .action(
+          'delete',
+          {
+            label: t('delete.label'),
+            icon: 'ph--trash--regular',
+            testId: 'routine.companion.delete',
+          },
+          () => handleDelete(routine),
+        )
+        .build();
+    },
+    [t, handleEdit, handleToggleEnabled, handleDelete],
+  );
+
+  // Row icon, reactive per row: an enabled routine takes its type's hue (amber); disabled uses the default
+  // icon colour. Subscribes (via `get`) only to this routine's triggers' `enabled` flags.
+  const getIcon = useCallback((get: Atom.Context, routine: Routine.Routine): MasterDetailIcon => {
+    const { icon, hue } = Obj.getIcon(routine) ?? { icon: 'ph--lightning--regular', hue: undefined };
+    const { enabled } = getRoutineEnabled(get, routine);
+    return { icon, classNames: enabled && hue ? getStyles(hue).text : undefined };
+  }, []);
+
+  // Row label, reactive per row via the object's label atom, so a rename updates the row live.
+  const getLabel = useCallback(
+    (get: Atom.Context, routine: Routine.Routine) =>
+      get(Obj.labelAtom(routine)) || t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) }),
+    [t],
+  );
+
+  // One form for both states: a selected row renders read-only; the menu's Edit action opens the same routine
+  // as an editable draft (a deep 'owned' clone) with the form's Cancel/Save actions. The form derives its
+  // owned instructions and trigger from the routine graph, so no separate draft editor is needed. The `key`
+  // (the routine id) remounts the form when the selection switches, so no uncontrolled state leaks between rows.
+  const shown = draft ?? selected;
+  const detail = shown ? (
+    <RoutineForm
+      key={shown.id}
+      db={db}
+      routine={shown}
+      readonly={!draft}
+      onSave={draft ? () => void handleSave() : undefined}
+      onCancel={draft ? handleCancel : undefined}
+    />
   ) : null;
 
   return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content classNames='dx-document'>
-        <MasterDetail<Routine.Routine>
-          items={items}
-          selectedId={draft ? undefined : selectedId}
-          detail={detail}
-          createOptions={createOptions}
-          createLabel={t('add-automation.label')}
-          onSelect={handleSelect}
-          onDelete={handleDelete}
-          getIcon={() => 'ph--lightning--regular'}
-          getLabel={(routine) =>
-            Obj.getLabel(routine) ?? t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) })
-          }
-          getAdornment={(routine) => {
-            const status = statusFor(routine.id);
-            return status === 'detached'
-              ? {
-                  icon: 'ph--warning--regular',
-                  label: ['automation-detached.message', { ns: meta.profile.key }] satisfies Label,
-                }
-              : undefined;
-          }}
-          emptyLabel={t('no-automations.message')}
-        />
-      </Panel.Content>
-    </Panel.Root>
-  );
-};
-
-/** Draft automation editor: the pre-filled in-memory form plus Save/Cancel; persists nothing until Save. */
-const DraftEditor = ({
-  db,
-  draft,
-  onSave,
-  onCancel,
-}: {
-  db: DatabaseNS.Database;
-  draft: RoutineDraft;
-  onSave: () => void;
-  onCancel: () => void;
-}) => {
-  const { t } = useTranslation(meta.profile.key);
-  return (
-    <div role='none' className='flex flex-col min-bs-0'>
-      <RoutineForm db={db} routine={draft.routine} instructions={draft.instructions} trigger={draft.trigger} />
-      <div role='none' className='flex justify-end gap-2 p-2 border-bs border-subdued-separator'>
-        <Button onClick={onCancel}>{t('cancel.label')}</Button>
-        <Button variant='primary' onClick={onSave}>
-          {t('save.label')}
-        </Button>
-      </div>
-    </div>
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content classNames='dx-document'>
+          <MasterDetail<Routine.Routine>
+            items={items}
+            selectedId={selectedId}
+            detail={detail}
+            onSelect={handleSelect}
+            getMenu={getMenu}
+            getIcon={getIcon}
+            getLabel={getLabel}
+            emptyLabel={t('no-automations.message')}
+          />
+        </Panel.Content>
+      </Panel.Root>
+    </Menu.Root>
   );
 };
 
@@ -199,14 +284,13 @@ const DraftEditor = ({
 //
 
 /**
- * Owns the companion's session-stable automation list. Two complementary reactive queries supply the
- * connected set — trigger-input refs ({@link connectedRoutinesQuery}) and instructions context refs
- * ({@link instructionsForObjectQuery} → parent Routine); rows are accumulated append-only so they never
- * reorder or disappear while mounted. A row whose routine leaves the connected set is flagged via
- * `statusFor` rather than dropped. `addToList` lets callers eagerly seed the list before the reactive
- * query catches up (e.g. immediately after saving a draft).
+ * The companion's automation list: the routines currently connected to the object, from two complementary
+ * reactive queries — trigger-input refs ({@link connectedRoutinesQuery}) and instructions context refs
+ * ({@link instructionsForObjectQuery} → parent Routine). A session-stable order is maintained so connected
+ * rows don't reorder while mounted; a routine that leaves the connected set drops out (it isn't persisted as
+ * a detached row). A freshly-saved routine appears once the queries reflect it.
  */
-const useConnectedAutomations = (db: DatabaseNS.Database, object: Obj.Unknown) => {
+const useConnectedAutomations = (db: Database.Database, object: Obj.Unknown): Routine.Routine[] => {
   // Trigger-based connected routines.
   const triggerConnected = useQuery(db, connectedRoutinesQuery(object));
   // Instructions-based: Instructions objects that list the subject in their `objects` context array.
@@ -226,52 +310,38 @@ const useConnectedAutomations = (db: DatabaseNS.Database, object: Obj.Unknown) =
     return [...triggerConnected, ...instructionRoutines.filter((routine) => !seen.has(routine.id))];
   }, [triggerConnected, instructionRoutines]);
 
-  const connectedIds = useMemo(() => new Set(connected.map((routine) => routine.id)), [connected]);
+  const connectedById = useMemo(() => new Map(connected.map((routine) => [routine.id, routine])), [connected]);
 
-  // All routines in the space — used to resolve rows that have left the connected set.
-  const all = useQuery(db, Filter.type(Routine.Routine));
-  const byId = useMemo(() => new Map(all.map((routine) => [routine.id, routine])), [all]);
-
-  // Session-stable bookkeeping — append-only so rows never reorder or drop.
+  // Session-stable order — append-only so connected rows never reorder while mounted.
   const seenOrder = useRef<string[]>([]);
-  const everConnected = useRef<Set<string>>(new Set());
-
-  for (const id of connectedIds) {
-    everConnected.current.add(id);
+  for (const id of connectedById.keys()) {
     if (!seenOrder.current.includes(id)) {
       seenOrder.current.push(id);
     }
   }
 
-  // Resolve to live objects in stable order, dropping ids whose object was hard-deleted.
-  const items = useMemo(
-    () => seenOrder.current.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [byId, connectedIds],
+  // Resolve to live objects in stable order, dropping ids no longer connected (detached or deleted).
+  return useMemo(
+    () => seenOrder.current.flatMap((id) => (connectedById.has(id) ? [connectedById.get(id)!] : [])),
+    [connectedById],
   );
-
-  const statusFor = useCallback(
-    (id: string): Status => (connectedIds.has(id) ? 'associated' : 'detached'),
-    [connectedIds],
-  );
-
-  // Eagerly add an id to the stable list before the reactive query catches up (e.g. after saving a draft).
-  const addToList = useCallback((id: string) => {
-    everConnected.current.add(id);
-    if (!seenOrder.current.includes(id)) {
-      seenOrder.current.push(id);
-    }
-  }, []);
-
-  return { items, statusFor, addToList };
 };
 
-/** Registry skill refs declared by the object type's {@link AppAnnotation.SkillsAnnotation}. */
-const skillRefsForObject = (object: Obj.Unknown): Ref.Ref<Skill.Skill>[] => {
-  const type = Obj.getType(object);
-  if (!type) {
-    return [];
-  }
-  const keys = Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(type)));
-  return keys.map((key) => Ref.fromURI(Skill.registryURI(key)));
+/** Whether a routine has at least one trigger and all of its triggers are enabled (its on/off state). */
+const routineEnabled = (routine: Routine.Routine): boolean => {
+  const triggers = routine.triggers.flatMap((ref) => (ref.target ? [ref.target] : []));
+  return triggers.length > 0 && triggers.every((trigger) => trigger.enabled === true);
+};
+
+/**
+ * Reactive read of a routine's on/off state — subscribes (via `get`) to its triggers' `enabled` flags so a
+ * consumer (the per-row menu, the row icon) re-derives when a flag flips.
+ */
+const getRoutineEnabled = (get: Atom.Context, routine: Routine.Routine): { hasTriggers: boolean; enabled: boolean } => {
+  const triggers = get(Obj.atomProperty(routine, 'triggers'));
+  const hasTriggers = triggers.length > 0;
+  return {
+    hasTriggers,
+    enabled: hasTriggers && triggers.every((ref) => get(Obj.atomProperty(ref, 'enabled')) === true),
+  };
 };

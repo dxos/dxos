@@ -7,9 +7,9 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Instructions, Trigger } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Trigger } from '@dxos/compute';
+import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -17,7 +17,7 @@ import { RoutineForm } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineOperation } from '#types';
 
-import { type RoutineDraft, saveRoutine } from '../../util';
+import { primaryTrigger, runnableInstructions, saveRoutine } from '../../util';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 
@@ -57,19 +57,11 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     [subject],
   );
 
-  const [session, setSession] = useState<RoutineDraft | undefined>(undefined);
+  const [session, setSession] = useState<Routine.Routine | undefined>(undefined);
 
-  // A routine action stores no `runnable`; it is an Instructions parented to the routine, so query for one.
-  const allInstructions = useQuery(db, Filter.type(Instructions.Instructions));
-  const ownedInstructions = useMemo(
-    () => allInstructions.find((instructions) => Obj.getParent(instructions)?.id === subject.id),
-    [allInstructions, subject.id],
-  );
-
-  const canRun = useMemo(
-    () => Boolean(routine.runnable) || ownedInstructions != null,
-    [routine.runnable, ownedInstructions],
-  );
+  // The action is the routine's `runnable` (an operation or the owned instructions); a routine can run once it
+  // has one.
+  const canRun = useMemo(() => Boolean(routine.runnable), [routine.runnable]);
 
   const handleToggleEnabled = useCallback(() => {
     const next = !registry.get(enabledAtom).allEnabled;
@@ -99,24 +91,20 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   }, [invokePromise, db, subject, registry, runningAtom]);
 
   const handleEdit = useCallback(() => {
-    // Build the edit session: detached in-memory clones so edits never touch the persisted aggregate until save.
-    const instructions = Instructions.make({
-      name: ownedInstructions?.name ?? subject.name,
-      text: ownedInstructions?.text?.target?.content ?? '',
-      skills: ownedInstructions ? [...ownedInstructions.skills] : [],
-      objects: ownedInstructions?.objects ? [...ownedInstructions.objects] : undefined,
-    });
-    const primaryTrigger = subject.triggers[0]?.target;
-    setSession({
-      routine: Obj.clone(subject),
-      instructions,
-      trigger:
-        primaryTrigger && Obj.instanceOf(Trigger.Trigger, primaryTrigger)
-          ? Obj.clone(primaryTrigger)
-          : Trigger.make({}),
-    });
+    // Deep-clone the owned graph (the runnable instructions + its text, and the trigger) with retained ids so
+    // edits stay isolated until save. Ensure the draft has an owned trigger so the form can configure it; the
+    // action editor manages the runnable (operation vs instructions) when the user switches kind.
+    const draft = Obj.clone(subject, { deep: 'owned', retainId: true });
+    if (!primaryTrigger(draft)) {
+      const trigger = Trigger.make({});
+      Obj.setParent(trigger, draft);
+      Obj.update(draft, (draft) => {
+        draft.triggers = [...draft.triggers, Ref.make(trigger)];
+      });
+    }
+    setSession(draft);
     registry.set(editingAtom, true);
-  }, [subject, ownedInstructions, registry, editingAtom]);
+  }, [subject, registry, editingAtom]);
 
   const handleCancel = useCallback(() => {
     setSession(undefined);
@@ -125,11 +113,11 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 
   const handleSave = useCallback(async () => {
     if (db && session) {
-      await saveRoutine(db, subject, session);
+      await saveRoutine(db, session);
     }
     setSession(undefined);
     registry.set(editingAtom, false);
-  }, [db, subject, session, registry, editingAtom]);
+  }, [db, session, registry, editingAtom]);
 
   const menuActions = useMenuBuilder(
     (get) => {
@@ -182,8 +170,11 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     return null;
   }
 
-  // Edit mode renders the routine's in-memory clones (with Save/Cancel); otherwise the live routine, read-only.
+  // Edit mode renders the routine's in-memory clone graph (with Save/Cancel); otherwise the live routine,
+  // read-only. The owned trigger/instructions are read off the clone graph.
   const editSession = editing ? session : undefined;
+  const editTrigger = editSession ? primaryTrigger(editSession) : undefined;
+  const editInstructions = editSession ? runnableInstructions(editSession.runnable) : undefined;
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
@@ -194,9 +185,9 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
         <Panel.Content classNames='dx-document'>
           <RoutineForm
             db={db}
-            routine={editSession?.routine ?? subject}
-            instructions={editSession?.instructions}
-            trigger={editSession?.trigger}
+            routine={editSession ?? subject}
+            instructions={editInstructions}
+            trigger={editTrigger}
             readonly={!editSession}
             onSave={editSession ? () => void handleSave() : undefined}
             onCancel={editSession ? handleCancel : undefined}

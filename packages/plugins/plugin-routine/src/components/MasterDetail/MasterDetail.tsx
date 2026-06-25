@@ -2,95 +2,72 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useCallback } from 'react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import React, { type ReactNode, useMemo } from 'react';
 
-import {
-  DropdownMenu,
-  Icon,
-  IconButton,
-  Tooltip,
-  type ThemedClassName,
-  toLocalizedString,
-  useTranslation,
-  type Label,
-} from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
+
+import { meta } from '#meta';
 
 // Prototype master-detail layout, candidate to push down into @dxos/react-ui-list as a reusable
 // component. Presentation-only: a selectable list (master) on top of a single detail pane, with an
-// optional create affordance and empty state. The parent owns the detail content (the selected item's
-// form, a draft form, etc.) and the selection state.
+// optional empty state. The parent owns the detail content (the selected item's form, a draft form,
+// etc.) and the selection state.
 
 export type MasterDetailRecord = { id: string };
 
-/** Icon + tooltip label shown after the row label, e.g. a status warning badge. */
-export type MasterDetailAdornment = { icon: string; label: Label };
+/** A row's leading icon: a Phosphor icon name plus optional colour classes (e.g. a hue text class). */
+export type MasterDetailIcon = { icon: string; classNames?: string };
 
-/** A single option in the create dropdown. */
-export type MasterDetailCreateOption = {
-  id: string;
-  label: Label;
-  icon?: string;
-  onClick: () => void;
-};
+const EMPTY_MENU: ActionGraphProps = { nodes: [], edges: [] };
 
 export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   items: readonly T[];
   /** Currently highlighted row; `undefined` clears the selection (e.g. while a draft is active). */
   selectedId?: string;
   onSelect?: (id: string | undefined) => void;
-  onDelete?: (item: T) => void;
-  /** Row label content. */
-  getLabel: (item: T) => ReactNode;
-  /** Optional Phosphor icon name shown at the start of each row. */
-  getIcon?: (item: T) => string;
-  /** Optional icon + tooltip label rendered after the row label (e.g. a status warning badge). */
-  getAdornment?: (item: T) => MasterDetailAdornment | undefined;
   /**
-   * When provided, the `+` button opens a dropdown with these options. When omitted, the button
-   * calls `onCreate` directly (current default behaviour).
+   * Build the row's label reactively. Run inside an atom so it can subscribe to the item's state via `get`
+   * (e.g. the object's name) and update live when it changes.
    */
-  createOptions?: MasterDetailCreateOption[];
-  /** Direct-click create handler; used when `createOptions` is not provided. */
-  onCreate?: () => void;
-  createLabel?: string;
+  getLabel: (get: Atom.Context, item: T) => ReactNode;
+  /**
+   * Build the row's leading icon reactively. Run inside an atom so it can subscribe to the item's state via
+   * `get` (e.g. colour the icon by an `enabled` flag); returns the icon name and optional colour classes.
+   */
+  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  /**
+   * Build the per-row overflow (three-dots) menu. Run inside each row's `useMenuBuilder`, so it should
+   * subscribe to that item's reactive state via `get` (e.g. an `enabled` flag) — the menu then updates live
+   * without re-rendering the whole list.
+   */
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
   /** Message shown when there are no items. */
   emptyLabel?: string;
   /** Detail pane content (selected item's form, draft form, …); rendered below the list. */
   detail?: ReactNode;
 }>;
 
-/** Selectable master list (with optional create/delete affordances) above a parent-supplied detail pane. */
+/** Selectable master list (with an optional per-row overflow menu) above a parent-supplied detail pane. */
 export const MasterDetail = <T extends MasterDetailRecord>({
   classNames,
   items,
   selectedId,
   onSelect,
-  onDelete,
   getLabel,
   getIcon,
-  getAdornment,
-  createOptions,
-  onCreate,
-  createLabel,
+  getMenu,
   emptyLabel,
   detail,
 }: MasterDetailProps<T>) => {
-  const hasCreate = createOptions || (onCreate && createLabel);
   return (
     <div role='none' className={mx('flex flex-col min-bs-0', classNames)}>
-      {(hasCreate || emptyLabel) && (
+      {items.length === 0 && emptyLabel && (
         <div role='none' className='flex items-center min-bs-[--dx-rail-item] pis-2'>
-          <span className='grow truncate text-sm text-description'>{items.length === 0 ? emptyLabel : null}</span>
-          {createOptions ? (
-            <CreateDropdown options={createOptions} label={createLabel} />
-          ) : (
-            onCreate &&
-            createLabel && (
-              <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={createLabel} onClick={onCreate} />
-            )
-          )}
+          <span className='grow truncate text-sm text-description'>{emptyLabel}</span>
         </div>
       )}
 
@@ -103,11 +80,10 @@ export const MasterDetail = <T extends MasterDetailRecord>({
                   key={item.id}
                   item={item}
                   selected={item.id === selectedId}
-                  label={getLabel(item)}
-                  icon={getIcon?.(item)}
-                  adornment={getAdornment?.(item)}
+                  getLabel={getLabel}
+                  getIcon={getIcon}
+                  getMenu={getMenu}
                   onSelect={onSelect}
-                  onDelete={onDelete}
                 />
               ))}
             </OrderedList.Content>
@@ -124,49 +100,27 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   );
 };
 
-const CreateDropdown = ({ options, label }: { options: MasterDetailCreateOption[]; label?: string }) => {
-  const { t } = useTranslation();
-  return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={label ?? ''} />
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            {options.map((option) => (
-              <DropdownMenu.Item key={option.id} onClick={option.onClick}>
-                {option.icon && <Icon icon={option.icon} size={4} />}
-                <span>{toLocalizedString(option.label, t)}</span>
-              </DropdownMenu.Item>
-            ))}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-  );
-};
-
 const MasterDetailRow = <T extends MasterDetailRecord>({
   item,
   selected,
-  label,
-  icon,
-  adornment,
+  getLabel,
+  getIcon,
+  getMenu,
   onSelect,
-  onDelete,
 }: {
   item: T;
   selected: boolean;
-  label: ReactNode;
-  icon?: string;
-  adornment?: MasterDetailAdornment;
+  getLabel: (get: Atom.Context, item: T) => ReactNode;
+  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
   onSelect?: (id: string | undefined) => void;
-  onDelete?: (item: T) => void;
 }) => {
-  const { t } = useTranslation();
-  const handleDelete = useCallback(() => onDelete?.(item), [onDelete, item]);
+  const { t } = useTranslation(meta.profile.key);
+  // Resolve the label, icon, and actions reactively per row — each subscribes (via `get`) only to this item's
+  // state, so a change (rename, toggling enabled) updates just this row's label / icon / menu.
+  const label = useAtomValue(useMemo(() => Atom.make((get) => getLabel(get, item)), [getLabel, item]));
+  const icon = useAtomValue(useMemo(() => Atom.make((get) => getIcon?.(get, item)), [getIcon, item]));
+  const menu = useMenuBuilder((get) => getMenu?.(get, item) ?? EMPTY_MENU, [getMenu, item]);
   return (
     <OrderedList.Item
       id={item.id}
@@ -177,23 +131,22 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
       classNames='flex items-center cursor-pointer pis-2 min-bs-[--dx-rail-item]'
       onClick={() => onSelect?.(selected ? undefined : item.id)}
     >
-      {icon && <Icon icon={icon} size={4} classNames='mie-2 shrink-0' />}
+      {icon && <Icon icon={icon.icon} size={4} classNames={mx('mie-2 shrink-0', icon.classNames)} />}
       <span className='grow truncate'>{label}</span>
-      {adornment && (
-        <Tooltip.Provider>
-          <Tooltip.Trigger asChild side='bottom' content={toLocalizedString(adornment.label, t)}>
-            <Icon icon={adornment.icon} size={4} classNames='shrink-0 mie-1' />
-          </Tooltip.Trigger>
-        </Tooltip.Provider>
-      )}
-      {onDelete && (
-        <OrderedList.DeleteButton
-          autoHide
-          onClick={(event) => {
-            event.stopPropagation();
-            handleDelete();
-          }}
-        />
+      {getMenu && (
+        <Menu.Root {...menu}>
+          <Menu.Trigger asChild>
+            <IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label={t('routine-actions.label')}
+              // Open the menu without toggling row selection.
+              onClick={(event) => event.stopPropagation()}
+            />
+          </Menu.Trigger>
+          <Menu.Content />
+        </Menu.Root>
       )}
     </OrderedList.Item>
   );

@@ -55,13 +55,19 @@ export type MakeProps = {
   objects?: Ref.Ref<Obj.Unknown>[];
 };
 
-export const make = ({ name, description, input, output, text, skills = [], objects }: MakeProps): Instructions =>
-  Obj.make(Instructions, {
+export const make = ({ name, description, input, output, text, skills = [], objects }: MakeProps): Instructions => {
+  const body = Text.make({ content: text ?? '' });
+  const instructions = Obj.make(Instructions, {
     name,
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
-    text: Ref.make(Text.make({ content: text ?? '' })),
+    text: Ref.make(body),
     skills,
     objects,
   });
+  // The body is owned by the instructions: it cascade-deletes with it and is cloned alongside it under
+  // `Obj.clone(..., { deep: 'owned' })`.
+  Obj.setParent(body, instructions);
+  return instructions;
+};

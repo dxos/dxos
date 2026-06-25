@@ -47,16 +47,12 @@ export type Template = {
    */
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
-   * Build the automation from the user's input as an in-memory {@link Routine.RoutineDraft}. The create flow
-   * persists the draft atomically via {@link saveRoutine}; scaffold must NOT call `Database.add` for the
-   * routine, instructions, or primary trigger — those are owned by the save flow. `Database.Service` may
-   * still be used for read-only lookups (e.g. loading a feed ref). `subject` is set when scaffolding from
-   * an object's companion.
+   * Build the automation as an in-memory {@link Routine.Routine} draft graph — the routine plus its owned
+   * trigger and instructions, wired with `makeRoutineDraft`. The create flow persists the graph via
+   * `saveRoutine`; scaffold must NOT call `Database.add` itself. `Database.Service` may still be used for
+   * read-only lookups (e.g. loading a feed ref). `subject` is set when scaffolding from an object's companion.
    */
-  scaffold: (ctx: {
-    name?: string;
-    subject?: Obj.Unknown;
-  }) => Effect.Effect<Routine.RoutineDraft, Error, Database.Service>;
+  scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };
 
 export const Template = Capability.make<Template>('org.dxos.plugin.routine.capability.template');
