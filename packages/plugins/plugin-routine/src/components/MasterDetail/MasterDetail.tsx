@@ -5,7 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -21,6 +21,9 @@ export type MasterDetailRecord = { id: string };
 
 /** A row's leading icon: same shape as {@link Obj.getIcon} — a Phosphor icon name and an optional hue. */
 export type MasterDetailIcon = { icon: string; hue?: string };
+
+/** A row's trailing adornment: a status icon with a tooltip label (e.g. a 'detached' warning badge). */
+export type MasterDetailAdornment = { icon: string; label: string };
 
 const EMPTY_MENU: ActionGraphProps = { nodes: [], edges: [] };
 
@@ -39,6 +42,11 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
    * `get` (e.g. colour the icon by an `enabled` flag); returns the icon name and optional colour classes.
    */
   getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  /**
+   * Build the row's trailing adornment reactively (e.g. a status badge). Run inside an atom so it can subscribe
+   * to the item's state via `get`; returns a Phosphor icon name and a tooltip label, or `undefined` for none.
+   */
+  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
   /**
    * Build the per-row overflow (three-dots) menu. Run inside each row's `useMenuBuilder`, so it should
    * subscribe to that item's reactive state via `get` (e.g. an `enabled` flag) — the menu then updates live
@@ -59,6 +67,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   onSelect,
   getLabel,
   getIcon,
+  getAdornment,
   getMenu,
   emptyLabel,
   detail,
@@ -82,6 +91,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
                   selected={item.id === selectedId}
                   getLabel={getLabel}
                   getIcon={getIcon}
+                  getAdornment={getAdornment}
                   getMenu={getMenu}
                   onSelect={onSelect}
                 />
@@ -105,6 +115,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   selected,
   getLabel,
   getIcon,
+  getAdornment,
   getMenu,
   onSelect,
 }: {
@@ -112,14 +123,16 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   selected: boolean;
   getLabel: (get: Atom.Context, item: T) => string;
   getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
   getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
   onSelect?: (id: string | undefined) => void;
 }) => {
   const { t } = useTranslation(meta.profile.key);
-  // Resolve the label, icon, and actions reactively per row — each subscribes (via `get`) only to this item's
-  // state, so a change (rename, toggling enabled) updates just this row's label / icon / menu.
+  // Resolve the label, icon, adornment, and actions reactively per row — each subscribes (via `get`) only to
+  // this item's state, so a change (rename, toggling enabled) updates just this row.
   const label = useAtomValue(useMemo(() => Atom.make((get) => getLabel(get, item)), [getLabel, item]));
   const icon = useAtomValue(useMemo(() => Atom.make((get) => getIcon?.(get, item)), [getIcon, item]));
+  const adornment = useAtomValue(useMemo(() => Atom.make((get) => getAdornment?.(get, item)), [getAdornment, item]));
   const menu = useMenuBuilder((get) => getMenu?.(get, item) ?? EMPTY_MENU, [getMenu, item]);
   return (
     <OrderedList.Item
@@ -135,6 +148,13 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
         <Icon icon={icon.icon} size={4} classNames={mx('mie-2 shrink-0', icon.hue && getStyles(icon.hue).text)} />
       )}
       <span className='grow truncate'>{label}</span>
+      {adornment && (
+        <Tooltip.Provider>
+          <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
+            <Icon icon={adornment.icon} size={4} classNames='shrink-0 mie-1 text-warning' />
+          </Tooltip.Trigger>
+        </Tooltip.Provider>
+      )}
       {getMenu && (
         <Menu.Root {...menu}>
           <Menu.Trigger asChild>

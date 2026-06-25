@@ -15,7 +15,6 @@ import {
   OperationHandler,
   ReactSurface,
   RegistrySync,
-  State,
   Templates,
   TriggerRuntimeController,
 } from '#capabilities';
@@ -48,7 +47,6 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.ClientReady,
     activate: RegistrySync,
   }),
-  Plugin.addModule({ activatesOn: AppActivationEvents.SetupSettings, activate: State }),
   Plugin.addModule({ activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),

@@ -2,24 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { RoutineForm, MasterDetail, type MasterDetailIcon } from '#components';
+import { RoutineForm, MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 
 import { connectedRoutinesQuery, saveRoutine } from '../../util';
+
+/** Association state of a row relative to the companion's object. */
+type Status = 'associated' | 'detached';
 
 export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
@@ -27,10 +30,11 @@ export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  * Per-object companion: a master-detail list of automations connected to the object, via
  * {@link connectedRoutinesQuery} (covers both trigger-input and instructions-context paths).
  *
- * Only currently-connected routines are listed; a routine that loses its association elsewhere drops out.
- * The toolbar create menu offers a template picker (contributed via {@link RoutineCapabilities.Template},
- * filtered by `appliesTo`). Each template's `scaffold` returns an in-memory routine draft; it is shown
- * editable in {@link RoutineForm} and committed atomically on Save via {@link saveRoutine}.
+ * The list is session-stable: a routine seen connected stays listed even after it loses its association
+ * (flagged with a 'detached' adornment) so it doesn't vanish mid-edit. The toolbar create menu offers a
+ * template picker (contributed via {@link RoutineCapabilities.Template}, filtered by `appliesTo`); each
+ * template's `scaffold` returns an in-memory routine draft, shown editable in {@link RoutineForm} and
+ * committed atomically on Save via {@link saveRoutine}. Existing routines are edited in place.
  */
 export const RoutineCompanion = ({ subject, attendableId }: RoutineCompanionProps) => {
   const db = Obj.getDatabase(subject);
@@ -52,7 +56,7 @@ const RoutineCompanionImpl = ({
 }) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const items = useConnectedRoutines(db, object);
+  const { items, statusFor } = useConnectedRoutines(db, object);
 
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [draft, setDraft] = useState<Routine.Routine | undefined>();
@@ -63,6 +67,14 @@ const RoutineCompanionImpl = ({
     () => items.find((routine) => routine.id === selectedId) ?? savedRoutine,
     [items, selectedId, savedRoutine],
   );
+
+  // Editability of the selected (already-persisted) routine is derived from its enabled state — editable while
+  // disabled, locked read-only once enabled (mirroring the article). Reactive so toggling enable flips it live.
+  const selectedEnabledAtom = useMemo(
+    () => Atom.make((get) => (selected ? get(routineEnabled(selected)).enabled : false)),
+    [selected],
+  );
+  const selectedEnabled = useAtomValue(selectedEnabledAtom);
 
   const handleSelect = useCallback(
     (id: string | undefined) => {
@@ -133,17 +145,9 @@ const RoutineCompanionImpl = ({
     [invokePromise, db],
   );
 
-  // Edit an isolated deep 'owned' clone (retained ids) so changes don't touch the live routine until Save;
-  // the detail panel then shows the editable form (saveRoutine reconciles by id).
-  const handleEdit = useCallback((routine: Routine.Routine) => {
-    setSavedRoutine(undefined);
-    setSelectedId(routine.id);
-    setDraft(Obj.clone(routine, { deep: 'parent', retainId: true }));
-  }, []);
-
   // Flip every trigger of the routine together (its on/off state), reading the current state at click time.
   const handleToggleEnabled = useCallback((routine: Routine.Routine) => {
-    const next = !routineEnabled(routine);
+    const next = !getRoutineEnabled(routine);
     for (const ref of routine.triggers) {
       const trigger = ref.target;
       if (trigger) {
@@ -154,16 +158,17 @@ const RoutineCompanionImpl = ({
     }
   }, []);
 
-  // Per-row overflow menu: edit, enable/disable (disabled until a trigger exists), and delete. Built reactively
-  // per row (see MasterDetail) — `get` subscribes to this routine's triggers' `enabled` flags, so the
-  // enable/disable label tracks the live state without re-rendering the whole list.
-  const getMenu = useGetMenu({ t, handleEdit, handleToggleEnabled, handleDelete });
+  // Per-row overflow menu: enable/disable (disabled until a trigger exists) and delete. Built reactively per row
+  // (see MasterDetail) — `get` subscribes to this routine's triggers' `enabled` flags, so the enable/disable
+  // label tracks the live state without re-rendering the whole list. (Editing is in place: disable a routine to
+  // edit it, so there is no separate edit action.)
+  const getMenu = useGetMenu({ t, handleToggleEnabled, handleDelete });
 
   // Row icon, reactive per row: an enabled routine takes its type's hue (amber); disabled uses the default
   // icon colour. Subscribes (via `get`) only to this routine's triggers' `enabled` flags.
   const getIcon = useCallback((get: Atom.Context, routine: Routine.Routine): MasterDetailIcon => {
     const { icon, hue } = Obj.getIcon(routine) ?? { icon: 'ph--lightning--regular', hue: undefined };
-    const { enabled } = getRoutineEnabled(get, routine);
+    const { enabled } = get(routineEnabled(routine));
     return { icon, hue: enabled ? hue : undefined };
   }, []);
 
@@ -174,17 +179,28 @@ const RoutineCompanionImpl = ({
     [t],
   );
 
-  // One form for both states: a selected row renders read-only; the menu's Edit action opens the same routine
-  // as an editable draft (a deep 'owned' clone) with the form's Cancel/Save actions. The form derives its
-  // owned instructions and trigger from the routine graph, so no separate draft editor is needed. The `key`
-  // (the routine id) remounts the form when the selection switches, so no uncontrolled state leaks between rows.
+  // Trailing adornment: a warning badge on a row whose routine has left the connected set (it stays in the
+  // session-stable list — see {@link useConnectedRoutines} — rather than disappearing while still selected/edited).
+  const getAdornment = useCallback(
+    (_get: Atom.Context, routine: Routine.Routine): MasterDetailAdornment | undefined =>
+      statusFor(routine.id) === 'detached'
+        ? { icon: 'ph--warning--regular', label: t('routine-detached.message') }
+        : undefined,
+    [statusFor, t],
+  );
+
+  // One form for both flows. A selected (persisted) routine is edited in place — editable while disabled,
+  // read-only once enabled — with no Save/Cancel. The create-from-template draft is the only Save/Cancel flow:
+  // an in-memory routine shown editable, discarded on Cancel and committed by `saveRoutine` on Save. The `key`
+  // (the routine id) remounts the uncontrolled form when the shown routine changes; the draft carries a fresh
+  // id, so no edits leak between rows.
   const shown = draft ?? selected;
   const detail = shown ? (
     <RoutineForm
       key={shown.id}
       db={db}
       routine={shown}
-      readonly={!draft}
+      readonly={draft ? false : selectedEnabled}
       onSave={draft ? () => void handleSave() : undefined}
       onCancel={draft ? handleCancel : undefined}
     />
@@ -205,6 +221,7 @@ const RoutineCompanionImpl = ({
             getMenu={getMenu}
             getIcon={getIcon}
             getLabel={getLabel}
+            getAdornment={getAdornment}
             emptyLabel={t('no-routines.message')}
           />
         </Panel.Content>
@@ -218,60 +235,80 @@ const RoutineCompanionImpl = ({
 //
 
 /**
- * The companion's automation list: the routines currently connected to the object, via
- * {@link connectedRoutinesQuery} (trigger-input and instructions-context paths unified). A session-stable
- * order is maintained so connected rows don't reorder while mounted; a routine that leaves the connected
- * set drops out. A freshly-saved routine appears once the query reflects it.
+ * The companion's automation list, session-stable and frozen against disconnection: routines connected to the
+ * object via {@link connectedRoutinesQuery} (trigger-input and instructions-context paths unified) are
+ * accumulated append-only so rows never reorder, and a routine that leaves the connected set stays in the list
+ * (flagged `detached` via {@link statusFor}) rather than vanishing mid-edit — only a hard-deleted routine drops
+ * out. Detached rows are resolved from the space's full routine set since the connected query no longer returns
+ * them. A freshly-saved routine appears once the query reflects it.
  */
-const useConnectedRoutines = (db: Database.Database, object: Obj.Unknown): Routine.Routine[] => {
+const useConnectedRoutines = (
+  db: Database.Database,
+  object: Obj.Unknown,
+): { items: Routine.Routine[]; statusFor: (id: string) => Status } => {
   const connected = useQuery(db, connectedRoutinesQuery(object));
-  const connectedById = useMemo(() => new Map(connected.map((routine) => [routine.id, routine])), [connected]);
+  const connectedIds = useMemo(() => new Set(connected.map((routine) => routine.id)), [connected]);
 
-  // Session-stable order — append-only so connected rows never reorder while mounted.
+  // All routines in the space — used to resolve rows that have left the connected set (still exist, just detached).
+  const all = useQuery(db, Filter.type(Routine.Routine));
+  const byId = useMemo(() => new Map(all.map((routine) => [routine.id, routine])), [all]);
+
+  // Session-stable, append-only: a routine seen connected this session is remembered so its row never reorders
+  // or disappears on disconnect.
   const seenOrder = useRef<string[]>([]);
-  for (const id of connectedById.keys()) {
+  for (const id of connectedIds) {
     if (!seenOrder.current.includes(id)) {
       seenOrder.current.push(id);
     }
   }
 
-  // Resolve to live objects in stable order, dropping ids no longer connected (detached or deleted).
-  return useMemo(
-    () => seenOrder.current.flatMap((id) => (connectedById.has(id) ? [connectedById.get(id)!] : [])),
-    [connectedById],
+  // Resolve to live objects in stable order, dropping only ids whose routine was hard-deleted.
+  const items = useMemo(
+    () => seenOrder.current.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])),
+    [byId, connectedIds],
   );
+
+  const statusFor = useCallback(
+    (id: string): Status => (connectedIds.has(id) ? 'associated' : 'detached'),
+    [connectedIds],
+  );
+
+  return { items, statusFor };
 };
 
 /** Whether a routine has at least one trigger and all of its triggers are enabled (its on/off state). */
-const routineEnabled = (routine: Routine.Routine): boolean => {
+const getRoutineEnabled = (routine: Routine.Routine): boolean => {
   const triggers = routine.triggers.flatMap((ref) => (ref.target ? [ref.target] : []));
   return triggers.length > 0 && triggers.every((trigger) => trigger.enabled === true);
 };
 
 /**
- * Reactive read of a routine's on/off state — subscribes (via `get`) to its triggers' `enabled` flags so a
- * consumer (the per-row menu, the row icon) re-derives when a flag flips.
+ * Reactive family for a routine's on/off state — subscribes (via `get`) to its triggers' `enabled` flags so a
+ * consumer (the per-row menu, the row icon, the detail's read-only gate) re-derives when a flag flips. Keyed by
+ * the routine instance.
  */
-const getRoutineEnabled = (get: Atom.Context, routine: Routine.Routine): { hasTriggers: boolean; enabled: boolean } => {
-  const triggers = get(Obj.atomProperty(routine, 'triggers'));
-  const hasTriggers = triggers.length > 0;
-  return {
-    hasTriggers,
-    enabled: hasTriggers && triggers.every((ref) => get(Obj.atomProperty(ref, 'enabled')) === true),
-  };
-};
+const routineEnabled = Atom.family(
+  (routine: Routine.Routine): Atom.Atom<{ hasTriggers: boolean; enabled: boolean }> =>
+    Atom.make((get) => {
+      const triggers = get(Obj.atomProperty(routine, 'triggers'));
+      const hasTriggers = triggers.length > 0;
+      return {
+        hasTriggers,
+        enabled: hasTriggers && triggers.every((ref) => get(Obj.atomProperty(ref, 'enabled')) === true),
+      };
+    }),
+);
 
 type GetMenuOptions = {
   t: ReturnType<typeof useTranslation>['t'];
-  handleEdit: (routine: Routine.Routine) => void;
   handleToggleEnabled: (routine: Routine.Routine) => void;
   handleDelete: (routine: Routine.Routine) => void;
 };
 
-const useGetMenu = ({ t, handleEdit, handleToggleEnabled, handleDelete }: GetMenuOptions) =>
+const useGetMenu = ({ t, handleToggleEnabled, handleDelete }: GetMenuOptions) =>
   useCallback(
     (get: Atom.Context, routine: Routine.Routine): ActionGraphProps => {
-      const { hasTriggers, enabled } = getRoutineEnabled(get, routine);
+      const { hasTriggers, enabled } = get(routineEnabled(routine));
       return MenuBuilder.make()
         .action(
           'toggle-enabled',
@@ -284,15 +321,6 @@ const useGetMenu = ({ t, handleEdit, handleToggleEnabled, handleDelete }: GetMen
           () => handleToggleEnabled(routine),
         )
         .action(
-          'edit',
-          {
-            label: t('edit.label'),
-            icon: 'ph--pencil-simple--regular',
-            testId: 'routine.companion.edit',
-          },
-          () => handleEdit(routine),
-        )
-        .action(
           'delete',
           {
             label: t('delete.label'),
@@ -303,7 +331,7 @@ const useGetMenu = ({ t, handleEdit, handleToggleEnabled, handleDelete }: GetMen
         )
         .build();
     },
-    [t, handleEdit, handleToggleEnabled, handleDelete],
+    [t, handleToggleEnabled, handleDelete],
   );
 
 type CompanionMenuActionsOptions = {

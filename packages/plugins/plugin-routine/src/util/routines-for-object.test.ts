@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Trigger } from '@dxos/compute';
+import { Instructions, Trigger } from '@dxos/compute';
 import { type Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, URI } from '@dxos/keys';
@@ -23,7 +23,7 @@ const FeedHost = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
 }).pipe(Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0')));
 
-const types = [Routine.Routine, Trigger.Trigger, Feed.Feed, FeedHost];
+const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, FeedHost];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
   const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -82,5 +82,26 @@ describe('routines connected to an object', () => {
     expect(routinesForObject(host, [owner, other]).map((routine) => routine.id)).toEqual([owner.id]);
 
     await expect.poll(() => connectedIds(db, host), { timeout: 5_000 }).toEqual([owner.id]);
+  });
+
+  test('instructions-ref: routine whose runnable instructions list the object in their `objects`', async ({
+    expect,
+  }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    const target = db.add(Routine.make({ name: 'target', triggers: [] }));
+    const other = db.add(Routine.make({ name: 'other', triggers: [] }));
+    // The routine's action is owned instructions that bind the object as a context object — the second
+    // connection path (O ← Instructions.objects ← Routine.runnable), with no trigger involved.
+    const instructions = db.add(Instructions.make({ objects: [qualifiedRef(db, target)] }));
+    const owner = db.add(Routine.make({ name: 'owner', instructions }));
+    await db.flush();
+
+    expect(routinesForObject(target, [owner, other]).map((routine) => routine.id)).toEqual([owner.id]);
+    expect(routinesForObject(other, [owner])).toEqual([]);
+
+    await expect.poll(() => connectedIds(db, target), { timeout: 5_000 }).toEqual([owner.id]);
+    await expect.poll(() => connectedIds(db, other), { timeout: 5_000 }).toEqual([]);
   });
 });

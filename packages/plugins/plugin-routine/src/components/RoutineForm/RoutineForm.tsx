@@ -29,17 +29,9 @@ type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 export type RoutineFormProps = {
   db: Database.Database;
   routine: Routine.Routine;
-  /**
-   * Draft owned instructions for a routine being edited in memory (the article's edit session or the
-   * companion's create flow). When supplied, the action editor edits it directly instead of querying for one,
-   * so an in-memory draft can be configured before it is persisted.
-   */
-  instructions?: Instructions.Instructions;
-  /** Draft trigger to edit (the article's edit session); overrides the routine's primary trigger. */
-  trigger?: Trigger.Trigger;
-  /** Render the form for display only (the article's default, non-editing view). */
+  /** Render the form for display only (e.g. an enabled routine, locked until disabled). */
   readonly?: boolean;
-  /** Commit the edit session; when set, the form renders a Save/Cancel action row. */
+  /** Commit the edit session; when set, the form renders a Save/Cancel action row (the companion's create flow). */
   onSave?: () => void;
   /** Discard the edit session. */
   onCancel?: () => void;
@@ -51,22 +43,14 @@ export type RoutineFormProps = {
  * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
  *
- * `readonly` displays the bound objects without edit affordances. The article passes in-memory draft clones
- * (`instructions`/`trigger`) while editing and persists them on save; the companion edits live objects.
+ * The sub-forms read and autosave the routine's owned instructions and primary trigger directly off the
+ * `routine` graph (live editing); `readonly` displays them without edit affordances. The optional Save/Cancel
+ * row is used only by the companion's create-from-template flow.
  */
-export const RoutineForm = ({
-  db,
-  routine,
-  instructions,
-  trigger: triggerProp,
-  readonly = false,
-  onSave,
-  onCancel,
-}: RoutineFormProps) => {
+export const RoutineForm = ({ db, routine, readonly = false, onSave, onCancel }: RoutineFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(routine);
-  const primaryTrigger = usePrimaryTrigger(routine);
-  const trigger = triggerProp ?? primaryTrigger;
+  const trigger = usePrimaryTrigger(routine);
 
   // Read once per routine identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralForm>>(
@@ -97,7 +81,7 @@ export const RoutineForm = ({
           <Form.FieldSet />
 
           <Section title={t('actions.title')}>
-            <ActionEditor db={db} routine={routine} instructions={instructions} readonly={readonly} />
+            <ActionEditor db={db} routine={routine} readonly={readonly} />
           </Section>
 
           <Section title={t('triggers.title')}>
@@ -131,26 +115,23 @@ const isActionKind = (value: string): value is ActionKind => (ActionKinds as rea
 /**
  * Single action: an Operation ref (written to the routine's `runnable`) or an owned Instructions edited inline.
  * The instructions object and `runnable` wiring are established on save (see `saveRoutine`), not on mount — the
- * editor only reads/edits what it is given (a draft in an edit session, or the live owned instructions).
+ * editor reads/edits the live owned instructions off the routine's `runnable`.
  */
 const ActionEditor = ({
   db,
   routine,
-  instructions: instructionsProp,
   readonly,
 }: {
   db: Database.Database;
   routine: Routine.Routine;
-  instructions?: Instructions.Instructions;
   readonly?: boolean;
 }) => {
   const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
   // The action is read off `runnable`: an Instructions runnable is an instructions action, an Operation
-  // runnable is an operation action. The owned instructions to edit is the one on `runnable` (a draft passes
-  // it in directly; both resolve to the same object).
+  // runnable is an operation action.
   const operationRunnable = runnableOperation(auto.runnable);
-  const ownedInstructions = instructionsProp ?? runnableInstructions(auto.runnable);
+  const ownedInstructions = runnableInstructions(auto.runnable);
   const isOperationAction = operationRunnable != null;
   const [kind, setKind] = useState<ActionKind>(isOperationAction ? 'operation' : 'instructions');
 

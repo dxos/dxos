@@ -3,5 +3,4 @@
 //
 
 // TODO(wittjosiah): Factor out.
-export * from './useRoutineEditing';
 export * from './useTriggerRuntimeControls';

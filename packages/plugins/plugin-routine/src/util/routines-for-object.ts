@@ -7,6 +7,8 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { Routine } from '#types';
 
+import { runnableInstructions } from './run-instructions';
+
 /**
  * Reactive query for all routines connected to an object O, via two structural paths:
  *
@@ -42,7 +44,11 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
 export const routinesForObject = (object: Obj.Unknown, routines: Routine.Routine[]): Routine.Routine[] =>
   routines.filter((routine) => routineReferencesObject(routine, object));
 
-export const routineReferencesObject = (routine: Routine.Routine, object: Obj.Unknown): boolean => {
+export const routineReferencesObject = (routine: Routine.Routine, object: Obj.Unknown): boolean =>
+  referencesViaTrigger(routine, object) || referencesViaInstructions(routine, object);
+
+/** Trigger path: a trigger's `input` references O, or a feed trigger is bound to O's feed. */
+const referencesViaTrigger = (routine: Routine.Routine, object: Obj.Unknown): boolean => {
   const objectFeedId = getFeedId(object);
   return routine.triggers.some((ref) => {
     const trigger = ref.target;
@@ -57,6 +63,10 @@ export const routineReferencesObject = (routine: Routine.Routine, object: Obj.Un
     return trigger.input != null && referencesId(trigger.input, object.id);
   });
 };
+
+/** Instructions path: the routine's runnable instructions list O in their `objects` context array. */
+const referencesViaInstructions = (routine: Routine.Routine, object: Obj.Unknown): boolean =>
+  runnableInstructions(routine.runnable)?.objects?.some((ref) => ref.target?.id === object.id) ?? false;
 
 /** The feed id a feed-annotated object points at (e.g. `mailbox.feed`), if any. */
 const getFeedId = (object: Obj.Unknown): string | undefined => {

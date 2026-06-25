@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Atom } from '@effect-atom/atom-react';
 import type * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Database, Obj } from '@dxos/echo';
@@ -58,18 +56,3 @@ export type Template = {
 };
 
 export const Template = Capability.make<Template>('org.dxos.plugin.routine.capability.template');
-
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Routines (by URI) whose article should open in an edit session. Set when a routine is created so its
-     * article opens directly in edit mode; the article clears the entry when the session ends (save/cancel).
-     */
-    editing: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.Boolean) }),
-  }),
-);
-
-export type RoutineState = Schema.Schema.Type<typeof StateSchema>;
-
-/** Session-scoped UI state for routine articles (e.g. which routines are mid-edit). Not persisted. */
-export const State = Capability.make<Atom.Writable<RoutineState>>('org.dxos.plugin.routine.capability.state');
