@@ -127,7 +127,6 @@ const SwitchToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
 
   return (
     <Input.Root>
-      {!iconOnly && <Input.Label>{labelStr}</Input.Label>}
       {iconOnly ? (
         <Tooltip.Trigger asChild content={labelStr}>
           <Input.Block>{switchInput}</Input.Block>
@@ -135,6 +134,7 @@ const SwitchToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
       ) : (
         <Input.Block>{switchInput}</Input.Block>
       )}
+      {!iconOnly && <Input.Label>{labelStr}</Input.Label>}
     </Input.Root>
   );
 };

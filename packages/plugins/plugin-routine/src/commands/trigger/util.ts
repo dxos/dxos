@@ -36,7 +36,7 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
  * Pretty prints a trigger with ANSI colors.
  */
 export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
-  const fn = trigger.function && (yield* Database.load(trigger.function));
+  const fn = trigger.runnable && (yield* Database.load(trigger.runnable));
 
   return FormBuilder.make({
     title: trigger.id,
@@ -316,7 +316,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
   const choices = yield* Effect.all(
     filteredTriggers.map((trigger) =>
       Effect.gen(function* () {
-        const fn = trigger.function ? yield* Database.load(trigger.function) : undefined;
+        const fn = trigger.runnable ? yield* Database.load(trigger.runnable) : undefined;
         const functionName =
           fn && Obj.instanceOf(Operation.PersistentOperation, fn)
             ? (fn.name ?? Obj.getMeta(fn).key ?? fn.id)

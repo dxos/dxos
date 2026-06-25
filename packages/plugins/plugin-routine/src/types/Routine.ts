@@ -6,12 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Runnable, Trigger } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { runInstructionsRef } from '../util/run-instructions';
-import * as Runnable from './Runnable';
 
 const Kinds = ['runnable', 'instructions'] as const;
 export const Kind = Schema.Literal(...Kinds);
@@ -40,16 +39,16 @@ export class Routine extends Type.declareObj<Routine>()(
 
     /**
      * The action to run: either an Operation (`spec.runnable`, bound directly) or the routine's own owned
-     * Instructions (`spec.instructions`). For an Operation action the trigger's `function` points at this
+     * Instructions (`spec.instructions`). For an Operation action the trigger's `runnable` points at this
      * Operation. For an Instructions action `spec.instructions` is the owned Instructions object (the operation
      * is implicitly the static RunInstructions, so no separate operation ref is stored), and the trigger's
-     * `function` is RunInstructions with this instructions bound as its input.
+     * `runnable` is RunInstructions with this instructions bound as its input.
      */
     // TODO(burdon): Change to Array? Or handle that case with a ComputeGraph runnable.
     spec: RoutineSpec.pipe(Schema.optional),
 
     /**
-     * Explicit membership, bi-directional with `trigger.function → runnable`. Required (not derived by query)
+     * Explicit membership, bi-directional with `trigger.runnable → runnable`. Required (not derived by query)
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
      */
@@ -61,6 +60,7 @@ export class Routine extends Type.declareObj<Routine>()(
   ),
 ) {}
 
+/** Returns true when value is a Routine object. */
 export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(Routine, value);
 
 /**
@@ -86,7 +86,7 @@ const withoutInstructions = (input: Record<string, unknown> | undefined): Record
 
 /**
  * Wire the routine's owned triggers to dispatch its current action (`spec`): an instructions action sets each
- * trigger's `function` to RunInstructions with the owned instructions bound into `input`; an operation action
+ * trigger's `runnable` to RunInstructions with the owned instructions bound into `input`; an operation action
  * binds the operation directly and drops any stale instructions binding. Call after the action (`spec`) changes
  * so a trigger never keeps a binding for the previous action.
  */
@@ -99,7 +99,7 @@ export const wireTriggers = (routine: Routine): void => {
       continue;
     }
     Obj.update(trigger, (trigger) => {
-      trigger.function = fn;
+      trigger.runnable = fn;
       const base = withoutInstructions(trigger.input);
       trigger.input = instructions ? { input: {}, ...base, instructions } : base;
     });
@@ -109,7 +109,7 @@ export const wireTriggers = (routine: Routine): void => {
 /**
  * Creates a fully-wired in-memory routine graph. `instructions` and `trigger` are optional extras beyond the
  * schema fields: when provided they are parented under the routine and wired together (runnable, trigger
- * function, the trigger's instructions input binding, and the `triggers` ref) so that a single `Database.add`
+ * runnable, the trigger's instructions input binding, and the `triggers` ref) so that a single `Database.add`
  * cascades the whole graph. `triggers` defaults to `[]` so callers that supply a `trigger` need not provide it.
  */
 export const make = ({
@@ -134,7 +134,7 @@ export const make = ({
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });
-    // Wire the trigger's `function`/`input` from the action (`spec`); preserves any template-provided input.
+    // Wire the trigger's `runnable`/`input` from the action (`spec`); preserves any template-provided input.
     wireTriggers(routine);
   }
   return routine;

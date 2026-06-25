@@ -255,7 +255,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             type: Paths.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
             space,
-            position: 300,
+            position: 100,
           }),
         ]),
     }),

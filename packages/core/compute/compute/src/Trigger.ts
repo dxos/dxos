@@ -11,6 +11,8 @@ import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dx
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 
+import * as Runnable from './Runnable';
+
 /**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
@@ -156,17 +158,15 @@ export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.A
 
 /**
  * Function trigger.
- * Function is invoked with the `payload` passed as input data.
- * The event that triggers the function is available in the function context.
+ * Runnable is invoked with the `payload` passed as input data.
+ * The event that fires the trigger is available in the runnable context.
  */
 export class Trigger extends Type.declareObj<Trigger>()(
   Schema.Struct({
     /**
-     * Function or workflow to invoke.
+     * Runnable (operation or workflow) to invoke.
      */
-    // TODO(burdon): Runnable?
-    // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-    function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+    runnable: Schema.optional(Ref.Ref(Runnable.Runnable).annotations({ title: 'Runnable' })),
     spec: Schema.optional(Spec),
     enabled: Schema.optional(Schema.Boolean),
 
@@ -192,7 +192,7 @@ export class Trigger extends Type.declareObj<Trigger>()(
     ),
 
     /**
-     * Passed as the input data to the function.
+     * Passed as the input data to the runnable.
      */
     input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
