@@ -1,7 +1,6 @@
 {
   "name": "@dxos/compute-hyperformula",
   "version": "0.9.0",
-  "private": true,
   "description": "HyperFormula-based compute graph (spreadsheet) engine.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
