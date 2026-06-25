@@ -3,10 +3,10 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -73,13 +73,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   const noPosts = posts.length === 0;
-  useEffect(() => {
-    if (noPosts) {
-      void invoker.invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: linkedSegment('settings'),
-      });
-    }
-  }, [noPosts, invoker]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
