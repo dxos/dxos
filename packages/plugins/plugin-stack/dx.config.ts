@@ -8,12 +8,10 @@ import { trim } from '@dxos/util';
 export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.stack',
-    // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
-    //   Conside renaming this to the collection plugin and trying to factor more collections logic from the space plugin.
-    name: 'Collections',
+    name: 'Stacks',
     author: 'DXOS',
     description: trim`
-      StackPlugin renders any Collection object as a vertically scrollable stack of collapsible sections in the
+      The Stack plugin renders any Collection as a vertically scrollable stack of collapsible sections in the
       Composer article surface. Each section wraps an arbitrary ECHO object and delegates its content rendering
       to the section surface role, enabling any other plugin to contribute its own section renderer.
 

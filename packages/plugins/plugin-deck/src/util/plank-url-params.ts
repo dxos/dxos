@@ -21,9 +21,11 @@ export const serializePlanks = (active: readonly string[], existingSearch: strin
 
 /**
  * Deserialize plank query params from a URL back to qualified graph IDs.
+ * Duplicates are dropped (preserving first occurrence): a shared or hand-edited URL may repeat a
+ * `plank` param, and the deck's `active` list must stay unique so each plank renders under a distinct key.
  */
 export const deserializePlanks = (url: URL): string[] => {
-  return url.searchParams.getAll(PLANK_PARAM).map(Paths.fromUrlPath);
+  return Array.from(new Set(url.searchParams.getAll(PLANK_PARAM).map(Paths.fromUrlPath)));
 };
 
 /**

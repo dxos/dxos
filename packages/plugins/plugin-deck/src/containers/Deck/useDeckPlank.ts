@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner, useNode } from '@dxos/plugin-graph';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
@@ -78,20 +78,13 @@ export const useDeckPlank = ({
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
+  const { hasAttention } = useAttention(id);
 
-  // In multi mode only the last plank hosts a companion; in solo/complementary the companion follows the
-  // preferred variant.
-  const isLastPlankInMulti =
-    layoutMode === 'multi' && !!active && active.length > 0 && active[active.length - 1] === id;
-  const variantForThisPlank =
-    layoutMode === 'multi' ? (isLastPlankInMulti ? companionVariant : undefined) : companionVariant;
+  // The companion follows the preferred variant; in multi mode it attaches only to the attended plank
+  // (hidden until a plank gains attention).
+  const variantForThisPlank = layoutMode === 'multi' ? (hasAttention ? companionVariant : undefined) : companionVariant;
   const { companionId } = useSelectedCompanion(companions, variantForThisPlank);
-  const resolvedCompanionId =
-    layoutMode === 'multi' && isLastPlankInMulti && companions.length > 0
-      ? companionId
-      : variantForThisPlank
-        ? companionId
-        : undefined;
+  const resolvedCompanionId = variantForThisPlank ? companionId : undefined;
   const currentCompanion = companions.find((companion) => companion.id === resolvedCompanionId);
   const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
@@ -109,8 +102,8 @@ export const useDeckPlank = ({
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
       fullscreen: !isCompanionNode,
-      // Offer to open the companion only when one exists and is not already shown.
-      companion: layoutMode !== 'multi' && !isCompanionNode && companions.length > 0 && !hasCompanion,
+      // Offer to open the companion (solo, or the attended plank in multi) when one exists and isn't shown.
+      companion: !isCompanionNode && companions.length > 0 && !hasCompanion && (layoutMode !== 'multi' || hasAttention),
     }),
     [
       deckEnabled,
@@ -122,6 +115,7 @@ export const useDeckPlank = ({
       layoutMode,
       companions.length,
       hasCompanion,
+      hasAttention,
     ],
   );
 

@@ -17,7 +17,6 @@
       "@dxos/node-std",
       "@dxos/random",
       "@dxos/react-ui-graph",
-      "@dxos/react-ui-stack",
       "@dxos/shell",
       "@dxos/test-utils",
       "@dxos/timeframe",
