@@ -23,7 +23,6 @@ import {
   type ScheduleKind,
   type ScheduleValue,
   cronToSchedule,
-  describeCron,
   scheduleToCron,
   toCron,
 } from '../Schedule';
@@ -248,11 +247,7 @@ const CronField = (props: FormFieldRendererProps) => {
     [props.type, props.onValueChange],
   );
 
-  // The Schedule picker is interactive-only; render a human-readable description for the read-only view.
-  if (props.readonly) {
-    return <p className='px-2 text-sm text-description'>{describeCron(cron)}</p>;
-  }
-
+  // TODO(wittjosiah): Add read-only support.
   return (
     <Schedule.Root kinds={RECURRING_KINDS} defaultValue={initial} onValueChange={handleChange}>
       <Schedule.Header />

@@ -35,8 +35,8 @@ export const magazineCuration: RoutineCapabilities.Template = {
       // Pre-populate the trigger's input so the magazine binding is preserved through the save flow.
       return Routine.make({
         name: name ?? magazine.name ?? 'Curate Magazine',
-        // Bind the CurateMagazine operation directly as the runnable (operation action, not instructions-based).
-        runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key),
+        // Bind the CurateMagazine operation directly as the action (an operation action, not instructions-based).
+        spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specTimer(DEFAULT_CRON),

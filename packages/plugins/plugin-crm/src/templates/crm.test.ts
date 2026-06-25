@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { Instructions, Trace, Trigger } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -44,7 +44,7 @@ describe('crm routine template', () => {
       // The draft is a routine graph with a recognisable name, wired for an instructions action.
       expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
       expect(draft.name).toContain('Test Mailbox');
-      expect(draft.runnable).toBeDefined();
+      expect(draft.spec?.kind).toBe('instructions');
 
       // Feed trigger pointing at the mailbox's feed, owned by the routine.
       const trigger = draft.triggers[0]?.target;
@@ -58,8 +58,8 @@ describe('crm routine template', () => {
       // save time, not on the draft).
       expect(trigger?.input?.input).toBe('{{event.item}}');
 
-      // The owned instructions is the routine's runnable (an instructions action).
-      const instructions = Ref.isRef(draft.runnable) ? draft.runnable.target : undefined;
+      // The owned instructions is the routine's action (an instructions action).
+      const instructions = Routine.instructionsRef(draft)?.target;
       expect(Obj.instanceOf(Instructions.Instructions, instructions)).toBe(true);
       expect(Obj.instanceOf(Instructions.Instructions, instructions) ? instructions.name : undefined).toContain(
         'Test Mailbox',
