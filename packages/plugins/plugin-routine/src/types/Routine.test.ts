@@ -32,8 +32,8 @@ describe('Routine', () => {
     const trigger = Trigger.make({ spec: Trigger.specTimer('0 9 * * *') });
     const routine = Routine.make({ name: 'R', instructions, trigger });
 
-    // trigger.runnable points to RunInstructions; the owned instructions is bound into trigger.input.instructions
-    // so a single Database.add cascades the whole graph without a separate persistence step.
+    // The routine owns the instructions, and the trigger dispatches RunInstructions with those instructions
+    // bound into the trigger input so no separate persistence step is needed.
     expect(Routine.instructionsRef(routine)?.target?.id).toBe(instructions.id);
     expect(routine.triggers[0]?.target?.id).toBe(trigger.id);
     expect(isRunInstructions(trigger.runnable)).toBe(true);

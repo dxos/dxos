@@ -86,7 +86,7 @@ const withoutInstructions = (input: Record<string, unknown> | undefined): Record
 
 /**
  * Wire the routine's owned triggers to dispatch its current action (`spec`): an instructions action sets each
- * trigger's `function` to RunInstructions with the owned instructions bound into `input`; an operation action
+ * trigger's `runnable` to RunInstructions with the owned instructions bound into `input`; an operation action
  * binds the operation directly and drops any stale instructions binding. Call after the action (`spec`) changes
  * so a trigger never keeps a binding for the previous action.
  */
@@ -109,7 +109,7 @@ export const wireTriggers = (routine: Routine): void => {
 /**
  * Creates a fully-wired in-memory routine graph. `instructions` and `trigger` are optional extras beyond the
  * schema fields: when provided they are parented under the routine and wired together (runnable, trigger
- * function, the trigger's instructions input binding, and the `triggers` ref) so that a single `Database.add`
+ * runnable, the trigger's instructions input binding, and the `triggers` ref) so that a single `Database.add`
  * cascades the whole graph. `triggers` defaults to `[]` so callers that supply a `trigger` need not provide it.
  */
 export const make = ({
@@ -134,7 +134,7 @@ export const make = ({
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));
     });
-    // Wire the trigger's `function`/`input` from the action (`spec`); preserves any template-provided input.
+    // Wire the trigger's `runnable`/`input` from the action (`spec`); preserves any template-provided input.
     wireTriggers(routine);
   }
   return routine;
