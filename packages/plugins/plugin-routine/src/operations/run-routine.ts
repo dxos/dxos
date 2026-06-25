@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation, Instructions } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { RoutineOperation } from '../types';
@@ -20,25 +20,23 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
       const db = Obj.getDatabase(routineObj);
       invariant(db, 'Routine is not attached to a database.');
 
-      // `runnable` is a union of refs (`Ref<Operation> | Ref<Instructions>`); widen to a ref of the union so
-      // Database.load infers a single target type, then narrow by instance below.
-      const runnableRef: Ref.Ref<Operation.PersistentOperation | Instructions.Instructions> | undefined =
-        routineObj.runnable;
-      const runnable = runnableRef ? yield* Database.load(runnableRef) : undefined;
-
-      if (Obj.instanceOf(Instructions.Instructions, runnable)) {
+      // The action kind is explicit in `spec`; dispatch by kind rather than dereferencing to classify.
+      const spec = routineObj.spec;
+      if (spec?.kind === 'instructions') {
         // The instructions carry their own context objects and skills; RunInstructions binds them to the
         // session, so the run does not forward context separately.
         yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
           db,
-          instructions: Ref.make(runnable),
+          instructions: spec.instructions,
           background: true,
         });
         return;
       }
 
-      invariant(Obj.instanceOf(Operation.PersistentOperation, runnable), 'Routine has no action to run.');
-      yield* Operation.invoke(Operation.deserialize(runnable));
+      invariant(spec?.kind === 'runnable', 'Routine has no action to run.');
+      const operation = yield* Database.load(spec.runnable);
+      invariant(Obj.instanceOf(Operation.PersistentOperation, operation), 'Routine has no action to run.');
+      yield* Operation.invoke(Operation.deserialize(operation));
     }),
   ),
 );

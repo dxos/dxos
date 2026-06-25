@@ -8,7 +8,7 @@ import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 
 import { blank } from '../templates';
-import { isRunInstructions, runnableInstructions } from '../util';
+import { isRunInstructions } from '../util';
 import * as Routine from './Routine';
 import * as Runnable from './Runnable';
 
@@ -20,7 +20,7 @@ describe('Routine', () => {
     expect(Type.getTypename(Routine.Routine)).toBe('org.dxos.type.routine');
     expect(Obj.getLabel(routine)).toBe('Test');
     expect(routine.triggers).toEqual([]);
-    expect(routine.runnable).toBeUndefined();
+    expect(routine.spec).toBeUndefined();
   });
 
   test('Runnable seam is currently the Operation type', ({ expect }) => {
@@ -35,7 +35,7 @@ describe('Routine', () => {
 
     // The runnable is the owned instructions; the trigger dispatches it through RunInstructions with the
     // instructions bound into the trigger input — no separate persistence step is needed.
-    expect(runnableInstructions(routine.runnable)?.id).toBe(instructions.id);
+    expect(Routine.instructionsRef(routine)?.target?.id).toBe(instructions.id);
     expect(routine.triggers[0]?.target?.id).toBe(trigger.id);
     expect(isRunInstructions(trigger.function)).toBe(true);
     const bound = trigger.input?.instructions;

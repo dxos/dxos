@@ -53,9 +53,8 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   );
   const { allEnabled } = useAtomValue(enabledAtom);
 
-  // The action is the routine's `runnable` (an operation or the owned instructions); a routine can run once it
-  // has one.
-  const canRun = useMemo(() => Boolean(routine.runnable), [routine.runnable]);
+  // The action is the routine's `spec` (an operation or the owned instructions); a routine can run once it has one.
+  const canRun = useMemo(() => Boolean(routine.spec), [routine.spec]);
 
   const handleToggleEnabled = useCallback(() => {
     const next = !registry.get(enabledAtom).allEnabled;

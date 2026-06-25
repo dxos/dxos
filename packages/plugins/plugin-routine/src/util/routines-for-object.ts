@@ -7,16 +7,14 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { Routine } from '#types';
 
-import { runnableInstructions } from './run-instructions';
-
 /**
  * Reactive query for all routines connected to an object O, via two structural paths:
  *
  * 1. **Trigger path** (two hops): O is referenced by a Trigger (via `input` or `spec.feed`), and that
  *    Trigger is referenced by a Routine's `triggers` array.
  * 2. **Instructions path** (two hops): O is listed in an Instructions' `objects` context array, and those
- *    Instructions are the Routine's `runnable`. Both hops traverse `Ref` fields, so they are fully
- *    queryable — no JavaScript parent-symbol traversal needed.
+ *    Instructions are the Routine's action (`spec.instructions`). Both hops traverse `Ref` fields, so they are
+ *    fully queryable — no JavaScript parent-symbol traversal needed.
  *
  * ECHO's reverse-ref index is structural — it tracks every `Ref` regardless of schema path, including
  * nested untyped records and union fields — so all variants are covered.
@@ -29,10 +27,12 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
   const byFeed = Query.select(Filter.id(object.id)).reference('feed').referencedBy(Trigger.Trigger);
   const byTrigger = Query.all(byInput, byFeed).referencedBy(Routine.Routine, 'triggers');
 
-  // Instructions path: O ← Instructions.objects ← Routine.runnable.
+  // Instructions path: O ← Instructions.objects ← Routine (via `spec.instructions`). The second hop drops the
+  // property key: the instructions ref is nested in the `spec` union, and the reverse-ref index is structural,
+  // so a keyless `referencedBy` matches it (a routine only references its own owned instructions here).
   const byInstructions = Query.select(Filter.id(object.id))
     .referencedBy(Instructions.Instructions, 'objects')
-    .referencedBy(Routine.Routine, 'runnable');
+    .referencedBy(Routine.Routine);
 
   return Query.all(byTrigger, byInstructions);
 };
@@ -64,9 +64,9 @@ const referencesViaTrigger = (routine: Routine.Routine, object: Obj.Unknown): bo
   });
 };
 
-/** Instructions path: the routine's runnable instructions list O in their `objects` context array. */
+/** Instructions path: the routine's owned instructions list O in their `objects` context array. */
 const referencesViaInstructions = (routine: Routine.Routine, object: Obj.Unknown): boolean =>
-  runnableInstructions(routine.runnable)?.objects?.some((ref) => ref.target?.id === object.id) ?? false;
+  Routine.instructionsRef(routine)?.target?.objects?.some((ref) => ref.target?.id === object.id) ?? false;
 
 /** The feed id a feed-annotated object points at (e.g. `mailbox.feed`), if any. */
 const getFeedId = (object: Obj.Unknown): string | undefined => {

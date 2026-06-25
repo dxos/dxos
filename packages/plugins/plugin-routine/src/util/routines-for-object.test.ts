@@ -93,7 +93,7 @@ describe('routines connected to an object', () => {
     const target = db.add(Routine.make({ name: 'target', triggers: [] }));
     const other = db.add(Routine.make({ name: 'other', triggers: [] }));
     // The routine's action is owned instructions that bind the object as a context object — the second
-    // connection path (O ← Instructions.objects ← Routine.runnable), with no trigger involved.
+    // connection path (O ← Instructions.objects ← Routine via spec.instructions), with no trigger involved.
     const instructions = db.add(Instructions.make({ objects: [qualifiedRef(db, target)] }));
     const owner = db.add(Routine.make({ name: 'owner', instructions }));
     await db.flush();

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Operation, Instructions, Trigger } from '@dxos/compute';
 import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
@@ -14,7 +14,6 @@ import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
-import { runnableInstructions, runnableOperation } from '../../util';
 import { InstructionsEditor } from '../InstructionsEditor';
 import { TriggerEditor } from '../TriggerEditor';
 
@@ -40,7 +39,7 @@ export type RoutineFormProps = {
 /**
  * Composite routine form: the general fields (name + description) are the outer {@link Form},
  * with the Actions and Triggers sections rendered as sub-forms inside its content:
- * - Actions — Operation/Routine variants chosen via a button group (single action; `runnable` isn't an array).
+ * - Actions — Operation/Instructions variants chosen via a button group (single action; `spec` isn't an array).
  * - Triggers — the {@link TriggerEditor}.
  *
  * The sub-forms read and autosave the routine's owned instructions and primary trigger directly off the
@@ -108,14 +107,11 @@ const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
 // Actions
 //
 
-const ActionKinds = ['instructions', 'operation'] as const;
-type ActionKind = (typeof ActionKinds)[number];
-const isActionKind = (value: string): value is ActionKind => (ActionKinds as readonly string[]).includes(value);
-
 /**
- * Single action: an Operation ref (written to the routine's `runnable`) or an owned Instructions edited inline.
- * The owned instructions and `runnable` wiring are established by `Routine.make` when the routine is scaffolded;
- * the editor reads/edits the live owned instructions off the routine's `runnable`.
+ * Single action: an Operation (the routine's `spec.runnable`) or an owned Instructions edited inline. The
+ * action kind is derived from the routine's `spec` — an absent spec means "operation, none chosen yet" (a
+ * scaffolded routine always carries an instructions spec, so the only way to clear it is switching to an
+ * operation). `Routine.make` establishes the owned-instructions wiring when the routine is scaffolded.
  */
 const ActionEditor = ({
   db,
@@ -126,37 +122,38 @@ const ActionEditor = ({
   routine: Routine.Routine;
   readonly?: boolean;
 }) => {
-  const [routine, updateRoutine] = useObject(routineProp);
   const operations = useOperations(db);
-  // The action is read off `runnable`: an Instructions runnable is an instructions action, an Operation
-  // runnable is an operation action.
-  const operationRunnable = runnableOperation(routine.runnable);
-  const ownedInstructions = runnableInstructions(routine.runnable);
-  const isOperationAction = operationRunnable != null;
-  const [kind, setKind] = useState<ActionKind>(isOperationAction ? 'operation' : 'instructions');
+  const [routine, updateRoutine] = useObject(routineProp);
+
+  // Classification is read off `spec.kind` (no dereference); the owned instructions object is then resolved in
+  // place to hand to the editor (an owned ref is always locally resolvable, and the parent `useObject` re-renders
+  // this when `spec` changes). An absent spec means "runnable, none chosen yet" — a scaffolded routine always
+  // carries an instructions spec, so the only way to clear it is switching to a runnable action.
+  const kind = routine.spec?.kind ?? 'runnable';
+  const operationRef = Routine.runnableRef(routine);
+  const instructions = Routine.instructionsRef(routine)?.target;
 
   const handleOperationChange = useCallback(
     (operation?: Ref.Ref<Operation.PersistentOperation>) => {
       updateRoutine((routine) => {
-        routine.runnable = operation;
+        routine.spec = operation ? { kind: 'runnable', runnable: operation } : undefined;
       });
     },
     [updateRoutine],
   );
 
   const handleKindChange = useCallback(
-    (next: ActionKind) => {
-      setKind(next);
+    (next: Routine.Kind) => {
       updateRoutine((routine) => {
-        if (next === 'operation') {
-          // Drop the instructions runnable; the operation is chosen via the picker below. The previously-owned
-          // instructions stays parented to the routine (cascade-deleted with it) but is no longer the runnable.
-          routine.runnable = undefined;
-        } else if (!runnableInstructions(routine.runnable)) {
-          // Seed an owned instructions as the runnable (the executing operation is the implicit RunInstructions).
+        if (next === 'runnable') {
+          // Switch to an operation action; the operation is chosen via the picker below. A previously-owned
+          // instructions stays parented to the routine (cascade-deleted with it) but is no longer the action.
+          routine.spec = undefined;
+        } else if (routine.spec?.kind !== 'instructions') {
+          // Seed an owned instructions action (the executing operation is the implicit RunInstructions).
           const instructions = Instructions.make({});
           Obj.setParent(instructions, routine);
-          routine.runnable = Ref.make(instructions);
+          routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
         }
       });
     },
@@ -166,27 +163,27 @@ const ActionEditor = ({
   return (
     <div role='none' className='flex flex-col'>
       {!readonly && <ActionKindToggle value={kind} onChange={handleKindChange} />}
-      {kind === 'operation' ? (
+      {kind === 'runnable' ? (
         <OperationEditor
           db={db}
           operations={operations}
-          operation={operationRunnable}
+          operation={operationRef}
           onChange={handleOperationChange}
           readonly={readonly}
         />
-      ) : ownedInstructions ? (
-        <InstructionsEditor db={db} instructions={ownedInstructions} readonly={readonly} />
+      ) : instructions ? (
+        <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}
     </div>
   );
 };
 
-const ActionKindToggle = ({ value, onChange }: { value: ActionKind; onChange: (kind: ActionKind) => void }) => {
+const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <ToggleGroup type='single' value={value} onValueChange={(next) => isActionKind(next) && onChange(next)}>
+    <ToggleGroup type='single' value={value} onValueChange={onChange}>
       <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
-      <ToggleGroupItem value='operation'>{t('action-kind.operation.label')}</ToggleGroupItem>
+      <ToggleGroupItem value='runnable'>{t('action-kind.operation.label')}</ToggleGroupItem>
     </ToggleGroup>
   );
 };
