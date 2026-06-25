@@ -94,7 +94,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     // Deep-clone the owned graph (the runnable instructions + its text, and the trigger) with retained ids so
     // edits stay isolated until save. Ensure the draft has an owned trigger so the form can configure it; the
     // action editor manages the runnable (operation vs instructions) when the user switches kind.
-    const draft = Obj.clone(subject, { deep: 'owned', retainId: true });
+    const draft = Obj.clone(subject, { deep: 'parent', retainId: true });
     if (!primaryTrigger(draft)) {
       const trigger = Trigger.make({});
       Obj.setParent(trigger, draft);

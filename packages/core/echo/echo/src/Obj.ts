@@ -308,12 +308,12 @@ export type CloneOptions = {
 
   /**
    * Recursively clone referenced objects.
-   * - `'owned'`: clone only refs whose target is transitively parented under the clone root (owned children
+   * - `'parent'`: clone only refs whose target is transitively parented under the clone root (children
    *   that cascade-delete with it); shared refs (registry operations, context objects, …) are copied as-is.
    * - `'all'`: clone every referenced object recursively.
    * Omit for a shallow clone (refs copied as-is).
    */
-  deep?: 'owned' | 'all';
+  deep?: 'parent' | 'all';
 };
 
 /**

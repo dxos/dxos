@@ -511,7 +511,7 @@ describe('Obj', () => {
       expect(Obj.getType(cloned)).toBe(Obj.getType(person));
     });
 
-    test("deep: 'owned' clones owned children but shares unowned refs", ({ expect }) => {
+    test("deep: 'parent' clones owned children but shares unowned refs", ({ expect }) => {
       // An owned task (parented to the person) is cloned; a shared task (no parent link) is referenced as-is.
       const ownedTask = Obj.make(TestSchema.Task, { title: 'Owned' });
       const sharedTask = Obj.make(TestSchema.Task, { title: 'Shared' });
@@ -523,7 +523,7 @@ describe('Obj', () => {
       });
       Obj.setParent(ownedTask, person);
 
-      const cloned = Obj.clone(person, { deep: 'owned' });
+      const cloned = Obj.clone(person, { deep: 'parent' });
 
       // Owned child is a fresh copy.
       expect(cloned.tasks?.[0]?.target).not.toBe(ownedTask);
@@ -533,7 +533,7 @@ describe('Obj', () => {
       expect(cloned.tasks?.[1]?.target).toBe(sharedTask);
     });
 
-    test("deep: 'owned' follows transitive ownership", ({ expect }) => {
+    test("deep: 'parent' follows transitive ownership", ({ expect }) => {
       // grandchild ← child ← root: both are cloned because their parent chain reaches the clone root.
       const grandchild = Obj.make(TestSchema.Task, { title: 'Grandchild' });
       const child = Obj.make(TestSchema.Task, { title: 'Child', previous: Ref.make(grandchild) });
@@ -546,7 +546,7 @@ describe('Obj', () => {
       Obj.setParent(child, person);
       Obj.setParent(grandchild, child);
 
-      const cloned = Obj.clone(person, { deep: 'owned' });
+      const cloned = Obj.clone(person, { deep: 'parent' });
 
       expect(cloned.tasks?.[0]?.target).not.toBe(child);
       expect(cloned.tasks?.[0]?.target?.previous?.target).not.toBe(grandchild);

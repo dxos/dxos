@@ -169,7 +169,7 @@ const RoutineCompanionImpl = ({
   const handleEdit = useCallback((routine: Routine.Routine) => {
     setSavedRoutine(undefined);
     setSelectedId(routine.id);
-    setDraft(Obj.clone(routine, { deep: 'owned', retainId: true }));
+    setDraft(Obj.clone(routine, { deep: 'parent', retainId: true }));
   }, []);
 
   // Flip every trigger of the routine together (its on/off state), reading the current state at click time.

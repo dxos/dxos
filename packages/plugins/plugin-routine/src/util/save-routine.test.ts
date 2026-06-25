@@ -115,7 +115,7 @@ describe('saveRoutine', () => {
 
     // Edit session: a deep 'owned' clone with the body changed. Re-saving edits in place — still exactly one
     // instructions and one trigger, body updated, `enabled` preserved.
-    const editDraft = Obj.clone(routine, { deep: 'owned', retainId: true });
+    const editDraft = Obj.clone(routine, { deep: 'parent', retainId: true });
     const editInstructions = runnableInstructions(editDraft.runnable)!;
     Doc.updateText(editInstructions.text!.target!, ['content'], 'second body');
     await saveRoutine(db, editDraft);
@@ -146,7 +146,7 @@ describe('saveRoutine', () => {
 
     // Edit session: switch the action to instructions — point the runnable at a freshly-authored owned
     // instructions (as the form's action editor does on switch).
-    const editDraft = Obj.clone(routine, { deep: 'owned', retainId: true });
+    const editDraft = Obj.clone(routine, { deep: 'parent', retainId: true });
     const instructions = Instructions.make({ name: 'Report', text: 'summarize the inbox' });
     Obj.setParent(instructions, editDraft);
     Obj.update(editDraft, (editDraft) => {

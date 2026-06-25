@@ -13,7 +13,7 @@ import { runInstructionsRef, runnableInstructions } from './run-instructions';
 
 /**
  * Wire scaffolded pieces into a single in-memory routine draft graph. For an instructions action the
- * instructions becomes the routine's owned `runnable` (parented, so a `deep: 'owned'` clone captures it and it
+ * instructions becomes the routine's owned `runnable` (parented, so a `deep: 'parent'` clone captures it and it
  * cascade-deletes with the routine); for an operation action the routine's `runnable` is the operation. The
  * trigger is parented and its `function` wired (RunInstructions for an instructions action, else the
  * operation). The trigger's instructions input binding is written at save time, so the draft graph holds only
@@ -64,7 +64,7 @@ export const primaryTrigger = (routine: Routine.Routine): Trigger.Trigger | unde
 /**
  * Persist an in-memory routine draft graph (the routine plus its owned trigger and instructions).
  *
- * The draft is either freshly scaffolded (create) or a deep `'owned'`, id-retaining clone of a persisted
+ * The draft is either freshly scaffolded (create) or a deep `'parent'`, id-retaining clone of a persisted
  * routine (edit). The action is read off `runnable`: an Instructions runnable is an instructions action (the
  * owned instructions is upserted and the trigger dispatches it through RunInstructions); anything else is an
  * operation action (the operation is bound directly). Switching an action from instructions to operation

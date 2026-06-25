@@ -67,7 +67,7 @@ export const make = ({ name, description, input, output, text, skills = [], obje
     objects,
   });
   // The body is owned by the instructions: it cascade-deletes with it and is cloned alongside it under
-  // `Obj.clone(..., { deep: 'owned' })`.
+  // `Obj.clone(..., { deep: 'parent' })`.
   Obj.setParent(body, instructions);
   return instructions;
 };

@@ -54,7 +54,7 @@ const cloneInner = <T extends Obj.Any>(
       if (
         target != null &&
         !inProgress.has(target.id) &&
-        (opts?.deep === 'all' || (opts?.deep === 'owned' && isOwnedBy(target, root)))
+        (opts?.deep === 'all' || (opts?.deep === 'parent' && isOwnedBy(target, root)))
       ) {
         return Ref.make(cloneInner(target, opts, root, cache, inProgress));
       }
