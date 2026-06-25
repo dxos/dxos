@@ -182,7 +182,7 @@ describe('Agent', () => {
           Trigger.make({
             enabled: true,
             spec: Trigger.specFeed(inboxFeed),
-            function: Ref.make(Operation.serialize(AgentWorker)),
+            runnable: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),
               event: '{{event}}',
@@ -240,8 +240,8 @@ describe('Agent', () => {
         expect(timerTrigger.enabled).toBe(true);
 
         // Timer trigger bypasses the qualifier and points to the agent worker.
-        invariant(timerTrigger.function);
-        const operation = yield* Database.load(timerTrigger.function);
+        invariant(timerTrigger.runnable);
+        const operation = yield* Database.load(timerTrigger.runnable);
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
         expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
       },

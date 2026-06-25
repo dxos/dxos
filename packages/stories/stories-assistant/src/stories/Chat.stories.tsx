@@ -740,7 +740,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(Reply)),
+          runnable: Ref.make(Operation.serialize(Reply)),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * * *'), // Every 5 seconds.
         }),
@@ -798,7 +798,7 @@ export const WithChessTrigger: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(ChessOperation.Play)),
+          runnable: Ref.make(Operation.serialize(ChessOperation.Play)),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Game))),
           input: {
@@ -838,7 +838,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(RunInstructions)),
+          runnable: Ref.make(Operation.serialize(RunInstructions)),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
@@ -966,7 +966,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(Operation.serialize(RunInstructions)),
+        runnable: Ref.make(Operation.serialize(RunInstructions)),
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {

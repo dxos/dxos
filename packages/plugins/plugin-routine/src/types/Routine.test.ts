@@ -4,13 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { Instructions, Operation, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Runnable, Trigger } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 
 import { blank } from '../templates';
 import { isRunInstructions } from '../util';
 import * as Routine from './Routine';
-import * as Runnable from './Runnable';
 
 describe('Routine', () => {
   test('make produces a typed Routine', ({ expect }) => {
@@ -33,11 +32,11 @@ describe('Routine', () => {
     const trigger = Trigger.make({ spec: Trigger.specTimer('0 9 * * *') });
     const routine = Routine.make({ name: 'R', instructions, trigger });
 
-    // The runnable is the owned instructions; the trigger dispatches it through RunInstructions with the
-    // instructions bound into the trigger input — no separate persistence step is needed.
+    // The routine owns the instructions, and the trigger dispatches RunInstructions with those instructions
+    // bound into the trigger input so no separate persistence step is needed.
     expect(Routine.instructionsRef(routine)?.target?.id).toBe(instructions.id);
     expect(routine.triggers[0]?.target?.id).toBe(trigger.id);
-    expect(isRunInstructions(trigger.function)).toBe(true);
+    expect(isRunInstructions(trigger.runnable)).toBe(true);
     const bound = trigger.input?.instructions;
     expect(Ref.isRef(bound) ? bound.target?.id : undefined).toBe(instructions.id);
   });
