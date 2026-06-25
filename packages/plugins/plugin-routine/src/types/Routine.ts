@@ -6,12 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Runnable, Trigger } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { runInstructionsRef } from '../util/run-instructions';
-import * as Runnable from './Runnable';
 
 const Kinds = ['runnable', 'instructions'] as const;
 export const Kind = Schema.Literal(...Kinds);
