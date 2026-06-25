@@ -54,7 +54,7 @@ const cloneInner = <T extends Obj.Any>(
       if (
         target != null &&
         !inProgress.has(target.id) &&
-        (opts?.deep === 'all' || (opts?.deep === 'parent' && isOwnedBy(target, root)))
+        (opts?.deep === 'all' || (opts?.deep === 'parent' && isChildOf(target, root)))
       ) {
         return Ref.make(cloneInner(target, opts, root, cache, inProgress));
       }
@@ -79,7 +79,7 @@ const cloneInner = <T extends Obj.Any>(
  * Whether `entity`'s parent chain reaches `root` — i.e. it is an owned descendant that cascade-deletes with
  * the root. Walks the `ParentId` back-links (a finite tree); guarded against cycles defensively.
  */
-const isOwnedBy = (entity: unknown, root: Obj.Any): boolean => {
+const isChildOf = (entity: unknown, root: Obj.Any): boolean => {
   const seen = new Set<InternalObjectProps>();
   assumeType<InternalObjectProps>(entity);
   let parent = entity[ParentId];
