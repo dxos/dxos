@@ -41,6 +41,9 @@ export interface ActionGroupBuilder {
   /** Add an action node as a child of the current group. */
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
 
+  /** Add a switch action rendered as a labeled Input.Switch. */
+  switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this;
+
   /** Add a nested action group. */
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this;
 
@@ -92,6 +95,10 @@ class MenuBuilderImpl implements MenuBuilder {
     this._data.nodes.push(createMenuAction(id, invoke, props));
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     return this;
+  }
+
+  switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this {
+    return this.action(id, { ...props, variant: 'switch' }, invoke);
   }
 
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this {
