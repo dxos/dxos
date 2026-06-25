@@ -3,10 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
+import { Process, Trace } from '@dxos/compute';
 import { EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
@@ -25,8 +26,8 @@ const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
 
 const ids = (commits: Commit[]) => commits.map((commit) => commit.id);
 
-const renderGraph = (messages: Trace.Message[]) => {
-  const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+const renderGraph = (messages: Trace.Message[], collapseCompletedSpans = false) => {
+  const { commits, branches } = buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans });
   return renderTimelineAscii(commits, branches);
 };
 
@@ -176,6 +177,20 @@ describe('CommitSelector', () => {
 
 const MESSAGE_ID = '01HQ0000000000000000000000';
 
+const SHIMMER_EFFECT_TAG = 'effect:shimmer';
+
+const makeActiveProcess = (
+  overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'key' | 'state'>,
+): Process.Info => ({
+  parentPid: null,
+  params: { name: null, annotations: {} },
+  error: null,
+  startedAt: 0,
+  completedAt: Option.none(),
+  metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+  ...overrides,
+});
+
 describe('buildExecutionGraph (span-tree based)', () => {
   test('empty input → no commits', ({ expect }) => {
     const { commits, branches } = buildExecutionGraph({ traceMessages: [] });
@@ -199,7 +214,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[0].branch).toBe('main');
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [function] Reply - Success
+      ●  [function] Reply
       "
     `);
   });
@@ -233,8 +248,8 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
       ●     [atom] Agent processing request...
-      ├──●  [user] hello
-      │  ●  [function] Lookup - Success
+      ├──●  [function] Lookup
+      │  ●  [user] hello
       ◆──╯  [atom] Agent completed request
       "
     `);
@@ -352,12 +367,13 @@ describe('buildExecutionGraph (span-tree based)', () => {
     // AgentBegin on main, Lookup-Success on agent branch, user "hello" on agent branch.
     expect(commits).toHaveLength(3);
     expect(commits[0].branch).toBe('main');
+    expect(commits[1].message).toBe('Lookup');
     expect(commits[1].branch).toBe('agent-1');
     expect(commits[2].branch).toBe('agent-1');
     expect(commits[2].message).toBe('hello');
   });
 
-  test('orders sub-spans chronologically under their parent', ({ expect }) => {
+  test('orders sub-spans categorically under their parent', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
         yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
@@ -382,8 +398,8 @@ describe('buildExecutionGraph (span-tree based)', () => {
     // After collapsing, expect: AgentBegin, Op1.End, Op2.End, AgentEnd → 4 commits.
     expect(commits.map((commit) => commit.message)).toEqual([
       'Agent processing request...',
-      'A - Success',
-      'B - Success',
+      'A',
+      'B',
       'Agent completed request',
     ]);
   });
@@ -407,7 +423,7 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [function] Reply - Success
+      ●  [function] Reply
       "
     `);
   });
@@ -438,8 +454,8 @@ describe('buildExecutionGraph scenarios', () => {
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
       ●     [function] Parent
-      ├──●  [function] Child - Success
-      ◆──╯  [function] Parent - Success
+      ├──●  [function] Child
+      ◆──╯  [function] Parent
       "
     `);
   });
@@ -471,10 +487,10 @@ describe('buildExecutionGraph scenarios', () => {
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
       ●     [function] Parent
-      ├──●  [function] Alpha - Success
-      │  ●  [function] Beta - Success
-      │  ●  [function] Gamma - Success
-      ◆──╯  [function] Parent - Success
+      ├──●  [function] Alpha
+      │  ●  [function] Beta
+      │  ●  [function] Gamma
+      ◆──╯  [function] Parent
       "
     `);
   });
@@ -531,12 +547,12 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●        [function] Run Routine 1
-      ●        [function] Run Routine 2
-      ├──●     [function] Lookup A - Success
-      ├──┼──●  [function] Lookup B - Success
-      ◆──╯  │  [function] Run Routine 1 - Success
-      ◆─────╯  [function] Run Routine 2 - Success
+      ●     [function] Run Routine 1
+      ├──●  [function] Lookup A
+      ◆──╯  [function] Run Routine 1
+      ●  │  [function] Run Routine 2
+      ├──●  [function] Lookup B
+      ◆──╯  [function] Run Routine 2
       "
     `);
   });
@@ -619,7 +635,7 @@ describe('buildExecutionGraph scenarios', () => {
       ├──●  [info] thinking
       │  ●  [info] searching
       │  ●  [info] writing
-      ◆──╯  [function] Work - Success
+      ◆──╯  [function] Work
       "
     `);
   });
@@ -705,7 +721,7 @@ describe('buildExecutionGraph scenarios', () => {
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
       ●     [atom] Agent processing request...
-      ├──●  [wrench] web-search - Success
+      ├──●  [wrench] web-search
       ◆──╯  [atom] Agent completed request
       "
     `);
@@ -802,7 +818,7 @@ describe('buildExecutionGraph scenarios', () => {
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
       ●     [atom] Agent processing request...
-      ├──●  [function] Lookup - Success
+      ├──●  [function] Lookup
       ◆──╯  [atom] Agent completed request
       "
     `);
@@ -887,5 +903,168 @@ describe('buildExecutionGraph scenarios', () => {
       ●  [function] Lost - Error
       "
     `);
+  });
+});
+
+describe('buildExecutionGraph collapseCompletedSpans', () => {
+  test('completed span with middle status events collapses to a single end commit', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'work', name: 'Work' });
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'assistant',
+            block: { _tag: 'status', statusText: 'thinking', pending: false },
+          });
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'assistant',
+            block: { _tag: 'status', statusText: 'writing', pending: false },
+          });
+          yield* Trace.write(Trace.OperationEnd, { key: 'work', name: 'Work', outcome: 'success' });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans: true });
+    expect(commits).toHaveLength(1);
+    expect(commits[0].message).toBe('Work');
+    expect(commits[0].branch).toBe('main');
+  });
+
+  test('completed agent span with user message and nested op collapses inner noise', ({ expect }) => {
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta(
+          { pid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(AgentRequestBegin, {});
+            yield* Trace.write(CompleteBlock, {
+              messageId: MESSAGE_ID,
+              role: 'user',
+              block: { _tag: 'text', text: 'hello', pending: false },
+            });
+          }),
+        );
+        yield* withMeta(
+          { pid: 'op-1', parentPid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'lookup', name: 'Lookup' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
+          }),
+        );
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+      }),
+    );
+
+    expect(`\n${renderGraph(messages, true)}\n`).toMatchInlineSnapshot(`
+      "
+      ●  [atom] Agent completed request
+      "
+    `);
+  });
+
+  test('pending span is not collapsed even when collapseCompletedSpans is enabled', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'user',
+            block: { _tag: 'text', text: 'hello', pending: false },
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans: true });
+    expect(commits).toHaveLength(2);
+    expect(commits[0].message).toBe('Agent processing request...');
+    expect(commits[1].message).toBe('hello');
+  });
+});
+
+describe('buildExecutionGraph in-progress shimmer tags', () => {
+  test('pending agent begin → effect:shimmer', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta({ pid: 'agent-1' }, Effect.gen(function* () {
+        yield* Trace.write(AgentRequestBegin, {});
+      })),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    expect(commits).toHaveLength(1);
+    expect(commits[0]?.tags).toContain(SHIMMER_EFFECT_TAG);
+  });
+
+  test('pending tool call → effect:shimmer', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'assistant',
+            block: {
+              _tag: 'toolCall',
+              toolCallId: 'call-1',
+              name: 'web-search',
+              input: '{"query":"hello"}',
+              providerExecuted: false,
+              pending: false,
+            },
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const toolCall = commits.find((commit) => commit.message === 'web-search');
+    expect(toolCall?.tags).toContain(SHIMMER_EFFECT_TAG);
+  });
+
+  test('completed operation end → no effect:shimmer', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta({ pid: 'worker' }, Effect.gen(function* () {
+        yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
+        yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Lookup', outcome: 'success' });
+      })),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    expect(commits.every((commit) => !commit.tags?.includes(SHIMMER_EFFECT_TAG))).toBe(true);
+  });
+
+  test('active running process → Running... has effect:shimmer after span subtree', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta({ pid: 'worker' }, Effect.gen(function* () {
+        yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Lookup' });
+        yield* Trace.write(CompleteBlock, {
+          messageId: MESSAGE_ID,
+          role: 'assistant',
+          block: { _tag: 'status', statusText: 'searching', pending: false },
+        });
+      })),
+    );
+
+    const { commits } = buildExecutionGraph({
+      traceMessages: messages,
+      activeProcesses: [
+        makeActiveProcess({
+          pid: 'worker',
+          key: 'worker',
+          state: Process.State.RUNNING,
+        }),
+      ],
+    });
+
+    const running = commits.find((commit) => commit.message === 'Running...');
+    expect(running?.tags).toContain(SHIMMER_EFFECT_TAG);
+    expect(commits.at(-1)).toBe(running);
   });
 });

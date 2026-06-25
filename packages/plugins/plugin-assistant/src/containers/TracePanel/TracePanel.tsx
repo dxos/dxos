@@ -159,16 +159,17 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 const atomEmpty = Atom.make(() => [] as const);
 
 type UseExecutionGraphOptions = {
+  collapseCompletedSpans?: boolean;
   eventLimit?: number;
 };
 
-const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+const useExecutionGraph = (space: Space, { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { eventLimit }),
-    [space, processesAtom, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit],
   );
 
   return useAtomValue(atom);
@@ -177,7 +178,7 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans = true, eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -198,6 +199,7 @@ const getExecutionGraph = (
     buildExecutionGraph({
       traceMessages: get(traceMessages),
       activeProcesses: get(activeProcesses),
+      collapseCompletedSpans,
       eventLimit,
     }),
   );
