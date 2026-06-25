@@ -34,7 +34,7 @@ export const RoutineSettings = ({ space }: RoutineSettingsProps) => {
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('automation-verbose.label')} description={t('automation.description')}>
+          <Form.Section title={t('routine-verbose.label')} description={t('routine.description')}>
             <Form.Row label={t('runtime.label')} description={t('runtime.description')}>
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>

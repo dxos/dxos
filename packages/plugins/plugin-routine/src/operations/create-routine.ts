@@ -20,13 +20,15 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
       const template = templates.find((entry) => entry.id === templateId);
       invariant(template, `Unknown routine template: ${templateId}`);
 
-      const object = yield* template
+      // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
+      // all parented and bound by `Routine.make`); AddObject's `Database.add` cascades the whole graph.
+      const draft = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object,
+        object: draft,
         target: db,
         targetNodeId,
       });
