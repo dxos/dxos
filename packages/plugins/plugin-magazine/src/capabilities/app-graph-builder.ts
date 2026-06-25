@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -18,6 +18,8 @@ import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
+
+import { getMagazinesPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -30,6 +32,38 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
+      // Magazine type section in the content group.
+      TypeSection.createTypeSectionExtension(Magazine.Magazine, {
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+        createObject: (space) =>
+          Operation.invoke(SpaceOperation.OpenCreateObject, {
+            target: space.db,
+            typename: Type.getTypename(Magazine.Magazine),
+            targetNodeId: getMagazinesPath(space.db.spaceId),
+          }),
+      }),
+
+      // Feeds as children under each Magazine node.
+      GraphBuilder.createExtension({
+        id: 'magazineFeeds',
+        match: (node) => (Magazine.instanceOf(node.data) ? Option.some(node.data as Magazine.Magazine) : Option.none()),
+        connector: (magazine, get) => {
+          const db = Obj.getDatabase(magazine);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          const feedRefs = get(Obj.atomProperty(magazine, 'feeds'));
+          const feeds = feedRefs
+            .map((ref) => get(ref.atom) as Subscription.Subscription | undefined)
+            .filter((feed): feed is Subscription.Subscription => Subscription.instanceOf(feed));
+          return Effect.succeed(
+            feeds
+              .map((feed) => AppNode.makeObject({ get, db, object: feed }))
+              .filter((node): node is NonNullable<typeof node> => node !== null),
+          );
+        },
+      }),
+
       // Companion panel: resolve the selected Post under a Magazine node.
       GraphBuilder.createExtension({
         id: 'magazinePost',
