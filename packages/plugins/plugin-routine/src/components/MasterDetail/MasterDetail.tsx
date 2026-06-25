@@ -5,7 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -73,9 +73,9 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   detail,
 }: MasterDetailProps<T>) => {
   return (
-    <div role='none' className={mx('flex flex-col min-bs-0', classNames)}>
+    <div className={mx('flex flex-col min-bs-0', classNames)}>
       {items.length === 0 && emptyLabel && (
-        <div role='none' className='flex items-center min-bs-[--dx-rail-item] pis-2'>
+        <div className='flex items-center h-8 p-1'>
           <span className='grow truncate text-sm text-description'>{emptyLabel}</span>
         </div>
       )}
@@ -101,11 +101,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
         </OrderedList.Root>
       )}
 
-      {detail && (
-        <div role='none' className='flex flex-col min-bs-0 border-bs border-subdued-separator'>
-          {detail}
-        </div>
-      )}
+      <div className='pt-trim-md'>{detail}</div>
     </div>
   );
 };
@@ -141,17 +137,19 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
       canDrag={false}
       hover
       selected={selected}
-      classNames='flex items-center cursor-pointer pis-2 min-bs-[--dx-rail-item]'
+      classNames='flex items-center cursor-pointer p-1'
       onClick={() => onSelect?.(selected ? undefined : item.id)}
     >
       {icon && (
-        <Icon icon={icon.icon} size={4} classNames={mx('mie-2 shrink-0', icon.hue && getStyles(icon.hue).text)} />
+        <IconBlock>
+          <Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
+        </IconBlock>
       )}
       <span className='grow truncate'>{label}</span>
       {adornment && (
         <Tooltip.Provider>
           <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
-            <Icon icon={adornment.icon} size={4} classNames='shrink-0 mie-1 text-warning' />
+            <Icon icon={adornment.icon} />
           </Tooltip.Trigger>
         </Tooltip.Provider>
       )}

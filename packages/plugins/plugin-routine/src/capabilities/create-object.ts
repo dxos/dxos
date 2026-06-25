@@ -19,8 +19,6 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Routine.Routine),
       customPanel: CreateRoutinePanel,
-      // A freshly-created routine starts disabled, so its article opens editable (editability is derived from
-      // the enabled state); no extra edit-mode flag is needed.
       createObject: ({ name, templateId }: { name?: string; templateId: string }, options: CreateOptions) =>
         Operation.invoke(RoutineOperation.CreateRoutine, { db: options.db, templateId, name }),
     });

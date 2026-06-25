@@ -317,10 +317,9 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
-      // Edit only the spec on the in-memory draft trigger; the trigger's `function` and `input` (including the
-      // instructions binding and any operation-specific bindings like `{ magazine }`) are wired by
-      // `Routine.make` and finalized by `saveRoutine`, so they are not re-derived here. `enabled` is owned
-      // by the routine-level toolbar toggle.
+      // Edit only the spec on the trigger; the trigger's `function` and `input` (including the instructions
+      // binding and any operation-specific bindings like `{ magazine }`) are wired once by `Routine.make`, so
+      // they are not re-derived here. `enabled` is owned by the routine-level toolbar toggle.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;

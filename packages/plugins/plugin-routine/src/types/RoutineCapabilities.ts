@@ -47,10 +47,11 @@ export type Template = {
    */
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
-   * Build the automation as an in-memory {@link Routine.Routine} draft graph — the routine plus its owned
-   * trigger and instructions, assembled by `Routine.make`. The create flow persists the graph via
-   * `saveRoutine`; scaffold must NOT call `Database.add` itself. `Database.Service` may still be used for
-   * read-only lookups (e.g. loading a feed ref). `subject` is set when scaffolding from an object's companion.
+   * Build the automation as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
+   * trigger and instructions, assembled by `Routine.make`. The create flow persists it with a single
+   * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
+   * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `subject` is set
+   * when scaffolding from an object's companion.
    */
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };

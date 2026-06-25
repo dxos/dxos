@@ -12,7 +12,6 @@ import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getRoutinesPath } from '../paths';
 import { RoutineCapabilities, RoutineOperation } from '../types';
-import { saveRoutine } from '../util';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
@@ -21,16 +20,15 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
       const template = templates.find((entry) => entry.id === templateId);
       invariant(template, `Unknown routine template: ${templateId}`);
 
+      // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
+      // all parented and bound by `Routine.make`); AddObject's `Database.add` cascades the whole graph.
       const draft = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      // saveRoutine persists the draft graph (the routine plus its owned instructions and trigger).
-      const routine = yield* Effect.promise(() => saveRoutine(db, draft));
-
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: routine,
+        object: draft,
         target: db,
         targetNodeId,
       });

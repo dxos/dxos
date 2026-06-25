@@ -12,14 +12,14 @@ import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm, MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 
-import { connectedRoutinesQuery, saveRoutine } from '../../util';
+import { connectedRoutinesQuery } from '../../util';
 
 /** Association state of a row relative to the companion's object. */
 type Status = 'associated' | 'detached';
@@ -33,8 +33,9 @@ export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  * The list is session-stable: a routine seen connected stays listed even after it loses its association
  * (flagged with a 'detached' adornment) so it doesn't vanish mid-edit. The toolbar create menu offers a
  * template picker (contributed via {@link RoutineCapabilities.Template}, filtered by `appliesTo`); each
- * template's `scaffold` returns an in-memory routine draft, shown editable in {@link RoutineForm} and
- * committed atomically on Save via {@link saveRoutine}. Existing routines are edited in place.
+ * template's `scaffold` returns a fully-wired in-memory routine graph, shown editable in {@link RoutineForm}
+ * and committed on Save with a single `Database.add` (which cascades the owned children). Existing routines
+ * are edited in place.
  */
 export const RoutineCompanion = ({ subject, attendableId }: RoutineCompanionProps) => {
   const db = Obj.getDatabase(subject);
@@ -124,9 +125,11 @@ const RoutineCompanionImpl = ({
       return;
     }
 
-    // saveRoutine persists the draft graph (adding the routine and its owned trigger/instructions, the
-    // subject carried in `objects` — the structural connection the query finds).
-    const persistedRoutine = await saveRoutine(db, draft);
+    // The draft is a fully-wired graph (see `Routine.make`); a single add cascades the owned trigger and
+    // instructions, and the subject carried in the instructions' `objects` is the structural connection the
+    // query finds.
+    const persistedRoutine = db.add(draft);
+    await db.flush();
     setSelectedId(persistedRoutine.id);
     // Provide the persisted routine directly so the detail panel renders before the reactive queries
     // catch up to include the newly-connected routine.
@@ -191,9 +194,9 @@ const RoutineCompanionImpl = ({
 
   // One form for both flows. A selected (persisted) routine is edited in place — editable while disabled,
   // read-only once enabled — with no Save/Cancel. The create-from-template draft is the only Save/Cancel flow:
-  // an in-memory routine shown editable, discarded on Cancel and committed by `saveRoutine` on Save. The `key`
-  // (the routine id) remounts the uncontrolled form when the shown routine changes; the draft carries a fresh
-  // id, so no edits leak between rows.
+  // an in-memory routine shown editable, discarded on Cancel and persisted by a single `Database.add` on Save.
+  // The `key` (the routine id) remounts the uncontrolled form when the shown routine changes; the draft carries
+  // a fresh id, so no edits leak between rows.
   const shown = draft ?? selected;
   const detail = shown ? (
     <RoutineForm
@@ -209,21 +212,26 @@ const RoutineCompanionImpl = ({
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+        <Panel.Toolbar className='bg-toolbar-surface'>
+          <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-document'>
-          <MasterDetail<Routine.Routine>
-            items={items}
-            selectedId={selectedId}
-            detail={detail}
-            onSelect={handleSelect}
-            getMenu={getMenu}
-            getIcon={getIcon}
-            getLabel={getLabel}
-            getAdornment={getAdornment}
-            emptyLabel={t('no-routines.message')}
-          />
+        <Panel.Content asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport>
+              <MasterDetail<Routine.Routine>
+                classNames='dx-document'
+                items={items}
+                selectedId={selectedId}
+                detail={detail}
+                onSelect={handleSelect}
+                getMenu={getMenu}
+                getIcon={getIcon}
+                getLabel={getLabel}
+                getAdornment={getAdornment}
+                emptyLabel={t('no-routines.message')}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>

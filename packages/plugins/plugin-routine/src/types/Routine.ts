@@ -29,7 +29,7 @@ export class Routine extends Type.declareObj<Routine>()(
      * no separate operation ref is stored), and the trigger's `function` is RunInstructions with this
      * instructions bound as its input.
      */
-    // TODO(burdon): Change to Array?
+    // TODO(burdon): Change to Array? Or handle that case with ComputGraph.
     runnable: Schema.Union(Ref.Ref(Runnable.Runnable), Ref.Ref(Instructions.Instructions)).pipe(Schema.optional),
 
     /**
@@ -48,10 +48,10 @@ export class Routine extends Type.declareObj<Routine>()(
 export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(Routine, value);
 
 /**
- * Creates an in-memory routine draft graph. `instructions` and `trigger` are optional extras beyond the
- * schema fields: when provided they are parented under the routine, wired (runnable, trigger function,
- * triggers ref), and included in a `deep: 'parent'` clone so `saveRoutine` captures them atomically.
- * `triggers` defaults to `[]` so callers that supply a `trigger` param need not provide it.
+ * Creates a fully-wired in-memory routine graph. `instructions` and `trigger` are optional extras beyond the
+ * schema fields: when provided they are parented under the routine and wired together (runnable, trigger
+ * function, the trigger's instructions input binding, and the `triggers` ref) so that a single `Database.add`
+ * cascades the whole graph. `triggers` defaults to `[]` so callers that supply a `trigger` need not provide it.
  */
 export const make = ({
   instructions,
@@ -73,7 +73,13 @@ export const make = ({
   if (trigger) {
     Obj.setParent(trigger, routine);
     Obj.update(trigger, (trigger) => {
+      // An instructions action dispatches through RunInstructions with the owned instructions bound into the
+      // trigger input (preserving any template-provided input fields); an operation action binds the operation
+      // directly, with its input supplied by the template.
       trigger.function = instructions ? runInstructionsRef() : routine.runnable;
+      if (instructions) {
+        trigger.input = { input: {}, ...trigger.input, instructions: Ref.make(instructions) };
+      }
     });
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));

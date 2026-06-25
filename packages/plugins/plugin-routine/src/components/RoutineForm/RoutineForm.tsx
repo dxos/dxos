@@ -114,43 +114,43 @@ const isActionKind = (value: string): value is ActionKind => (ActionKinds as rea
 
 /**
  * Single action: an Operation ref (written to the routine's `runnable`) or an owned Instructions edited inline.
- * The instructions object and `runnable` wiring are established on save (see `saveRoutine`), not on mount — the
- * editor reads/edits the live owned instructions off the routine's `runnable`.
+ * The owned instructions and `runnable` wiring are established by `Routine.make` when the routine is scaffolded;
+ * the editor reads/edits the live owned instructions off the routine's `runnable`.
  */
 const ActionEditor = ({
   db,
-  routine,
+  routine: routineProp,
   readonly,
 }: {
   db: Database.Database;
   routine: Routine.Routine;
   readonly?: boolean;
 }) => {
-  const [auto, updateAuto] = useObject(routine);
+  const [routine, updateRoutine] = useObject(routineProp);
   const operations = useOperations(db);
   // The action is read off `runnable`: an Instructions runnable is an instructions action, an Operation
   // runnable is an operation action.
-  const operationRunnable = runnableOperation(auto.runnable);
-  const ownedInstructions = runnableInstructions(auto.runnable);
+  const operationRunnable = runnableOperation(routine.runnable);
+  const ownedInstructions = runnableInstructions(routine.runnable);
   const isOperationAction = operationRunnable != null;
   const [kind, setKind] = useState<ActionKind>(isOperationAction ? 'operation' : 'instructions');
 
   const handleOperationChange = useCallback(
     (operation?: Ref.Ref<Operation.PersistentOperation>) => {
-      updateAuto((routine) => {
+      updateRoutine((routine) => {
         routine.runnable = operation;
       });
     },
-    [updateAuto],
+    [updateRoutine],
   );
 
   const handleKindChange = useCallback(
     (next: ActionKind) => {
       setKind(next);
-      updateAuto((routine) => {
+      updateRoutine((routine) => {
         if (next === 'operation') {
-          // Drop the instructions runnable; the operation is chosen via the picker below. `saveRoutine` deletes
-          // the now-orphaned instructions when persisting an operation action.
+          // Drop the instructions runnable; the operation is chosen via the picker below. The previously-owned
+          // instructions stays parented to the routine (cascade-deleted with it) but is no longer the runnable.
           routine.runnable = undefined;
         } else if (!runnableInstructions(routine.runnable)) {
           // Seed an owned instructions as the runnable (the executing operation is the implicit RunInstructions).
@@ -160,7 +160,7 @@ const ActionEditor = ({
         }
       });
     },
-    [updateAuto],
+    [updateRoutine],
   );
 
   return (
