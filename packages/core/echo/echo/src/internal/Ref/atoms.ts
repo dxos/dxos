@@ -16,17 +16,24 @@ import { loadRefTarget } from './utils';
  */
 export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undefined> => {
   return Atom.make<T | undefined>((get) => {
+    let unsubscribeTarget: (() => void) | undefined;
+
     const setupSubscription = (target: T): T | undefined => {
+      // Release any previous subscription before re-subscribing (loadRefTarget may call this more than once).
       // T has no ECHO-proxy constraint at this generic level; `subscribe` and ObjectDeletedId
       // both require the internal proxy shape that cannot be expressed statically here.
-      const unsubscribe = subscribe(target as any, () => {
+      unsubscribeTarget?.();
+      unsubscribeTarget = subscribe(target as any, () => {
         const deleted = !!(target as any)[ObjectDeletedId];
         get.setSelf(deleted ? undefined : target);
       });
-      get.addFinalizer(unsubscribe);
       const deleted = !!(target as any)[ObjectDeletedId];
       return deleted ? undefined : target;
     };
+
+    get.addFinalizer(() => {
+      unsubscribeTarget?.();
+    });
 
     return loadRefTarget(ref, get, setupSubscription);
   });

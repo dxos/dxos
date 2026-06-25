@@ -31,7 +31,7 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
 
     const resolveCreateEntry = useCallback(
       (typename: string): CreateEntryOverride | undefined => {
-        const entry = createEntries.find((e) => e.id === typename);
+        const entry = createEntries.find((createEntry) => createEntry.id === typename);
         if (!entry?.inputSchema && !entry?.createObject) {
           return undefined;
         }
