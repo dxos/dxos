@@ -26,6 +26,7 @@ const make = () =>
         Setting "fen" alone or leaving "pgn" empty will result in the initial position being shown.
       `,
     }),
+    agentCanEnable: true,
   });
 
 const skill: Skill.Definition = {
