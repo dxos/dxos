@@ -400,6 +400,7 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all
@@ -412,6 +413,7 @@ jobs:
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        timeout-minutes: 45
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all
