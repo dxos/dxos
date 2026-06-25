@@ -1,3 +1,24 @@
+diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
+index e00ecc498da732c03d229d9613f1df937682746d..82d51d81bdf750d34de8adfa0ae56d383464261f 100644
+--- a/dist/Repo.d.ts
++++ b/dist/Repo.d.ts
+@@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
+ import { StorageSubsystem } from "./storage/StorageSubsystem.js";
+ import { StorageId } from "./storage/types.js";
+ import { CollectionSynchronizer } from "./synchronizer/CollectionSynchronizer.js";
++import type { SubductionPeerBinding } from "./subduction/source.js";
+ import type { AnyDocumentId, AutomergeUrl, DocumentId, PeerId } from "./types.js";
+ import { AbortOptions } from "./helpers/abortable.js";
+ import { type Subduction } from "@automerge/automerge-subduction/slim";
+@@ -294,5 +295,7 @@ export interface RepoEvents {
+     "heal-exhausted": (payload: {
+         documentId: DocumentId;
+     }) => void;
++    /** A subduction handshake bound a verified peer identity to a transport. */
++    "subduction-peer-bound": (binding: SubductionPeerBinding) => void;
+ }
+ //# sourceMappingURL=Repo.d.ts.map
+\ No newline at end of file
 diff --git a/dist/Repo.js b/dist/Repo.js
 index 25770b92ad37867241cbd27f51e8b463483e60ef..eb4e87f631d13a549f9cdd9ace13cb16f11edf2e 100644
 --- a/dist/Repo.js
