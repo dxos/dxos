@@ -271,7 +271,7 @@ const RoutineCompanionImpl = ({
             getMenu={getMenu}
             getIcon={getIcon}
             getLabel={getLabel}
-            emptyLabel={t('no-automations.message')}
+            emptyLabel={t('no-routines.message')}
           />
         </Panel.Content>
       </Panel.Root>

@@ -122,44 +122,44 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const menuActions = useMenuBuilder(
     (get) => {
       const { hasTriggers, allEnabled } = get(enabledAtom);
-      const builder = MenuBuilder.make()
-        .action(
-          'run',
-          {
-            label: ['run.label', { ns: meta.profile.key }],
-            icon: 'ph--play--regular',
-            disabled: get(runningAtom) || !canRun || get(editingAtom),
-            disposition: 'toolbar',
-            testId: 'routine.toolbar.run',
-          },
-          () => handleRun(),
-        )
-        // Routine-level enable toggle (available whether editing or not): flips every trigger together; disabled
-        // until at least one trigger exists. A plain toolbar action has no pressed state, so the icon shows on/off.
-        .action(
-          'enabled',
-          {
-            label: ['enabled.label', { ns: meta.profile.key }],
-            icon: allEnabled ? 'ph--toggle-right--fill' : 'ph--toggle-left--regular',
-            checked: allEnabled,
-            disabled: !hasTriggers,
-            disposition: 'toolbar',
-            testId: 'routine.toolbar.enabled',
-          },
-          () => handleToggleEnabled(),
-        );
+      const builder = MenuBuilder.make().action(
+        'run',
+        {
+          label: ['run.label', { ns: meta.profile.key }],
+          icon: 'ph--play--regular',
+          disabled: get(runningAtom) || !canRun || get(editingAtom),
+          disposition: 'toolbar',
+          testId: 'routine.toolbar.run',
+        },
+        () => handleRun(),
+      );
       // The Edit action sits at the trailing edge; while editing, Cancel/Save take over (at the form's footer).
       if (!get(editingAtom)) {
-        builder.separator().action(
-          'edit',
-          {
-            label: ['edit.label', { ns: meta.profile.key }],
-            icon: 'ph--pencil-simple--regular',
-            disposition: 'toolbar',
-            testId: 'routine.toolbar.edit',
-          },
-          () => handleEdit(),
-        );
+        builder
+          .separator()
+          .action(
+            'edit',
+            {
+              label: ['edit.label', { ns: meta.profile.key }],
+              icon: 'ph--pencil-simple--regular',
+              disposition: 'toolbar',
+              testId: 'routine.toolbar.edit',
+            },
+            () => handleEdit(),
+          )
+          // Routine-level enable toggle (available whether editing or not): flips every trigger together; disabled
+          // until at least one trigger exists. A plain toolbar action has no pressed state, so the icon shows on/off.
+          .switch(
+            'enabled',
+            {
+              label: ['enabled.label', { ns: meta.profile.key }],
+              iconOnly: true,
+              checked: allEnabled,
+              disabled: !hasTriggers,
+              testId: 'routine.toolbar.enabled',
+            },
+            () => handleToggleEnabled(),
+          );
       }
       return builder.build();
     },
