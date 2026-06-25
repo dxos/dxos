@@ -8,37 +8,32 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Routine } from '#types';
 
 /**
- * Reactive query for the routines connected to an object O via its triggers — without a stored
- * association field.
+ * Reactive query for all routines connected to an object O, via two structural paths:
  *
- * Association is derived: a routine is connected when one of its triggers references O, either via a
- * `Ref` anywhere in the trigger's `input` (e.g. a magazine passed into RunInstructions's input) or via a feed
- * trigger whose `spec.feed` resolves to `O.feed` (feed-annotated hosts like mailboxes). Both are reachable
- * by reverse-reference traversal because ECHO's reverse-ref index is structural — it records every ref in a
- * document regardless of schema path (incl. untyped records and union-nested fields). The traversal is two
- * hops: O ← Trigger ← Routine.
+ * 1. **Trigger path** (two hops): O is referenced by a Trigger (via `input` or `spec.feed`), and that
+ *    Trigger is referenced by a Routine's `triggers` array.
+ * 2. **Instructions path** (two hops): O is listed in an Instructions' `objects` context array, and those
+ *    Instructions are the Routine's `runnable`. Both hops traverse `Ref` fields, so they are fully
+ *    queryable — no JavaScript parent-symbol traversal needed.
  *
- * Supplement with {@link instructionsForObjectQuery} to also catch routines connected via their owned
- * instructions' `objects` array (parent traversal is not queryable, so the companion merges both).
+ * ECHO's reverse-ref index is structural — it tracks every `Ref` regardless of schema path, including
+ * nested untyped records and union fields — so all variants are covered.
  */
 export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine.Routine> => {
-  // Triggers referencing O directly (any path, incl. nested in the untyped `input` record).
+  // Trigger path: O ← Trigger (any ref path, incl. nested `input`) ← Routine.triggers.
   const byInput = Query.select(Filter.id(object.id)).referencedBy(Trigger.Trigger);
-  // Triggers referencing O's feed; `.reference('feed')` reads the path structurally and is empty for objects
-  // without a feed prop, so this branch contributes nothing for non-feed objects.
+  // Feed variant: O's feed ← Trigger.spec.feed ← Routine.triggers.
+  // `.reference('feed')` is empty for objects without a feed prop, so this adds nothing for non-feed objects.
   const byFeed = Query.select(Filter.id(object.id)).reference('feed').referencedBy(Trigger.Trigger);
-  return Query.all(byInput, byFeed).referencedBy(Routine.Routine, 'triggers');
-};
+  const byTrigger = Query.all(byInput, byFeed).referencedBy(Routine.Routine, 'triggers');
 
-/**
- * Reactive query for Instructions objects that include O in their `objects` context array.
- *
- * The parent hop from Instructions to its owning Routine is not expressible as an ECHO query (the parent
- * link is stored as a symbol, not a Ref field). Callers must resolve parent routines in JavaScript via
- * {@link Obj.getParent} and merge with {@link connectedRoutinesQuery}.
- */
-export const instructionsForObjectQuery = (object: Obj.Unknown): Query.Query<Instructions.Instructions> =>
-  Query.select(Filter.id(object.id)).referencedBy(Instructions.Instructions, 'objects');
+  // Instructions path: O ← Instructions.objects ← Routine.runnable.
+  const byInstructions = Query.select(Filter.id(object.id))
+    .referencedBy(Instructions.Instructions, 'objects')
+    .referencedBy(Routine.Routine, 'runnable');
+
+  return Query.all(byTrigger, byInstructions);
+};
 
 /**
  * Pure predicate equivalent of {@link connectedRoutinesQuery}, over a pre-queried list of routines.

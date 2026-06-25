@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -14,6 +14,7 @@ import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
+import { useRoutineEditing } from '#hooks';
 import { meta } from '#meta';
 import { Routine, RoutineOperation } from '#types';
 
@@ -36,10 +37,9 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const [routine] = useObject(subject);
   const db = Obj.getDatabase(subject);
 
-  // Toolbar state as atoms, read reactively inside the builder via `get` (the reactive toolbar idiom).
-  const editingAtom = useMemo(() => Atom.make(false), []);
+  // Per-routine edit state keyed by URI; the running flag stays local (transient run state).
+  const { editing, editingAtom, setEditing } = useRoutineEditing(subject);
   const runningAtom = useMemo(() => Atom.make(false), []);
-  const editing = useAtomValue(editingAtom);
 
   // Derive the routine's enabled state in the atom graph, subscribing granularly to the routine (for trigger
   // membership) and to each trigger (for its `enabled` flag) — rather than subscribing this component to the
@@ -90,81 +90,50 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     ).finally(() => registry.set(runningAtom, false));
   }, [invokePromise, db, subject, registry, runningAtom]);
 
-  const handleEdit = useCallback(() => {
-    // Deep-clone the owned graph (the runnable instructions + its text, and the trigger) with retained ids so
-    // edits stay isolated until save. Ensure the draft has an owned trigger so the form can configure it; the
-    // action editor manages the runnable (operation vs instructions) when the user switches kind.
+  // Build the in-memory edit session whenever editing is entered — via the toolbar's Edit action or because
+  // the routine was just created and opened in edit mode (the State capability flag is preset). Deep-clone the
+  // owned graph (the runnable instructions + its text, and the trigger) with retained ids so edits stay
+  // isolated until save; ensure the draft has an owned trigger so the form can configure it (the action editor
+  // manages the runnable — operation vs instructions — when the user switches kind).
+  useEffect(() => {
+    if (!editing || session) {
+      return;
+    }
     const draft = Obj.clone(subject, { deep: 'parent', retainId: true });
     if (!primaryTrigger(draft)) {
       const trigger = Trigger.make({});
       Obj.setParent(trigger, draft);
       Obj.update(draft, (draft) => {
-        draft.triggers = [...draft.triggers, Ref.make(trigger)];
+        draft.triggers.push(Ref.make(trigger));
       });
     }
     setSession(draft);
-    registry.set(editingAtom, true);
-  }, [subject, registry, editingAtom]);
+  }, [editing, session, subject]);
+
+  const handleEdit = useCallback(() => setEditing(true), [setEditing]);
 
   const handleCancel = useCallback(() => {
     setSession(undefined);
-    registry.set(editingAtom, false);
-  }, [registry, editingAtom]);
+    setEditing(false);
+  }, [setEditing]);
 
   const handleSave = useCallback(async () => {
     if (db && session) {
       await saveRoutine(db, session);
     }
     setSession(undefined);
-    registry.set(editingAtom, false);
-  }, [db, session, registry, editingAtom]);
+    setEditing(false);
+  }, [db, session, setEditing]);
 
-  const menuActions = useMenuBuilder(
-    (get) => {
-      const { hasTriggers, allEnabled } = get(enabledAtom);
-      const builder = MenuBuilder.make().action(
-        'run',
-        {
-          label: ['run.label', { ns: meta.profile.key }],
-          icon: 'ph--play--regular',
-          disabled: get(runningAtom) || !canRun || get(editingAtom),
-          disposition: 'toolbar',
-          testId: 'routine.toolbar.run',
-        },
-        () => handleRun(),
-      );
-      // The Edit action sits at the trailing edge; while editing, Cancel/Save take over (at the form's footer).
-      if (!get(editingAtom)) {
-        builder
-          .separator()
-          .action(
-            'edit',
-            {
-              label: ['edit.label', { ns: meta.profile.key }],
-              icon: 'ph--pencil-simple--regular',
-              disposition: 'toolbar',
-              testId: 'routine.toolbar.edit',
-            },
-            () => handleEdit(),
-          )
-          // Routine-level enable toggle (available whether editing or not): flips every trigger together; disabled
-          // until at least one trigger exists. A plain toolbar action has no pressed state, so the icon shows on/off.
-          .switch(
-            'enabled',
-            {
-              label: ['enabled.label', { ns: meta.profile.key }],
-              iconOnly: true,
-              checked: allEnabled,
-              disabled: !hasTriggers,
-              testId: 'routine.toolbar.enabled',
-            },
-            () => handleToggleEnabled(),
-          );
-      }
-      return builder.build();
-    },
-    [canRun, enabledAtom, handleRun, handleToggleEnabled, handleEdit, runningAtom, editingAtom],
-  );
+  const menuActions = useArticleMenuActions({
+    canRun,
+    enabledAtom,
+    runningAtom,
+    editingAtom,
+    handleRun,
+    handleEdit,
+    handleToggleEnabled,
+  });
 
   if (!db) {
     return null;
@@ -197,3 +166,73 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     </Menu.Root>
   );
 };
+
+//
+// Hooks
+//
+
+type ArticleMenuActionsOptions = {
+  canRun: boolean;
+  enabledAtom: Atom.Atom<EnabledState>;
+  runningAtom: Atom.Writable<boolean>;
+  editingAtom: Atom.Atom<boolean>;
+  handleRun: () => void;
+  handleEdit: () => void;
+  handleToggleEnabled: () => void;
+};
+
+const useArticleMenuActions = ({
+  canRun,
+  enabledAtom,
+  runningAtom,
+  editingAtom,
+  handleRun,
+  handleEdit,
+  handleToggleEnabled,
+}: ArticleMenuActionsOptions) =>
+  useMenuBuilder(
+    (get) => {
+      const { hasTriggers, allEnabled } = get(enabledAtom);
+      const builder = MenuBuilder.make().action(
+        'run',
+        {
+          label: ['run.label', { ns: meta.profile.key }],
+          icon: 'ph--play--regular',
+          disabled: get(runningAtom) || !canRun || get(editingAtom),
+          disposition: 'toolbar',
+          testId: 'routine.toolbar.run',
+        },
+        () => handleRun(),
+      );
+      // The Edit action and enabled switch are always visible; disabled while an edit session is active
+      // (Cancel/Save in the form's footer are the active controls then).
+      builder
+        .separator()
+        .action(
+          'edit',
+          {
+            label: ['edit.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple--regular',
+            disabled: get(editingAtom),
+            disposition: 'toolbar',
+            testId: 'routine.toolbar.edit',
+          },
+          () => handleEdit(),
+        )
+        // Routine-level enable toggle: flips every trigger together; disabled until at least one trigger
+        // exists or while an edit session is active.
+        .switch(
+          'enabled',
+          {
+            label: ['enabled.label', { ns: meta.profile.key }],
+            iconOnly: true,
+            checked: allEnabled,
+            disabled: !hasTriggers || get(editingAtom),
+            testId: 'routine.toolbar.enabled',
+          },
+          () => handleToggleEnabled(),
+        );
+      return builder.build();
+    },
+    [canRun, enabledAtom, handleRun, handleToggleEnabled, handleEdit, runningAtom, editingAtom],
+  );

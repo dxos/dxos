@@ -15,6 +15,7 @@ import {
   OperationHandler,
   ReactSurface,
   RegistrySync,
+  State,
   Templates,
   TriggerRuntimeController,
 } from '#capabilities';
@@ -27,13 +28,15 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   AppPlugin.addSchemaModule({
     schema: [Routine.Routine, Operation.PersistentOperation, Instructions.Instructions, Trigger.Trigger, Trace.Message],
   }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -45,12 +48,11 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.ClientReady,
     activate: RegistrySync,
   }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupSettings, activate: State }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
     activate: TriggerRuntimeController,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );
