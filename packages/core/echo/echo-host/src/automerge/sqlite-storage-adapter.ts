@@ -89,6 +89,7 @@ export class SqliteStorageAdapter extends Resource implements StorageAdapterInte
     }
     const startMs = Date.now();
     const encoded = encodeKey(keyArray);
+    // TODO(dmaretskyi): If another transaction is running concurently, this write will be associated with the wrong transaction.
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -106,6 +107,7 @@ export class SqliteStorageAdapter extends Resource implements StorageAdapterInte
     }
     const startMs = Date.now();
     const encoded = entries.map(([key, data]) => [encodeKey(key), data] as const);
+    // TODO(dmaretskyi): replace with one batched write.
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

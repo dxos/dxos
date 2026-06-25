@@ -251,6 +251,46 @@ const isBoundary = (event: Trace.FlatEvent): boolean =>
   BEGIN_EVENT_TYPES.has(event.type) || END_EVENT_TYPES.has(event.type);
 
 /**
+ * A single event positioned within the span tree for commit emission.
+ */
+export interface SpanEventCursor {
+  readonly span: Span;
+  readonly event: Trace.FlatEvent;
+  readonly eventIndex: number;
+}
+
+/**
+ * Flattens span-tree events in categorical (depth-first) order: each span's begin events, its
+ * child subtrees in sibling order, then its remaining events (middle and end).
+ */
+export const collectSpanTreeEventsCategorically = (root: Span): SpanEventCursor[] => {
+  const stream: SpanEventCursor[] = [];
+
+  const visitSpan = (span: Span): void => {
+    for (let eventIndex = 0; eventIndex < span.events.length; eventIndex += 1) {
+      const event = span.events[eventIndex]!;
+      if (isSpanBeginEvent(event)) {
+        stream.push({ span, event, eventIndex });
+      }
+    }
+
+    for (const child of span.children) {
+      visitSpan(child);
+    }
+
+    for (let eventIndex = 0; eventIndex < span.events.length; eventIndex += 1) {
+      const event = span.events[eventIndex]!;
+      if (!isSpanBeginEvent(event)) {
+        stream.push({ span, event, eventIndex });
+      }
+    }
+  };
+
+  visitSpan(root);
+  return stream;
+};
+
+/**
  * Walks the span tree in depth-first pre-order, invoking `visit` for each span (root included).
  */
 export const walkSpanTree = (root: Span, visit: (span: Span, depth: number) => void, depth = 0): void => {

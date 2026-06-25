@@ -26,6 +26,9 @@ import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEven
  */
 const MAIN_BRANCH = 'main';
 
+/** Timeline tag that applies a shimmer message effect. */
+const SHIMMER_EFFECT_TAG = 'effect:shimmer';
+
 const ICONS = {
   agentRequestBegin: {
     icon: 'ph--atom--regular',
@@ -88,6 +91,7 @@ const ICONS = {
 export interface BuildExecutionGraphParams {
   traceMessages: readonly Trace.Message[];
   activeProcesses?: readonly Process.Info[];
+  collapseCompletedSpans?: boolean;
   eventLimit?: number;
 }
 
@@ -115,11 +119,12 @@ export type ExecutionGraphDetailsMap = Record<string, Trace.FlatEvent | undefine
 export const buildExecutionGraph = ({
   traceMessages,
   activeProcesses = [],
+  collapseCompletedSpans = false,
   eventLimit = 500,
 }: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = buildSpanTree(traceMessages, { eventLimit });
   const toolCallContext = buildToolCallContext(traceMessages);
-  const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext);
+  const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
   log('trace execution graph', {
     traceMessages: traceMessages.length,
     commits: built.commits.length,
@@ -285,7 +290,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
         return {
           icon: success ? ICONS.toolResultSuccess.icon : ICONS.toolResultError.icon,
           level: success ? ICONS.toolResultSuccess.level : ICONS.toolResultError.level,
-          message: `${name} - ${success ? 'Success' : 'Error'}`,
+          message: `${name}${!success ? ' - Error' : ''}`,
           idSuffix: `toolResult:${event.data.block.toolCallId}`,
         };
       }
@@ -314,7 +319,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     return {
       icon: event.data.icon ?? (success ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon),
       level: success ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-      message: `${event.data.name ?? event.data.key} - ${success ? 'Success' : 'Error'}`,
+      message: `${event.data.name ?? event.data.key}${!success ? ' - Error' : ''}`,
       idSuffix: `${event.data.key}:end`,
     };
   }
@@ -457,10 +462,40 @@ const collectDescendantPids = (messages: readonly Trace.Message[], rootPid: stri
   return pids;
 };
 
+const isPendingToolCallEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): boolean => {
+  if (!Trace.isOfType(CompleteBlock, event)) {
+    return false;
+  }
+  if (event.data.block._tag !== 'toolCall') {
+    return false;
+  }
+  return !toolCallContext.resultByCallId.has(event.data.block.toolCallId);
+};
+
+/**
+ * Marks commits that represent work still in flight for Timeline shimmer styling.
+ */
+const shouldShimmerInProgressCommit = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): boolean =>
+  isPendingToolCallEvent(event, toolCallContext);
+
+/**
+ * A span is completed when its last recorded event is a matching end boundary.
+ */
+const isCompletedSpan = (span: Span): boolean => {
+  if (span.id === ROOT_SPAN_ID) {
+    return false;
+  }
+  const lastEvent = span.events[span.events.length - 1];
+  return lastEvent !== undefined && isSpanEndEvent(lastEvent);
+};
+
 /**
  * A span is "collapsible" when it would otherwise render as an empty fork-and-merge:
  * exactly two events that form a begin/end pair and no child sub-spans. In that case
  * we emit a single commit for the end event on the parent branch.
+ *
+ * When `collapseCompletedSpans` is enabled, any completed span collapses to that single
+ * end commit — middle events, child sub-spans, and the begin fork are all omitted.
  *
  * A *pending* span (one whose end event has not yet been recorded) is never collapsed:
  * its trailing events should keep rendering as middle commits on the span's own branch
@@ -470,22 +505,24 @@ const collectDescendantPids = (messages: readonly Trace.Message[], rootPid: stri
  * once they have completed: a span with no inner activity is collapsed regardless of where
  * it sits in the tree.
  */
-const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
+const isCollapsibleSpan = (span: Span, parent: Span | null, collapseCompletedSpans: boolean): boolean => {
   if (span.id === ROOT_SPAN_ID) {
     return false;
   }
-  if (span.events.length !== 2) {
+  if (parent === null) {
     return false;
   }
-  if (span.children.length > 0) {
-    return false;
+  if (span.events.length === 2 && span.children.length === 0) {
+    const firstEvent = span.events[0];
+    const lastEvent = span.events[span.events.length - 1];
+    if (isSpanBeginEvent(firstEvent) && isSpanEndEvent(lastEvent)) {
+      return true;
+    }
   }
-  const firstEvent = span.events[0];
-  const lastEvent = span.events[span.events.length - 1];
-  if (!isSpanBeginEvent(firstEvent) || !isSpanEndEvent(lastEvent)) {
-    return false;
+  if (collapseCompletedSpans && isCompletedSpan(span)) {
+    return true;
   }
-  return parent !== null;
+  return false;
 };
 
 /**
@@ -500,13 +537,15 @@ const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
  * Collapsible spans (`isCollapsibleSpan`) emit only the end commit on the parent branch with
  * a single parent — a tidier rendering for sub-operations that have no inner detail.
  *
- * Events are processed in global chronological order so that sub-operations of a span interleave
- * naturally with the span's own middle events.
+ * Events are processed in categorical span-tree order: each span's begin events, its child
+ * subtrees (depth-first), then its remaining events. Active-process running rows are inserted
+ * at the end of each matching span block — not appended after the entire tree.
  */
 const spanTreeToCommits = (
   root: Span,
   activeProcesses: readonly Process.Info[],
   toolCallContext: ToolCallContext,
+  collapseCompletedSpans: boolean,
 ): { branches: string[]; commits: Commit[]; details: ExecutionGraphDetailsMap } => {
   const builder = new GraphBuilder();
   const details: ExecutionGraphDetailsMap = {};
@@ -526,6 +565,24 @@ const spanTreeToCommits = (
 
   const findParentSpan = (span: Span): Span | null => parentBySpan.get(span) ?? null;
 
+  const collapsedSpanIds = new Set<string>();
+  walkSpanTree(root, (span) => {
+    if (isCollapsibleSpan(span, findParentSpan(span), collapseCompletedSpans)) {
+      collapsedSpanIds.add(span.id);
+    }
+  });
+
+  const isUnderCollapsedAncestor = (span: Span): boolean => {
+    let ancestor = findParentSpan(span);
+    while (ancestor) {
+      if (collapsedSpanIds.has(ancestor.id)) {
+        return true;
+      }
+      ancestor = findParentSpan(ancestor);
+    }
+    return false;
+  };
+
   // The branch name for a span is its pid — multiple sequential spans of the same process
   // (e.g. successive agent requests in one session) share a branch so they reuse a single lane.
   const branchOf = (span: Span | null): string => {
@@ -534,6 +591,9 @@ const spanTreeToCommits = (
     }
     return span.meta.pid ?? span.id;
   };
+
+  // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
+  const beginCommitIdBySpan = new Map<string, string>();
 
   // Selector that returns "the most recent commit in this span's structural context".
   //
@@ -560,29 +620,60 @@ const spanTreeToCommits = (
     );
   };
 
-  // Flatten the tree into a chronological stream, recording each event's position within its span
-  // so we can detect begin/end events.
-  interface EventCursor {
-    span: Span;
-    event: Trace.FlatEvent;
-    eventIndex: number;
-    globalIndex: number;
-  }
-  const stream: EventCursor[] = [];
-  walkSpanTree(root, (span) => {
-    span.events.forEach((event, eventIndex) => {
-      stream.push({ span, event, eventIndex, globalIndex: stream.length });
-    });
-  });
-  stream.sort((a, b) => a.event.timestamp - b.event.timestamp || a.globalIndex - b.globalIndex);
+  const lastCommitIdBySpan = new Map<string, string>();
+  let globalIndex = 0;
+  const insertedRunningPids = new Set<string>();
+  const activeProcessByPid = new Map(activeProcesses.map((process) => [process.pid, process]));
 
-  // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
-  const beginCommitIdBySpan = new Map<string, string>();
+  const emitRunningIndicator = (pid: Process.ID): void => {
+    if (insertedRunningPids.has(pid)) {
+      return;
+    }
 
-  for (const { span, event, globalIndex } of stream) {
+    const process = activeProcessByPid.get(pid);
+    if (!process) {
+      return;
+    }
+
+    if (
+      process.key === AGENT_PROCESS_KEY &&
+      Option.isSome(Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation)) &&
+      (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
+    ) {
+      builder.addCommit({
+        id: `running:${process.pid}`,
+        branch: process.pid,
+        parents: builder.computeParents(
+          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+        ),
+        icon: ICONS.agentRequestRunning.icon,
+        level: ICONS.agentRequestRunning.level,
+        message: 'Generating...',
+        timestamp: new Date(),
+        tags: [SHIMMER_EFFECT_TAG],
+      });
+      insertedRunningPids.add(pid);
+    } else if (process.state === Process.State.RUNNING && builder.hasBranch(process.pid)) {
+      builder.addCommit({
+        id: `running:${process.pid}`,
+        branch: process.pid,
+        parents: builder.computeParents(
+          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+        ),
+        icon: ICONS.processRunning.icon,
+        level: ICONS.processRunning.level,
+        message: 'Running...',
+        timestamp: new Date(),
+        tags: [SHIMMER_EFFECT_TAG],
+      });
+      insertedRunningPids.add(pid);
+    }
+  };
+
+  const emitEventCommit = (span: Span, event: Trace.FlatEvent, eventIndex: number): void => {
     const presentation = presentEvent(event, toolCallContext);
     if (!presentation) {
-      continue;
+      return;
     }
 
     // Classify based on event TYPE, not array index. A pending span's trailing
@@ -592,11 +683,16 @@ const spanTreeToCommits = (
     const isBeginEvent = isSpanBeginEvent(event);
     const isEndEvent = isSpanEndEvent(event);
     const parentSpan = findParentSpan(span);
-    const collapsible = isCollapsibleSpan(span, parentSpan);
+    const collapsible = isCollapsibleSpan(span, parentSpan, collapseCompletedSpans);
 
-    // Collapsed spans: skip the begin event entirely; only the end event renders.
-    if (collapsible && isBeginEvent) {
-      continue;
+    // Descendants of a collapsed span emit no commits — inner activity is folded into the ancestor end row.
+    if (isUnderCollapsedAncestor(span)) {
+      return;
+    }
+
+    // Collapsed spans: skip every event except the end commit.
+    if (collapsible && !isEndEvent) {
+      return;
     }
 
     const parentBranch = branchOf(parentSpan);
@@ -610,7 +706,7 @@ const spanTreeToCommits = (
     // mid-stream would flash a throwaway lane.
     const ownPid = span.meta.pid;
     const parentPid = parentSpan?.meta.pid;
-    const spanHasMiddle = span.events.some((event) => !isSpanBeginEvent(event) && !isSpanEndEvent(event));
+    const spanHasMiddle = span.events.some((spanEvent) => !isSpanBeginEvent(spanEvent) && !isSpanEndEvent(spanEvent));
     const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid && spanHasMiddle;
 
     let branch: string;
@@ -660,7 +756,9 @@ const spanTreeToCommits = (
       parents = builder.computeParents(lastInSpanContext(span));
     }
 
-    const commitId = formatCommitId(span, globalIndex, presentation.idSuffix);
+    const commitIndex = globalIndex++;
+    const commitId = formatCommitId(span, commitIndex, presentation.idSuffix);
+    const shimmer = shouldShimmerInProgressCommit(event, toolCallContext);
     const commit: Commit = {
       id: commitId,
       branch,
@@ -669,47 +767,65 @@ const spanTreeToCommits = (
       icon: presentation.icon,
       level: presentation.level,
       message: presentation.message,
+      ...(shimmer && { tags: [SHIMMER_EFFECT_TAG] }),
     };
     builder.addCommit(commit);
     details[commitId] = event;
+    lastCommitIdBySpan.set(span.id, commitId);
 
     // Record begin commit so a later end event can merge into it.
     if (isBeginEvent && !collapsible && span.id !== ROOT_SPAN_ID) {
       beginCommitIdBySpan.set(span.id, commitId);
     }
-  }
+  };
 
-  // Append "running" indicators for processes that are still active.
-  for (const process of activeProcesses) {
-    if (
-      process.key === AGENT_PROCESS_KEY &&
-      Option.isSome(Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation)) &&
-      (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
-    ) {
-      builder.addCommit({
-        id: `running:${process.pid}`,
-        branch: process.pid,
-        parents: builder.computeParents(
-          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
-        ),
-        icon: ICONS.agentRequestRunning.icon,
-        level: ICONS.agentRequestRunning.level,
-        message: 'Generating...',
-        timestamp: new Date(),
-      });
-    } else if (process.state === Process.State.RUNNING && builder.hasBranch(process.pid)) {
-      builder.addCommit({
-        id: `running:${process.pid}`,
-        branch: process.pid,
-        parents: builder.computeParents(
-          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
-        ),
-        icon: ICONS.processRunning.icon,
-        level: ICONS.processRunning.level,
-        message: 'Running...',
-        timestamp: new Date(),
-      });
+  const finishSpan = (span: Span): void => {
+    const pid = span.meta.pid;
+    if (pid) {
+      // Trace.Meta.pid is plain string (avoids circular dep); construct brand here.
+      emitRunningIndicator(Process.ID.make(pid));
     }
+
+    if (span.id === ROOT_SPAN_ID || isCompletedSpan(span)) {
+      return;
+    }
+
+    if (pid && insertedRunningPids.has(pid)) {
+      return;
+    }
+
+    const lastCommitId = lastCommitIdBySpan.get(span.id);
+    if (lastCommitId) {
+      builder.addTag(lastCommitId, SHIMMER_EFFECT_TAG);
+    }
+  };
+
+  const emitSpanCommits = (span: Span): void => {
+    for (let eventIndex = 0; eventIndex < span.events.length; eventIndex += 1) {
+      const event = span.events[eventIndex]!;
+      if (isSpanBeginEvent(event)) {
+        emitEventCommit(span, event, eventIndex);
+      }
+    }
+
+    for (const child of span.children) {
+      emitSpanCommits(child);
+    }
+
+    for (let eventIndex = 0; eventIndex < span.events.length; eventIndex += 1) {
+      const event = span.events[eventIndex]!;
+      if (!isSpanBeginEvent(event)) {
+        emitEventCommit(span, event, eventIndex);
+      }
+    }
+
+    finishSpan(span);
+  };
+
+  emitSpanCommits(root);
+
+  for (const process of activeProcesses) {
+    emitRunningIndicator(process.pid);
   }
 
   const { commits, branches } = builder.build();
@@ -877,6 +993,18 @@ class GraphBuilder {
   addCommit(commit: Commit) {
     this.addBranch(commit.branch);
     this.#commits.push(commit);
+  }
+
+  addTag(commitId: string, tag: string) {
+    const index = this.#commits.findIndex((commit) => commit.id === commitId);
+    if (index < 0) {
+      return;
+    }
+    const commit = this.#commits[index]!;
+    if (commit.tags?.includes(tag)) {
+      return;
+    }
+    this.#commits[index] = { ...commit, tags: [...(commit.tags ?? []), tag] };
   }
 
   /**

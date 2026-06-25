@@ -22,6 +22,7 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
 
@@ -61,6 +62,33 @@ const vacuumDatabase = (sqlite3: ReturnType<typeof WaSqlite.Factory>, db: number
 const importDatabase = (sqlite3: ReturnType<typeof WaSqlite.Factory>, db: number, data: Uint8Array): void => {
   sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
   vacuumDatabase(sqlite3, db);
+};
+
+const recordSqliteQueryMetrics = (
+  sql: string,
+  params: ReadonlyArray<unknown>,
+  resultCount: number,
+  begin: number,
+): void => {
+  const end = performance.now();
+  log('sqlite query', { sql, params, results: resultCount, time: end - begin });
+  performance.measure(sql.slice(0, 128), {
+    start: begin,
+    end: end,
+    detail: {
+      devtools: {
+        dataType: 'track-entry',
+        track: 'Query',
+        trackGroup: 'SQlite',
+        color: 'tertiary-dark',
+        properties: [
+          ['sql', sql],
+          ['params', params],
+          ['resultCount', resultCount],
+        ],
+      },
+    },
+  });
 };
 
 /** In-process OPFS SQLite client for dedicated worker contexts (no MessagePort). */
@@ -106,6 +134,7 @@ export const makeOpfs = (
         Effect.try({
           try: () => {
             const results: Array<any> = [];
+            const begin = performance.now();
             for (const stmt of sqlite3.statements(db, sql)) {
               let columns: Array<string> | undefined;
               // wa-sqlite bind_collection is typed for SQLiteCompatibleType[] only.
@@ -124,9 +153,13 @@ export const makeOpfs = (
                 }
               }
             }
+            recordSqliteQueryMetrics(sql, params, results.length, begin);
             return results;
           },
-          catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' }),
+          catch: (cause) => {
+            log('sqlite error', { error: cause, sql, params });
+            return new SqlError.SqlError({ cause, message: 'Failed to execute statement' });
+          },
         });
 
       return identity<Connection>({
@@ -139,6 +172,8 @@ export const makeOpfs = (
         },
         executeStream: (sql, params, rowTransform) => {
           const stream = function* () {
+            const begin = performance.now();
+            let resultCount = 0;
             for (const stmt of sqlite3.statements(db, sql)) {
               let columns: Array<string> | undefined;
               sqlite3.bind_collection(stmt, params as any);
@@ -149,16 +184,21 @@ export const makeOpfs = (
                 for (let index = 0; index < columns!.length; index++) {
                   obj[columns![index]] = row[index];
                 }
+                resultCount++;
                 yield obj;
               }
             }
+            recordSqliteQueryMetrics(sql, params, resultCount, begin);
           };
 
           return Stream.suspend(() => Stream.fromIteratorSucceed(stream()[Symbol.iterator]())).pipe(
             rowTransform
               ? Stream.mapChunks((chunk) => Chunk.unsafeFromArray(rowTransform(Chunk.toReadonlyArray(chunk))))
               : identity,
-            Stream.mapError((cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' })),
+            Stream.mapError((cause) => {
+              log('sqlite error', { error: cause, sql, params });
+              return new SqlError.SqlError({ cause, message: 'Failed to execute statement' });
+            }),
           );
         },
         export: Effect.try({
@@ -167,7 +207,10 @@ export const makeOpfs = (
         }),
         import: (data: Uint8Array) =>
           Effect.try({
-            try: () => importDatabase(sqlite3, db, data),
+            try: () => {
+              log('opfs import', { bytes: data.byteLength });
+              importDatabase(sqlite3, db, data);
+            },
             catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to import database' }),
           }),
       });
