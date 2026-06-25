@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Instructions, Skill } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -27,9 +27,12 @@ const types = [Routine.Routine, Instructions.Instructions, Skill.Skill, Text.Tex
 const seed = (space: Space) => {
   const subject = space.db.add(Text.make({ content: 'Meeting notes' }));
 
-  const automation = space.db.add(Routine.make({ name: 'Summarize Notes', triggers: [] }));
-  const routine = space.db.add(Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }));
-  Obj.setParent(routine, automation);
+  space.db.add(
+    Routine.make({
+      name: 'Summarize Notes',
+      instructions: Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }),
+    }),
+  );
 };
 
 const withCompanion = () =>

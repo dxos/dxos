@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useMemo } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -48,7 +48,7 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
   /** Message shown when there are no items. */
   emptyLabel?: string;
   /** Detail pane content (selected item's form, draft form, …); rendered below the list. */
-  detail?: string;
+  detail?: ReactNode;
 }>;
 
 /** Selectable master list (with an optional per-row overflow menu) above a parent-supplied detail pane. */

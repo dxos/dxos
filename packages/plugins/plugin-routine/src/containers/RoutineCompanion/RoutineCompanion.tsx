@@ -234,8 +234,8 @@ const RoutineCompanionImpl = ({
 
   // Row label, reactive per row via the object's label atom, so a rename updates the row live.
   const getLabel = useCallback(
-    (get: Atom.Context, routine: Routine.Routine) =>
-      get(Obj.labelAtom(routine)) || t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) }),
+    (get: Atom.Context, routine: Routine.Routine): string =>
+      get(Obj.labelAtom(routine)) || t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) }) || '',
     [t],
   );
 
