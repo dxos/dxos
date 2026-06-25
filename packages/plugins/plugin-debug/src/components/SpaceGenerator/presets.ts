@@ -786,7 +786,7 @@ const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeMode
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
   Obj.update(functionTrigger, (functionTrigger) => {
-    // ComputeGraph is a valid runnable but not yet in the Runnable union type.
+    // TODO(wittjosiah): Widen Runnable union to include ComputeGraph and remove cast.
     functionTrigger.runnable = Ref.make(computeModel.root) as any;
     functionTrigger.inputNodeId = inputNode.id;
   });
