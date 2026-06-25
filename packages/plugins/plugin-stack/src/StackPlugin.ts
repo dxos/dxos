@@ -8,13 +8,13 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { StackViewType } from '#types';
+import { Stack } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StackPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [StackViewType] }),
+  AppPlugin.addSchemaModule({ schema: [Stack.Stack] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({

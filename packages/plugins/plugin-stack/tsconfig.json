@@ -25,6 +25,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -55,6 +58,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
@@ -71,6 +77,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-sketch"
     },
     {
       "path": "../plugin-space"
