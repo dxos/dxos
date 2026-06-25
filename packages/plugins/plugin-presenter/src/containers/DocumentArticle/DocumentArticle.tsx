@@ -22,8 +22,8 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
   return (
     <Panel.Root role={role} classNames='relative'>
       <Panel.Content asChild>
-        <PresentationShell onExit={handleExit}>
-          <RevealPlayer content={document.content.target?.content ?? ''} fullscreen={fullscreen} />
+        <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
+          <RevealPlayer fullscreen={fullscreen} content={document.content.target?.content ?? ''} />
         </PresentationShell>
       </Panel.Content>
     </Panel.Root>

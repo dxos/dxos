@@ -149,10 +149,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: [
-            'dx-container grid place-items-center bg-scrim-surface border',
-            fullscreen && 'absolute inset-0',
-          ],
+          classNames: ['dx-container grid place-items-center bg-scrim-surface', fullscreen && 'absolute inset-0'],
         })}
         ref={forwardedRef}
       >
@@ -168,6 +165,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
               />
             </style>
             <div className={mx('slides', !fullscreen && 'bg-base-surface p-8')}>
+              <div />
               <section {...{ 'data-markdown': [] }}>
                 <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
               </section>
