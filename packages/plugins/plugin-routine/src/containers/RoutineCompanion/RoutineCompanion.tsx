@@ -14,7 +14,6 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
-import { getStyles } from '@dxos/ui-theme';
 
 import { RoutineForm, MasterDetail, type MasterDetailIcon } from '#components';
 import { meta } from '#meta';
@@ -230,7 +229,7 @@ const RoutineCompanionImpl = ({
   const getIcon = useCallback((get: Atom.Context, routine: Routine.Routine): MasterDetailIcon => {
     const { icon, hue } = Obj.getIcon(routine) ?? { icon: 'ph--lightning--regular', hue: undefined };
     const { enabled } = getRoutineEnabled(get, routine);
-    return { icon, classNames: enabled && hue ? getStyles(hue).text : undefined };
+    return { icon, hue: enabled ? hue : undefined };
   }, []);
 
   // Row label, reactive per row via the object's label atom, so a rename updates the row live.

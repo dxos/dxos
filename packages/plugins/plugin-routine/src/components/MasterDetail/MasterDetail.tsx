@@ -8,7 +8,7 @@ import React, { type ReactNode, useMemo } from 'react';
 import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -19,8 +19,8 @@ import { meta } from '#meta';
 
 export type MasterDetailRecord = { id: string };
 
-/** A row's leading icon: a Phosphor icon name plus optional colour classes (e.g. a hue text class). */
-export type MasterDetailIcon = { icon: string; classNames?: string };
+/** A row's leading icon: same shape as {@link Obj.getIcon} — a Phosphor icon name and an optional hue. */
+export type MasterDetailIcon = { icon: string; hue?: string };
 
 const EMPTY_MENU: ActionGraphProps = { nodes: [], edges: [] };
 
@@ -131,7 +131,9 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
       classNames='flex items-center cursor-pointer pis-2 min-bs-[--dx-rail-item]'
       onClick={() => onSelect?.(selected ? undefined : item.id)}
     >
-      {icon && <Icon icon={icon.icon} size={4} classNames={mx('mie-2 shrink-0', icon.classNames)} />}
+      {icon && (
+        <Icon icon={icon.icon} size={4} classNames={mx('mie-2 shrink-0', icon.hue && getStyles(icon.hue).text)} />
+      )}
       <span className='grow truncate'>{label}</span>
       {getMenu && (
         <Menu.Root {...menu}>
