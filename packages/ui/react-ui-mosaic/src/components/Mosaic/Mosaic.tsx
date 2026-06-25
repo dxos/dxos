@@ -9,6 +9,7 @@ import {
   type MosaicScrollController,
   useMosaicContainerContext,
 } from './Container';
+import { MosaicDragHandle, type MosaicDragHandleProps } from './DragHandle';
 import {
   MosaicDropIndicator,
   type MosaicDropIndicatorProps,
@@ -28,6 +29,7 @@ export const Mosaic = {
   Root: MosaicRoot,
   Container: MosaicContainer,
   Tile: MosaicTile,
+  DragHandle: MosaicDragHandle,
   ResizeHandle: MosaicResizeHandle,
   Placeholder: MosaicPlaceholder,
   DropIndicator: MosaicDropIndicator,
@@ -38,6 +40,7 @@ export const Mosaic = {
 export type {
   MosaicRootProps,
   MosaicContainerProps,
+  MosaicDragHandleProps,
   MosaicContainerState,
   MosaicScrollController,
   MosaicTileProps,

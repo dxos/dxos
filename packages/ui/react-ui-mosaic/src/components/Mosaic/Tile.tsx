@@ -44,6 +44,8 @@ type MosaicTileState =
 
 type MosaicTileContextValue = {
   state: MosaicTileState;
+  /** Register the element that initiates dragging; set by a child `Mosaic.DragHandle`. */
+  setDragHandle: (element: HTMLElement | null) => void;
   /** Current extent (rem) during/after resize; undefined when the tile is not sized. */
   size?: Size;
   /** Update the tile extent. A `commit` (drop) propagates to the consumer's `onSizeChange`. */
@@ -92,7 +94,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
     {
       children,
       asChild,
-      dragHandle,
+      dragHandle: dragHandleProp,
       allowedEdges: allowedEdgesProp,
       location,
       id,
@@ -122,6 +124,10 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_TILE_NAME);
     const [state, setState] = useState<MosaicTileState>({ type: 'idle' });
+
+    // A child `Mosaic.DragHandle` registers its element here; an explicit `dragHandle` prop wins.
+    const [registeredDragHandle, setRegisteredDragHandle] = useState<HTMLElement | null>(null);
+    const dragHandle = dragHandleProp ?? registeredDragHandle;
 
     // Live extent during a resize drag. Seeded from the prop; the consumer persists committed
     // sizes via `onSizeChange` and feeds the result back as `size` on the next render.
@@ -254,7 +260,14 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
-      <MosaicTileContextProvider state={state} size={size} setSize={setSize} minSize={minSize} maxSize={maxSize}>
+      <MosaicTileContextProvider
+        state={state}
+        setDragHandle={setRegisteredDragHandle}
+        size={size}
+        setSize={setSize}
+        minSize={minSize}
+        maxSize={maxSize}
+      >
         <Comp
           {...rest}
           {...(bounded && resizeAttributes)}
