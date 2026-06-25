@@ -18,7 +18,7 @@ export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
   }
 
   return (
-    <Panel>
+    <Panel classNames='border'>
       <Slide content={content} />
     </Panel>
   );
