@@ -35,8 +35,9 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 
   const runningAtom = useMemo(() => Atom.make(false), []);
 
-  // The action is the routine's `spec` (an operation or the owned instructions); a routine can run once it has one.
-  const canRun = useMemo(() => Boolean(routine.spec), [routine.spec]);
+  // Require both a spec and at least one trigger: manual runs are attributed to the first trigger
+  // so they appear in history, and without a trigger the run would be invisible there.
+  const canRun = useMemo(() => Boolean(routine.spec) && routine.triggers.length > 0, [routine.spec, routine.triggers]);
 
   const handleRun = useCallback(() => {
     if (!invokePromise || !db) {
