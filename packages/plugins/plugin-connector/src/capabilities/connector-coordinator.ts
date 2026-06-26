@@ -170,7 +170,7 @@ const createSingleBinding = (
       const accessToken = yield* Database.load(connection.accessToken);
       const name = accessToken.account;
       if (name) {
-        Obj.update(target, (obj) => Obj.setLabel(obj, name));
+        Obj.update(target, (target) => Obj.setLabel(target, name));
       }
     } else if (connector.materializeTarget) {
       const { target: materialized } = yield* invoker.invoke(

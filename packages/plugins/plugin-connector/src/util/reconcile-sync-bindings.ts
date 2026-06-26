@@ -79,7 +79,7 @@ export const reconcileSyncBindings = ({
       if (sel === firstNew && existingTarget) {
         target = yield* Database.load(existingTarget);
         if (sel.name) {
-          Obj.update(target, (obj) => Obj.setLabel(obj, sel.name!));
+          Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
         }
       } else if (connector.materializeTarget) {
         const { target: materialized } = yield* invoker.invoke(

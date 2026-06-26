@@ -61,8 +61,8 @@ const findOrCreateCalendar = (remoteId: string, name: string) =>
         return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
       }
       if (candidate.name !== name) {
-        Obj.update(candidate, (cal) => {
-          cal.name = name;
+        Obj.update(candidate, (candidate) => {
+          candidate.name = name;
         });
       }
       return candidate;
