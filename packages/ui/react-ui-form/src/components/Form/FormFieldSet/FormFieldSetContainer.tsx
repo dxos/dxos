@@ -77,8 +77,13 @@ export const FormFieldSetContainer = ({
   // Nested groups render inside an indented, bordered container with a collapse toggle. A non-collapsible
   // group only materializes a wrapper when `classNames` is supplied — otherwise the body flows straight
   // into the parent grid (the default, grid-transparent behavior).
+  // TODO(burdon): This should be styled.
   if (collapsible) {
-    return <div className={mx('border border-subdued-separator rounded-md', classNames)}>{content}</div>;
+    return (
+      <div className='pt-trim-md'>
+        <div className={mx('border border-subdued-separator rounded-sm', classNames)}>{content}</div>
+      </div>
+    );
   }
 
   return <div className={mx(classNames)}>{content}</div>;
