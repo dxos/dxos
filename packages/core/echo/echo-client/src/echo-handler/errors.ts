@@ -49,5 +49,8 @@ export const createArrayMethodError = (method: string): MutationOutsideChangeCon
  * Create an error for attempting a text CRDT mutation outside of a change context.
  */
 export const createTextMethodError = (method: string): MutationOutsideChangeContextError => {
-  return new MutationOutsideChangeContextError(`call ${method} on ECHO object`, `Text.${method}(mutableObj, path, ...);`);
+  return new MutationOutsideChangeContextError(
+    `call ${method} on ECHO object`,
+    `Text.${method}(mutableObj, path, ...);`,
+  );
 };

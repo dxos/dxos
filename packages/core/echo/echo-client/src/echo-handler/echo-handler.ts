@@ -93,7 +93,12 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { createArrayMethodError, createPropertyDeleteError, createPropertySetError, createTextMethodError } from './errors';
+import {
+  createArrayMethodError,
+  createPropertyDeleteError,
+  createPropertySetError,
+  createTextMethodError,
+} from './errors';
 
 /**
  * Shared for all targets within one ECHO object.

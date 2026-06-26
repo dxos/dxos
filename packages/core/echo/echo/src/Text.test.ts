@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import * as Obj from './Obj';
-import * as Text from './Text';
 import { TestSchema } from './testing';
+import * as Text from './Text';
 
 describe('Text', () => {
   describe('update', () => {
@@ -132,10 +132,7 @@ describe('Text', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'hello' });
       let result = '';
       Obj.update(obj, () => {
-        result = Text.applyEdits(obj, 'name', [
-          { oldString: 'hello', newString: 'hi' },
-          { newString: ' there' },
-        ]);
+        result = Text.applyEdits(obj, 'name', [{ oldString: 'hello', newString: 'hi' }, { newString: ' there' }]);
       });
       expect(result).toBe('hi there');
       expect(Obj.getValue(obj, ['name'])).toBe('hi there');

@@ -28,7 +28,13 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
    * `deleteCount` characters at `start` and insert `insert`. Returns the removed substring. `Text.splice`
    * dispatches here. Must run inside a change context (`Obj.update`).
    */
-  textSplice?(target: T, path: readonly (string | number)[], start: number, deleteCount: number, insert: string): string;
+  textSplice?(
+    target: T,
+    path: readonly (string | number)[],
+    start: number,
+    deleteCount: number,
+    insert: string,
+  ): string;
 }
 
 /**
