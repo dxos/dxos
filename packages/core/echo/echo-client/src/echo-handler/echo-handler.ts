@@ -786,12 +786,23 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     const target = slot.target as ProxyTarget;
     core.rootSchema = type;
-    // Preserve the object's existing Event so reactive subscriptions established
-    // while it was an in-memory typed object keep firing once it becomes
-    // database-backed. Re-point the target's prototype at the ECHO `instanceState`;
-    // the previous handler's per-object accessors go away with the old prototype.
-    // Own-property metadata it left behind is stripped after migration (below).
-    adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: target[EventId] }));
+    // Preserve the object's existing Event so reactive subscriptions established while it was an
+    // in-memory typed object keep firing once it becomes database-backed.
+    const existingEvent = target[EventId];
+    // The previous (typed) handler keeps this object's metadata on its instance-state prototype.
+    // Re-pointing the prototype below would detach it, but the migration that follows
+    // (`initCore`, `setRelationSourceAndTarget`, `rebindRelationEndpoints`) reads parent/relation
+    // endpoints off the target — so flatten that metadata onto the target as own properties first.
+    // Shadowing copies are removed by `stripShadowingProperties` once migrated into the document.
+    const previousState = Object.getPrototypeOf(target);
+    if (previousState != null) {
+      for (const symbol of Object.getOwnPropertySymbols(previousState)) {
+        if (!Object.prototype.hasOwnProperty.call(target, symbol)) {
+          Object.defineProperty(target, symbol, Object.getOwnPropertyDescriptor(previousState, symbol)!);
+        }
+      }
+    }
+    adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent }));
     slot.handler._proxyMap.set(target, obj);
 
     core.subscriptions.push(

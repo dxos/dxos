@@ -27,7 +27,14 @@ import {
   wouldCreateCycle,
 } from './ownership';
 import { type ReactiveHandler, objectData } from './proxy-types';
-import { createProxy, isProxy, isValidProxyTarget, symbolIsProxy } from './proxy-utils';
+import {
+  createProxy,
+  isProxy,
+  isReactiveRecord,
+  isValidProxyTarget,
+  symbolIsProxy,
+  symbolReactivePrototype,
+} from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
 import { SchemaValidator } from './schema-validator';
 import { ChangeId, EventId } from './symbols';
@@ -92,9 +99,10 @@ const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
     return copy as T;
   }
 
-  // Don't copy other class instances (objects with non-Object prototype).
+  // Don't copy other class instances (objects with non-Object prototype). A reactive record
+  // (its metadata moved onto a behaviour prototype) still counts as a plain data record here.
   const proto = Object.getPrototypeOf(actualValue);
-  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) {
+  if (proto !== Array.prototype && proto !== null && !isReactiveRecord(actualValue)) {
     return value; // Return as-is, don't copy class instances.
   }
 
@@ -128,6 +136,35 @@ const copyHiddenProperties = (source: any, target: any): void => {
   if (TypeId in source) {
     defineHiddenProperty(target, TypeId, source[TypeId]);
   }
+};
+
+/**
+ * Behaviour prototype for typed reactive records. A record's per-object metadata is moved onto an
+ * intermediate instance-state object whose prototype is this, so that swapping the handler that
+ * backs an object (e.g. an in-memory object becoming database-backed) is a prototype re-point that
+ * doesn't perturb the target's own-property shape. Marked as a reactive prototype so the "plain
+ * object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
+ */
+const TypedObjectPrototype: object = Object.create(Object.prototype);
+defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
+
+/**
+ * Move a record's per-object metadata (symbol-keyed hidden properties) onto a fresh instance-state
+ * object inserted between the target and {@link TypedObjectPrototype}. The target keeps only its
+ * user data as own properties. Arrays are exempt — they keep their own (ReactiveArray) prototype chain.
+ */
+const compactMetadataToInstanceState = (target: ProxyTarget): void => {
+  if (Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) {
+    return;
+  }
+  const state = Object.create(TypedObjectPrototype);
+  for (const symbol of Object.getOwnPropertySymbols(target)) {
+    Object.defineProperty(state, symbol, Object.getOwnPropertyDescriptor(target, symbol)!);
+    // Dynamic delete over arbitrary symbol keys: `ProxyTarget` declares these as required, so the
+    // statically-typed view cannot express deleting them; the symbol set is only known at runtime.
+    delete (target as any)[symbol];
+  }
+  Object.setPrototypeOf(target, state);
 };
 
 /**
@@ -192,6 +229,18 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       configurable: true,
       value: this._inspect.bind(target),
     });
+
+    // Relocate per-object metadata onto an instance-state prototype, leaving only user data as own
+    // properties on the target. Done last so all metadata set above (and by `prepareTypedTarget`) moves.
+    compactMetadataToInstanceState(target);
+  }
+
+  /**
+   * Hide the internal instance-state prototype so consumers see a plain object; arrays keep their
+   * real (ReactiveArray) prototype.
+   */
+  getPrototypeOf(target: ProxyTarget): object | null {
+    return Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype;
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
