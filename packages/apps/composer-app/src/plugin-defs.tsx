@@ -36,6 +36,7 @@ import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
+import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
@@ -209,6 +210,7 @@ export const getPlugins = ({
     DiscordPlugin(),
     DoctorPlugin(),
     DuffelPlugin(),
+    IbkrPlugin(),
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),

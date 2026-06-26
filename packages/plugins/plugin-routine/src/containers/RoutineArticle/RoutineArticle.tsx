@@ -35,13 +35,18 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 
   const runningAtom = useMemo(() => Atom.make(false), []);
 
-  // The action is the routine's `spec` (an operation or the owned instructions); a routine can run once it has one.
-  const canRun = useMemo(() => Boolean(routine.spec), [routine.spec]);
+  // Require both a spec and at least one trigger: manual runs are attributed to the first trigger
+  // so they appear in history, and without a trigger the run would be invisible there.
+  const canRun = useMemo(() => Boolean(routine.spec) && routine.triggers.length > 0, [routine.spec, routine.triggers]);
 
   const handleRun = useCallback(() => {
     if (!invokePromise || !db) {
       return;
     }
+    // Thread the routine's first trigger as trace attribution so the run appears in history.
+    // Manual runs bypass the trigger dispatcher (which normally stamps meta.trigger), so we
+    // do it here — history filters on trigger entity id, and without this the run is invisible.
+    const triggerRef = routine.triggers[0];
     registry.set(runningAtom, true);
     void invokePromise(
       RoutineOperation.RunRoutine,
@@ -49,9 +54,10 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
       {
         spaceId: db.spaceId,
         notify: { error: ['run-error.message', { ns: meta.profile.key }] },
+        ...(triggerRef ? { tracing: { trigger: triggerRef } } : {}),
       },
     ).finally(() => registry.set(runningAtom, false));
-  }, [invokePromise, db, subject, registry, runningAtom]);
+  }, [invokePromise, db, subject, routine, registry, runningAtom]);
 
   const menuActions = useArticleMenuActions({ canRun, runningAtom, handleRun });
 

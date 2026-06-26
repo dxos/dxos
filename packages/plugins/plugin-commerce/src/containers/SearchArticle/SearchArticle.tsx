@@ -11,6 +11,7 @@ import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -155,9 +156,10 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <div className='flex items-center justify-center h-full text-subdued text-sm'>
-              {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            </div>
+            <Empty
+              classNames='bs-full'
+              label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
+            />
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content thin centered padding>

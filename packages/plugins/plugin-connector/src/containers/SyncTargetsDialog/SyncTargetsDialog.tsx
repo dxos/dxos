@@ -11,6 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Input, List, ListItem, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Empty } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -123,7 +124,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         )}
 
         {availableTargets.length === 0 ? (
-          <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
+          <Empty label={t('no-available-targets.message')} />
         ) : (
           <ScrollArea.Root classNames='my-4' padding>
             <ScrollArea.Viewport>

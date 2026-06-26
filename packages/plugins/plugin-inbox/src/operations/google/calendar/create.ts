@@ -9,6 +9,12 @@ import * as Effect from 'effect/Effect';
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
+// Connection and Event are referenced in the inferred type of this module's default export via
+// InboxOperation.CreateGoogleCalendarEvent's schema; the import lets TypeScript name them in .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Connection } from '@dxos/plugin-connector';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GoogleCredentials } from '../../../services/google-credentials';

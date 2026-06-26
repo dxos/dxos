@@ -11,7 +11,7 @@ import { translations } from '#translations';
 
 import { Schedule, type ScheduleValue } from './Schedule';
 
-const DefaultStory = ({ initial }: { initial: ScheduleValue }) => {
+const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInterval?: number }) => {
   const [value, setValue] = useState<ScheduleValue>(initial);
 
   return (
@@ -19,6 +19,7 @@ const DefaultStory = ({ initial }: { initial: ScheduleValue }) => {
       <Schedule.Root
         classNames='bg-card-surface border border-separator rounded-sm p-2'
         timezone='EDT'
+        minInterval={minInterval}
         value={value}
         onValueChange={setValue}
       >
@@ -64,4 +65,9 @@ export const Monthly: Story = {
 
 export const Custom: Story = {
   args: { initial: { kind: 'custom', cron: '0 9 * * MON-FRI' } },
+};
+
+// A 5-minute minimum clamps a too-frequent custom cron (`* * * * *` -> `*/5 * * * *`).
+export const MinInterval: Story = {
+  args: { initial: { kind: 'custom', cron: '* * * * *' }, minInterval: 300 },
 };

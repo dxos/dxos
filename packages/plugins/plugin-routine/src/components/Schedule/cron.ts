@@ -176,6 +176,140 @@ export const scheduleToCron = (value: ScheduleValue): string | undefined => {
   }
 };
 
+//
+// Minimum-interval constraint.
+//
+
+const MINUTE_SECONDS = 60;
+const HOUR_SECONDS = 60 * 60;
+const DAY_SECONDS = 24 * HOUR_SECONDS;
+
+/** Upper bound for a Schedule minimum interval: a 5-field cron's coarsest single-field cadence is hourly. */
+export const MAX_MIN_INTERVAL_SECONDS = HOUR_SECONDS;
+
+/** Parses a comma-separated list of bounded integers; returns undefined if any token is not a plain integer in range. */
+const parseList = (field: string, min: number, max: number): number[] | undefined => {
+  const tokens = field.split(',');
+  const values = tokens
+    .map((token) => parseBoundedUInt(token, min, max))
+    .filter((value): value is number => value !== undefined);
+  return values.length === tokens.length && values.length > 0 ? values : undefined;
+};
+
+/**
+ * Smallest cyclic gap between values in a field whose domain wraps at `span` (60 for minutes, 24 for hours),
+ * or Infinity for a single value. The wrap is required so e.g. minutes `0,59` register their 1-unit gap
+ * (59 → 0 of the next cycle), not just the 59-unit one.
+ */
+const minGap = (values: number[], span: number): number => {
+  const sorted = [...new Set(values)].sort((lhs, rhs) => lhs - rhs);
+  if (sorted.length <= 1) {
+    return Number.POSITIVE_INFINITY;
+  }
+  let gap = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < sorted.length; index++) {
+    const next = index === sorted.length - 1 ? sorted[0] + span : sorted[index + 1];
+    gap = Math.min(gap, next - sorted[index]);
+  }
+  return gap;
+};
+
+/** Step value of a `*\/N`, `M/N`, or `A-B/N` field (the cadence between fires), or undefined if not a step form. */
+const parseStep = (field: string, max: number): number | undefined => {
+  const match = field.match(/^(?:\*|\d+(?:-\d+)?)\/(\d+)$/);
+  return match ? parseBoundedUInt(match[1], 1, max) : undefined;
+};
+
+/** Minimum seconds between fires implied by a cron's hour field (independent of minute granularity). */
+const hourIntervalSeconds = (hour: string): number => {
+  const step = parseStep(hour, 23);
+  if (step !== undefined) {
+    return step * HOUR_SECONDS;
+  }
+  if (hour === '*') {
+    return HOUR_SECONDS;
+  }
+  const hours = parseList(hour, 0, 23);
+  if (hours) {
+    return hours.length > 1 ? minGap(hours, 24) * HOUR_SECONDS : DAY_SECONDS;
+  }
+  return Number.POSITIVE_INFINITY;
+};
+
+/**
+ * Best-effort minimum seconds between consecutive fires of a 5-field cron expression. Recognises the patterns
+ * a too-frequent schedule can take (`* …`, `*\/N …`, explicit minute/hour lists); returns Infinity for
+ * expressions it cannot analyse, so unrecognised crons are treated as satisfying any minimum.
+ */
+export const cronIntervalSeconds = (cron: string): number => {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const [minute, hour] = parts;
+  const minuteStep = parseStep(minute, 59);
+  if (minuteStep !== undefined) {
+    return minuteStep * MINUTE_SECONDS;
+  }
+  if (minute === '*') {
+    return MINUTE_SECONDS;
+  }
+
+  const minutes = parseList(minute, 0, 59);
+  if (minutes) {
+    const minuteGap = minutes.length > 1 ? minGap(minutes, 60) * MINUTE_SECONDS : Number.POSITIVE_INFINITY;
+    return Math.min(minuteGap, hourIntervalSeconds(hour));
+  }
+
+  return Number.POSITIVE_INFINITY;
+};
+
+/**
+ * Rewrites a cron's minute field so it fires no more often than `minIntervalSeconds`. Used to clamp a custom
+ * expression; leaves non-5-field expressions untouched since their cadence cannot be reasoned about.
+ */
+const clampCronMinute = (cron: string, minIntervalSeconds: number): string => {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) {
+    return cron;
+  }
+  const stepMinutes = Math.ceil(minIntervalSeconds / MINUTE_SECONDS);
+  // A step that spans the whole minute range fires only at minute 0; express that as the hourly cadence.
+  parts[0] = stepMinutes >= 60 ? '0' : `*/${stepMinutes}`;
+  return parts.join(' ');
+};
+
+/** Minimum seconds between fires for a recurring {@link ScheduleValue}. */
+export const scheduleIntervalSeconds = (value: ScheduleValue): number => {
+  switch (value.kind) {
+    case 'hourly':
+      return HOUR_SECONDS;
+    case 'daily':
+      return DAY_SECONDS;
+    // Consecutive selected weekdays sit one day apart at closest.
+    case 'weekly':
+      return DAY_SECONDS;
+    // Approximate the shortest month to stay conservative.
+    case 'monthly':
+      return 28 * DAY_SECONDS;
+    case 'custom':
+      return cronIntervalSeconds(value.cron);
+  }
+};
+
+/**
+ * Coerces a schedule so it fires no more often than `minIntervalSeconds`. Only `custom` expressions can exceed
+ * the limit (structured kinds are hourly or slower), so clamping rewrites the cron's minute field; all other
+ * values pass through unchanged.
+ */
+export const clampSchedule = (value: ScheduleValue, minIntervalSeconds: number): ScheduleValue => {
+  if (value.kind !== 'custom' || cronIntervalSeconds(value.cron) >= minIntervalSeconds) {
+    return value;
+  }
+  return { kind: 'custom', cron: clampCronMinute(value.cron, minIntervalSeconds) };
+};
+
 /**
  * Convert a cron expression to a recurring {@link ScheduleValue}. Patterns that Schedule cannot model exactly
  * (sub-hourly intervals, multi-day months, etc.) fall back to the `custom` kind preserving the raw expression.

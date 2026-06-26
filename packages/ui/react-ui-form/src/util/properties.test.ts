@@ -16,10 +16,12 @@ import { getFormProperties, getRootFormProperties } from './properties';
 
 describe('getFormProperties', () => {
   test('filters out keyword fields annotated FormInputAnnotation.set(false)', ({ expect }) => {
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      hidden: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.keywordHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.keywordHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        hidden: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -30,10 +32,12 @@ describe('getFormProperties', () => {
     // Regression: JsonSchema fields are a Schema.Struct; encodedBoundAST strips
     // annotations from non-keyword inner types, which previously bypassed the
     // form-input filter (e.g., Routine.input).
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      schema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.structHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.structHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        schema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -41,10 +45,12 @@ describe('getFormProperties', () => {
   });
 
   test('filters out array fields annotated FormInputAnnotation.set(false)', ({ expect }) => {
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.arrayHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.arrayHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -56,10 +62,12 @@ describe('getFormProperties', () => {
     // annotation lives on the inner `T`. Without unwrapping, the filter would
     // miss the annotation and the hidden field would render. Covers the
     // conventional pattern `Schema.X.pipe(FormInputAnnotation.set(false), Schema.optional)`.
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.optionalHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.optionalHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -77,12 +85,14 @@ describe('getFormProperties', () => {
       geometry: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false)),
     });
     const Route = Schema.Struct({ legs: Schema.Array(Leg) });
-    const TestSchema = Schema.Struct({
-      details: Schema.Union(
-        Schema.TaggedStruct('road', { routes: Schema.optional(Schema.Array(Route)) }),
-        Schema.TaggedStruct('other', { note: Schema.optional(Schema.String) }),
-      ),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.nestedHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.nestedHidden', '0.1.0'))(
+      Schema.Struct({
+        details: Schema.Union(
+          Schema.TaggedStruct('road', { routes: Schema.optional(Schema.Array(Route)) }),
+          Schema.TaggedStruct('other', { note: Schema.optional(Schema.String) }),
+        ),
+      }),
+    );
 
     // Drill as the form does: getFormProperties at each level, descending via the property type
     // (array element / type literal) returned by the previous level.
@@ -112,12 +122,14 @@ describe('getFormProperties', () => {
   test('preserves annotation when chained with .annotations()', ({ expect }) => {
     // Regression: `.pipe(FormInputAnnotation.set(false)).annotations({...})` must
     // not lose the form-input annotation.
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
-        description: 'Hidden field',
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+          description: 'Hidden field',
+        }),
       }),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0')));
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');

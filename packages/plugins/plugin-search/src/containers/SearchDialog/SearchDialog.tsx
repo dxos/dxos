@@ -78,17 +78,17 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
           <SearchList.Viewport classNames='max-h-[24rem]'>
+            {query && allResults.length === 0 && <SearchList.Empty />}
             {allResults.map((result) => (
               <SearchList.Item
                 key={result.id}
                 classNames='flex gap-2 items-center'
+                icon={result.icon}
                 value={result.id}
                 label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
-                icon={result.icon}
                 onSelect={() => void handleSelect(result)}
               />
             ))}
-            {query && allResults.length === 0 && <SearchList.Empty />}
           </SearchList.Viewport>
         </SearchList.Root>
       </Dialog.Body>

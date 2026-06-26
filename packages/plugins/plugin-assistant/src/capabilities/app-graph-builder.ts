@@ -162,7 +162,7 @@ export default Capability.makeModule(
                 position: Position.first,
               }),
             ];
-          }),
+          }).pipe(Effect.orDie),
       }),
 
       GraphBuilder.createExtension({

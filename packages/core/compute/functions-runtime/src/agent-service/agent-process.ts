@@ -20,6 +20,7 @@ import {
   AgentRequestBegin,
   AgentRequestEnd,
   HarnessControl,
+  SkillHooks,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -31,10 +32,9 @@ import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { ContentBlock, Message } from '@dxos/types';
+import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
@@ -62,12 +62,6 @@ interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * When provided, inspects session plan state before `ctx.succeed()` and may run an ephemeral
-   * stop/continue check when open tasks remain.
-   */
-  completionGuard?: CompletionGuard;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -129,25 +123,49 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // into the conversation on completion. Absent (the default), the process behaves as a plain
         // conversational agent.
         const strategy = Option.fromNullable(options.delegationStrategy);
-        const completionGuard = Option.fromNullable(options.completionGuard);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
+
+        const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+
+        // Fire end-request hooks declared by the bound skills (e.g. the planning plan-reminder).
+        // Each hook runs as a child operation with `conversation` set, so it resolves the full
+        // HarnessService (Tier B) and can enqueue a continuation back onto this host's queue — which
+        // keeps the process alive past this turn.
+        const runEndRequestHooks = Effect.gen(function* () {
+          yield* SkillHooks.runHooks({
+            skills: session.context.getSkills(),
+            phase: 'end-request',
+            invoke: (operation, input) =>
+              Effect.gen(function* () {
+                const fiber = yield* operationInvoker.invokeFiber(operation, input, {
+                  environment: { conversation: Obj.getURI(feed) },
+                  traceMeta: { conversation: Ref.make(feed) },
+                });
+                // `fiber.await` yields an Exit; surface a child failure into the Effect channel so
+                // the outer `Effect.orDie` (and the hook runner's `catchAllCause`) handle it instead
+                // of the failure being silently discarded.
+                const exit = yield* fiber.await;
+                if (Exit.isFailure(exit)) {
+                  yield* Effect.failCause(exit.cause);
+                }
+              }).pipe(Effect.asVoid, Effect.orDie),
+          });
+        });
 
         const maybeComplete = Effect.gen(function* () {
           if (isAgentWorkPending({ inputQueue, alarmManager, delegations, toolCallManager })) {
             return;
           }
 
-          if (Option.isSome(completionGuard)) {
-            const planSummary = yield* completionGuard.value.getIncompletePlanSummary(feed);
-            if (planSummary != null) {
-              log('agent scheduling plan completion check', { planLength: planSummary.length });
-              inputQueue.push({ _tag: 'completion_check', planSummary });
-              yield* AgentEventsCell.set(inputQueue);
-              alarmManager.reconcile(true);
-              return;
-            }
+          // The hook may enqueue work (e.g. a plan continuation reminder) via HarnessService Tier B,
+          // which pushes onto `inputQueue`; re-check before succeeding so the turn is not dropped.
+          yield* runEndRequestHooks;
+          if (isAgentWorkPending({ inputQueue, alarmManager, delegations, toolCallManager })) {
+            log('agent work enqueued by end-request hook, continuing');
+            alarmManager.reconcile(true);
+            return;
           }
 
           log('agent work complete, succeeding');
@@ -211,33 +229,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('agent onAlarm handling', { tag: item._tag });
 
-              if (item._tag === 'completion_check') {
-                log('agent running plan completion check', { planLength: item.planSummary.length });
-                const messages = yield* session
-                  .createRequest({
-                    prompt: [
-                      ContentBlock.Text.make({
-                        text: planCompletionCheckPrompt(item.planSummary),
-                        disposition: 'synthetic',
-                      }),
-                    ],
-                    system: planCompletionCheckSystem,
-                    persist: false,
-                  })
-                  .pipe(Effect.orDie);
-                const reply = messages.map(Message.extractText).join(' ').toLowerCase();
-                if (parseContinueDecision(reply)) {
-                  inputQueue.push({ _tag: 'plan_continue_reminder', planSummary: item.planSummary });
-                  yield* AgentEventsCell.set(inputQueue);
-                  alarmManager.reconcile(true);
-                  log('agent plan completion check: continue');
-                  return;
-                }
-                log('agent plan completion check: stop');
-                ctx.succeed();
-                return;
-              }
-
               const prompt: ContentBlock.Any[] = Match.value(item).pipe(
                 Match.tag('prompt', (item) => [...item.content]),
                 Match.tag('tool_result', (item) =>
@@ -257,12 +248,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 ),
                 Match.tag('alarm', (item) => [
                   ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt, item.message), disposition: 'synthetic' }),
-                ]),
-                Match.tag('plan_continue_reminder', (item) => [
-                  ContentBlock.Text.make({
-                    text: planContinueReminderPrompt(item.planSummary),
-                    disposition: 'synthetic',
-                  }),
                 ]),
                 Match.exhaustive,
               );
@@ -424,12 +409,6 @@ const AgentEvent = Schema.Union(
     // Optional reminder carried from the self-wake; surfaced to the agent when the alarm fires.
     message: Schema.NullOr(Schema.String),
   }),
-  Schema.TaggedStruct('completion_check', {
-    planSummary: Schema.String,
-  }),
-  Schema.TaggedStruct('plan_continue_reminder', {
-    planSummary: Schema.String,
-  }),
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
@@ -557,42 +536,6 @@ export const isAgentWorkPending = ({
   alarmManager.wakeAt != null ||
   delegations.length > 0 ||
   toolCallManager.hasPendingToolResults();
-
-const planCompletionCheckSystem = trim`
-  You decide whether an agent should stop or continue working.
-  Reply with exactly one word: "stop" or "continue".
-  Do not use tools. Do not add explanation.
-`;
-
-const planCompletionCheckPrompt = (planSummary: string): string => trim`
-  The agent is about to finish, but its plan still has incomplete tasks:
-
-  <plan>
-  ${planSummary}
-  </plan>
-
-  Should the agent STOP now (no more work needed) or CONTINUE working on the plan?
-  Reply with exactly one word: "stop" or "continue".
-`;
-
-const planContinueReminderPrompt = (planSummary: string): string => trim`
-  Your plan still has incomplete tasks — continue working before finishing:
-
-  <plan>
-  ${planSummary}
-  </plan>
-`;
-
-/** Prefer an explicit "continue"; treat ambiguous replies as continue so open plan work is not dropped. */
-export const parseContinueDecision = (reply: string): boolean => {
-  if (/\bcontinue\b/.test(reply)) {
-    return true;
-  }
-  if (/\bstop\b/.test(reply)) {
-    return false;
-  }
-  return true;
-};
 
 //
 // Alarms.

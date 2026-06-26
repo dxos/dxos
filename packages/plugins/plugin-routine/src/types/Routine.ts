@@ -7,6 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Instructions, Runnable, Trigger } from '@dxos/compute';
+// Operation is imported so TypeScript can name Operation.PersistentOperation in the emitted .d.ts
+// (Runnable is an alias for Operation.PersistentOperation, so Routine's class type references it).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Operation } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
@@ -32,7 +36,7 @@ const RoutineSpec = Schema.Union(RunnableSpec, InstructionsSpec);
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.
  * App-level only — EDGE stays unaware of it (triggers point directly at the runnable).
  */
-export class Routine extends Type.declareObj<Routine>()(
+export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.routine', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     description: Schema.String.pipe(Schema.optional),
@@ -56,7 +60,6 @@ export class Routine extends Type.declareObj<Routine>()(
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
-    Type.makeObject(DXN.make('org.dxos.type.routine', '0.2.0')),
   ),
 ) {}
 

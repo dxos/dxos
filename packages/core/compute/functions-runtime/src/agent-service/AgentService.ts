@@ -25,7 +25,6 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
-import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
@@ -92,12 +91,6 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * When provided, inspects session plan state before `ctx.succeed()` and may run an ephemeral
-   * stop/continue check when open tasks remain.
-   */
-  completionGuard?: CompletionGuard;
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
@@ -117,7 +110,6 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
-          completionGuard: opts?.completionGuard,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {

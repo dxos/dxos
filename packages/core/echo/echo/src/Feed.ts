@@ -30,29 +30,25 @@ import * as Type from './Type';
  * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
  */
-export const Feed = Schema.Struct({
-  /** User-facing display name. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Identifier for the feed's kind (e.g., plugin id). */
-  kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '0.1.0'))(
+  Schema.Struct({
+    /** User-facing display name. */
+    name: Schema.String.pipe(Schema.optional),
+    /** Identifier for the feed's kind (e.g., plugin id). */
+    kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
 
-  /**
-   * Feed namespace.
-   * Controls how feed data is stored and replicated.
-   * - `data`: Data feed (default).
-   * - `trace`: Trace feed.
-   */
-  namespace: Schema.optional(Schema.Literal('data', 'trace')),
-}).pipe(
-  internal.HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
-  Type.makeObject(DXN.make('org.dxos.type.feed', '0.1.0')),
-);
-
-/**
- * TypeScript instance type for a Feed object.
- */
-export type Feed = Type.InstanceType<typeof Feed>;
+    /**
+     * Feed namespace.
+     * Controls how feed data is stored and replicated.
+     * - `data`: Data feed (default).
+     * - `trace`: Trace feed.
+     */
+    namespace: Schema.optional(Schema.Literal('data', 'trace')),
+  }).pipe(
+    internal.HiddenAnnotation.set(true),
+    Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
+  ),
+) {}
 
 //
 // Types

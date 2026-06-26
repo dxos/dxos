@@ -53,11 +53,11 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
     );
 
     return (
-      <Panel.Root role={role} className='dx-document' ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root />
+      <Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Toolbar className='bg-toolbar-surface'>
+          <Toolbar.Root className='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content className='dx-document'>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />

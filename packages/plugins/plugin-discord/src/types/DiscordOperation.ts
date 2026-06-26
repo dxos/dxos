@@ -15,6 +15,8 @@ import {
   MaterializeTargetInput,
   MaterializeTargetOutput,
   SyncBinding,
+  // eslint-disable-next-line unused-imports/no-unused-imports
+  type Connection,
 } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';

@@ -9,6 +9,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -113,9 +114,7 @@ export const ConnectionView = ({
                   {canSync && (
                     <Form.Section title={t('targets.label')}>
                       {bindings.length === 0 ? (
-                        <p className='px-trim-md text-description'>
-                          {canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}
-                        </p>
+                        <Empty label={canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')} />
                       ) : (
                         bindings.map((binding) => (
                           <BindingRow

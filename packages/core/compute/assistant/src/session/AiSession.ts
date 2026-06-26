@@ -28,6 +28,7 @@ import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
 import * as Harness from './Harness';
 import { SessionLoader } from './SessionLoader';
+import * as SkillHooks from './SkillHooks';
 import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {
@@ -162,6 +163,14 @@ export class Session extends Resource {
         objects,
         prompt: params.prompt,
         system: params.system,
+      });
+
+      // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
+      // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
+      yield* SkillHooks.runHooks({
+        skills,
+        phase: 'begin-request',
+        invoke: (operation, input) => Operation.invoke(operation, input).pipe(Effect.asVoid, Effect.orDie),
       });
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
