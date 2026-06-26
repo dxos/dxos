@@ -193,21 +193,23 @@ const busyListener = EditorView.updateListener.of((update) => {
 });
 
 const styles = EditorView.theme({
+  // Render the pending block on its own line, separated from the preceding content by a blank line.
   '.cm-pending-text': {
+    display: 'block',
+    marginBlockStart: '1.5em',
     boxDecorationBreak: 'clone',
   },
-  '.cm-pending-text-final': {
+  // Finalized, interim, and placeholder text all share the comment-like surface (one transcription);
+  // the interim tail is only distinguished by reduced opacity.
+  '.cm-pending-text-final, .cm-pending-text-interim, .cm-pending-text-placeholder': {
     boxShadow: '0 0 0 3px var(--color-cm-comment-surface)',
     backgroundColor: 'var(--color-cm-comment-surface)',
     color: 'var(--color-cm-comment-text) !important',
   },
   '.cm-pending-text-interim': {
-    boxShadow: '0 0 0 3px var(--color-cm-comment-current-surface)',
-    backgroundColor: 'var(--color-cm-comment-current-surface)',
-    color: 'var(--color-cm-comment-text) !important',
+    opacity: 0.6,
   },
   '.cm-pending-text-placeholder': {
-    color: 'var(--dx-subdued)',
     fontStyle: 'italic',
   },
   '.cm-pending-text-button': {
