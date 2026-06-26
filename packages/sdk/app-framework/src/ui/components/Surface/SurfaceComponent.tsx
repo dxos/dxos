@@ -87,11 +87,20 @@ const WebComponentWrapper = memo(({ id, role, data, limit, definition, ...rest }
     };
   }, [definition.tagName]);
 
-  // Keep all props (including those in `rest`) in sync on the existing element.
+  const previousPropsRef = useRef<Record<string, any>>({});
+
+  // Keep all props (including those in `rest`) in sync on the existing element,
+  // removing any that disappeared since the last render so no stale config lingers.
   useEffect(() => {
     const element = elementRef.current;
     if (element) {
+      for (const key of Object.keys(previousPropsRef.current)) {
+        if (!(key in propsRef.current)) {
+          Reflect.deleteProperty(element, key);
+        }
+      }
       Object.assign(element, propsRef.current);
+      previousPropsRef.current = propsRef.current;
     }
   });
 
@@ -197,7 +206,8 @@ export const SurfaceComponent = memo(
 
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
     const definitions = matchCandidates(roleCandidates, effectiveRole, data);
-    const candidates = limit ? definitions.slice(0, limit) : definitions;
+    // `limit != null` (not truthiness) so an explicit `limit={0}` renders nothing.
+    const candidates = limit != null ? definitions.slice(0, limit) : definitions;
     const truncated = limit != null && definitions.length > limit;
 
     // Dev metrics: track dispatch count, candidate count, and `data` instability (see SurfaceMetrics).
@@ -301,15 +311,29 @@ const matchCandidates = (
 
 const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
 
-// Per-manager, per-role atoms are cached so every Surface for a role shares one subscription.
+// Per-manager atoms are cached so every Surface shares one index computation and one subscription.
+const indexAtomCache = new WeakMap<object, Atom.Atom<Map<string, Definition[]>>>();
 const candidatesAtomCache = new WeakMap<object, Map<string, Atom.Atom<ReadonlyArray<Definition>>>>();
 
 /**
- * Derived atom yielding the (position-sorted) candidates for a single role. It
- * derives directly from the capability atom and wraps the role's bucket with
- * {@link Data.array}, so the atom registry compares results structurally: a
- * contribution to a different role recomputes to an equal value and is dropped,
- * leaving this role's subscribers untouched.
+ * Derived atom producing the role index (each bucket sorted by {@link Position}).
+ * Built once per capability change and shared by all per-role atoms.
+ */
+const getIndexAtom = (capabilities: CapabilityManager.CapabilityManager): Atom.Atom<Map<string, Definition[]>> => {
+  let atom = indexAtomCache.get(capabilities);
+  if (!atom) {
+    const base = capabilities.atom(Capabilities.ReactSurface);
+    atom = Atom.make((get) => indexByRole(get(base).flat()));
+    indexAtomCache.set(capabilities, atom);
+  }
+  return atom;
+};
+
+/**
+ * Derived atom yielding the (position-sorted) candidates for a single role. Reads
+ * the shared index and wraps the role's bucket with {@link Data.array}, so the atom
+ * registry compares results structurally: a contribution to a different role
+ * recomputes to an equal value and is dropped, leaving this role's subscribers untouched.
  */
 const getCandidatesAtom = (
   capabilities: CapabilityManager.CapabilityManager,
@@ -322,9 +346,9 @@ const getCandidatesAtom = (
   }
   let atom = byRole.get(role);
   if (!atom) {
-    const base = capabilities.atom(Capabilities.ReactSurface);
+    const indexAtom = getIndexAtom(capabilities);
     atom = Atom.make((get) => {
-      const bucket = indexByRole(get(base).flat()).get(role);
+      const bucket = get(indexAtom).get(role);
       return bucket ? Data.array(bucket) : EMPTY_CANDIDATES;
     });
     byRole.set(role, atom);

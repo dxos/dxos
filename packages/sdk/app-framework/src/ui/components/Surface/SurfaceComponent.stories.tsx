@@ -64,6 +64,12 @@ const DefaultStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
   const [debug, setDebug] = useState(isSurfaceDebugEnabled());
 
+  // Restore the global debug flag on unmount so other stories don't inherit it.
+  useEffect(() => {
+    const previous = isSurfaceDebugEnabled();
+    return () => setSurfaceDebug(previous);
+  }, []);
+
   const handleToggleDebug = useCallback((next: boolean) => {
     setSurfaceDebug(next);
     setDebug(next);

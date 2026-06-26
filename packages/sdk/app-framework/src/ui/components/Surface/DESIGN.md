@@ -21,7 +21,7 @@ This decouples the shell/layout from the plugins that fill it.
 
 ## Dispatch pipeline
 
-```
+```text
 <Surface type={Token} data={…} limit?={n} />
   └─ useSurfaces()            → role-indexed, position-sorted candidate map
   └─ findCandidates(role,data)→ candidates for role, then data guard filter
@@ -93,7 +93,7 @@ React surfaces.
 Enabled when `VITE_DEBUG` is set (build-time) or the runtime flag is toggled
 (no rebuild). When on:
 
-- Each React candidate is wrapped in a `<dx-surface role data-id>` element —
+- Each React candidate is wrapped in a `<dx-surface data-role data-id>` element —
   named, inspectable in DevTools, and queryable
   (`document.querySelectorAll('dx-surface')`).
 - A single centralized overlay manager draws boundary highlights and an info

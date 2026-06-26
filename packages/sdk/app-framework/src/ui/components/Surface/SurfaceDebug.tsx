@@ -172,6 +172,12 @@ const SurfaceDebugOverlay = (): ReactNode => {
   const [rects, setRects] = useState<ReadonlyMap<number, DOMRect>>(EMPTY_RECTS);
 
   useLayoutEffect(() => {
+    // No registered surfaces: clear rects and install no global listeners.
+    if (entries.length === 0) {
+      setRects(EMPTY_RECTS);
+      return;
+    }
+
     const measure = () => {
       const next = new Map<number, DOMRect>();
       for (const entry of entries) {

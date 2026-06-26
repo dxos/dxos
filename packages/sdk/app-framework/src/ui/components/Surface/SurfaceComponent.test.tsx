@@ -47,6 +47,16 @@ const probe = (counts: { value: number }) => () => {
   counts.value++;
 };
 
+describe('SurfaceComponent dispatch', () => {
+  test('limit={0} renders nothing', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [TestPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleA} limit={0} />);
+    // Allow any async dispatch to settle, then assert the surface did not render.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(view.queryByTestId('a')).toBeNull();
+  });
+});
+
 describe('SurfaceComponent per-role subscription', () => {
   test('contributions to one role do not re-render surfaces of other roles', async ({ expect }) => {
     await using harness = await createTestApp({ plugins: [TestPlugin()] });
