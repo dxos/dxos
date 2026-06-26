@@ -101,6 +101,27 @@ Enabled when `VITE_DEBUG` is set (build-time) or the runtime flag is toggled
 - The React `Profiler` is attached per surface; `SurfaceProfiler*` collect
   render counts and durations for an in-app perf panel.
 
+### Dev metrics
+
+`SurfaceMetrics` (a module singleton, so the out-of-tree overlay and the in-app
+devtools panel share one source) records, keyed by `surface/<id>/<role>`:
+
+- **`dataUnstable` / `dataChurn`** — the consumer's `data` prop identity churns
+  across renders without its value changing. This is the most common Surface
+  footgun (see Performance notes) and nothing else detects it.
+- **`candidates` / `truncated`** — candidates matched on the last dispatch, and
+  whether `limit` dropped some. Diagnoses "nothing renders" (0) and "two things
+  render" (ambiguous match).
+- **`dispatches`** — how often the dispatcher re-resolved (the count the per-role
+  subscription minimizes).
+- **`errors`** — error-boundary trips for this surface.
+- **`mounts` / `unmounts`** — mount churn (often a thrashing upstream `key`).
+
+Recording is gated on the debug flag (zero production cost). Surfaced two ways:
+the `dx-surface` overlay badge (turns ⚠/red on a concern; full metrics on
+expand) and the devtools `SurfaceProfilerPanel` (joined onto render-timing by id).
+`Surface.useMetrics()` / `Surface.clearMetrics()` expose the data.
+
 ## Performance notes
 
 - Keep `data` referentially stable across renders — it is a memo/`resetKeys`

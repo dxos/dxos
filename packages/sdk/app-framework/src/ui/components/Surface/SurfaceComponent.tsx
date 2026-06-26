@@ -26,6 +26,7 @@ import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager/PluginManagerProvider';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled } from './SurfaceDebug';
+import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
 import {
   type Definition,
@@ -118,11 +119,13 @@ const SurfaceContextProvider = memo(
     const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
     const onProfilerRender = useSurfaceProfilerCallback();
     const profilerId = `surface/${id}/${role}`;
+    // Count error-boundary trips against this surface (dev only).
+    const onError = isSurfaceDebugEnabled() ? () => surfaceMetrics.recordError(id, role) : undefined;
 
     // Handle Web Component surfaces.
     if (definition.kind === 'web-component') {
       return (
-        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
+        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>
             <WebComponentWrapper id={id} role={role} data={data} limit={limit} definition={definition} {...rest} />
           </SurfaceContext.Provider>
@@ -144,7 +147,7 @@ const SurfaceContextProvider = memo(
 
     if (isSurfaceDebugEnabled()) {
       return (
-        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
+        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>
             <DebugSurface info={contextValue}>{profiled}</DebugSurface>
           </SurfaceContext.Provider>
@@ -154,7 +157,7 @@ const SurfaceContextProvider = memo(
 
     // Production renders the matched component directly: a surface adds no wrapper element of its own.
     return (
-      <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
+      <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
         <SurfaceContext.Provider value={contextValue}>{profiled}</SurfaceContext.Provider>
       </ErrorBoundary>
     );
@@ -192,6 +195,29 @@ export const SurfaceComponent = memo(
     );
     const roleCandidates = useAtomValue(candidatesAtom);
 
+    // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
+    const definitions = matchCandidates(roleCandidates, effectiveRole, data);
+    const candidates = limit ? definitions.slice(0, limit) : definitions;
+    const truncated = limit != null && definitions.length > limit;
+
+    // Dev metrics: track dispatch count, candidate count, and `data` instability (see SurfaceMetrics).
+    const churnRef = useRef<{ data: unknown; churn: number }>({ data: undefined, churn: 0 });
+    useEffect(() => {
+      if (!isSurfaceDebugEnabled() || effectiveRole === '') {
+        return;
+      }
+      const previous = churnRef.current;
+      const churn = previous.data === undefined ? 0 : nextDataChurn(previous.data, data, previous.churn);
+      churnRef.current = { data, churn };
+      for (const definition of candidates) {
+        surfaceMetrics.recordDispatch(definition.id, effectiveRole, {
+          candidates: candidates.length,
+          truncated,
+          dataChurn: churn,
+        });
+      }
+    });
+
     if (type?.role == null) {
       if (DEBUG) {
         log.warn('Surface is missing required `type` prop', { id: _id });
@@ -199,9 +225,6 @@ export const SurfaceComponent = memo(
       return null;
     }
 
-    // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
-    const definitions = matchCandidates(roleCandidates, effectiveRole, data);
-    const candidates = limit ? definitions.slice(0, limit) : definitions;
     if (DEBUG && candidates.length === 0) {
       log.warn('no candidates for surface', { role: effectiveRole, data });
       return null;

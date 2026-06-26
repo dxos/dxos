@@ -8,6 +8,7 @@ import type { DXN } from '@dxos/keys';
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
+import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics';
 import {
   SurfaceProfilerProvider,
   useSurfaceProfilerCallback,
@@ -64,6 +65,11 @@ export namespace Surface {
   export const useProfilerEntries = useSurfaceProfilerEntries;
   export const useProfilerStats = useSurfaceProfilerStats;
   export const useProfilerClear = useSurfaceProfilerClear;
+
+  export type Metric = SurfaceMetric;
+  export const useMetrics = useSurfaceMetrics;
+  export const clearMetrics = () => surfaceMetrics.clear();
 }
 
 export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext';
+export type { SurfaceMetric } from './SurfaceMetrics';

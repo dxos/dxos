@@ -18,6 +18,7 @@ import { createRoot } from 'react-dom/client';
 import { addEventListener, combine } from '@dxos/async';
 
 import { type SurfaceContext } from './context';
+import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics';
 
 declare global {
   interface Window {
@@ -144,8 +145,15 @@ const ensureOverlay = (): void => {
  * its own) via a Range spanning its children.
  */
 const measureContents = (element: HTMLElement): DOMRect | null => {
+  if (typeof document === 'undefined' || typeof document.createRange !== 'function') {
+    return null;
+  }
   const range = document.createRange();
   range.selectNodeContents(element);
+  // Range.getBoundingClientRect is unavailable in some non-browser DOMs (tests / SSR).
+  if (typeof range.getBoundingClientRect !== 'function') {
+    return null;
+  }
   const rect = range.getBoundingClientRect();
   if (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0) {
     return null;
@@ -175,17 +183,18 @@ const SurfaceDebugOverlay = (): ReactNode => {
       setRects(next);
     };
 
-    const observer = new ResizeObserver(measure);
+    // Guard for environments without ResizeObserver (SSR / tests); scroll/resize still drive measurement.
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : undefined;
     for (const entry of entries) {
       // The element itself has no box (display: contents); observe its parent.
-      if (entry.element.parentElement) {
+      if (observer && entry.element.parentElement) {
         observer.observe(entry.element.parentElement);
       }
     }
     measure();
 
     return combine(addEventListener(window, 'scroll', measure, true), addEventListener(window, 'resize', measure), () =>
-      observer.disconnect(),
+      observer?.disconnect(),
     );
   }, [entries]);
 
@@ -200,9 +209,19 @@ const SurfaceDebugOverlay = (): ReactNode => {
   );
 };
 
+/** Subscribes to the metric for a single surface. */
+const useSurfaceMetric = (surfaceId: string, role: string): SurfaceMetric | undefined => {
+  const all = useSyncExternalStore(surfaceMetrics.subscribe, surfaceMetrics.getSnapshot, surfaceMetrics.getSnapshot);
+  const key = surfaceMetricKey(surfaceId, role);
+  return all.find((metric) => metric.id === key);
+};
+
 const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }): ReactNode => {
   const [expand, setExpand] = useState(false);
   const info = infoRef.current;
+  const metric = useSurfaceMetric(info.id ?? '', info.role);
+  // A surface with a likely problem (unstable data or a caught error) flags red.
+  const concern = !!metric && (metric.dataUnstable || metric.errors > 0);
   return (
     <div
       className='z-[100] fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
@@ -218,24 +237,46 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
           }}
         >
           <pre className='absolute left-2 bottom-2 bg-card-surface inline-block ring-2 ring-separator opacity-80 p-2 text-xs text-description font-mono'>
-            {JSON.stringify({ info }, null, 2)}
+            {JSON.stringify({ info, metric }, null, 2)}
           </pre>
         </div>
       ) : (
         <span
-          className='absolute right-1 bottom-0 flex items-center p-1 text-green-500 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto'
-          title={info.id}
+          className={
+            (concern ? 'text-rose-500' : 'text-green-500') +
+            ' absolute right-1 bottom-0 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto'
+          }
+          title={metricSummary(info.id ?? '', metric)}
           onPointerDown={(ev) => ev.stopPropagation()}
           onClick={(ev) => {
             ev.stopPropagation();
             setExpand(true);
           }}
         >
-          ⓘ
+          {concern ? '⚠' : 'ⓘ'}
         </span>
       )}
     </div>
   );
+};
+
+const metricSummary = (surfaceId: string, metric: SurfaceMetric | undefined): string => {
+  if (!metric) {
+    return surfaceId;
+  }
+  const parts = [
+    surfaceId,
+    `dispatches=${metric.dispatches}`,
+    `candidates=${metric.candidates}${metric.truncated ? '(+truncated)' : ''}`,
+    `mounts=${metric.mounts}/unmounts=${metric.unmounts}`,
+  ];
+  if (metric.dataUnstable) {
+    parts.push(`UNSTABLE data (churn=${metric.dataChurn})`);
+  }
+  if (metric.errors > 0) {
+    parts.push(`errors=${metric.errors}`);
+  }
+  return parts.join(' · ');
 };
 
 /**
@@ -252,11 +293,18 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
   useEffect(() => {
     ensureSurfaceElement();
     ensureOverlay();
-    const element = elementRef.current;
-    if (!element) {
-      return;
+    const { id, role } = infoRef.current;
+    if (id) {
+      surfaceMetrics.recordMount(id, role);
     }
-    return manager.register(element, infoRef);
+    const element = elementRef.current;
+    const unregister = element ? manager.register(element, infoRef) : undefined;
+    return () => {
+      if (id) {
+        surfaceMetrics.recordUnmount(id, role);
+      }
+      unregister?.();
+    };
   }, []);
 
   return createElement(DX_SURFACE_TAG, { ref: elementRef, 'data-id': info.id, 'data-role': info.role }, children);

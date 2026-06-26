@@ -4,7 +4,7 @@
 
 import { act } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
-import React, { Profiler } from 'react';
+import React, { Profiler, useState } from 'react';
 import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -16,7 +16,11 @@ import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
 import { render } from '../../../testing/react';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
+import { setSurfaceDebug } from './SurfaceDebug';
+import { surfaceMetrics } from './SurfaceMetrics';
 import { type Definition, create, makeFilter, makeType } from './types';
+
+const flushMetrics = () => act(async () => void (await new Promise((resolve) => setTimeout(resolve, 30))));
 
 const RoleA = makeType<Record<string, unknown>>('org.dxos.test.role.alpha');
 const RoleB = makeType<Record<string, unknown>>('org.dxos.test.role.beta');
@@ -209,5 +213,67 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
     // (plus a small fleet-independent commit-phase constant) — NOT the fleet size.
     expect(nextPerContribution).toBeLessThanOrEqual(3 * SURFACES_PER_ROLE);
     expect(next.reRenders).toBeLessThan(legacy.reRenders / 2);
+  });
+});
+
+describe('SurfaceComponent dev metrics', () => {
+  test('records dispatch + candidate count and flags unstable data', async ({ expect }) => {
+    setSurfaceDebug(true);
+    surfaceMetrics.clear();
+    try {
+      await using harness = await createTestApp({ plugins: [TestPlugin()] });
+
+      // Host passes a fresh `data` object of identical content on every render — the unstable-prop footgun.
+      let bump: () => void = () => {};
+      const Host = () => {
+        const [, setN] = useState(0);
+        bump = () => setN((n) => n + 1);
+        return <SurfaceComponent type={RoleA} data={{ k: 1 }} />;
+      };
+
+      const view = render(harness, <Host />);
+      await view.findByTestId('a');
+      for (let i = 0; i < 5; i++) {
+        act(() => bump());
+      }
+      await flushMetrics();
+
+      const metric = surfaceMetrics.getSnapshot().find((entry) => entry.surfaceId === 'alpha');
+      expect(metric?.candidates).toBe(1);
+      expect(metric?.dispatches).toBeGreaterThan(1);
+      expect(metric?.mounts).toBe(1);
+      expect(metric?.dataUnstable).toBe(true);
+    } finally {
+      setSurfaceDebug(false);
+    }
+  });
+
+  test('stable data is not flagged unstable', async ({ expect }) => {
+    setSurfaceDebug(true);
+    surfaceMetrics.clear();
+    try {
+      await using harness = await createTestApp({ plugins: [TestPlugin()] });
+
+      // Same `data` reference across renders.
+      const STABLE = { k: 1 };
+      let bump: () => void = () => {};
+      const Host = () => {
+        const [, setN] = useState(0);
+        bump = () => setN((n) => n + 1);
+        return <SurfaceComponent type={RoleA} data={STABLE} />;
+      };
+
+      const view = render(harness, <Host />);
+      await view.findByTestId('a');
+      for (let i = 0; i < 5; i++) {
+        act(() => bump());
+      }
+      await flushMetrics();
+
+      const metric = surfaceMetrics.getSnapshot().find((entry) => entry.surfaceId === 'alpha');
+      expect(metric?.dataUnstable).toBe(false);
+    } finally {
+      setSurfaceDebug(false);
+    }
   });
 });
