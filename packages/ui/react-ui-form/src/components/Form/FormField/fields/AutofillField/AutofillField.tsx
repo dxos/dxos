@@ -9,8 +9,8 @@ import { type AnyProperties } from '@dxos/echo/internal';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { TextField } from '../TextField';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
+import { TextField } from '../TextField';
 
 export type AutofillFieldProps = FormFieldRendererProps<string> & {
   /** Derives this field's value from the autofill's declared dependency fields (e.g. a sibling URL). */

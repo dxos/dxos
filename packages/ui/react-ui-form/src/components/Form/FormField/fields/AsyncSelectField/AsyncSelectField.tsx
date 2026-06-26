@@ -9,8 +9,8 @@ import { type AnyProperties } from '@dxos/echo/internal';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { SelectField } from '../SelectField';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
+import { SelectField } from '../SelectField';
 
 export type AsyncSelectFieldProps = FormFieldRendererProps<string> & {
   /** Loads the selectable options from the lookup's declared dependency fields. */

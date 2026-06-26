@@ -6,11 +6,12 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site';
 import { type FetchOptions } from './feed-fetcher';
+import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site';
 
 // The Standard.site fetchers are Effects (they provide their own HTTP layer); run them for assertions.
-const runFetchStandardSite = (url: string, options?: FetchOptions) => EffectEx.runPromise(fetchStandardSite(url, options));
+const runFetchStandardSite = (url: string, options?: FetchOptions) =>
+  EffectEx.runPromise(fetchStandardSite(url, options));
 
 // RSS/Atom coverage lives in rss.test.ts.
 

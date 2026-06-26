@@ -169,7 +169,9 @@ describe('fetchRss', () => {
 
     // FetchHttpClient calls `fetch(url, init)`; the test env resolves the relative proxy path to an
     // absolute URL, so assert the proxied target is contained rather than matching exactly.
-    expect(String(mockFetch.mock.calls[0][0])).toContain('/api/rss?url=' + encodeURIComponent('https://example.com/rss'));
+    expect(String(mockFetch.mock.calls[0][0])).toContain(
+      '/api/rss?url=' + encodeURIComponent('https://example.com/rss'),
+    );
   });
 
   test('parses a real-world RSS feed, unwrapping CDATA and converting content to markdown', async ({ expect }) => {

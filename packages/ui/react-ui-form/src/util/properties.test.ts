@@ -181,7 +181,9 @@ describe('getRootFormProperties', () => {
         ),
       ),
       publication: StandardSiteBase.fields.publication.pipe(
-        Annotation.OptionsLookupAnnotation.set(Annotation.optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]))),
+        Annotation.OptionsLookupAnnotation.set(
+          Annotation.optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([])),
+        ),
       ),
     });
 

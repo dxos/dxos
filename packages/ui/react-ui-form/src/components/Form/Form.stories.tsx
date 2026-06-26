@@ -263,7 +263,9 @@ const DynamicFieldsSchema = Schema.mutable(
         Annotation.OptionsLookupAnnotation.set(
           Annotation.optionsLookup<DynamicFieldsValues>()(['query'], ({ query }) =>
             (query && query.length > 0
-              ? Effect.succeed([1, 2, 3].map((index) => ({ value: `${query}-${index}`, label: `${query} choice ${index}` })))
+              ? Effect.succeed(
+                  [1, 2, 3].map((index) => ({ value: `${query}-${index}`, label: `${query} choice ${index}` })),
+                )
               : Effect.succeed([])
             ).pipe(Effect.delay('600 millis')),
           ),
@@ -278,7 +280,8 @@ const DynamicFieldsSchema = Schema.mutable(
           Annotation.optionsLookup<DynamicFieldsValues>()(
             // No deps: the pool is fetched once; the combobox filters it by the typed text client-side.
             [],
-            () => Effect.succeed(TAG_VOCABULARY.map((value) => ({ value, label: value }))).pipe(Effect.delay('400 millis')),
+            () =>
+              Effect.succeed(TAG_VOCABULARY.map((value) => ({ value, label: value }))).pipe(Effect.delay('400 millis')),
             { combobox: true },
           ),
         ),
@@ -334,7 +337,8 @@ const StandardSiteCreate = Schema.Struct({
     Annotation.OptionsLookupAnnotation.set(
       Annotation.optionsLookup<StandardSiteValues>()(
         ['handle'],
-        () => Effect.succeed(HANDLE_SUGGESTIONS.map((value) => ({ value, label: value }))).pipe(Effect.delay('300 millis')),
+        () =>
+          Effect.succeed(HANDLE_SUGGESTIONS.map((value) => ({ value, label: value }))).pipe(Effect.delay('300 millis')),
         { combobox: true },
       ),
     ),
@@ -368,7 +372,9 @@ const RssCreate = Schema.Struct({
     Schema.String.pipe(
       Annotation.AutofillAnnotation.set(
         Annotation.autofill<RssValues>()(['url'], ({ url }) =>
-          isValidUrl(url) ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('500 millis')) : Effect.succeed(undefined),
+          isValidUrl(url)
+            ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('500 millis'))
+            : Effect.succeed(undefined),
         ),
       ),
     ).annotations({ title: 'Name' }),

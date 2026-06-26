@@ -151,7 +151,9 @@ export const fetchStandardSite: FeedFetcher = (url, options) =>
 const ResolveHandleResponse = Schema.Struct({ did: Schema.optional(Schema.String) });
 
 const SearchActorsResponse = Schema.Struct({
-  actors: Schema.optional(Schema.Array(Schema.Struct({ handle: Schema.String, displayName: Schema.optional(Schema.String) }))),
+  actors: Schema.optional(
+    Schema.Array(Schema.Struct({ handle: Schema.String, displayName: Schema.optional(Schema.String) })),
+  ),
 });
 
 const DidDocument = Schema.Struct({
@@ -190,9 +192,7 @@ const StandardSiteDocument = Schema.Struct({
 });
 
 const ListRecordsResponse = Schema.Struct({
-  records: Schema.optional(
-    Schema.Array(Schema.Struct({ uri: Schema.String, value: StandardSiteDocument })),
-  ),
+  records: Schema.optional(Schema.Array(Schema.Struct({ uri: Schema.String, value: StandardSiteDocument }))),
   cursor: Schema.optional(Schema.String),
 });
 type DocumentRecord = NonNullable<Schema.Schema.Type<typeof ListRecordsResponse>['records']>[number];
@@ -232,7 +232,10 @@ const resolvePds = (did: string, proxy?: string): Effect.Effect<string, FeedFetc
   if (did.startsWith('did:web:')) {
     // Per the did:web spec `:` separates host from path segments (each percent-encoded); a bare host
     // resolves to `/.well-known/did.json`, path segments to `/<path>/did.json`.
-    const [host, ...segments] = did.slice('did:web:'.length).split(':').map((segment) => decodeURIComponent(segment));
+    const [host, ...segments] = did
+      .slice('did:web:'.length)
+      .split(':')
+      .map((segment) => decodeURIComponent(segment));
     if (!host) {
       return Effect.fail(new FeedFetchError({ message: `Invalid did:web identifier: ${did}` }));
     }
@@ -246,7 +249,9 @@ const extractPds = (
   doc: Schema.Schema.Type<typeof DidDocument>,
   did: string,
 ): Effect.Effect<string, FeedFetchError> => {
-  const service = doc.service?.find((entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer');
+  const service = doc.service?.find(
+    (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
+  );
   const endpoint = service?.serviceEndpoint;
   return typeof endpoint === 'string' && endpoint.length > 0
     ? Effect.succeed(endpoint.replace(/\/$/, ''))
@@ -266,7 +271,10 @@ const listDocuments = (
   ).pipe(Effect.map((listed) => listed.records ?? []));
 
 /** Best-effort author profile lookup (display name / avatar / bio); undefined on any failure. */
-const fetchProfile = (actor: string, proxy?: string): Effect.Effect<Profile | undefined, never, HttpClient.HttpClient> =>
+const fetchProfile = (
+  actor: string,
+  proxy?: string,
+): Effect.Effect<Profile | undefined, never, HttpClient.HttpClient> =>
   getJson(Profile, `${BSKY_PUBLIC_API}/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`, proxy).pipe(
     Effect.catchAll(() => Effect.succeed(undefined)),
   );

@@ -10,8 +10,8 @@ import { Combobox } from '@dxos/react-ui-list';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
+import { FormRow } from '../../FormRow';
 
 export type ComboboxFieldProps = FormFieldRendererProps<string> & {
   /** Loads suggestions from the lookup's declared dependency fields (typically the field's own value). */
@@ -62,9 +62,18 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
   }, []);
 
   return (
-    <FormRow<string> readonly={readonly} renderStatic={(value) => <p className='truncate min-w-0'>{value ?? ''}</p>} {...props}>
+    <FormRow<string>
+      readonly={readonly}
+      renderStatic={(value) => <p className='truncate min-w-0'>{value ?? ''}</p>}
+      {...props}
+    >
       {({ value = '' }) => (
-        <Combobox.Root value={value} onValueChange={handleValueChange} onOpenChange={handleOpenChange} placeholder={placeholder}>
+        <Combobox.Root
+          value={value}
+          onValueChange={handleValueChange}
+          onOpenChange={handleOpenChange}
+          placeholder={placeholder}
+        >
           {/* Full-width trigger (default renders value/placeholder + caret) to match the other fields. */}
           <Combobox.Trigger disabled={!!readonly} classNames='w-full' />
           <Combobox.Portal>
