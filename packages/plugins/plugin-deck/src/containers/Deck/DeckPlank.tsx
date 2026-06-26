@@ -10,6 +10,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Splitter, type ThemedClassName } from '@dxos/react-ui';
 
 import { Companion, Plank } from '#components';
+import { useCompanionSplit } from '#hooks';
 import { type LayoutMode, type ResolvedPart, type Settings } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -21,7 +22,8 @@ export type DeckPlankProps = ThemedClassName<{
   part: ResolvedPart;
   layoutMode: LayoutMode;
   active?: string[];
-  companionVariant?: string;
+  /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
+  companionShown?: boolean;
   settings?: Settings.Settings;
   path?: string[];
 }>;
@@ -33,7 +35,7 @@ export type DeckPlankProps = ThemedClassName<{
  * `PlankContainer`/`PlankComponent`/`PlankHeading` tree.
  */
 export const DeckPlank = memo(
-  ({ id, part, layoutMode, active, companionVariant, settings, path, classNames }: DeckPlankProps) => {
+  ({ id, part, layoutMode, active, companionShown, settings, path, classNames }: DeckPlankProps) => {
     const { findFirstFocusable } = useFocusFinders();
     const rootRef = useRef<HTMLDivElement>(null);
     const {
@@ -41,6 +43,7 @@ export const DeckPlank = memo(
       companions,
       resolvedCompanionId,
       hasCompanion,
+      companionOrientation,
       capabilities,
       sigilActions,
       popoverAnchorId,
@@ -49,7 +52,10 @@ export const DeckPlank = memo(
       onAdjust,
       onScrollIntoView,
       onUpdateCompanion,
-    } = useDeckPlank({ id, part, layoutMode, active, companionVariant, deckEnabled: settings?.enableDeck });
+    } = useDeckPlank({ id, part, layoutMode, active, companionShown, deckEnabled: settings?.enableDeck });
+
+    // Memoize the split point per orientation so toggling side-by-side ↔ stacked restores each one.
+    const { size: companionSize, onSizeChange: onCompanionSizeChange } = useCompanionSplit(companionOrientation);
 
     // Newly opened/navigated planks are flagged via `scrollIntoView`; focus the pane so it gains
     // attention, then clear the one-shot flag.
@@ -131,11 +137,12 @@ export const DeckPlank = memo(
 
     return (
       <Splitter.Root
-        orientation='horizontal'
+        orientation={companionOrientation}
         anchor='end'
         resizable
-        defaultSize={30}
+        size={companionSize}
         minSize={20}
+        onSizeChange={onCompanionSizeChange}
         classNames={classNames}
       >
         <Splitter.Panel position='start'>{renderPlank()}</Splitter.Panel>

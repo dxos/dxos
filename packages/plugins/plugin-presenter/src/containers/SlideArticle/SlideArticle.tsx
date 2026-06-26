@@ -4,15 +4,14 @@
 
 import React from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Markdown } from '@dxos/plugin-markdown';
 
 import { Panel, Slide } from '#components';
 
-type MarkdownSlideProps = {
-  document: Markdown.Document;
-};
+export type SlideArticleProps = AppSurface.ObjectSectionProps<Markdown.Document>;
 
-export const MarkdownSlide = ({ document }: MarkdownSlideProps) => {
+export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
   const content = document.content.target?.content;
   if (!content) {
     return null;
