@@ -5,15 +5,13 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { VirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
+import { VirtuosoMasonry } from '@virtuoso.dev/masonry';
 import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
 import { composable, composableProps, scrollbar } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
-
-// TODO(burdon): Make scrollable optional.
 
 //
 // Context
@@ -167,24 +165,17 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     }
 
     return (
-      <ScrollArea.Viewport asChild>
-        <ComposableVirtuosoMasonry
+      <ScrollArea.Viewport>
+        <VirtuosoMasonry
           {...arrowNavigationAttrs}
           {...composableProps(props)}
-          ref={forwardedRef}
+          ItemContent={TileAdapter}
+          columnCount={columnCount}
           style={{ gap: `${gutter}rem` }}
           data={items as any[]}
-          columnCount={columnCount}
-          ItemContent={TileAdapter}
         />
       </ScrollArea.Viewport>
     );
-  },
-);
-
-const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(
-  ({ ...props }, _forwardedRef) => {
-    return <VirtuosoMasonry {...props} />;
   },
 );
 
