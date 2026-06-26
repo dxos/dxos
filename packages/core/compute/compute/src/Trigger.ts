@@ -161,7 +161,7 @@ export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.A
  * Runnable is invoked with the `payload` passed as input data.
  * The event that fires the trigger is available in the runnable context.
  */
-export class Trigger extends Type.declareObj<Trigger>()(
+export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.trigger', '0.1.0'))(
   Schema.Struct({
     /**
      * Runnable (operation or workflow) to invoke.
@@ -198,7 +198,6 @@ export class Trigger extends Type.declareObj<Trigger>()(
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
     HiddenAnnotation.set(true),
-    Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
   ),
 ) {}
 

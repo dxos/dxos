@@ -10,9 +10,11 @@ import { DXN, Obj, Type } from '@dxos/echo';
 import * as Doc from './Doc';
 import { AbstractStoreAdapter, type Batch } from './store-adapter';
 
-const Canvas = Schema.Struct({
-  content: Schema.optional(Schema.Any),
-}).pipe(Type.makeObject(DXN.make('com.example.type.canvas', '0.1.0')));
+const Canvas = Type.makeObject(DXN.make('com.example.type.canvas', '0.1.0'))(
+  Schema.Struct({
+    content: Schema.optional(Schema.Any),
+  }),
+);
 
 type Element = { id: string; value: string };
 

@@ -73,11 +73,9 @@ interface BaseTypeEntity<A> {
  *
  * @example
  * ```ts
- * const Person = Schema.Struct({
- *   name: Schema.String,
- * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
- *
- * type Person = Type.InstanceType<typeof Person>;
+ * class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+ *   Schema.Struct({ name: Schema.String }),
+ * ) {}
  * ```
  */
 export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends BaseTypeEntity<
@@ -124,12 +122,6 @@ export type AnyObj = Obj<unknown>;
  * scope. Pass `{ id }` to override (e.g. with `EntityId.random()` from a
  * request handler).
  *
- * @example
- * ```ts
- * const Person = Schema.Struct({
- *   name: Schema.String,
- * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
- * ```
  * Giving the type a nominal class name keeps its inferred type portable for
  * declaration emit: structural expansion (which can pull in unnameable union
  * members from referenced schemas) is replaced by a reference to the class.
@@ -300,13 +292,9 @@ export type AnyRelation = Relation<unknown, unknown, unknown>;
  *
  * @example
  * ```ts
- * const WorksFor = Schema.Struct({
- *   role: Schema.String,
- * }).pipe(Type.makeRelation({
- *   dxn: DXN.make('com.example.type.worksFor', '0.1.0'),
- *   source: Person,
- *   target: Company,
- * }));
+ * class WorksFor extends Type.makeRelation<WorksFor>(DXN.make('com.example.type.worksFor', '0.1.0'))(
+ *   { source: Person, target: Company },
+ * )(Schema.Struct({ role: Schema.String })) {}
  * ```
  */
 export const makeRelation: {

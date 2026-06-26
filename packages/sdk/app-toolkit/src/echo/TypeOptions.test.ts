@@ -11,21 +11,14 @@ import { DXN } from '@dxos/keys';
 
 import * as TypeOptions from './TypeOptions';
 
-const UserType = Schema.Struct({ name: Schema.String }).pipe(
-  Type.makeObject(DXN.make('com.example.type.user', '0.1.0')),
+const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(Schema.Struct({ name: Schema.String }));
+
+const HiddenType = Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }).pipe(HiddenAnnotation.set(true)),
 );
 
-const HiddenType = Schema.Struct({ name: Schema.String }).pipe(
-  HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0')),
-);
-
-const Relation = Schema.Struct({ role: Schema.String }).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('com.example.type.relation', '0.1.0'),
-    source: UserType,
-    target: UserType,
-  }),
+const Relation = Type.makeRelation(DXN.make('com.example.type.relation', '0.1.0'))({ source: UserType, target: UserType })(
+  Schema.Struct({ role: Schema.String }),
 );
 
 const types = [UserType, HiddenType, Relation];

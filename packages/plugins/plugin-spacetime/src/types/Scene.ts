@@ -11,15 +11,14 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 import * as Model from './Model';
 
-export const Scene = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  objects: Ref.Ref(Model.Object).pipe(Schema.Array, FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
-  Type.makeObject(DXN.make('org.dxos.type.spacetime.scene', '0.1.0')),
-);
-
-export type Scene = Type.InstanceType<typeof Scene>;
+export class Scene extends Type.makeObject<Scene>(DXN.make('org.dxos.type.spacetime.scene', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    objects: Ref.Ref(Model.Object).pipe(Schema.Array, FormInputAnnotation.set(false)),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
+  ),
+) {}
 
 export const make = (props?: Partial<Omit<Scene, 'objects'>>) => {
   const defaultCube = Model.make({ primitive: 'cube' });

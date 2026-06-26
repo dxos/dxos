@@ -12,7 +12,7 @@ import { ViewModel } from '../types';
  * @deprecated Use (@dxos/echo/testing)
  */
 // TODO(burdon): REMOVE
-export const Example = Schema.Struct({
+export class Example extends Type.makeObject<Example>(DXN.make('com.example.type.example', '0.1.0'))(Schema.Struct({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
@@ -37,9 +37,7 @@ export const Example = Schema.Struct({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}).pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
-
-export type Example = Type.InstanceType<typeof Example>;
+})) {}
 
 export const testSchema = Type.makeObjectFromJsonSchema({
   typename: 'com.example.type.test',

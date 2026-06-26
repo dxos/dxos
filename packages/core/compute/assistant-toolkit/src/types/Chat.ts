@@ -18,23 +18,22 @@ import * as Plan from './Plan';
 /**
  * AI chat.
  */
-export const Chat = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  viewType: Schema.String.pipe(Schema.optional),
+export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    viewType: Schema.String.pipe(Schema.optional),
 
-  /**
-   * Session plan for tracking task progress within this conversation.
-   * Created lazily when the first task is recorded.
-   */
-  plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' }),
-  Type.makeObject(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
-);
-
-export type Chat = Type.InstanceType<typeof Chat>;
+    /**
+     * Session plan for tracking task progress within this conversation.
+     * Created lazily when the first task is recorded.
+     */
+    plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' }),
+  ),
+) {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
 
@@ -73,28 +72,31 @@ export const getFromContext: Effect.Effect<
 });
 
 /** @deprecated Use CompanionTo instead. */
-export const LegacyCompanionTo = Schema.Struct({
-  id: Obj.ID,
-}).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
+export class LegacyCompanionTo extends Type.makeRelation<LegacyCompanionTo>(
+  DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
+)(
+  {
     source: Chat,
     target: Obj.Unknown,
+  },
+)(
+  Schema.Struct({
+    id: Obj.ID,
   }),
-);
+) {}
 
-export type LegacyCompanionTo = Type.InstanceType<typeof LegacyCompanionTo>;
 /**
  * Relation between a Chat and companion objects (e.g., artifacts).
  */
-export const CompanionTo = Schema.Struct({
-  id: Obj.ID,
-}).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
+export class CompanionTo extends Type.makeRelation<CompanionTo>(
+  DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
+)(
+  {
     source: Chat,
     target: Obj.Unknown,
+  },
+)(
+  Schema.Struct({
+    id: Obj.ID,
   }),
-);
-
-export type CompanionTo = Type.InstanceType<typeof CompanionTo>;
+) {}

@@ -22,19 +22,25 @@ afterEach(async () => {
   await builder.close();
 });
 
-const ContactV1 = Schema.Struct({
-  firstName: Schema.String,
-  lastName: Schema.String,
-}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+const ContactV1 = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+  Schema.Struct({
+    firstName: Schema.String,
+    lastName: Schema.String,
+  }),
+);
 
-const ContactV2 = Schema.Struct({
-  name: Schema.String,
-}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
+const ContactV2 = Type.makeObject(DXN.make('com.example.type.person', '0.2.0'))(
+  Schema.Struct({
+    name: Schema.String,
+  }),
+);
 
-const ContactV3 = Schema.Struct({
-  name: Schema.String,
-  email: Schema.String,
-}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.3.0')));
+const ContactV3 = Type.makeObject(DXN.make('com.example.type.person', '0.3.0'))(
+  Schema.Struct({
+    name: Schema.String,
+    email: Schema.String,
+  }),
+);
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
@@ -107,15 +113,19 @@ test('incrementally migrates new objects', async () => {
 });
 
 test('migration moves data key/version into meta', async () => {
-  const RegistryEntryV1 = Schema.Struct({
-    key: Schema.String,
-    name: Schema.String,
-    version: Schema.String,
-  }).pipe(Type.makeObject(DXN.make('com.example.type.registryEntry', '0.1.0')));
+  const RegistryEntryV1 = Type.makeObject(DXN.make('com.example.type.registryEntry', '0.1.0'))(
+    Schema.Struct({
+      key: Schema.String,
+      name: Schema.String,
+      version: Schema.String,
+    }),
+  );
 
-  const RegistryEntryV2 = Schema.Struct({
-    name: Schema.String,
-  }).pipe(Type.makeObject(DXN.make('com.example.type.registryEntry', '0.2.0')));
+  const RegistryEntryV2 = Type.makeObject(DXN.make('com.example.type.registryEntry', '0.2.0'))(
+    Schema.Struct({
+      name: Schema.String,
+    }),
+  );
 
   const migration = defineObjectMigration({
     from: RegistryEntryV1,

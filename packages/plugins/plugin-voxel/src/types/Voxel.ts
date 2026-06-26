@@ -26,23 +26,22 @@ export type VoxelData = {
 export type VoxelMap = Record<string, VoxelProps>;
 
 /** A voxel world containing a set of 3D points. */
-export const World = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  /** Grid extent along x-axis. */
-  gridX: Schema.optional(Schema.Number),
-  /** Grid extent along y-axis. */
-  gridY: Schema.optional(Schema.Number),
-  /** Size of each voxel block (default 1). */
-  blockSize: Schema.optional(Schema.Number),
-  /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
-  voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'white' }),
-  Type.makeObject(DXN.make('org.dxos.type.voxel', '0.1.0')),
-);
-
-export type World = Type.InstanceType<typeof World>;
+export class World extends Type.makeObject<World>(DXN.make('org.dxos.type.voxel', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    /** Grid extent along x-axis. */
+    gridX: Schema.optional(Schema.Number),
+    /** Grid extent along y-axis. */
+    gridY: Schema.optional(Schema.Number),
+    /** Size of each voxel block (default 1). */
+    blockSize: Schema.optional(Schema.Number),
+    /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
+    voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'white' }),
+  ),
+) {}
 
 const DEFAULT_GRID_SIZE = 32;
 const DEFAULT_BLOCK_SIZE = 1;

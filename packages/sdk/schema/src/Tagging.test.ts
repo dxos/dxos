@@ -13,15 +13,15 @@ import * as Tagging from './Tagging';
 import * as TagIndex from './TagIndex';
 
 /** A minimal immutable feed item. */
-const Item = Schema.Struct({
+const Item = Type.makeObject(DXN.make('org.dxos.test.tagging.Item', '0.1.0'))(Schema.Struct({
   text: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagging.Item', '0.1.0')));
+}));
 
 /** A host pairing an immutable feed of items with a tag index over them. */
-const Host = Schema.Struct({
+const Host = Type.makeObject(DXN.make('org.dxos.test.tagging.Host', '0.1.0'))(Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
   tags: Ref.Ref(TagIndex.TagIndex),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagging.Host', '0.1.0')));
+}));
 
 describe('Tagging', () => {
   let builder: EchoTestBuilder;

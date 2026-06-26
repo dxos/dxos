@@ -21,34 +21,33 @@ import * as Connection from './Connection';
  * object is materialized when the binding is created (eager), not lazily on
  * first sync.
  */
-export const SyncBinding = Schema.Struct({
-  id: Obj.ID,
-  /** Remote foreign id (board id, calendar id, channel id, …). */
-  remoteId: Schema.String.pipe(Schema.optional),
-  /** Cached display label for the remote target. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Provider-defined sync cursor (opaque). */
-  cursor: Schema.String.pipe(Schema.optional),
-  /** Last successful sync (ISO). */
-  lastSyncAt: Format.DateTime.pipe(Schema.optional),
-  /** Last sync failure message. */
-  lastError: Schema.String.pipe(Schema.optional),
-  /**
-   * Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`).
-   * Shape is provider-defined; drives pull merge `(local, remote, snapshot)` — remote wins on conflict.
-   */
-  snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
-  /** Provider-specific options; opaque here — providers validate their shape. */
-  options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
-}).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('org.dxos.type.syncBinding', '0.1.0'),
+export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dxos.type.syncBinding', '0.1.0'))(
+  {
     source: Connection.Connection,
     target: Obj.Unknown,
+  },
+)(
+  Schema.Struct({
+    id: Obj.ID,
+    /** Remote foreign id (board id, calendar id, channel id, …). */
+    remoteId: Schema.String.pipe(Schema.optional),
+    /** Cached display label for the remote target. */
+    name: Schema.String.pipe(Schema.optional),
+    /** Provider-defined sync cursor (opaque). */
+    cursor: Schema.String.pipe(Schema.optional),
+    /** Last successful sync (ISO). */
+    lastSyncAt: Format.DateTime.pipe(Schema.optional),
+    /** Last sync failure message. */
+    lastError: Schema.String.pipe(Schema.optional),
+    /**
+     * Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`).
+     * Shape is provider-defined; drives pull merge `(local, remote, snapshot)` — remote wins on conflict.
+     */
+    snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+    /** Provider-specific options; opaque here — providers validate their shape. */
+    options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
   }),
-);
-
-export type SyncBinding = Type.InstanceType<typeof SyncBinding>;
+) {}
 
 export const instanceOf = (value: unknown): value is SyncBinding => Relation.instanceOf(SyncBinding, value);
 

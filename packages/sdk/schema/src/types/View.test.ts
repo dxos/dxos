@@ -146,10 +146,12 @@ describe('Projection', () => {
     const { db } = await builder.createDatabase();
 
     const typename = 'com.example.type.dbtask';
-    const staticSchema = Schema.Struct({
-      title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-      status: Schema.optional(Schema.String).annotations({ title: 'Status' }),
-    }).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
+    const staticSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(
+      Schema.Struct({
+        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+        status: Schema.optional(Schema.String).annotations({ title: 'Status' }),
+      }),
+    );
 
     await db.addType(staticSchema);
 
@@ -166,9 +168,11 @@ describe('Projection', () => {
     const { db } = await builder.createDatabase();
 
     const typename = 'com.example.type.dburi';
-    const staticSchema = Schema.Struct({
-      title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-    }).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
+    const staticSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(
+      Schema.Struct({
+        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+      }),
+    );
 
     const addedType = await db.addType(staticSchema);
 
