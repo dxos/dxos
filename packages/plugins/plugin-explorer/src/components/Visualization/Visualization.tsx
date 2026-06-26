@@ -20,7 +20,6 @@ import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { type TreeNode } from '../Tree';
-
 import { type VisualizationVariant, type VisualizationVariantId, getVariant } from './variants';
 
 //
@@ -34,8 +33,7 @@ type VisualizationContextValue = {
   focus?: string;
 };
 
-const [VisualizationProvider, useVisualizationContext] =
-  createContext<VisualizationContextValue>('Visualization.Root');
+const [VisualizationProvider, useVisualizationContext] = createContext<VisualizationContextValue>('Visualization.Root');
 
 //
 // Root

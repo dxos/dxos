@@ -59,9 +59,7 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     }
 
     const target = event.target as HTMLElement;
-    target.dispatchEvent(
-      new DxAnchorActivate({ dxn, kind: 'card', trigger: target, label: Obj.getLabel(obj) ?? dxn }),
-    );
+    target.dispatchEvent(new DxAnchorActivate({ dxn, kind: 'card', trigger: target, label: Obj.getLabel(obj) ?? dxn }));
   }, []);
 
   if (!subject || !model) {

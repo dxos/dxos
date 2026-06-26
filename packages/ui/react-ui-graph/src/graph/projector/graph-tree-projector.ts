@@ -166,7 +166,9 @@ export class GraphTreeProjector<
     }
 
     const rightRoot = hierarchy<HierDatum>(makeDatum(focusId!), (d) => (rightChildren.get(d.id) ?? []).map(makeDatum));
-    const leftRoot = hierarchy<HierDatum>(makeDatum(focusId!), (d) => (d.id === focusId ? leftSources.map(makeDatum) : []));
+    const leftRoot = hierarchy<HierDatum>(makeDatum(focusId!), (d) =>
+      d.id === focusId ? leftSources.map(makeDatum) : [],
+    );
 
     const { width } = this.context.size;
     const margin = this.options.margin ?? 80;
