@@ -43,6 +43,13 @@ describe('SketchBuilder', () => {
     expect(Object.values(content).filter((record: any) => record.typeName === 'binding')).to.have.length(0);
   });
 
+  test('throws on unknown connector handles and duplicate shape ids', ({ expect }) => {
+    expect(() => new SketchBuilder().rectangle({ id: 'a' }).arrow({ from: 'a', to: 'missing' })).to.throw(
+      /unknown target shape/,
+    );
+    expect(() => new SketchBuilder().rectangle({ id: 'dup' }).ellipse({ id: 'dup' })).to.throw(/duplicate shape id/);
+  });
+
   test('produces records that pass tldraw schema validation', ({ expect }) => {
     const content = new SketchBuilder()
       .rectangle({ id: 'a', x: 0, y: 0, text: 'A' })
