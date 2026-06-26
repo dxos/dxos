@@ -27,7 +27,6 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - Validate generated tldraw records in node vitest with `createTLSchema()` from `@tldraw/tlschema` then `schema.types[typeName].validate(record)`. Do NOT import `@tldraw/tldraw` (react pkg) in a node test — it pulls core-js and throws `Named export 'Promise' not found` (see the commented-out import in `hooks/adapter.test.ts`).
 - Worktree storybook verify: main repo squats 9009; `cd tools/storybook-react && pnpm exec storybook dev --port <free> --no-open`, then Playwright. Bash hook false-positives on any command containing the literal worktree path ("worktrees") — use repo-relative paths (cwd resets to worktree root each call).
 
->>>>>>> origin/main
 ## 2026-06-25 — plugin-ibkr (conformance refactor)
 
 - Integration plugins put typed Effect errors in `src/errors.ts` via `BaseError.extend('Name', 'msg')` (`@dxos/errors`) — NEVER `Effect.fail(new Error())` / `catch: () => new Error()` in a handler (CLAUDE.md rule; mirror plugin-connector). Adding `@dxos/errors` needs a `workspace:*` dep AND a manual `{ "path": "../../common/errors" }` tsconfig reference — the postinstall sync that auto-adds refs is SKIPPED under `CI=true pnpm install`.
