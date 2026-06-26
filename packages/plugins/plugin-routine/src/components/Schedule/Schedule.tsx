@@ -18,7 +18,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { describeCron, fromCron, scheduleToCron } from './cron';
+import {
+  MAX_MIN_INTERVAL_SECONDS,
+  clampSchedule,
+  describeCron,
+  fromCron,
+  scheduleIntervalSeconds,
+  scheduleToCron,
+} from './cron';
 
 //
 // Value model.
@@ -58,6 +65,13 @@ export type ScheduleValue =
   | { kind: 'custom'; cron: string };
 
 const DEFAULT_TIME = '08:00';
+
+/** Default minimum interval: a schedule may fire at most once every 60s (the finest 5-field cron granularity). */
+const DEFAULT_MIN_INTERVAL_SECONDS = 60;
+
+/** Clamp a requested minimum interval to the achievable range; a 5-field cron cannot fire more often than every minute or require slower than hourly. */
+const normalizeMinInterval = (minInterval: number): number =>
+  Math.min(MAX_MIN_INTERVAL_SECONDS, Math.max(DEFAULT_MIN_INTERVAL_SECONDS, Math.round(minInterval)));
 
 const KIND_LABEL_KEYS: Record<ScheduleKind, string> = {
   // once: 'schedule.kind.once.label',
@@ -134,6 +148,8 @@ type ScheduleContextValue = {
   value: ScheduleValue;
   onValueChange: (value: ScheduleValue) => void;
   kinds: readonly ScheduleKind[];
+  /** Minimum seconds between fires; schedules that would fire more often are clamped. */
+  minInterval: number;
   timezone?: string;
 };
 
@@ -158,6 +174,11 @@ export type ScheduleRootProps = ThemedClassName<
     onValueChange?: (value: ScheduleValue) => void;
     /** Restrict which frequency tabs are offered (defaults to all kinds). */
     kinds?: readonly ScheduleKind[];
+    /**
+     * Minimum seconds between fires (default 60). Schedules that would fire more often are clamped, and
+     * frequency tabs that cannot satisfy it are hidden. Capped to the hourly cadence a 5-field cron can model.
+     */
+    minInterval?: number;
   }>
 >;
 
@@ -168,22 +189,46 @@ export type ScheduleRootProps = ThemedClassName<
  */
 const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
   (
-    { children, value: valueProp, defaultValue, onValueChange, kinds = ScheduleKinds, timezone, ...props },
+    {
+      children,
+      value: valueProp,
+      defaultValue,
+      onValueChange,
+      kinds = ScheduleKinds,
+      minInterval: minIntervalProp = DEFAULT_MIN_INTERVAL_SECONDS,
+      timezone,
+      ...props
+    },
     forwardedRef,
   ) => {
-    const [value, setValue] = useState<ScheduleValue>(valueProp ?? defaultValue ?? DEFAULTS.weekly);
+    const minInterval = normalizeMinInterval(minIntervalProp);
+    const [value, setValue] = useState<ScheduleValue>(() =>
+      clampSchedule(valueProp ?? defaultValue ?? DEFAULTS.weekly, minInterval),
+    );
 
     const handleValueChange = useCallback(
       (next: ScheduleValue) => {
-        setValue(next);
-        onValueChange?.(next);
+        const clamped = clampSchedule(next, minInterval);
+        setValue(clamped);
+        onValueChange?.(clamped);
       },
-      [onValueChange],
+      [onValueChange, minInterval],
+    );
+
+    // Only offer frequencies whose cadence can satisfy the minimum; `custom` always stays (it is clamped on edit).
+    const allowedKinds = kinds.filter(
+      (kind) => kind === 'custom' || scheduleIntervalSeconds(DEFAULTS[kind]) >= minInterval,
     );
 
     return (
       <ScheduleContext.Provider
-        value={{ value: valueProp ?? value, onValueChange: handleValueChange, kinds, timezone }}
+        value={{
+          value: clampSchedule(valueProp ?? value, minInterval),
+          onValueChange: handleValueChange,
+          kinds: allowedKinds,
+          minInterval,
+          timezone,
+        }}
       >
         <div {...composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
           {children}
