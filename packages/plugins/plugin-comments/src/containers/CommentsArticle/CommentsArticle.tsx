@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Card, Icon, Message as MessageHint, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type ObjectTileComponent } from '@dxos/react-ui-thread';
@@ -236,8 +236,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const comments =
     filteredAnchors.length === 0 ? (
       <div className='p-form-padding'>
-        <MessageHint.Root>
-          <MessageHint.Content>
+        <Message.Root>
+          <Message.Content>
             <span>
               <Trans
                 {...{
@@ -249,8 +249,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 }}
               />
             </span>
-          </MessageHint.Content>
-        </MessageHint.Root>
+          </Message.Content>
+        </Message.Root>
       </div>
     ) : (
       <div>

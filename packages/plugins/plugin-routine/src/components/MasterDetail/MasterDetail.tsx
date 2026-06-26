@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { Empty, OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -74,13 +74,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
 }: MasterDetailProps<T>) => {
   return (
     <div className={mx('flex flex-col min-bs-0', classNames)}>
-      {items.length === 0 && emptyLabel && (
-        <div className='flex items-center h-8 p-1'>
-          <span className='grow truncate text-sm text-description'>{emptyLabel}</span>
-        </div>
-      )}
-
-      {items.length > 0 && (
+      {(items.length === 0 && <Empty label={emptyLabel} />) || (
         <OrderedList.Root<T> items={items}>
           {({ items }) => (
             <OrderedList.Content>
@@ -106,6 +100,16 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   );
 };
 
+type MasterDetailRowProps<T extends MasterDetailRecord> = {
+  item: T;
+  selected: boolean;
+  getLabel: (get: Atom.Context, item: T) => string;
+  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
+  onSelect?: (id: string | undefined) => void;
+};
+
 const MasterDetailRow = <T extends MasterDetailRecord>({
   item,
   selected,
@@ -114,15 +118,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   getAdornment,
   getMenu,
   onSelect,
-}: {
-  item: T;
-  selected: boolean;
-  getLabel: (get: Atom.Context, item: T) => string;
-  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
-  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
-  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
-  onSelect?: (id: string | undefined) => void;
-}) => {
+}: MasterDetailRowProps<T>) => {
   const { t } = useTranslation(meta.profile.key);
   // Resolve the label, icon, adornment, and actions reactively per row — each subscribes (via `get`) only to
   // this item's state, so a change (rename, toggling enabled) updates just this row.
@@ -130,6 +126,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   const icon = useAtomValue(useMemo(() => Atom.make((get) => getIcon?.(get, item)), [getIcon, item]));
   const adornment = useAtomValue(useMemo(() => Atom.make((get) => getAdornment?.(get, item)), [getAdornment, item]));
   const menu = useMenuBuilder((get) => getMenu?.(get, item) ?? EMPTY_MENU, [getMenu, item]);
+
   return (
     <OrderedList.Item
       id={item.id}

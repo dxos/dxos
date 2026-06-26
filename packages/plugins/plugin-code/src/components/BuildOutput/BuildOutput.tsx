@@ -56,6 +56,7 @@ const BuildStatus = ({ build, run }: BuildStatusProps) => {
   if (!build) {
     return null;
   }
+
   const buildLabel = build.ok ? t('build.clean.label') : t('build.failed.label');
   const runLabel = run ? (run.ok ? null : t('run.failed.label')) : null;
   return (
