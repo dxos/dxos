@@ -60,7 +60,6 @@ describe('CRM Mailbox', () => {
         - Research the sender and any contacts mentioned in the message.
         - Create and link a summary document for the sender's Organization if one does not already exist.
         - Create or update CRM Profiles (Person and/or Organization objects) for those contacts using the CRM tools.
-        - Attach a profile photo or company logo if you can find one.
 
         <input>${JSON.stringify(SEED_EMAIL_INPUT)}</input>
       `,
