@@ -7,6 +7,7 @@ import type { DXN } from '@dxos/keys';
 // TODO(wittjosiah): Cleanup to avoid re-naming.
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
+import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
 import {
   SurfaceProfilerProvider,
   useSurfaceProfilerCallback,
@@ -54,6 +55,9 @@ export namespace Surface {
 
   export const makeFilter = makeFilterFn;
   export const isFilter = isSurfaceFilterFn;
+
+  export const isDebugEnabled = isSurfaceDebugEnabled;
+  export const setDebug = setSurfaceDebug;
 
   export const ProfilerProvider = SurfaceProfilerProvider;
   export const useProfilerCallback = useSurfaceProfilerCallback;

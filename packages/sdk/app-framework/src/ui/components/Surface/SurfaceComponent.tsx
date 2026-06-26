@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 import React, {
   type FC,
   Fragment,
   type NamedExoticComponent,
   Profiler,
-  type RefAttributes,
   Suspense,
-  forwardRef,
   memo,
   useEffect,
   useMemo,
@@ -26,7 +25,7 @@ import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager/PluginManagerProvider';
 import { SurfaceContext } from './context';
-import { SurfaceInfo } from './SurfaceInfo';
+import { DebugSurface, isSurfaceDebugEnabled } from './SurfaceDebug';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
 import {
   type Definition,
@@ -54,67 +53,49 @@ type WebComponentWrapperProps = {
   [key: string]: any;
 };
 
-const WebComponentWrapper = memo(
-  forwardRef<HTMLElement, WebComponentWrapperProps>(({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const elementRef = useRef<HTMLElement | null>(null);
-    const propsRef = useRef({ id, role, data, limit, ...rest });
+const WebComponentWrapper = memo(({ id, role, data, limit, definition, ...rest }: WebComponentWrapperProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const elementRef = useRef<HTMLElement | null>(null);
+  const propsRef = useRef({ id, role, data, limit, ...rest });
 
-    // Update props ref on every render
-    propsRef.current = { id, role, data, limit, ...rest };
+  // Update props ref on every render.
+  propsRef.current = { id, role, data, limit, ...rest };
 
-    // Create element only once
-    useEffect(() => {
-      if (!containerRef.current || elementRef.current) {
-        return;
+  // Create element only once.
+  useEffect(() => {
+    if (!containerRef.current || elementRef.current) {
+      return;
+    }
+
+    // Create the Web Component.
+    const element = document.createElement(definition.tagName);
+    elementRef.current = element;
+
+    // Set initial properties on the Web Component.
+    Object.assign(element, propsRef.current);
+
+    // Append to container.
+    containerRef.current.appendChild(element);
+
+    // Cleanup on unmount to prevent memory leaks.
+    return () => {
+      if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
+        containerRef.current.removeChild(elementRef.current);
       }
+      elementRef.current = null;
+    };
+  }, [definition.tagName]);
 
-      // Create the Web Component
-      const element = document.createElement(definition.tagName);
-      elementRef.current = element;
-
-      // Set initial properties on the Web Component
+  // Keep all props (including those in `rest`) in sync on the existing element.
+  useEffect(() => {
+    const element = elementRef.current;
+    if (element) {
       Object.assign(element, propsRef.current);
+    }
+  });
 
-      // Append to container
-      containerRef.current.appendChild(element);
-
-      // Setup ref forwarding if provided
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(element);
-      } else if (forwardedRef) {
-        forwardedRef.current = element;
-      }
-
-      // Cleanup on unmount to prevent memory leaks
-      return () => {
-        if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
-          containerRef.current.removeChild(elementRef.current);
-        }
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(null);
-        } else if (forwardedRef) {
-          forwardedRef.current = null;
-        }
-        elementRef.current = null;
-      };
-    }, [definition.tagName, forwardedRef]);
-
-    // Update props on existing element without recreating it
-    // This runs on every render to ensure all props (including those in `rest`) are kept up to date
-    useEffect(() => {
-      const element = elementRef.current;
-      if (!element) {
-        return;
-      }
-
-      // Update properties on the existing Web Component
-      Object.assign(element, propsRef.current);
-    });
-
-    return <div ref={containerRef} />;
-  }),
-);
+  return <div ref={containerRef} />;
+});
 
 WebComponentWrapper.displayName = 'WebComponentWrapper';
 
@@ -133,67 +114,51 @@ type SurfaceContextProviderProps = {
  */
 // TODO(burdon): Allow DebugPlugin to provide different fallback using react-ui ErrorFallback.
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, SurfaceContextProviderProps>(
-    ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
-      const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
-      const onProfilerRender = useSurfaceProfilerCallback();
-      const profilerId = `surface/${id}/${role}`;
+  ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }: SurfaceContextProviderProps) => {
+    const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
+    const onProfilerRender = useSurfaceProfilerCallback();
+    const profilerId = `surface/${id}/${role}`;
 
-      // Handle Web Component surfaces
-      if (definition.kind === 'web-component') {
-        return (
-          <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-            <SurfaceContext.Provider value={contextValue}>
-              <WebComponentWrapper
-                id={id}
-                role={role}
-                data={data}
-                limit={limit}
-                definition={definition}
-                ref={forwardedRef}
-                {...rest}
-              />
-            </SurfaceContext.Provider>
-          </ErrorBoundary>
-        );
-      }
-
-      // Handle React component surfaces
-      const Component = definition.component;
-
-      // TODO(burdon): Remove from production build?
-      const debug = DEBUG || '__DX_DEBUG__' in window;
-      if (debug) {
-        return (
-          <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-            <div className='contents' data-id={id} data-role={role}>
-              <SurfaceContext.Provider value={contextValue}>
-                <SurfaceInfo ref={forwardedRef}>
-                  {onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
-                    <Profiler id={profilerId} onRender={onProfilerRender}>
-                      <Component id={id} role={role} data={data} limit={limit} {...rest} />
-                    </Profiler>
-                  ) : (
-                    <Component id={id} role={role} data={data} limit={limit} {...rest} />
-                  )}
-                </SurfaceInfo>
-              </SurfaceContext.Provider>
-            </div>
-          </ErrorBoundary>
-        );
-      }
-
+    // Handle Web Component surfaces.
+    if (definition.kind === 'web-component') {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-          <div className='contents' data-id={id} data-role={role}>
-            <SurfaceContext.Provider value={contextValue}>
-              <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
-            </SurfaceContext.Provider>
-          </div>
+          <SurfaceContext.Provider value={contextValue}>
+            <WebComponentWrapper id={id} role={role} data={data} limit={limit} definition={definition} {...rest} />
+          </SurfaceContext.Provider>
         </ErrorBoundary>
       );
-    },
-  ),
+    }
+
+    // Handle React component surfaces.
+    const Component = definition.component;
+    const component = <Component id={id} role={role} data={data} limit={limit} {...rest} />;
+    const profiled =
+      onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
+        <Profiler id={profilerId} onRender={onProfilerRender}>
+          {component}
+        </Profiler>
+      ) : (
+        component
+      );
+
+    if (isSurfaceDebugEnabled()) {
+      return (
+        <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
+          <SurfaceContext.Provider value={contextValue}>
+            <DebugSurface info={contextValue}>{profiled}</DebugSurface>
+          </SurfaceContext.Provider>
+        </ErrorBoundary>
+      );
+    }
+
+    // Production renders the matched component directly: a surface adds no wrapper element of its own.
+    return (
+      <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
+        <SurfaceContext.Provider value={contextValue}>{profiled}</SurfaceContext.Provider>
+      </ErrorBoundary>
+    );
+  },
 );
 
 SurfaceContextProvider.displayName = 'SurfaceContextProvider';
@@ -202,55 +167,65 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
  * A surface is a named region of the screen that can be populated by plugins.
  * The `type` prop is a {@link RoleToken} that defines which region and its
  * associated data contract.
+ *
+ * A surface is a boundary that may resolve to zero, one, or many components, so
+ * it intentionally accepts no `ref`; consumers needing an element should own one
+ * inside their contributed component.
  */
-// TODO(burdon): Remove `ref` since relying on this would be error prone.
 export const SurfaceComponent = memo(
-  forwardRef<HTMLElement, TypedProps<RoleToken<any>>>(
-    ({ id: _id, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
-      const data = useDefaultValue(dataProp, () => ({}));
-      // TODO(wittjosiah): This will make all surfaces depend on a single signal.
-      //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
-      //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
-      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
-      //   In the future, it would be nice to be able to bucket the surface contributions by role.
-      const surfaces = useSurfaces();
+  ({
+    id: _id,
+    type,
+    data: dataProp,
+    limit,
+    placeholder = DEFAULT_PLACEHOLDER,
+    ...rest
+  }: TypedProps<RoleToken<any>>) => {
+    const data = useDefaultValue(dataProp, () => ({}));
+    const manager = usePluginManager();
+    // Subscribe only to this role's contributions: contributing/removing a surface for a
+    // different role keeps this bucket referentially stable, so the atom does not re-render us.
+    const effectiveRole = type?.role ?? '';
+    const candidatesAtom = useMemo(
+      () => getCandidatesAtom(manager.capabilities, effectiveRole),
+      [manager, effectiveRole],
+    );
+    const roleCandidates = useAtomValue(candidatesAtom);
 
-      const effectiveRole = type?.role;
-      if (effectiveRole == null) {
-        if (DEBUG) {
-          log.warn('Surface is missing required `type` prop', { id: _id });
-        }
-        return null;
+    if (type?.role == null) {
+      if (DEBUG) {
+        log.warn('Surface is missing required `type` prop', { id: _id });
       }
+      return null;
+    }
 
-      // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
-      const definitions = findCandidates(surfaces, { role: effectiveRole, data });
-      const candidates = limit ? definitions.slice(0, limit) : definitions;
-      if (DEBUG && candidates.length === 0) {
-        log.warn('no candidates for surface', { role: effectiveRole, data });
-        return null;
-      }
+    // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
+    const definitions = matchCandidates(roleCandidates, effectiveRole, data);
+    const candidates = limit ? definitions.slice(0, limit) : definitions;
+    if (DEBUG && candidates.length === 0) {
+      log.warn('no candidates for surface', { role: effectiveRole, data });
+      return null;
+    }
 
-      return (
-        <Suspense fallback={placeholder}>
-          {candidates.map((definition) => (
-            <SurfaceContextProvider
-              key={definition.id}
-              id={definition.id}
-              role={effectiveRole}
-              data={data}
-              limit={limit}
-              definition={definition}
-              ref={forwardedRef}
-              {...rest}
-            />
-          ))}
-        </Suspense>
-      );
-    },
-  ),
-) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode) &
-  NamedExoticComponent<TypedProps<RoleToken<any>> & RefAttributes<HTMLElement>>;
+    return (
+      <Suspense fallback={placeholder}>
+        {candidates.map((definition) => (
+          <SurfaceContextProvider
+            key={definition.id}
+            id={definition.id}
+            role={effectiveRole}
+            data={data}
+            limit={limit}
+            definition={definition}
+            {...rest}
+          />
+        ))}
+      </Suspense>
+    );
+  },
+  // The generic call signature is reattached here because `memo` erases it from the inferred type.
+) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken>) => React.ReactNode) &
+  NamedExoticComponent<TypedProps<RoleToken<any>>>;
 
 SurfaceComponent.displayName = 'Surface';
 
@@ -259,18 +234,79 @@ const ErrorFallback = ({ error }: { error: Error }) => {
   const { message } = error instanceof Error ? error : { message: String(error) };
   return (
     <div role='alert' data-testid='error-boundary-fallback'>
-      <h1 className='flex gap-2 text-sm mt-2 text-info-text'>{message}</h1>
+      <h1 className='flex p-2 text-sm text-info-text'>{message}</h1>
     </div>
   );
 };
 
-const findCandidates = (surfaces: Definition[], { role, data }: { role: string; data: Props['data'] }) => {
-  return Object.values(surfaces)
-    .filter((definition) =>
-      Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
-    )
-    .filter(({ filter }) => (filter ? filter(data ?? {}, role) : true))
-    .toSorted(Position.compare);
+/**
+ * Groups definitions by role with each bucket pre-sorted by {@link Position},
+ * so dispatch avoids a full scan and re-sort on every render.
+ */
+const indexByRole = (definitions: Definition[]): Map<string, Definition[]> => {
+  const index = new Map<string, Definition[]>();
+  for (const definition of definitions) {
+    const roles = Array.isArray(definition.role) ? definition.role : [definition.role];
+    for (const role of roles) {
+      let bucket = index.get(role);
+      if (!bucket) {
+        bucket = [];
+        index.set(role, bucket);
+      }
+      bucket.push(definition);
+    }
+  }
+  for (const bucket of index.values()) {
+    bucket.sort(Position.compare);
+  }
+  return index;
+};
+
+/**
+ * Filters the pre-indexed candidates for a role through their data guards.
+ */
+const matchCandidates = (
+  definitions: ReadonlyArray<Definition> | undefined,
+  role: string,
+  data: Props['data'],
+): Definition[] => {
+  if (!definitions) {
+    return [];
+  }
+  return definitions.filter(({ filter }) => (filter ? filter(data ?? {}, role) : true));
+};
+
+const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
+
+// Per-manager, per-role atoms are cached so every Surface for a role shares one subscription.
+const candidatesAtomCache = new WeakMap<object, Map<string, Atom.Atom<ReadonlyArray<Definition>>>>();
+
+/**
+ * Derived atom yielding the (position-sorted) candidates for a single role. It
+ * derives directly from the capability atom and wraps the role's bucket with
+ * {@link Data.array}, so the atom registry compares results structurally: a
+ * contribution to a different role recomputes to an equal value and is dropped,
+ * leaving this role's subscribers untouched.
+ */
+const getCandidatesAtom = (
+  capabilities: CapabilityManager.CapabilityManager,
+  role: string,
+): Atom.Atom<ReadonlyArray<Definition>> => {
+  let byRole = candidatesAtomCache.get(capabilities);
+  if (!byRole) {
+    byRole = new Map();
+    candidatesAtomCache.set(capabilities, byRole);
+  }
+  let atom = byRole.get(role);
+  if (!atom) {
+    const base = capabilities.atom(Capabilities.ReactSurface);
+    atom = Atom.make((get) => {
+      const bucket = indexByRole(get(base).flat()).get(role);
+      return bucket ? Data.array(bucket) : EMPTY_CANDIDATES;
+    });
+    byRole.set(role, atom);
+  }
+  return atom;
 };
 
 /**
@@ -281,7 +317,7 @@ export const useSurfaces = () => {
   const surfacesByModule = useAtomValue(manager.capabilities.atomByModule(Capabilities.ReactSurface));
   return useMemo(() => {
     const result: Definition[] = [];
-    for (const [moduleId, surfaces] of Object.entries(surfacesByModule)) {
+    for (const [, surfaces] of Object.entries(surfacesByModule)) {
       for (const def of surfaces.flat()) {
         result.push(def);
       }
@@ -305,9 +341,7 @@ export function isSurfaceAvailable<TToken extends RoleToken<any>>(
     return false;
   }
   const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
-  const candidates = findCandidates(surfaces.flat(), {
-    role: effectiveRole,
-    data: args.data as Props['data'],
-  });
+  const index = indexByRole(surfaces.flat());
+  const candidates = matchCandidates(index.get(effectiveRole), effectiveRole, args.data as Props['data']);
   return candidates.length > 0;
 }
