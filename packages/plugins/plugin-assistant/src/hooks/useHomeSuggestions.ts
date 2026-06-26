@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
@@ -28,27 +28,25 @@ export const useHomeSuggestions = (space?: Space): readonly string[] | undefined
   const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);
   const [suggestions, setSuggestions] = useState<readonly string[] | undefined>(undefined);
 
-  useEffect(() => {
-    setSuggestions(undefined);
-    if (!space) {
-      return;
-    }
-    let cancelled = false;
-    void invokePromise(
-      AssistantOperation.GenerateHomeSuggestions,
-      { db: space.db },
-      { spaceId: space.db.spaceId },
-    ).then((result) => {
-      if (cancelled) {
+  useAsyncEffect(
+    async (controller) => {
+      setSuggestions(undefined);
+      if (!space) {
+        return;
+      }
+      const result = await invokePromise(
+        AssistantOperation.GenerateHomeSuggestions,
+        { db: space.db },
+        { spaceId: space.db.spaceId },
+      );
+      if (controller.signal.aborted) {
         return;
       }
       const prompts = result.data?.prompts;
       setSuggestions(prompts && prompts.length > 0 ? prompts : fallbacks);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [space, invokePromise]);
+    },
+    [space, invokePromise],
+  );
 
   return suggestions;
 };
