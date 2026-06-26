@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { Empty, OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -74,13 +74,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
 }: MasterDetailProps<T>) => {
   return (
     <div className={mx('flex flex-col min-bs-0', classNames)}>
-      {items.length === 0 && emptyLabel && (
-        <div className='flex items-center h-8 p-1'>
-          <span className='grow truncate text-sm text-description'>{emptyLabel}</span>
-        </div>
-      )}
-
-      {items.length > 0 && (
+      {(items.length === 0 && <Empty label={emptyLabel} />) || (
         <OrderedList.Root<T> items={items}>
           {({ items }) => (
             <OrderedList.Content>
