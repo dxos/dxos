@@ -12,6 +12,8 @@ import {
   AgentHandlers,
   AgentWizardSkill,
   AgentWizardHandlers,
+  AlarmSkill,
+  AlarmHandlers,
   SkillManagerSkill,
   SkillManagerHandlers,
   BrowserSkill,
@@ -28,7 +30,6 @@ import {
   DelegationSkill,
   DelegationHandlers,
   makeDelegationStrategy,
-  makePlanCompletionGuard,
 } from '@dxos/assistant-toolkit';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
@@ -49,6 +50,7 @@ const skillDefinition = () =>
     Capability.contributes(AppCapabilities.SkillDefinition, SkillManagerSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, AgentWizardSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
+    Capability.contributes(AppCapabilities.SkillDefinition, AlarmSkill),
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentSkillHandlers),
@@ -58,11 +60,11 @@ const skillDefinition = () =>
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
     Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
     Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+    Capability.contributes(Capabilities.OperationHandler, AlarmHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
     Capability.contributes(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
-    Capability.contributes(RoutineCapabilities.AgentCompletionGuard, makePlanCompletionGuard()),
   ]);
 
 export default skillDefinition;

@@ -4791,6 +4791,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../../plugins/plugin-client
+      '@dxos/plugin-crm':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-crm
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../../plugins/plugin-inbox
