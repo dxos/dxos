@@ -76,18 +76,21 @@ export const reconcileSyncBindings = ({
         continue;
       }
       let target: Obj.Unknown;
-      if (sel === firstNew && existingTarget) {
-        target = yield* Database.load(existingTarget);
-      } else if (connector.materializeTarget) {
+      if (connector.materializeTarget) {
+        // Always route through materializeTarget so it can apply name updates to
+        // existing targets (e.g. rename a pre-existing Calendar to match the remote name).
         const { target: materialized } = yield* invoker.invoke(
           connector.materializeTarget,
           {
             connection: Ref.make(connection),
             remoteTarget: { id: sel.remoteId, name: sel.name ?? sel.remoteId },
+            ...(sel === firstNew && existingTarget ? { existingTarget } : {}),
           },
           { spaceId: db.spaceId },
         );
         target = yield* Database.load(materialized);
+      } else if (sel === firstNew && existingTarget) {
+        target = yield* Database.load(existingTarget);
       } else {
         // Targetless connector: no dedicated local root object, so the binding
         // is a self-loop referencing the connection. The remote target is

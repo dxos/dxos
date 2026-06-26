@@ -13,13 +13,13 @@ import { InboxOperation, Mailbox } from '../../../types';
 /**
  * Eagerly materializes a local Mailbox so a {@link SyncBinding} can be created
  * (relations require both endpoints to exist). Gmail is a single-target connector
- * with no remote selection, so a fresh Mailbox is always created; the connection's
- * `accessToken.account` (the authenticated email) seeds the default name when available.
+ * with no remote selection. When `existingTarget` is supplied, its name is updated
+ * to match the account email rather than creating a fresh Mailbox.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.MaterializeGmailTarget> =
   InboxOperation.MaterializeGmailTarget.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ connection }) {
+      Effect.fnUntraced(function* ({ connection, existingTarget }) {
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
@@ -33,6 +33,17 @@ const handler: Operation.WithHandler<typeof InboxOperation.MaterializeGmailTarge
         return yield* Effect.gen(function* () {
           const accessToken = yield* Database.load(connectionObj.accessToken);
           const name = accessToken.account ?? 'Inbox';
+
+          if (existingTarget) {
+            const mailbox = yield* Database.load(existingTarget);
+            if (Mailbox.instanceOf(mailbox) && mailbox.name !== name) {
+              Obj.update(mailbox, (m) => {
+                m.name = name;
+              });
+            }
+            return { target: existingTarget };
+          }
+
           const created = yield* Database.add(Mailbox.make({ name }));
           return { target: Ref.make(created) };
         }).pipe(Effect.provide(Database.layer(db)));
