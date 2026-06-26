@@ -76,9 +76,7 @@ export default Capability.makeModule(
         id: 'callCompanion',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
-          const callManager = yield* Capability.get(CallsCapabilities.Manager).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const callManager = yield* Capability.get(CallsCapabilities.Manager).pipe(Effect.orDie);
           const channelUri = Obj.getURI(channel);
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
@@ -86,9 +84,7 @@ export default Capability.makeModule(
             return [];
           }
 
-          const store = yield* Capability.get(MeetingCapabilities.State).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const store = yield* Capability.get(MeetingCapabilities.State).pipe(Effect.orDie);
           const data = get(activeMeetingOrPlaceholderFamily(store));
 
           return [
@@ -107,9 +103,7 @@ export default Capability.makeModule(
         id: 'callTranscript',
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
-          const store = yield* Capability.get(MeetingCapabilities.State).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const store = yield* Capability.get(MeetingCapabilities.State).pipe(Effect.orDie);
           const transcriptionManager = get(transcriptionManagerFamily(store));
           const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
           return [
@@ -161,9 +155,7 @@ export default Capability.makeModule(
           ];
         }),
         connector: Effect.fnUntraced(function* (channel, get) {
-          const store = yield* Capability.get(MeetingCapabilities.State).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const store = yield* Capability.get(MeetingCapabilities.State).pipe(Effect.orDie);
           const meeting = get(activeMeetingFamily(store));
           if (!meeting) {
             return [];
@@ -187,9 +179,7 @@ export default Capability.makeModule(
         id: 'meetingCallCompanion',
         type: Meeting.Meeting,
         connector: Effect.fnUntraced(function* (meeting, get) {
-          const callManager = yield* Capability.get(CallsCapabilities.Manager).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const callManager = yield* Capability.get(CallsCapabilities.Manager).pipe(Effect.orDie);
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
           if (!joined || roomId !== Obj.getURI(meeting)) {
@@ -226,9 +216,7 @@ export default Capability.makeModule(
 
           // Graph-action Effects lack `Operation.Service` in context, so `Operation.invoke` fails here;
           // call the captured `OperationInvoker` capability directly instead.
-          const invoker = yield* Capability.get(Capabilities.OperationInvoker).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const invoker = yield* Capability.get(Capabilities.OperationInvoker).pipe(Effect.orDie);
 
           if (meeting) {
             return [

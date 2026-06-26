@@ -5,7 +5,6 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import type * as Context from 'effect/Context';
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -681,15 +680,10 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 };
 
 /**
- * Domain error for graph extension failures (connector, actions, resolver callbacks).
- * Using a tagged error allows callers to recover with `Effect.catchTag` when needed.
- */
-export class ExtensionError extends Data.TaggedError('ExtensionError')<{ readonly cause: unknown }> {}
-
-/**
  * Options for creating a graph builder extension with simplified API.
  * All callbacks must return Effects for dependency injection.
- * Effects may fail - errors are caught, logged, and the extension returns empty results.
+ * Effects may defect — defects are caught, logged, and the extension returns empty results.
+ * Use Effect.orDie on any failable effects inside callbacks.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
@@ -697,20 +691,20 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   actions?: (
     matched: TMatched,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], ExtensionError, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], ExtensionError, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, ExtensionError, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };
 
 /**
  * Run an Effect synchronously with the provided context.
- * If the effect fails, logs the error and returns the fallback value.
+ * Defects are caught, logged, and the fallback value is returned.
  * @internal
  */
 const runEffectSyncWithFallback = <T, R>(
-  effect: Effect.Effect<T, ExtensionError, R>,
+  effect: Effect.Effect<T, never, R>,
   context: Context.Context<R>,
   extensionId: string,
   fallback: T,
@@ -718,8 +712,8 @@ const runEffectSyncWithFallback = <T, R>(
   return Effect.runSync(
     effect.pipe(
       Effect.provide(context),
-      Effect.catchAll((error) => {
-        log.warn('Extension failed', { extension: extensionId, error });
+      Effect.catchAllDefect((defect) => {
+        log.warn('Extension failed', { extension: extensionId, defect });
         return Effect.succeed(fallback);
       }),
     ),
@@ -798,7 +792,7 @@ export const createConnector = <TData>(
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
   matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], ExtensionError, R>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -823,11 +817,8 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   actions?: (
     object: Type.InstanceType<T>,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], ExtensionError, R>;
-  connector?: (
-    object: Type.InstanceType<T>,
-    get: Atom.Context,
-  ) => Effect.Effect<Node.NodeArg<any>[], ExtensionError, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };

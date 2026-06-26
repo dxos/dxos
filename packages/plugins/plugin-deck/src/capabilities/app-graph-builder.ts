@@ -90,11 +90,7 @@ export default Capability.makeModule(
               },
             };
 
-            const state = get(
-              yield* Capability.get(DeckCapabilities.State).pipe(
-                Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-              ),
-            );
+            const state = get(yield* Capability.get(DeckCapabilities.State).pipe(Effect.orDie));
             const deck = state.decks[state.activeDeck];
 
             const toggleSidebar = {

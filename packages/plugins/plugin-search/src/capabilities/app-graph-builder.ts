@@ -21,9 +21,7 @@ export default Capability.makeModule(
         id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
         connector: Effect.fnUntraced(function* (node, get) {
-          const client = yield* Capability.get(ClientCapabilities.Client).pipe(
-            Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
-          );
+          const client = yield* Capability.get(ClientCapabilities.Client).pipe(Effect.orDie);
           const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
           const layout = layoutAtom ? get(layoutAtom) : undefined;
           const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
