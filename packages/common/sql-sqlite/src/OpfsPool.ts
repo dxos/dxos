@@ -279,11 +279,7 @@ export const writeDatabase = async (database: Uint8Array, dbFilename: string = D
   // Disassociate stale rollback/WAL sidecars left by a previous database. A freshly imported
   // main file paired with a leftover `-wal`/`-shm` (or `-journal`) opens as
   // "database disk image is malformed", so the sidecars must be released alongside the main write.
-  const staleSidecars = new Set([
-    `${associatedPath}-journal`,
-    `${associatedPath}-wal`,
-    `${associatedPath}-shm`,
-  ]);
+  const staleSidecars = new Set([`${associatedPath}-journal`, `${associatedPath}-wal`, `${associatedPath}-shm`]);
   for (const file of files) {
     if (staleSidecars.has(file.associatedPath)) {
       await writeAssociatedPath(file.handle, '', 0);
