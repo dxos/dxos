@@ -26,11 +26,15 @@ import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
 
-/** SQLite journal mode (see https://www.sqlite.org/pragma.html#pragma_journal_mode). */
-export type SqliteJournalMode = 'delete' | 'truncate' | 'persist' | 'memory' | 'wal' | 'off';
+import {
+  applyOpfsPragmas,
+  DEFAULT_JOURNAL_MODE,
+  DEFAULT_SYNCHRONOUS,
+  type SqliteJournalMode,
+  type SqliteSynchronous,
+} from './opfs-pragmas';
 
-/** SQLite synchronous flag (see https://www.sqlite.org/pragma.html#pragma_synchronous). */
-export type SqliteSynchronous = 'off' | 'normal' | 'full' | 'extra';
+export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas';
 
 /** Config for in-process OPFS SQLite (worker-only, no MessagePort). */
 export interface OpfsConfig extends WasmSqliteClient.SqliteClientMemoryConfig {
@@ -55,10 +59,6 @@ const ATTR_DB_SYSTEM_NAME = 'db.system.name';
 
 const DEFAULT_VFS_DIRECTORY = 'opfs';
 
-const DEFAULT_JOURNAL_MODE: SqliteJournalMode = 'wal';
-
-const DEFAULT_SYNCHRONOUS: SqliteSynchronous = 'normal';
-
 const initModule = Effect.runSync(Effect.cached(Effect.promise(() => SQLiteESMFactory())));
 
 const initEffect = Effect.runSync(Effect.cached(initModule.pipe(Effect.map((module) => WaSqlite.Factory(module)))));
@@ -82,9 +82,18 @@ const vacuumDatabase = (sqlite3: ReturnType<typeof WaSqlite.Factory>, db: number
   }
 };
 
-const importDatabase = (sqlite3: ReturnType<typeof WaSqlite.Factory>, db: number, data: Uint8Array): void => {
+const importDatabase = (
+  sqlite3: ReturnType<typeof WaSqlite.Factory>,
+  db: number,
+  data: Uint8Array,
+  pragmaOptions: OpfsConfig,
+): void => {
   sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
   vacuumDatabase(sqlite3, db);
+  applyOpfsPragmas(sqlite3, db, {
+    journalMode: pragmaOptions.journalMode ?? DEFAULT_JOURNAL_MODE,
+    synchronous: pragmaOptions.synchronous ?? DEFAULT_SYNCHRONOUS,
+  });
 };
 
 const recordSqliteQueryMetrics = (
@@ -146,22 +155,8 @@ export const makeOpfs = (
         (handle) => Effect.sync(() => sqlite3.close(handle)),
       );
 
-      // PRAGMAs must run before any reads/writes. WAL on AccessHandlePoolVFS has no shared-memory
-      // (xShm) support, so it is only valid under exclusive locking, and locking_mode must precede
-      // journal_mode. journal_mode returns a row, so results are stepped through.
       yield* Effect.try({
-        try: () => {
-          const pragmas = [
-            ...(journalMode === 'wal' ? ['PRAGMA locking_mode=EXCLUSIVE'] : []),
-            `PRAGMA journal_mode=${journalMode}`,
-            `PRAGMA synchronous=${synchronous}`,
-          ];
-          for (const pragma of pragmas) {
-            for (const stmt of sqlite3.statements(db, pragma)) {
-              while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {}
-            }
-          }
-        },
+        try: () => applyOpfsPragmas(sqlite3, db, { journalMode, synchronous }),
         catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to configure database PRAGMAs' }),
       });
 
@@ -253,7 +248,7 @@ export const makeOpfs = (
           Effect.try({
             try: () => {
               log('opfs import', { bytes: data.byteLength });
-              importDatabase(sqlite3, db, data);
+              importDatabase(sqlite3, db, data, options);
             },
             catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to import database' }),
           }),
