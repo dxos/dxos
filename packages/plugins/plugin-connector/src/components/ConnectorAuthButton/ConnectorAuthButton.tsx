@@ -4,19 +4,22 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { Filter, type Database, type Obj, type Ref, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { useConnector } from '#hooks';
 import { meta } from '#meta';
-import { Connection, ConnectorCoordinator, SyncBinding } from '#types';
+import { Connection, Connector, type ConnectorEntry, ConnectorCoordinator, SyncBinding } from '#types';
 
 export type ConnectorAuthButtonProps = {
-  /** Stable id of the {@link Connector} capability entry to authenticate against. */
-  connectorId: string;
+  /**
+   * Stable ids of the {@link Connector} entries this button operates over: existing connections from
+   * any of them are offered for reuse, and each (with an auth flow) gets a "Connect X" entry for
+   * creating a new connection. A single-element list behaves like the old single-connector button.
+   */
+  connectorIds: readonly string[];
   db: Database.Database;
   /**
    * Existing local object (e.g. an empty Mailbox or Calendar the user is
@@ -28,39 +31,50 @@ export type ConnectorAuthButtonProps = {
 };
 
 /**
- * Inline connect button. Hands off to the long-lived
- * {@link ConnectorCoordinator}, which builds the AccessToken + Connection
- * stubs in memory, runs the connector's auth flow (OAuth or credential form),
- * and persists everything on success — same flow as the standard
- * "Add Object → Connection" dialog. Used by callers (e.g. inbox / calendar)
- * that detect a missing connection mid-flow. Renders only when the connector
- * has an `oauth` or `credentialForm` flow.
- *
- * When existing {@link Connection} objects for this connector are already in
- * the space the button becomes a dropdown: each existing connection is offered
- * as a reuse option (creates a {@link SyncBinding} inline) and "New
- * Connection" at the bottom starts the usual auth flow.
+ * Inline connect dropdown. Always a dropdown menu: existing {@link Connection} objects for any of the
+ * given connectors are listed first (each creates a {@link SyncBinding} inline when selected), then —
+ * after a divider — a "Connect X" entry per connector starts the usual auth flow via the long-lived
+ * {@link ConnectorCoordinator} (which builds the AccessToken + Connection stubs, runs OAuth or the
+ * credential form, and persists on success). Used by callers (inbox / calendar) that detect a missing
+ * connection mid-flow.
  */
-export const ConnectorAuthButton = ({ connectorId, db, existingTarget }: ConnectorAuthButtonProps) => {
+export const ConnectorAuthButton = ({ connectorIds, db, existingTarget }: ConnectorAuthButtonProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
-  const connector = useConnector(connectorId);
+  const allConnectors = useCapabilities(Connector).flat();
+
+  // Connectors offered for a NEW connection: those in the list that actually expose an auth flow.
+  const offered = useMemo(
+    () =>
+      connectorIds
+        .map((id) => allConnectors.find((connector) => connector.id === id))
+        .filter(
+          (connector): connector is ConnectorEntry => !!connector && (!!connector.oauth || !!connector.credentialForm),
+        ),
+    [connectorIds, allConnectors],
+  );
 
   // Subscribe so reuse items enable once the target ref resolves.
   const [existingTargetLoaded] = useObject(existingTarget);
 
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
   const connections = useMemo(
-    () => allConnections.filter((connection) => connection.connectorId === connectorId),
-    [allConnections, connectorId],
+    () =>
+      allConnections.filter(
+        (connection) => connection.connectorId !== undefined && connectorIds.includes(connection.connectorId),
+      ),
+    [allConnections, connectorIds],
   );
 
-  const handleCreateNew = useCallback(() => {
-    const coordinator = manager.capabilities.get(ConnectorCoordinator);
-    void EffectEx.runAndForwardErrors(
-      coordinator.createConnection({ db, spaceId: db.spaceId, connectorId, existingTarget }),
-    ).catch(() => {});
-  }, [manager, db, connectorId, existingTarget]);
+  const handleCreateNew = useCallback(
+    (connectorId: string) => {
+      const coordinator = manager.capabilities.get(ConnectorCoordinator);
+      void EffectEx.runAndForwardErrors(
+        coordinator.createConnection({ db, spaceId: db.spaceId, connectorId, existingTarget }),
+      ).catch(() => {});
+    },
+    [manager, db, existingTarget],
+  );
 
   const handleSelectExisting = useCallback(
     (connection: Connection.Connection) => {
@@ -73,21 +87,27 @@ export const ConnectorAuthButton = ({ connectorId, db, existingTarget }: Connect
     [db, existingTarget],
   );
 
-  if (!connector?.oauth && !connector?.credentialForm) {
+  const connectorLabel = useCallback(
+    (connectorId: string | undefined): string =>
+      allConnectors.find((connector) => connector.id === connectorId)?.label ?? connectorId ?? t('connect.label'),
+    [allConnectors, t],
+  );
+
+  // Nothing to reuse and no connector with an auth flow.
+  if (offered.length === 0 && connections.length === 0) {
     return null;
   }
 
-  const connectorLabel = connector.label ?? connector.id;
-  const buttonLabel = t('connect-connection.label', { connector: connectorLabel });
-
-  if (connections.length === 0) {
-    return <IconButton onClick={handleCreateNew} icon='ph--plugs--regular' label={buttonLabel} />;
-  }
+  // Name the trigger after the single offered connector, else a generic "Connect".
+  const triggerLabel =
+    offered.length === 1
+      ? t('connect-connection.label', { connector: connectorLabel(offered[0]?.id) })
+      : t('connect.label');
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton icon='ph--plugs--regular' label={buttonLabel} />
+        <IconButton icon='ph--plugs--regular' label={triggerLabel} />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
@@ -96,13 +116,17 @@ export const ConnectorAuthButton = ({ connectorId, db, existingTarget }: Connect
               <ConnectionMenuItem
                 key={connection.id}
                 connection={connection}
-                connectorLabel={connectorLabel}
+                connectorLabel={connectorLabel(connection.connectorId)}
                 disabled={!existingTargetLoaded}
                 onSelect={handleSelectExisting}
               />
             ))}
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item onClick={handleCreateNew}>{t('new-connection.label')}</DropdownMenu.Item>
+            {connections.length > 0 && offered.length > 0 && <DropdownMenu.Separator />}
+            {offered.map((connector) => (
+              <DropdownMenu.Item key={connector.id} onClick={() => handleCreateNew(connector.id)}>
+                {t('connect-connection.label', { connector: connector.label ?? connector.id })}
+              </DropdownMenu.Item>
+            ))}
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>

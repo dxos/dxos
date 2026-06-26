@@ -11,7 +11,7 @@ import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
-import { GMAIL_PROVIDER_ID } from '../../constants';
+import { GMAIL_PROVIDER_ID, JMAP_PROVIDER_ID } from '../../constants';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
@@ -36,12 +36,12 @@ InitializeMailbox.displayName = 'InitializeMailbox';
 
 export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => {
   const { t } = useTranslation(meta.profile.key);
-  // The sync op is resolved from the bound connection's connector (see `useTargetSync`); `connectorId`
-  // only seeds the connect CTA shown when the mailbox isn't connected yet.
+  // The sync op is resolved from the bound connection's connector (see `useTargetSync`); `connectorIds`
+  // only seeds the connect dropdown shown when the mailbox isn't connected yet.
   return (
     <InitializeAction
       target={mailbox}
-      connectorId={GMAIL_PROVIDER_ID}
+      connectorIds={[GMAIL_PROVIDER_ID, JMAP_PROVIDER_ID]}
       syncLabel={t('sync-mailbox.label')}
       notify={{
         success: ['sync-mailbox-success.title', { ns: meta.profile.key }],

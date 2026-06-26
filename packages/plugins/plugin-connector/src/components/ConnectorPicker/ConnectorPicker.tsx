@@ -84,7 +84,7 @@ export const ConnectorPicker = ({ connectorId, db, existingTarget }: ConnectorPi
           </Listbox.Viewport>
         </Listbox.Root>
       )}
-      <ConnectorAuthButton connectorId={connectorId} db={db} existingTarget={existingTarget} />
+      <ConnectorAuthButton connectorIds={[connectorId]} db={db} existingTarget={existingTarget} />
     </div>
   );
 };

@@ -48,15 +48,18 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'connectorAuth',
-        filter: Surface.makeFilter(ConnectorAuth, (data) => typeof data.connectorId === 'string'),
+        filter: Surface.makeFilter(
+          ConnectorAuth,
+          (data) => typeof data.connectorId === 'string' || Array.isArray(data.connectorIds),
+        ),
         component: ({ data }) => {
           const space = useActiveSpace();
-          if (!space) {
+          // Normalize the legacy single `connectorId` to the `connectorIds` list.
+          const connectorIds = data.connectorIds ?? (data.connectorId ? [data.connectorId] : []);
+          if (!space || connectorIds.length === 0) {
             return null;
           }
-          return (
-            <ConnectorAuthButton connectorId={data.connectorId} db={space.db} existingTarget={data.existingTarget} />
-          );
+          return <ConnectorAuthButton connectorIds={connectorIds} db={space.db} existingTarget={data.existingTarget} />;
         },
       }),
       Surface.create({

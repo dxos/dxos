@@ -39,7 +39,7 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
   return (
     <InitializeAction
       target={calendar}
-      connectorId={GOOGLE_CALENDAR_PROVIDER_ID}
+      connectorIds={[GOOGLE_CALENDAR_PROVIDER_ID]}
       syncLabel={t('sync-calendar.label')}
       notify={{
         success: ['sync-calendar-success.title', { ns: meta.profile.key }],
