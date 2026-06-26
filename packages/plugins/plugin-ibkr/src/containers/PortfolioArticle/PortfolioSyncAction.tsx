@@ -60,7 +60,7 @@ export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
   }
 
   // No connection yet: render the connector's auth button through its Surface (like "Connect Gmail").
-  const data = { connectorId: IBKR_CONNECTOR_ID };
+  const data = { connectorIds: [IBKR_CONNECTOR_ID] };
   return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data }) ? (
     <Surface.Surface type={ConnectorAuth} data={data} limit={1} />
   ) : null;

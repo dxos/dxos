@@ -98,16 +98,24 @@ export const ConnectorAuthButton = ({ connectorIds, db, existingTarget }: Connec
     return null;
   }
 
-  // Name the trigger after the single offered connector, else a generic "Connect".
-  const triggerLabel =
-    offered.length === 1
-      ? t('connect-connection.label', { connector: connectorLabel(offered[0]?.id) })
-      : t('connect.label');
+  // A single connector with nothing to reuse needs no menu — a plain connect button suffices.
+  if (offered.length === 1 && connections.length === 0) {
+    const [connector] = offered;
+    if (connector) {
+      return (
+        <IconButton
+          icon='ph--plugs--regular'
+          label={t('connect-connection.label', { connector: connector.label ?? connector.id })}
+          onClick={() => handleCreateNew(connector.id)}
+        />
+      );
+    }
+  }
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton icon='ph--plugs--regular' label={triggerLabel} />
+        <IconButton icon='ph--plugs--regular' label={t('connect.label')} />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
