@@ -4,6 +4,17 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-26 — plugin-transcription / ui-editor (cross-plugin markdown toolbar control)
+
+- Contribute a toolbar button into another plugin's markdown editor: AppGraphBuilder action with `properties.disposition: 'toolbar'`, matched on the target type via `NodeMatcher.whenAll(whenEchoObjectMatches, whenEchoTypeMatches(Markdown.Document))`. Mirror `plugin-comments/src/capabilities/app-graph-builder.ts`. Wire with `AppPlugin.addAppGraphModule({ activate })`.
+- The action attaches to the matched node; `MarkdownArticle` gathers toolbar actions via `graph.actions(attendableId ?? id)`, and the editor registers its `EditorView` under that SAME `attendableId ?? id` in `MarkdownCapabilities.EditorViews`. So `matched.id` == the editor-registry key — use it to key any external control state and to look the view back up.
+- Drive a live `EditorView` from outside an extension: resolve `MarkdownCapabilities.EditorViews` (`useCapabilities`, not `useCapability` — won't throw if markdown absent), `.get(id)` → `entry.view.dispatch({ effects })`. Same pattern as `plugin-markdown/src/operations/scroll-to-anchor.ts`.
+- App-wide headless controller: contribute `Capabilities.ReactContext` (`{ id, context: ({children}) => <>{children}<Driver/></> }`) via `AppPlugin.addReactContextModule`. Mirror `plugin-debug/src/capabilities/react-context.tsx`.
+- Reactive toolbar label/icon from an atom: in `actions: (matched, get)` read `get(capabilities.get(MyAtomCapability))`; toggle it in the `data` Effect handler via `capabilities.get(Capabilities.AtomRegistry).set(atom, …)`.
+- Generic CM extension that takes externally-injected text lives in `@dxos/ui-editor` (`pending-text.ts`): `StateField` mapping its anchor through `tr.changes.mapPos`, decorations widget, and exported `StateEffect`s as the external contract + `Command`s for confirm/cancel. Build widget DOM (incl. icons) with `Domino` from `@dxos/ui` (`Domino.svg('ph--…')`), `mousedown`+preventDefault so clicks don't steal selection.
+- Storybook showing a custom markdown toolbar action: `corePlugins()` has `GraphPlugin` but NOT the space→object graph nodes, so the action has no node to attach to. Add `SpacePlugin({})` (`@dxos/plugin-space/testing`) + a story-only `AppPlugin.addAppGraphModule` whose `GraphBuilder.createExtension({ match: NodeMatcher.whenRoot, connector })` returns `AppNode.makeObject({get,db,object})` for the space's docs; render with `attendableId = qualifyId(Node.RootId, doc.id)` and `Graph.expand(graph, attendableId, 'action')`. Copy `plugin-comments/src/containers/CommentsArticle/CommentsArticle.stories.tsx`.
+- `moon run <proj>:serve` (tasks with `preset: server`) is SKIPPED when `CI=true` is in the env (errors "No tasks found"). Run storybook serve WITHOUT `CI=true`. (pnpm install still needs `CI=true`/`HUSKY=0`.)
+
 ## 2026-06-25 — plugin-masonry / react-ui-masonry
 
 - Container renamed `MasonryContainer` → `MasonryArticle` (surface `article` role suffix convention). When renaming a container, update: dir + both files (`.tsx`/`.stories.tsx`), the bridge `index.ts` (`export { X as default }`), `containers/index.ts` lazy const, and `capabilities/react-surface.tsx` import + JSX — `grep -rn OldName` to confirm zero left.

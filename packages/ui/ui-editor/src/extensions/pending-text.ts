@@ -3,7 +3,7 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { type Command, Decoration, type DecorationSet, EditorView, WidgetType, keymap } from '@codemirror/view';
+import { type Command, Decoration, EditorView, WidgetType, keymap } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
