@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, View } from '@dxos/echo';
 
-import { MasonryContainer } from '#containers';
+import { MasonryArticle } from '#containers';
 import { Masonry } from '#types';
 
 export default Capability.makeModule(() =>
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => {
           const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view;
-          return <MasonryContainer view={view} role={role} />;
+          return <MasonryArticle view={view} role={role} />;
         },
       }),
     ]),

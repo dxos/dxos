@@ -16,18 +16,12 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-export type MasonryContainerProps = {
-  view: View.View;
+export type MasonryArticleProps = {
+  view: View.View | Ref.Ref<View.View>;
   role?: string;
 };
 
-export const MasonryContainer = ({
-  view: viewOrRef,
-  role: _role,
-}: {
-  view: View.View | Ref.Ref<View.View>;
-  role?: string;
-}) => {
+export const MasonryArticle = ({ view: viewOrRef, role: _role }: MasonryArticleProps) => {
   const [view] = useObject(viewOrRef);
   const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
@@ -83,7 +77,7 @@ export const MasonryContainer = ({
               <SearchList.Input placeholder='Search...' />
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Panel.Content>
+          <Panel.Content classNames='pt-trim-md'>
             <MasonryComponent.Content padding centered>
               <MasonryComponent.Viewport items={results} getId={(data: any) => data?.id} />
             </MasonryComponent.Content>

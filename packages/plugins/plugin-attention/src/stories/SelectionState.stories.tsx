@@ -136,7 +136,7 @@ const SelectionStateStory = () => {
 
   return (
     <div className='flex h-full overflow-hidden divide-x divide-separator'>
-      {/* Left pane: ordered list with selection */}
+      {/* Left pane: ordered list with selection. */}
       <div className='w-56 shrink-0 flex flex-col overflow-hidden'>
         <div className='px-3 py-2 text-sm font-medium text-subdued border-b border-separator'>Items</div>
         <OrderedList.Root<StoryItem> items={ITEMS} isItem={isItem} getId={(item) => item.id}>

@@ -20,7 +20,7 @@ import { Organization } from '@dxos/types';
 
 import { Masonry } from '#types';
 
-import { MasonryContainer } from './MasonryContainer';
+import { MasonryArticle } from './MasonryArticle';
 
 random.seed(0);
 
@@ -30,7 +30,7 @@ const StorybookMasonry = () => {
   const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
   const [masonry] = useObject(masonries.at(0));
 
-  return masonry ? <MasonryContainer view={masonry.view} role='story' /> : null;
+  return masonry ? <MasonryArticle view={masonry.view} role='story' /> : null;
 };
 
 const meta = {

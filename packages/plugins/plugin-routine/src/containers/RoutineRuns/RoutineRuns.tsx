@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Icon, List, ListItem, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Empty } from '@dxos/react-ui-list';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -105,7 +106,7 @@ export const RoutineRuns = ({ role, subject }: RoutineRunsProps) => {
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               {runs.length === 0 ? (
-                <p className='text-sm text-description p-2'>{t('history.empty.message')}</p>
+                <Empty label={t('history.empty.message')} />
               ) : (
                 <List classNames='dx-document'>
                   <Mosaic.VirtualStack
