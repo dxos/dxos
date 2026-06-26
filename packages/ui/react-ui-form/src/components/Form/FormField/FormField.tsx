@@ -24,6 +24,7 @@ import {
   AsyncSelectField,
   AutofillField,
   BooleanField,
+  ComboboxField,
   DateField,
   GeoPointField,
   InlineRefField,
@@ -167,7 +168,11 @@ export const FormField = (props: FormFieldProps) => {
 
   const optionsLookup = Option.getOrUndefined(Annotation.OptionsLookupAnnotation.getFromAst(type));
   if (optionsLookup) {
-    return <AsyncSelectField {...fieldProps} lookup={optionsLookup} />;
+    return optionsLookup.combobox ? (
+      <ComboboxField {...fieldProps} lookup={optionsLookup} />
+    ) : (
+      <AsyncSelectField {...fieldProps} lookup={optionsLookup} />
+    );
   }
 
   const autofill = Option.getOrUndefined(Annotation.AutofillAnnotation.getFromAst(type));

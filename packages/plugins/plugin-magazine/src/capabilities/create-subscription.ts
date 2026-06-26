@@ -9,7 +9,12 @@ import { Annotation, Format } from '@dxos/echo';
 
 import { Subscription } from '#types';
 
-import { browserCorsProxy, fetchRss, listStandardSitePublications } from '../operations/sources';
+import {
+  browserCorsProxy,
+  fetchRss,
+  listStandardSitePublications,
+  searchStandardSiteHandles,
+} from '../operations/sources';
 
 // Structural gates (regex / URL format), used as form-field validation and to short-circuit the network
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup
@@ -26,13 +31,32 @@ const isUrl = Schema.is(Format.URL);
 const StandardSiteCreateBase = Schema.Struct({
   type: Schema.Literal('standard-site'),
   handle: HandleSchema.annotations({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
+  // No `name`: the feed name is taken from the selected publication (resolved by `fetchStandardSite`).
   publication: Schema.String.annotations({ title: 'Publication', description: 'Choose a publication.' }),
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
 
 const StandardSiteCreate = Schema.Struct({
   ...StandardSiteCreateBase.fields,
+  // Handle is a combobox: typing queries known handles (typeahead); the typed text stays selectable.
+  handle: StandardSiteCreateBase.fields.handle.pipe(
+    Annotation.OptionsLookupAnnotation.set(
+      Annotation.optionsLookup<StandardSiteValues>()(
+        ['handle'],
+        ({ handle }) =>
+          searchStandardSiteHandles(handle ?? '', { corsProxy: browserCorsProxy() }).pipe(
+            Effect.map((suggestions) =>
+              suggestions.map((suggestion) => ({
+                value: suggestion.handle,
+                label: suggestion.handle,
+                secondaryLabel: suggestion.displayName,
+              })),
+            ),
+          ),
+        { combobox: true },
+      ),
+    ),
+  ),
   // Publication options are looked up from the entered `handle`.
   publication: StandardSiteCreateBase.fields.publication.pipe(
     Annotation.OptionsLookupAnnotation.set(
@@ -87,12 +111,8 @@ export type CreateSubscriptionInput = Schema.Schema.Type<typeof CreateSubscripti
 export const makeSubscriptionFromCreate = (input: CreateSubscriptionInput): Subscription.Subscription => {
   switch (input.type) {
     case 'standard-site':
-      return Subscription.makeSubscription({
-        type: 'standard-site',
-        url: input.handle,
-        site: input.publication,
-        name: input.name,
-      });
+      // Name is left unset; sync resolves it from the selected publication.
+      return Subscription.makeSubscription({ type: 'standard-site', url: input.handle, site: input.publication });
     case 'rss':
       return Subscription.makeSubscription({ type: 'rss', url: input.url, name: input.name });
   }

@@ -247,10 +247,13 @@ const isValidUrl = Schema.is(Format.URL);
 const DynamicFieldsBase = Schema.Struct({
   query: Schema.String.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
   choice: Schema.optional(Schema.String),
+  tag: Schema.optional(Schema.String),
   url: Format.URL.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
   name: Schema.optional(Schema.String),
 });
 type DynamicFieldsValues = Schema.Schema.Type<typeof DynamicFieldsBase>;
+
+const TAG_VOCABULARY = ['react', 'effect', 'schema', 'echo', 'composer'];
 
 const DynamicFieldsSchema = Schema.mutable(
   Schema.Struct({
@@ -266,6 +269,20 @@ const DynamicFieldsSchema = Schema.mutable(
           ),
         ),
         Schema.annotations({ title: 'Choice', description: 'Options load from the query (after a delay).' }),
+      ),
+    ),
+    // Combobox: the field's own value is the query; the typed text is the auto-selected first option.
+    tag: Schema.optional(
+      Schema.String.pipe(
+        Annotation.OptionsLookupAnnotation.set(
+          Annotation.optionsLookup<DynamicFieldsValues>()(
+            // No deps: the pool is fetched once; the combobox filters it by the typed text client-side.
+            [],
+            () => Effect.succeed(TAG_VOCABULARY.map((value) => ({ value, label: value }))).pipe(Effect.delay('400 millis')),
+            { combobox: true },
+          ),
+        ),
+        Schema.annotations({ title: 'Tag', description: 'Combobox: type to filter; your text stays selectable.' }),
       ),
     ),
     name: Schema.optional(
@@ -294,5 +311,79 @@ export const DynamicFields: Story<Schema.Schema.Type<typeof DynamicFieldsSchema>
   args: {
     json: true,
     schema: DynamicFieldsSchema,
+  },
+};
+
+// Discriminated-union create form mirroring the magazine create-feed schema: a `type` selector picks the
+// member, whose fields then render — `standard-site` (handle combobox → publication select) or `rss`
+// (URL → auto-filled name). Backed by in-memory Effects so the story is deterministic. Regression harness
+// for union create forms (e.g. the `omitId` union-flattening bug).
+const HANDLE_SUGGESTIONS = ['dxos.org', 'alice.bsky.social', 'bob.example.com'];
+
+const StandardSiteCreateBase = Schema.Struct({
+  type: Schema.Literal('standard-site'),
+  handle: Schema.String.annotations({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
+  // No `name`: the feed name is taken from the selected publication.
+  publication: Schema.String.annotations({ title: 'Publication', description: 'Choose a publication.' }),
+});
+type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
+
+const StandardSiteCreate = Schema.Struct({
+  ...StandardSiteCreateBase.fields,
+  handle: StandardSiteCreateBase.fields.handle.pipe(
+    Annotation.OptionsLookupAnnotation.set(
+      Annotation.optionsLookup<StandardSiteValues>()(
+        ['handle'],
+        () => Effect.succeed(HANDLE_SUGGESTIONS.map((value) => ({ value, label: value }))).pipe(Effect.delay('300 millis')),
+        { combobox: true },
+      ),
+    ),
+  ),
+  publication: StandardSiteCreateBase.fields.publication.pipe(
+    Annotation.OptionsLookupAnnotation.set(
+      Annotation.optionsLookup<StandardSiteValues>()(['handle'], ({ handle }) =>
+        Effect.succeed(
+          handle
+            ? [
+                { value: `at://${handle}/pub/blog`, label: `${handle} — Blog` },
+                { value: `at://${handle}/pub/notes`, label: `${handle} — Notes` },
+              ]
+            : [],
+        ).pipe(Effect.delay('300 millis')),
+      ),
+    ),
+  ),
+});
+
+const RssCreateBase = Schema.Struct({
+  type: Schema.Literal('rss'),
+  url: Format.URL.annotations({ title: 'URL', description: 'RSS feed URL.' }),
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+});
+type RssValues = Schema.Schema.Type<typeof RssCreateBase>;
+
+const RssCreate = Schema.Struct({
+  ...RssCreateBase.fields,
+  name: Schema.optional(
+    Schema.String.pipe(
+      Annotation.AutofillAnnotation.set(
+        Annotation.autofill<RssValues>()(['url'], ({ url }) =>
+          isValidUrl(url) ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('500 millis')) : Effect.succeed(undefined),
+        ),
+      ),
+    ).annotations({ title: 'Name' }),
+  ),
+});
+
+const CreateFeedSchema = Schema.Union(StandardSiteCreate, RssCreate);
+
+/**
+ * A discriminated-union create form: selecting `type` reveals that member's fields (combobox + select for
+ * `standard-site`, URL + autofill for `rss`). Mirrors the magazine create-feed schema.
+ */
+export const DiscriminatedUnion: Story<Schema.Schema.Type<typeof CreateFeedSchema>> = {
+  args: {
+    json: true,
+    schema: CreateFeedSchema,
   },
 };

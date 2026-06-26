@@ -479,6 +479,12 @@ export type OptionsLookup = {
   readonly deps: readonly string[];
   // `values` is type-erased here (like `FactoryFn`); `optionsLookup` is the typed construction surface.
   readonly load: (values: any) => Effect.Effect<readonly OptionsLookupEntry[], unknown>;
+  /**
+   * Render as an editable combobox (type-to-search, with the typed text offered as the auto-selected first
+   * option) rather than a constrained select. The loader is then driven by the field's own value, so its
+   * `deps` typically include the field itself.
+   */
+  readonly combobox?: boolean;
 };
 
 export const OptionsLookupAnnotationId = Symbol.for('@dxos/schema/annotation/OptionsLookup');
@@ -487,14 +493,15 @@ export const OptionsLookupAnnotation = createAnnotationHelper<OptionsLookup>(Opt
 /**
  * Builds an {@link OptionsLookup} typed against a schema's value type `Values` (e.g.
  * `Schema.Schema.Type<typeof CreateFooBase>`): `deps` is checked against its field names, and `load`
- * receives only those fields, narrowed.
+ * receives only those fields, narrowed. Pass `{ combobox: true }` to render an editable combobox.
  */
 export const optionsLookup =
   <Values>() =>
   <const Deps extends readonly (keyof Values & string)[]>(
     deps: Deps,
     load: (values: Pick<Values, Deps[number]>) => Effect.Effect<readonly OptionsLookupEntry[], unknown>,
-  ): OptionsLookup => ({ deps, load });
+    options?: { combobox?: boolean },
+  ): OptionsLookup => ({ deps, load, combobox: options?.combobox });
 
 /**
  * Derives a (text) field's value from a declared subset of the form values, so a field can be pre-filled

@@ -25,9 +25,24 @@ export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(
   const schema = Type.isType(schemaOrType)
     ? Type.getSchema(schemaOrType)
     : (schemaOrType as Schema.Schema.AnyNoContext);
-  // Cast: `Schema.omit` cannot statically express the `ExcludeId<S>` result type, so the pipe
-  // returns a widened schema; the runtime shape matches the declared return type.
-  return schema.pipe(Schema.omit('id')) as any;
+  // Cast: `Schema.omit` cannot statically express the `ExcludeId<S>` result type, so the result is a
+  // widened schema; the runtime shape matches the declared return type.
+  return omitIdFromSchema(schema) as any;
+};
+
+/**
+ * Removes the `id` field where present, preserving the schema's shape. Recurses into unions so a
+ * discriminated (create) schema keeps its discriminant — `Schema.omit('id')` is a struct operation and
+ * would otherwise flatten the union, breaking variant rendering. A no-op when there is no `id` (plain
+ * create structs that never carried one).
+ */
+const omitIdFromSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext => {
+  const ast = schema.ast;
+  if (SchemaAST.isUnion(ast)) {
+    return Schema.Union(...ast.types.map((type) => omitIdFromSchema(Schema.make(type))));
+  }
+  const hasId = SchemaAST.getPropertySignatures(ast).some((prop) => prop.name === 'id');
+  return hasId ? schema.pipe(Schema.omit('id')) : schema;
 };
 
 /**

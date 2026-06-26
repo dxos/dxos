@@ -64,6 +64,28 @@ export const listStandardSitePublications = (
     return yield* resolvePublications(sites, did, pds, proxy);
   }).pipe(Effect.provide(FetchHttpClient.layer));
 
+/** A handle suggestion returned by typeahead search. */
+export type HandleSuggestion = { handle: string; displayName?: string };
+
+/** Searches atproto handles by prefix (typeahead), for combobox suggestions; empty on blank/failed query. */
+export const searchStandardSiteHandles = (
+  query: string,
+  options?: FetchOptions,
+): Effect.Effect<HandleSuggestion[], never> =>
+  query.trim().length === 0
+    ? Effect.succeed([])
+    : getJson(
+        SearchActorsResponse,
+        `${BSKY_PUBLIC_API}/app.bsky.actor.searchActorsTypeahead?q=${encodeURIComponent(query.trim())}&limit=8`,
+        options?.corsProxy,
+      ).pipe(
+        Effect.map((response) =>
+          (response.actors ?? []).map((actor) => ({ handle: actor.handle, displayName: actor.displayName })),
+        ),
+        Effect.orElseSucceed((): HandleSuggestion[] => []),
+        Effect.provide(FetchHttpClient.layer),
+      );
+
 /** Fetches a public Standard.site long-form feed (real articles, full markdown body, canonical link). */
 export const fetchStandardSite: FeedFetcher = (url, options) =>
   Effect.gen(function* () {
@@ -127,6 +149,10 @@ export const fetchStandardSite: FeedFetcher = (url, options) =>
 //
 
 const ResolveHandleResponse = Schema.Struct({ did: Schema.optional(Schema.String) });
+
+const SearchActorsResponse = Schema.Struct({
+  actors: Schema.optional(Schema.Array(Schema.Struct({ handle: Schema.String, displayName: Schema.optional(Schema.String) }))),
+});
 
 const DidDocument = Schema.Struct({
   service: Schema.optional(
