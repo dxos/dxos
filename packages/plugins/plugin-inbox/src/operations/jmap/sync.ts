@@ -73,6 +73,9 @@ export default InboxOperation.JmapSync.pipe(
       );
     }),
   ),
+  // Erase the inferred handler type (which surfaces Connection from the input schema) so the default
+  // export is portably nameable in the emitted .d.ts (TS2883).
+  Operation.opaqueHandler,
 );
 
 const readBindingOptions = (binding: SyncBinding.SyncBinding) => {

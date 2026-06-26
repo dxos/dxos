@@ -82,6 +82,9 @@ export default InboxOperation.JmapSend.pipe(
       return { id: result.id, threadId: result.threadId ?? '' };
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(JmapCredentials.fromConnection(connectionRef))),
   ),
+  // Erase the inferred handler type (which surfaces Message/Connection from the input schema) so the
+  // default export is portably nameable in the emitted .d.ts (TS2883).
+  Operation.opaqueHandler,
 );
 
 /** Parses a comma-separated header value into JMAP structured addresses. */
