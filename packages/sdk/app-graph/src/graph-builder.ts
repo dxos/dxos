@@ -5,6 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import type * as Context from 'effect/Context';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -680,6 +681,12 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 };
 
 /**
+ * Domain error for graph extension failures (connector, actions, resolver callbacks).
+ * Using a tagged error allows callers to recover with `Effect.catchTag` when needed.
+ */
+export class ExtensionError extends Data.TaggedError('ExtensionError')<{ readonly cause: unknown }> {}
+
+/**
  * Options for creating a graph builder extension with simplified API.
  * All callbacks must return Effects for dependency injection.
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
@@ -690,9 +697,9 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   actions?: (
     matched: TMatched,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], Error, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], ExtensionError | Error, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], ExtensionError | Error, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, ExtensionError | Error, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };
@@ -703,7 +710,7 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
  * @internal
  */
 const runEffectSyncWithFallback = <T, R>(
-  effect: Effect.Effect<T, Error, R>,
+  effect: Effect.Effect<T, ExtensionError | Error, R>,
   context: Context.Context<R>,
   extensionId: string,
   fallback: T,
@@ -791,7 +798,7 @@ export const createConnector = <TData>(
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
   matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], ExtensionError | Error, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -816,8 +823,8 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   actions?: (
     object: Type.InstanceType<T>,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
-  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], ExtensionError | Error, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], ExtensionError | Error, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };

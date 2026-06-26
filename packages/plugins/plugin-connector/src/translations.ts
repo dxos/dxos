@@ -46,6 +46,7 @@ export const translations = [
         'sync-target.label': 'Sync target',
         'last-sync.label': 'Last synced',
         'never-synced.label': 'Never synced',
+        'binding-source-missing.message': 'Connection was deleted. Remove this binding to clean it up.',
         'binding-target-missing.message': 'Synced object was deleted. Remove this binding to clean it up.',
         'remove-binding.label': 'Remove binding',
         'open-connection.label': 'Open connection',

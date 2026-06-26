@@ -92,9 +92,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     [subject],
   );
 
-  if (!connection) {
-    return null;
-  }
+  const sourceMissing = !connection;
 
   const connectorLabel = connector?.label ?? connector?.id ?? connectionObj?.connectorId;
   const account = accessToken?.account;
@@ -103,11 +101,13 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     ? `${connectorLabel}${account ? ` · ${account}` : ''}`
     : (accessToken?.source ?? undefined);
 
-  const status = targetMissing
-    ? t('binding-target-missing.message')
-    : subject.lastSyncAt
-      ? `${t('last-sync.label')}: ${new Date(subject.lastSyncAt).toLocaleString()}`
-      : t('never-synced.label');
+  const status = sourceMissing
+    ? t('binding-source-missing.message')
+    : targetMissing
+      ? t('binding-target-missing.message')
+      : subject.lastSyncAt
+        ? `${t('last-sync.label')}: ${new Date(subject.lastSyncAt).toLocaleString()}`
+        : t('never-synced.label');
 
   return (
     <Panel.Root role={role}>
@@ -122,16 +122,16 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                       label={t('sync-target.label')}
                       description={status}
                       validation={
-                        !targetMissing && subject.lastError ? (
+                        !targetMissing && !sourceMissing && subject.lastError ? (
                           <span className='text-sm text-error-text'>{subject.lastError}</span>
                         ) : undefined
                       }
                     >
-                      {targetMissing ? (
+                      {targetMissing || sourceMissing ? (
                         <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
                       ) : undefined}
 
-                      {connector?.optionsSchema && !targetMissing && (
+                      {connector?.optionsSchema && !targetMissing && !sourceMissing && (
                         <Form.Root
                           schema={connector.optionsSchema}
                           defaultValues={optionsDefaultValues}
@@ -145,9 +145,11 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                     </Form.Row>
 
                     {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
-                    <Form.Row label={t('open-connection.label')}>
-                      <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
-                    </Form.Row>
+                    {!sourceMissing && (
+                      <Form.Row label={t('open-connection.label')}>
+                        <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
+                      </Form.Row>
+                    )}
                   </Form.Section>
                 </Form.Content>
               </Form.Viewport>

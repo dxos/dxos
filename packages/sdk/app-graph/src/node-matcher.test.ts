@@ -12,11 +12,6 @@ import { TestSchema } from '@dxos/echo/testing';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
 
-// Real reactive context for matchers that take `get`. The matchers under test
-// inspect only the node, so the context is never read — it satisfies the arity.
-const captureContext = (): Atom.Context => Registry.make().get(Atom.make((context): Atom.Context => context));
-const get = captureContext();
-
 describe('NodeMatcher', () => {
   describe('whenRoot', () => {
     test('matches root node', () => {
@@ -305,3 +300,8 @@ describe('NodeMatcher', () => {
     });
   });
 });
+
+// Real reactive context for matchers that take `get`. The matchers under test
+// inspect only the node, so the context is never read — it satisfies the arity.
+const captureContext = (): Atom.Context => Registry.make().get(Atom.make((context): Atom.Context => context));
+const get = captureContext();
