@@ -46,20 +46,35 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
         <h2 className='text-sm font-medium text-description'>{t('space-home.suggestions.heading')}</h2>
         <div className='flex flex-col gap-3'>
           {suggestions.map((prompt, index) => (
-            <Card.Root
+            <div
               key={`${index}:${prompt}`}
-              fullWidth
               role='button'
-              classNames='cursor-pointer'
+              tabIndex={0}
+              className='cursor-pointer w-full'
               onClick={() => handleRunPrompt(prompt)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleRunPrompt(prompt);
+                }
+              }}
             >
-              <Card.Header>
-                <Card.Block>
-                  <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
-                </Card.Block>
-                <Card.Title>{prompt}</Card.Title>
-              </Card.Header>
-            </Card.Root>
+              <Card.Root fullWidth>
+                <Card.Header>
+                  <Card.Block>
+                    <IconButton
+                      variant='ghost'
+                      label={prompt}
+                      icon='ph--sparkle--regular'
+                      iconOnly
+                      tabIndex={-1}
+                      aria-hidden
+                    />
+                  </Card.Block>
+                  <Card.Title>{prompt}</Card.Title>
+                </Card.Header>
+              </Card.Root>
+            </div>
           ))}
         </div>
       </div>

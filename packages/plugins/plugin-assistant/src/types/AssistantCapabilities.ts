@@ -38,9 +38,9 @@ export const HomeSuggestionsCacheSchema = Schema.mutable(
   Schema.Record({
     key: Schema.String,
     value: Schema.Struct({
-      /** Epoch ms timestamp of the last generation attempt (success, empty, or failure). */
+      /** Epoch ms timestamp of the successful generation that produced these prompts. */
       generatedAt: Schema.Number,
-      /** Generated prompts; empty array means fall back to hardcoded defaults. */
+      /** Non-empty, trimmed prompts from a successful generation. */
       prompts: Schema.Array(Schema.String),
     }),
   }),

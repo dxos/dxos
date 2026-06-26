@@ -73,14 +73,16 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
           }
         }
 
-        if (prompts.length > 0) {
+        const validPrompts = prompts.map((p) => p.trim()).filter((p) => p.length > 0);
+
+        if (validPrompts.length > 0) {
           yield* Capabilities.updateAtomValue(AssistantCapabilities.HomeSuggestionsCache, (current) => ({
             ...current,
-            [spaceId]: { generatedAt: Date.now(), prompts },
+            [spaceId]: { generatedAt: Date.now(), prompts: validPrompts },
           }));
         }
 
-        return { prompts };
+        return { prompts: validPrompts };
       }),
     ),
   );
