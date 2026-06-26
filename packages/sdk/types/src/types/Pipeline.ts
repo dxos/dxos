@@ -18,19 +18,18 @@ export const Column = Schema.Struct({
 
 export type Column = Schema.Schema.Type<typeof Column>;
 
-export const Pipeline = Schema.Struct({
-  name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
-  description: Schema.String.pipe(Schema.optional),
-  image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
-  columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Schema.annotations({ title: 'Pipeline' }),
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'purple' }),
-  Type.makeObject(DXN.make('org.dxos.type.pipeline', '0.1.0')),
-);
-
-export type Pipeline = Type.InstanceType<typeof Pipeline>;
+export class Pipeline extends Type.makeObject<Pipeline>(DXN.make('org.dxos.type.pipeline', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
+    description: Schema.String.pipe(Schema.optional),
+    image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
+    columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    Schema.annotations({ title: 'Pipeline' }),
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'purple' }),
+  ),
+) {}
 
 export const make = (props: Partial<Obj.MakeProps<typeof Pipeline>> = {}): Pipeline =>
   Obj.make(Pipeline, {

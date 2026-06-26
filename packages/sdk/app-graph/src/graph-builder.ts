@@ -682,28 +682,29 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 /**
  * Options for creating a graph builder extension with simplified API.
  * All callbacks must return Effects for dependency injection.
- * Effects may fail - errors are caught, logged, and the extension returns empty results.
+ * Effects may defect — defects are caught, logged, and the extension returns empty results.
+ * Use Effect.orDie on any failable effects inside callbacks.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
-  match: (node: Node.Node) => Option.Option<TMatched>;
+  match: (node: Node.Node, get: Atom.Context) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], Error, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };
 
 /**
  * Run an Effect synchronously with the provided context.
- * If the effect fails, logs the error and returns the fallback value.
+ * Defects are caught, logged, and the fallback value is returned.
  * @internal
  */
 const runEffectSyncWithFallback = <T, R>(
-  effect: Effect.Effect<T, Error, R>,
+  effect: Effect.Effect<T, never, R>,
   context: Context.Context<R>,
   extensionId: string,
   fallback: T,
@@ -711,8 +712,8 @@ const runEffectSyncWithFallback = <T, R>(
   return Effect.runSync(
     effect.pipe(
       Effect.provide(context),
-      Effect.catchAll((error) => {
-        log.warn('Extension failed', { extension: extensionId, error });
+      Effect.catchAllDefect((defect) => {
+        log.warn('Extension failed', { extension: extensionId, defect });
         return Effect.succeed(fallback);
       }),
     ),
@@ -736,7 +737,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
           Atom.make((get) =>
             Function.pipe(
               get(node),
-              Option.flatMap(match),
+              Option.flatMap((matchedNode) => match(matchedNode, get)),
               Option.map((matched) =>
                 runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
@@ -769,14 +770,14 @@ export const createExtension = <TMatched = Node.Node, R = never>(
  * The factory's data type is inferred from the matcher's return type.
  */
 export const createConnector = <TData>(
-  matcher: (node: Node.Node) => Option.Option<TData>,
+  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
   factory: (data: TData, get: Atom.Context) => Node.NodeArg<any>[],
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
       Function.pipe(
         get(node),
-        Option.flatMap(matcher),
+        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => factory(data, get)),
         Option.getOrElse(() => []),
       ),
@@ -790,15 +791,15 @@ export const createConnector = <TData>(
  */
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
-  matcher: (node: Node.Node) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>,
+  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
       Function.pipe(
         get(node),
-        Option.flatMap(matcher),
+        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
         Option.getOrElse(() => []),
       ),
@@ -816,8 +817,8 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   actions?: (
     object: Type.InstanceType<T>,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
-  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };

@@ -9,40 +9,32 @@ import { DXN, Ref, Type } from '@dxos/echo';
 // TODO(burdon): Replace with @dxos/echo/testing TestSchema.
 
 /** @deprecated */
-export const Contact = Schema.Struct({
-  name: Schema.String.annotations({ description: 'The name of the person.' }),
-  email: Schema.optional(Schema.String).annotations({ description: 'Email address.' }),
-}).pipe(
-  Schema.annotations({ description: 'Contact information.' }),
-  Type.makeObject(DXN.make('com.example.type.person', '0.1.0')),
-);
-export type Contact = Type.InstanceType<typeof Contact>;
+export class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type.person', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.annotations({ description: 'The name of the person.' }),
+    email: Schema.optional(Schema.String).annotations({ description: 'Email address.' }),
+  }).pipe(Schema.annotations({ description: 'Contact information.' })),
+) {}
 /** @deprecated */
-export const Project = Schema.Struct({
-  name: Schema.String.annotations({ description: 'The name of the project.' }),
-  description: Schema.optional(Schema.String).annotations({ description: 'The description of the project.' }),
-}).pipe(
-  Schema.annotations({ description: 'Project information.' }),
-  Type.makeObject(DXN.make('com.example.type.project', '0.1.0')),
-);
-export type Project = Type.InstanceType<typeof Project>;
-export const Task = Schema.Struct({
-  name: Schema.String.annotations({ description: 'The name of the task.' }),
-  description: Schema.optional(Schema.String).annotations({ description: 'The description of the task.' }),
-  project: Ref.Ref(Project),
-  assignee: Ref.Ref(Contact),
-}).pipe(
-  Schema.annotations({ description: 'Task information.' }),
-  Type.makeObject(DXN.make('com.example.type.task', '0.1.0')),
-);
-export type Task = Type.InstanceType<typeof Task>;
+export class Project extends Type.makeObject<Project>(DXN.make('com.example.type.project', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.annotations({ description: 'The name of the project.' }),
+    description: Schema.optional(Schema.String).annotations({ description: 'The description of the project.' }),
+  }).pipe(Schema.annotations({ description: 'Project information.' })),
+) {}
+export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.annotations({ description: 'The name of the task.' }),
+    description: Schema.optional(Schema.String).annotations({ description: 'The description of the task.' }),
+    project: Ref.Ref(Project),
+    assignee: Ref.Ref(Contact),
+  }).pipe(Schema.annotations({ description: 'Task information.' })),
+) {}
 /** @deprecated */
-export const Organization = Schema.Struct({
-  name: Schema.String.annotations({ description: 'The name of the organization.' }),
-  projects: Schema.Array(Ref.Ref(Project)),
-  employees: Schema.Array(Ref.Ref(Contact)),
-}).pipe(
-  Schema.annotations({ description: 'Organization information.' }),
-  Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')),
-);
-export type Organization = Type.InstanceType<typeof Organization>;
+export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.annotations({ description: 'The name of the organization.' }),
+    projects: Schema.Array(Ref.Ref(Project)),
+    employees: Schema.Array(Ref.Ref(Contact)),
+  }).pipe(Schema.annotations({ description: 'Organization information.' })),
+) {}

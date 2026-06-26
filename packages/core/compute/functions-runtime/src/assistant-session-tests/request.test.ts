@@ -19,14 +19,14 @@ import { Message } from '@dxos/types';
 import { AssistantTestLayer } from '../testing';
 
 // Define a calendar event artifact schema.
-const CalendarEventSchema = Schema.Struct({
-  title: Schema.String,
-  startTime: Schema.String,
-  endTime: Schema.String,
-  description: Schema.String,
-}).pipe(Type.makeObject(DXN.make('com.example.type.calendarEvent', '0.1.0')));
-
-type CalendarEvent = Type.InstanceType<typeof CalendarEventSchema>;
+class CalendarEvent extends Type.makeObject<CalendarEvent>(DXN.make('com.example.type.calendarEvent', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    startTime: Schema.String,
+    endTime: Schema.String,
+    description: Schema.String,
+  }),
+) {}
 
 const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
@@ -64,7 +64,7 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(ToolExecutionServices),
   Layer.provideMerge(
     AssistantTestLayer({
-      types: [CalendarEventSchema],
+      types: [CalendarEvent],
       tracing: 'pretty',
     }),
   ),
@@ -157,31 +157,31 @@ describe('AiRequest.Request', () => {
 // Travel to rome, florence, livorno, siena, madrid for conferences
 
 const _CALENDAR_EVENTS: CalendarEvent[] = [
-  Obj.make(CalendarEventSchema, {
+  Obj.make(CalendarEvent, {
     title: 'Exploring Ancient Ruins in Rome',
     startTime: '2024-01-01T10:00:00Z',
     endTime: '2024-01-01T11:00:00Z',
     description: 'Tech conference at the historic Colosseum with networking opportunities',
   }),
-  Obj.make(CalendarEventSchema, {
+  Obj.make(CalendarEvent, {
     title: 'Renaissance Tech Summit in Florence',
     startTime: '2024-01-01T11:00:00Z',
     endTime: '2024-01-01T12:00:00Z',
     description: 'Discussing AI innovations surrounded by Renaissance art',
   }),
-  Obj.make(CalendarEventSchema, {
+  Obj.make(CalendarEvent, {
     title: 'Travel to Livorno',
     startTime: '2024-01-01T12:00:00Z',
     endTime: '2024-01-01T13:00:00Z',
     description: 'Travel to Livorno',
   }),
-  Obj.make(CalendarEventSchema, {
+  Obj.make(CalendarEvent, {
     title: 'Travel to Siena',
     startTime: '2024-01-01T13:00:00Z',
     endTime: '2024-01-01T14:00:00Z',
     description: 'Travel to Siena',
   }),
-  Obj.make(CalendarEventSchema, {
+  Obj.make(CalendarEvent, {
     title: 'Travel to Madrid',
     startTime: '2024-01-01T14:00:00Z',
     endTime: '2024-01-01T15:00:00Z',

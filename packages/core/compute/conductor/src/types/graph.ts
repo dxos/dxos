@@ -84,14 +84,14 @@ export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
 /**
  * Persistent graph.
  */
-export const ComputeGraph = Schema.Struct({
-  graph: Graph.Graph,
+export class ComputeGraph extends Type.makeObject<ComputeGraph>(DXN.make('org.dxos.type.computeGraph', '0.1.0'))(
+  Schema.Struct({
+    graph: Graph.Graph,
 
-  // Reference nodes.
-  input: Schema.optional(ComputeNode),
-  output: Schema.optional(ComputeNode),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
-
-export interface ComputeGraph extends Type.InstanceType<typeof ComputeGraph> {}
+    // Reference nodes.
+    input: Schema.optional(ComputeNode),
+    output: Schema.optional(ComputeNode),
+  }),
+) {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

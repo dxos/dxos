@@ -120,6 +120,7 @@ export const RefField = (props: RefFieldProps) => {
     useResults = defaultUseResults,
     getOptions = defaultGetOptions,
     onCreate,
+    resolveCreateEntry,
     onValueChange,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -155,24 +156,31 @@ export const RefField = (props: RefFieldProps) => {
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
   const createSchema = useType(db, typename && typename !== ANY_OBJECT_TYPENAME ? DXN.make(typename) : undefined);
 
+  // Per-typename override supplied by the caller (e.g. SpaceCapabilities.CreateObjectEntry).
+  const createEntry = typename ? resolveCreateEntry?.(typename) : undefined;
+
   // Lift the popover open state so we can dismiss it after a successful create.
   const [open, setOpen] = useState(false);
 
   const handleCreate = useCallback(
     async (values: any) => {
-      if (!createSchema || !onCreate) {
-        return;
-      }
-      const newObject = await onCreate(createSchema, values);
-      if (newObject) {
-        // Wire the newly-created object into this slot's form value. ArrayField
-        // owns the array; this RefField represents a single slot, so writing a
-        // Ref via `onValueChange` populates that slot.
-        onValueChange(type, Ref.make(newObject));
+      // Wire the newly-created object into this slot's form value. ArrayField
+      // owns the array; this RefField represents a single slot, so writing a
+      // Ref via `onValueChange` populates that slot.
+      if (createEntry?.createObject && db) {
+        const newObject = await createEntry.createObject(values, db);
+        if (newObject) {
+          onValueChange(type, Ref.make(newObject));
+        }
+      } else if (createSchema && onCreate) {
+        const newObject = await onCreate(createSchema, values);
+        if (newObject) {
+          onValueChange(type, Ref.make(newObject));
+        }
       }
       setOpen(false);
     },
-    [createSchema, onCreate, type, onValueChange],
+    [createEntry, db, createSchema, onCreate, type, onValueChange],
   );
 
   const handleUpdate = useCallback(
@@ -238,17 +246,22 @@ export const RefField = (props: RefFieldProps) => {
                 classNames='dx-card-popover-width'
                 options={options}
                 selectedIds={selectedIds}
-                // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
-                // form's validator doesn't reject required-but-hidden fields
-                // such as backing-object refs supplied by a `FactoryAnnotation`.
-                createSchema={createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema)))}
+                // Prefer the plugin-registered inputSchema; fall back to stripping hidden fields
+                // (`FormInputAnnotation.set(false)`) from the raw ECHO type schema so the form's
+                // validator doesn't reject required-but-hidden fields such as backing-object refs
+                // supplied by a `FactoryAnnotation`.
+                createSchema={
+                  createEntry?.inputSchema ??
+                  (createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema))))
+                }
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}
                 createFieldMap={createFieldMap}
-                // Only offer inline create when the caller wired a handler; a resolvable `createSchema`
-                // alone is not enough (e.g. operation refs, whose objects can't be created ad hoc).
-                onCreate={onCreate ? handleCreate : undefined}
+                // Offer inline create when the caller wired a handler OR a plugin-registered
+                // createObject override is available. A resolvable `createSchema` alone is not
+                // enough (e.g. operation refs, whose objects can't be created ad hoc).
+                onCreate={onCreate || createEntry?.createObject ? handleCreate : undefined}
                 onSelect={handleSelect}
               />
             </ObjectPicker.Portal>

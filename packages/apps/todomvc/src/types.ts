@@ -7,16 +7,18 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
-export const Todo = Schema.Struct({
-  title: Schema.String,
-  completed: Schema.Boolean,
-}).pipe(Type.makeObject(DXN.make('com.example.type.todo', '0.1.0')));
-export type Todo = Type.InstanceType<typeof Todo>;
+export class Todo extends Type.makeObject<Todo>(DXN.make('com.example.type.todo', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    completed: Schema.Boolean,
+  }),
+) {}
 
-export const TodoList = Schema.Struct({
-  todos: Schema.Array(Ref.Ref(Todo)),
-}).pipe(Type.makeObject(DXN.make('com.example.type.todoList', '0.1.0')));
-export type TodoList = Type.InstanceType<typeof TodoList>;
+export class TodoList extends Type.makeObject<TodoList>(DXN.make('com.example.type.todoList', '0.1.0'))(
+  Schema.Struct({
+    todos: Schema.Array(Ref.Ref(Todo)),
+  }),
+) {}
 
 /** Typed annotation storing the root TodoList reference on space properties. */
 export const TodoListAnnotation = Annotation.make({

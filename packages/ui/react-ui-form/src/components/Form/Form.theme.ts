@@ -13,7 +13,7 @@ export type FormBehavior = { showDescription: boolean };
 const formStyles = tv({
   slots: {
     viewport: '',
-    content: 'pb-3',
+    content: '',
     section: 'flex flex-col py-form-section-gap first:pt-0',
     group: 'flex flex-col gap-3 p-trim-md border border-separator rounded-sm',
     sectionHeader: '',

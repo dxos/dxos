@@ -43,7 +43,7 @@ type PresentationSettings
 ## Components
 
 ```mdl
-component DocumentPresenterContainer
+component DocumentArticle
   desc: |
     Full-screen Reveal.js player for a single Markdown document.
     Parses the document content into slides using horizontal/vertical `---` separators.
@@ -64,12 +64,12 @@ component DocumentPresenterContainer
 ```
 
 ```mdl
-component CollectionPresenterArticle
+component CollectionArticle
   desc: |
     Slideshow player for a Collection.
     Renders one slide per object in the collection's ordered items array.
     The active slide is delegated to the AppSurface.Slide surface, so each
-    item's own plugin renders it (e.g. MarkdownSlide for documents).
+    item's own plugin renders it (e.g. SlideArticle for documents).
   props:
     subject: Collection.Collection
     role?: string
@@ -92,7 +92,7 @@ component CollectionPresenterArticle
 ```
 
 ```mdl
-component MarkdownSlide
+component SlideArticle
   desc: |
     Renders a single Markdown document as a slide panel inside a Collection presentation.
     Used as the AppSurface.Slide surface implementation for Markdown.Document objects.
@@ -145,7 +145,7 @@ feat F-1: Presentation Mode
 feat F-2: Document Slideshow (Reveal.js)
 
   req F-2.1:
-    when: DocumentPresenterContainer mounts with a Markdown.Document
+    when: DocumentArticle mounts with a Markdown.Document
     then: RevealPlayer parses the document content and renders slides
   req F-2.2: Horizontal slides are separated by `---`; vertical slides by `----`.
   req F-2.3:
@@ -157,7 +157,7 @@ feat F-2: Document Slideshow (Reveal.js)
 feat F-3: Collection Slideshow
 
   req F-3.1:
-    when: CollectionPresenterArticle mounts with a Collection
+    when: CollectionArticle mounts with a Collection
     then: slide 0 is shown, corresponding to collection.objects[0]
   req F-3.2:
     when: user navigates to slide N via the Pager
@@ -185,14 +185,14 @@ test T-1: Document presenter opens in fullscreen
   when: user invokes TogglePresentation (keyboard or action menu)
   then:
     - Composer switches to solo-fullscreen layout
-    - DocumentPresenterContainer is shown with the document content
+    - DocumentArticle is shown with the document content
     - RevealPlayer is visible with at least one slide
 ```
 
 ```mdl
 test T-2: Slide navigation via Reveal.js
   given: a Markdown document with three `---`-separated sections
-  when: DocumentPresenterContainer renders the document
+  when: DocumentArticle renders the document
   then:
     - three horizontal slides are produced
     - arrow-key navigation advances and retreats between slides
@@ -200,7 +200,7 @@ test T-2: Slide navigation via Reveal.js
 
 ```mdl
 test T-3: Exit returns to document view
-  given: DocumentPresenterContainer is open in fullscreen
+  given: DocumentArticle is open in fullscreen
   when: user presses Escape
   then: Composer navigates back to the document article view
 ```
@@ -208,15 +208,15 @@ test T-3: Exit returns to document view
 ```mdl
 test T-4: Collection slideshow renders per-item surfaces
   given: a Collection with two Markdown documents and settings.presentCollections = true
-  when: CollectionPresenterArticle mounts
+  when: CollectionArticle mounts
   then:
-    - slide 0 shows MarkdownSlide for collection.objects[0]
+    - slide 0 shows SlideArticle for collection.objects[0]
     - Pager shows count = 2
 ```
 
 ```mdl
 test T-5: Collection slide advance
-  given: CollectionPresenterArticle at slide 0 with a three-item collection
+  given: CollectionArticle at slide 0 with a three-item collection
   when: user clicks the next-slide control in Pager
   then:
     - slide index advances to 1

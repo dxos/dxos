@@ -111,8 +111,7 @@ export const DeckContentEmpty = () => {
  */
 export const DeckSoloMode = () => {
   const { deck, settings, layoutMode, onLayoutChange } = useDeckContext('DeckSoloMode');
-  const { companionOpen, companionVariant, fullscreen, solo } = deck;
-  const effectiveCompanionVariant = fullscreen ? undefined : companionOpen ? companionVariant : undefined;
+  const { companionOpen, fullscreen, solo } = deck;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   invariant(solo);
@@ -142,7 +141,7 @@ export const DeckSoloMode = () => {
         id={solo}
         part='solo'
         layoutMode={layoutMode}
-        companionVariant={effectiveCompanionVariant}
+        companionShown={!fullscreen && companionOpen}
         settings={settings}
         classNames={mx('absolute inset-0', mainIntrinsicSize)}
       />
@@ -188,7 +187,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
         part='multi'
         layoutMode={layoutMode}
         active={deck.active}
-        companionVariant={deck.companionOpen ? deck.companionVariant : undefined}
+        companionShown={deck.companionOpen}
         settings={settings}
         classNames='size-full'
       />

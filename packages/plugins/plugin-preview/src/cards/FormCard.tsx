@@ -10,7 +10,7 @@ import { Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, type FormPresentation, getFormProperties, omitId } from '@dxos/react-ui-form';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -123,14 +123,6 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-      <Card.Row fullWidth>
-        <div className='pt-1'>
-          <div {...{ 'data-hue': hue }} className='inline-flex items-center gap-1 dx-tag'>
-            <Icon icon={icon} />
-            <span>{Obj.getTypename(subject)}</span>
-          </div>
-        </div>
-      </Card.Row>
     </Card.Body>
   );
 };

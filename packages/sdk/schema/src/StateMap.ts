@@ -25,12 +25,12 @@ import { type EntityId } from '@dxos/keys';
  * The stored value type is open (`Schema.Any`); callers project the concrete per-object state shape
  * `S` via the typed {@link bind} / {@link atom} views.
  */
-export const StateMap = Schema.Struct({
-  /** Per-object state keyed by object id. Values are open records projected to `S` by accessors. */
-  state: Schema.Record({ key: Obj.ID, value: Schema.Any }).pipe(FormInputAnnotation.set(false)),
-}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.stateMap', '0.1.0')));
-
-export type StateMap = Type.InstanceType<typeof StateMap>;
+export class StateMap extends Type.makeObject<StateMap>(DXN.make('org.dxos.type.stateMap', '0.1.0'))(
+  Schema.Struct({
+    /** Per-object state keyed by object id. Values are open records projected to `S` by accessors. */
+    state: Schema.Record({ key: Obj.ID, value: Schema.Any }).pipe(FormInputAnnotation.set(false)),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 
 /** Creates an empty StateMap object. */
 export const make = (): StateMap => Obj.make(StateMap, { state: {} });

@@ -141,6 +141,7 @@ export const func: {
   - If there are unstaged changes, stash these and move them into the worktree; tell the user.
   - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
+  - **IMPORTANT**: Do NOT create new git branches unless the user explicitly asks. Work on the current branch only.
   - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points

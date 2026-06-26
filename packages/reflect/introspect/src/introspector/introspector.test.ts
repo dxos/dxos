@@ -139,14 +139,12 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
     expect(detail!.source).toContain("LabelAnnotation.set(['title'])");
   });
 
-  test('getSymbol surfaces both merged declarations of Task in source', ({ expect }) => {
-    // ECHO idiom: `export const Task = Schema.Struct(...).pipe(Type.makeObject(...))` AND
-    // `export type Task = Type.InstanceType<typeof Task>` — both declarations share
-    // a name, and the indexer concatenates their source so consumers see the full
-    // pattern rather than only the value form.
+  test('getSymbol surfaces the class declaration of Task in source', ({ expect }) => {
+    // ECHO idiom uses a class declaration:
+    // `export class Task extends Type.makeObject<Task>(DXN.make(...))(Schema.Struct({...})) {}`
     const detail = introspector.getSymbol('@fixture/pkg-a#Task', ['source']);
-    expect(detail!.source).toContain('export const Task');
-    expect(detail!.source).toContain('export type Task = Type.InstanceType<typeof Task>');
+    expect(detail!.source).toContain('export class Task');
+    expect(detail!.source).toContain('Type.makeObject');
   });
 
   test('getSymbol on the React component captures its useObject body', ({ expect }) => {

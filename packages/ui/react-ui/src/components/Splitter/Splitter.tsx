@@ -96,11 +96,14 @@ const panelStyle = (
 };
 
 // Absolute position for the handle, centered on the split point (`size` rem from the anchored edge, or
-// the middle for an even split).
+// the middle for an even split). The offset is clamped to the same bounds as the anchored panel
+// (`minSize` .. `100% - minSize`) so a sudden container shrink (e.g. opening devtools) that caps the
+// panel keeps the handle pinned to the panel edge instead of floating into the other panel.
 const handlePosition = (
   orientation: SplitterOrientation,
   anchor: Position,
   size: number | undefined,
+  minSize: number,
 ): CSSProperties => {
   if (size === undefined) {
     return orientation === 'horizontal'
@@ -108,7 +111,7 @@ const handlePosition = (
       : { insetInline: 0, insetBlockStart: '50%', transform: 'translateY(-50%)' };
   }
 
-  const offset = `${size}rem`;
+  const offset = `clamp(${minSize}rem, ${size}rem, calc(100% - ${minSize}rem))`;
   if (orientation === 'horizontal') {
     return anchor === 'end'
       ? { insetBlock: 0, insetInlineEnd: offset, transform: 'translateX(50%)' }
@@ -363,7 +366,7 @@ const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props 
       aria-valuemin={Math.round(minSize)}
       aria-valuenow={size !== undefined ? Math.round(size) : undefined}
       className={tx('splitter.handle', { orientation }, className)}
-      style={handlePosition(orientation, anchor, size)}
+      style={handlePosition(orientation, anchor, size, minSize)}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

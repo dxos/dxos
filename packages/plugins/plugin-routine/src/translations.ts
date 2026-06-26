@@ -90,7 +90,7 @@ export const translations: Resource[] = [
         'remove-trigger.label': 'Remove',
         'select-action-first.message': 'Select an action first.',
         'automation-companion.label': 'Routine',
-        'routine-history.label': 'History',
+        'routine-runs.label': 'Runs',
 
         'history.empty.message': 'No runs yet.',
         'history.status.success.label': 'Success',

@@ -11,7 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner, useNode } from '@dxos/plugin-graph';
 import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
-import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
@@ -35,8 +35,8 @@ export type UseDeckPlankOptions = {
   layoutMode: LayoutMode;
   /** Ordered active planks (multi mode); enables increment/close-range semantics. */
   active?: string[];
-  /** Preferred companion variant to surface. */
-  companionVariant?: string;
+  /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
+  companionShown?: boolean;
   deckEnabled?: boolean;
 };
 
@@ -46,6 +46,8 @@ export type DeckPlank = {
   resolvedCompanionId: string | undefined;
   currentCompanion: Node.Node | undefined;
   hasCompanion: boolean;
+  /** Splitter orientation for the companion pane (defaults to `horizontal`). */
+  companionOrientation: 'horizontal' | 'vertical';
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
@@ -68,25 +70,28 @@ export const useDeckPlank = ({
   part,
   layoutMode,
   active,
-  companionVariant,
+  companionShown,
   deckEnabled,
 }: UseDeckPlankOptions): DeckPlank => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
-  const { state } = useDeckState();
+  const { state, deck } = useDeckState();
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
   const { hasAttention } = useAttention(id);
+  const selectedVariant = useSelectedCompanionVariant();
 
-  // The companion follows the preferred variant; in multi mode it attaches only to the attended plank
-  // (hidden until a plank gains attention).
-  const variantForThisPlank = layoutMode === 'multi' ? (hasAttention ? companionVariant : undefined) : companionVariant;
-  const { companionId } = useSelectedCompanion(companions, variantForThisPlank);
-  const resolvedCompanionId = variantForThisPlank ? companionId : undefined;
+  // The companion is shown when open; in multi mode it attaches only to the attended plank (hidden until
+  // a plank gains attention). Which companion shows follows the globally-selected variant (view state),
+  // falling back to the first when none is stored.
+  const showCompanion = !!companionShown && (layoutMode !== 'multi' || hasAttention);
+  const { companionId } = useSelectedCompanion(companions, showCompanion ? selectedVariant : undefined);
+  const resolvedCompanionId = showCompanion ? companionId : undefined;
   const currentCompanion = companions.find((companion) => companion.id === resolvedCompanionId);
   const hasCompanion = !!(resolvedCompanionId && currentCompanion);
+  const companionOrientation = deck.companionOrientation ?? 'horizontal';
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -198,6 +203,7 @@ export const useDeckPlank = ({
     resolvedCompanionId,
     currentCompanion,
     hasCompanion,
+    companionOrientation,
     capabilities,
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,

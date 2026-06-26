@@ -9,7 +9,8 @@ import { KindId, SnapshotKindId } from '../common/types';
  * Returns true if the value is an ECHO entity instance (object or relation).
  */
 export const isEntity = (value: unknown): value is Entity.Unknown => {
-  if (typeof value !== 'object' || value === null) {
+  // (some) type entities are functions since they are class declarations.
+  if (value == null || (typeof value !== 'object' && typeof value !== 'function')) {
     return false;
   }
   return (value as any)[KindId] !== undefined;

@@ -46,7 +46,10 @@ export const modules = [
 
 // NOTE: Storybook test depends on relative paths.
 export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
-export const content = modules.map((dir) => join(packages, dir, contentFiles));
+export const content = [
+  ...modules.map((dir) => join(packages, dir, contentFiles)),
+  join(packages, '**/dx.config.{ts,tsx,js,jsx}'),
+];
 
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));

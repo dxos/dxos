@@ -98,50 +98,49 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-const TriggerSchema = Schema.Struct({
-  /**
-   * Function or workflow to invoke.
-   */
-  // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref.Ref(Expando.Expando).annotations({ title: 'Function' })),
+export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.trigger', '0.1.0'))(
+  Schema.Struct({
+    /**
+     * Function or workflow to invoke.
+     */
+    // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
+    function: Schema.optional(Ref.Ref(Expando.Expando).annotations({ title: 'Function' })),
 
-  /**
-   * Only used for workflowSchema.
-   * Specifies the input node in the circuit.
-   * @deprecated Remove and enforce a single input node in all compute graphSchema.
-   */
-  inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
+    /**
+     * Only used for workflowSchema.
+     * Specifies the input node in the circuit.
+     * @deprecated Remove and enforce a single input node in all compute graphSchema.
+     */
+    inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
 
-  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
-  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
-  enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
+    // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
+    //  Need lint rule; or agent rule to require PR review for "boolean" key word.
+    enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
 
-  spec: Schema.optional(Spec),
+    spec: Schema.optional(Spec),
 
-  concurrency: Schema.optional(
-    Schema.Number.annotations({
-      title: 'Concurrency',
-      default: 1,
-      description:
-        'Maximum number of concurrent invocations of the trigger. For queue triggers, this will process queue items in parallel.',
-    }),
-  ),
+    concurrency: Schema.optional(
+      Schema.Number.annotations({
+        title: 'Concurrency',
+        default: 1,
+        description:
+          'Maximum number of concurrent invocations of the trigger. For queue triggers, this will process queue items in parallel.',
+      }),
+    ),
 
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   *
-   * @example
-   * {
-   *   item: '{{$.trigger.event}}',
-   *   instructions: 'Summarize and perform entity-extraction'
-   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
-   * }
-   */
-  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')), HiddenAnnotation.set(true));
-
-export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
-export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
+    /**
+     * Passed as the input data to the function.
+     * Must match the function's input schema.
+     *
+     * @example
+     * {
+     *   item: '{{$.trigger.event}}',
+     *   instructions: 'Summarize and perform entity-extraction'
+     *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+     * }
+     */
+    input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  }).pipe(HiddenAnnotation.set(true)),
+) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

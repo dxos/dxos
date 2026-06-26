@@ -5,7 +5,7 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { addEventListener, combine, throttle } from '@dxos/async';
+import { addEventListener, combine, debounceAndThrottle, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 import { getSize } from '@dxos/ui-theme';
 
@@ -176,7 +176,10 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           // Re-pin check is throttled so the listener doesn't thrash while scrolling, but
           // unpinning must be immediate — otherwise content arriving during the throttle
           // window re-applies the crawl effect and yanks the viewport back to the bottom.
-          const onUserScroll = throttle(() => {
+          // `debounceAndThrottle` (not bare `throttle`) guarantees a trailing call after the
+          // gesture stops; a leading-only throttle drops the final at-bottom sample, leaving the
+          // scroll-to-bottom button visible even though the viewport settled at the bottom.
+          const onUserScroll = debounceAndThrottle(() => {
             requestAnimationFrame(() => {
               const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
               const delta = scrollHeight - scrollTop - clientHeight;
@@ -208,13 +211,14 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          const icon = Domino.of('dx-icon' as any)
-            .classNames(getSize(4))
-            .attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
-            .classNames('dx-button bg-accent-bg')
-            .attributes({ 'data-density': 'md' })
-            .append(icon)
+            .classNames('dx-button bg-accent-bg aspect-square')
+            .attributes({ 'data-density': 'sm' })
+            .append(
+              Domino.of('dx-icon' as any)
+                .classNames(getSize(4))
+                .attributes({ icon: 'ph--arrow-down--regular' }),
+            )
             .on('click', () => {
               setPinned(true);
               view.dispatch({
