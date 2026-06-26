@@ -19,22 +19,21 @@ export type Settings = SettingsModule.Settings;
 /**
  * Document Item type.
  */
-export const Document = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-  content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  LabelAnnotation.set(['name', 'fallbackName']),
-  DescriptionAnnotation.set('description'),
-  Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
-  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-  AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
-  CollectionItemAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),
-);
-
-export type Document = Type.InstanceType<typeof Document>;
+export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.document', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    LabelAnnotation.set(['name', 'fallbackName']),
+    DescriptionAnnotation.set('description'),
+    Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
+    CollectionItemAnnotation.set(true),
+  ),
+) {}
 
 /**
  * Document factory.

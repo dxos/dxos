@@ -43,7 +43,7 @@ export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
 
 /**
  * Whether a value can carry an entity brand/slot. Class-declared types
- * (`Type.declareObj`) are functions whose prototype chain reaches the entity,
+ * Class-declared types (`Type.makeObject`) are functions whose prototype chain reaches the entity,
  * so brand/slot lookups must accept functions as well as plain objects.
  */
 const isBrandCarrier = (value: unknown): boolean =>

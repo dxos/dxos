@@ -539,9 +539,11 @@ describe('Integration tests', () => {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
-        const LocalTestSchema = Schema.Struct({
-          field: Schema.String,
-        }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+        const LocalTestSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+          Schema.Struct({
+            field: Schema.String,
+          }),
+        );
         const stored = await db.addType(LocalTestSchema);
         schemaDxn = Type.getURI(stored)!;
 

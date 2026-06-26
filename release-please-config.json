@@ -690,6 +690,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-ibkr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },

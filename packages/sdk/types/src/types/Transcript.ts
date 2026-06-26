@@ -13,21 +13,17 @@ import { HiddenAnnotation } from '@dxos/echo/Annotation';
  * Root transcript object created when the user starts a transcription.
  */
 // TODO(dmaretskyi): Convert `queue` to `Ref.Ref(Feed.Feed)` (see plugin-assistant migrations for pattern).
-export const Transcript = Schema.Struct({
-  started: Schema.optional(Schema.String),
-  ended: Schema.optional(Schema.String),
+export class Transcript extends Type.makeObject<Transcript>(DXN.make('org.dxos.type.transcript', '0.1.0'))(
+  Schema.Struct({
+    started: Schema.optional(Schema.String),
+    ended: Schema.optional(Schema.String),
 
-  /**
-   * Feed containing TranscriptBlock objects.
-   */
-  feed: Ref.Ref(Feed.Feed),
-}).pipe(
-  HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.transcript', '0.1.0')),
-);
-
-export type Transcript = Type.InstanceType<typeof Transcript>;
+    /**
+     * Feed containing TranscriptBlock objects.
+     */
+    feed: Ref.Ref(Feed.Feed),
+  }).pipe(HiddenAnnotation.set(true), Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' })),
+) {}
 
 /**
  * First message in queue.
