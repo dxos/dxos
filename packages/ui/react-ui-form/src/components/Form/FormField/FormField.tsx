@@ -94,6 +94,7 @@ export const FormField = (props: FormFieldProps) => {
     useType,
     getOptions,
     onCreate,
+    resolveCreateEntry,
     refInline,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -215,7 +216,16 @@ export const FormField = (props: FormFieldProps) => {
     const inline =
       refInline || Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
     if (inline && !refProps.isArray) {
-      return <InlineRefField {...fieldProps} {...refProps} db={db} useType={useType} onCreate={onCreate} />;
+      return (
+        <InlineRefField
+          {...fieldProps}
+          {...refProps}
+          db={db}
+          useType={useType}
+          onCreate={onCreate}
+          resolveCreateEntry={resolveCreateEntry}
+        />
+      );
     }
 
     const isCreateTarget = !createTypename || refProps.typename === createTypename;
@@ -231,6 +241,7 @@ export const FormField = (props: FormFieldProps) => {
         useType={useType}
         getOptions={getOptions}
         onCreate={onCreate}
+        resolveCreateEntry={resolveCreateEntry}
       />
     );
   }
@@ -265,6 +276,7 @@ export const FormField = (props: FormFieldProps) => {
           useType={useType}
           getOptions={getOptions}
           onCreate={onCreate}
+          resolveCreateEntry={resolveCreateEntry}
         />
       );
     }
