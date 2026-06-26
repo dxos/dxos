@@ -17,17 +17,11 @@ import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 export type MasonryArticleProps = {
-  view: View.View;
+  view: View.View | Ref.Ref<View.View>;
   role?: string;
 };
 
-export const MasonryArticle = ({
-  view: viewOrRef,
-  role: _role,
-}: {
-  view: View.View | Ref.Ref<View.View>;
-  role?: string;
-}) => {
+export const MasonryArticle = ({ view: viewOrRef, role: _role }: MasonryArticleProps) => {
   const [view] = useObject(viewOrRef);
   const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
