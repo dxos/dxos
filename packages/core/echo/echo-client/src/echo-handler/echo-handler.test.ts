@@ -226,6 +226,23 @@ describe('Reactive Object with ECHO database', () => {
     expect(returnObj === obj).to.be.true;
   });
 
+  test('object with nested reactive records can be added to the database', async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+
+    // A nested struct value is a reactive record whose target prototype carries the per-object
+    // instance state (not `Object.prototype`); ingestion must accept it rather than reject it as a
+    // class instance.
+    const obj = db.add(
+      Obj.make(TestSchema.Example, {
+        string: 'foo',
+        nested: { field: 'bar' },
+        nestedArray: [{ field: 'a' }, { field: 'b' }],
+      }),
+    );
+    expect(obj.nested?.field).to.eq('bar');
+    expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'b']);
+  });
+
   test('existing proxy objects can be passed to create', async () => {
     const TestSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
       Schema.Struct({

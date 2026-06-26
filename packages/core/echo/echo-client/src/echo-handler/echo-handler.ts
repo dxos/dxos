@@ -43,6 +43,7 @@ import {
   getTypeAnnotation,
   isInChangeContext,
   isProxy,
+  isReactiveRecord,
   queueNotification,
   symbolIsProxy,
 } from '@dxos/echo/internal';
@@ -682,8 +683,10 @@ export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
     return;
   }
 
-  const proto = Object.getPrototypeOf(value);
-  if (typeof value === 'object' && proto !== Object.prototype) {
+  // A reactive record is either rooted at `Object.prototype` or carries a reactive behaviour
+  // prototype (the typed handler relocates per-object metadata onto an intermediate prototype),
+  // so test for that rather than a bare `Object.prototype` identity check.
+  if (typeof value === 'object' && !isReactiveRecord(value)) {
     throw new Error(`class instances are not supported: setting ${value} on ${String(prop)}`);
   }
 };
