@@ -50,7 +50,7 @@ export const createArrayMethodError = (method: string): MutationOutsideChangeCon
  */
 export const createTextMethodError = (method: string): MutationOutsideChangeContextError => {
   return new MutationOutsideChangeContextError(
-    `call ${method} on ECHO object`,
+    `call Text.${method}() on ECHO object`,
     `Text.${method}(mutableObj, path, ...);`,
   );
 };

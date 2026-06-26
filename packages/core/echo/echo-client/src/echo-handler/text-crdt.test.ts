@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Obj, Text } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -15,7 +15,7 @@ const make = (value: string) => createObject(Obj.make(TestSchema.Example, { stri
 
 describe('Text (Automerge)', () => {
   describe('update', () => {
-    test('replaces the value', () => {
+    test('replaces the value', ({ expect }) => {
       const obj = make('hello');
       Obj.update(obj, () => {
         Text.update(obj, 'string', 'goodbye');
@@ -26,7 +26,7 @@ describe('Text (Automerge)', () => {
   });
 
   describe('splice', () => {
-    test('inserts at an index and returns the empty removed substring', () => {
+    test('inserts at an index and returns the empty removed substring', ({ expect }) => {
       const obj = make('helloworld');
       Obj.update(obj, () => {
         expect(Text.splice(obj, 'string', 5, 0, ' ')).toBe('');
@@ -34,7 +34,7 @@ describe('Text (Automerge)', () => {
       expect(obj.string).toBe('hello world');
     });
 
-    test('deletes and returns the removed substring', () => {
+    test('deletes and returns the removed substring', ({ expect }) => {
       const obj = make('hello world');
       Obj.update(obj, () => {
         expect(Text.splice(obj, 'string', 5, 6)).toBe(' world');
@@ -42,7 +42,7 @@ describe('Text (Automerge)', () => {
       expect(obj.string).toBe('hello');
     });
 
-    test('replaces in place', () => {
+    test('replaces in place', ({ expect }) => {
       const obj = make('hello world');
       Obj.update(obj, () => {
         expect(Text.splice(obj, 'string', 6, 5, 'there')).toBe('world');
@@ -50,7 +50,7 @@ describe('Text (Automerge)', () => {
       expect(obj.string).toBe('hello there');
     });
 
-    test('start past end appends', () => {
+    test('start past end appends', ({ expect }) => {
       const obj = make('abc');
       Obj.update(obj, () => {
         expect(Text.splice(obj, 'string', 100, 0, 'def')).toBe('');
@@ -60,7 +60,7 @@ describe('Text (Automerge)', () => {
   });
 
   describe('applyEdits', () => {
-    test('replaces the first occurrence', () => {
+    test('replaces the first occurrence', ({ expect }) => {
       const obj = make('foo foo foo');
       Obj.update(obj, () => {
         Text.applyEdits(obj, 'string', [{ oldString: 'foo', newString: 'bar' }]);
@@ -68,7 +68,7 @@ describe('Text (Automerge)', () => {
       expect(obj.string).toBe('bar foo foo');
     });
 
-    test('replaces all occurrences', () => {
+    test('replaces all occurrences', ({ expect }) => {
       const obj = make('foo foo foo');
       Obj.update(obj, () => {
         Text.applyEdits(obj, 'string', [{ oldString: 'foo', newString: 'bar', replaceAll: true }]);
@@ -76,7 +76,7 @@ describe('Text (Automerge)', () => {
       expect(obj.string).toBe('bar bar bar');
     });
 
-    test('appends when oldString is missing', () => {
+    test('appends when oldString is missing', ({ expect }) => {
       const obj = make('hello');
       let result = '';
       Obj.update(obj, () => {
@@ -86,7 +86,7 @@ describe('Text (Automerge)', () => {
       expect(obj.string).toBe('hello world');
     });
 
-    test('throws when a non-replaceAll oldString is not found', () => {
+    test('throws when a non-replaceAll oldString is not found', ({ expect }) => {
       const obj = make('hello');
       expect(() =>
         Obj.update(obj, () => {
@@ -97,7 +97,7 @@ describe('Text (Automerge)', () => {
   });
 
   describe('strict mode', () => {
-    test('mutations throw outside Obj.update', () => {
+    test('mutations throw outside Obj.update', ({ expect }) => {
       const obj = make('hello');
       expect(() => Text.update(obj, 'string', 'x')).toThrow(/Obj\.update/);
       expect(() => Text.splice(obj, 'string', 0, 1, 'x')).toThrow(/Obj\.update/);
@@ -106,7 +106,7 @@ describe('Text (Automerge)', () => {
   });
 
   describe('minimal-delta semantics', () => {
-    test('a cursor survives a splice at an earlier offset', () => {
+    test('a cursor survives a splice at an earlier offset', ({ expect }) => {
       const obj = make('Hello World');
       const accessor = getObjectCore(obj).getDocAccessor(['string']);
       // Anchor a cursor on 'W' (index 6). A whole-string replace would invalidate it.
@@ -123,7 +123,7 @@ describe('Text (Automerge)', () => {
       expect(text[position]).toBe('W');
     });
 
-    test('a cursor before the edited region survives an update', () => {
+    test('a cursor before the edited region survives an update', ({ expect }) => {
       const obj = make('Hello World');
       const accessor = getObjectCore(obj).getDocAccessor(['string']);
       // Anchor a cursor on 'H' (index 0), before the region the diff rewrites.

@@ -358,6 +358,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Shared read-modify-write for the in-memory string CRDT path. Mirrors the `set` trap: enforce the
    * change context, then mutate and notify through the same batched notification path so reactivity fires.
+   *
+   * Writes via `setDeep` on the raw target, intentionally bypassing `_prepareValueForAssignment` /
+   * `_validateValue`: a string CRDT delta produces a string, and per-delta schema checks (pattern,
+   * maxLength) would reject valid intermediate states during incremental edits. Such constraints are
+   * enforced at the initial assignment or as application-level invariants, mirroring the Automerge path.
    */
   private _applyTextMutation(
     target: ProxyTarget,

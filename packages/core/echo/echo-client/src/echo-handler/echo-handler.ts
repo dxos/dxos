@@ -875,7 +875,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textUpdate(target: ProxyTarget, path: Doc.KeyPath, newText: string): void {
-    this._checkTextMutationAllowed(target, 'Text.update');
+    this._checkTextMutationAllowed(target, 'update');
     const fullPath = this._getPropertyMountPath(target, path);
     target[symbolInternals].change((doc: any) => {
       // `A.updateText` computes a minimal diff so cursors/anchors survive and concurrent edits merge.
@@ -885,7 +885,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textSplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount: number, insert: string): string {
-    this._checkTextMutationAllowed(target, 'Text.splice');
+    this._checkTextMutationAllowed(target, 'splice');
     const fullPath = this._getPropertyMountPath(target, path);
 
     let removed = '';
