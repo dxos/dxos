@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
-import { useHubHttpClient } from '../../state/use-hub-http';
+import { useHubHttpClient } from '../../state/useHubClient';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
