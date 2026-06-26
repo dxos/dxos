@@ -268,20 +268,15 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
         </DropdownMenu.Root>
       </div>
       <div className='p-1'>
+        {/* Inline glyph (not a sprite `Icon`) so the handle stays visible in the tile's native drag image. */}
         <Mosaic.DragHandle
           label={t('drag-handle.label')}
           classNames='p-1 min-h-0 w-(--dx-rail-item) h-(--dx-rail-item)'
           testId='section.drag-handle'
-        />
+        >
+          <DragHandleGlyph />
+        </Mosaic.DragHandle>
       </div>
-    </div>
-  );
-
-  // Icon-safe drag image: inline grip glyph + title (the cloned tile would drop its sprite icons).
-  const preview = (
-    <div className='flex w-max max-w-[16rem] items-center gap-2 rounded border border-separator bg-base-surface px-2 py-1 text-sm shadow-md'>
-      <DragHandleGlyph />
-      <span className='truncate'>{title}</span>
     </div>
   );
 
@@ -289,7 +284,6 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
     <Mosaic.Tile
       {...tileProps}
       data={data}
-      preview={preview}
       classNames='grid grid-cols-[var(--dx-rail-action)_1fr] dx-attention-surface border border-subdued-separator'
     >
       <div className='border-e border-subdued-separator'>

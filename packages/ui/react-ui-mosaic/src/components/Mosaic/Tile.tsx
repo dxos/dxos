@@ -20,15 +20,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type PropsWithChildren,
-  type ReactNode,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -82,13 +74,6 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
     /** Whether this tile is selected (aria-selected). */
     selected?: boolean;
     /**
-     * Lightweight content rendered into the native drag image instead of a clone of the tile.
-     * Use this to avoid snapshot artifacts: the browser does not rasterize external SVG sprite
-     * `<use href>` icons (e.g. `@dxos/react-ui` `Icon`), so a cloned tile drops its icons — supply
-     * inline SVG / text here instead. When omitted the tile is cloned at its current size.
-     */
-    preview?: ReactNode;
-    /**
      * Initial extent in rem (width when the container is horizontal, height when vertical).
      * Pair with a child `Mosaic.ResizeHandle` to make the tile user-resizable; the consumer
      * persists committed sizes via {@link MosaicTileProps.onSizeChange}.
@@ -117,7 +102,6 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       draggable: draggableProp,
       current,
       selected,
-      preview,
       size: sizeProp,
       onSizeChange,
       minSize,
@@ -318,27 +302,24 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
           {children}
         </Comp>
 
-        {/* Dragging preview. A `preview` slot renders icon-safe content (sprite `<use>` icons do not
-            rasterize into the native drag image); otherwise the tile is cloned at its current size. */}
+        {/* Dragging preview. Cloned at the source size; the live tile is removed from the list while
+            dragging, so this clone is what the user sees following the cursor. NOTE: external SVG sprite
+            `<use>` icons do not rasterize here — use inline SVG (see Mosaic.DragHandle) for drag affordances. */}
         {state.type === 'preview' &&
           createPortal(
-            preview != null ? (
-              <div {...{ [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type }}>{preview}</div>
-            ) : (
-              <Comp
-                {...{
-                  // NOTE: Use to control appearance while dragging.
-                  [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
-                }}
-                className={className}
-                style={{
-                  width: `${state.rect.width}px`,
-                  height: `${state.rect.height}px`,
-                }}
-              >
-                {children}
-              </Comp>
-            ),
+            <Comp
+              {...{
+                // NOTE: Use to control appearance while dragging.
+                [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
+              }}
+              className={className}
+              style={{
+                width: `${state.rect.width}px`,
+                height: `${state.rect.height}px`,
+              }}
+            >
+              {children}
+            </Comp>,
             state.container,
           )}
       </MosaicTileContextProvider>
