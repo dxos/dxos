@@ -943,6 +943,17 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
+/**
+ * Create a reactive snapshot atom for an ECHO object or ref.
+ * Use inside atom computations (e.g. `Atom.make((get) => get(Obj.atom(ref)))`) to subscribe
+ * to a ref's target — the atom re-fires when the target loads or changes.
+ *
+ * @idiom org.dxos.echo.objAtomReactive
+ *   applies: Subscribing to a ref's target inside an atom computation or a non-React reactive context
+ *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never notifies when it becomes available
+ *   uses: {@link atom}
+ *   related: org.dxos.echo-react.useObjectReactive
+ */
 export const atom = objInternal.makeAtom;
 export const atomReactive = objInternal.makeWithReactive;
 export const atomProperty = objInternal.makeProperty;

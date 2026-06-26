@@ -24,9 +24,16 @@ export const useObject: {
    * Hook to subscribe to a Ref's target object.
    * Automatically dereferences the ref and handles async loading.
    * Returns a snapshot (undefined if the ref hasn't loaded yet).
+   * Re-renders the component when the ref resolves or the target object changes.
    *
    * @param ref - The Ref to dereference and subscribe to
    * @returns The current target snapshot (or undefined if not loaded) and update callback
+   *
+   * @idiom org.dxos.echo-react.useObjectReactive
+   *   applies: Reading a ref's target (or a specific property) inside a React component — establishes a reactive subscription so the component re-renders when the ref resolves or the value changes
+   *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never triggers a re-render when it becomes available
+   *   uses: {@link useObject}
+   *   related: org.dxos.echo.objAtomReactive, org.dxos.echo.refLoad
    */
   <T extends Obj.Unknown>(ref: Ref.Ref<T>): [Obj.Snapshot<T> | undefined, ObjectUpdateCallback<T>];
 
