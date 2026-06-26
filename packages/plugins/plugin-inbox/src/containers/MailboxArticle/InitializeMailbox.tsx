@@ -8,7 +8,6 @@ import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
 import { type Mailbox } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
@@ -37,11 +36,12 @@ InitializeMailbox.displayName = 'InitializeMailbox';
 
 export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // The sync op is resolved from the bound connection's connector (see `useTargetSync`); `connectorId`
+  // only seeds the connect CTA shown when the mailbox isn't connected yet.
   return (
     <InitializeAction
       target={mailbox}
       connectorId={GMAIL_PROVIDER_ID}
-      operation={InboxOperation.GoogleMailSync}
       syncLabel={t('sync-mailbox.label')}
       notify={{
         success: ['sync-mailbox-success.title', { ns: meta.profile.key }],

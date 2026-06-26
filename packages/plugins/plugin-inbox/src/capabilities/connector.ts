@@ -19,8 +19,11 @@ import {
   GOOGLE_CALENDAR_PROVIDER_ID,
   GOOGLE_CONTACTS_PROVIDER_ID,
   GOOGLE_INTEGRATION_SOURCE,
+  JMAP_DEFAULT_HOST,
+  JMAP_PROVIDER_ID,
 } from '../constants';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
+import { jmapCredentialForm } from './jmap-credential-form';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -86,6 +89,19 @@ export default Capability.makeModule(
         materializeTarget: InboxOperation.MaterializeGmailTarget,
         sync: InboxOperation.GoogleMailSync,
         onTokenCreated,
+      },
+      {
+        id: JMAP_PROVIDER_ID,
+        // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
+        source: JMAP_DEFAULT_HOST,
+        label: 'JMAP',
+        // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
+        credentialForm: jmapCredentialForm,
+        optionsSchema: SyncOptions,
+        // Single-target connector (the account inbox): no `getSyncTargets`. The coordinator calls
+        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
+        materializeTarget: InboxOperation.MaterializeJmapTarget,
+        sync: InboxOperation.JmapSync,
       },
       {
         id: GOOGLE_CALENDAR_PROVIDER_ID,

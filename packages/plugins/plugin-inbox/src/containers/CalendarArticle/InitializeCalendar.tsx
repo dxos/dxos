@@ -8,7 +8,6 @@ import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
 import { type Calendar } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
@@ -41,7 +40,6 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
     <InitializeAction
       target={calendar}
       connectorId={GOOGLE_CALENDAR_PROVIDER_ID}
-      operation={InboxOperation.GoogleCalendarSync}
       syncLabel={t('sync-calendar.label')}
       notify={{
         success: ['sync-calendar-success.title', { ns: meta.profile.key }],

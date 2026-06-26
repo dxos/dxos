@@ -15,10 +15,8 @@ import { useTargetSync } from './useTargetConnection';
 export type InitializeActionProps<T extends Obj.Any> = {
   /** The object whose Connection we're connecting / syncing. */
   target: T;
-  /** Connector id forwarded to the auth Surface (`'gmail'`, `'google-calendar'`, …). */
+  /** Connector id forwarded to the auth Surface (`'gmail'`, `'google-calendar'`, …) for the connect CTA. */
   connectorId: string;
-  /** Operation invoked when the user clicks sync. Must accept `{ binding }`. */
-  operation: Operation.Definition<any, any>;
   /** Already-translated label for the sync action. */
   syncLabel: string;
   /** Per-phase notifications shown for the sync invocation. */
@@ -28,20 +26,20 @@ export type InitializeActionProps<T extends Obj.Any> = {
 /**
  * Toolbar action for the "initialize / connect this thing" empty state.
  * When a `Connection` is bound to `target` (via a `SyncBinding`) we render an
- * `IconButton` that invokes `operation`; otherwise we render the `ConnectorAuth`
- * Surface (if registered) so the user can connect a connector.
+ * `IconButton` that runs the bound connector's `sync` op (resolved by
+ * {@link useTargetSync}); otherwise we render the `ConnectorAuth` Surface (if
+ * registered) so the user can connect a connector.
  *
  * Used by `InitializeMailboxAction` and `InitializeCalendarAction`.
  */
 export const InitializeAction = <T extends Obj.Any>({
   target,
   connectorId,
-  operation,
   syncLabel,
   notify,
 }: InitializeActionProps<T>) => {
   const pluginManager = usePluginManager();
-  const { connection, sync, syncing } = useTargetSync(target, operation, notify);
+  const { connection, sync, syncing } = useTargetSync(target, notify);
 
   if (connection) {
     return (

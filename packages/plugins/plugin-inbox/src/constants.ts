@@ -21,6 +21,18 @@ export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
 /** `Connector.id` for Google Contacts OAuth / sync; stored as `Connection.connectorId`. */
 export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
 
+/** `Connector.id` for JMAP (RFC 8620/8621) sync / send; stored as `Connection.connectorId`. */
+export const JMAP_PROVIDER_ID = 'jmap';
+
+/**
+ * Default JMAP server host pre-filled in the credential form. Fastmail is the canonical JMAP
+ * provider; the session is discovered at `https://${host}/.well-known/jmap`.
+ */
+export const JMAP_DEFAULT_HOST = 'api.fastmail.com';
+
+/** Foreign-key `Meta.keys[].source` stamped on synced JMAP messages (dedup key; see jmap mapper). */
+export const JMAP_MESSAGE_SOURCE = 'jmap';
+
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
 
 export const MAILBOXES_SECTION_TYPE = `${meta.profile.key}.mailboxes-section`;

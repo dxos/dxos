@@ -17,6 +17,13 @@ import { Message } from '@dxos/types';
  */
 export const GMAIL_TAG_SOURCE = 'google.com/gmail/label';
 
+/**
+ * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
+ * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
+ * {@link GMAIL_TAG_SOURCE}.
+ */
+export const JMAP_TAG_SOURCE = 'jmap/mailbox';
+
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
 // TODO(burdon): Implement as labels?
@@ -127,6 +134,16 @@ export const findOrCreateGmailTag = (
   db: Database.Database,
   { id, name }: { id: string; name: string },
 ): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: GMAIL_TAG_SOURCE, id }, label: name });
+
+/**
+ * Finds an existing JMAP provider {@link Tag} object by its JMAP mailbox-id foreign key, or creates
+ * one carrying that key. Keeps the folder label in sync with the server on re-sync. Mirrors
+ * {@link findOrCreateGmailTag}.
+ */
+export const findOrCreateJmapTag = (
+  db: Database.Database,
+  { id, name }: { id: string; name: string },
+): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: JMAP_TAG_SOURCE, id }, label: name });
 
 /** Returns the URI used to index a {@link Tag} object on a Mailbox. */
 export const tagUri = (tag: Tag.Tag): string => Obj.getURI(tag).toString();

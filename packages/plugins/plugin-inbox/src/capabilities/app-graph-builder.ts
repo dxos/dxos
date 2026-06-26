@@ -14,7 +14,7 @@ import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { SyncBinding } from '@dxos/plugin-connector';
+import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
@@ -506,11 +506,15 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when a SyncBinding targets this mailbox; the binding's
-          // source Connection authenticates the sync.
-          const bindings = get(db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding)).atom);
-          const binding = bindings.find(SyncBinding.instanceOf);
-          if (!binding) {
+          // The sync action appears only when a SyncBinding's source Connection targets this mailbox.
+          // Delegate to the connector framework's `SyncConnection`, which resolves the connection's
+          // connector and runs its `sync` op — no provider-specific branching here. Resolved via the
+          // reverse-ref `.source()` query (reactive; loading it synchronously isn't reliable here).
+          const connections = get(
+            db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding).source()).atom,
+          );
+          const connection = connections.find(Connection.instanceOf);
+          if (!connection) {
             return Effect.succeed([]);
           }
           return Effect.succeed([
@@ -518,10 +522,8 @@ export default Capability.makeModule(
               id: 'sync',
               data: () =>
                 Operation.invoke(
-                  InboxOperation.GoogleMailSync,
-                  {
-                    binding: Ref.make(binding),
-                  },
+                  ConnectorOperation.SyncConnection,
+                  { connection: Ref.make(connection) },
                   {
                     spaceId: db.spaceId,
                     notify: {
