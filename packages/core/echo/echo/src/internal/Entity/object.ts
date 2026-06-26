@@ -73,13 +73,14 @@ export const EchoObjectSchema: {
   };
 };
 
-export const makeObjectType: (
+export const makeObjectType = <Self, _Schema extends Schema.Schema.Any>(
   dxn: DXN.DXN,
-  schema: Schema.Schema.Any,
+  schema: _Schema,
   options?: { id?: EntityId },
-) => Type.ObjClass<unknown, unknown, {}> = (dxn, schema, options) => {
+): Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}> => {
   const type = EchoObjectSchema(dxn, options)(schema);
   const constructor = function ObjectType() {};
   Object.setPrototypeOf(constructor, type);
-  return constructor as any;
+  // Boundary cast: constructor/prototype wiring cannot be expressed in TypeScript's type system.
+  return constructor as unknown as Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
 };

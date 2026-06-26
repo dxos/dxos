@@ -95,7 +95,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 }
 
 /**
- * Return type for {@link makeObj}.
+ * Return type for {@link makeObject}.
  *
  * Not to be used directly, but must be exported for typescript to infer the type.
  */
@@ -138,6 +138,8 @@ export const makeObject: {
     dxn: DXN.DXN,
     options?: { id?: EntityId },
   ): <_Schema extends Schema.Schema.Any>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+// Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
+// so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
 } = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
 
 //
@@ -316,10 +318,12 @@ export const makeRelation: {
     {}
   >;
 } = (dxn) => (opts) => (schema) =>
+  // Boundary cast: makeRelationType erases generic params since the constructor/prototype
+  // wiring cannot thread them through the type system.
   internal.makeRelationType({
     dxn,
-    source: opts.source as AnyObj,
-    target: opts.target as AnyObj,
+    source: opts.source,
+    target: opts.target,
     schema,
     id: opts.id,
   }) as any;
