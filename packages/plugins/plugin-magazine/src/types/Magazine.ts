@@ -50,6 +50,24 @@ export const PostState = Schema.Struct({
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
+ * Structured output contract of the curation Routine: the Posts the agent selected, each with
+ * agent-generated display values. Declared as the Routine's `output` ({@link make}) so the agent's
+ * `completeJob` carries this payload (a Void/Unknown default would silently drop it); {@link
+ * CurateMagazine} decodes the Routine result against the same schema.
+ */
+export const CurationOutput = Schema.Struct({
+  posts: Schema.Array(
+    Schema.Struct({
+      id: Obj.ID,
+      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
+      snippet: Schema.optional(Schema.String),
+      /** Best image URL found for this article (from the post or fetched content). */
+      imageUrl: Schema.optional(Schema.String),
+    }),
+  ),
+});
+
+/**
  * An agent-curated collection of articles drawn from one or more Feeds.
  * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): its
  * instructions hold the editorial brief and it references the Magazine skill (the tool/output
@@ -127,6 +145,8 @@ export const make = (props: MakeProps = {}): Magazine => {
     skills: [Ref.fromURI(Skill.registryURI(SKILL_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
+    // Declare the selection contract so the agent's completeJob carries the chosen Posts.
+    output: CurationOutput,
   });
   Obj.update(magazine, (magazine) => {
     magazine.instructions = Ref.make(instructions);
