@@ -59,10 +59,11 @@ export const formatAgentPidTag = (pid: Process.ID): string => `agent-${String(pi
 /**
  * Hierarchical collection of tasks for humans and agents to track progress.
  */
-export const Plan = Schema.Struct({
-  tasks: Schema.Array(Task),
-}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
-export type Plan = Type.InstanceType<typeof Plan>;
+export class Plan extends Type.makeObject<Plan>(DXN.make('org.dxos.type.plan', '0.1.0'))(
+  Schema.Struct({
+    tasks: Schema.Array(Task),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 export const generateTaskId = (plan: Plan): TaskId => {
   const existingIds = plan.tasks
     .map((task) => {

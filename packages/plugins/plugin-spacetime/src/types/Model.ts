@@ -49,19 +49,17 @@ export type Mesh = Schema.Schema.Type<typeof Mesh>;
  *
  * These are mutually exclusive; `mesh` takes precedence if both are present.
  */
-export const Object = Schema.Struct({
-  label: Schema.optional(Schema.String),
-  primitive: Schema.optional(PrimitiveType),
-  mesh: Schema.optional(Mesh.pipe(FormInputAnnotation.set(false))),
-  position: Vec3.pipe(FormInputAnnotation.set(false)),
-  scale: Vec3.pipe(FormInputAnnotation.set(false)),
-  rotation: Vec3.pipe(FormInputAnnotation.set(false)),
-  color: Schema.optional(Schema.String),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
-  Type.makeObject(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
-);
-export type Object = Type.InstanceType<typeof Object>;
+export class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.spacetime.object', '0.1.0'))(
+  Schema.Struct({
+    label: Schema.optional(Schema.String),
+    primitive: Schema.optional(PrimitiveType),
+    mesh: Schema.optional(Mesh.pipe(FormInputAnnotation.set(false))),
+    position: Vec3.pipe(FormInputAnnotation.set(false)),
+    scale: Vec3.pipe(FormInputAnnotation.set(false)),
+    rotation: Vec3.pipe(FormInputAnnotation.set(false)),
+    color: Schema.optional(Schema.String),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' })),
+) {}
 
 /** Create a model object with sensible defaults. */
 export const make = (props?: Partial<Obj.MakeProps<typeof Object>>): Object =>

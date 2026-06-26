@@ -11,17 +11,15 @@ import { DXN, Obj, Type } from '@dxos/echo';
 
 import * as AppSurface from './app-surface';
 
-const TypeA = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0')));
+const TypeA = Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0'))(Schema.Struct({ name: Schema.String }));
 
-// A class-based type (like real ECHO types declared via `Type.declareObj`); unlike `Type.makeObject` schemas
-// it is `typeof === 'function'`, exercising the companion guard's schema-vs-guard disambiguation.
-class TypeC extends Type.declareObj<TypeC>()(
-  Schema.Struct({ title: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeC', '0.1.0'))),
+// A class-based type; unlike a plain `Type.makeObject(...)` call its typeof is 'function',
+// exercising the companion guard's schema-vs-guard disambiguation.
+class TypeC extends Type.makeObject<TypeC>(DXN.make('com.example.test.TypeC', '0.1.0'))(
+  Schema.Struct({ title: Schema.String }),
 ) {}
 
-const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
-  Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0')),
-);
+const TypeB = Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0'))(Schema.Struct({ value: Schema.Number }));
 
 describe('AppSurface', () => {
   //

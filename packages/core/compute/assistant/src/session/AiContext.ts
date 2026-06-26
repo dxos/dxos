@@ -21,19 +21,19 @@ import { ComplexSet, isNonNullable } from '@dxos/util';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-export const Binding = Schema.Struct({
-  skills: Schema.Struct({
-    added: Schema.Array(Ref.Ref(Skill.Skill)),
-    removed: Schema.Array(Ref.Ref(Skill.Skill)),
-  }),
+export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.contextBinding', '0.1.0'))(
+  Schema.Struct({
+    skills: Schema.Struct({
+      added: Schema.Array(Ref.Ref(Skill.Skill)),
+      removed: Schema.Array(Ref.Ref(Skill.Skill)),
+    }),
 
-  objects: Schema.Struct({
-    added: Schema.Array(Ref.Ref(Obj.Unknown)),
-    removed: Schema.Array(Ref.Ref(Obj.Unknown)),
-  }),
-}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
-
-export type Binding = Type.InstanceType<typeof Binding>;
+    objects: Schema.Struct({
+      added: Schema.Array(Ref.Ref(Obj.Unknown)),
+      removed: Schema.Array(Ref.Ref(Obj.Unknown)),
+    }),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 export type BindingProps = Partial<{
   skills: Ref.Ref<Skill.Skill>[];
   objects: Ref.Ref<Obj.Unknown>[];

@@ -54,7 +54,6 @@ export const FormFieldSetContainer = ({
           path={path}
           readonly={readonly}
           classNames='pl-2'
-          onClick={collapsible ? () => setCollapsed((value) => !value) : undefined}
           actions={
             collapsible ? (
               <ToggleIconButton
@@ -68,18 +67,24 @@ export const FormFieldSetContainer = ({
               />
             ) : undefined
           }
+          onClick={collapsible ? () => setCollapsed((value) => !value) : undefined}
         />
       )}
-      {showBody && (collapsible ? <div className='px-2 pb-2'>{children}</div> : children)}
+      {showBody && (collapsible ? <div className='flex flex-col gap-2 px-2 pb-2'>{children}</div> : children)}
     </>
   );
 
   // Nested groups render inside an indented, bordered container with a collapse toggle. A non-collapsible
   // group only materializes a wrapper when `classNames` is supplied — otherwise the body flows straight
   // into the parent grid (the default, grid-transparent behavior).
+  // TODO(burdon): This should be styled.
   if (collapsible) {
-    return <div className={mx('border border-subdued-separator rounded-sm', classNames)}>{content}</div>;
+    return (
+      <div className='pt-trim-md'>
+        <div className={mx('border border-subdued-separator rounded-sm', classNames)}>{content}</div>
+      </div>
+    );
   }
 
-  return classNames ? <div className={mx(classNames)}>{content}</div> : content;
+  return <div className={mx(classNames)}>{content}</div>;
 };

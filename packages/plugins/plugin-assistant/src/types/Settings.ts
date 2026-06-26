@@ -70,7 +70,7 @@ export const Settings = Schema.mutable(
         description: 'Select which language model service to use for AI responses.',
       }),
     ),
-    modelDefaults: Schema.optional(ModelDefaults),
+    modelDefaults: Schema.optional(ModelDefaults.annotations({ title: 'Model defaults' })),
     tracePanelDebug: Schema.optional(
       Schema.Boolean.annotations({
         title: 'Trace panel debug',

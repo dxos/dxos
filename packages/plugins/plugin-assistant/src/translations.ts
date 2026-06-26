@@ -189,7 +189,7 @@ export const translations: Resource[] = [
         'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 
-        'nav-tree-group-ai.label': 'Intelligence',
+        'nav-tree-group-ai.label': 'Assistant',
       },
     },
   },

@@ -11,10 +11,9 @@ import { Clipboard, Icon, IconButton, List, ListItem, useAsyncEffect, useTransla
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { ClientCapabilities } from '#types';
+import { type AccountCacheInvitation, ClientCapabilities } from '#types';
 
-import { type AccountCacheInvitation } from '../../state/account-cache';
-import { useHubHttpClient } from '../../state/use-hub-http';
+import { useHubHttpClient } from '../../hooks';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -24,27 +23,28 @@ export const InvitationsContainer = () => {
   const [pending, setPending] = useState(false);
 
   // Account/invitation routes live on hub-service, not the edge worker.
-  const hubHttp = useHubHttpClient();
+  const hubClient = useHubHttpClient();
 
   useAsyncEffect(async () => {
-    if (!hubHttp) {
+    if (!hubClient) {
       return;
     }
+
     try {
-      const result = await hubHttp.listAccountInvitations(new Context());
+      const result = await hubClient.listAccountInvitations(new Context());
       setCache((prev) => ({ ...prev, invitations: result.invitations, fetchedAt: Date.now() }));
     } catch {
       // Offline: keep cache.
     }
-  }, [hubHttp, setCache]);
+  }, [hubClient, setCache]);
 
   const handleIssue = useCallback(async () => {
-    if (!hubHttp) {
+    if (!hubClient) {
       return;
     }
     setPending(true);
     try {
-      const result = await hubHttp.issueAccountInvitation(new Context());
+      const result = await hubClient.issueAccountInvitation(new Context());
       // Optimistically push the new code and decrement the remaining quota; the
       // server consumes one slot at issue time. Next refresh reconciles.
       setCache((prev) => ({
@@ -57,7 +57,7 @@ export const InvitationsContainer = () => {
     } finally {
       setPending(false);
     }
-  }, [hubHttp, setCache]);
+  }, [hubClient, setCache]);
 
   const remaining = cache.account?.invitationsRemaining ?? 0;
   const list = cache.invitations ?? [];

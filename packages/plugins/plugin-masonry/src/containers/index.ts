@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const MasonryContainer: ComponentType<any> = lazy(() => import('./MasonryContainer'));
+export const MasonryArticle: ComponentType<any> = lazy(() => import('./MasonryArticle'));

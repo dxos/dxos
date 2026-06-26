@@ -46,9 +46,11 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  *
  * @example
  * ```ts
- * const Task = Schema.Struct({
- *   assignee: Ref.Ref(Person),  // Creates a Ref schema
- * }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+ * class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
+ *   Schema.Struct({
+ *     assignee: Ref.Ref(Person),  // Creates a Ref schema
+ *   }),
+ * ) {}
  * ```
  */
 export const Ref: {

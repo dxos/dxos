@@ -5,10 +5,10 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list';
+import { Column, Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Empty, OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -72,38 +72,47 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   emptyLabel,
   detail,
 }: MasterDetailProps<T>) => {
+  // The gutter is owned by a `Column.Root` (not an ad-hoc wrapper) so the list aligns to the surface's
+  // column system: rows and their selection highlight sit in the centre track (`Column.Center`), matching
+  // the inset of the detail's form. The detail bleeds the full width since its own `Form` owns its gutter.
   return (
-    <div className={mx('flex flex-col min-bs-0', classNames)}>
-      {items.length === 0 && emptyLabel && (
-        <div className='flex items-center h-8 p-1'>
-          <span className='grow truncate text-sm text-description'>{emptyLabel}</span>
-        </div>
-      )}
+    <Column.Root gutter='sm' classNames={classNames}>
+      <Column.Center>
+        {(items.length === 0 && <Empty label={emptyLabel} />) || (
+          <OrderedList.Root<T> items={items}>
+            {({ items }) => (
+              <OrderedList.Content>
+                {items.map((item) => (
+                  <MasterDetailRow
+                    key={item.id}
+                    item={item}
+                    selected={item.id === selectedId}
+                    getLabel={getLabel}
+                    getIcon={getIcon}
+                    getAdornment={getAdornment}
+                    getMenu={getMenu}
+                    onSelect={onSelect}
+                  />
+                ))}
+              </OrderedList.Content>
+            )}
+          </OrderedList.Root>
+        )}
+      </Column.Center>
 
-      {items.length > 0 && (
-        <OrderedList.Root<T> items={items}>
-          {({ items }) => (
-            <OrderedList.Content>
-              {items.map((item) => (
-                <MasterDetailRow
-                  key={item.id}
-                  item={item}
-                  selected={item.id === selectedId}
-                  getLabel={getLabel}
-                  getIcon={getIcon}
-                  getAdornment={getAdornment}
-                  getMenu={getMenu}
-                  onSelect={onSelect}
-                />
-              ))}
-            </OrderedList.Content>
-          )}
-        </OrderedList.Root>
-      )}
-
-      <div className='pt-trim-md'>{detail}</div>
-    </div>
+      <div className='col-span-full pt-trim-md'>{detail}</div>
+    </Column.Root>
   );
+};
+
+type MasterDetailRowProps<T extends MasterDetailRecord> = {
+  item: T;
+  selected: boolean;
+  getLabel: (get: Atom.Context, item: T) => string;
+  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
+  onSelect?: (id: string | undefined) => void;
 };
 
 const MasterDetailRow = <T extends MasterDetailRecord>({
@@ -114,15 +123,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   getAdornment,
   getMenu,
   onSelect,
-}: {
-  item: T;
-  selected: boolean;
-  getLabel: (get: Atom.Context, item: T) => string;
-  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
-  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
-  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
-  onSelect?: (id: string | undefined) => void;
-}) => {
+}: MasterDetailRowProps<T>) => {
   const { t } = useTranslation(meta.profile.key);
   // Resolve the label, icon, adornment, and actions reactively per row — each subscribes (via `get`) only to
   // this item's state, so a change (rename, toggling enabled) updates just this row.
@@ -130,6 +131,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   const icon = useAtomValue(useMemo(() => Atom.make((get) => getIcon?.(get, item)), [getIcon, item]));
   const adornment = useAtomValue(useMemo(() => Atom.make((get) => getAdornment?.(get, item)), [getAdornment, item]));
   const menu = useMenuBuilder((get) => getMenu?.(get, item) ?? EMPTY_MENU, [getMenu, item]);
+
   return (
     <OrderedList.Item
       id={item.id}
