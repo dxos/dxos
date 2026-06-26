@@ -42,6 +42,10 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     if (!invokePromise || !db) {
       return;
     }
+    // Thread the routine's first trigger as trace attribution so the run appears in history.
+    // Manual runs bypass the trigger dispatcher (which normally stamps meta.trigger), so we
+    // do it here — history filters on trigger entity id, and without this the run is invisible.
+    const triggerRef = routine.triggers[0];
     registry.set(runningAtom, true);
     void invokePromise(
       RoutineOperation.RunRoutine,
@@ -49,9 +53,10 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
       {
         spaceId: db.spaceId,
         notify: { error: ['run-error.message', { ns: meta.profile.key }] },
+        ...(triggerRef ? { tracing: { trigger: triggerRef } } : {}),
       },
     ).finally(() => registry.set(runningAtom, false));
-  }, [invokePromise, db, subject, registry, runningAtom]);
+  }, [invokePromise, db, subject, routine, registry, runningAtom]);
 
   const menuActions = useArticleMenuActions({ canRun, runningAtom, handleRun });
 
