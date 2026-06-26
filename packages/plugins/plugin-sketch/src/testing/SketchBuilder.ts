@@ -8,6 +8,8 @@
 // seeding stories/tests without hand-writing verbose tldraw records.
 //
 
+// TODO(burdon): Factor out and create a formal API.
+
 export type Color =
   | 'black'
   | 'grey'
