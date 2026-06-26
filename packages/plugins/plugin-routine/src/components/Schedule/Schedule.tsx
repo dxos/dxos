@@ -70,8 +70,11 @@ const DEFAULT_TIME = '08:00';
 const DEFAULT_MIN_INTERVAL_SECONDS = 60;
 
 /** Clamp a requested minimum interval to the achievable range; a 5-field cron cannot fire more often than every minute or require slower than hourly. */
-const normalizeMinInterval = (minInterval: number): number =>
-  Math.min(MAX_MIN_INTERVAL_SECONDS, Math.max(DEFAULT_MIN_INTERVAL_SECONDS, Math.round(minInterval)));
+const normalizeMinInterval = (minInterval: number): number => {
+  // Guard non-finite input (NaN/Infinity) so the clamp can't yield NaN and produce a `*/NaN` cron.
+  const finite = Number.isFinite(minInterval) ? minInterval : DEFAULT_MIN_INTERVAL_SECONDS;
+  return Math.min(MAX_MIN_INTERVAL_SECONDS, Math.max(DEFAULT_MIN_INTERVAL_SECONDS, Math.round(finite)));
+};
 
 const KIND_LABEL_KEYS: Record<ScheduleKind, string> = {
   // once: 'schedule.kind.once.label',

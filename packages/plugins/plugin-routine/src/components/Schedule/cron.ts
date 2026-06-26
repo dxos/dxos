@@ -196,28 +196,42 @@ const parseList = (field: string, min: number, max: number): number[] | undefine
   return values.length === tokens.length && values.length > 0 ? values : undefined;
 };
 
-/** Smallest gap between consecutive sorted values, or Infinity for a single value. */
-const minGap = (values: number[]): number => {
-  const sorted = [...values].sort((lhs, rhs) => lhs - rhs);
+/**
+ * Smallest cyclic gap between values in a field whose domain wraps at `span` (60 for minutes, 24 for hours),
+ * or Infinity for a single value. The wrap is required so e.g. minutes `0,59` register their 1-unit gap
+ * (59 → 0 of the next cycle), not just the 59-unit one.
+ */
+const minGap = (values: number[], span: number): number => {
+  const sorted = [...new Set(values)].sort((lhs, rhs) => lhs - rhs);
+  if (sorted.length <= 1) {
+    return Number.POSITIVE_INFINITY;
+  }
   let gap = Number.POSITIVE_INFINITY;
-  for (let index = 1; index < sorted.length; index++) {
-    gap = Math.min(gap, sorted[index] - sorted[index - 1]);
+  for (let index = 0; index < sorted.length; index++) {
+    const next = index === sorted.length - 1 ? sorted[0] + span : sorted[index + 1];
+    gap = Math.min(gap, next - sorted[index]);
   }
   return gap;
 };
 
+/** Step value of a `*\/N`, `M/N`, or `A-B/N` field (the cadence between fires), or undefined if not a step form. */
+const parseStep = (field: string, max: number): number | undefined => {
+  const match = field.match(/^(?:\*|\d+(?:-\d+)?)\/(\d+)$/);
+  return match ? parseBoundedUInt(match[1], 1, max) : undefined;
+};
+
 /** Minimum seconds between fires implied by a cron's hour field (independent of minute granularity). */
 const hourIntervalSeconds = (hour: string): number => {
-  const step = hour.match(/^\*\/(\d+)$/);
-  if (step) {
-    return parseInt(step[1]) * HOUR_SECONDS;
+  const step = parseStep(hour, 23);
+  if (step !== undefined) {
+    return step * HOUR_SECONDS;
   }
   if (hour === '*') {
     return HOUR_SECONDS;
   }
   const hours = parseList(hour, 0, 23);
   if (hours) {
-    return hours.length > 1 ? minGap(hours) * HOUR_SECONDS : DAY_SECONDS;
+    return hours.length > 1 ? minGap(hours, 24) * HOUR_SECONDS : DAY_SECONDS;
   }
   return Number.POSITIVE_INFINITY;
 };
@@ -234,9 +248,9 @@ export const cronIntervalSeconds = (cron: string): number => {
   }
 
   const [minute, hour] = parts;
-  const minuteStep = minute.match(/^\*\/(\d+)$/);
-  if (minuteStep) {
-    return parseInt(minuteStep[1]) * MINUTE_SECONDS;
+  const minuteStep = parseStep(minute, 59);
+  if (minuteStep !== undefined) {
+    return minuteStep * MINUTE_SECONDS;
   }
   if (minute === '*') {
     return MINUTE_SECONDS;
@@ -244,7 +258,7 @@ export const cronIntervalSeconds = (cron: string): number => {
 
   const minutes = parseList(minute, 0, 59);
   if (minutes) {
-    const minuteGap = minutes.length > 1 ? minGap(minutes) * MINUTE_SECONDS : Number.POSITIVE_INFINITY;
+    const minuteGap = minutes.length > 1 ? minGap(minutes, 60) * MINUTE_SECONDS : Number.POSITIVE_INFINITY;
     return Math.min(minuteGap, hourIntervalSeconds(hour));
   }
 
