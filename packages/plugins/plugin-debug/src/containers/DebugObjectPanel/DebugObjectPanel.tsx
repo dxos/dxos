@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
-import { Filter, Json, Obj, Query } from '@dxos/echo';
+import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import type { EntityId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
@@ -16,9 +16,12 @@ import { mx } from '@dxos/ui-theme';
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
   'role' | 'companionTo'
->;
+> & {
+  onOpen?: (object: Obj.Unknown) => void;
+  canOpen?: (entity: Entity.Snapshot) => boolean;
+};
 
-export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) => {
+export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(companionTo);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
   const [depth, setDepth] = useState(0);
@@ -39,7 +42,7 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
             {db && (
               <ScrollArea.Root>
                 <ScrollArea.Viewport>
-                  <ObjectsTree db={db} root={companionTo} onSelect={(entity) => setSelectedId(entity.id)} />
+                  <ObjectsTree db={db} root={companionTo} onSelect={(entity) => setSelectedId(entity.id)} onOpen={onOpen} canOpen={canOpen} />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
