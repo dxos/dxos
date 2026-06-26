@@ -156,8 +156,11 @@ const ConnectionMenuItem = ({
   onSelect: (connection: Connection.Connection) => void;
 }) => {
   const [accessToken] = useObject(connection.accessToken);
-  const label =
-    connection.name ?? (accessToken?.account ? `${connectorLabel} · ${accessToken.account}` : connectorLabel);
+  // Lead with "<connector> · <account>" so multiple connections of the same connector are
+  // distinguishable; fall back to the connection name / connector label when no account is set.
+  const label = accessToken?.account
+    ? `${connectorLabel} · ${accessToken.account}`
+    : (connection.name ?? connectorLabel);
 
   return (
     <DropdownMenu.Item disabled={disabled} onClick={() => onSelect(connection)}>
