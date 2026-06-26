@@ -83,7 +83,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
             {/* Mirror MarkdownArticle: Panel.Toolbar/Content are NOT `asChild` (MarkdownEditor.Toolbar is not
                 composable, so asChild wraps it in a dx-slot-warning div that breaks the grid-area layout). */}
             <Panel.Root role='article'>
-              <Panel.Toolbar classNames='bg-toolbar-surface'>
+              <Panel.Toolbar>
                 <MarkdownEditor.Toolbar classNames='dx-document' />
               </Panel.Toolbar>
               <Panel.Content>

@@ -38,22 +38,41 @@ export const AccordionItem = <T extends ListItemRecord>({ children, classNames, 
   );
 };
 
-export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.AccordionHeaderProps & { icon?: string }>;
+export type AccordionItemHeaderProps = ThemedClassName<
+  AccordionPrimitive.AccordionHeaderProps & {
+    icon?: string;
+    /** Apply `dx-hover` row styling on the trigger (off by default; mirrors `Listbox.Item`). */
+    hover?: boolean;
+  }
+>;
 
-export const AccordionItemHeader = ({ classNames, children, icon, ...props }: AccordionItemHeaderProps) => {
+export const AccordionItemHeader = ({ classNames, children, icon, hover, ...props }: AccordionItemHeaderProps) => {
   return (
     <AccordionPrimitive.Header {...props} className={mx(classNames)}>
       {/* `justify-between` pins the toggle caret to the trailing edge of the row regardless of
           the header content's intrinsic width — so the affordance lives at a predictable
           right-end position. The content wrapper grabs the remaining space. */}
-      <AccordionPrimitive.Trigger className='group flex items-center justify-between gap-2 p-2 dx-focus-ring-inset w-full text-start'>
-        {icon && <Icon icon={icon} size={4} />}
+      <AccordionPrimitive.Trigger
+        className={mx(
+          'group flex items-start justify-between gap-2 p-2 dx-focus-ring-inset w-full text-start',
+          hover && 'dx-hover',
+        )}
+      >
+        {/* Leading icon and caret center within a single line-height band (`h-6`) so they sit on
+            the same centerline as the first line of the content, which may span multiple lines. */}
+        {icon && (
+          <span className='flex items-center h-6 shrink-0'>
+            <Icon icon={icon} size={4} />
+          </span>
+        )}
         <span className='min-w-0 flex-1 truncate'>{children}</span>
-        <Icon
-          icon='ph--caret-right--regular'
-          size={4}
-          classNames='shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90'
-        />
+        <span className='flex items-center h-6 shrink-0'>
+          <Icon
+            icon='ph--caret-right--regular'
+            size={4}
+            classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
+          />
+        </span>
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );
