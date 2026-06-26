@@ -43,14 +43,11 @@ export interface GetSyncTargetsOutput extends Schema.Schema.Type<typeof GetSyncT
 /**
  * Input accepted by every {@link ConnectorEntry.materializeTarget} operation.
  * `remoteTarget` is omitted for single-target connectors (e.g. Gmail) that have
- * no remote selection. When `existingTarget` is supplied the operation should
- * update the existing object's name rather than creating a new one.
+ * no remote selection.
  */
 export const MaterializeTargetInput = Schema.Struct({
   connection: Ref.Ref(Connection.Connection),
   remoteTarget: RemoteTarget.pipe(Schema.optional),
-  /** Pre-existing local object to rename instead of creating a fresh one. */
-  existingTarget: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
 });
 export interface MaterializeTargetInput extends Schema.Schema.Type<typeof MaterializeTargetInput> {}
 

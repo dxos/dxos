@@ -165,17 +165,20 @@ const createSingleBinding = (
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     let target: Obj.Unknown | undefined;
-    if (connector.materializeTarget) {
-      // Always route through materializeTarget so it can apply name updates to
-      // existing targets (e.g. stamp the account email onto a pre-existing Mailbox).
+    if (existingTarget) {
+      target = yield* Database.load(existingTarget);
+      const accessToken = yield* Database.load(connection.accessToken);
+      const name = accessToken.account;
+      if (name) {
+        Obj.update(target, (obj) => Obj.setLabel(obj, name));
+      }
+    } else if (connector.materializeTarget) {
       const { target: materialized } = yield* invoker.invoke(
         connector.materializeTarget,
-        { connection: Ref.make(connection), ...(existingTarget ? { existingTarget } : {}) },
+        { connection: Ref.make(connection) },
         { spaceId: db.spaceId },
       );
       target = yield* Database.load(materialized);
-    } else if (existingTarget) {
-      target = yield* Database.load(existingTarget);
     }
     if (!target) {
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });

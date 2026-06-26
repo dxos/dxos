@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, type Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 
 import { type Connection, type ConnectorEntry, SyncBinding } from '../types';
 
@@ -76,21 +76,21 @@ export const reconcileSyncBindings = ({
         continue;
       }
       let target: Obj.Unknown;
-      if (connector.materializeTarget) {
-        // Always route through materializeTarget so it can apply name updates to
-        // existing targets (e.g. rename a pre-existing Calendar to match the remote name).
+      if (sel === firstNew && existingTarget) {
+        target = yield* Database.load(existingTarget);
+        if (sel.name) {
+          Obj.update(target, (obj) => Obj.setLabel(obj, sel.name!));
+        }
+      } else if (connector.materializeTarget) {
         const { target: materialized } = yield* invoker.invoke(
           connector.materializeTarget,
           {
             connection: Ref.make(connection),
             remoteTarget: { id: sel.remoteId, name: sel.name ?? sel.remoteId },
-            ...(sel === firstNew && existingTarget ? { existingTarget } : {}),
           },
           { spaceId: db.spaceId },
         );
         target = yield* Database.load(materialized);
-      } else if (sel === firstNew && existingTarget) {
-        target = yield* Database.load(existingTarget);
       } else {
         // Targetless connector: no dedicated local root object, so the binding
         // is a self-loop referencing the connection. The remote target is
