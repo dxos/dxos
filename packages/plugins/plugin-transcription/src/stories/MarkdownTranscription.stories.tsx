@@ -116,7 +116,8 @@ const DefaultStory = ({ seed }: StoryArgs) => {
       if (!entry) {
         return false;
       }
-      const anchor = entry.view.state.selection.main.head;
+      // Anchor the pending block at the end of the document.
+      const anchor = entry.view.state.doc.length;
       const effects: StateEffect<unknown>[] = [setPendingAnchor.of({ anchor, placeholder: 'Recording…' })];
       if (seed.final) {
         effects.push(appendPendingText.of(seed.final));
@@ -193,8 +194,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Shows the recording-state decoration: finalized text on the comment surface, the volatile interim
- * tail distinguished, and the inline confirm/cancel affordances — seeded without a microphone.
+ * Shows the recording-state decoration at the end of the document: finalized text on the comment
+ * surface, the volatile interim tail distinguished, and the inline confirm/cancel affordances —
+ * seeded without a microphone.
  */
 export const Recording: Story = {
   args: {
@@ -202,5 +204,15 @@ export const Recording: Story = {
       final: 'The quick brown fox jumps over the lazy dog.',
       interim: ' And the in-flight words still being transcribed',
     },
+  },
+};
+
+/**
+ * Shows the "Recording…" placeholder shown at the end of the document the moment recording starts,
+ * before any text has been transcribed.
+ */
+export const RecordingIndicator: Story = {
+  args: {
+    seed: {},
   },
 };
