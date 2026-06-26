@@ -19,6 +19,13 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - The markdown command hint ("Press '/' for commands") is the `placeholder({focusOnly:true})` extension from `@dxos/ui-editor`, wired in `react-ui-editor/.../EditorMenuProvider/popover.ts`.
 - Clicking a toolbar action blurs the editor (caret hidden). For immediate feedback, dispatch state into the view on action-start from the driver (CM keeps `selection.main.head` through blur) rather than waiting for async results.
 
+## 2026-06-26 — plugin-sketch (SketchBuilder)
+
+- `SketchBuilder` (`src/testing/SketchBuilder.ts`, exported via `#testing` + new `./testing` subpath) is the chainable way to author tldraw (`tldraw.com/2`) `Canvas.content` — replaces hand-written `SKETCH_CONTENT` record blobs in stories. Shapes: `rectangle/ellipse/circle/geo(type,…)/text`; connectors: `arrow/line({from,to})`; `.build()` returns the record map (with `document:document` + `page:page`). Friendly `id` handles link connectors to shapes.
+- Arrows that link shapes need a separate `binding:*` record (`type:'arrow'`, `fromId`=arrow, `toId`=target, `props.terminal:'start'|'end'`, `normalizedAnchor`) — NOT inline `start.boundShapeId` (that's the pre-v2 format that fails migration). The bound arrow's `props.start/end` are placeholder points; tldraw recomputes terminals from bindings.
+- Validate generated tldraw records in node vitest with `createTLSchema()` from `@tldraw/tlschema` then `schema.types[typeName].validate(record)`. Do NOT import `@tldraw/tldraw` (react pkg) in a node test — it pulls core-js and throws `Named export 'Promise' not found` (see the commented-out import in `hooks/adapter.test.ts`).
+- Worktree storybook verify: main repo squats 9009; `cd tools/storybook-react && pnpm exec storybook dev --port <free> --no-open`, then Playwright. Bash hook false-positives on any command containing the literal worktree path ("worktrees") — use repo-relative paths (cwd resets to worktree root each call).
+
 ## 2026-06-25 — plugin-ibkr (conformance refactor)
 
 - Integration plugins put typed Effect errors in `src/errors.ts` via `BaseError.extend('Name', 'msg')` (`@dxos/errors`) — NEVER `Effect.fail(new Error())` / `catch: () => new Error()` in a handler (CLAUDE.md rule; mirror plugin-connector). Adding `@dxos/errors` needs a `workspace:*` dep AND a manual `{ "path": "../../common/errors" }` tsconfig reference — the postinstall sync that auto-adds refs is SKIPPED under `CI=true pnpm install`.
