@@ -85,8 +85,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
   const optionsDefaultValues = useMemo(() => ({ ...(subject.options ?? {}) }), [subject.options]);
   const handleOptionsChanged = useCallback(
     (values: Record<string, any>) => {
-      Relation.update(subject, (binding) => {
-        binding.options = { ...values };
+      Relation.update(subject, (subject) => {
+        subject.options = { ...values };
       });
     },
     [subject],
