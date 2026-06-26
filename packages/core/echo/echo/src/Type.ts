@@ -138,8 +138,8 @@ export const makeObject: {
     dxn: DXN.DXN,
     options?: { id?: EntityId },
   ): <_Schema extends Schema.Schema.Any>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
-// Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
-// so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
+  // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
+  // so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
 } = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
 
 //

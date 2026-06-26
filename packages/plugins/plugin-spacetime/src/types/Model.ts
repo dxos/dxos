@@ -58,9 +58,7 @@ export class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.spac
     scale: Vec3.pipe(FormInputAnnotation.set(false)),
     rotation: Vec3.pipe(FormInputAnnotation.set(false)),
     color: Schema.optional(Schema.String),
-  }).pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' })),
 ) {}
 
 /** Create a model object with sensible defaults. */

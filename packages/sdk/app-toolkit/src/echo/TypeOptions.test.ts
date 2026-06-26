@@ -17,9 +17,10 @@ const HiddenType = Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0'))
   Schema.Struct({ name: Schema.String }).pipe(HiddenAnnotation.set(true)),
 );
 
-const Relation = Type.makeRelation(DXN.make('com.example.type.relation', '0.1.0'))({ source: UserType, target: UserType })(
-  Schema.Struct({ role: Schema.String }),
-);
+const Relation = Type.makeRelation(DXN.make('com.example.type.relation', '0.1.0'))({
+  source: UserType,
+  target: UserType,
+})(Schema.Struct({ role: Schema.String }));
 
 const types = [UserType, HiddenType, Relation];
 

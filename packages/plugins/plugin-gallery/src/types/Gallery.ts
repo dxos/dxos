@@ -13,10 +13,7 @@ export class Gallery extends Type.makeObject<Gallery>(DXN.make('org.dxos.type.ga
     name: Schema.optional(Schema.String),
     /** References to {@link File.File} objects. */
     images: Schema.Array(Ref.Ref(File.File)).pipe(FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--images--regular', hue: 'rose' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--images--regular', hue: 'rose' })),
 ) {}
 
 /** Construct a new `Gallery` ECHO object. Defaults `images` to an empty array. */

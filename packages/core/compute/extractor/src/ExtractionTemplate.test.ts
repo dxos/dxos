@@ -36,9 +36,10 @@ class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type.Contac
   }),
 ) {}
 
-const ExtractedRel = Type.makeRelation(DXN.make('com.example.relation.extracted', '0.1.0'))({ source: Obj.Unknown, target: Obj.Unknown })(
-  Schema.Struct({ id: Obj.ID }),
-);
+const ExtractedRel = Type.makeRelation(DXN.make('com.example.relation.extracted', '0.1.0'))({
+  source: Obj.Unknown,
+  target: Obj.Unknown,
+})(Schema.Struct({ id: Obj.ID }));
 
 //
 // Template + code wiring.

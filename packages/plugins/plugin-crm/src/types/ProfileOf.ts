@@ -16,12 +16,10 @@ import { Format } from '@dxos/echo/Format';
  */
 export class ProfileOf extends Type.makeRelation<ProfileOf>(
   DXN.make('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
-)(
-  {
-    source: Obj.Unknown,
-    target: Obj.Unknown,
-  },
-)(
+)({
+  source: Obj.Unknown,
+  target: Obj.Unknown,
+})(
   Schema.Struct({
     id: Obj.ID,
     sources: Schema.Array(Schema.String).pipe(

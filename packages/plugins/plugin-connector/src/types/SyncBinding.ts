@@ -21,12 +21,10 @@ import * as Connection from './Connection';
  * object is materialized when the binding is created (eager), not lazily on
  * first sync.
  */
-export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dxos.type.syncBinding', '0.1.0'))(
-  {
-    source: Connection.Connection,
-    target: Obj.Unknown,
-  },
-)(
+export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dxos.type.syncBinding', '0.1.0'))({
+  source: Connection.Connection,
+  target: Obj.Unknown,
+})(
   Schema.Struct({
     id: Obj.ID,
     /** Remote foreign id (board id, calendar id, channel id, …). */

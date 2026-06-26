@@ -11,12 +11,12 @@ import { DXN, Obj, Relation, Type } from '@dxos/echo';
 import * as Organization from './Organization';
 
 // TODO(burdon): Rename HasBusinessRelationship?
-export class HasConnection extends Type.makeRelation<HasConnection>(DXN.make('org.dxos.relation.hasConnection', '0.1.0'))(
-  {
-    source: Organization.Organization,
-    target: Organization.Organization,
-  },
-)(
+export class HasConnection extends Type.makeRelation<HasConnection>(
+  DXN.make('org.dxos.relation.hasConnection', '0.1.0'),
+)({
+  source: Organization.Organization,
+  target: Organization.Organization,
+})(
   Schema.Struct({
     id: Obj.ID,
     kind: Schema.String.annotations({

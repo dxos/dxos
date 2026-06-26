@@ -29,10 +29,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Created lazily when the first task is recorded.
      */
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' })),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
@@ -74,12 +71,10 @@ export const getFromContext: Effect.Effect<
 /** @deprecated Use CompanionTo instead. */
 export class LegacyCompanionTo extends Type.makeRelation<LegacyCompanionTo>(
   DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
-)(
-  {
-    source: Chat,
-    target: Obj.Unknown,
-  },
-)(
+)({
+  source: Chat,
+  target: Obj.Unknown,
+})(
   Schema.Struct({
     id: Obj.ID,
   }),
@@ -90,12 +85,10 @@ export class LegacyCompanionTo extends Type.makeRelation<LegacyCompanionTo>(
  */
 export class CompanionTo extends Type.makeRelation<CompanionTo>(
   DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
-)(
-  {
-    source: Chat,
-    target: Obj.Unknown,
-  },
-)(
+)({
+  source: Chat,
+  target: Obj.Unknown,
+})(
   Schema.Struct({
     id: Obj.ID,
   }),

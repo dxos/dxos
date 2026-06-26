@@ -185,7 +185,9 @@ export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.ma
  * unboundedly and force every reader to download every body. The queue is
  * lazily replicated and append-only — a natural fit for immutable content.
  */
-export class PostContent extends Type.makeObject<PostContent>(DXN.make('org.dxos.type.subscription.postContent', '0.1.0'))(
+export class PostContent extends Type.makeObject<PostContent>(
+  DXN.make('org.dxos.type.subscription.postContent', '0.1.0'),
+)(
   Schema.Struct({
     /** Source Post (in the Subscription's `feed` queue). */
     post: Ref.Ref(Post).pipe(FormInputAnnotation.set(false)),
@@ -197,9 +199,7 @@ export class PostContent extends Type.makeObject<PostContent>(DXN.make('org.dxos
     imageUrl: Schema.optional(Schema.String),
     /** ISO 8601 timestamp when the content was fetched. */
     fetchedAt: Schema.String,
-  }).pipe(
-    Annotation.HiddenAnnotation.set(true),
-  ),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 
 /** Schema for the create-feed dialog form. */

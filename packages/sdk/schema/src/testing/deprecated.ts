@@ -16,10 +16,12 @@ export namespace TestSchema {
   // Document
   //
 
-  export class DocumentType extends Type.makeObject<DocumentType>(DXN.make('org.dxos.example.document', '0.1.0'))(Schema.Struct({
-    name: Schema.String,
-    content: Schema.String,
-  })) {}
+  export class DocumentType extends Type.makeObject<DocumentType>(DXN.make('org.dxos.example.document', '0.1.0'))(
+    Schema.Struct({
+      name: Schema.String,
+      content: Schema.String,
+    }),
+  ) {}
 
   //
   // Organization

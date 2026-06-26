@@ -14,12 +14,10 @@ import * as Person from './Person';
 /**
  * Employer relation.
  */
-export class Employer extends Type.makeRelation<Employer>(DXN.make('org.dxos.relation.employer', '0.1.0'))(
-  {
-    source: Person.Person,
-    target: Organization.Organization,
-  },
-)(
+export class Employer extends Type.makeRelation<Employer>(DXN.make('org.dxos.relation.employer', '0.1.0'))({
+  source: Person.Person,
+  target: Organization.Organization,
+})(
   Schema.Struct({
     id: Obj.ID, // TODO(burdon): Remove.
     role: Schema.optional(Schema.String),

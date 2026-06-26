@@ -30,9 +30,11 @@ const withDevtoolsContext: Decorator = (Story) => (
 const WorksAt = Type.makeRelation(DXN.make('com.example.story.worksAt', '0.1.0'))({
   source: TestSchema.Person,
   target: TestSchema.Organization,
-})(Schema.Struct({
-  role: Schema.optional(Schema.String),
-}));
+})(
+  Schema.Struct({
+    role: Schema.optional(Schema.String),
+  }),
+);
 
 const ObjectsPanelStory = () => {
   const { space } = useClientStory();

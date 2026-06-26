@@ -12,12 +12,10 @@ import * as Person from './Person';
 
 export class HasRelationship extends Type.makeRelation<HasRelationship>(
   DXN.make('org.dxos.relation.hasRelationship', '0.1.0'),
-)(
-  {
-    source: Person.Person,
-    target: Person.Person,
-  },
-)(
+)({
+  source: Person.Person,
+  target: Person.Person,
+})(
   Schema.Struct({
     id: Obj.ID,
     kind: Schema.String.annotations({

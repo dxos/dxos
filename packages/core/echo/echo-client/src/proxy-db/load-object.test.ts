@@ -162,9 +162,7 @@ describe.skip('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    const Nested = Type.makeObject(DXN.make('com.example.nested', '0.1.0'))(
-      Schema.Struct({ value: Schema.Number }),
-    );
+    const Nested = Type.makeObject(DXN.make('com.example.nested', '0.1.0'))(Schema.Struct({ value: Schema.Number }));
 
     const TestSchema = Type.makeObject(DXN.make('com.example.test', '0.1.0'))(
       Schema.Struct({

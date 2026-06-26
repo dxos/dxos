@@ -22,9 +22,11 @@ const PostState = Schema.Struct({
 type PostState = Schema.Schema.Type<typeof PostState>;
 
 /** A minimal immutable feed item. */
-const Item = Type.makeObject(DXN.make('org.dxos.test.StateMapItem', '0.1.0'))(Schema.Struct({
-  text: Schema.String,
-}));
+const Item = Type.makeObject(DXN.make('org.dxos.test.StateMapItem', '0.1.0'))(
+  Schema.Struct({
+    text: Schema.String,
+  }),
+);
 
 describe('StateMap', () => {
   test('patches, reads, and removes per-object state', () => {

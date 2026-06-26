@@ -137,17 +137,17 @@ const schema = Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0'
 );
 ```
 
-Note the argument order: the schema is wrapped *inside* `makeObject(dxn)(schema)`, not piped into it. The old `.pipe(Type.makeObject(dxn))` form is **deprecated**.
+Note the argument order: the schema is wrapped _inside_ `makeObject(dxn)(schema)`, not piped into it. The old `.pipe(Type.makeObject(dxn))` form is **deprecated**.
 
 ### Migration guide — old to new
 
-| Old pattern | New pattern |
-|-------------|-------------|
-| `const X = Schema.Struct({…}).pipe(Type.makeObject(dxn));` | `Type.makeObject(dxn)(Schema.Struct({…}))` (inline) |
-| `export const X = …; export type X = Type.InstanceType<typeof X>;` | `export class X extends Type.makeObject<X>(dxn)(schema) {}` |
-| `export const X = …; export interface X extends Type.InstanceType<typeof X> {}` | same class pattern |
-| `class X extends Type.declareObj<X>()(schema.pipe(Type.makeObject(dxn)))` | `class X extends Type.makeObject<X>(dxn)(schema)` |
-| `export const X = …; export type X = Type.InstanceType<typeof X>;` (relation) | `export class X extends Type.makeRelation<X>(dxn)({ source, target })(schema) {}` |
+| Old pattern                                                                     | New pattern                                                                       |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `const X = Schema.Struct({…}).pipe(Type.makeObject(dxn));`                      | `Type.makeObject(dxn)(Schema.Struct({…}))` (inline)                               |
+| `export const X = …; export type X = Type.InstanceType<typeof X>;`              | `export class X extends Type.makeObject<X>(dxn)(schema) {}`                       |
+| `export const X = …; export interface X extends Type.InstanceType<typeof X> {}` | same class pattern                                                                |
+| `class X extends Type.declareObj<X>()(schema.pipe(Type.makeObject(dxn)))`       | `class X extends Type.makeObject<X>(dxn)(schema)`                                 |
+| `export const X = …; export type X = Type.InstanceType<typeof X>;` (relation)   | `export class X extends Type.makeRelation<X>(dxn)({ source, target })(schema) {}` |
 
 ### `Type.InstanceType` — when to use it
 

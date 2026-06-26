@@ -22,10 +22,7 @@ export class Transcript extends Type.makeObject<Transcript>(DXN.make('org.dxos.t
      * Feed containing TranscriptBlock objects.
      */
     feed: Ref.Ref(Feed.Feed),
-  }).pipe(
-    HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' }),
-  ),
+  }).pipe(HiddenAnnotation.set(true), Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' })),
 ) {}
 
 /**

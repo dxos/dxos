@@ -195,10 +195,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Passed as the input data to the runnable.
      */
     input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-    HiddenAnnotation.set(true),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }), HiddenAnnotation.set(true)),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

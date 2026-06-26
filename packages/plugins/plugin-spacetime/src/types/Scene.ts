@@ -15,9 +15,7 @@ export class Scene extends Type.makeObject<Scene>(DXN.make('org.dxos.type.spacet
   Schema.Struct({
     name: Schema.optional(Schema.String),
     objects: Ref.Ref(Model.Object).pipe(Schema.Array, FormInputAnnotation.set(false)),
-  }).pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' })),
 ) {}
 
 export const make = (props?: Partial<Omit<Scene, 'objects'>>) => {

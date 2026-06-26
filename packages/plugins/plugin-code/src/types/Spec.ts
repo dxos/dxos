@@ -17,7 +17,9 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '
   Schema.Struct({
     name: Schema.optional(Schema.String),
     content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-  }).pipe(Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
+  ),
 ) {}
 
 export const isSpec = (object: unknown): object is Spec =>

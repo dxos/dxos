@@ -29,10 +29,7 @@ export class Notebook extends Type.makeObject<Notebook>(DXN.make('org.dxos.type.
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' })),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }): Notebook => Obj.make(Notebook, props);

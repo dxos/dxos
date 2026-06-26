@@ -37,10 +37,7 @@ export class World extends Type.makeObject<World>(DXN.make('org.dxos.type.voxel'
     blockSize: Schema.optional(Schema.Number),
     /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
     voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'white' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'white' })),
 ) {}
 
 const DEFAULT_GRID_SIZE = 32;
