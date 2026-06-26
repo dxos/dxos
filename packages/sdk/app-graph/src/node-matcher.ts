@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 
 import { Entity, Obj, type Type } from '@dxos/echo';
@@ -12,10 +13,15 @@ import * as Node from './node';
  * Type for a node matcher function that returns an Option of the matched data.
  * Matchers are used to filter and transform nodes in the app graph.
  *
+ * Matchers receive the reactive atom context (`get`) so a match decision can
+ * depend on reactive state (e.g. an ECHO query for related objects). Reading an
+ * atom via `get` subscribes the extension to it, so the match re-runs when that
+ * state changes. Matchers that only inspect the node itself simply ignore `get`.
+ *
  * @template TData - The type of data returned when the matcher succeeds.
  *   Defaults to Node.Node, but can be a more specific type (e.g., an ECHO entity).
  */
-export type NodeMatcher<TData = Node.Node> = (node: Node.Node) => Option.Option<TData>;
+export type NodeMatcher<TData = Node.Node> = (node: Node.Node, get: Atom.Context) => Option.Option<TData>;
 
 //
 // Basic Node Matchers
@@ -176,10 +182,10 @@ export const whenAll: {
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any>;
 } =
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any> =>
-  (node: Node.Node) => {
+  (node: Node.Node, get: Atom.Context) => {
     let first: Option.Option<any> = Option.none();
     for (const candidate of matchers) {
-      const result = candidate(node);
+      const result = candidate(node, get);
       if (Option.isNone(result)) {
         return Option.none();
       }
@@ -214,9 +220,9 @@ export const whenAny: {
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any>;
 } =
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any> =>
-  (node: Node.Node) => {
+  (node: Node.Node, get: Atom.Context) => {
     for (const candidate of matchers) {
-      const result = candidate(node);
+      const result = candidate(node, get);
       if (Option.isSome(result)) {
         return result;
       }
@@ -309,5 +315,5 @@ export const whenEchoObjectMatches = (node: Node.Node): Option.Option<Node.Node>
  */
 export const whenNot =
   (matcher: NodeMatcher<any>): NodeMatcher<unknown> =>
-  (node: Node.Node): Option.Option<unknown> =>
-    Option.isNone(matcher(node)) ? Option.some(node) : Option.none();
+  (node: Node.Node, get: Atom.Context): Option.Option<unknown> =>
+    Option.isNone(matcher(node, get)) ? Option.some(node) : Option.none();
