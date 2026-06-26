@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';

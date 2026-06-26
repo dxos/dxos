@@ -34,7 +34,11 @@ export const useHomeSuggestions = (space?: Space): readonly string[] | undefined
       return;
     }
     let cancelled = false;
-    void invokePromise(AssistantOperation.GenerateHomeSuggestions, { db: space.db }, { spaceId: space.db.spaceId }).then((result) => {
+    void invokePromise(
+      AssistantOperation.GenerateHomeSuggestions,
+      { db: space.db },
+      { spaceId: space.db.spaceId },
+    ).then((result) => {
       if (cancelled) {
         return;
       }
