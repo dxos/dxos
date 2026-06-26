@@ -52,19 +52,19 @@ export const externalData = (url: string, cid?: string): FileData => ({
  * Canonical file type. Storage is backend-agnostic — the `data` field
  * discriminates between inline bytes and an external URL reference.
  */
-export const File = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  type: Schema.String.pipe(FormInputAnnotation.set(false)),
-  size: Schema.Number.pipe(FormInputAnnotation.set(false)),
-  data: FileDataSchema.pipe(FormInputAnnotation.set(false)),
-  timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' }),
-  CollectionItemAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.file', '0.1.0')),
-);
+export class File extends Type.makeObject<File>(DXN.make('org.dxos.type.file', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    type: Schema.String.pipe(FormInputAnnotation.set(false)),
+    size: Schema.Number.pipe(FormInputAnnotation.set(false)),
+    data: FileDataSchema.pipe(FormInputAnnotation.set(false)),
+    timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' }),
+    CollectionItemAnnotation.set(true),
+  ),
+) {}
 
-export type File = Type.InstanceType<typeof File>;
 /**
  * Constructs a `File.File` ECHO object from the given props.
  * @param props - The initial field values for the file object.

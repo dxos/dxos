@@ -301,6 +301,9 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-ibkr"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {

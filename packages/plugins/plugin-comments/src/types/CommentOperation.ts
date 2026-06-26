@@ -10,7 +10,10 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
-import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
+// Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name
+// it in the emitted .d.ts for AddMessage.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Actor, AnchoredTo, Message, type Person, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 

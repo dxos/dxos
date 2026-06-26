@@ -26,10 +26,33 @@ import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
 
+import {
+  applyOpfsPragmas,
+  DEFAULT_JOURNAL_MODE,
+  DEFAULT_SYNCHRONOUS,
+  type SqliteJournalMode,
+  type SqliteSynchronous,
+} from './opfs-pragmas';
+
+export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas';
+
 /** Config for in-process OPFS SQLite (worker-only, no MessagePort). */
 export interface OpfsConfig extends WasmSqliteClient.SqliteClientMemoryConfig {
   readonly dbName: string;
   readonly vfsDirectory?: string;
+
+  /**
+   * Journal mode applied to every connection. Defaults to `wal`.
+   * `wal` on {@link AccessHandlePoolVFS} requires exclusive locking because the VFS has no
+   * shared-memory (`xShm`) support, so selecting `wal` also applies `PRAGMA locking_mode=EXCLUSIVE`.
+   */
+  readonly journalMode?: SqliteJournalMode;
+
+  /**
+   * Synchronous flag applied to every connection. Defaults to `normal`, which is corruption-safe
+   * under WAL and avoids a per-commit fsync (`xSync` -> OPFS `flush`).
+   */
+  readonly synchronous?: SqliteSynchronous;
 }
 
 const ATTR_DB_SYSTEM_NAME = 'db.system.name';
@@ -59,9 +82,18 @@ const vacuumDatabase = (sqlite3: ReturnType<typeof WaSqlite.Factory>, db: number
   }
 };
 
-const importDatabase = (sqlite3: ReturnType<typeof WaSqlite.Factory>, db: number, data: Uint8Array): void => {
+const importDatabase = (
+  sqlite3: ReturnType<typeof WaSqlite.Factory>,
+  db: number,
+  data: Uint8Array,
+  pragmaOptions: OpfsConfig,
+): void => {
   sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
   vacuumDatabase(sqlite3, db);
+  applyOpfsPragmas(sqlite3, db, {
+    journalMode: pragmaOptions.journalMode ?? DEFAULT_JOURNAL_MODE,
+    synchronous: pragmaOptions.synchronous ?? DEFAULT_SYNCHRONOUS,
+  });
 };
 
 const recordSqliteQueryMetrics = (
@@ -102,6 +134,8 @@ export const makeOpfs = (
       ? Statement.defaultTransforms(options.transformResultNames).array
       : undefined;
     const vfsDirectory = options.vfsDirectory ?? DEFAULT_VFS_DIRECTORY;
+    const journalMode = options.journalMode ?? DEFAULT_JOURNAL_MODE;
+    const synchronous = options.synchronous ?? DEFAULT_SYNCHRONOUS;
 
     const makeConnection = Effect.gen(function* () {
       const sqlite3 = yield* initEffect;
@@ -120,6 +154,11 @@ export const makeOpfs = (
         }),
         (handle) => Effect.sync(() => sqlite3.close(handle)),
       );
+
+      yield* Effect.try({
+        try: () => applyOpfsPragmas(sqlite3, db, { journalMode, synchronous }),
+        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to configure database PRAGMAs' }),
+      });
 
       if (options.installReactivityHooks) {
         sqlite3.update_hook(db, (_op, _db, table, rowid) => {
@@ -209,7 +248,7 @@ export const makeOpfs = (
           Effect.try({
             try: () => {
               log('opfs import', { bytes: data.byteLength });
-              importDatabase(sqlite3, db, data);
+              importDatabase(sqlite3, db, data, options);
             },
             catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to import database' }),
           }),

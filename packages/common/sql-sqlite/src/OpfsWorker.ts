@@ -20,6 +20,14 @@ import { log } from '@dxos/log';
 // @ts-ignore
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
 
+import {
+  applyOpfsPragmas,
+  DEFAULT_JOURNAL_MODE,
+  DEFAULT_SYNCHRONOUS,
+  type SqliteJournalMode,
+  type SqliteSynchronous,
+} from './internal/opfs-pragmas';
+
 /** @internal */
 type OpfsWorkerMessage =
   | [id: number, sql: string, params: ReadonlyArray<unknown>]
@@ -35,6 +43,8 @@ type OpfsWorkerMessage =
 export interface OpfsWorkerConfig {
   readonly port: EventTarget & Pick<MessagePort, 'postMessage' | 'close'>;
   readonly dbName: string;
+  readonly journalMode?: SqliteJournalMode;
+  readonly synchronous?: SqliteSynchronous;
 }
 
 /**
@@ -50,7 +60,14 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
     let shutdownRequested = false;
     const db = yield* Effect.acquireRelease(
       Effect.try({
-        try: () => sqlite3.open_v2(options.dbName, undefined, 'opfs'),
+        try: () => {
+          const handle = sqlite3.open_v2(options.dbName, undefined, 'opfs');
+          applyOpfsPragmas(sqlite3, handle, {
+            journalMode: options.journalMode ?? DEFAULT_JOURNAL_MODE,
+            synchronous: options.synchronous ?? DEFAULT_SYNCHRONOUS,
+          });
+          return handle;
+        },
         catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
       }),
       (handle) =>
@@ -88,6 +105,10 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
                   throw new Error('VACUUM failed while persisting imported database');
                 }
               }
+              applyOpfsPragmas(sqlite3, db, {
+                journalMode: options.journalMode ?? DEFAULT_JOURNAL_MODE,
+                synchronous: options.synchronous ?? DEFAULT_SYNCHRONOUS,
+              });
               options.port.postMessage([id, void 0, void 0]);
               return;
             }

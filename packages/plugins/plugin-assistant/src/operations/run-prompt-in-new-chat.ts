@@ -29,8 +29,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
           if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
-            const feedTarget = chat.feed.target;
-            invariant(feedTarget, 'Chat feed not found.');
+            const feedTarget = yield* Database.load(chat.feed);
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');

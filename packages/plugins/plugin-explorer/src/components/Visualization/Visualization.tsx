@@ -84,7 +84,7 @@ export type VisualizationGraphProps = {
  * model, variant definition, and focus from `Visualization.Root` context; owns the live projector,
  * click-driven focus, and the layout snapshot that lets each variant swap animate from prior positions.
  */
-const VisualizationGraph = ({ debug = true, onNodeHover }: VisualizationGraphProps) => {
+const VisualizationGraph = ({ debug = false, onNodeHover }: VisualizationGraphProps) => {
   const { model, variant, focus } = useVisualizationContext('Visualization.Graph');
 
   const svgRef = useRef<SVGContext>(null);
@@ -175,18 +175,22 @@ const VisualizationGraph = ({ debug = true, onNodeHover }: VisualizationGraphPro
   return (
     <SVG.Root ref={svgRef}>
       <SVG.Zoom extent={[1 / 2, 2]}>
-        <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-          model={model}
-          projector={projector}
-          renderNode={variant.renderNode}
-          applyNode={variant.applyNode}
-          edgeOpacity={variant.edgeOpacity}
-          drag={variant.drag}
-          highlightOnHover={variant.highlightOnHover}
-          onSelect={handleSelect}
-          onInspect={handleInspect}
-          {...pointerProps}
-        />
+        {/* Mount only once the variant's projector exists; otherwise SVG.Graph falls back to a
+            force projector for a frame, flashing the wrong layout for non-force variants. */}
+        {projector && (
+          <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+            model={model}
+            projector={projector}
+            renderNode={variant.renderNode}
+            applyNode={variant.applyNode}
+            edgeOpacity={variant.edgeOpacity}
+            drag={variant.drag}
+            highlightOnHover={variant.highlightOnHover}
+            onSelect={handleSelect}
+            onInspect={handleInspect}
+            {...pointerProps}
+          />
+        )}
       </SVG.Zoom>
       {debug && <SVG.FPS />}
     </SVG.Root>

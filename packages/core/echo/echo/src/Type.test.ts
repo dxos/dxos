@@ -207,74 +207,75 @@ describe('Type', () => {
     const worksForDxn = DXN.make('com.example.type.deterministic.worksFor', '0.1.0');
 
     test('Type.makeObject with the same DXN twice yields entities with identical ids', ({ expect }) => {
-      const a = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
-      const b = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
+      const a = Type.makeObject(personDxn)(Schema.Struct({ name: Schema.String }));
+      const b = Type.makeObject(personDxn)(Schema.Struct({ name: Schema.String }));
       expect(a.id).toBe(b.id);
       expect(a.id).toBe(EntityId.deterministic('com.example.type.deterministic.person', '0.1.0'));
     });
 
     test('different versions produce different ids', ({ expect }) => {
-      const v1 = Schema.Struct({ name: Schema.String }).pipe(
-        Type.makeObject(DXN.make('com.example.type.deterministic.person', '0.1.0')),
+      const v1 = Type.makeObject(DXN.make('com.example.type.deterministic.person', '0.1.0'))(
+        Schema.Struct({ name: Schema.String }),
       );
-      const v2 = Schema.Struct({ name: Schema.String }).pipe(
-        Type.makeObject(DXN.make('com.example.type.deterministic.person', '0.2.0')),
+      const v2 = Type.makeObject(DXN.make('com.example.type.deterministic.person', '0.2.0'))(
+        Schema.Struct({ name: Schema.String }),
       );
       expect(v1.id).not.toBe(v2.id);
     });
 
     test('Type.makeObject({ id }) override is honoured', ({ expect }) => {
       const explicit = EntityId.random();
-      const entity = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn, { id: explicit }));
+      const entity = Type.makeObject(personDxn, { id: explicit })(Schema.Struct({ name: Schema.String }));
       expect(entity.id).toBe(explicit);
       // And the default still kicks in when no override is supplied.
-      const defaultEntity = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
+      const defaultEntity = Type.makeObject(personDxn)(Schema.Struct({ name: Schema.String }));
       expect(defaultEntity.id).not.toBe(explicit);
     });
 
     test('Type.makeRelation defaults id to deterministic(typename, version)', ({ expect }) => {
-      const a = Schema.Struct({ since: Schema.Number }).pipe(
-        Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
-      );
-      const b = Schema.Struct({ since: Schema.Number }).pipe(
-        Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
-      );
-      expect(a.id).toBe(b.id);
-      expect(a.id).toBe(EntityId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
+      class RelationA extends Type.makeRelation<RelationA>(worksForDxn)({
+        source: TestSchema.Person,
+        target: TestSchema.Organization,
+      })(Schema.Struct({ since: Schema.Number })) {}
+
+      class RelationB extends Type.makeRelation<RelationB>(worksForDxn)({
+        source: TestSchema.Person,
+        target: TestSchema.Organization,
+      })(Schema.Struct({ since: Schema.Number })) {}
+
+      expect(RelationA.id).toBe(RelationB.id);
+      expect(RelationA.id).toBe(EntityId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
     });
 
     test('Type.makeRelation({ id }) override is honoured', ({ expect }) => {
       const explicit = EntityId.random();
-      const entity = Schema.Struct({ since: Schema.Number }).pipe(
-        Type.makeRelation({
-          dxn: worksForDxn,
-          source: TestSchema.Person,
-          target: TestSchema.Organization,
-          id: explicit,
-        }),
-      );
+      const entity = Type.makeRelation(worksForDxn)({
+        source: TestSchema.Person,
+        target: TestSchema.Organization,
+        id: explicit,
+      })(Schema.Struct({ since: Schema.Number }));
       expect(entity.id).toBe(explicit);
     });
 
-    test('Type.declareObj', ({ expect }) => {
-      class Person extends Type.declareObj<Person>()(
-        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+    test('Type.makeObject class syntax', ({ expect }) => {
+      class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+        Schema.Struct({ name: Schema.String }),
       ) {}
       expect(Person.jsonSchema).toBeDefined();
     });
 
-    test('Ref of Type.declareObj', ({ expect }) => {
-      class Person extends Type.declareObj<Person>()(
-        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+    test('Ref of Type.makeObject class', ({ expect }) => {
+      class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+        Schema.Struct({ name: Schema.String }),
       ) {}
 
       const refSchema = Ref.Ref(Person);
       expect(refSchema).toBeDefined();
     });
 
-    test('Filter of Type.declareObj', ({ expect }) => {
-      class Person extends Type.declareObj<Person>()(
-        Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))),
+    test('Filter of Type.makeObject class', ({ expect }) => {
+      class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+        Schema.Struct({ name: Schema.String }),
       ) {}
 
       const filter = Filter.type(Person);

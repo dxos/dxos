@@ -764,14 +764,18 @@ describe('Query', () => {
 
   describe('Queue queries', () => {
     test('typeURI: versionless matches any version', async () => {
-      const ContactV1 = Schema.Struct({
-        firstName: Schema.String,
-        lastName: Schema.String,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+      const ContactV1 = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+        Schema.Struct({
+          firstName: Schema.String,
+          lastName: Schema.String,
+        }),
+      );
 
-      const ContactV2 = Schema.Struct({
-        name: Schema.String,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
+      const ContactV2 = Type.makeObject(DXN.make('com.example.type.person', '0.2.0'))(
+        Schema.Struct({
+          name: Schema.String,
+        }),
+      );
 
       const peer = await builder.createPeer({ types: [Feed.Feed, ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -1407,14 +1411,18 @@ describe('Query', () => {
 
   describe('Filter', () => {
     test('query objects with different versions', async () => {
-      const ContactV1 = Schema.Struct({
-        firstName: Schema.String,
-        lastName: Schema.String,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+      const ContactV1 = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+        Schema.Struct({
+          firstName: Schema.String,
+          lastName: Schema.String,
+        }),
+      );
 
-      const ContactV2 = Schema.Struct({
-        name: Schema.String,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
+      const ContactV2 = Type.makeObject(DXN.make('com.example.type.person', '0.2.0'))(
+        Schema.Struct({
+          name: Schema.String,
+        }),
+      );
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
