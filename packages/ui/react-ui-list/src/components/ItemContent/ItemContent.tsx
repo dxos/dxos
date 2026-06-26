@@ -1,0 +1,53 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type ReactElement, type ReactNode, forwardRef } from 'react';
+
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+export type ItemContentProps = ThemedClassName<{
+  /**
+   * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
+   * carrying its own size/colour (e.g. `<Icon icon='…' classNames='text-success-text' />`).
+   */
+  icon?: string | ReactElement;
+  /** Primary line. */
+  title: ReactNode;
+  /** Optional secondary line, aligned under the title in the content column. */
+  description?: ReactNode;
+}>;
+
+/**
+ * Presentational row layout: a rail-sized leading icon centered on the primary line, with an
+ * optional secondary line aligned beneath the title in the content column. Drop inside a
+ * `Listbox.Item`, an `Accordion.ItemHeader`, or any row container.
+ *
+ * The grid uses the same `var(--dx-rail-item)` rail track as `useListGrid`, so an adjacent body
+ * (e.g. an `Accordion.ItemBody`) can reuse `grid-cols-[var(--dx-rail-item)_1fr]` to line its
+ * content up under the same content column.
+ */
+export const ItemContent = forwardRef<HTMLDivElement, ItemContentProps>(
+  ({ classNames, icon, title, description }, forwardedRef) => (
+    <div
+      ref={forwardedRef}
+      className={mx(
+        'grid grid-cols-[var(--dx-rail-item)_minmax(0,1fr)] items-center gap-x-2 is-full min-is-0',
+        classNames,
+      )}
+    >
+      {icon != null && (
+        <div className='col-start-1 row-start-1 place-self-center'>
+          {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
+        </div>
+      )}
+      <span className='col-start-2 row-start-1 min-is-0 truncate'>{title}</span>
+      {description != null && (
+        <span className='col-start-2 row-start-2 min-is-0 truncate text-sm text-description'>{description}</span>
+      )}
+    </div>
+  ),
+);
+
+ItemContent.displayName = 'ItemContent';

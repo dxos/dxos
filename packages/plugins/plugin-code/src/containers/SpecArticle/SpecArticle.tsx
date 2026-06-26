@@ -73,7 +73,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       <Editor.Root extensions={extensions}>
         <Panel.Root role={role} ref={forwardedRef}>
           {!readOnly && (
-            <Panel.Toolbar classNames='bg-toolbar-surface'>
+            <Panel.Toolbar>
               <Editor.Toolbar role={role} attendableId={attendableId} />
             </Panel.Toolbar>
           )}
