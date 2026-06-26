@@ -11,8 +11,7 @@ import { Empty, type EmptyProps } from './Empty';
 const meta = {
   title: 'ui/react-ui-list/Empty',
   component: Empty,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'grid place-items-center' })],
-  parameters: { layout: 'fullscreen' },
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Empty>;
 
 export default meta;
