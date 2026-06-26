@@ -148,7 +148,7 @@ export const translations = [
         'object.placeholder': 'Type a title here…',
         'personal-space.label': 'Personal Space',
         'spaces.label': 'Spaces',
-        'space-settings.label': 'Spaces',
+        'space-settings.label': 'Your spaces',
         'space-settings.description':
           'Per-space settings for properties, membership, integrations, and other space-specific objects.',
         'save-files-to-directory.label': 'Save files to disk',
