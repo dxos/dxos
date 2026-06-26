@@ -21,6 +21,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -83,6 +84,8 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && qualifyId(Node.RootId, doc.id);
+  // Mark the editor attended so its toolbar (and the contributed actions) are active.
+  const attentionAttrs = useAttentionAttributes(attendableId);
 
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
@@ -98,7 +101,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='contents'>
+    <div className='contents' {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
     </div>
   );

@@ -9,6 +9,7 @@ export * from './awareness';
 export * from './blast';
 export * from './blocks';
 export * from './bookmarks';
+export * from './busy-state';
 export * from './comments';
 export * from './debug';
 export * from './dnd';

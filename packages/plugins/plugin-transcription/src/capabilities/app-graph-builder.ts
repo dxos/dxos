@@ -44,7 +44,9 @@ export default Capability.makeModule(
                 label: recording
                   ? ['stop-recording.label', { ns: meta.profile.key }]
                   : ['start-recording.label', { ns: meta.profile.key }],
-                icon: recording ? 'ph--microphone-slash--regular' : 'ph--microphone--regular',
+                icon: 'ph--microphone--regular',
+                // Highlight the control with the error (rose) tone while recording.
+                classNames: recording ? 'bg-error-surface' : undefined,
                 disposition: 'toolbar',
                 testId: 'transcription.record.toggle',
               },

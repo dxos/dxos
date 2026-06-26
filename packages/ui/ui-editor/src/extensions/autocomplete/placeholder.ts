@@ -7,6 +7,7 @@ import { type Extension } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 import { clientRectsFor, flattenRect } from '../../util';
+import { isBusy } from '../busy-state';
 
 type Content = string | HTMLElement | ((view: EditorView) => HTMLElement);
 
@@ -49,6 +50,11 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
         // focused, leave the placeholder hidden and skip rescheduling. The
         // next `focusChanged` update reschedules once focus returns.
         if (focusOnly && !update.view.hasFocus) {
+          return;
+        }
+
+        // Suppress the hint while another extension owns the caret region (e.g. transcription).
+        if (isBusy(update.view.state)) {
           return;
         }
 

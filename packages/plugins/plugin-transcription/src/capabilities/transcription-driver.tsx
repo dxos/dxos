@@ -10,7 +10,7 @@ import { useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui'
 import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { type ContentBlock } from '@dxos/types';
-import { appendPendingText, setPendingAnchor } from '@dxos/ui-editor';
+import { appendPendingText, cancelPendingText, pendingTextState, setPendingAnchor } from '@dxos/ui-editor';
 
 import { useAudioTrack, useTranscriber } from '#hooks';
 import { meta } from '#meta';
@@ -31,11 +31,32 @@ const TranscriptionDriver = () => {
   const sessionId = session?.id;
   const track = useAudioTrack(recording);
 
-  // Reset the per-session anchor flag whenever a new recording starts.
-  const anchorSet = useRef(false);
+  // Whether any text has been appended in the current session (controls inter-batch spacing).
+  const appended = useRef(false);
+
+  // On recording start, anchor a pending session at the caret with a placeholder. Clicking the
+  // toolbar blurs the editor and hides the caret, so this gives immediate visual feedback.
   useEffect(() => {
-    anchorSet.current = false;
-  }, [recording, sessionId]);
+    if (!recording || !editorViews || !sessionId) {
+      return;
+    }
+    const entry = editorViews.get(sessionId);
+    if (!entry) {
+      return;
+    }
+    appended.current = false;
+    entry.view.dispatch({
+      effects: setPendingAnchor.of({ anchor: entry.view.state.selection.main.head, placeholder: 'Recording…' }),
+    });
+    return () => {
+      // On stop, drop the placeholder if nothing was transcribed; otherwise leave the block for review.
+      const current = editorViews.get(sessionId);
+      const pending = current?.view.state.field(pendingTextState, false);
+      if (current && pending && pending.final.length === 0) {
+        current.view.dispatch({ effects: cancelPendingText.of() });
+      }
+    };
+  }, [recording, sessionId, editorViews]);
 
   const handleSegments = useCallback(
     async (segments: ContentBlock.Transcript[]) => {
@@ -55,16 +76,9 @@ const TranscriptionDriver = () => {
         return;
       }
 
-      const effects = [];
-      if (!anchorSet.current) {
-        effects.push(setPendingAnchor.of(entry.view.state.selection.main.head));
-        anchorSet.current = true;
-        effects.push(appendPendingText.of(text));
-      } else {
-        // Separate successive batches with a single space.
-        effects.push(appendPendingText.of(' ' + text));
-      }
-      entry.view.dispatch({ effects });
+      // Separate successive batches with a single space.
+      entry.view.dispatch({ effects: appendPendingText.of((appended.current ? ' ' : '') + text) });
+      appended.current = true;
     },
     [editorViews, sessionId],
   );
