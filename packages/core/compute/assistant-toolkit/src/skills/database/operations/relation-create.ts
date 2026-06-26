@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Filter, Query, Relation, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { safeParseJson } from '@dxos/util';
 
 import { RelationCreate } from './definitions';
 
@@ -23,11 +24,13 @@ export default RelationCreate.pipe(
 
       const sourceObj = yield* Database.load(source);
       const targetObj = yield* Database.load(target);
+      const relationProperties =
+        typeof properties === 'string' ? safeParseJson(properties, {}) : (properties ?? {});
       const relation = db.add(
         Relation.make(schema, {
           [Relation.Source]: sourceObj,
           [Relation.Target]: targetObj,
-          ...properties,
+          ...relationProperties,
         }),
       );
       return Entity.toJSON(relation);
