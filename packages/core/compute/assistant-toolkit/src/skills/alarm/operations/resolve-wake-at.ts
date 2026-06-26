@@ -4,6 +4,7 @@
 
 import * as Duration from 'effect/Duration';
 import * as Either from 'effect/Either';
+import * as Option from 'effect/Option';
 
 interface ResolveAlarmInput {
   /** Duration from now, e.g. `'30 seconds'`, `'5 minutes'`, `'1 hour'`. */
@@ -35,11 +36,11 @@ export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Either.Eit
     if (!match) {
       return Either.left(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
     }
-    try {
-      return Either.right(now + Duration.toMillis(Duration.decode(`${match[1]} ${match[2]}`)));
-    } catch {
+    const duration = Duration.decodeUnknown(inDuration.trim());
+    if (Option.isNone(duration)) {
       return Either.left(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
     }
+    return Either.right(now + Duration.toMillis(duration.value));
   }
   return Either.left('Specify either "in" (a duration from now) or "at" (an absolute time).');
 };
