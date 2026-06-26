@@ -29,6 +29,10 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
       _decorations = Decoration.none;
 
       update(update: ViewUpdate) {
+        // A busy-state toggle (e.g. transcription starting) carries no doc/selection/focus change,
+        // so it must be detected explicitly to clear an already-scheduled placeholder.
+        const busyChanged = isBusy(update.startState) !== isBusy(update.view.state);
+
         // React to actual user activity only. The empty `view.update([])`
         // dispatched from the timeout below carries no doc/selection/focus
         // change, so it falls through here as a no-op — that's how the
@@ -36,7 +40,7 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
         // provider to read it. Without this gate, the unconditional reset
         // would clobber the decoration in the same tick and the placeholder
         // would never visibly render.
-        if (!update.docChanged && !update.selectionSet && !update.focusChanged) {
+        if (!update.docChanged && !update.selectionSet && !update.focusChanged && !busyChanged) {
           return;
         }
 

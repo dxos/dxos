@@ -101,6 +101,17 @@ export const cancelPending: Command = (view) => {
   return true;
 };
 
+// Commit when there is finalized text, otherwise just consume the key so the editor's default
+// newline insertion cannot mutate the document mid-session (e.g. placeholder/interim-only state).
+const commitOrConsumePending: Command = (view) => {
+  const value = view.state.field(pendingTextState, false);
+  if (!value) {
+    return false;
+  }
+
+  return value.final.length > 0 ? commitPending(view) : true;
+};
+
 //
 // Decorations.
 //
@@ -223,7 +234,7 @@ export const pendingText = (): Extension => [
   busyListener,
   styles,
   keymap.of([
-    { key: 'Enter', run: commitPending },
+    { key: 'Enter', run: commitOrConsumePending },
     { key: 'Escape', run: cancelPending },
   ]),
 ];
