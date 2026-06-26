@@ -32,16 +32,19 @@ export const ItemContent = forwardRef<HTMLDivElement, ItemContentProps>(
   ({ classNames, icon, title, description }, forwardedRef) => (
     <div
       ref={forwardedRef}
-      className={mx('grid grid-cols-[var(--dx-rail-item)_1fr] items-center gap-x-2 is-full min-is-0', classNames)}
+      className={mx(
+        'grid grid-cols-[var(--dx-rail-item)_minmax(0,1fr)] items-center gap-x-2 is-full min-is-0',
+        classNames,
+      )}
     >
       {icon != null && (
         <div className='col-start-1 row-start-1 place-self-center'>
           {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
         </div>
       )}
-      <span className='col-start-2 row-start-1 truncate'>{title}</span>
+      <span className='col-start-2 row-start-1 min-is-0 truncate'>{title}</span>
       {description != null && (
-        <span className='col-start-2 row-start-2 truncate text-sm text-description'>{description}</span>
+        <span className='col-start-2 row-start-2 min-is-0 truncate text-sm text-description'>{description}</span>
       )}
     </div>
   ),
