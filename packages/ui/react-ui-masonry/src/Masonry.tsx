@@ -6,7 +6,15 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { VirtuosoMasonry as NaturalVirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
-import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
+import React, {
+  type ComponentType,
+  type CSSProperties,
+  type JSX,
+  type PropsWithChildren,
+  type Ref,
+  useMemo,
+  useRef,
+} from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
@@ -171,14 +179,20 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       return null;
     }
 
+    // VirtuosoMasonry renders the scroller as a full-width flex row whose column children carry an
+    // inline `flexGrow: 1`. Capping each column at `maxColumnWidth` lets the columns grow to fill the
+    // row but stop at the natural card width; `justify-center` then distributes the remaining space as
+    // symmetric margins so the grid stays centered without the scroll container leaving the far edge.
     return (
       <ScrollArea.Viewport asChild>
         <VirtuosoMasonry
-          {...composableProps(props)}
+          {...composableProps(props, {
+            classNames: ['justify-center', '[&>div]:max-w-[var(--dx-masonry-column-max)]'],
+            style: { gap: `${gutter}rem`, '--dx-masonry-column-max': `${maxColumnWidth}rem` } as CSSProperties,
+          })}
           {...arrowNavigationAttrs}
           ItemContent={TileAdapter}
           columnCount={columnCount}
-          style={{ gap: `${gutter}rem` }}
           data={items as any[]}
           // ref={forwardedRef}
         />

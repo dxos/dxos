@@ -27,7 +27,7 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
       </Card.Header>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       {description && (
-        <Card.Row fullWidth classNames='px-2 pb-2'>
+        <Card.Row classNames='px-2 pb-2'>
           <Card.Text variant='description'>{description}</Card.Text>
         </Card.Row>
       )}
@@ -41,7 +41,7 @@ const DefaultStory = (props: MasonryRootProps) => {
 
   return (
     <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content centered scrollbars={false}>
+      <Masonry.Content centered>
         <Masonry.Viewport items={organizations} />
       </Masonry.Content>
     </Masonry.Root>
