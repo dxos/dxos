@@ -65,7 +65,7 @@ export const AccordionItemHeader = ({ classNames, children, icon, hover, ...prop
             <Icon icon={icon} size={4} />
           </span>
         )}
-        <span className='min-w-0 flex-1 truncate'>{children}</span>
+        <div className='min-w-0 flex-1'>{children}</div>
         <span className='flex items-center h-6 shrink-0'>
           <Icon
             icon='ph--caret-right--regular'
