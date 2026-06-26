@@ -57,16 +57,6 @@ export const setSurfaceDebug = (enabled: boolean): void => {
   }
 };
 
-/**
- * Zero-behavior custom element. `display: contents` keeps the debug wrapper
- * layout-neutral so the debug DOM matches production (which renders no wrapper).
- */
-class DxSurfaceElement extends HTMLElement {
-  connectedCallback(): void {
-    this.style.display = 'contents';
-  }
-}
-
 let elementRegistered = false;
 
 const ensureSurfaceElement = (): void => {
@@ -75,6 +65,15 @@ const ensureSurfaceElement = (): void => {
   }
   elementRegistered = true;
   if (!customElements.get(DX_SURFACE_TAG)) {
+    // Defined lazily (not at module scope) so importing this module never evaluates
+    // `extends HTMLElement` in non-DOM environments (node tests / SSR).
+    // Zero-behavior element; `display: contents` keeps the debug wrapper layout-neutral
+    // so the debug DOM matches production (which renders no wrapper).
+    class DxSurfaceElement extends HTMLElement {
+      connectedCallback(): void {
+        this.style.display = 'contents';
+      }
+    }
     customElements.define(DX_SURFACE_TAG, DxSurfaceElement);
   }
 };
