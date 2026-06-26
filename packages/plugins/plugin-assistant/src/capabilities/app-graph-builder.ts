@@ -138,8 +138,8 @@ export default Capability.makeModule(
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
-            const state = get(yield* Capability.get(AssistantCapabilities.State).pipe(Effect.orDie));
-            const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache).pipe(Effect.orDie));
+            const state = get(yield* Capability.get(AssistantCapabilities.State));
+            const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
             const objectUri = Obj.getURI(object);
 
             // Resolve chat from persisted state or transient cache.
@@ -162,7 +162,7 @@ export default Capability.makeModule(
                 position: Position.first,
               }),
             ];
-          }),
+          }).pipe(Effect.orDie),
       }),
 
       GraphBuilder.createExtension({

@@ -90,7 +90,7 @@ export default Capability.makeModule(
               },
             };
 
-            const state = get(yield* Capability.get(DeckCapabilities.State).pipe(Effect.orDie));
+            const state = get(yield* Capability.get(DeckCapabilities.State));
             const deck = state.decks[state.activeDeck];
 
             const toggleSidebar = {
@@ -119,7 +119,7 @@ export default Capability.makeModule(
             };
 
             return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
-          }),
+          }).pipe(Effect.orDie),
       }),
     ]);
 

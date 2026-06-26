@@ -20,22 +20,23 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
-        connector: Effect.fnUntraced(function* (node, get) {
-          const client = yield* Capability.get(ClientCapabilities.Client).pipe(Effect.orDie);
-          const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
-          const layout = layoutAtom ? get(layoutAtom) : undefined;
-          const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
-          const space = spaceId ? client.spaces.get(spaceId) : null;
+        connector: (node, get) =>
+          Effect.gen(function* () {
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
+            const layout = layoutAtom ? get(layoutAtom) : undefined;
+            const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
+            const space = spaceId ? client.spaces.get(spaceId) : null;
 
-          return [
-            AppNode.makeDeckCompanion({
-              id: linkedSegment('search'),
-              label: ['search.label', { ns: meta.profile.key }],
-              icon: 'ph--magnifying-glass--regular',
-              data: space,
-            }),
-          ];
-        }),
+            return [
+              AppNode.makeDeckCompanion({
+                id: linkedSegment('search'),
+                label: ['search.label', { ns: meta.profile.key }],
+                icon: 'ph--magnifying-glass--regular',
+                data: space,
+              }),
+            ];
+          }).pipe(Effect.orDie),
       }),
       GraphBuilder.createExtension({
         id: 'root',

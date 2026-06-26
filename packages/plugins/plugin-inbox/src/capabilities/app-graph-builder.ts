@@ -80,7 +80,7 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
           return null;
         }
 
-        const client = yield* Capability.get(ClientCapabilities.Client).pipe(Effect.orDie);
+        const client = yield* Capability.get(ClientCapabilities.Client);
         const space = client.spaces.get(spaceId);
         if (!space) {
           return null;
@@ -120,7 +120,7 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
             disposition: 'hidden',
           },
         };
-      }),
+      }).pipe(Effect.orDie),
   });
 
 export default Capability.makeModule(
@@ -440,7 +440,7 @@ export default Capability.makeModule(
               return null;
             }
 
-            const client = yield* Capability.get(ClientCapabilities.Client).pipe(Effect.orDie);
+            const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(spaceId);
             if (!space) {
               return null;
@@ -481,7 +481,7 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             };
-          }),
+          }).pipe(Effect.orDie),
       }),
 
       createFeedObjectNodeExtension<Calendar.Calendar, Event.Event>({
