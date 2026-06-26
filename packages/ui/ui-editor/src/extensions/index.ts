@@ -23,6 +23,7 @@ export * from './mention';
 export * from './modal';
 export * from './modes';
 export * from './outliner';
+export * from './pending-text';
 export * from './preview';
 export * from './replacer';
 export * from './scrolling';
