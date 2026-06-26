@@ -235,10 +235,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
               return (data && eventHandler.canDrop?.({ source: data })) || false;
             },
 
-            // TODO(burdon): Provide semantic intent to onDrop.
-            // getDropEffect: () => {
-            //   return 'move';
-            // },
+            // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+            getDropEffect: () => 'move',
 
             /**
              * Dragging started in this container.

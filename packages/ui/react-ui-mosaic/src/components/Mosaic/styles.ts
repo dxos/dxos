@@ -19,9 +19,9 @@ export const styles = {
     ],
     content: [
       'transition-all duration-0',
-      // TODO(burdon): Don't animate open if placeholder is the source.
-      // TODO(burdon): Flickers when start to drag since source is removed and then the placeholder shows up.
-      //  - Use absolute positioning?
+      // The source slot is reserved on drag start by activating its placeholder (see Stack.tsx), so the
+      // stack no longer collapses and flickers when the dragged item is removed from the list.
+      // TODO(burdon): Don't animate open if placeholder is the source (it would animate the reserved gap).
       // 'group-data-[mosaic-placeholder-state=active]:duration-200',
       'group-data-[mosaic-placeholder-orientation=vertical]:h-0',
       'group-data-[mosaic-placeholder-orientation=vertical]:group-data-[mosaic-placeholder-state=active]:h-[var(--mosaic-placeholder-height)]',

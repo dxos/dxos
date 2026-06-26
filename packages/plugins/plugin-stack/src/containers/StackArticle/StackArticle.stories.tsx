@@ -79,7 +79,7 @@ const meta: Meta<typeof StackArticle> = {
   component: StackArticle,
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column', classNames: 'dx-document' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
@@ -121,10 +121,11 @@ const meta: Meta<typeof StackArticle> = {
                 ),
               ];
 
+              const insertAt = 1;
               space.db.add(
                 Collection.make({
                   name: random.lorem.sentence(5),
-                  objects: [...documents.slice(0, 2), ...sketches, ...documents.slice(3)],
+                  objects: [...documents.slice(0, insertAt), ...sketches, ...documents.slice(insertAt + 1)],
                 }),
               );
             }),
