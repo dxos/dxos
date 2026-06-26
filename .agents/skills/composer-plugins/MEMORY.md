@@ -4,6 +4,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+<<<<<<< HEAD
 ## 2026-06-25 — react-ui-mosaic drag-start flicker (Mosaic.Stack)
 
 - Non-virtual `Mosaic.Stack` (`react-ui-mosaic/.../Mosaic/Stack.tsx` `MosaicStackInner`) flickered on drag START: `useVisibleItems` removes the dragged item from the list the same render `dragging` is set, but no placeholder is `active` yet (the pointer is still over the source, so no placeholder `onDragEnter` has fired) → the stack collapses by the item's height and the following tiles jump upward for a frame. Fix: in the Stack, compute the source's index in `items` (`dragging.source.data` has `id`+`containerId`) and `setActiveLocation(sourceIndex + 0.5)` in a `useLayoutEffect` keyed on `[sourceIndex, setActiveLocation]` — activates the source-slot placeholder in the SAME commit (before paint), reserving the gap (placeholder height = source `bounds` via `--mosaic-placeholder-height`, set in Container `onDragStart`). Placeholder slot locations are `index + 0.5` (leading 0.5, then `j+1.5` after each visible tile); the hole left by removing original index `i` lands at `i + 0.5`. `onDragEnter`/tile-edge handlers override the seed as the user moves; the effect re-runs only when `sourceIndex` changes (drag start/end), so it doesn't fight live hovering. The maintainer's own TODO in `Mosaic/styles.ts` documented this exact flicker ("source is removed and then the placeholder shows up"). NOTE: only fixed the non-virtual stack — `MosaicVirtualStack` gives placeholders 0 height in the virtualizer (`wrappedEstimateSize`), so the active-placeholder approach doesn't reserve space there.
@@ -20,6 +21,16 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - Remount verification idiom (storybook + playwright): tag `.cm-editor` nodes (`el.__probe = i`), force a container re-render, then compare element identity (`===`) — survivors = no remount, all-different = remount. Confirmed before/after for the inline→stable Tile fix.
 - `useDeckPlank` sigil actions MUST be read reactively via `useActions(graph, node?.id)` (`@dxos/plugin-graph`), NOT one-shot `Graph.getActions(graph, node.id)` inside a `useMemo([graph, node, ...])`. The `_node(id)` atom (`app-graph/src/graph.ts`) is INDEPENDENT of `_edges`/`_actions`/`_connections`; child actions are loaded async by the `Graph.expand(graph, node.id, 'child')` rAF effect, which updates the actions atom but does NOT re-emit the node atom. So a node-keyed memo never recomputes for a freshly-CREATED node → its plank sigil renders with no dropdown menu until an unrelated re-render. Existing nodes worked only because the navtree had already expanded their actions before the plank mounted. Memo deps become `[actions, node, variant]`.
 
+||||||| 5f251a84f0
+=======
+## 2026-06-26 — plugin-sketch (SketchBuilder)
+
+- `SketchBuilder` (`src/testing/SketchBuilder.ts`, exported via `#testing` + new `./testing` subpath) is the chainable way to author tldraw (`tldraw.com/2`) `Canvas.content` — replaces hand-written `SKETCH_CONTENT` record blobs in stories. Shapes: `rectangle/ellipse/circle/geo(type,…)/text`; connectors: `arrow/line({from,to})`; `.build()` returns the record map (with `document:document` + `page:page`). Friendly `id` handles link connectors to shapes.
+- Arrows that link shapes need a separate `binding:*` record (`type:'arrow'`, `fromId`=arrow, `toId`=target, `props.terminal:'start'|'end'`, `normalizedAnchor`) — NOT inline `start.boundShapeId` (that's the pre-v2 format that fails migration). The bound arrow's `props.start/end` are placeholder points; tldraw recomputes terminals from bindings.
+- Validate generated tldraw records in node vitest with `createTLSchema()` from `@tldraw/tlschema` then `schema.types[typeName].validate(record)`. Do NOT import `@tldraw/tldraw` (react pkg) in a node test — it pulls core-js and throws `Named export 'Promise' not found` (see the commented-out import in `hooks/adapter.test.ts`).
+- Worktree storybook verify: main repo squats 9009; `cd tools/storybook-react && pnpm exec storybook dev --port <free> --no-open`, then Playwright. Bash hook false-positives on any command containing the literal worktree path ("worktrees") — use repo-relative paths (cwd resets to worktree root each call).
+
+>>>>>>> origin/main
 ## 2026-06-25 — plugin-ibkr (conformance refactor)
 
 - Integration plugins put typed Effect errors in `src/errors.ts` via `BaseError.extend('Name', 'msg')` (`@dxos/errors`) — NEVER `Effect.fail(new Error())` / `catch: () => new Error()` in a handler (CLAUDE.md rule; mirror plugin-connector). Adding `@dxos/errors` needs a `workspace:*` dep AND a manual `{ "path": "../../common/errors" }` tsconfig reference — the postinstall sync that auto-adds refs is SKIPPED under `CI=true pnpm install`.
