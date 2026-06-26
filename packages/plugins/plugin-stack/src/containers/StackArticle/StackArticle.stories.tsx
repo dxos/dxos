@@ -16,6 +16,7 @@ import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
+import { SketchBuilder } from '@dxos/plugin-sketch/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -27,41 +28,12 @@ import { translations } from '#translations';
 
 import { StackArticle, type StackArticleProps } from './StackArticle';
 
-// A minimal tldraw (schema `tldraw.com/2`) snapshot: a single labelled rectangle, used as a test image.
-const SKETCH_CONTENT = {
-  'document:document': { gridSize: 10, name: 'Test', meta: {}, id: 'document:document', typeName: 'document' },
-  'page:page': { meta: {}, id: 'page:page', name: 'Page 1', index: 'a1', typeName: 'page' },
-  'shape:rect': {
-    x: 0,
-    y: 0,
-    rotation: 0,
-    isLocked: false,
-    opacity: 1,
-    meta: {},
-    id: 'shape:rect',
-    type: 'geo',
-    props: {
-      w: 160,
-      h: 120,
-      geo: 'rectangle',
-      color: 'blue',
-      labelColor: 'black',
-      fill: 'solid',
-      dash: 'draw',
-      size: 'l',
-      font: 'draw',
-      text: 'DXOS',
-      align: 'middle',
-      verticalAlign: 'middle',
-      growY: 0,
-      url: '',
-      scale: 1,
-    },
-    parentId: 'page:page',
-    index: 'a1',
-    typeName: 'shape',
-  },
-};
+// A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test image.
+const SKETCH_CONTENT = new SketchBuilder()
+  .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
+  .ellipse({ id: 'echo', x: 320, y: 0, text: 'ECHO', color: 'green' })
+  .arrow({ from: 'rect', to: 'echo' })
+  .build();
 
 const DefaultStory = (args: StackArticleProps) => {
   const client = useClient();
@@ -79,7 +51,7 @@ const meta: Meta<typeof StackArticle> = {
   component: StackArticle,
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column', classNames: 'dx-document' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
@@ -121,10 +93,11 @@ const meta: Meta<typeof StackArticle> = {
                 ),
               ];
 
+              const insertAt = 1;
               space.db.add(
                 Collection.make({
                   name: random.lorem.sentence(5),
-                  objects: [...documents.slice(0, 2), ...sketches, ...documents.slice(3)],
+                  objects: [...documents.slice(0, insertAt), ...sketches, ...documents.slice(insertAt + 1)],
                 }),
               );
             }),

@@ -12,6 +12,8 @@ import React, {
   type Ref,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
 } from 'react';
 
@@ -87,9 +89,28 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       currentId,
       selectedIds,
       registerScrollTo,
+      setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
+
+    // Reserve the dragged item's slot the instant it leaves `visibleItems`. The source is removed a frame
+    // before any placeholder becomes active (the pointer still sits over the source, so no `onDragEnter`
+    // has fired), which collapses the stack by the item's height and flickers the following tiles upward.
+    // Activating the source-slot placeholder (location `index + 0.5`) in a layout effect fills the gap in
+    // the same commit, before paint.
+    const draggingSource = dragging?.source.data;
+    const sourceIndex = useMemo(() => {
+      if (!items || !draggingSource || draggingSource.containerId !== id) {
+        return -1;
+      }
+      return items.findIndex((item) => getId(item) === draggingSource.id);
+    }, [items, draggingSource, id, getId]);
+    useLayoutEffect(() => {
+      if (sourceIndex >= 0) {
+        setActiveLocation(sourceIndex + 0.5);
+      }
+    }, [sourceIndex, setActiveLocation]);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const scrollToId = useCallback(

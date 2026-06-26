@@ -18,7 +18,14 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Paths } from '@dxos/app-toolkit';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { DropdownMenu, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  DropdownMenu,
+  Icon,
+  ScrollArea,
+  ScrollAreaRootProps,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
@@ -128,20 +135,20 @@ StackRoot.displayName = 'Stack.Root';
 // Content
 //
 
-type StackContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type StackContentProps = ThemedClassName<
+  ComponentPropsWithoutRef<'div'> & Pick<ScrollAreaRootProps, 'centered' | 'thin' | 'padding'>
+>;
 
-const StackContent = forwardRef<HTMLDivElement, StackContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { eventHandler, viewport } = useStackContext('Stack.Content');
-    return (
-      <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-        <ScrollArea.Root {...props} orientation='vertical' classNames={classNames} ref={forwardedRef}>
-          {children}
-        </ScrollArea.Root>
-      </Mosaic.Container>
-    );
-  },
-);
+const StackContent = forwardRef<HTMLDivElement, StackContentProps>(({ children, ...props }, forwardedRef) => {
+  const { eventHandler, viewport } = useStackContext('Stack.Content');
+  return (
+    <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
+      <ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
+        {children}
+      </ScrollArea.Root>
+    </Mosaic.Container>
+  );
+});
 
 StackContent.displayName = 'Stack.Content';
 
@@ -190,6 +197,17 @@ type StackSectionProps = MosaicTileProps<StackSectionItem>;
  */
 // TODO(burdon): All sections are intrinsic (content-sized) for now. Extrinsic content (e.g. a sketch
 //   with no intrinsic height) should later get a Mosaic-native resizable height affordance.
+
+// Inline grip glyph for the drag preview. The native drag image does not rasterize external SVG sprite
+// `<use>` icons (e.g. `@dxos/react-ui` `Icon`), so the preview uses plain inline SVG circles instead.
+const DragHandleGlyph = () => (
+  <svg width={10} height={16} viewBox='0 0 10 16' aria-hidden className='shrink-0 text-description'>
+    {[3, 8, 13].flatMap((cy) =>
+      [2.5, 7.5].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={1.1} fill='currentColor' />),
+    )}
+  </svg>
+);
+
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
   const { t } = useTranslation(meta.profile.key);
@@ -203,55 +221,62 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const title = Obj.getLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
   const rail = (
-    <div className='grid grid-rows-[min-content_1fr] gap-2'>
-      <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
-        <DropdownMenu.Trigger asChild>
-          <AttentionSigilButton size='md' attendableId={attendableId}>
-            <Icon icon={icon} classNames='transition-opacity' />
-          </AttentionSigilButton>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              {isCollapsed ? (
-                <DropdownMenu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
-                  <Icon icon='ph--arrows-out-line-vertical--regular' />
-                  <span className='ms-2 grow'>{t('expand.label')}</span>
+    <div className='grid grid-rows-[min-content_1fr]'>
+      <div className='p-1 bg-toolbar-surface'>
+        <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
+          <DropdownMenu.Trigger asChild>
+            <AttentionSigilButton size='md' attendableId={attendableId}>
+              <Icon icon={icon} classNames='transition-opacity' />
+            </AttentionSigilButton>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                {isCollapsed ? (
+                  <DropdownMenu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
+                    <Icon icon='ph--arrows-out-line-vertical--regular' />
+                    <span className='ms-2 grow'>{t('expand.label')}</span>
+                  </DropdownMenu.Item>
+                ) : (
+                  <DropdownMenu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
+                    <Icon icon='ph--arrows-in-line-vertical--regular' />
+                    <span className='ms-2 grow'>{t('collapse.label')}</span>
+                  </DropdownMenu.Item>
+                )}
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item onClick={() => onAdd(id)} data-testid='section.add'>
+                  <Icon icon='ph--plus--regular' />
+                  <span className='ms-2 grow'>{t('add-section.label')}</span>
                 </DropdownMenu.Item>
-              ) : (
-                <DropdownMenu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
-                  <Icon icon='ph--arrows-in-line-vertical--regular' />
-                  <span className='ms-2 grow'>{t('collapse.label')}</span>
+                <DropdownMenu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
+                  <Icon icon='ph--arrow-line-up--regular' />
+                  <span className='ms-2 grow'>{t('move-up.label')}</span>
                 </DropdownMenu.Item>
-              )}
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item onClick={() => onAdd(id)} data-testid='section.add'>
-                <Icon icon='ph--plus--regular' />
-                <span className='ms-2 grow'>{t('add-section.label')}</span>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
-                <Icon icon='ph--arrow-line-up--regular' />
-                <span className='ms-2 grow'>{t('move-up.label')}</span>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
-                <Icon icon='ph--arrow-line-down--regular' />
-                <span className='ms-2 grow'>{t('move-down.label')}</span>
-              </DropdownMenu.Item>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
-                <Icon icon='ph--trash--regular' />
-                <span className='ms-2 grow'>{t('remove-section.label')}</span>
-              </DropdownMenu.Item>
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
-      <Mosaic.DragHandle
-        label={t('drag-handle.label')}
-        classNames='p-1 min-h-0 w-(--dx-rail-item) h-(--dx-rail-item)'
-        testId='section.drag-handle'
-      />
+                <DropdownMenu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
+                  <Icon icon='ph--arrow-line-down--regular' />
+                  <span className='ms-2 grow'>{t('move-down.label')}</span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
+                  <Icon icon='ph--trash--regular' />
+                  <span className='ms-2 grow'>{t('remove-section.label')}</span>
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </div>
+      <div className='p-1'>
+        {/* Inline glyph (not a sprite `Icon`) so the handle stays visible in the tile's native drag image. */}
+        <Mosaic.DragHandle
+          label={t('drag-handle.label')}
+          classNames='p-1 min-h-0 w-(--dx-rail-item) h-(--dx-rail-item)'
+          testId='section.drag-handle'
+        >
+          <DragHandleGlyph />
+        </Mosaic.DragHandle>
+      </div>
     </div>
   );
 
@@ -262,7 +287,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
       classNames='grid grid-cols-[var(--dx-rail-action)_1fr] dx-attention-surface border border-subdued-separator'
     >
       <div className='border-e border-subdued-separator'>
-        <div className='sticky top-0 flex flex-col items-center p-1'>{rail}</div>
+        <div className='sticky top-0 flex flex-col items-center'>{rail}</div>
       </div>
       <div {...attentionAttrs} className='min-w-0'>
         <span className='sr-only'>{title}</span>
