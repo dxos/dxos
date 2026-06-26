@@ -39,3 +39,15 @@ export const applyOpfsPragmas = (sqlite3: Sqlite3, db: number, options: OpfsPrag
     }
   }
 };
+
+/**
+ * Force a full WAL checkpoint into the main database file and truncate the WAL.
+ * Required before any raw (non-SQLite) read of the OPFS pool file so the main file is
+ * authoritative and no committed data is stranded in the `-wal` sidecar. A harmless no-op
+ * when the connection is not in WAL mode (per SQLite `wal_checkpoint` semantics).
+ */
+export const checkpointWal = (sqlite3: Sqlite3, db: number): void => {
+  for (const stmt of sqlite3.statements(db, 'PRAGMA wal_checkpoint(TRUNCATE)')) {
+    while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {}
+  }
+};
