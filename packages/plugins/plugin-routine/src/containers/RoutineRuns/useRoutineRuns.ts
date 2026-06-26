@@ -15,12 +15,12 @@ import { type Routine } from '#types';
 import { groupIntoRuns, type RoutineRun } from './runs';
 
 /**
- * Returns the execution history for a routine.
+ * Returns the execution runs for a routine.
  *
  * Reads from the per-space trace feed and filters to messages whose
  * `meta.trigger` ref matches one of the routine's triggers.
  */
-export const useRoutineHistory = (db: Database.Database | undefined, routine: Routine.Routine): RoutineRun[] => {
+export const useRoutineRuns = (db: Database.Database | undefined, routine: Routine.Routine): RoutineRun[] => {
   const [traceFeed] = useQuery(db, FeedTraceSink.query);
 
   const messages = useQuery(

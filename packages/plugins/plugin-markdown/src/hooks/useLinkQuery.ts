@@ -14,7 +14,7 @@ import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
 import { Markdown } from '../types';
 
-export const useLinkQuery = (db: Database.Database | undefined) => {
+export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
   const { t } = useTranslation();
 
   const filter = useMemo(
@@ -41,7 +41,9 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
 
       const items =
         results
-          ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
+          // Exclude the current document; it cannot link to itself.
+          ?.filter((object) => object.id !== current?.id)
+          .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           .map((object: Obj.Unknown): EditorMenuItem => {
             const type = Obj.getType(object);
             const icon = type
@@ -87,7 +89,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         { id: 'create', items: [createItem] },
       ];
     },
-    [db, filter, t],
+    [db, filter, t, current],
   );
 
   return handleLinkQuery;

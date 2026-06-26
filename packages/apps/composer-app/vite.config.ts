@@ -550,6 +550,7 @@ export default defineConfig((env) => ({
       contentPaths: [
         path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+        path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
       // verbose: true,
     }),
