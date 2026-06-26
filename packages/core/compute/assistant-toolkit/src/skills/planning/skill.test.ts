@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation, Process, Skill } from '@dxos/compute';
@@ -30,12 +30,12 @@ describe('Planning skill', () => {
   // The hook fires the plan-reminder operation only while the plan has open tasks; cover that
   // predicate directly so the branch is verified without an agent turn.
   describe('hasIncompleteTasks', () => {
-    it('is true while any task is todo or in-progress', ({ expect }) => {
+    test('is true while any task is todo or in-progress', ({ expect }) => {
       expect(Plan.hasIncompleteTasks(makePlan(['todo']))).toBe(true);
       expect(Plan.hasIncompleteTasks(makePlan(['done', 'in-progress']))).toBe(true);
     });
 
-    it('is false when every task is done', ({ expect }) => {
+    test('is false when every task is done', ({ expect }) => {
       expect(Plan.hasIncompleteTasks(makePlan(['done', 'done']))).toBe(false);
       expect(Plan.hasIncompleteTasks(makePlan([]))).toBe(false);
     });

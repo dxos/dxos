@@ -21,6 +21,7 @@ const applyMarkdownEdits = (accessor: Doc.Accessor, edits: readonly MarkdownEdit
     if (edit.oldString == null || edit.oldString.length === 0) {
       accessor.handle.change((doc) => {
         const text = Doc.getValue<string>(accessor);
+        // Echo-doc accessor paths are structurally Automerge props; no typed bridge is exported.
         A.splice(doc, accessor.path as A.Prop[], text.length, 0, edit.newString);
       });
     } else {

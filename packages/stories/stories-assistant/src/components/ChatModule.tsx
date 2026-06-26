@@ -26,8 +26,6 @@ export const ChatModule = ({ space }: ModuleProps) => {
   const runtime = useProcessManagerRuntime();
   const processor = useChatProcessor({ runtime, space, chat, preset, registry });
 
-  const feedTarget = chat?.feed?.target;
-
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
   const [viewValue] = useObject(chat, 'viewType');
@@ -38,7 +36,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
   }
 
   return (
-    <Chat.Root chat={chat} feed={feedTarget} processor={processor}>
+    <Chat.Root chat={chat} processor={processor}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Chat.Toolbar attendableId={chat.id} alwaysActive>

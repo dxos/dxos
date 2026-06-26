@@ -49,13 +49,6 @@ export const GetCurrentDate = Operation.make({
     icon: 'ph--clock--regular',
     description: 'Get the current date and time as an ISO-8601 string.',
   },
-  // Anthropic requires `input_schema.type: object`; a single optional field keeps the schema a struct.
-  input: Schema.Struct({
-    timezone: Schema.optional(
-      Schema.String.annotations({
-        description: 'Optional IANA timezone name. Defaults to the process clock when omitted.',
-      }),
-    ),
-  }),
+  input: Schema.Struct({}),
   output: Schema.String,
 });

@@ -143,7 +143,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   environment: { conversation: Obj.getURI(feed) },
                   traceMeta: { conversation: Ref.make(feed) },
                 });
-                yield* fiber.await;
+                // `fiber.await` yields an Exit; surface a child failure into the Effect channel so
+                // the outer `Effect.orDie` (and the hook runner's `catchAllCause`) handle it instead
+                // of the failure being silently discarded.
+                const exit = yield* fiber.await;
+                if (Exit.isFailure(exit)) {
+                  yield* Effect.failCause(exit.cause);
+                }
               }).pipe(Effect.asVoid, Effect.orDie),
           });
         });
