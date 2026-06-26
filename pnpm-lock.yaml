@@ -13441,9 +13441,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search

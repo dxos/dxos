@@ -188,7 +188,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
-        <Panel.Toolbar className='bg-toolbar-surface'>
+        <Panel.Toolbar>
           <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content asChild className='pt-trim-md'>
