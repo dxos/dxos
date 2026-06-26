@@ -12,7 +12,7 @@ import { type HubHttpClient } from '@dxos/edge-client';
 
 import { meta } from '#meta';
 
-import { type AccountCache as AccountCacheType } from '../state/account-cache';
+import { type AccountCache as AccountCacheType } from './account-cache';
 
 export namespace ClientCapabilities {
   export const Client = Capability.make<Client>(`${meta.profile.key}.capability.client`);
