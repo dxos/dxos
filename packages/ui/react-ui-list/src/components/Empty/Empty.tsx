@@ -28,8 +28,7 @@ export const Empty = composable<HTMLDivElement, Pick<EmptyProps, 'label' | 'icon
       <div
         {...composableProps<HTMLDivElement>(props, {
           role: 'status',
-          classNames:
-            'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
+          classNames: 'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
         })}
         ref={forwardedRef}
       >

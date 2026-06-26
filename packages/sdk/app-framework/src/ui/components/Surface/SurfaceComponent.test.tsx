@@ -8,7 +8,6 @@ import React, { Profiler, useState } from 'react';
 import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
-
 import { Position } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../../../common';
@@ -127,7 +126,9 @@ describe('SurfaceComponent per-role subscription', () => {
     // Role A never re-renders despite 50 unrelated contributions.
     expect(a.value).toBe(aBaseline);
     // eslint-disable-next-line no-console
-    console.log(`[surface-bench] ${rounds} unrelated contributions: roleA re-renders=${a.value - aBaseline}, ${elapsed.toFixed(1)}ms`);
+    console.log(
+      `[surface-bench] ${rounds} unrelated contributions: roleA re-renders=${a.value - aBaseline}, ${elapsed.toFixed(1)}ms`,
+    );
   });
 });
 
@@ -135,7 +136,9 @@ describe('SurfaceComponent per-role subscription', () => {
 const EMPTY_DATA: Record<string, unknown> = {};
 const legacyFindCandidates = (surfaces: Definition[], role: string): Definition[] =>
   surfaces
-    .filter((definition) => (Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role))
+    .filter((definition) =>
+      Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
+    )
     .filter(({ filter }) => (filter ? filter(EMPTY_DATA, role) : true))
     .toSorted(Position.compare);
 
@@ -151,7 +154,9 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   const SURFACES_PER_ROLE = 10;
   const ROUNDS = ROLE_COUNT; // one contribution per role.
 
-  const roles = Array.from({ length: ROLE_COUNT }, (_, i) => makeType<Record<string, unknown>>(`org.dxos.test.role.r${i}`));
+  const roles = Array.from({ length: ROLE_COUNT }, (_, i) =>
+    makeType<Record<string, unknown>>(`org.dxos.test.role.r${i}`),
+  );
 
   const benchMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceBench'), name: 'SurfaceBenchTest' });
   const BenchPlugin = Plugin.define(benchMeta).pipe(
@@ -196,7 +201,11 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
           harness.manager.capabilities.contribute({
             module: `extra-${round}`,
             interface: Capabilities.ReactSurface,
-            implementation: create({ id: `extra${round}`, filter: makeFilter(role, () => false), component: () => null }),
+            implementation: create({
+              id: `extra${round}`,
+              filter: makeFilter(role, () => false),
+              component: () => null,
+            }),
           });
         });
       }

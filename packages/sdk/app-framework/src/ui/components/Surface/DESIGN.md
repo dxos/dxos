@@ -49,6 +49,7 @@ This decouples the shell/layout from the plugins that fill it.
   role (20/contribution — one role's surfaces ×2 store commit phases) → **5×
   fewer re-renders**, and the ratio grows with the number of roles. A second case
   confirms 50 unrelated contributions cause 0 re-renders of an unaffected role.
+
 - **`limit`.** Caps how many resolved candidates render (e.g. `limit={1}` for
   single-component regions).
 - **`isSurfaceAvailable`.** Same matching logic against a `CapabilityManager`,

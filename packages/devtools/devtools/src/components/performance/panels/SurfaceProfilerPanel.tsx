@@ -74,7 +74,10 @@ export const SurfaceProfilerPanel = ({
         <tbody>
           {displayed.map((stat) => (
             <tr key={stat.id} className={stat.dataUnstable ? 'text-error-text' : undefined}>
-              <td className='py-0.5 truncate cursor-pointer' title={stat.dataUnstable ? `${stat.id} (unstable data)` : stat.id}>
+              <td
+                className='py-0.5 truncate cursor-pointer'
+                title={stat.dataUnstable ? `${stat.id} (unstable data)` : stat.id}
+              >
                 {stat.dataUnstable ? '⚠ ' : ''}
                 {stat.id.split('/').pop()}
               </td>

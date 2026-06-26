@@ -60,9 +60,7 @@ const shallowEqual = (a: unknown, b: unknown): boolean => {
   if (aKeys.length !== bKeys.length) {
     return false;
   }
-  return aKeys.every((key) =>
-    Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
-  );
+  return aKeys.every((key) => Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]));
 };
 
 /**
@@ -189,9 +187,12 @@ export const nextDataChurn = (previous: unknown, next: unknown, churn: number): 
  * (unstable data, then errors, then dispatch count).
  */
 export const useSurfaceMetrics = (): SurfaceMetric[] => {
-  const metrics = useSyncExternalStore(surfaceMetrics.subscribe, surfaceMetrics.getSnapshot, surfaceMetrics.getSnapshot);
+  const metrics = useSyncExternalStore(
+    surfaceMetrics.subscribe,
+    surfaceMetrics.getSnapshot,
+    surfaceMetrics.getSnapshot,
+  );
   return [...metrics].sort(
-    (a, b) =>
-      Number(b.dataUnstable) - Number(a.dataUnstable) || b.errors - a.errors || b.dispatches - a.dispatches,
+    (a, b) => Number(b.dataUnstable) - Number(a.dataUnstable) || b.errors - a.errors || b.dispatches - a.dispatches,
   );
 };
