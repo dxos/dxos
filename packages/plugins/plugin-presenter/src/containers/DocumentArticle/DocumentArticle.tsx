@@ -18,12 +18,15 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
   const handleExit = useExitPresenter(document);
   const layout = useLayout();
   const fullscreen = layout.mode === 'solo--fullscreen';
+  // RevealPlayer seeds its deck once from `content` (via a `defaultValue`); wait for the markdown ref to
+  // resolve so the presentation isn't initialized empty and left blank when the content arrives later.
+  const content = document.content.target?.content;
 
   return (
     <Panel.Root role={role} classNames='relative'>
       <Panel.Content asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
-          <RevealPlayer fullscreen={fullscreen} content={document.content.target?.content ?? ''} />
+          {content !== undefined && <RevealPlayer fullscreen={fullscreen} content={content} />}
         </PresentationShell>
       </Panel.Content>
     </Panel.Root>
