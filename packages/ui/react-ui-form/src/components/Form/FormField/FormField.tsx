@@ -75,7 +75,7 @@ export const FormField = (props: FormFieldProps) => {
   const {
     type,
     name,
-    label: labelOverride,
+    label: labelProp,
     path,
     required,
     projection,
@@ -102,13 +102,9 @@ export const FormField = (props: FormFieldProps) => {
   const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
-  // `name === null` means "no header" -- collapse to an empty string so
-  // downstream consumers keep their `label: string` types, and the falsy
-  // value lets `FormFieldSet`'s `label && <FormFieldLabel ...>` guard skip
-  // the header.
   const label = useMemo(
-    () => labelOverride ?? title ?? (name == null ? '' : String.capitalize(name)),
-    [labelOverride, title, name],
+    () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [labelProp, title, name],
   );
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
