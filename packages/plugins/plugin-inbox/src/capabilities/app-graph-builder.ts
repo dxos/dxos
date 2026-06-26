@@ -80,7 +80,9 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
           return null;
         }
 
-        const client = yield* Capability.get(ClientCapabilities.Client);
+        const client = yield* Capability.get(ClientCapabilities.Client).pipe(
+          Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
+        );
         const space = client.spaces.get(spaceId);
         if (!space) {
           return null;
@@ -440,7 +442,9 @@ export default Capability.makeModule(
               return null;
             }
 
-            const client = yield* Capability.get(ClientCapabilities.Client);
+            const client = yield* Capability.get(ClientCapabilities.Client).pipe(
+              Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
+            );
             const space = client.spaces.get(spaceId);
             if (!space) {
               return null;

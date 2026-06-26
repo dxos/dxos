@@ -1325,7 +1325,8 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            connector: (node, get) => Effect.fail(new GraphBuilder.ExtensionError({ cause: 'Connector failed intentionally' })),
+            connector: (node, get) =>
+              Effect.fail(new GraphBuilder.ExtensionError({ cause: 'Connector failed intentionally' })),
           }),
         );
 
@@ -1352,7 +1353,8 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingActionsExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            actions: (node, get) => Effect.fail(new GraphBuilder.ExtensionError({ cause: 'Actions failed intentionally' })),
+            actions: (node, get) =>
+              Effect.fail(new GraphBuilder.ExtensionError({ cause: 'Actions failed intentionally' })),
           }),
         );
 
@@ -1379,7 +1381,8 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingResolverExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            resolver: (id, get) => Effect.fail(new GraphBuilder.ExtensionError({ cause: 'Resolver failed intentionally' })),
+            resolver: (id, get) =>
+              Effect.fail(new GraphBuilder.ExtensionError({ cause: 'Resolver failed intentionally' })),
           }),
         );
 

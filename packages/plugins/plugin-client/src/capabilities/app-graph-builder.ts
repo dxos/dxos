@@ -38,7 +38,9 @@ export default Capability.makeModule(
           },
         ]),
       connector: Effect.fnUntraced(function* (node, get) {
-        const client = yield* Capability.get(ClientCapabilities.Client);
+        const client = yield* Capability.get(ClientCapabilities.Client).pipe(
+          Effect.mapError((cause) => new GraphBuilder.ExtensionError({ cause })),
+        );
         const identity = get(CreateAtom.fromObservable(client.halo.identity));
         const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 

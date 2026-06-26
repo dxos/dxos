@@ -697,9 +697,9 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   actions?: (
     matched: TMatched,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], ExtensionError | Error, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], ExtensionError | Error, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, ExtensionError | Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], ExtensionError, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], ExtensionError, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, ExtensionError, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };
@@ -710,7 +710,7 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
  * @internal
  */
 const runEffectSyncWithFallback = <T, R>(
-  effect: Effect.Effect<T, ExtensionError | Error, R>,
+  effect: Effect.Effect<T, ExtensionError, R>,
   context: Context.Context<R>,
   extensionId: string,
   fallback: T,
@@ -798,7 +798,7 @@ export const createConnector = <TData>(
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
   matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], ExtensionError | Error, R>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], ExtensionError, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -823,8 +823,11 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   actions?: (
     object: Type.InstanceType<T>,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], ExtensionError | Error, R>;
-  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], ExtensionError | Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], ExtensionError, R>;
+  connector?: (
+    object: Type.InstanceType<T>,
+    get: Atom.Context,
+  ) => Effect.Effect<Node.NodeArg<any>[], ExtensionError, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };
