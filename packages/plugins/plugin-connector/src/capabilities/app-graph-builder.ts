@@ -10,8 +10,9 @@ import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Connector } from '#types';
@@ -112,6 +113,33 @@ export default Capability.makeModule(
               },
             }),
           ]),
+      }),
+
+      // Companion panel: visible on any ECHO object that has a SyncBinding targeting it.
+      // Reactively appears and disappears as bindings are created or removed.
+      GraphBuilder.createExtension({
+        id: 'connectorCompanion',
+        match: NodeMatcher.whenEchoObject,
+        connector: (object, get) => {
+          const db = Obj.getDatabase(object);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          const bindings = get(
+            db.query(Query.select(Filter.id(object.id)).targetOf(SyncBinding.SyncBinding)).atom,
+          );
+          if (bindings.length === 0) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('connector'),
+              label: ['connection-companion.label', { ns: meta.profile.key }],
+              icon: 'ph--plugs-connected--regular',
+              data: 'connector',
+            }),
+          ]);
+        },
       }),
 
       // Connection objects listed under the connections section node.
