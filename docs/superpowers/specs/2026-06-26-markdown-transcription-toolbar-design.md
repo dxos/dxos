@@ -96,7 +96,7 @@ New `app-graph-builder.ts` capability (mirroring `plugin-comments`):
   `attendableId`).
 - Label/icon reflect recording state: idle `ph--microphone--regular` →
   active `ph--microphone-slash--regular` (or a recording indicator). `testId:
-  'transcription.record.toggle'`.
+'transcription.record.toggle'`.
 - Activated on `MarkdownEvents.SetupExtensions`, contributed to
   `AppCapabilities.AppGraphBuilder`, same plugin wiring as `plugin-comments`.
 

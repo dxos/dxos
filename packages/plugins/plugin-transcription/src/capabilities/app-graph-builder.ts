@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { meta } from '#meta';
 import { TranscriptionCapabilities } from '#types';

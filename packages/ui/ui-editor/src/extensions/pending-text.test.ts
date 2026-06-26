@@ -29,7 +29,12 @@ describe('pendingText extension', () => {
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 6 }) });
     view.dispatch({ effects: appendPendingText.of('world') });
     view.dispatch({ effects: setPendingInterim.of(' and') });
-    expect(view.state.field(pendingTextState)).toEqual({ anchor: 6, final: 'world', interim: ' and', placeholder: undefined });
+    expect(view.state.field(pendingTextState)).toEqual({
+      anchor: 6,
+      final: 'world',
+      interim: ' and',
+      placeholder: undefined,
+    });
     expect(view.state.doc.toString()).toBe('hello ');
     view.destroy();
   });
@@ -74,7 +79,12 @@ describe('pendingText extension', () => {
   test('a placeholder-only session is held without committable text', ({ expect }) => {
     const view = createView('hello ');
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 6, placeholder: 'Recording…' }) });
-    expect(view.state.field(pendingTextState)).toEqual({ anchor: 6, final: '', interim: '', placeholder: 'Recording…' });
+    expect(view.state.field(pendingTextState)).toEqual({
+      anchor: 6,
+      final: '',
+      interim: '',
+      placeholder: 'Recording…',
+    });
     // Nothing finalized yet, so commit is a no-op.
     expect(commitPending(view)).toBe(false);
     view.destroy();
