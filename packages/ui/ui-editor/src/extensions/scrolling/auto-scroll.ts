@@ -211,13 +211,14 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          const icon = Domino.of('dx-icon' as any)
-            .classNames(getSize(4))
-            .attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
-            .classNames('dx-button bg-accent-bg')
-            .attributes({ 'data-density': 'md' })
-            .append(icon)
+            .classNames('dx-button bg-accent-bg aspect-square')
+            .attributes({ 'data-density': 'sm' })
+            .append(
+              Domino.of('dx-icon' as any)
+                .classNames(getSize(4))
+                .attributes({ icon: 'ph--arrow-down--regular' }),
+            )
             .on('click', () => {
               setPinned(true);
               view.dispatch({
