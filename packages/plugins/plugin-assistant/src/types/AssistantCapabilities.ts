@@ -33,3 +33,21 @@ export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.prof
 export const CompanionChatCache = Capability.make<Atom.Writable<Record<string, Obj.Unknown | undefined>>>(
   `${meta.profile.key}.capability.companion-chat-cache`,
 );
+
+export const HomeSuggestionsCacheSchema = Schema.mutable(
+  Schema.Record({
+    key: Schema.String,
+    value: Schema.Struct({
+      /** Epoch ms timestamp of the last generation attempt (success, empty, or failure). */
+      generatedAt: Schema.Number,
+      /** Generated prompts; empty array means fall back to hardcoded defaults. */
+      prompts: Schema.Array(Schema.String),
+    }),
+  }),
+);
+export type HomeSuggestionsCache = Schema.Schema.Type<typeof HomeSuggestionsCacheSchema>;
+
+/** Per-space cache of LLM-generated home starter prompts, persisted across page reloads. */
+export const HomeSuggestionsCache = Capability.make<Atom.Writable<HomeSuggestionsCache>>(
+  `${meta.profile.key}.capability.home-suggestions-cache`,
+);

@@ -17,6 +17,7 @@ export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
 export * from './useTraceMessages';
+export * from './useHomeSuggestions';
 export * from './useProcessEphemeralStatus';
 
 export { type AiChatProcessor } from '../processor';

@@ -9,15 +9,8 @@ import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 
+import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
-
-/** Starter prompts shown on the Home page. Always rendered — they surface quick actions alongside
- * the recent-objects masonry rather than only as an empty-state fallback. */
-const SUGGESTION_KEYS = [
-  'space-home.suggestion-draft-doc.label',
-  'space-home.suggestion-data-type.label',
-  'space-home.suggestion-ideas.label',
-] as const;
 
 type SpaceScopedProps = {
   space?: Space;
@@ -31,6 +24,7 @@ type SpaceScopedProps = {
 export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  const suggestions = useHomeSuggestions(space);
 
   const handleRunPrompt = useCallback(
     (prompt: string) => {
@@ -42,30 +36,31 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
     [invokePromise, space],
   );
 
+  if (!suggestions) {
+    return null;
+  }
+
   return (
     <div className='flex justify-center w-full'>
       <div className='flex flex-col gap-2 w-full max-w-[40rem]'>
         <h2 className='text-sm font-medium text-description'>{t('space-home.suggestions.heading')}</h2>
         <div className='flex flex-col gap-3'>
-          {SUGGESTION_KEYS.map((key) => {
-            const prompt = t(key);
-            return (
-              <Card.Root
-                key={key}
-                fullWidth
-                role='button'
-                classNames='cursor-pointer'
-                onClick={() => handleRunPrompt(prompt)}
-              >
-                <Card.Header>
-                  <Card.Block>
-                    <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
-                  </Card.Block>
-                  <Card.Title>{prompt}</Card.Title>
-                </Card.Header>
-              </Card.Root>
-            );
-          })}
+          {suggestions.map((prompt, index) => (
+            <Card.Root
+              key={`${index}:${prompt}`}
+              fullWidth
+              role='button'
+              classNames='cursor-pointer'
+              onClick={() => handleRunPrompt(prompt)}
+            >
+              <Card.Header>
+                <Card.Block>
+                  <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
+                </Card.Block>
+                <Card.Title>{prompt}</Card.Title>
+              </Card.Header>
+            </Card.Root>
+          ))}
         </div>
       </div>
     </div>
