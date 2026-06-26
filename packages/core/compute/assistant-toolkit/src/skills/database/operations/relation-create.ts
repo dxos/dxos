@@ -24,8 +24,7 @@ export default RelationCreate.pipe(
 
       const sourceObj = yield* Database.load(source);
       const targetObj = yield* Database.load(target);
-      const relationProperties =
-        typeof properties === 'string' ? safeParseJson(properties, {}) : (properties ?? {});
+      const relationProperties = typeof properties === 'string' ? safeParseJson(properties, {}) : (properties ?? {});
       const relation = db.add(
         Relation.make(schema, {
           [Relation.Source]: sourceObj,

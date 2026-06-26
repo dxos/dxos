@@ -27,8 +27,8 @@ import { ToolExecutionServices } from '../tool-runtime';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
 import * as Harness from './Harness';
-import * as SkillHooks from './SkillHooks';
 import { SessionLoader } from './SessionLoader';
+import * as SkillHooks from './SkillHooks';
 import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {

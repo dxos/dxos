@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation, Process, Skill } from '@dxos/compute';
-import { getSession } from '@dxos/compute/AgentService';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { getSession } from '@dxos/compute/AgentService';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -15,8 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../types';
-import PlanningSkill from './skill';
 import { PlanningHandlers, PlanningOperations } from './operations';
+import PlanningSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 
