@@ -48,14 +48,24 @@ describe('pendingText extension', () => {
     view.destroy();
   });
 
-  test('commit inserts the finalized text plus a newline at the anchor and clears state', ({ expect }) => {
+  test('commit at the end of the document inserts the text and leaves a trailing blank line', ({ expect }) => {
     const view = createView('hello ');
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 6 }) });
     view.dispatch({ effects: appendPendingText.of('world') });
     view.dispatch({ effects: setPendingInterim.of(' dropped') });
     expect(commitPending(view)).toBe(true);
-    expect(view.state.doc.toString()).toBe('hello world\n');
+    expect(view.state.doc.toString()).toBe('hello world\n\n');
     expect(view.state.field(pendingTextState)).toBeNull();
+    view.destroy();
+  });
+
+  test('commit before the end of the document does not add a trailing blank line', ({ expect }) => {
+    const view = createView('one\ntwo');
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 3 }) });
+    view.dispatch({ effects: appendPendingText.of(' and a half') });
+    expect(commitPending(view)).toBe(true);
+    // Single newline terminates the inserted line; the document still ends at 'two' (no trailing blank line).
+    expect(view.state.doc.toString()).toBe('one and a half\n\ntwo');
     view.destroy();
   });
 
@@ -97,7 +107,7 @@ describe('pendingText extension', () => {
     view.dispatch({ changes: { from: 0, insert: 'X' } });
     expect(view.state.field(pendingTextState)?.anchor).toBe(7);
     expect(commitPending(view)).toBe(true);
-    expect(view.state.doc.toString()).toBe('Xhello world\n');
+    expect(view.state.doc.toString()).toBe('Xhello world\n\n');
     view.destroy();
   });
 

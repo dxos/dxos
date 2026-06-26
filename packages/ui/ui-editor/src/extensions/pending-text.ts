@@ -75,17 +75,23 @@ const hasContent = (value: PendingTextState): boolean =>
 // Commands.
 //
 
-/** Insert the finalized pending text (followed by a newline) into the document and clear the buffer. */
+/**
+ * Insert the finalized pending text into the document and clear the buffer. The text is terminated
+ * with a newline; when committed at the end of the document an extra newline is added so the document
+ * always ends with a blank line.
+ */
 export const commitPending: Command = (view) => {
   const value = view.state.field(pendingTextState, false);
   if (!value || value.final.length === 0) {
     return false;
   }
 
-  const insert = value.final + '\n';
+  const atEnd = value.anchor >= view.state.doc.length;
+  const insert = value.final + (atEnd ? '\n\n' : '\n');
   view.dispatch({
+    // Place the cursor on the line after the inserted text (before the trailing blank line).
     changes: { from: value.anchor, insert },
-    selection: { anchor: value.anchor + insert.length },
+    selection: { anchor: value.anchor + value.final.length + 1 },
     effects: cancelPendingText.of(),
   });
   return true;
