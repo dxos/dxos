@@ -221,25 +221,28 @@ export class GraphTreeProjector<
     this.layout.graph.nodes = placed;
 
     // Synthesize hierarchy edges for both sides; paths are filled by onTickFrame from current positions.
+    // Left-side links are reversed so the rendered edge keeps the real inbound direction (source → focus)
+    // rather than the layout's parent → child (focus → source) orientation.
     const edges: GraphLayoutEdge<NodeData>[] = [];
-    const addLinks = (root: HierarchyPointNode<HierDatum>) => {
+    const addLinks = (root: HierarchyPointNode<HierDatum>, reverse = false) => {
       root.links().forEach((link) => {
-        const source = link.source.data.node;
-        const target = link.target.data.node;
-        if (!source || !target) {
+        const parent = link.source.data;
+        const child = link.target.data;
+        const [from, to] = reverse ? [child, parent] : [parent, child];
+        if (!from.node || !to.node) {
           return;
         }
         edges.push({
-          id: `${HIER_EDGE_PREFIX}${link.source.data.id}->${link.target.data.id}`,
+          id: `${HIER_EDGE_PREFIX}${from.id}->${to.id}`,
           type: 'hierarchy',
-          source,
-          target,
+          source: from.node,
+          target: to.node,
           data: undefined,
         });
       });
     };
     addLinks(rightPoint);
-    addLinks(leftPoint);
+    addLinks(leftPoint, true);
     this.layout.graph.edges = edges;
 
     // Seed initial paths so the topology emit has correct geometry to enter into the DOM.
