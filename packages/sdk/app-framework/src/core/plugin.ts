@@ -6,9 +6,12 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -147,90 +150,63 @@ class PluginModuleImpl implements PluginModule {
   }
 }
 
-export type Meta = {
-  /**
-   * Globally unique ID.
-   *
-   * Expected to be in the form of a valid URL.
-   *
-   * @example org.dxos.plugin.example
-   */
-  id: string;
+/**
+ * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
+ * config + registry schemas; the runtime projection lives here).
+ *
+ * - {@link Profile}: version-independent identity + display + provenance — the wire `PluginProfileSchema`
+ *   (which carries `key`, the display fields, `dependsOn`, `spec`) plus `author` (resolved at runtime
+ *   from the publisher's handle/DID for registry plugins, or self-declared for bundled).
+ * - {@link Release}: a specific hosted release — the wire `PluginReleaseSchema` (version, moduleUrl, dependencies).
+ * - {@link Meta}: a resolved single-release view — `{ profile, release? }`, both nested. `release` is
+ *   unset for bundled plugins (compiled in) and set for registry plugins.
+ */
+export const Profile = Schema.Struct({
+  ...PluginProfileSchema.fields,
+  author: Schema.optional(Schema.String),
+});
+export type Profile = Schema.Schema.Type<typeof Profile>;
 
-  /**
-   * Human-readable name.
-   */
+export const Release = PluginReleaseSchema;
+export type Release = Schema.Schema.Type<typeof Release>;
+
+export const Meta = Schema.Struct({
+  profile: Profile,
+  release: Schema.optional(Release),
+});
+export type Meta = Schema.Schema.Type<typeof Meta>;
+
+/** Options for {@link makeMeta}: the {@link Profile} content fields plus the canonical DXN `key`. */
+export type MakeMetaOptions = {
+  key: DXN.DXN;
   name: string;
-
-  /**
-   * Semver version string of the plugin, typically the publishing package's
-   * `package.json` version.
-   */
-  version?: string;
-
-  /**
-   * Short description of plugin functionality.
-   */
   description?: string;
-
-  /**
-   * Name of the author or organization that created the plugin.
-   */
-  // TODO(burdon): DID or domain name?
   author?: string;
-
-  /**
-   * URL of home page.
-   */
   homePage?: string;
-
-  /**
-   * URL of source code.
-   */
   source?: string;
-
-  /**
-   * URL of screenshot.
-   */
-  screenshots?: string[];
-
-  /**
-   * Tags to help categorize the plugin.
-   */
-  tags?: string[];
-
-  /**
-   * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
-   */
-  icon?: string;
-
-  /**
-   * Icon hue (ChromaticPalette).
-   */
-  iconHue?: string;
-
-  /**
-   * URL of the plugin's MDL spec, typically the published `PLUGIN.mdl` on the
-   * unpkg CDN (e.g. `https://unpkg.com/<pkg>@<version>/PLUGIN.mdl`).
-   * Rendered as a "Specification" link in the plugin detail view.
-   */
+  tags?: readonly string[];
+  dependsOn?: readonly string[];
   spec?: string;
+  icon?: Config2.Icon;
+  screenshots?: ReadonlyArray<Config2.Screenshot>;
+};
 
-  /**
-   * IDs of plugins this plugin functionally depends on.
-   *
-   * Treated as a convenience by the default `PluginManager` flow:
-   * - Enabling this plugin auto-enables the transitive closure of `dependsOn`
-   *   (installing missing entries from the plugin registry when possible).
-   * - Disabling a depended-upon plugin surfaces dependents to the caller; the
-   *   `PluginManager.disable` API supports an opt-in cascade.
-   *
-   * Not an invariant: low-level `PluginManager` APIs accept opt-outs
-   * (`resolveDependencies: false`, `ignoreDependents: true`) so a caller may
-   * substitute an alternative implementation that satisfies the dependent's
-   * capability needs in its own way.
-   */
-  dependsOn?: string[];
+/** Constructs a bundled-plugin {@link Meta} from a canonical DXN. `profile.key` is the bare NSID derived from `key`. */
+export const makeMeta = (options: MakeMetaOptions): Meta => {
+  const { key, ...rest } = options;
+  return { profile: { ...rest, key: DXN.getName(key) } };
+};
+
+/** Returns the plugin's canonical DXN URI, constructed from `meta.profile.key` and `meta.release?.version`. */
+export const getURI = (meta: Meta): DXN.DXN => DXN.make(meta.profile.key, meta.release?.version);
+
+/**
+ * Derives a runtime {@link Meta} from a loaded `dx.config.ts` (the `@dxos/protocols` `Config2.Config`).
+ * Maps the flat authoring config to the nested profile; bundled plugins have no `release`.
+ */
+export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
+  const { key, ...rest } = plugin;
+  return makeMeta({ key: DXN.make(key), ...rest });
 };
 
 /**
@@ -354,14 +330,15 @@ const resolveModule = (
   options?: any,
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
+  const pluginName = meta.profile.key;
   const id = Option.fromNullable(moduleOptions.id).pipe(
     Option.match({
       onNone: () => {
         const exportName = Capability.getModuleTag(moduleOptions.activate);
-        invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
-        return computeModuleId(meta.id, exportName);
+        invariant(exportName, `Plugin module missing name. Plugin: ${meta.profile.key}`);
+        return computeModuleId(pluginName, exportName);
       },
-      onSome: (id) => computeModuleId(meta.id, id),
+      onSome: (id) => computeModuleId(pluginName, id),
     }),
   );
   return new PluginModuleImpl({ ...moduleOptions, id });
@@ -376,7 +353,11 @@ const resolveModule = (
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
   const meta = builder.meta;
-  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
+  // `dependsOn` entries and `key` are both bare NSIDs, so compare directly.
+  invariant(
+    !meta.profile.dependsOn?.includes(meta.profile.key),
+    `Plugin ${meta.profile.key} declares itself as a dependency.`,
+  );
 
   const factory = (options: T) => {
     const modules = builder.modules.map((module) => resolveModule(meta, module, options));
@@ -411,7 +392,7 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * Defines a lazy plugin whose body is loaded on first enable.
  *
  * The returned factory produces a stub `Plugin` that exposes `meta`
- * synchronously (so callers can read `Plugin.meta.id` for free) but defers
+ * synchronously (so callers can read `Plugin.meta.profile.key` for free) but defers
  * loading the real plugin's modules until the manager calls
  * `Plugin.resolveLazy`. This lets the plugin's main entry point ship as a
  * tiny meta-only chunk — the heavy capabilities, schema, React surfaces,
@@ -450,7 +431,7 @@ export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
 
 /**
  * Tagged error for failures during lazy plugin resolution. `context.id` is
- * the lazy plugin's `meta.id`; `context.reason` discriminates the failure
+ * the lazy plugin's `meta.profile.key`; `context.reason` discriminates the failure
  * mode (`'load-failed' | 'missing-default' | 'invalid-plugin' |
  * 'meta-mismatch'`) so callers can route on it.
  */
@@ -485,7 +466,7 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     if (!isLazy(plugin)) {
       return plugin;
     }
-    const id = plugin.meta.id;
+    const id = plugin.meta.profile.key;
     const { loader, options } = (plugin as unknown as { [LazyTag]: LazyPayload })[LazyTag];
     const mod = yield* Effect.tryPromise({
       try: loader,
@@ -498,9 +479,9 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     if (!isPlugin(result)) {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'invalid-plugin' } }));
     }
-    if (result.meta.id !== id) {
+    if (result.meta.profile.key !== id) {
       return yield* Effect.fail(
-        new LazyPluginError({ context: { id, reason: 'meta-mismatch', returnedId: result.meta.id } }),
+        new LazyPluginError({ context: { id, reason: 'meta-mismatch', returnedId: result.meta.profile.key } }),
       );
     }
     return result;

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Routine } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
-import { createObject } from '@dxos/echo-db';
+import { Instructions } from '@dxos/compute';
+import { Ref, Type } from '@dxos/echo';
+import { createObject } from '@dxos/echo-client';
 import { PublicKey } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
@@ -45,8 +45,8 @@ export const createNotebook = (): Notebook.Notebook =>
         type: 'prompt',
         prompt: Ref.make(
           createObject(
-            Routine.make({
-              instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
+            Instructions.make({
+              text: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
             }),
           ),
         ),
@@ -54,15 +54,15 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'query',
-        source: Ref.make(createObject(Text.make({ content: `docs = (type: ${Markdown.Document.typename})` }))),
+        source: Ref.make(createObject(Text.make({ content: `docs = (type: ${Type.getTypename(Markdown.Document)})` }))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'prompt',
         prompt: Ref.make(
           createObject(
-            Routine.make({
-              instructions: 'Very briefly, summarize the documents: {{docs}}',
+            Instructions.make({
+              text: 'Very briefly, summarize the documents: {{docs}}',
             }),
           ),
         ),

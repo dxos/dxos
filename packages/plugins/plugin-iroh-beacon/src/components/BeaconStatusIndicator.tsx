@@ -17,7 +17,7 @@ import { type BeaconPeer } from '../types';
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
   const state = useAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const onlineCount = state.peers.filter((peer) => peer.online).length;
 
   const iconClass = onlineCount > 0 ? 'text-green-500' : state.status === 'connecting' ? 'animate-pulse' : undefined;
@@ -26,7 +26,13 @@ export const BeaconStatusIndicator = () => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon='ph--broadcast--regular' iconOnly label={t('beacon-status.label')} classNames={iconClass} />
+          <IconButton
+            variant='ghost'
+            icon='ph--broadcast--regular'
+            iconOnly
+            label={t('beacon-status.label')}
+            classNames={iconClass}
+          />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
@@ -41,7 +47,7 @@ export const BeaconStatusIndicator = () => {
 
 const BeaconPopover = () => {
   const state = useAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const onlineCount = state.peers.filter((peer) => peer.online).length;
 
   return (
@@ -88,7 +94,7 @@ const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
   return (
     <div className='flex items-center gap-2 text-sm'>
       <Icon
-        icon={peer.online ? 'ph--circle-fill' : 'ph--circle--regular'}
+        icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
         classNames={mx('shrink-0', peer.online ? 'text-green-500' : 'text-description')}
         size={3}
       />

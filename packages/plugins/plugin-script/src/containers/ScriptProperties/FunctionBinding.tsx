@@ -19,7 +19,7 @@ import { meta } from '#meta';
 export type FunctionBindingProps = { object: Script.Script };
 
 export const FunctionBinding = ({ object }: FunctionBindingProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const db = Obj.getDatabase(object);
 
@@ -51,7 +51,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
 
   return (
     <div className='flex flex-col'>
-      <Form.Section label={t('remote-function-settings.heading')} />
+      <Form.Section title={t('remote-function-settings.heading')} />
 
       {functionUrl && (
         <Input.Root>

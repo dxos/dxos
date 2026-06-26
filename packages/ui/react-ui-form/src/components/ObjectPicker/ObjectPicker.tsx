@@ -5,39 +5,31 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
-import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 
 import { translationKey } from '#translations';
+import { type CreateOptions, type RefOption } from '#types';
 
 import { Form } from '../Form';
-import { type FormFieldMap } from '../Form/FormFieldComponent';
 
-export type RefOption = {
-  id: string;
-  label: string;
-  hue?: Palette;
-};
-
-export type ObjectPickerContentProps = ThemedClassName<{
-  options: RefOption[];
-  selectedIds?: string[];
-  createOptionLabel?: [string, { ns: string }];
-  createOptionIcon?: string;
-  createSchema?: Schema.Schema.AnyNoContext;
-  createInitialValuePath?: string;
-  createFieldMap?: FormFieldMap;
-  /**
-   * Persist a newly-created object given the form values. May be async (e.g.
-   * to write to a database). The Promise is awaited before the inline create
-   * form is collapsed back to the picker list, so consumers can complete
-   * follow-up work (assign the new ref to a parent slot, close the popover)
-   * before the picker UI re-renders.
-   */
-  onCreate?: (values: any) => unknown | Promise<unknown>;
-  onSelect: (id: string) => void;
-}>;
+export type ObjectPickerContentProps = ThemedClassName<
+  CreateOptions & {
+    options: RefOption[];
+    selectedIds?: string[];
+    createSchema?: Schema.Schema.AnyNoContext;
+    /**
+     * Persist a newly-created object given the form values. May be async (e.g.
+     * to write to a database). The Promise is awaited before the inline create
+     * form is collapsed back to the picker list, so consumers can complete
+     * follow-up work (assign the new ref to a parent slot, close the popover)
+     * before the picker UI re-renders.
+     */
+    onCreate?: (values: any) => unknown | Promise<unknown>;
+    onSelect?: (id: string) => void;
+  }
+>;
 
 const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(
   (
@@ -137,8 +129,9 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
               key={option.id}
               value={option.id}
               label={option.label}
+              description={option.description}
               checked={selectedIds?.includes(option.id)}
-              onSelect={() => onSelect(option.id)}
+              onSelect={() => onSelect?.(option.id)}
               classNames='flex items-center gap-2'
             />
           ))}
@@ -167,7 +160,7 @@ const CreateItem = ({
   onCreateItemSelect,
 }: {
   query: string;
-  createOptionLabel?: [string, { ns: string }];
+  createOptionLabel?: [string, { ns: string | readonly string[] }];
   createOptionIcon: string;
   onCreateItemSelect: (query: string) => void;
 }) => {

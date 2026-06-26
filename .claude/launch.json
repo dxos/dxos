@@ -9,9 +9,39 @@
     },
     {
       "name": "composer-app",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev", "--port", "5180", "--strictPort"],
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "composer-app:serve", "--", "--port", "5180", "--strictPort"],
       "port": 5180,
+      "autoPort": true
+    },
+    {
+      "name": "composer-app-tw-debug",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DEBUG=1 moon run composer-app:serve -- --port 5181 --strictPort"
+      ],
+      "port": 5181,
+      "autoPort": true
+    },
+    {
+      "name": "composer-app-proto",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5180 --strictPort"
+      ],
+      "port": 5180,
+      "autoPort": true
+    },
+    {
+      "name": "composer-dev-hmr",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5273 --strictPort --debug hmr"
+      ],
+      "port": 5273,
       "autoPort": true
     },
     {
@@ -40,16 +70,65 @@
       "port": 9009
     },
     {
+      "name": "storybook-react-alt",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd .claude/worktrees/inbox && pnpm --filter @dxos/storybook-react exec storybook dev --port 9012 --no-open --ci"
+      ],
+      "port": 9012,
+      "autoPort": true
+    },
+    {
+      "name": "storybook-proto",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-react exec storybook dev --port 9013 --no-open --ci"
+      ],
+      "port": 9013,
+      "autoPort": true
+    },
+    {
       "name": "plugin-explorer-storybook",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@dxos/plugin-explorer", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
       "port": 9010
     },
     {
+      "name": "plugin-map-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-map", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
+      "port": 9010
+    },
+    {
+      "name": "plugin-preview-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-preview", "exec", "storybook", "dev", "--port", "9011", "--no-open"],
+      "port": 9011,
+      "autoPort": true
+    },
+    {
+      "name": "plugin-client-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-client", "exec", "storybook", "dev", "--port", "9009", "--no-open"],
+      "port": 9009
+    },
+    {
       "name": "docs",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "docs:serve"],
       "port": 4321
+    },
+    {
+      "name": "storybook-9010",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-react exec storybook dev --port 9010 --no-open --ci"
+      ],
+      "port": 9010,
+      "autoPort": false
     }
   ]
 }

@@ -8,14 +8,14 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Feed, Obj, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { Operation, Trace } from '@dxos/compute';
+import { Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
-import { DXN } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -39,16 +39,10 @@ const TestLayer = Layer.mergeAll(
     schedule: () => Effect.die('Operation.Service not available in test.'),
     invokePromise: async () => ({ error: new Error('Not available') }),
   } as any),
-  Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+  registryLayerNoop,
 ).pipe(
   Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer(),
-      configuredCredentialsLayer([]),
-      Feed.notAvailable,
-      Trace.writerLayerNoop,
-    ),
+    Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]), Trace.writerLayerNoop),
   ),
 );
 
@@ -59,7 +53,7 @@ describe('workflow', () => {
       function* ({ expect }) {
         const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
         const workflowLoader = new WorkflowLoader(createResolver(graph));
-        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDXN));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
         const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
         expect(result).toEqual(5);
       },
@@ -78,7 +72,7 @@ describe('workflow', () => {
           product: (input) => (sideEffect = input.num1 * input.num2),
         });
         const workflowLoader = new WorkflowLoader(createResolver(graph));
-        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDXN));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
         const input = makeInput({ num1: 2, num2: 3 });
         expect(() => workflow.run(input)).toThrow(/.*Ambiguous workflow.*entrypoint.*/);
         expect(yield* executeEffect(workflow.runFrom('sum', input))).toEqual(5);
@@ -101,7 +95,7 @@ describe('workflow', () => {
           product: (input) => (productSideEffect = input.num1 * input.num2),
         });
         const workflowLoader = new WorkflowLoader(createResolver(graph));
-        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDXN));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
         const input = makeInput({ num1: 2, num2: 3 });
         expect(() => workflow.run(input)).throws();
         expect(yield* executeEffect(workflow.runFrom('sum', input))).toBeUndefined();
@@ -120,7 +114,7 @@ describe('workflow', () => {
       function* ({ expect }) {
         const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
         const workflowLoader = new WorkflowLoader(createResolver(graph));
-        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDXN));
+        const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
         const executable = yield* Effect.promise(() => workflow.asExecutable());
         const result = yield* executeEffect(executable.exec!(makeInput({ num1: 2, num2: 3 })));
         expect(result).toEqual(5);
@@ -136,9 +130,9 @@ describe('workflow', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const subgraph = createSimpleTransformGraph((input) => input.num1 + input.num2);
-          const graph = createSubgraphTransform(subgraph.graphDXN);
+          const graph = createSubgraphTransform(subgraph.graphUri);
           const workflowLoader = new WorkflowLoader(createResolver(graph, subgraph));
-          const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphDXN));
+          const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
           const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
           expect(result).toEqual(5);
         },
@@ -152,9 +146,9 @@ describe('workflow', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const subgraph = createSimpleTransformGraph((input) => input.num1 + input.num2);
-          const graph = createSubgraphTransform(subgraph.graphDXN);
+          const graph = createSubgraphTransform(subgraph.graphUri);
           const workflowLoader = new WorkflowLoader(createResolver(graph));
-          yield* Effect.promise(() => expect(workflowLoader.load(graph.graphDXN)).rejects.toThrowError());
+          yield* Effect.promise(() => expect(workflowLoader.load(graph.graphUri)).rejects.toThrowError());
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
@@ -169,7 +163,7 @@ describe('workflow', () => {
         function* ({ expect }) {
           const graph = createFunctionTransform(null);
           const workflowLoader = new WorkflowLoader(createResolver(graph));
-          yield* Effect.promise(() => expect(workflowLoader.load(graph.graphDXN)).rejects.toThrowError());
+          yield* Effect.promise(() => expect(workflowLoader.load(graph.graphUri)).rejects.toThrowError());
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
@@ -195,39 +189,35 @@ describe('workflow', () => {
     outputPath: string | null,
     map: { [inputId: string]: Transform },
   ): TestWorkflowGraph => {
-    const graphDXN = DXN.fromLocalObjectId(ObjectId.random());
-    const model = ComputeGraphModel.create({ id: graphDXN.toString() });
-    const compute: [DXN, Transform][] = [];
+    const graphUri = EID.make({ entityId: EntityId.random() });
+    const model = ComputeGraphModel.create({ id: graphUri });
+    const compute: [EID.EID, Transform][] = [];
     for (const [inputId, transform] of Object.entries(map)) {
-      const computeNodeDXN = DXN.fromLocalObjectId(ObjectId.random());
-      const transformId = ObjectId.random();
-      compute.push([computeNodeDXN, transform]);
-      addTransform(
-        model,
-        { id: transformId, type: computeNodeDXN.toString() },
-        { inputId, withOutput: inputId === outputPath },
-      );
+      const computeNodeUri = EID.make({ entityId: EntityId.random() });
+      const transformId = EntityId.random();
+      compute.push([computeNodeUri, transform]);
+      addTransform(model, { id: transformId, type: computeNodeUri }, { inputId, withOutput: inputId === outputPath });
     }
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
-    return { graphDXN, graph, compute };
+    return { graphUri, graph, compute };
   };
 
-  const createSubgraphTransform = (subgraphDXN: DXN): TestWorkflowGraph => {
-    const graphDXN = DXN.fromLocalObjectId(ObjectId.random());
-    const model = ComputeGraphModel.create({ id: graphDXN.toString() });
-    const transformId = ObjectId.random();
-    addTransform(model, { id: transformId, type: subgraphDXN.toString(), subgraph: Ref.fromDXN(subgraphDXN) });
+  const createSubgraphTransform = (subgraphDxn: EID.EID): TestWorkflowGraph => {
+    const graphUri = EID.make({ entityId: EntityId.random() });
+    const model = ComputeGraphModel.create({ id: graphUri });
+    const transformId = EntityId.random();
+    addTransform(model, { id: transformId, type: subgraphDxn, subgraph: Ref.fromURI(subgraphDxn) });
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
-    return { graphDXN, graph, compute: [] };
+    return { graphUri, graph, compute: [] };
   };
 
   const createFunctionTransform = (functionRef: Ref.Ref<any> | null): TestWorkflowGraph => {
-    const graphDXN = DXN.fromLocalObjectId(ObjectId.random());
-    const model = ComputeGraphModel.create({ id: graphDXN.toString() });
-    const transformId = ObjectId.random();
+    const graphUri = EID.make({ entityId: EntityId.random() });
+    const model = ComputeGraphModel.create({ id: graphUri });
+    const transformId = EntityId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
-    return { graphDXN, graph, compute: [] };
+    return { graphUri, graph, compute: [] };
   };
 
   const addTransform = (
@@ -249,15 +239,15 @@ describe('workflow', () => {
   const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderProps => {
     return {
       nodeResolver: async (node: ComputeNode) => {
-        const transform = params.flatMap((v) => v.compute).find((v) => v[0].toString() === node.type)?.[1];
+        const transform = params.flatMap((v) => v.compute).find((v) => v[0] === node.type)?.[1];
         invariant(transform, 'Transform not found.');
         return {
           meta: { input: AnyInput, output: AnyOutput },
           exec: synchronizedComputeFunction(({ input }) => Effect.succeed({ result: transform(input) })),
         } satisfies Executable;
       },
-      graphLoader: async (graphDXN: DXN) => {
-        const result = params.find((v) => v.graphDXN.toString() === graphDXN.toString())?.graph;
+      graphLoader: async (graphUri: string) => {
+        const result = params.find((v) => v.graphUri === graphUri)?.graph;
         invariant(result, 'Graph not found.');
         return result;
       },
@@ -268,7 +258,7 @@ describe('workflow', () => {
 type Transform = (input: any) => any;
 
 type TestWorkflowGraph = {
-  graphDXN: DXN;
+  graphUri: EID.EID;
   graph: ComputeGraph;
-  compute: [DXN, Transform][];
+  compute: [EID.EID, Transform][];
 };

@@ -6,14 +6,14 @@ import { describe, expect, it } from '@effect/vitest';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { ExecutionGraph } from './execution-graph';
 
 // Helper function to create valid object IDs for testing.
-const createTestId = () => ObjectId.random();
+const createTestId = () => EntityId.random();
 
 const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
 
@@ -71,7 +71,7 @@ describe('ExecutionGraph', () => {
         blocks: [
           {
             _tag: 'text',
-            text: '{"id":"01K6AXZKK79H4E54RKP1YZDARK","@type":"dxn:type:org.dxos.type.organization:0.1.0","@meta":{"keys":[]},"name":"Blue Yard","website":"https://blueyard.com"}',
+            text: '{"id":"01K6AXZKK79H4E54RKP1YZDARK","@type":"dxn:org.dxos.type.organization:0.1.0","@meta":{"keys":[]},"name":"Blue Yard","website":"https://blueyard.com"}',
           },
         ],
         properties: {},

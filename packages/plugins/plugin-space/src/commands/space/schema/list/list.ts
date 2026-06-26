@@ -9,9 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
-import { ClientService } from '@dxos/client';
-import { type Key } from '@dxos/echo';
-import { getTypeAnnotation } from '@dxos/echo/internal';
+import { type Key, Type } from '@dxos/echo';
+import { getTypeAnnotation } from '@dxos/echo/Annotation';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
 
@@ -23,28 +22,22 @@ export const handler = Effect.fn(function* ({
   typename: Option.Option<string>;
 }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
 
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const echoSchema = yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run());
-  const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
+  const types = space.db.graph.registry.list().filter(Type.isType);
 
-  const schemas = [
-    ...echoSchema.map((schema) => ({
-      id: schema.id,
-      typename: schema.typename,
-      version: schema.version,
-    })),
-    ...runtimeSchema.map((schema) => {
-      const schemaAnnotation = getTypeAnnotation(schema)!;
+  const schemas = types
+    .map((schema) => {
+      const schemaAnnotation = getTypeAnnotation(Type.getSchema(schema));
       return {
-        typename: schemaAnnotation.typename,
-        version: schemaAnnotation.version,
+        id: Type.getURI(schema).toString(),
+        typename: schemaAnnotation?.typename ?? Type.getTypename(schema) ?? '',
+        version: schemaAnnotation?.version ?? Type.getVersion(schema) ?? '',
       };
-    }),
-  ].filter(createTypenameFilter(Option.getOrUndefined(typename)));
+    })
+    .filter(createTypenameFilter(Option.getOrUndefined(typename)));
 
   if (json) {
     yield* Console.log(JSON.stringify(mapSchemas(schemas), null, 2));

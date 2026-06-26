@@ -28,10 +28,10 @@ export type ActionItemsProps = {
 };
 
 export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Form.Section label={t('action-items.title')}>
+    <Form.Section title={t('action-items.title')}>
       {items.length === 0 ? (
         <p className='text-sm text-description italic'>{t('no-action-items.label')}</p>
       ) : (

@@ -166,9 +166,12 @@ test.describe('Comments tests', () => {
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
     const editorText = random.lorem.paragraphs(3);
-    const firstMessage = editorText.slice(0, 10);
-    const secondMessage = editorText.slice(100, 115);
-    const thirdMessage = editorText.slice(-20);
+    // Split into paragraphs so each slice stays within a single line;
+    // cm-comment decorations are per-line and cannot match text spanning newlines.
+    const [firstParagraph, secondParagraph, thirdParagraph] = editorText.split('\n');
+    const firstMessage = firstParagraph.slice(0, 10);
+    const secondMessage = secondParagraph.slice(0, 15);
+    const thirdMessage = thirdParagraph.slice(-20);
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, firstMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
@@ -176,17 +179,17 @@ test.describe('Comments tests', () => {
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
     await Markdown.select(editorTextbox, thirdMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
-    await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('class', 'cm-comment-current');
+    await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, thirdMessage)).toHaveAttribute('aria-current', 'location');
 
     // Selecting a comment should highlight the thread.
     await Thread.getComment(host.page, firstMessage).click();
-    await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('class', 'cm-comment-current');
+    await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, firstMessage)).toHaveAttribute('aria-current', 'location');
 
     // Selecting a thread should highlight the comment.
     await Thread.getThread(host.page, secondMessage).click();
-    await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('class', 'cm-comment-current');
+    await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, secondMessage)).toHaveAttribute('aria-current', 'location');
   });
 
@@ -203,7 +206,7 @@ test.describe('Comments tests', () => {
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, messageText);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
-    await expect(Thread.getComment(host.page, messageText)).toHaveAttribute('class', 'cm-comment-current');
+    await expect(Thread.getComment(host.page, messageText)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, messageText)).toHaveAttribute('aria-current', 'location');
 
     await Markdown.getMarkdownTextbox(host.page).focus();

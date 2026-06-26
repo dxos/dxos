@@ -42,7 +42,7 @@ type ${name}ViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const ${name}Viewport = ({ classNames, children }: ${name}ViewportProps) => {
   const context = use${name}Context(${NAME}_VIEWPORT_NAME);
-  return <div role='none' className={mx('flex bs-full is-full overflow-y-auto', classNames)}>{children}</div>;
+  return <div className={mx('flex h-full is-full overflow-y-auto', classNames)}>{children}</div>;
 };
 
 ${name}Viewport.displayName = ${NAME}_VIEWPORT_NAME;
@@ -57,7 +57,7 @@ type ${name}ContentProps = ThemedClassName<{}>;
 
 const ${name}Content = ({ classNames }: ${name}ContentProps) => {
   const context = use${name}Context(${NAME}_CONTENT_NAME);
-  return <div role='none' className={mx('flex flex-col is-full', classNames)}>{JSON.stringify(context)}</div>;
+  return <div className={mx('flex flex-col is-full', classNames)}>{JSON.stringify(context)}</div>;
 };
 
 ${name}Content.displayName = ${NAME}_CONTENT_NAME;

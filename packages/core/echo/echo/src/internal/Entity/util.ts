@@ -5,29 +5,29 @@
 import * as Schema from 'effect/Schema';
 
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, SelfDXNId } from './model';
+import { type InternalObjectProps, SelfURIId } from './model';
 
 /**
- * Returns a DXN for an object or schema.
+ * Returns the EID of an object.
  *
  * @internal
  */
-export const getObjectDXN = (object: any): DXN | undefined => {
+export const getObjectEchoUri = (object: any): EID.EID | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
   assertArgument(typeof object === 'object' && object != null, 'object', 'expected object');
   assumeType<InternalObjectProps>(object);
 
-  if (object[SelfDXNId]) {
-    invariant(object[SelfDXNId] instanceof DXN, 'Invalid object model: invalid self dxn');
-    return object[SelfDXNId];
+  if (object[SelfURIId]) {
+    invariant(EID.isEID(object[SelfURIId]), 'Invalid object model: invalid self dxn');
+    return EID.parse(object[SelfURIId]);
   }
 
-  if (!ObjectId.isValid(object.id)) {
+  if (!EntityId.isValid(object.id)) {
     throw new TypeError('Object id is not valid.');
   }
 
-  return DXN.fromLocalObjectId(object.id);
+  return EID.make({ entityId: object.id });
 };

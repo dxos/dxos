@@ -71,7 +71,7 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
     return null;
   }
 
-  const currentObjectViewers = ephemeral.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
+  const currentObjectViewers = ephemeral.viewersByObject[Obj.getURI(object)] ?? noViewers;
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))
@@ -246,7 +246,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>

@@ -8,7 +8,7 @@ import { Script } from '@dxos/compute';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
+  SkillDefinition,
   Compiler,
   CreateObject,
   OperationHandler,
@@ -19,9 +19,12 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { ScriptEvents } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Script.Script] }),
@@ -34,6 +37,9 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ScriptEvents.SetupCompiler,
     activate: Compiler,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

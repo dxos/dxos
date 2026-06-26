@@ -9,13 +9,14 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
 
 const AddDefinition = Operation.make({
   meta: {
-    key: 'add',
+    key: DXN.make('org.dxos.test.compute.add'),
     name: 'add',
     description: 'Adds two numbers',
   },
@@ -89,7 +90,7 @@ describe('ComputeGraphRegistry', () => {
 
     // Sanity check: mapping to fully qualified id works as well.
     const bindingId = graph.mapFunctionBindingToId('ADD(2, 3)');
-    expect(bindingId.startsWith(`${Obj.getDXN(functionObj).toString()}`)).to.be.true;
+    expect(bindingId.startsWith(`${Obj.getURI(functionObj)}`)).to.be.true;
   });
 
   test('adding a function binding updates autocomplete and enables execution', async () => {

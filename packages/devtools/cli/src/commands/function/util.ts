@@ -91,7 +91,7 @@ export const printInvokeResult = (result: unknown) => {
  */
 export const selectDeployedFunction = Effect.fn(function* (fns: Operation.PersistentOperation[]) {
   // Query database for existing functions to determine status
-  const dbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+  const dbFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
 
   // Filter out functions that are already up-to-date
   const importableFunctions = fns.filter((fn) => {

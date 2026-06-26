@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Filter, Obj, Query } from '@dxos/echo';
@@ -23,7 +23,7 @@ export type SearchDialogProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { setMatch } = useGlobalSearch();
   const layout = useLayout();
@@ -53,7 +53,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         return;
       }
 
-      const qualifiedPath = getObjectPathFromObject(result.object);
+      const qualifiedPath = Paths.getObjectPathFromObject(result.object);
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       await invokePromise(LayoutOperation.Open, {
         subject: [qualifiedPath],
@@ -69,25 +69,29 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
       <Dialog.Header>
         <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
-        <SearchList.Viewport classNames='max-h-[24rem]'>
-          {allResults.map((result) => (
-            <SearchList.Item
-              key={result.id}
-              classNames='flex gap-2 items-center'
-              value={result.id}
-              label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
-              icon={result.icon}
-              onSelect={() => void handleSelect(result)}
-            />
-          ))}
-          {query && allResults.length === 0 && <SearchList.Empty />}
-        </SearchList.Viewport>
-      </SearchList.Root>
+      {/* Dialog.Body is the column propagator; without it the SearchList input/viewport are direct
+          children of Dialog.Content's Column grid and land in the gutter (misplaced searchbox). */}
+      <Dialog.Body>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+          <SearchList.Viewport classNames='max-h-[24rem]'>
+            {query && allResults.length === 0 && <SearchList.Empty />}
+            {allResults.map((result) => (
+              <SearchList.Item
+                key={result.id}
+                classNames='flex gap-2 items-center'
+                icon={result.icon}
+                value={result.id}
+                label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
+                onSelect={() => void handleSelect(result)}
+              />
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

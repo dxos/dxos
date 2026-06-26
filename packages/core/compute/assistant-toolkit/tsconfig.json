@@ -36,6 +36,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/app-toolkit"
+    },
+    {
       "path": "../../../sdk/client-protocol"
     },
     {
@@ -57,10 +60,10 @@
       "path": "../../echo/echo"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../echo/echo-protocol"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../../mesh/edge-client"
     },
     {
       "path": "../ai"
@@ -70,6 +73,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../compute-runtime"
     },
     {
       "path": "../functions"

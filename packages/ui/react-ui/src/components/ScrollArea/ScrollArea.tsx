@@ -7,10 +7,11 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { CSSProperties, useMemo } from 'react';
 
-import { composableProps, scrollbar, slottable } from '@dxos/ui-theme';
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
+import { composableProps, slottable } from '../../util';
+import { scrollbar } from './scrollbar';
 
 //
 // Context
@@ -23,6 +24,8 @@ type ScrollAreaContextType = {
   orientation: AllowedAxis;
   /** Hide scrollbars when not scrolling. */
   autoHide: boolean;
+  /** Show scrollbars. */
+  scrollbars?: boolean;
   /** Apply padding to opposite side of scrollbar. */
   centered?: boolean;
   /** Apply padding. */
@@ -53,6 +56,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       asChild,
       orientation = 'vertical',
       autoHide = true,
+      scrollbars = true,
       centered = false,
       padding = false,
       thin = false,
@@ -65,8 +69,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const options = useMemo(
-      () => ({ orientation, autoHide, centered, padding, thin, snap }),
-      [orientation, autoHide, centered, padding, thin, snap],
+      () => ({ orientation, autoHide, scrollbars, centered, padding, thin, snap }),
+      [orientation, autoHide, scrollbars, centered, padding, thin, snap],
     );
 
     return (
@@ -92,7 +96,7 @@ type ScrollAreaViewportProps = SlottableProps;
 const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
-  const density = options.thin ? scrollbar.thin : scrollbar.coarse;
+  const density = options.thin ? scrollbar.md : scrollbar.lg;
   const { className, ...rest } = composableProps(props);
   const { style, ...restWithoutStyle } = rest as { style?: CSSProperties; [key: string]: any };
   const Comp = asChild ? Slot : Primitive.div;
@@ -102,8 +106,8 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
       {...restWithoutStyle}
       style={
         {
-          '--scroll-width': `${density.size}px`,
-          '--scroll-padding': `${density.padding}px`,
+          '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
+          '--scroll-padding': options.scrollbars ? `${density.padding}px` : '0px',
           ...style,
         } as CSSProperties
       }

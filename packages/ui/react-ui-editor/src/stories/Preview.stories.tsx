@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
-import { Card, Popover, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Popover } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -59,13 +59,15 @@ const PreviewCard = () => {
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport classNames='dx-card-popover-width'>
           <Card.Root border={false}>
-            <Card.Toolbar>
-              <Card.Icon icon='ph--file-text--regular' />
+            <Card.Header>
+              <Card.Block>
+                <Icon icon='ph--file-text--regular' />
+              </Card.Block>
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
-                <Card.CloseIconButton />
+                <Card.ActionIconButton action='close' />
               </Popover.Close>
-            </Card.Toolbar>
+            </Card.Header>
             <Card.Row>
               <Card.Text variant='description'>{target.text}</Card.Text>
             </Card.Row>
@@ -165,15 +167,19 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
     <Menu.Root>
       <Card.Root classNames={hoverableControls}>
         {!view?.state.readOnly && (
-          <Card.Toolbar>
-            <Card.Icon icon='ph--bookmark--regular' />
+          <Card.Header>
+            <Card.Block>
+              <Icon icon='ph--bookmark--regular' />
+            </Card.Block>
             <Card.Title>{link.label}</Card.Title>
             {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-            <Menu.Trigger asChild disabled={!menuItems?.length}>
-              <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-            </Menu.Trigger>
+            <Card.Block end>
+              <Menu.Trigger asChild disabled={!menuItems?.length}>
+                <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+              </Menu.Trigger>
+            </Card.Block>
             <Menu.Content items={menuItems} />
-          </Card.Toolbar>
+          </Card.Header>
         )}
         {target && (
           <Card.Row>
@@ -202,15 +208,15 @@ type Story = StoryObj<typeof meta>;
 const text = trim`
   # Preview
 
-  This project is part of the [DXOS](dxn:queue:data:123) SDK.
+  This project is part of the [DXOS](echo:/123) SDK.
 
-  ![DXOS](dxn:queue:data:123)
+  ![DXOS](echo:/123)
 
-  It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
+  It consists of [ECHO](echo:/echo), [HALO](echo:/halo), and [MESH](echo:/mesh).
 
   ## Deep dive
 
-  ![ECHO](dxn:queue:data:echo)
+  ![ECHO](echo:/echo)
 
 `;
 

@@ -19,6 +19,8 @@ const packages = await $`pnpm -r ls --depth=-1 --json`.json();
 
 const repoRoot = await $`git rev-parse --show-toplevel`.text().then((text) => text.trim());
 
+let hasErrors = false;
+
 for (const { name, path: pkgPath } of packages) {
   let diagnostics = [];
 
@@ -96,10 +98,58 @@ for (const { name, path: pkgPath } of packages) {
     addDiagnostic('conventional', 'type-module', 'package.json is "type": "module"');
   }
 
-  // Package has imports field - info.
-  if ('imports' in pkgJson) {
-    const importCount = Object.keys(pkgJson.imports).length;
-    addDiagnostic('info', 'imports-field', `package.json has "imports" field with ${importCount} entries`);
+  // Check imports source paths.
+  const pkgImports = pkgJson.imports ?? {};
+  for (const [importPath, importValue] of Object.entries(pkgImports)) {
+    if (typeof importValue === 'string') {
+      // Simple string import — skip dist paths (pre-built artifacts).
+      if (!importValue.startsWith('./dist/')) {
+        const srcPath = join(pkgPath, importValue);
+        if (!existsSync(srcPath)) {
+          addDiagnostic(
+            'error',
+            'import-source-missing',
+            `import "${importPath}": file does not exist: ${importValue}`,
+          );
+        } else {
+          addDiagnostic('conventional', 'import-source-exists', `import "${importPath}": file exists`);
+        }
+      }
+    } else if (importValue && typeof importValue === 'object') {
+      const { source } = importValue;
+      if (typeof source === 'string') {
+        const srcPath = join(pkgPath, source);
+        if (!existsSync(srcPath)) {
+          addDiagnostic(
+            'error',
+            'import-source-missing',
+            `import "${importPath}": source file does not exist: ${source}`,
+          );
+        } else {
+          addDiagnostic('conventional', 'import-source-exists', `import "${importPath}": source file exists`);
+        }
+      } else if (source && typeof source === 'object') {
+        // Nested conditions (e.g., { workerd: "...", node: "...", default: "..." }).
+        for (const [condition, condValue] of Object.entries(source)) {
+          if (typeof condValue === 'string') {
+            const srcPath = join(pkgPath, condValue);
+            if (!existsSync(srcPath)) {
+              addDiagnostic(
+                'error',
+                'import-source-missing',
+                `import "${importPath}": source[${condition}] does not exist: ${condValue}`,
+              );
+            } else {
+              addDiagnostic(
+                'conventional',
+                'import-source-exists',
+                `import "${importPath}": source[${condition}] exists`,
+              );
+            }
+          }
+        }
+      }
+    }
   }
 
   // Package has peerDependencies - info.
@@ -190,16 +240,18 @@ for (const { name, path: pkgPath } of packages) {
     if (!conditions.includes('source')) {
       addDiagnostic('warning', 'no-source-export', `export "${exportPath}" has no "source" condition`);
     } else {
-      // Source export points to a non-existent file - error.
-      const sourcePath = join(pkgPath, exportValue.source);
-      if (!existsSync(sourcePath)) {
-        addDiagnostic(
-          'error',
-          'source-missing',
-          `export "${exportPath}": source file does not exist: ${exportValue.source}`,
-        );
-      } else {
-        addDiagnostic('conventional', 'source-exists', `export "${exportPath}": source file exists`);
+      // Source may be a string or a nested condition object (e.g. { workerd: "...", default: "..." }).
+      const sourceEntries =
+        typeof exportValue.source === 'string'
+          ? [exportValue.source]
+          : Object.values(exportValue.source).filter((v) => typeof v === 'string');
+      for (const sourceFile of sourceEntries) {
+        const sourcePath = join(pkgPath, sourceFile);
+        if (!existsSync(sourcePath)) {
+          addDiagnostic('error', 'source-missing', `export "${exportPath}": source file does not exist: ${sourceFile}`);
+        } else {
+          addDiagnostic('conventional', 'source-exists', `export "${exportPath}": source file exists`);
+        }
       }
     }
 
@@ -353,4 +405,12 @@ for (const { name, path: pkgPath } of packages) {
     }
     console.log();
   }
+
+  if (diagnostics.some((d) => d.severity === 'error')) {
+    hasErrors = true;
+  }
+}
+
+if (hasErrors) {
+  process.exit(1);
 }

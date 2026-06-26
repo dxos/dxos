@@ -5,8 +5,20 @@
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { type Database, type Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { type Database, Type } from '@dxos/echo';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
+
+const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
+  Array.from(
+    new Set(
+      db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+        .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false))),
+    ),
+  );
 
 // TODO(burdon): Pass in filter.
 // TODO(wittjosiah): Factor out.
@@ -17,20 +29,10 @@ export const useFilteredTypes = (db?: Database.Database): Type.AnyEntity[] => {
       return;
     }
 
-    return db.schemaRegistry.query({ location: ['database', 'runtime'] }).subscribe(
-      (query) => {
-        const types = Array.from(
-          new Set(
-            query.results
-              .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-              .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
-          ),
-        );
-
-        setTypes(types);
-      },
-      { fire: true },
-    );
+    setTypes(getFilteredTypes(db));
+    return db.graph.registry.changed.on(() => {
+      setTypes(getFilteredTypes(db));
+    });
   }, [db]);
 
   return types;

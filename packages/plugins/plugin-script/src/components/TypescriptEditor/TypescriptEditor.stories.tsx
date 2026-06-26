@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 import { createObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -37,7 +37,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
     () => [
       createDataExtensions({
         id: object.id,
-        text: createDocAccessor(object, ['content']),
+        text: Doc.createAccessor(object, ['content']),
       }),
     ],
     [],

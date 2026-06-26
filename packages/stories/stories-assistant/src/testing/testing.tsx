@@ -17,26 +17,35 @@ import {
 } from '@dxos/app-framework';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
+import {
+  Agent,
+  AgentSkill,
+  AgentHandlers,
+  Chat,
+  DelegationSkill,
+  DelegationHandlers,
+  Plan,
+  PlanningSkill,
+  PlanningHandlers,
+} from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
+import { Skill, Instructions, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { MarkdownBlueprint, Markdown } from '@dxos/plugin-markdown';
+import { MarkdownSkill, Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
@@ -90,16 +99,20 @@ const buildPluginManagerOptions = ({
   createAgent,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
+  // Fire SetupSettings so plugins (e.g. AssistantPlugin) contribute their settings capabilities,
+  // which surfaces such as the TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
+  setupEvents: [AppActivationEvents.SetupSettings],
   plugins: [
     ...corePlugins(),
     ClientPlugin({
       types: [
         AccessToken.AccessToken,
         Assistant.Chat,
-        Blueprint.Blueprint,
+        Plan.Plan,
+        Skill.Skill,
         Operation.PersistentOperation,
         Markdown.Document,
-        Routine.Routine,
+        Instructions.Instructions,
         Trigger.Trigger,
         ...types,
       ],
@@ -136,7 +149,7 @@ const buildPluginManagerOptions = ({
 
     // User plugins.
     PreviewPlugin(),
-    AutomationPlugin(),
+    RoutinePlugin(),
     AssistantPlugin(),
 
     // Test-specific.
@@ -163,7 +176,7 @@ const PluginManagerHost = ({
     const pluginManager = PluginManager.make({
       pluginLoader: () => Effect.die(new Error('Not implemented')),
       plugins: options.plugins ?? [],
-      enabled: (options.plugins ?? []).map(({ meta }) => meta.id),
+      enabled: (options.plugins ?? []).map(({ meta }) => meta.profile.key),
     });
     return pluginManager;
   }, [options]);
@@ -181,11 +194,14 @@ const PluginManagerHost = ({
 
     return () => {
       manager.capabilities.remove(capability.interface, capability.implementation);
-      void runAndForwardErrors(manager.shutdown());
+      void EffectEx.runAndForwardErrors(manager.shutdown());
     };
   }, [manager, contextId, children]);
 
-  const App = useApp({ pluginManager: manager });
+  // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
+  // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy
+  // `withPluginManager` path forwards them automatically).
+  const App = useApp({ pluginManager: manager, setupEvents: options.setupEvents });
   return <App />;
 };
 
@@ -265,20 +281,24 @@ type StoryPluginOptions = {
   createAgent?: boolean | CreateAgentOptions;
 };
 
-const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: 'com.example.plugin.testing',
-  name: 'Testing',
-}).pipe(
+const StoryPlugin = Plugin.define<StoryPluginOptions>(
+  Plugin.makeMeta({
+    key: DXN.make('com.example.plugin.testing'),
+    name: 'Testing',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
-        // TODO(burdon): Needs attention!!!
-        Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
-        Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+        // TODO(burdon): Clean up.
+        Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill),
+        Capability.contributes(AppCapabilities.SkillDefinition, PlanningSkill),
+        Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
         Capability.contributes(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
         Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
         Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
         Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
@@ -292,9 +312,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       const space = client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
-      // Ensure workspace is set.
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
+      // Ensure workspace is set. NOTE: the active workspace that surfaces read via
+      // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
+      // activation context resolves a different AtomRegistry than the UI).
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
 
+      // Create agent.
       if (createAgent) {
         const agentOptions = typeof createAgent === 'object' ? createAgent : {};
         const agent = yield* Agent.makeInitialized(
@@ -302,10 +325,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
             name: agentOptions.name ?? 'Default',
             instructions: agentOptions.instructions ?? '',
           },
-          AgentBlueprint.make(),
+          AgentSkill.make(),
         ).pipe(
           Effect.provide(
-            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService, QueueService).pipe(
+            ServiceResolver.provide({ space: space.id }, Database.Service).pipe(
               Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
             ),
           ),
@@ -316,8 +339,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const chat = yield* Effect.promise(() => agent.chat!.load());
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const feedServiceLayer = createFeedServiceLayer(space.queues);
-          const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
@@ -333,35 +355,37 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     id: 'com.example.plugin.testing.module.operationHandler',
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
       return Capability.contributes(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
           Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
           Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
             Effect.gen(function* () {
+              // Resolve the client lazily at invocation time: the `Client` capability is
+              // contributed on `Startup` (concurrently with `SetupProcessManager`), so it is
+              // not guaranteed to exist when this module activates.
+              const client = yield* Capability.get(ClientCapabilities.Client);
               const registry = yield* Capability.get(Capabilities.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
               const feed = space.db.add(Feed.make());
-              const chat = Obj.make(Assistant.Chat, {
-                name,
-                feed: Ref.make(feed),
-              });
-              const feedServiceLayer = createFeedServiceLayer(space.queues);
-              const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+              const chat = Chat.make({ name, feed: Ref.make(feed) });
+              Obj.setParent(feed, chat);
+              const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
               const binder = new AiContext.Binder({ feed, runtime, registry });
 
-              // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
               yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
+              yield* Effect.tryPromise(() => binder.open());
+              yield* Effect.tryPromise(() => binder.bind({ objects: [Ref.make(chat)] }));
+
               if (onChatCreated) {
-                yield* Effect.tryPromise(() => binder.open());
                 yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-                yield* Effect.tryPromise(() => binder.close());
               }
+
+              yield* Effect.tryPromise(() => binder.close());
 
               return {
                 object: chat,

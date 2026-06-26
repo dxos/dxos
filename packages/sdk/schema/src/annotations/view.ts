@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type Obj, type Type, View } from '@dxos/echo';
+import { type Obj, Type, View } from '@dxos/echo';
 import { createAnnotationHelper, type AnnotationHelper } from '@dxos/echo/internal';
 
 // TODO(wittjosiah): This won't serialize into echo. Migrate to `Annotation.make` to store in `PropertyMeta`.
@@ -50,7 +50,8 @@ const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
 
 const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRefPath>> = {
   has(schema: Type.AnyEntity): boolean {
-    return viewAnnotation.get(schema).pipe(
+    const effectSchema = Type.getSchema(schema);
+    return viewAnnotation.get(effectSchema).pipe(
       Option.map((path) => path.length > 0),
       Option.getOrElse(() => false),
     );

@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { createSystemPrompt, formatSystemPrompt } from '@dxos/assistant';
-import { Blueprint, Template, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Skill, Template, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -18,7 +19,7 @@ import { AssistantTestLayer } from '../testing';
 
 const OrganizationList = Operation.make({
   meta: {
-    key: 'org.dxos.function.organization-list',
+    key: DXN.make('org.dxos.function.organizationList'),
     name: 'Organization List',
     description: 'List organizations',
   },
@@ -31,14 +32,14 @@ const Handlers = OperationHandlerSet.make(
   Operation.withHandler(
     OrganizationList,
     Effect.fnUntraced(function* () {
-      const organizations = yield* Database.runQuery(Query.type(Organization.Organization));
+      const organizations = yield* Database.query(Query.type(Organization.Organization)).run;
       return organizations.map((organization) => organization.name ?? '<no org>');
     }),
   ),
 );
 
 const TestLayer = AssistantTestLayer({
-  types: [Text.Text, Organization.Organization, Blueprint.Blueprint],
+  types: [Text.Text, Organization.Organization, Skill.Skill],
   operationHandlers: Handlers,
 });
 
@@ -55,14 +56,14 @@ describe('format', () => {
           }),
         );
 
-        const blueprint = db.add(
-          Blueprint.make({
-            key: 'com.example.blueprint.test',
+        const skill = db.add(
+          Skill.make({
+            key: 'com.example.skill.test',
             name: 'Test',
             instructions: Template.make({
               source: trim`
                 Test
-                This is the test blueprint.
+                This is the test skill.
               `,
             }),
           }),
@@ -70,7 +71,7 @@ describe('format', () => {
 
         const output = yield* formatSystemPrompt({
           system: createSystemPrompt({}),
-          blueprints: [blueprint],
+          skills: [skill],
           objects: [object],
         });
 
@@ -93,9 +94,9 @@ describe('format', () => {
           }),
         );
 
-        const blueprint = db.add(
-          Blueprint.make({
-            key: 'com.example.blueprint.test',
+        const skill = db.add(
+          Skill.make({
+            key: 'com.example.skill.test',
             name: 'Test',
             instructions: Template.make({
               source: trim`
@@ -117,7 +118,7 @@ describe('format', () => {
 
         const output = yield* formatSystemPrompt({
           system: createSystemPrompt({}),
-          blueprints: [blueprint],
+          skills: [skill],
           objects: [object],
         });
 

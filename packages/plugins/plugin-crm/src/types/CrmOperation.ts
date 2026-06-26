@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Trace, Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref, DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 /**
@@ -17,8 +17,9 @@ import { trim } from '@dxos/util';
  */
 export const AttachImage = Operation.make({
   meta: {
-    key: 'org.dxos.function.plugin-crm.attach-image',
+    key: DXN.make('org.dxos.function.plugin-crm.attachImage'),
     name: 'Attach image',
+    icon: 'ph--image--regular',
     description: trim`
       Downloads an external image URL and stores it on the DXOS image service,
       then writes the canonical URL onto the subject's \`image\` field.

@@ -46,11 +46,14 @@ export default Capability.makeModule(
       }
     };
 
-    const eventHandler = debounce(() => {
+    const syncBindings = () => {
       Graph.traverse(graph, { relation: ['child', 'action'], visitor });
-    }, 500);
+    };
+
+    const eventHandler = debounce(syncBindings, 500);
 
     const unsubscribe = graph.onNodeChanged.on(eventHandler);
+    syncBindings();
 
     // TODO(burdon): Create context and plugin.
     Keyboard.singleton.initialize();

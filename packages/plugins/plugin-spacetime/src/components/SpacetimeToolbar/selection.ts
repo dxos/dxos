@@ -22,7 +22,7 @@ export const createSelectionModeActions =
     builder.group(
       'selection-mode',
       {
-        label: ['selection-mode.label', { ns: meta.id }],
+        label: ['selection-mode.label', { ns: meta.profile.key }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
@@ -32,7 +32,11 @@ export const createSelectionModeActions =
         for (const [mode, icon] of Object.entries(selectionModes)) {
           group.action(
             mode,
-            { label: [`selection-mode.${mode}.label`, { ns: meta.id }], checked: currentMode === mode, icon },
+            {
+              label: [`selection-mode.${mode}.label`, { ns: meta.profile.key }],
+              checked: currentMode === mode,
+              icon,
+            },
             () => onModeChange(mode as SelectionMode),
           );
         }

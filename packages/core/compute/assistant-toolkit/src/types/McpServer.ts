@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { McpServer as McpServerSpec } from '@dxos/compute';
-import { Annotation, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * MCP server configuration stored as a space-level ECHO object.
@@ -23,15 +23,9 @@ export const McpServer = Schema.Struct({
   ...McpServerSpec.McpServer.fields,
   enabled: Schema.optional(Schema.Boolean),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.assistant.mcpServer',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--plugs-connected--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.assistant.mcpServer', '0.1.0')),
 );
 
-export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
+export type McpServer = Type.InstanceType<typeof McpServer>;

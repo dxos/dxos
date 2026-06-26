@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
@@ -16,7 +17,7 @@ import { TableOperation } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Table.Table.typename,
+      id: Type.getTypename(Table.Table),
       inputSchema: TableOperation.CreateTableSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
@@ -30,7 +31,6 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            hidden: true,
             targetNodeId: options.targetNodeId,
           });
         }),

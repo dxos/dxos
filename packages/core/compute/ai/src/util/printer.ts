@@ -100,19 +100,19 @@ export class ConsolePrinter {
                 const input = Schema.decodeUnknownSync(tool.parametersSchema as any)(JSON.parse(content.input));
                 payload = formatter.debugFormatCall(input as never);
                 if (typeof payload !== 'string') {
-                  payload = inspect(payload, { depth: null, colors: true });
+                  payload = inspect(payload, { colors: true });
                 }
               } catch {}
             } else {
               try {
                 payload = JSON.parse(content.input);
                 if (typeof payload !== 'string') {
-                  payload = inspect(payload, { depth: null, colors: true });
+                  payload = inspect(payload, { colors: true });
                 }
               } catch {}
             }
             if (!payload) {
-              payload = inspect(content.input, { depth: null, colors: true });
+              payload = inspect(content.input, { colors: true });
             }
             this.log(`${prefix}⚙️ [Tool Use] ${content.name} ${payload}`);
             break;
@@ -128,7 +128,7 @@ export class ConsolePrinter {
               if (tool && formatter && formatter.debugFormatResult) {
                 try {
                   const result = Schema.decodeUnknownSync(tool.successSchema as any)(
-                    JSON.parse(content.result ?? '{}'),
+                    typeof content.result === 'string' ? JSON.parse(content.result) : content.result,
                   );
                   payload = formatter.debugFormatResult(result as never);
                   if (typeof payload !== 'string') {
@@ -137,7 +137,7 @@ export class ConsolePrinter {
                 } catch {}
               } else {
                 try {
-                  payload = JSON.parse(content.result ?? '{}');
+                  payload = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
                   if (typeof payload !== 'string') {
                     payload = inspect(payload, { depth: null, colors: true });
                   }
@@ -151,14 +151,14 @@ export class ConsolePrinter {
             break;
           }
           case 'reference':
-            this.log(`${prefix}🔗 [Reference] ${content.reference.dxn.toString()}`);
+            this.log(`${prefix}🔗 [Reference] ${content.reference.uri}`);
             break;
           case 'summary':
             this.log(`${prefix}📝 [Summary] ${content.content}`);
             break;
           case 'stats':
             this.log(
-              `${prefix}📊 [Stats] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
+              `${prefix}→ [End Turn] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
             );
             break;
           default: {

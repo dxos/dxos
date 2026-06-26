@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Doc } from '@automerge/automerge';
+import { next as A, type Doc, toJS } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
-import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
-import { getSchemaDXN } from '@dxos/echo/internal';
+import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client/internal';
+import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { getSchemaURI } from '@dxos/echo/internal';
+import * as Type from '@dxos/echo/Type';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
@@ -37,7 +38,7 @@ export class MigrationBuilder {
   private readonly _repo: RepoProxy;
   private readonly _rootDoc: Doc<DatabaseDirectory>;
 
-  // echoId -> automergeUrl
+  // echoUri -> automergeUrl
   private readonly _newLinks: Record<string, string> = {};
   private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
@@ -45,14 +46,13 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.internal.db.coreDatabase._repo;
-    // TODO(wittjosiah): Accessing private API.
-    this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
-      .getSpaceRootDocHandle()
-      .doc() as Doc<DatabaseDirectory>;
+    this._repo = this._space.internal.db._repo;
+    const rootDoc = this._space.internal.db._getSpaceRootDocHandle().doc();
+    invariant(rootDoc, 'Space root document must be available when creating MigrationBuilder');
+    this._rootDoc = rootDoc;
   }
 
-  async findObject(id: string): Promise<ObjectStructure | undefined> {
+  async findObject(id: string): Promise<EntityStructure | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
@@ -66,14 +66,15 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
+    migrate: (objectStructure: EntityStructure) => MaybePromise<{ type: Type.AnyEntity; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
     }
 
-    const { schema, props } = await migrate(objectStructure);
+    const { type, props } = await migrate(objectStructure);
+    const schema = Type.getSchema(type);
 
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
@@ -86,7 +87,7 @@ export class MigrationBuilder {
       objects: {
         [id]: {
           system: {
-            type: EncodedReference.fromDXN(getSchemaDXN(schema)!),
+            type: EncodedReference.fromURI(getSchemaURI(schema)!),
           },
           data: props,
           meta: {
@@ -103,20 +104,51 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
-    const core = await this._createObject({ schema, props });
+  async addObject(type: Type.AnyEntity, props: any): Promise<string> {
+    const resolved = Type.getSchema(type);
+    const core = await this._createObject({ schema: resolved, props });
     return core.id;
   }
 
   createReference(id: string) {
-    return EncodedReference.fromDXN(DXN.fromLocalObjectId(id));
+    invariant(EntityId.isValid(id), 'Invalid EntityId.');
+    return EncodedReference.fromURI(EID.make({ entityId: id }));
   }
 
   deleteObject(id: string): void {
     this._deleteObjects.push(id);
   }
 
-  async changeProperties(changeFn: (properties: ObjectStructure) => void): Promise<void> {
+  /**
+   * Re-materializes linked object documents into fresh Automerge docs without history.
+   * Call {@link _commit} to publish a new space epoch with updated root links.
+   */
+  async compactLinkedDocuments(objectIds?: string[]): Promise<{ compacted: string[]; skipped: string[] }> {
+    const linkIds = objectIds ?? Object.keys(this._rootDoc.links ?? {});
+    const compacted: string[] = [];
+    const skipped: string[] = [];
+
+    for (const id of linkIds) {
+      const oldHandle = await this._findObjectContainingHandle(id);
+      if (!oldHandle) {
+        skipped.push(id);
+        continue;
+      }
+
+      await oldHandle.whenReady();
+      const materialized = toJS(oldHandle.doc()!) as DatabaseDirectory;
+      const newHandle = this._repo.create<DatabaseDirectory>(materialized);
+      await newHandle.whenReady();
+      invariant(newHandle.url, 'Compacted document URL not available after whenReady');
+      this._newLinks[id] = newHandle.url;
+      this._addHandleToFlushList(newHandle.documentId!);
+      compacted.push(id);
+    }
+
+    return { compacted, skipped };
+  }
+
+  async changeProperties(changeFn: (properties: EntityStructure) => void): Promise<void> {
     if (!this._newRoot) {
       await this._buildNewRoot();
     }
@@ -197,14 +229,14 @@ export class MigrationBuilder {
     }
 
     core.initNewObject(props);
-    core.setType(EncodedReference.fromDXN(getSchemaDXN(schema)!));
+    core.setType(EncodedReference.fromURI(getSchemaURI(schema)!));
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
       objects: {
-        [core.id]: core.getDoc() as ObjectStructure,
+        [core.id]: core.getDoc() as EntityStructure,
       },
     });
     await newHandle.whenReady();

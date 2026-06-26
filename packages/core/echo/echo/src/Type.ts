@@ -4,133 +4,91 @@
 
 // @import-as-namespace
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
+import { raise } from '@dxos/debug';
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
-import { type ToMutable } from '@dxos/util';
+import { assertArgument, invariant } from '@dxos/invariant';
+import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 
-import type * as Entity from './Entity';
+import type * as Database from './Database';
+import type * as EntityModule from './Entity';
 import * as internal from './internal';
 import * as typeInternal from './internal/Type';
-import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
-
-/**
- * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
- */
-export const RuntimeType = typeInternal.EchoSchema;
-
-/**
- * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
- */
-export type RuntimeType = typeInternal.EchoSchema;
 
 //
 // Internal types (not exported)
 //
 
 /**
- * Type that marks a schema as an ECHO schema.
- * The value indicates the entity kind (Object or Relation).
+ * Structural base shared by the three sibling type-entity interfaces
+ * ({@link Obj}, {@link Relation}, {@link Type}). NOT exported — callers
+ * should constrain on {@link AnyEntity} when they want "any of the three"
+ * and on the specific kind interface otherwise.
  */
-type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
-  readonly [internal.SchemaKindId]: K;
-};
-
-//
-// Obj - Runtime schema for any ECHO object
-//
-
-/**
- * TypeScript type for an ECHO object schema.
- * `T` is the instance type produced by the schema.
- * `Fields` is the optional struct fields type for introspection.
- *
- * @example
- * ```ts
- * const PersonSchema: Type.Obj<Person> = Schema.Struct({
- *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'Person', version: '0.1.0' }));
- *
- * // Access fields for introspection:
- * Object.keys(PersonSchema.fields); // ['name']
- * ```
- */
-export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends
-    internal.TypeMeta,
-    EchoSchemaKind<internal.EntityKind.Object>,
-    Schema.AnnotableClass<
-      Obj<T, Fields>,
-      Entity.OfKind<typeof Entity.Kind.Object> & T,
-      Schema.Simplify<ObjModule.BaseObjJson & ToMutable<T>>,
-      never
-    > {
+interface BaseTypeEntity<A> {
   /**
-   * The fields defined in the original struct schema.
-   * Allows accessing field definitions for introspection.
+   * Entity-kind brand of the type-entity value itself — always `EntityKind.Type`.
+   * The kind of instance the type *describes* lives on `[SchemaKindId]`
+   * (Object / Relation / Type). Lets `Obj.isObject` / `Relation.isRelation`
+   * reject type entities by a single `[KindId]` check.
    */
-  readonly fields: Fields;
+  readonly [internal.KindId]: internal.EntityKind.Type;
+
+  /**
+   * Object id. Like all ECHO entities, type entities always carry an id —
+   * stamped at construction for in-memory (static) declarations and assigned by
+   * the database once persisted. The id does NOT determine the entity's URI:
+   * static types resolve to their typename DXN, persisted types to `echo:/<id>`
+   * (see `getTypeURIFromSpecifier`).
+   */
+  readonly id: EntityId;
+
+  readonly name?: string;
+  // NOTE: `typename` / `version` are intentionally NOT fields on any type-entity
+  // interface. Both static and persisted entities carry them in `EntityMeta`
+  // (`key` / `version`); read them via `Type.getTypename(self)` /
+  // `Type.getVersion(self)` — never as a direct property.
+  readonly jsonSchema: internal.JsonSchemaType;
+  readonly [InstancePhantomId]?: A;
 }
 
-/**
- * Structural base type for any ECHO object schema.
- * Accepts both static schemas (created with Type.object()) and EchoSchema.
- * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
- * Use Type.isObjectSchema() for runtime type guards.
- */
-type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
-  readonly typename: string;
-  readonly version: string;
-};
+//
+// Obj — `Type.Type` value for an ECHO object schema.
+//
 
 /**
- * Type that represents any ECHO object schema.
- * Accepts both static schemas (Type.object()) and mutable schemas (EchoSchema).
- */
-export type AnyObj = ObjectSchemaBase;
-
-/**
- * Factory function to create an ECHO object schema.
- * Adds object metadata annotations to an Effect schema.
+ * TypeScript type for an ECHO object type — a `Type.Type<A>` entity.
+ *
+ * `T` is the instance type produced by `Obj.make(Foo, props)`. `Fields` is
+ * retained as a structural hint (the runtime value still carries `.fields`),
+ * but consumers should derive instance/encoded types via `Type.InstanceType`.
+ *
+ * **Not a `Schema.Schema`.** `Foo.ast` / `Schema.Schema.Type<typeof Foo>` /
+ * `Schema.extend(Foo)` no longer typecheck — extract the Effect Schema via
+ * `Type.getSchema(Foo)` first, or derive instance types via
+ * `Type.InstanceType<typeof Foo>`.
  *
  * @example
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+ *
+ * type Person = Type.InstanceType<typeof Person>;
  * ```
  */
-export const object: {
-  (opts: internal.TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
-} = internal.EchoObjectSchema as any;
+export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends BaseTypeEntity<
+  T & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+> {
+  /** Schema-kind brand (object). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Object;
 
-//
-// PersistentType (Schema stored in database)
-//
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
 
-export const PersistentType: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
-
-export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
-
-/**
- * TypeScript type for an ECHO relation schema.
- * `T` is the instance type produced by the schema (excluding source/target).
- * `Source` and `Target` are the endpoint types.
- * `Fields` is the optional struct fields type for introspection.
- */
-export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends
-    internal.TypeMeta,
-    EchoSchemaKind<internal.EntityKind.Relation>,
-    Schema.AnnotableClass<
-      Relation<T, Source, Target, Fields>,
-      Entity.OfKind<typeof Entity.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
-      Schema.Simplify<RelationModule.BaseRelationJson & ToMutable<T>>,
-      never
-    > {
   /**
    * The fields defined in the original struct schema.
    * Allows accessing field definitions for introspection.
@@ -139,21 +97,169 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
 }
 
 /**
- * Structural base type for any ECHO relation schema.
- * Accepts static schemas (created with Type.relation()).
- * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
- * Use Type.isRelationSchema() for runtime type guards.
+ * Type that represents any ECHO object type — a `Type.Type` entity branded
+ * with the object entity kind, i.e. what `Type.makeObject(dxn)` produces.
  */
-type RelationSchemaBase = Schema.Schema.AnyNoContext & {
-  readonly typename: string;
-  readonly version: string;
+export type AnyObj = Obj<unknown>;
+
+/**
+ * Factory function to create an ECHO object type.
+ *
+ * Returns a `Type.Type` entity — a live, in-memory `TypeSchema` instance,
+ * NOT a `Schema.Schema`. Use `Type.InstanceType<typeof Foo>` for the instance
+ * type and `Type.getSchema(Foo)` to obtain the underlying Effect Schema.
+ *
+ * The entity's id defaults to `EntityId.deterministic(typename, version)` so
+ * constructing a type never reaches `crypto.getRandomValues()` — required for
+ * Cloudflare workerd, which forbids RNG calls in global (module-evaluation)
+ * scope. Pass `{ id }` to override (e.g. with `EntityId.random()` from a
+ * request handler).
+ *
+ * @example
+ * ```ts
+ * const Person = Schema.Struct({
+ *   name: Schema.String,
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+ * ```
+ */
+export const makeObject: {
+  (
+    dxn: DXN.DXN,
+    options?: { id?: EntityId },
+  ): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
+} = internal.EchoObjectSchema as any;
+
+//
+// Type — the ECHO entity that holds a schema and metadata.
+// Persisted via `db.addType()`; subscribed to via `Filter.type(Type.Type)`.
+//
+
+/**
+ * ECHO meta-schema entity — stores `{ name?, typename, version, jsonSchema }`.
+ * Type-kind sibling of `Type.makeObject(...)` / `Type.makeRelation(...)` outputs.
+ * Stored types live under this entity; filter via `Filter.type(Type.Type)`.
+ */
+export const Type: Type<typeInternal.TypeSchema> = typeInternal.TypeSchema as any;
+
+/**
+ * Default version stamped on draft (unnamed) types created via
+ * {@link makeObjectFromJsonSchema} / {@link makeRelationFromJsonSchema} when
+ * the caller does not supply one. Pure dynamic drafts surface as `'0.0.0'`
+ * until they are persisted, at which point automerge-heads suffix the version.
+ */
+const DRAFT_VERSION = '0.0.0';
+
+/**
+ * Common props shared by the type-kind factories. Typename and version are
+ * optional — drafts omit typename and default version to {@link DRAFT_VERSION}.
+ */
+type MakeTypeProps = {
+  jsonSchema: internal.JsonSchemaType;
+  typename?: string;
+  version?: string;
+  name?: string;
+  id?: EntityId;
 };
 
 /**
- * Type that represents any ECHO relation schema.
- * Accepts static schemas (Type.relation()).
+ * Construct a new object-kind type entity from raw metadata — for cases where
+ * an Effect Schema isn't available (e.g. JSON-Schema arriving over the network
+ * or from a UI editor). Parallel to {@link makeObject} but takes pre-built
+ * `jsonSchema` instead of piping through an Effect schema.
+ *
+ * The returned entity is in-memory; persist it with `db.addType(entity)`.
  */
-export type AnyRelation = RelationSchemaBase;
+export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.TypeSchema> => {
+  const { typename, version, ...data } = props;
+  // `typename` / `version` are routed through `EntityMeta` (`key` / `version`)
+  // — the canonical registry-provenance pair — not data fields. Drafts default
+  // to `'0.0.0'`; the version is omitted from meta entirely when the caller
+  // doesn't supply one so the proxy projection can apply its own default.
+  return internal.makeObject(
+    internal.getStaticTypeSchema(typeInternal.TypeSchema) as any,
+    data as any,
+    {
+      keys: [],
+      key: typename,
+      version: version ?? DRAFT_VERSION,
+    },
+    typeInternal.TypeSchema,
+  ) as unknown as Type<typeInternal.TypeSchema>;
+};
+
+/**
+ * Construct a new relation-kind type entity from raw metadata. Parallel to
+ * {@link makeRelation} but takes pre-built `jsonSchema` instead of piping
+ * through an Effect schema. `source` / `target` accept either a static
+ * `Type.Obj` entity or the well-known `Obj.Unknown` schema.
+ *
+ * The returned entity is in-memory; persist it with `db.addType(entity)`.
+ */
+export const makeRelationFromJsonSchema = (
+  props: MakeTypeProps & {
+    source: AnyObj | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
+    target: AnyObj | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
+  },
+): Type<typeInternal.TypeSchema> => {
+  const { source, target, jsonSchema, typename, version, ...rest } = props;
+  // Embed source/target DXNs + relation entity-kind into the jsonSchema so the
+  // entity round-trips correctly through `toEffectSchema` / queries / refs.
+  const sourceURI = internal.getTypeURIFromSpecifier(source);
+  const targetURI = internal.getTypeURIFromSpecifier(target);
+  const enrichedJsonSchema: internal.JsonSchemaType = {
+    ...jsonSchema,
+    entityKind: internal.EntityKind.Relation,
+    relationSource: { $ref: sourceURI },
+    relationTarget: { $ref: targetURI },
+  };
+  // `typename` / `version` route through `EntityMeta` (see
+  // {@link makeObjectFromJsonSchema}); drafts default version to `'0.0.0'`.
+  return internal.makeObject(
+    internal.getStaticTypeSchema(typeInternal.TypeSchema) as any,
+    { ...rest, jsonSchema: enrichedJsonSchema } as any,
+    {
+      keys: [],
+      key: typename,
+      version: version ?? DRAFT_VERSION,
+    },
+    typeInternal.TypeSchema,
+  ) as unknown as Type<typeInternal.TypeSchema>;
+};
+
+/**
+ * TypeScript type for an ECHO relation type — a `Type.Type<A>` entity.
+ *
+ * `T` is the instance-property type produced by `Relation.make(...)` (excluding
+ * source/target endpoints). `Source` and `Target` are the endpoint types.
+ *
+ * **Not a `Schema.Schema`.** See {@link Obj}'s note.
+ */
+export interface Relation<
+  T,
+  Source,
+  Target,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> extends BaseTypeEntity<
+  RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
+> {
+  /** Schema-kind brand (relation). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
+
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+
+  /**
+   * The fields defined in the original struct schema.
+   * Allows accessing field definitions for introspection.
+   */
+  readonly fields: Fields;
+}
+
+/**
+ * Type that represents any ECHO relation type — a `Type.Type` entity branded
+ * with the relation entity kind, i.e. what `Type.makeRelation(...)` produces.
+ */
+export type AnyRelation = Relation<unknown, unknown, unknown>;
 
 /**
  * Factory function to create an ECHO relation schema.
@@ -163,42 +269,93 @@ export type AnyRelation = RelationSchemaBase;
  * ```ts
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
- * }).pipe(Type.relation({
- *   typename: 'com.example.type.works-for',
- *   version: '0.1.0',
+ * }).pipe(Type.makeRelation({
+ *   dxn: DXN.make('com.example.type.worksFor', '0.1.0'),
  *   source: Person,
  *   target: Company,
  * }));
  * ```
  */
-export const relation: {
-  <SourceSchema extends Schema.Schema.AnyNoContext, TargetSchema extends Schema.Schema.AnyNoContext>(
-    opts: internal.EchoRelationSchemaOptions<SourceSchema, TargetSchema>,
-  ): <Self extends Schema.Schema.Any>(
+export const makeRelation: {
+  <SourceInstance, TargetInstance>(opts: {
+    dxn: DXN.DXN;
+    source: Obj<SourceInstance, any> | internal.UnknownTypeSchema<SourceInstance, typeof EntityModule.Kind.Object>;
+    target: Obj<TargetInstance, any> | internal.UnknownTypeSchema<TargetInstance, typeof EntityModule.Kind.Object>;
+    /**
+     * Override the entity id. Defaults to `EntityId.deterministic(typename, version)`;
+     * see `Type.makeObject` for the workerd motivation.
+     */
+    id?: EntityId;
+  }): <Self extends Schema.Schema.Any>(
     self: Self,
-  ) => Relation<Schema.Schema.Type<Self>, Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>>;
+  ) => Relation<
+    Schema.Schema.Type<Self>,
+    SourceInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
+    TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+  >;
 } = internal.EchoRelationSchema as any;
 
 /**
- * Type alias for any ECHO entity schema (object or relation).
- * Use this in type annotations for schema parameters.
+ * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema
+ * value (static `Type.Type` or a persisted draft from `db.addType(...)`).
+ * Mirrors {@link AnyObj} / {@link AnyRelation} for the third sibling kind.
  */
-export type AnyEntity = AnyObj | AnyRelation;
+export type AnyType = Type<unknown>;
 
 /**
- * Type guard to check if a schema is an object schema.
- * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
+ * Any ECHO type-entity — one of the three sibling kinds: object-kind, relation-kind,
+ * or type-kind (the meta-schema). APIs that want "any ECHO type" use this union;
+ * the underlying Effect Schema is retrieved via `Type.getSchema`.
  */
-export const isObjectSchema = (schema: AnyEntity): schema is AnyObj => {
-  return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
+export type AnyEntity = AnyObj | AnyRelation | AnyType;
+
+/**
+ * Type guard: narrows a `Type.AnyEntity` to an object-kind entity. Checks
+ * ENTITIES, not instances — use `Obj.isObject` for instances. Raw
+ * `Schema.Schema` values (including the branded `Obj.Unknown` companion)
+ * are intentionally not accepted; inspect their `TypeAnnotation` directly.
+ */
+export const isObject = (entity: AnyEntity): entity is AnyObj => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Object;
 };
 
 /**
- * Type guard to check if a schema is a relation schema.
- * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
+ * Type guard: narrows a `Type.AnyEntity` to a relation-kind entity. Checks
+ * ENTITIES, not instances — use `Relation.isRelation` for instances.
  */
-export const isRelationSchema = (schema: AnyEntity): schema is AnyRelation => {
-  return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
+export const isRelation = (entity: AnyEntity): entity is AnyRelation => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Relation;
+};
+
+/**
+ * Type guard: narrows a `Type.AnyEntity` to the type-kind meta-schema
+ * (e.g. `Type.Type`). Mirrors {@link isObject} / {@link isRelation}.
+ */
+export const isTypeKind = (entity: AnyEntity): entity is Type => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Type;
+};
+
+/**
+ * Narrow a `Type.AnyEntity` (e.g. one returned from `schemaRegistry.query(...)`)
+ * to `AnyObj`, throwing if it describes a relation or the type-kind
+ * meta-schema. Use at call sites that need to pass the value to `Obj.make`,
+ * `Filter.type`, or other object-only APIs.
+ */
+export const assertObject = (entity: AnyEntity): AnyObj => {
+  assertArgument(isObject(entity), 'entity', 'Expected an object-kind Type entity.');
+  return entity;
+};
+
+/** Narrow a `Type.AnyEntity` to `AnyRelation`, throwing otherwise. */
+export const expectRelation = (entity: AnyEntity): AnyRelation => {
+  assertArgument(isRelation(entity), 'entity', 'Expected a relation-kind Type entity.');
+  return entity;
+};
+
+/** Narrow a `Type.AnyEntity` to the `Type.Type` meta-schema, throwing otherwise. */
+export const expectTypeKind = (entity: AnyEntity): Type => {
+  assertArgument(isTypeKind(entity), 'entity', 'Expected a type-kind Type entity.');
+  return entity;
 };
 
 /**
@@ -212,48 +369,462 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 //
 
 /**
- * Gets the full DXN of the schema.
- * Will include the version if it's a `type` DXN.
- * @example "dxn:com.example.type.person:0.1.0"
- * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
+ * Returns the URI identifying a type entity. Always defined.
+ *
+ * - Static `Type.Obj` / `Type.Relation` → typename DXN (e.g. `dxn:com.example.type.person:0.1.0`).
+ * - Persisted `Type.Type` instance (has `id`) → local `EID` (`echo:/<objectId>`).
+ * - In-memory `Type.Type` draft (has `id`, no typename) → local `EID`.
+ *
+ * When `options.prefer === 'named'` the result is forced to a DXN — for
+ * persisted type entities the typename + version from meta are used to
+ * construct the DXN; static types already return a DXN by default.
+ *
+ * Only accepts `Type.AnyEntity` entities. Raw `Schema.Schema` values and the
+ * branded `Obj.Unknown` / `Relation.Unknown` schemas are intentionally not
+ * supported — use `internal.getSchemaURI` or the schema's typename annotation
+ * directly when working at the schema level.
  */
-export const getDXN = (schema: AnyEntity): DXN | undefined => {
-  return internal.getSchemaDXN(schema);
+export const getURI = (input: AnyEntity, options?: internal.GetURIOptions): URI.URI => {
+  // For Type entities, route through `getTypeURIFromSpecifier` (id → EID,
+  // typename/version → DXN). For Obj/Relation entities, unwrap to the source
+  // Effect Schema first and read its annotations.
+  if (isType(input)) {
+    const uri = internal.getTypeURIFromSpecifier(input);
+    if (options?.prefer === 'named' && !DXN.isDXN(uri)) {
+      // Persisted type — the auto-detected URI is an EID, but caller wants a
+      // DXN. Construct from typename + version (both live in EntityMeta).
+      const typename = getTypename(input);
+      const version = getMeta(input).version;
+      if (typename && version) {
+        return DXN.make(typename, version);
+      }
+    }
+    return uri;
+  }
+  return internal.getSchemaURI(getSchema(input)) ?? raise(new TypeError('Type entity has no URI'));
 };
 
 /**
- * @param schema - Schema to get the typename from.
- * @returns The typename of the schema. Example: `com.example.type.person`.
+ * @returns The typename. Example: `com.example.type.person`.
+ *
+ * Persisted `Type.Type` entities carry typename in `EntityMeta.key` (the
+ * canonical registry-provenance field); unnamed drafts fall back to the
+ * entity's object id so the helper always returns a string. Any `dxn:` or
+ * `echo:/` prefix is stripped — typename is a bare identifier, not a URI.
  */
-export const getTypename = (schema: AnyEntity): string => {
-  const typename = internal.getSchemaTypename(schema);
-  invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
+// TODO(wittjosiah): For in-database types this should return the object id once the registry
+//   has more robust options for shadowing types (so callers can disambiguate db-stored copies).
+export const getTypename = (input: AnyEntity): string => {
+  // Both in-memory and in-database entities carry typename in `EntityMeta.key`
+  // — the canonical registry-provenance field. In-memory entities attach meta
+  // eagerly (see `makeEchoTypeSchema`), so a single meta-backed read covers
+  // both forms.
+  const meta = internal.getMetaChecked(input);
+  let typename: string | undefined = meta.key as string | undefined;
+  // `meta.key` is a denormalized copy of the typename. The authoritative source
+  // for a type entity is its `jsonSchema.typename` (`getSchema` rebuilds the
+  // Effect Schema from `jsonSchema`). A type loaded from a snapshot can arrive
+  // with `meta.key` absent (the meta round-trip dropped the denormalized copy)
+  // while `jsonSchema.typename` is always present — consult it before the
+  // last-resort id fallback so callers never receive a bare object id where a
+  // typename is expected (e.g. `Filter.typename`, which rejects non-typenames).
+  if (typename == null) {
+    typename = input.jsonSchema?.typename;
+  }
+  // Unnamed drafts (no meta.key, no jsonSchema typename) fall back to the id.
+  typename ??= input.id as string;
+  // Typename is a bare identifier — strip URI prefixes if a caller seeded
+  // meta.key with one accidentally (or if a static entity carries a DXN-
+  // style typename).
+  typename = stripTypenamePrefix(typename);
+  invariant(typeof typename === 'string' && typename.length > 0, 'Invalid typename');
   return typename;
 };
 
 /**
- * Gets the version of the schema.
+ * Gets the version.
  * @example 0.1.0
+ * @example 0.1.0-<heads> (in-database, versioned by automerge heads)
+ *
+ * The registry-provenance semver lives in `EntityMeta.version`; unversioned
+ * drafts default to {@link DRAFT_VERSION} (`'0.0.0'`). In-database entities are
+ * additionally versioned by their automerge heads, which are exposed as the
+ * semver pre-release tag (`<semver>-<heads>`). In-memory declarations have no
+ * heads and surface the bare semver. Read the registry semver alone via
+ * `Type.getMeta(input).version`.
  */
-export const getVersion = (schema: AnyEntity): string => {
-  const version = internal.getSchemaVersion(schema);
-  invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
-  return version;
+export const getVersion = (input: AnyEntity): string => {
+  const meta = internal.getMetaChecked(input);
+  // As with `getTypename`: `meta.version` is a denormalized copy; the
+  // authoritative semver lives in `jsonSchema.version`. Prefer meta, fall back
+  // to jsonSchema (always present on persisted types, survives serialization),
+  // then to `DRAFT_VERSION` for unversioned drafts.
+  const semver = (meta.version as string | undefined) ?? input.jsonSchema?.version ?? DRAFT_VERSION;
+  invariant(typeof semver === 'string' && semver.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
+  // In-database entities are versioned by their automerge heads; expose them as
+  // the semver pre-release tag. In-memory drafts carry no heads → bare semver.
+  const heads = internal.version(input).automergeHeads;
+  if (heads != null && heads.length > 0) {
+    return `${semver}-${[...heads].sort().join('.')}`;
+  }
+  return semver;
 };
 
 /**
- * @returns True if the schema is mutable.
+ * Strip URI prefixes (`dxn:`, `echo:/`, `echo://`) from a typename string.
+ * Typename is a bare identifier — callers reading from meta or from a
+ * caller-supplied seed value shouldn't propagate URI prefixes downstream.
  */
-export const isMutable = typeInternal.isMutable;
+const stripTypenamePrefix = (value: string): string => {
+  if (value.startsWith('dxn:')) {
+    return value.slice('dxn:'.length);
+  }
+  if (value.startsWith('echo://')) {
+    return value.slice('echo://'.length);
+  }
+  if (value.startsWith('echo:/')) {
+    return value.slice('echo:/'.length);
+  }
+  return value;
+};
 
 /**
- * ECHO type metadata.
+ * Type predicate: true iff the value is any type-kind ECHO entity — a static
+ * `Type.Obj` / `Type.Relation` produced by `Type.makeObject` / `Type.makeRelation`, a
+ * static meta `Type.Type`, or a persisted `Type.Type` returned by the database.
+ *
+ * All three branches stamp `[KindId] = Type`, so this is a single brand check.
+ * Use {@link isObject} / {@link isRelation} / {@link isTypeKind}
+ * when you need to discriminate further; use {@link getDatabase} when you mean
+ * "is this a db-attached type" (vs. an in-memory declaration).
  */
-export type Meta = internal.TypeAnnotation;
+export const isType = (value: unknown): value is AnyEntity =>
+  internal.getEntityKindBrand(value) === internal.EntityKind.Type;
 
 /**
- * Gets the meta data of the schema.
+ * Get the database the type entity belongs to, or `undefined` if it is an
+ * in-memory declaration (`Type.makeObject` / `Type.makeRelation` result) not
+ * yet attached to a database. Mirrors `Obj.getDatabase` / `Relation.getDatabase`.
+ *
+ * Database attachment is the canonical discriminator between in-memory and
+ * in-database type entities — both are live reactive `TypeSchema` instances and
+ * are otherwise indistinguishable.
  */
-export const getMeta = (schema: AnyEntity): Meta | undefined => {
-  return internal.getTypeAnnotation(schema);
+export const getDatabase = (input: AnyEntity): Database.Database | undefined => internal.getDatabase(input);
+
+/**
+ * Mutable meta type returned by `Type.getMeta` inside a `Type.update` callback.
+ * Mirrors `Obj.Meta` / `Relation.Meta` — `Type.Type` is an Entity like its
+ * siblings, so its meta is the same `EntityMeta` record:
+ * `{ keys, tags?, key?, version? }`.
+ *
+ * `key` / `version` here are the canonical registry-provenance pair
+ * (typename + semver) on persisted Type.Type entities; they are absent on
+ * unnamed drafts. Use {@link getTypename} / {@link getVersion} when you want
+ * a non-`undefined` value with id / {@link DRAFT_VERSION} fallbacks.
+ */
+export type Meta = internal.Meta;
+
+/**
+ * Deeply read-only version of {@link Meta}.
+ * Prevents mutation at all nesting levels (e.g., `meta.keys.push()` is a TS error).
+ */
+export type ReadonlyMeta = internal.ReadonlyMeta;
+
+/**
+ * Returns the entity's `EntityMeta`. Same semantics as `Obj.getMeta` /
+ * `Relation.getMeta` — `Type.Type` is an Entity and carries the canonical
+ * `EntityMeta` directly. Returns mutable meta when passed a mutable type
+ * (inside a `Type.update` callback), read-only meta otherwise.
+ *
+ * For persisted Type entities, `meta.key` holds the typename and
+ * `meta.version` holds the semver. Use {@link getTypename} / {@link getVersion}
+ * if you want the helpers' id / {@link DRAFT_VERSION} fallbacks for drafts.
+ *
+ * Both persisted and in-memory type entities (`Type.makeObject` /
+ * `Type.makeRelation` results) carry their `EntityMeta` via `[MetaId]`, so the
+ * lookup is uniform.
+ */
+export function getMeta(entity: internal.Mutable<AnyEntity>): Meta;
+export function getMeta(entity: Mutable): Meta;
+export function getMeta(entity: AnyEntity): ReadonlyMeta;
+export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutable): ReadonlyMeta | Meta {
+  // The `Mutable` overload accepts the narrowed view passed to `Type.update`
+  // callbacks; at runtime that draft IS the underlying persisted Type entity,
+  // so the same `MetaId` lookup works.
+  assertArgument(isType(entity), 'entity', 'Expected a Type entity.');
+  // Both persisted and in-memory type entities carry runtime `EntityMeta` via
+  // `[MetaId]`, so the lookup is uniform.
+  return internal.getMetaChecked(entity);
+}
+
+/**
+ * Get the display label of a type entity.
+ * Reads the field(s) nominated by the type's {@link LabelAnnotation} (e.g. `name` on persisted schemas).
+ * Returns `undefined` if no label field is populated.
+ */
+export const getLabel = (entity: AnyEntity, options?: internal.GetLabelOptions): string | undefined =>
+  internal.getLabel(entity, options);
+
+/**
+ * String key used to phantom-carry the instance type produced by a `Type.Type`.
+ * Used by `Type.InstanceType<typeof Foo>` to recover the schema instance type
+ * since `Type.makeObject(dxn)` does not return a `Schema.Schema`.
+ *
+ * Re-exported from the internal types layer so both `Type.ts` and internal
+ * helpers (`makeObject`, `createObject`) reference the same phantom key.
+ */
+export const InstancePhantomId = internal.InstancePhantomId;
+export type InstancePhantomId = internal.InstancePhantomId;
+
+/**
+ * Sibling of {@link Obj} / {@link Relation} for the third ECHO entity kind:
+ * **type-kind** entities (meta-schemas). The singleton {@link Type} const is
+ * the canonical example — it describes stored type definitions themselves.
+ *
+ * Not a `Schema.Schema`. Use `Type.getSchema(value)` to obtain the underlying
+ * Effect Schema and `Type.update(value, draft => ...)` to mutate.
+ *
+ * `A` is the instance-type phantom — what `Obj.make(value, ...)` would produce.
+ * Merged with the `Type` const value via TypeScript declaration merging.
+ */
+export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Type>> {
+  /** Schema-kind brand (type — the meta-schema kind). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Type;
+
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+}
+
+/**
+ * Instance type produced by a Type entity.
+ *
+ * Accepts ONLY {@link AnyEntity} inputs — `Type.Obj`, `Type.Relation`, or
+ * `Type.Type`. Raw Effect `Schema.Schema` values are rejected: for those, use
+ * `Schema.Schema.Type<typeof Foo>` directly. This separation keeps the type
+ * system honest about which values represent ECHO entities versus plain
+ * Effect schemas.
+ *
+ * Dispatches on the entity kind:
+ *  - `Relation<Props, S, T>` → `Endpoints<S,T> & Props & OfKind<Relation>`
+ *  - `Obj<A>`                → `A & OfKind<Object>`
+ *  - `Type<A>`               → `A & OfKind<Type>`
+ */
+export type InstanceType<T extends AnyEntity> =
+  T extends Relation<infer Props, infer Source, infer Target, any>
+    ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
+    : T extends Obj<infer A, any>
+      ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+      : T extends Type<infer A>
+        ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
+        : never;
+
+/**
+ * Returns the Effect Schema for a type entity.
+ *
+ * - For static `Type.Obj` / `Type.Relation` entities the source Effect Schema is
+ *   read from a hidden slot — these overloads preserve the instance type.
+ * - For `Type.Type` entities (the meta-schema kind) the schema is rebuilt from
+ *   `type.jsonSchema`; the instance type isn't statically knowable so the wide
+ *   `AnyEntity` overload widens to `Schema.Schema.AnyNoContext`.
+ *
+ * Always call this when you need to interact with the Effect Schema API
+ * (e.g. before passing to Effect.Schema functions). For ECHO-side APIs
+ * (`Obj.make`, `Filter.type`, `Ref`) pass the type entity directly.
+ *
+ * Only accepts `Type.AnyEntity` — raw `Schema.Schema` values can be used
+ * directly without unwrapping.
+ */
+export function getSchema<T extends AnyObj>(type: T): Schema.Schema<InstanceType<T>>;
+export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
+export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext;
+export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
+  // Static `Type.Type` entities carry the source Effect Schema on a hidden
+  // slot so we can return it without round-tripping through JsonSchema.
+  const staticSchema = internal.getStaticTypeSchema(type);
+  if (staticSchema != null) {
+    return staticSchema;
+  }
+  assertArgument(isType(type), 'type', 'Expected a Type entity.');
+  // Persisted `Type.Type` entity — build the Effect Schema from its stored
+  // jsonSchema and re-attach the TypeIdentifierAnnotation so the rebuilt
+  // schema's URI (via getSchemaURI) matches the entity's local EID.
+  const rebuilt = internal.toEffectSchema(type.jsonSchema);
+  if (typeof type.id === 'string') {
+    return rebuilt.annotations({
+      [internal.TypeIdentifierAnnotationId]: EID.make({ entityId: type.id }),
+    });
+  }
+  return rebuilt;
+}
+
+/**
+ * Mutable view of a `Type.Type` — the shape passed to the `Type.update` callback.
+ * Outside `Type.update`, `Type.Type` fields are read-only (both at the type level
+ * and at runtime — direct assignment throws). Use this to constrain mutation to
+ * the change context, analogous to `Obj.update(obj, (draft) => ...)`.
+ *
+ * NOTE: `typename` and `version` are intentionally absent — they live in
+ * `EntityMeta` (`key` / `version` — the canonical registry-provenance pair).
+ * Read them via {@link getTypename} / {@link getVersion} / {@link getMeta};
+ * `typename` is treated as immutable on persisted entities.
+ *
+ * Unlike `Obj.update` — whose mutable view is inferred as `Mutable<A>` over the
+ * whole instance type because every data field is editable — a `Type.Type`
+ * exposes only `name` and `jsonSchema` for mutation. The rest of its shape
+ * (`id`, the `[KindId]` / `[SchemaKindId]` brands, and `typename` / `version`
+ * in meta) is immutable, so this view is declared explicitly rather than
+ * derived from `InstanceType<Type.Type>`.
+ */
+export interface Mutable {
+  name?: string;
+  // Deep-mutable within the change context — `Type.update`'s purpose is to allow
+  // mutation, so the draft exposes `jsonSchema` as writable (the readonly
+  // `JsonSchemaType` would force callers to cast).
+  jsonSchema: Types.DeepMutable<internal.JsonSchemaType>;
+}
+
+/**
+ * Perform mutations on a `Type.Type` within a change context.
+ *
+ * The callback receives a {@link Mutable} view of the type — direct mutation of
+ * a `Type.Type` outside `Type.update` throws at runtime, mirroring `Obj.update`.
+ * Delegates to the same automerge-transaction primitive `Obj.update(obj, cb)` uses.
+ */
+export const update = (type: AnyEntity, callback: (mutable: Mutable) => void): void => {
+  // `Type.Type` is an ECHO object; the change machinery is the same as `Obj.update`.
+  internal.change(type, callback as internal.ChangeCallback<AnyEntity>);
+};
+
+//
+// Field-level helpers for mutating persisted types.
+// These are thin wrappers over `Type.update` plus the JsonSchema manipulation
+// utilities. Callers pass a persisted `Type.Type` (e.g. one returned by
+// `db.addType(schemaEntity)`) and the helper drives the change context.
+//
+
+/**
+ * Add fields to a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const addFields = (type: AnyEntity, fields: Schema.Struct.Fields): void => {
+  const extended = typeInternal.addFieldsToSchema(getSchema(type), fields);
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(extended);
+  });
+};
+
+/**
+ * Replace existing fields on a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const updateFields = (type: AnyEntity, fields: Schema.Struct.Fields): void => {
+  const updated = typeInternal.updateFieldsInSchema(getSchema(type), fields);
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(updated);
+  });
+};
+
+/**
+ * Rename a field on a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const updateFieldPropertyName = (
+  type: Type,
+  { before, after }: { before: PropertyKey; after: PropertyKey },
+): void => {
+  const renamed = typeInternal.updateFieldNameInSchema(getSchema(type), { before, after });
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(renamed);
+  });
+};
+
+/**
+ * Remove fields from a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
+  const removed = typeInternal.removeFieldsFromSchema(getSchema(type), fieldNames);
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(removed);
+  });
+};
+
+/**
+ * Return type for {@link declareObj}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends Obj<Self, Fields> {
+  new (_: never): T & EntityModule.OfKind<typeof EntityModule.Kind.Object>;
+}
+
+/**
+ * Declare a schema definition and a typescript type in one statement.
+ *
+ * Giving the type a nominal class name keeps its inferred type portable for
+ * declaration emit: structural expansion (which can pull in unnameable union
+ * members from referenced schemas) is replaced by a reference to the class.
+ *
+ * @example
+ * ```ts
+ * export class MyType extends Type.declareObj<MyType>()(Schema.Struct({
+ *   name: Schema.String,
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.myType', '0.1.0')))) {}
+ * ```
+ */
+export const declareObj =
+  <Self>() =>
+  <T, Fields extends Schema.Struct.Fields>(type: Obj<T, Fields>): ObjClass<Self, T, Fields> => {
+    return makeEntityClass(type);
+  };
+
+/**
+ * Return type for {@link declareRelation}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface RelationClass<Self, T, Source, Target, Fields extends Schema.Struct.Fields> extends Relation<
+  Self,
+  Source,
+  Target,
+  Fields
+> {
+  new (_: never): RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>;
+}
+
+/**
+ * Declare a relation schema definition and a typescript type in one statement.
+ *
+ * Relation sibling of {@link declareObj}; see its note on portability.
+ *
+ * @example
+ * ```ts
+ * export class MyRelation extends Type.declareRelation<MyRelation>()(Schema.Struct({
+ *   name: Schema.String,
+ * }).pipe(Type.makeRelation({ dxn, source, target }))) {}
+ * ```
+ */
+export const declareRelation =
+  <Self>() =>
+  <T, Source, Target, Fields extends Schema.Struct.Fields>(
+    type: Relation<T, Source, Target, Fields>,
+  ): RelationClass<Self, T, Source, Target, Fields> => {
+    return makeEntityClass(type);
+  };
+
+/**
+ * Adapt a runtime type-schema entity into a constructor usable as the base of a
+ * `class X extends ... {}` declaration. The entity is a plain (proxy) value, so
+ * it is placed on the constructor's prototype chain: static property access on
+ * the subclass falls through to the entity (fields, jsonSchema, brands), while
+ * the wrapper satisfies the `extends` requirement of being a constructor.
+ */
+// Returns `any`: the result is a constructor (to satisfy `class X extends ...`) that
+// nonetheless delegates to a plain entity object — a shape TypeScript cannot express,
+// so the public `ObjClass` / `RelationClass` types are applied by the callers' signatures.
+const makeEntityClass = (entity: object): any => {
+  const constructor = function EntityClass() {};
+  Object.setPrototypeOf(constructor, entity);
+  return constructor;
 };

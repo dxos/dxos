@@ -4,12 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation, GraphPropsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { Text } from '@dxos/schema';
+import { AppAnnotation } from '@dxos/app-toolkit';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
+export const SKILL_KEY = 'org.dxos.skill.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
 import * as SettingsModule from './Settings';
@@ -25,21 +25,16 @@ export const Document = Schema.Struct({
   fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.document',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--text-aa--regular',
-    hue: 'indigo',
-  }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  GraphPropsAnnotation.set({ managesAutofocus: true }),
+  Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+  AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
+  CollectionItemAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),
 );
 
-export type Document = Schema.Schema.Type<typeof Document>;
+export type Document = Type.InstanceType<typeof Document>;
 
 /**
  * Document factory.

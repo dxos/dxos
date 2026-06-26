@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { EID, Filter, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/Obj';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -24,7 +23,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const db = Obj.getDatabase(view);
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
+  const [type, setType] = useState<Type.AnyEntity>();
   const tags = useQuery(db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     db,
@@ -39,39 +38,39 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
-    if (foundSchema && foundSchema !== schema) {
-      setSchema(() => foundSchema);
+    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
+    if (foundType && foundType !== type) {
+      setType(() => foundType);
     }
-  }, [client, db, view, schema]);
+  }, [client, db, view, type]);
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: EID.EID) => {
       if (!view || !db) {
         return;
       }
 
-      const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
+      const queue = target;
+      const query = queue ? Query.fromAst(newQuery).from([Scope.feed(queue)]) : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newSchema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
-      if (!newSchema) {
+      const newType = await resolveSchemaWithRegistry(db, query.ast);
+      if (!newType) {
         return;
       }
 
       const newView = ViewModel.make({
         query,
-        jsonSchema: JsonSchema.toJsonSchema(newSchema),
+        jsonSchema: newType.jsonSchema,
       });
       Obj.update(view, (view) => {
         view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 
-      setSchema(() => newSchema);
+      setType(() => newType);
     },
-    [view, schema],
+    [view, type],
   );
 
   const handleDelete = useCallback(
@@ -81,21 +80,21 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     [invokePromise, view],
   );
 
-  if (!db || !schema) {
+  if (!db || !type) {
     return null;
   }
 
   return (
     <NaturalViewEditor
-      registry={db.schemaRegistry}
-      schema={schema}
+      registry={db.graph.registry}
+      type={type}
       view={view}
       mode='tag'
       db={db}
       tags={tags}
       types={types}
       onQueryChanged={handleQueryChanged}
-      onDelete={Type.isMutable(schema) ? handleDelete : undefined}
+      onDelete={Type.getDatabase(type) != null ? handleDelete : undefined}
     />
   );
 };

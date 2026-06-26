@@ -23,14 +23,14 @@ export type PermissionsProps = {
 };
 
 export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (entries.length === 0) {
     return null;
   }
 
   return (
-    <Form.Section label={t('permissions.title')}>
+    <Form.Section title={t('permissions.title')}>
       <table className='w-full text-sm'>
         <thead>
           <tr className='text-left text-description'>

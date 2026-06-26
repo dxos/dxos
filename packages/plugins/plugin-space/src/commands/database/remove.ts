@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, print, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Query } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { printObjectRemoved } from './util';
 
@@ -30,11 +31,11 @@ export const remove = Command.make(
       if (Option.isSome(id)) {
         query = Query.select(Filter.id(id.value));
       } else if (Option.isSome(typename)) {
-        query = Query.select(Filter.typename(typename.value));
+        query = Query.select(Filter.type(DXN.make(typename.value)));
       } else {
         throw new Error('Must specify typename or id');
       }
-      const objects = yield* Database.runQuery(query);
+      const objects = yield* Database.query(query).run;
       for (const object of objects) {
         yield* Database.remove(object);
       }

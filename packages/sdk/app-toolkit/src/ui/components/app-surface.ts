@@ -3,13 +3,15 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj, Type } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../capabilities';
+import { AppCapabilities } from '../../app-framework';
 
 //
 // Internal type helpers
@@ -90,18 +92,20 @@ export const object: {
     token: TToken,
     schema: S,
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S> }>;
   <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S[number]> }>;
 } = (
   token: Surface.RoleToken<any>,
   schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
-  const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
+  const schemas = (Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas]) as Array<
+    Type.AnyObj | Type.AnyRelation
+  >;
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -109,20 +113,16 @@ export const object: {
     const subject = (data as { subject?: unknown }).subject;
     // Roles whose data contract (ArticleData, ObjectSectionData) requires a
     // string `attendableId`. The runtime guard enforces what the type-level
-    // contract declares, so Article/Section/Tabpanel filters only match data
-    // that can be fed to components which destructure `attendableId`.
-    if (
-      (token.role === 'article' || token.role === 'section' || token.role === 'tabpanel') &&
-      typeof (data as { attendableId?: unknown }).attendableId !== 'string'
-    ) {
+    // contract declares.
+    if (ATTENDABLE_ROLES.has(token.role) && typeof (data as { attendableId?: unknown }).attendableId !== 'string') {
       return false;
     }
-    if (!schemas.some((schema) => Obj.instanceOf(schema, subject))) {
+    if (!schemas.some((schema) => Entity.instanceOf(schema, subject))) {
       return false;
     }
     return predicate ? predicate(data) : true;
   };
-  return { bindings: [{ role: token.role, guard }] };
+  return Surface.makeFilter(token, guard);
 };
 
 /**
@@ -178,11 +178,11 @@ export const subject: {
  * Filter: matches when `data.subject` is an ECHO snapshot of the given schema.
  * Preserves the token's other data fields (e.g. Article/Section `attendableId`).
  */
-export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
+export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.Obj<any>>(
   token: TToken,
   schema: S,
 ): Surface.Filter<
-  Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Schema.Schema.Type<S>> }
+  Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Type.InstanceType<S>> }
 > => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -194,51 +194,46 @@ export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S 
 };
 
 /**
- * Filter: lifts an ad-hoc predicate into the typed filter world so it composes
- * via {@link allOf} on the same role as `token`.
- */
-export const predicate = <TData extends Record<string, unknown>>(
-  token: Surface.RoleToken<TData>,
-  fn: (data: TData) => boolean,
-): Surface.Filter<TData> => {
-  const guard = (data: unknown): boolean => {
-    try {
-      return fn(data as TData);
-    } catch {
-      return false;
-    }
-  };
-  return { bindings: [{ role: token.role, guard }] };
-};
-
-/**
  * Filter: requires `data.companionTo` to match the given schema, literal string,
- * or (with no second argument) any ECHO object. Pair with {@link allOf} and
- * {@link object} to express "article displaying X whose companion is Y".
+ * type predicate, or (with no second argument) any ECHO object. Pair with
+ * {@link allOf} and {@link object} to express "article displaying X whose companion is Y".
  */
 export const companion: {
   <TToken extends Surface.RoleToken<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
   <TToken extends Surface.RoleToken<any>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
-  ): Surface.Filter<{ companionTo: Schema.Schema.Type<S> }>;
+  ): Surface.Filter<{ companionTo: Type.InstanceType<S> }>;
   <TToken extends Surface.RoleToken<any>, T extends string>(
     token: TToken,
     value: T,
   ): Surface.Filter<{ companionTo: T }>;
-} = (token: Surface.RoleToken<any>, schemaOrValue?: Type.AnyEntity | string): Surface.Filter<any> => {
+  <TToken extends Surface.RoleToken<any>, T>(
+    token: TToken,
+    guard: (value: unknown) => value is T,
+  ): Surface.Filter<{ companionTo: T }>;
+} = (
+  token: Surface.RoleToken<any>,
+  schemaOrValueOrGuard?: Type.AnyEntity | string | ((value: unknown) => boolean),
+): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
     }
     const companionTo = (data as { companionTo?: unknown }).companionTo;
-    if (schemaOrValue === undefined) {
+    if (schemaOrValueOrGuard === undefined) {
       return Obj.isObject(companionTo);
     }
-    if (typeof schemaOrValue === 'string') {
-      return companionTo === schemaOrValue;
+    if (Type.isType(schemaOrValueOrGuard)) {
+      return Entity.instanceOf(schemaOrValueOrGuard as Type.AnyEntity, companionTo);
     }
-    return Obj.instanceOf(schemaOrValue, companionTo);
+    if (typeof schemaOrValueOrGuard === 'function') {
+      return schemaOrValueOrGuard(companionTo);
+    }
+    if (typeof schemaOrValueOrGuard === 'string') {
+      return companionTo === schemaOrValueOrGuard;
+    }
+    return false;
   };
   return { bindings: [{ role: token.role, guard }] };
 };
@@ -250,7 +245,7 @@ export const companion: {
 /** Role token for the `article` role. Subject defaults to `any` until narrowed
  * via {@link object}, {@link literal}, or {@link subject}. Extra passthrough
  * props are permitted. */
-export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('article');
+export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('org.dxos.role.article');
 
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
@@ -269,7 +264,7 @@ export type ArticleProps<Subject = unknown, Props extends {} = {}, CompanionTo =
   Props,
   CompanionTo
 > & {
-  role?: 'article' | (string & {});
+  role?: string;
 };
 
 /** Surface data for article-role ECHO object. */
@@ -285,28 +280,6 @@ export type ObjectArticleProps<
   Props extends {} = {},
   CompanionTo = unknown,
 > = ArticleProps<Subject, Props, CompanionTo>;
-
-/** Component props for article-role plugin settings. */
-export type SettingsArticleProps<T extends {}, Props extends {} = {}> = {
-  settings: T;
-  onSettingsChange?: (cb: (current: T) => T) => void;
-} & Props;
-
-/** Filter: matches a plugin-settings article by prefix. */
-export const settings = (
-  token: Surface.RoleToken<any>,
-  prefix: string,
-): Surface.Filter<{ subject: AppCapabilities.Settings }> => {
-  const guard = (data: unknown): boolean => {
-    if (typeof data !== 'object' || data === null) {
-      return false;
-    }
-
-    const subject = (data as { subject?: unknown }).subject;
-    return AppCapabilities.isSettings(subject) && subject.prefix === prefix;
-  };
-  return { bindings: [{ role: token.role, guard }] };
-};
 
 //
 // SpaceArticle
@@ -331,7 +304,45 @@ export type SpaceArticleData<Props extends {} = {}> = Omit<ArticleData<unknown>,
 
 /** Component props for an article whose container receives a resolved Space. */
 export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> & {
-  role?: 'article' | (string & {});
+  role?: string;
+};
+
+//
+// Settings
+//
+// Plugin settings render as article-role planks whose subject is an
+// `AppCapabilities.Settings` entry (the deck's PlankComponent dispatches every
+// plank under the `article` role). The `settings` filter narrows those planks
+// to a settings subject; `SettingsProps` is the contract a settings panel
+// component receives once `useSettingsState` has resolved the contributed atom.
+//
+
+/** Surface data for a plugin-settings article (subject is an `AppCapabilities.Settings` entry). */
+export type SettingsData<Props extends {} = {}> = {
+  subject: AppCapabilities.Settings;
+} & Props;
+
+/** Component props for a plugin-settings panel. */
+export type SettingsProps<T extends {}, Props extends {} = {}> = {
+  settings: T;
+  onSettingsChange?: (cb: (current: T) => T) => void;
+} & Props;
+
+/**
+ * Filter: matches a plugin-settings article. When `prefix` is omitted the
+ * filter matches any settings subject (used by the generic default settings
+ * surface); pass a `prefix` to match a single plugin's settings.
+ */
+export const settings = (token: Surface.RoleToken<any>, prefix?: string): Surface.Filter<SettingsData> => {
+  const guard = (data: unknown): boolean => {
+    if (typeof data !== 'object' || data === null) {
+      return false;
+    }
+
+    const subject = (data as { subject?: unknown }).subject;
+    return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
+  };
+  return { bindings: [{ role: token.role, guard }] };
 };
 
 //
@@ -339,20 +350,24 @@ export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> &
 //
 
 /** Role token for the `section` role. */
-export const Section: Surface.RoleToken<SectionData<any>> = Surface.makeType('section');
+export const Section: Surface.RoleToken<SectionData<any>> = Surface.makeType('org.dxos.role.section');
 
 /** Role token for the `slide` role. Shares the section data shape. */
-export const Slide: Surface.RoleToken<SectionData<any>> = Surface.makeType('slide');
+export const Slide: Surface.RoleToken<SectionData<any>> = Surface.makeType('org.dxos.role.slide');
 
 /** Role token for the `tabpanel` role. Shares the article data shape. */
-export const Tabpanel: Surface.RoleToken<ArticleData<any>> = Surface.makeType('tabpanel');
+export const Tabpanel: Surface.RoleToken<ArticleData<any>> = Surface.makeType('org.dxos.role.tabpanel');
+
+/** Roles whose data contract requires a string `attendableId`. */
+const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);
 
 /**
  * Role token for the `related` role. Related panels may render in both
  * plank (attendable) and popover (non-attendable) contexts, so `attendableId`
  * is optional here.
  */
-export const Related: Surface.RoleToken<{ attendableId?: string; subject: any }> = Surface.makeType('related');
+export const Related: Surface.RoleToken<{ attendableId?: string; subject: any }> =
+  Surface.makeType('org.dxos.role.related');
 
 /**
  * Surface data for section role (from StackSection). Sections always render
@@ -365,7 +380,7 @@ export type SectionData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for section role. */
 export type SectionProps<Subject = unknown, Props extends {} = {}> = SectionData<Subject, Props> & {
-  role?: 'section' | (string & {});
+  role?: string;
 };
 
 /** Surface data for section-role ECHO object. */
@@ -385,10 +400,12 @@ export type ObjectSectionProps<
 //
 
 /**
- * Role token for the `object-properties` role (per-object configuration panel).
+ * Role token for the `objectProperties` role (per-object configuration panel).
  * Distinct from Section: no `attendableId` requirement.
  */
-export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<any>> = Surface.makeType('object-properties');
+export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<any>> = Surface.makeType(
+  'org.dxos.role.objectProperties',
+);
 
 /** Surface data for object-properties surfaces (distinct from section; no attendableId). */
 export type ObjectPropertiesData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
@@ -400,15 +417,15 @@ export type ObjectPropertiesProps<
   Subject extends Obj.Unknown | undefined = Obj.Unknown,
   Props extends {} = {},
 > = ObjectPropertiesData<Subject, Props> & {
-  role?: 'object-properties' | (string & {});
+  role?: string;
 };
 
 //
 // Card
 //
 
-/** Role token for the `card--content` role. */
-export const Card: Surface.RoleToken<CardData<any>> = Surface.makeType('card--content');
+/** Role token for the card slot. */
+export const CardContent: Surface.RoleToken<CardData<any>> = Surface.makeType('org.dxos.role.cardContent');
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
@@ -423,7 +440,7 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for card role. */
 export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subject, Props> & {
-  role?: 'card--content' | (string & {});
+  role?: string;
 };
 
 /** Surface data for card-role ECHO object. */
@@ -443,10 +460,10 @@ export type ObjectCardProps<Subject extends Obj.Unknown | undefined = Obj.Unknow
 //
 
 /** Role token for the `dialog` role. */
-export const Dialog: Surface.RoleToken<DialogData> = Surface.makeType('dialog');
+export const Dialog: Surface.RoleToken<DialogData> = Surface.makeType('org.dxos.role.dialog');
 
 /** Role token for the `popover` role. */
-export const Popover: Surface.RoleToken<DialogData> = Surface.makeType('popover');
+export const Popover: Surface.RoleToken<DialogData> = Surface.makeType('org.dxos.role.popover');
 
 /**
  * Surface data for dialog/popover role.
@@ -503,26 +520,88 @@ export const component = <ComponentProps = any, Component extends string = strin
 //
 
 /** Role token for the `navigation` role. */
-export const Navigation: Surface.RoleToken<NavigationData> = Surface.makeType('navigation');
+export const Navigation: Surface.RoleToken<NavigationData> = Surface.makeType('org.dxos.role.navigation');
 
-/** Role token for the `menu-footer` role. */
-export const MenuFooter: Surface.RoleToken<MenuFooterData<unknown>> = Surface.makeType('menu-footer');
+/** Role token for the `menuFooter` role (was `menu-footer`). */
+export const MenuFooter: Surface.RoleToken<MenuFooterData<unknown>> = Surface.makeType('org.dxos.role.menuFooter');
 
-/** Role token for the `navbar-end` role. */
-export const NavbarEnd: Surface.RoleToken<NavbarEndData<unknown>> = Surface.makeType('navbar-end');
+/** Role token for the `navbarEnd` role (was `navbar-end`). */
+export const NavbarEnd: Surface.RoleToken<NavbarEndData<unknown>> = Surface.makeType('org.dxos.role.navbarEnd');
 
-/** Role token for the `document-title` role. */
-export const DocumentTitle: Surface.RoleToken<DocumentTitleData<unknown>> = Surface.makeType('document-title');
+/** Role token for the `documentTitle` role (was `document-title`). */
+export const DocumentTitle: Surface.RoleToken<DocumentTitleData<unknown>> =
+  Surface.makeType('org.dxos.role.documentTitle');
+
+/** Role token for the `statusIndicator` role (was `status-indicator`). */
+export const StatusIndicator: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
+  'org.dxos.role.statusIndicator',
+);
+
+/**
+ * Data passed to FormInput surface components by `useInputSurfaceLookup`.
+ * Extra fields from `baseData` are accessible as `unknown` via the index signature.
+ */
+export type FormInputData = {
+  prop: string;
+  schema: Schema.Schema.AnyNoContext;
+  fieldPropertyAst?: SchemaAST.AST;
+  [key: string]: unknown;
+};
+
+/** Role token for the `formInput` role (was `form-input`). */
+export const FormInput: Surface.RoleToken<FormInputData> = Surface.makeType('org.dxos.role.formInput');
+
+/** Filter FormInput surfaces by a typed data predicate. */
+export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, predicate);
+
+/** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
+export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
+
+/** Filter FormInput surfaces by a predicate on the schema's root AST. */
+export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, (data) => predicate(data.schema.ast));
+
+/** Surface data for navtree-item-end role. */
+export type NavtreeItemEndData<Subject = unknown> = {
+  id: string;
+  subject?: Subject;
+  open?: boolean;
+};
+
+/** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
+export const NavtreeItemEnd: Surface.RoleToken<NavtreeItemEndData> = Surface.makeType('org.dxos.role.navtreeItemEnd');
+
+/** Role token for the `searchInput` role (was `search-input`). */
+export const SearchInput: Surface.RoleToken<Record<string, unknown>> = Surface.makeType('org.dxos.role.searchInput');
+
+/**
+ * Creates a role token for a deck companion variant. Both the deck consumer
+ * (building the `<Surface type={...} />`) and contributing plugins (registering
+ * via `Surface.create({ filter: AppSurface.subject(AppSurface.deckCompanion(id), ...) })`)
+ * must call this factory with the same variant id so they agree on the dispatch NSID.
+ *
+ * Variant ids must be camelCase alphanumeric (DXN rule: no hyphens in the final segment).
+ */
+export const deckCompanion = (variant: string): Surface.RoleToken<{ subject?: any }> => {
+  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(variant)) {
+    throw new Error(
+      `Invalid deck companion variant id: "${variant}". Must be camelCase alphanumeric (no hyphens or underscores).`,
+    );
+  }
+  return Surface.makeType(`org.dxos.role.deckCompanion.${variant}` as any);
+};
 
 /** Surface data for navigation role. */
 export type NavigationData<Props extends {} = {}> = {
   popoverAnchorId?: string;
-  current?: string;
+  current: string;
 } & Props;
 
 /** Component props for navigation role. */
 export type NavigationProps<Props extends {} = {}> = NavigationData<Props> & {
-  role?: 'navigation' | (string & {});
+  role?: string;
 };
 
 /** Surface data for menu-footer role. */
@@ -532,7 +611,7 @@ export type MenuFooterData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for menu-footer role. */
 export type MenuFooterProps<Subject = unknown, Props extends {} = {}> = MenuFooterData<Subject, Props> & {
-  role?: 'menu-footer' | (string & {});
+  role?: string;
 };
 
 /** Surface data for navbar-end role. */
@@ -542,7 +621,7 @@ export type NavbarEndData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for navbar-end role. */
 export type NavbarEndProps<Subject = unknown, Props extends {} = {}> = NavbarEndData<Subject, Props> & {
-  role?: 'navbar-end' | (string & {});
+  role?: string;
 };
 
 /** Surface data for document-title role. */
@@ -552,5 +631,21 @@ export type DocumentTitleData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for document-title role. */
 export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = DocumentTitleData<Subject, Props> & {
-  role?: 'document-title' | (string & {});
+  role?: string;
 };
+
+/**
+ * Spy filter: logs the filter's bindings and data to the console.
+ */
+export const spyFilter = <TData>(label: string, filter: Surface.Filter<TData>): Surface.Filter<TData> => ({
+  bindings: filter.bindings.map((binding) => ({
+    role: binding.role,
+    guard: (data: unknown) => {
+      const result = binding.guard(data);
+      // Debug-gated and payload-free: this runs on every guard evaluation (hot path) and `data` may
+      // carry sensitive entity content.
+      log.debug(label, { role: binding.role, result, dataType: data == null ? String(data) : typeof data });
+      return result;
+    },
+  })),
+});

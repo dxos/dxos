@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Voxel } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Voxel.World.typename]: {
+      [Type.getTypename(Voxel.World)]: {
         'typename.label': 'Voxel World',
         'typename.label_zero': 'Voxel Worlds',
         'typename.label_one': 'Voxel World',
@@ -21,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete voxel world',
         'object-deleted.label': 'Voxel world deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Voxel',
       },
     },

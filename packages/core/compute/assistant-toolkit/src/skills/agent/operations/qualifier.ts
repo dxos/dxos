@@ -1,0 +1,97 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import { AiService } from '@dxos/ai';
+import { Operation } from '@dxos/compute';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { trim } from '@dxos/util';
+
+import { Plan, Agent } from '../../../types';
+import { Qualifier } from './definitions';
+
+const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ agent: agentRef, event }) {
+        const agent = yield* Database.load(agentRef);
+        invariant(Obj.instanceOf(Agent.Agent, agent));
+        invariant(agent.chat, 'Agent has no chat.');
+
+        const { id, name, feed: queue } = agent;
+        if (!queue) {
+          throw new Error('Agent has no queue.');
+        }
+
+        const chat = yield* Database.load(agent.chat);
+        const planText = chat.plan
+          ? yield* Database.load(chat.plan).pipe(
+              Effect.map(Plan.formatPlan),
+              Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
+            )
+          : 'No plan found.';
+        const instructions = yield* Database.load(agent.instructions);
+
+        const { value } = yield* Effect.scoped(
+          LanguageModel.generateObject({
+            schema: Schema.Struct({
+              isRelevant: Schema.Boolean,
+            }),
+            prompt: Prompt.fromMessages([
+              Prompt.systemMessage({
+                content: trim`
+                  You are a qualifying agent that determines if the event is relevant to the agent.
+                  Respond with true if the event is relevant to the agent, false otherwise.
+                  If you are not sure, return true.
+                  The qualified events will be forwarded to the larger agent that will process them.
+                  <agent id="${id}" name="${name}">
+                    <instructions>
+                    ${instructions.content}
+                    </instructions>
+                    <plan>
+                      ${planText}
+                    </plan>
+                  </agent>
+                `,
+              }),
+              Prompt.userMessage({
+                content: [
+                  Prompt.makePart('text', {
+                    text: trim`
+                      <event>
+                        ${JSON.stringify(event, null, 2)}
+                      </event>
+                    `,
+                  }),
+                ],
+              }),
+            ]),
+          }),
+        );
+
+        const { isRelevant } = value as { isRelevant: boolean };
+
+        if (isRelevant) {
+          const feedTarget = yield* Database.load(queue);
+          if ('feed' in event && event.item) {
+            const obj = event.item;
+            yield* Feed.append(feedTarget, [obj]);
+          } else if ('subject' in event && Ref.isRef(event.subject)) {
+            const obj = yield* Database.load(event.subject);
+            yield* Feed.append(feedTarget, [obj]);
+          } else {
+            throw new Error('Invalid event.');
+          }
+        }
+      },
+      Effect.provide(AiService.model('ai.claude.model.claude-sonnet-4-5')),
+    ),
+  ),
+);
+export default handler;

@@ -8,66 +8,77 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration';
+import { Ref, DXN } from '@dxos/echo';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
-const DISCORD_OPERATION = `${meta.id}.operation`;
-
-/** Wire-shape of a `RemoteTarget` for `GetDiscordChannels.output`. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
-});
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Discovery only — list Discord text channels across every guild the bot
- * belongs to and return one descriptor per channel.
+ * Discovery only — list Discord text channels across every guild the
+ * connection's token can reach and return one descriptor per channel.
  *
  * Read-only: returns one row per remote channel, NEVER creates a local
- * `Channel`. Materialization happens lazily in `SyncDiscordChannel` on first
- * sync of a target, so unselected channels leave no trace in the space.
+ * `Channel`. Local Channels are materialized eagerly when a binding is created
+ * (see `materializeTarget`), so unselected channels leave no trace in the space.
  */
 export const GetDiscordChannels = Operation.make({
   meta: {
-    key: `${DISCORD_OPERATION}.get-discord-channels`,
+    key: makeKey('getDiscordChannels'),
     name: 'Get Discord Channels',
-    description: 'List Discord text channels reachable from an integration without materializing local Channels.',
+    description: 'List Discord text channels reachable from a connection without materializing local Channels.',
+    icon: 'ph--hash--regular',
   },
   services: [Capability.Service],
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 /**
- * Pull-only sync of currently-selected Discord targets in an Integration.
+ * Find-or-create the empty local feed-backed `Channel` for a selected Discord
+ * channel so a {@link SyncBinding} relation can be created eagerly (relations
+ * require both endpoints to exist). Keyed by the Discord channel id foreign
+ * key, so it is idempotent across re-selection.
+ */
+export const MaterializeDiscordTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeDiscordTarget'),
+    name: 'Materialize Discord Target',
+    description: 'Create the empty local Channel bound to a selected Discord channel.',
+    icon: 'ph--hash--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
+
+/**
+ * Pull-only sync of the single Discord channel bound by a {@link SyncBinding}.
  *
- * For each selected channel: load (or create) a local `Channel` keyed by the
- * Discord channel id, ask Discord for messages newer than `target.cursor`,
- * and append them to the channel's feed as `@dxos/types` `Message` objects.
+ * Loads the binding, asks Discord for messages newer than `binding.cursor`,
+ * maps each into a `@dxos/types` `Message`, and appends them to the bound
+ * Channel's feed. Updates the binding's `cursor`/`lastSyncAt`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
-    key: `${DISCORD_OPERATION}.sync-discord-channel`,
+    key: makeKey('syncDiscordChannel'),
     name: 'Sync Discord Channel',
-    description: 'Reconcile messages for currently-selected Discord targets in an Integration.',
+    description: 'Reconcile messages for the Discord channel bound by a SyncBinding.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    /** Optional: narrow to a single target Channel. */
-    channel: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+    binding: Ref.Ref(SyncBinding.SyncBinding),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,
     }),
   }),
-});
+}).pipe(Operation.visible);

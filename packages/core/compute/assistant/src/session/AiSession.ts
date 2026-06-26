@@ -4,9 +4,8 @@
 
 // @import-as-namespace
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
@@ -15,19 +14,20 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
+import { type Skill, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Message, type ContentBlock } from '@dxos/types';
 
-import { ToolExecutionServices } from '../functions';
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
+import { ToolExecutionServices } from '../tool-runtime';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
+import * as Harness from './Harness';
+import { SessionLoader } from './SessionLoader';
 import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {
@@ -37,15 +37,23 @@ export type RunProps<R = never> = {
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 
   /**
-   * Space-level MCP servers to connect alongside blueprint-defined ones.
+   * Space-level MCP servers to connect alongside skill-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
+
+  /**
+   * When false, messages from this request are not appended to the feed or persisted to trace.
+   *
+   * @default true
+   */
+  persist?: boolean;
 };
 
 export type Options = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Feed.FeedService>;
-  registry?: Registry.Registry;
+  runtime: Runtime.Runtime<Database.Service>;
+  /** @effect-atom/atom-react Registry for reactive state. */
+  registry?: AtomRegistry.Registry;
 };
 
 /**
@@ -60,11 +68,12 @@ const SUMMARY_THRESHOLD = 80_000;
  */
 export class Session extends Resource {
   /**
-   * Blueprints and objects bound to the session.
+   * Skills and objects bound to the session.
    */
   private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  private readonly _sessionLoader = new SessionLoader();
 
   public constructor(options: Options) {
     super();
@@ -94,7 +103,8 @@ export class Session extends Resource {
   public async getHistory(): Promise<Message.Message[]> {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
-    return items.filter(Obj.instanceOf(Message.Message));
+    const messages = items.filter(Obj.instanceOf(Message.Message));
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, messages));
   }
 
   getTools(): Effect.Effect<
@@ -103,7 +113,7 @@ export class Session extends Resource {
     ToolExecutionService | ToolResolverService
   > {
     return Effect.gen(this, function* () {
-      const toolkit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
+      const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
   }
@@ -114,10 +124,10 @@ export class Session extends Resource {
   makeToolExecutionServices(): Layer.Layer<
     ToolExecutionService | ToolResolverService,
     never,
-    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | OperationRegistry.Service
+    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | Registry.Service
   > {
     return ToolExecutionServices.pipe(
-      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() })),
+      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) })),
     );
   }
 
@@ -129,51 +139,57 @@ export class Session extends Resource {
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
-      const blueprints = this.context.getBlueprints();
+      const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
       log('run', {
         history: history.length,
-        blueprints: blueprints.length,
+        skills: skills.length,
         objects: objects.length,
       });
 
       const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
+        persist: params.persist,
         onOutput: (message) =>
           Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
       });
 
       yield* request.begin({
         history,
-        blueprints,
+        skills,
         objects,
         prompt: params.prompt,
         system: params.system,
       });
 
-      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled blueprints.
+      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       do {
         yield* Effect.promise(() => this.context.sync());
-        const currentBlueprints = this.context.getBlueprints();
-        const mcps = yield* connectMcpServers(currentBlueprints, params.mcpServers);
+        const currentSkills = this.context.getSkills();
+        const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
-          blueprints: currentBlueprints,
+          skills: currentSkills,
           opaqueToolkits: mcps,
         });
 
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
-          blueprints: currentBlueprints,
+          skills: currentSkills,
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* request.runAgentTurn({ system, toolkit });
+        const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
           break;
+        }
+        // A paused server-tool turn (e.g. Anthropic `pause_turn`) resumes with another request and
+        // no local tool execution; the trailing server tool call must be left intact for the provider.
+        if (finishReason === 'pause') {
+          continue;
         }
 
         yield* request.runTools({ toolkit });
@@ -189,11 +205,14 @@ export class Session extends Resource {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          Layer.succeed(AiContext.Service, {
-            binder: this.context,
-          }),
-          Layer.succeed(Service, this),
-          Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() }),
+          // Tier A only: the agent's own turn fiber has no `ProcessManager.Service` in scope, so
+          // Tier B (setAlarm/enqueueMessage) is reachable only by child operations through the
+          // process-affinity HarnessService LayerSpec — not from here.
+          Layer.succeed(
+            Harness.HarnessService,
+            Harness.fromBinder({ feed: this._feed, runtime: this._runtime, binder: this.context }),
+          ),
+          Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) }),
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
@@ -201,68 +220,12 @@ export class Session extends Resource {
   }
 }
 
-/**
- * Gives access to the ai session.
- */
-export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Service, Session>() {
-  /**
-   * Create a new session layer from options.
-   */
-  static layer = (options: Options): Layer.Layer<Service | AiContext.Service> =>
-    aiContextFromSession.pipe(
-      Layer.provideMerge(
-        Layer.scoped(
-          Service,
-          Effect.gen(function* () {
-            const session = yield* acquireReleaseResource(() => new Session(options));
-            return session;
-          }),
-        ),
-      ),
-    );
-
-  /**
-   * Create a new session with a new feed.
-   */
-  static layerNewFeed = (
-    options?: Omit<Options, 'feed' | 'runtime'>,
-  ): Layer.Layer<Service | AiContext.Service, never, Database.Service | Feed.FeedService> =>
-    Layer.unwrapScoped(
-      Effect.gen(function* () {
-        const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
-        return Service.layer({ ...options, feed, runtime });
-      }),
-    );
-
-  /**
-   * Run a prompt in the current session.
-   */
-  static run = <R = never>(
-    params: RunProps<R>,
-  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | Service | R> =>
-    Effect.gen(function* () {
-      const session = yield* Service;
-      return yield* session.createRequest(params);
-    });
-}
-
-const aiContextFromSession = Layer.effect(
-  AiContext.Service,
-  Effect.gen(function* () {
-    const session = yield* Service;
-    return {
-      binder: session.context,
-    };
-  }),
-);
-
 const connectMcpServers = (
-  blueprints: readonly Blueprint.Blueprint[],
+  skills: readonly Skill.Skill[],
   spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
-  const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
-    blueprints,
+  const skillServers: McpToolkit.McpToolkitOptions[] = pipe(
+    skills,
     Array.flatMap((_) => _.mcpServers ?? []),
     Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
@@ -271,7 +234,7 @@ const connectMcpServers = (
     protocol,
     apiKey,
   }));
-  const allServers = [...blueprintServers, ...spaceServers];
+  const allServers = [...skillServers, ...spaceServers];
 
   return pipe(
     allServers,

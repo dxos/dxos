@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-toolkit",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Composer-specific capabilities, plugin helpers, and playground for building Composer plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,20 +19,25 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
+      "workerd": "./dist/lib/browser/index.mjs",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./workerd": {
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/browser/index.mjs"
+    },
     "./events": {
-      "source": "./src/activation-events.ts",
-      "types": "./dist/types/src/activation-events.d.ts",
-      "browser": "./dist/lib/browser/activation-events.mjs",
-      "node": "./dist/lib/node-esm/activation-events.mjs"
+      "source": "./src/app-framework/AppActivationEvents.ts",
+      "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
+      "browser": "./dist/lib/browser/app-framework/AppActivationEvents.mjs",
+      "node": "./dist/lib/node-esm/app-framework/AppActivationEvents.mjs"
     },
     "./query": {
-      "source": "./src/query.ts",
-      "types": "./dist/types/src/query.d.ts",
-      "browser": "./dist/lib/browser/query.mjs",
-      "node": "./dist/lib/node-esm/query.mjs"
+      "source": "./src/echo/Query.ts",
+      "types": "./dist/types/src/echo/Query.d.ts",
+      "browser": "./dist/lib/browser/echo/Query.mjs",
+      "node": "./dist/lib/node-esm/echo/Query.mjs"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
@@ -51,12 +56,16 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -71,6 +80,8 @@
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

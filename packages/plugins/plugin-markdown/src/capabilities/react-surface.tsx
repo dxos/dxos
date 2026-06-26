@@ -10,6 +10,7 @@ import {
   Surface,
   useAtomCapability,
   useAtomCapabilityState,
+  useCapabilities,
   useCapability,
   useSettingsState,
 } from '@dxos/app-framework/ui';
@@ -18,9 +19,15 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
+import { Position } from '@dxos/util';
 
-import { MarkdownSettings } from '#components';
-import { MarkdownCard, EditableMarkdownCard, MarkdownArticle, type MarkdownArticleProps } from '#containers';
+import {
+  MarkdownCard,
+  EditableMarkdownCard,
+  MarkdownArticle,
+  MarkdownSettings,
+  type MarkdownArticleProps,
+} from '#containers';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
@@ -30,17 +37,19 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Markdown.Document, (data) => !data.variant),
+          AppSurface.object(AppSurface.Section, Markdown.Document),
+          AppSurface.object(AppSurface.Tabpanel, Markdown.Document, (data) => !data.variant),
+        ),
         component: ({ data, role, ref }) => {
           return (
             <Container
-              id={Obj.getDXN(data.subject).toString()}
+              id={Obj.getURI(data.subject)}
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
-              ref={ref}
+              ref={ref as React.Ref<HTMLDivElement>}
             />
           );
         },
@@ -57,18 +66,18 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => {
           return (
             <Container
-              id={Obj.getDXN(data.subject).toString()}
+              id={Obj.getURI(data.subject)}
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
-              ref={ref}
+              ref={ref as React.Ref<HTMLDivElement>}
             />
           );
         },
       }),
       Surface.create({
-        id: 'surface.plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        id: 'surface.pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -76,13 +85,21 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.editable',
-        position: 'first',
-        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
+        position: Position.first,
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          [Markdown.Document, Text.Text],
+          (data) => data.editable === true,
+        ),
         component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
       }),
       Surface.create({
         id: 'surface.preview',
-        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable !== true),
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          [Markdown.Document, Text.Text],
+          (data) => data.editable !== true,
+        ),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),
@@ -96,11 +113,11 @@ const Container = forwardRef<
   HTMLDivElement,
   AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
 >(({ id, attendableId, subject, role }, forwardedRef) => {
-  const selectionManager = useCapability(AttentionCapabilities.Selection);
+  const viewState = useCapability(AttentionCapabilities.ViewState);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
   const editorState = useCapability(MarkdownCapabilities.EditorState);
-  const extensions = useCapability(MarkdownCapabilities.Extensions);
+  const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
   const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
   const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
@@ -116,7 +133,7 @@ const Container = forwardRef<
       id={id}
       attendableId={attendableId}
       settings={settings}
-      selectionManager={selectionManager}
+      viewState={viewState}
       extensionProviders={extensionProviders}
       editorStateStore={editorState}
       viewMode={viewMode}

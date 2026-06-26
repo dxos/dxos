@@ -14,9 +14,9 @@ export type DayAheadProps = {
 };
 
 export const DayAhead = ({ summary }: DayAheadProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
-    <Form.Section label={t('day-ahead.title')}>
+    <Form.Section title={t('day-ahead.title')}>
       {summary ? (
         <p className='text-sm text-description whitespace-pre-wrap'>{summary}</p>
       ) : (

@@ -47,7 +47,7 @@ const SAMPLE_TOOLS: Tool[] = [
   {
     id: 'list_schemas',
     title: 'List schemas',
-    description: 'List ECHO-registered types — anything passing through Type.object({ typename, version }).',
+    description: 'List ECHO-registered types — anything passing through Type.makeObject({ typename, version }).',
   },
 ];
 
@@ -100,7 +100,9 @@ const Playground = () => {
   return (
     <div className={GRID_LAYOUT}>
       <PaneTools>
-        <ToolList.Root tools={SAMPLE_TOOLS} selectedId={selectedId} onSelect={setSelectedId} />
+        <ToolList.Root selectedId={selectedId} onSelect={setSelectedId}>
+          <ToolList.Content tools={SAMPLE_TOOLS} />
+        </ToolList.Root>
       </PaneTools>
 
       <PaneForm>
@@ -188,12 +190,15 @@ export const TitlesOnly: Story = {
   render: () => (
     <div className={GRID_LAYOUT}>
       <PaneTools>
-        <ToolList.Root tools={SAMPLE_TOOLS} selectedId={SAMPLE_TOOLS[0].id}>
-          {(tool) => (
-            <ToolList.Item key={tool.id} tool={tool}>
-              <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
-            </ToolList.Item>
-          )}
+        <ToolList.Root selectedId={SAMPLE_TOOLS[0].id}>
+          <ToolList.Content
+            tools={SAMPLE_TOOLS}
+            renderItem={(tool) => (
+              <ToolList.Item key={tool.id} tool={tool}>
+                <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
+              </ToolList.Item>
+            )}
+          />
         </ToolList.Root>
       </PaneTools>
       <PaneForm>

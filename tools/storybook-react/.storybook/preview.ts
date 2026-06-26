@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import './suppress-storybook-deprecation-warnings';
+
 // Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
 // Pre-populating this set prevents Lit from issuing the warning on load.
 (globalThis as any).litIssuedWarnings ??= new Set();
@@ -58,11 +60,6 @@ export const preview: Preview = {
       source: {
         type: 'code',
       },
-    },
-
-    // Disables Chromatic's snapshotting on a global level.
-    chromatic: {
-      disableSnapshot: true,
     },
 
     options: {

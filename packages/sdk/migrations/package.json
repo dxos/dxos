@@ -1,6 +1,6 @@
 {
   "name": "@dxos/migrations",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,14 +30,13 @@
     "@automerge/automerge-repo": "catalog:",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:"
+    "@effect-atom/atom": "catalog:",
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

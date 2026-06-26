@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 // `/plugin` entrypoints used here for the same reason as `corePlugins()` —
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.
@@ -22,11 +22,11 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useType, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
-import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
@@ -91,36 +91,35 @@ const DefaultComponent = () => {
   const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
   const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
   const view = viewRef?.target;
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space?.db, typename);
-  const projection = useProjectionModel(schema, kanban, registry);
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const type = useType(space?.db, typeUri);
+  const projection = useProjectionModel(type, kanban, registry);
 
   const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
-      invariant(schema);
+      invariant(type);
       invariant(view);
-      if (Type.isMutable(schema)) {
-        schema.updateTypename(getTypenameFromQuery(newQuery));
-      }
+      // NOTE: persisted Type.Type typename is immutable; only the view's
+      // query is updated here.
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [view, schema],
+    [view, type],
   );
 
   const handleDeleteField = useCallback(
     (fieldId: string) => {
-      if (schema && Type.isMutable(schema) && projection) {
+      if (type && Type.getDatabase(type) != null && projection) {
         projection.deleteFieldProjection(fieldId);
       }
     },
-    [schema, projection],
+    [type, projection],
   );
 
-  if (!schema || !view) {
+  if (!type || !view) {
     return null;
   }
 
@@ -129,13 +128,13 @@ const DefaultComponent = () => {
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
-          registry={space?.db.schemaRegistry}
-          schema={schema}
+          registry={space?.db.graph.registry}
+          type={type}
           view={view}
           onQueryChanged={handleUpdateQuery}
-          onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
+          onDelete={type && Type.getDatabase(type) != null ? handleDeleteField : undefined}
         />
-        <Syntax.Root data={{ view, schema }}>
+        <Syntax.Root data={{ view, schema: Type.getSchema(type) }}>
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>
@@ -178,7 +177,7 @@ export const Default: Story = {
       onSpaceCreated: async (space) => {
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: Organization.Organization.typename,
+          typename: Type.getTypename(Organization.Organization),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });
@@ -222,7 +221,7 @@ export const Default: Story = {
     await expect(activeCards.length).toBeGreaterThan(0);
     await expect(prospectCards.length).toBeGreaterThan(0);
 
-    // Verify cards have drag handles (Card.Toolbar includes drag handle).
+    // Verify cards have drag handles (Card.Header includes drag handle).
     const firstActiveCard = activeCards[0];
     const buttons = firstActiveCard.querySelectorAll('button');
     await expect(buttons.length).toBeGreaterThan(0);
@@ -239,7 +238,7 @@ export const Default: Story = {
 };
 
 /**
- * Story variant that uses a mutable database schema (EchoSchema).
+ * Story variant that uses a database-stored Type.Type entity (mutable schema).
  * This allows testing schema mutations like adding/removing fields.
  */
 // TODO(wittjosiah): Card previews (e.g., OrganizationCard) are type-specific and hard-coded.
@@ -250,12 +249,14 @@ export const MutableSchema: Story = {
   decorators: [
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
-        // Register schema in the database to make it mutable (EchoSchema).
-        const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
+        // Persist the schema in the database to make it mutable (stored Type.Type).
+        const type = await space.db.addType(Organization.Organization);
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: schema.typename,
+          // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the
+          // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
+          typename: Type.getTypename(type),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });
@@ -269,7 +270,7 @@ export const MutableSchema: Story = {
           ...Array.from({ length: 1 }, () => createOrg('commit')),
           ...Array.from({ length: 1 }, () => createOrg('reject')),
         ];
-        requiredOrgs.forEach((org) => space.db.add(Obj.make(schema, org)));
+        requiredOrgs.forEach((org) => space.db.add(Obj.make(type, org)));
       },
     }),
   ],

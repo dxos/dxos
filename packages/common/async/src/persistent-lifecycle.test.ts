@@ -57,6 +57,42 @@ describe('ConnectionState', () => {
     expect(timeToTrigger).to.be.greaterThanOrEqual(100);
   });
 
+  test('connection that drops immediately backs off instead of hot-looping', async () => {
+    const startTimes: number[] = [];
+    const maxStarts = 4;
+    const done = new Trigger();
+
+    const persistentLifecycle = new PersistentLifecycle({
+      start: async () => {
+        startTimes.push(Date.now());
+        if (startTimes.length >= maxStarts) {
+          done.wake();
+        }
+      },
+      stop: async () => {},
+      // Simulate the connection dropping the moment it is established.
+      onRestart: async () => {
+        if (startTimes.length < maxStarts) {
+          void persistentLifecycle.scheduleRestart();
+        }
+      },
+    });
+
+    await persistentLifecycle.open();
+    onTestFinished(async () => {
+      await persistentLifecycle.close();
+    });
+
+    // The initial open already performed the first start; simulate its immediate drop.
+    void persistentLifecycle.scheduleRestart();
+    await done.wait({ timeout: 5000 });
+
+    // Successive reconnects must back off (~0, ~100, ~200ms), not fire back-to-back.
+    const gaps = startTimes.slice(1).map((time, index) => time - startTimes[index]);
+    expect(gaps[1]).to.be.greaterThanOrEqual(90);
+    expect(gaps[2]).to.be.greaterThanOrEqual(180);
+  });
+
   test('finish `restart` before close', async () => {
     let restarted = false;
     const persistentLifecycle = new PersistentLifecycle({

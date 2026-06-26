@@ -7,9 +7,8 @@ import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
-import type { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
-import type { Database, Feed } from '@dxos/echo';
-import type { QueueService } from '@dxos/functions';
+import type { Credential, Operation, Trace } from '@dxos/compute';
+import type { Database, Registry } from '@dxos/echo';
 import { mapValues } from '@dxos/util';
 
 import { type ComputeNodeContext } from './compute-events';
@@ -104,13 +103,11 @@ export type ComputeRequirements =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
-  | QueueService
-  | Feed.FeedService
   | Trace.TraceService
   | ComputeNodeContext
   | Scope.Scope
   | Operation.Service
-  | OperationRegistry.Service;
+  | Registry.Service;
 
 /**
  * For results of compute functions.

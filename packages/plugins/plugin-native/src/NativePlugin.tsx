@@ -10,6 +10,9 @@ import { NativeSettings, Ollama, ReactSurface, SpotlightListener, Updater } from
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const NativePlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: NativeSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
@@ -28,6 +31,9 @@ export const NativePlugin = Plugin.define(meta).pipe(
     id: 'ollama',
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: Ollama,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -7,15 +7,17 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { raise } from '@dxos/debug';
-import { type JsonPath, getField } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
+import type * as Annotation from '../../Annotation';
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { type AnnotationHelper, createAnnotationHelper } from './util';
+import { createAnnotationHelper } from './util';
+
+const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
 /**
  * @internal
@@ -35,7 +37,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
 
 /**
  * ECHO identifier (for a stored schema).
- * Must be a `dxn:echo:` URI.
+ * Must be an `echo:` URI.
  */
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 
@@ -46,39 +48,27 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
   )(schema.ast);
 
 /**
- * @returns DXN of the schema.
+ * @returns The schema's type identifier URI — whichever URI fits.
  *
- * For non-stored schema returns `dxn:type:`.
- * For stored schema returns `dxn:echo:`.
+ * - Stored (dynamic) schemas: the schema-as-object's EID, so loaded objects ride
+ *   along with their schema as a strong dependency.
+ * - Non-stored (static) schemas: the typename DXN built from `TypeAnnotation`.
+ *
+ * This URI is what gets written to an object's `system.type`; queries that filter by
+ * type also use it (see `Filter.type` / `getTypeURIFromSpecifier`), so both sides
+ * stay symmetric without per-schema branching.
  */
-export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
-    return DXN.parse(id);
+    return URI.make(id);
   }
-
-  // TODO(dmaretskyi): Add support for dynamic schema.
   const objectAnnotation = getTypeAnnotation(schema);
-  if (!objectAnnotation) {
-    return undefined;
+  if (objectAnnotation) {
+    return DXN.make(objectAnnotation.typename, objectAnnotation.version);
   }
-
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
-};
-
-/**
- * @param input schema or a typename string.
- * @return type DXN.
- */
-export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
-  if (Schema.isSchema(input)) {
-    return getSchemaDXN(input) ?? raise(new TypeError('Schema has no DXN'));
-  } else {
-    assertArgument(typeof input === 'string', 'input');
-    assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.fromTypename(input);
-  }
+  return undefined;
 };
 
 //
@@ -186,8 +176,15 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     // Try to extract typename from DXN.
     return getSchemaTypename(schema);
   } else {
-    const type = getTypeDXN(obj);
-    return type?.asTypeDXN()?.type;
+    // `obj` may be an arbitrary value (e.g. from `isInstanceOf`); read TypeId
+    // directly so we return undefined for non-entities instead of throwing.
+    const type = (obj as any)?.[TypeId];
+    // Parse the URI string to extract typename.
+    if (DXN.isDXN(type)) {
+      const parsed = DXN.tryMake(type);
+      return parsed && DXN.getName(parsed);
+    }
+    return undefined;
   }
 };
 
@@ -195,8 +192,8 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  * @internal (use Type.setTypename)
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
-export const setTypename = (obj: any, typename: DXN): void => {
-  invariant(typename instanceof DXN, 'Invalid type.');
+export const setTypename = (obj: any, typename: URI.URI): void => {
+  assertArgument(typeof typename === 'string', 'typename', 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,
@@ -206,66 +203,23 @@ export const setTypename = (obj: any, typename: DXN): void => {
 };
 
 /**
- * @returns Object type as {@link DXN}.
- * @returns undefined if the object doesn't have a type.
+ * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
+ * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
+ * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
- * @internal (use Obj.getTypeDXN)
+ * @internal (use Obj.getTypeURI)
  */
-// TODO(burdon): Narrow type.
-export const getTypeDXN = (obj: AnyProperties): DXN | undefined => {
-  if (!obj) {
+export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
+  if (obj == null) {
     return undefined;
   }
-
   const type = (obj as any)[TypeId];
-  if (!type) {
+  if (type == null) {
     return undefined;
   }
-
-  invariant(type instanceof DXN, 'Invalid object.');
+  invariant(URI.isURI(type), 'Invalid object.');
   return type;
-};
-
-/**
- * Checks if the object is an instance of the schema.
- * Only typename is compared, the schema version is ignored.
- *
- * The following cases are considered to mean that the object is an instance of the schema:
- *  - Object was created with this exact schema.
- *  - Object was created with a different version of this schema.
- *  - Object was created with a different schema (maybe dynamic) that has the same typename.
- */
-// TODO(burdon): Can we use `Schema.is`?
-export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
-  schema: Schema,
-  object: any,
-): object is Schema.Schema.Type<Schema> => {
-  if (object == null) {
-    return false;
-  }
-
-  const schemaDXN = getSchemaDXN(schema);
-  if (!schemaDXN) {
-    throw new Error('Schema must have an object annotation.');
-  }
-
-  const type = getTypeDXN(object);
-  if (type && DXN.equals(type, schemaDXN)) {
-    return true;
-  }
-
-  const typename = getTypename(object);
-  if (!typename) {
-    return false;
-  }
-
-  const typeDXN = schemaDXN.asTypeDXN();
-  if (!typeDXN) {
-    return false;
-  }
-
-  return typeDXN.type === typename;
 };
 
 //
@@ -286,6 +240,12 @@ export type PropertyMetaAnnotation = {
 
 // TODO(wittjosiah): Align with other annotations.
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
+/**
+ * Apply property-level metadata to an Effect schema. Only accepts
+ * `Schema.Schema.Any` — apply BEFORE wrapping the schema with
+ * `Type.makeObject` / `Type.makeRelation`. To read property meta off a
+ * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
+ */
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
@@ -323,10 +283,10 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as a schema for a hidden system type.
+ * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
  */
-export const SystemTypeAnnotationId = Symbol.for('@dxos/schema/annotation/SystemType');
-export const SystemTypeAnnotation = createAnnotationHelper<boolean>(SystemTypeAnnotationId);
+export const HiddenAnnotationId = Symbol.for('@dxos/schema/annotation/Hidden');
+export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
 
 /**
  * Identifies label property or JSON path expression.
@@ -340,7 +300,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Lower-level version that requires explicit schema parameter.
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
-// TODO(burdon): Convert to JsonPath?
+// TODO(burdon): Convert to SchemaEx.JsonPath?
 export const getLabelWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
@@ -352,7 +312,7 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
       'accessor',
       'Label annotation must be a string or an array of strings',
     );
-    const value = getField(object, accessor as JsonPath);
+    const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
     switch (typeof value) {
       case 'string': {
         const trimmed = value.trim();
@@ -403,14 +363,14 @@ export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionA
  * Returns the description for a given object based on {@link DescriptionAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-// TODO(burdon): Convert to JsonPath?
+// TODO(burdon): Convert to SchemaEx.JsonPath?
 export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
   const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
   assertArgument(typeof accessor === 'string', 'accessor', 'Description annotation must be a string');
-  const value = getField(object, accessor as JsonPath);
+  const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
   switch (typeof value) {
     case 'string':
     case 'number':
@@ -447,6 +407,64 @@ export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInp
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
+ * When set on a `Ref` property, the form renders the referenced object's own
+ * fields inline (a nested form bound to the target) instead of a picker.
+ */
+export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormInline');
+export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
+
+/**
+ * When set on a `Ref` (or array-of-`Ref`) property, the form OWNS the referenced target(s): "add" creates a
+ * new object of the annotation's typename (instead of opening the existing-object picker) and each target is
+ * rendered inline — its own fields — like {@link FormInlineAnnotation}. The target typename is carried here
+ * (rather than inferred from the element type) so the field can stay `Ref.Ref(Obj.Unknown)` and avoid pulling
+ * the target's type (e.g. query-AST-laden `Trigger`) into the schema's emitted declaration.
+ */
+export const FormCreateAnnotationId = Symbol.for('@dxos/schema/annotation/FormCreate');
+export const FormCreateAnnotation = createAnnotationHelper<string>(FormCreateAnnotationId);
+
+/**
+ * When set on an array property, the form renders it as an ordered,
+ * drag-to-reorder list (drag handles per row). Element order is meaningful and
+ * user-controllable; reordering rewrites the array.
+ */
+export const FormOrderedAnnotationId = Symbol.for('@dxos/schema/annotation/FormOrdered');
+export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
+
+/**
+ * Annotation carrying one or more named layout DSL templates that control how a
+ * form arranges a schema's fields (consumed by `@dxos/react-ui-form`'s
+ * `Form.Layout` / `Form.FieldSet`). Callers select a variant by name; the
+ * implicit name is `DEFAULT_LAYOUT_NAME` (`'default'`).
+ *
+ * Templates use a minimal XML grammar. Example:
+ *
+ *   FormLayoutAnnotation.set({
+ *     default: `
+ *       <grid cols="2">
+ *         <field name="origin"/>
+ *         <field name="destination"/>
+ *         <field name="provider" span="2"/>
+ *       </grid>
+ *     `,
+ *     card: `
+ *       <grid cols="1">
+ *         <field name="provider"/>
+ *         <field name="number"/>
+ *       </grid>
+ *     `,
+ *   })
+ */
+export const FormLayoutAnnotationId = Symbol.for('@dxos/react-ui-form/annotation/Layout');
+
+export type FormLayoutMap = Record<string, string>;
+
+export const FormLayoutAnnotation = createAnnotationHelper<FormLayoutMap>(FormLayoutAnnotationId);
+
+/** Name used when no explicit form-layout variant is requested. */
+export const DEFAULT_LAYOUT_NAME = 'default';
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
@@ -471,26 +489,29 @@ interface MakeAnnoationsProps<T> {
   schema: Schema.Schema<T, any, never>;
 }
 
-// TODO(wittjosiah): Comment.
-export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
+// Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
+// dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
+// At least 3 segments are required (e.g. org.dxos.annotation.example).
+export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
   assertArgument(
-    /^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/.test(props.id),
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
+      props.id,
+    ),
     'id',
-    'Annotation id must be in the FQN format (org.dxos.annotation.example).',
+    'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection).',
   );
 
-  const getFromAst = (ast: SchemaAST.AST) =>
-    SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
-      Option.map(Schema.decodeUnknownSync(props.schema)),
-    );
-
-  return {
-    get: (schema) => getFromAst(schema.ast),
-    getFromAst: (ast) => getFromAst(ast),
+  const annotation: Annotation.Annotation<T> = {
+    [ANNOTATION_TYPE_ID]: { _Type: {} as T },
+    key: props.id as Annotation.Key,
+    schema: props.schema,
+    get: (schema) => getFromAst(schema.ast, annotation),
+    getFromAst: (ast) => getFromAst(ast, annotation),
     set: (value) =>
       PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
   };
+
+  return annotation;
 };
 
 const IconAnnotationSchema = Schema.Struct({
@@ -518,7 +539,6 @@ const IconAnnotationSchema = Schema.Struct({
    *  - 'pink'
    *  - 'rose'
    */
-
   hue: Schema.optional(Schema.String),
 });
 
@@ -546,14 +566,35 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
 });
 
 /**
+ * Options for {@link getLabel}.
+ */
+export type GetLabelOptions = {
+  /**
+   * Strategy for deriving a label when the entity has no `LabelAnnotation` value.
+   * - `'typename'`: use the entity's typename (e.g. `org.dxos.type.table`).
+   *   Useful for Card.Title chrome that must always display something, even
+   *   for unlabeled objects.
+   */
+  fallback?: 'typename';
+};
+
+/**
  * Get the label of an entity.
  * Accepts both reactive entities and snapshots.
+ *
+ * If `options.fallback === 'typename'` and no label is set, returns the
+ * entity's typename instead.
  */
-export const getLabel = (entity: AnyProperties): string | undefined => {
+export const getLabel = (entity: AnyProperties, options?: GetLabelOptions): string | undefined => {
   const schema = getSchema(entity);
-  if (schema != null) {
-    return getLabelWithSchema(schema, entity);
+  const label = schema != null ? getLabelWithSchema(schema, entity) : undefined;
+  if (label != null) {
+    return label;
   }
+  if (options?.fallback === 'typename') {
+    return getTypename(entity);
+  }
+  return undefined;
 };
 
 /**
@@ -568,6 +609,21 @@ export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
 };
 
 /**
+ * Returns the primary label property key for an entity.
+ * Reads the first accessor from {@link LabelAnnotation}, defaulting to 'name'.
+ */
+export const getLabelProperty = (entity: AnyProperties): string => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return 'name';
+  }
+  return LabelAnnotation.get(schema).pipe(
+    Option.flatMap((fields) => Option.fromNullable(fields[0])),
+    Option.getOrElse(() => 'name'),
+  );
+};
+
+/**
  * Get the description of an entity.
  * Accepts both reactive entities and snapshots.
  */
@@ -579,6 +635,26 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 };
 
 /**
+ * Get the icon annotation for an entity, resolved via its type-level `IconAnnotation`.
+ * Accepts both reactive entities and snapshots.
+ *
+ * Returns the full `{ icon, hue }` annotation so callers can use both the phosphor icon
+ * name and the suggested colour. Callers wanting just the icon name typically write
+ * `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
+ *
+ * Note: this is the "static" icon from the object's own schema. It does not follow
+ * `IconFromRefAnnotation` delegation — call sites needing that (e.g. app-graph node
+ * builders) should resolve the ref themselves.
+ */
+export const getIcon = (entity: AnyProperties): IconAnnotation | undefined => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return undefined;
+  }
+  return Option.getOrUndefined(IconAnnotation.get(schema));
+};
+
+/**
  * Set the description of an entity.
  * Must be called within an Obj.update or Relation.update callback.
  */
@@ -587,4 +663,13 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   if (schema != null) {
     setDescriptionWithSchema(schema, entity, description);
   }
+};
+
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+
+export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+  return SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
+    Option.flatMap((meta) => Option.fromNullable(meta[annotation.key])),
+    Option.map(Schema.decodeUnknownSync(annotation.schema)),
+  );
 };

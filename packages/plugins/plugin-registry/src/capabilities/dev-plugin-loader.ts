@@ -29,7 +29,7 @@ export default Capability.makeModule(
 
     log.info('loading dev plugin from registry settings', { url });
     yield* manager.add(url).pipe(
-      Effect.flatMap((plugin) => manager.enable(plugin.meta.id)),
+      Effect.flatMap((plugin) => manager.enable(plugin.meta.profile.key)),
       Effect.tapError((error) => Effect.sync(() => log.warn('dev plugin auto-load failed', { url, error }))),
       Effect.ignore,
     );

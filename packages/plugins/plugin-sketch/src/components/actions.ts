@@ -5,11 +5,10 @@
 import type { TLRecord } from '@tldraw/tldraw';
 import { isShape } from '@tldraw/tlschema';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
+import { getDeep } from '@dxos/util';
 
 import type { Sketch } from '#types';
-
-import { getDeep } from '../util';
 
 /**
  * Snap to grid.
@@ -20,9 +19,9 @@ export const handleSnap = async (sketch: Sketch.Sketch) => {
   };
 
   // TODO(burdon): Use context to access document.
-  const accessor = createDocAccessor(sketch.canvas.target!, ['content']);
+  const accessor = Doc.createAccessor(sketch.canvas.target!, ['content']);
   accessor.handle.change((sketch) => {
-    const map: Record<string, TLRecord> = getDeep(sketch, accessor.path);
+    const map = getDeep<Record<string, TLRecord>>(sketch, accessor.path);
     Object.entries(map ?? {}).forEach(([_id, item]) => {
       if (isShape(item)) {
         const { x, y, props } = item;

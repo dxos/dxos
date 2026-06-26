@@ -4,7 +4,7 @@
 
 import { useCapability } from '@dxos/app-framework/ui';
 
-import { AppCapabilities } from '../../capabilities';
+import { AppCapabilities } from '../../app-framework';
 
 /**
  * Hook to get the current app graph.

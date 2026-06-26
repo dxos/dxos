@@ -7,16 +7,15 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Ref } from '@dxos/echo';
-import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { invariant } from '@dxos/invariant';
+import { Database, DXN, Filter, Ref, Registry } from '@dxos/echo';
+import type { EntityNotFoundError } from '@dxos/echo/Err';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import Handlebars from '@dxos/vendor-kbn-handlebars';
 
 import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
-import * as OperationRegistry from './OperationRegistry';
 
 /**
  * Template input kind determines how template variables are resolved.
@@ -63,7 +62,7 @@ export const Template = Schema.Struct({
   inputs: Schema.optional(Schema.Array(Input)),
 });
 
-export interface Template extends Schema.Schema.Type<typeof Template> {}
+export type Template = Schema.Schema.Type<typeof Template>;
 
 export type MakeProps = Partial<{ id: string; source: string; inputs: Input[] }>;
 
@@ -76,7 +75,7 @@ export const make = ({ id, source, inputs = [] }: MakeProps = {}): Template => (
  * Process Handlebars template.
  */
 export const process = <Options extends {}>(source: string, variables: Partial<Options> = {}): string => {
-  invariant(typeof source === 'string');
+  assertArgument(typeof source === 'string', 'source');
   let section = 0;
   const handlebars = Handlebars.create();
   handlebars.registerHelper('section', () => String(++section));
@@ -87,7 +86,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template,
-): Effect.Effect<string, ObjectNotFoundError | FunctionNotFoundError, OperationRegistry.Service | Operation.Service> =>
+): Effect.Effect<string, EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const entries = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {
@@ -98,12 +97,17 @@ export const processTemplate = (
 
           case 'operation': {
             invariant(input.operation);
-            const fn = yield* OperationRegistry.resolve(input.operation).pipe(
-              Effect.flatten,
-              Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(input.operation!))),
+            // Normalize to a full DXN key so Filter.key matches the stored meta key.
+            const key = DXN.isDXN(input.operation) ? input.operation : `dxn:${input.operation}`;
+            const results = yield* Registry.runQuery(
+              Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key)),
             );
+            if (results.length === 0) {
+              return yield* Effect.fail(new FunctionNotFoundError(input.operation));
+            }
 
             // NOTE: Operations referenced by template inputs must accept void input — see `Input.operation`.
+            const fn = Operation.deserialize(results[0]);
             const result = yield* Operation.invoke(fn, undefined as any).pipe(Effect.orDie);
             return [input.name, result] as const;
           }

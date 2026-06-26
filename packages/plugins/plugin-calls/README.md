@@ -11,4 +11,4 @@ no persistent schema is contributed by this plugin.
 
 Persistent meeting records, transcripts, and summaries are the responsibility
 of `@dxos/plugin-meeting`, which composes on top of this plugin's
-`CallsCapabilities.Manager` and `CallsCapabilities.Extension`.
+`CallsCapabilities.Manager` and `CallsCapabilities.EventHandler`.

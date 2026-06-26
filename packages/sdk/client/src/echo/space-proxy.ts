@@ -17,7 +17,6 @@ import {
 import {
   type ClientServicesProvider,
   type ExportSpaceOptions,
-  LegacySpaceProperties,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
@@ -34,19 +33,13 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
-import {
-  type EchoClient,
-  type EchoDatabase,
-  type EchoDatabaseImpl,
-  Filter,
-  type QueueFactory,
-  type SpaceSyncState,
-} from '@dxos/echo-db';
+import { Filter, Obj } from '@dxos/echo';
+import { type EchoClient, type EchoDatabase, type DatabaseImpl, type SpaceSyncState } from '@dxos/echo-client';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService, decodeError } from '@dxos/protocols';
+import { decodeError } from '@dxos/protocols';
 import {
   type Contact,
   CreateEpochRequest,
@@ -68,7 +61,6 @@ import {
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { compositeKey } from '@dxos/util';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
@@ -80,7 +72,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  *
  * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
  * helper is retained only for callers that need {@link Space} proxy members
- * (`properties`, `queues`, `members`, `key`, `state`, `listen`, identity).
+ * (`properties`, `members`, `key`, `state`, `listen`, identity).
  */
 // TODO(burdon): Hypergraph.getSpace().
 export const getSpace = (object?: any): Space | undefined => {
@@ -143,7 +135,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   @trace.info()
   _initialized = false;
 
-  private readonly _db!: EchoDatabaseImpl;
+  private readonly _db!: DatabaseImpl;
   private readonly _internal!: SpaceInternal;
   private readonly _invitationsProxy: InvitationsProxy;
 
@@ -151,8 +143,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
-
-  private readonly _queues!: QueueFactory;
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
@@ -186,7 +176,6 @@ export class SpaceProxy implements Space, CustomInspectable {
       spaceKey: this.key,
       owningObject: this,
     });
-    this._queues = echoClient.constructQueueFactory(this.id);
 
     const self = this;
     this._internal = {
@@ -242,10 +231,6 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get db(): EchoDatabase {
     return this._db;
-  }
-
-  get queues(): QueueFactory {
-    return this._queues;
   }
 
   @trace.info()
@@ -467,21 +452,19 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db
-        .query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties)))
-        .subscribe(
-          (query) => {
-            if (query.results.length === 1) {
-              this._properties = query.results[0];
-              propertiesAvailable.wake();
-              this._stateUpdate.emit(this._currentState);
-              scheduleMicroTask(this._ctx, () => {
-                unsubscribe();
-              });
-            }
-          },
-          { fire: true },
-        );
+      const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
+        (query) => {
+          if (query.results.length === 1) {
+            this._properties = query.results[0];
+            propertiesAvailable.wake();
+            this._stateUpdate.emit(this._currentState);
+            scheduleMicroTask(this._ctx, () => {
+              unsubscribe();
+            });
+          }
+        },
+        { fire: true },
+      );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
@@ -534,6 +517,21 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
+      { timeout: RPC_TIMEOUT, ctx },
+    );
+  }
+
+  async delete(): Promise<void> {
+    await this._deleteInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _deleteInternal(ctx: Context): Promise<void> {
+    if (this._databaseOpen) {
+      await this._db.flush();
+    }
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.SPACE_DELETED },
       { timeout: RPC_TIMEOUT, ctx },
     );
   }
@@ -697,7 +695,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // Needed to have space root set to be able to make next check.
     await this._databaseInitialized.wait();
 
-    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
+    if (this._db.getNumberOfInlineObjects() > 1) {
       await this._createEpoch({
         migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
       });
@@ -732,6 +730,14 @@ export class SpaceProxy implements Space, CustomInspectable {
       throw new Error('Edge replication is disabled');
     }
 
+    // Drain pending head updates before sampling sync state. `db.flush()` calls
+    // `host.flush`, which (a) flushes loaded docs to disk and (b) `runBlocking`s
+    // `_onHeadsChangedTask` so any `_afterSave`-recorded heads have propagated into
+    // `_collectionSynchronizer`. Without this, `getCollectionSyncState` is eventually
+    // consistent and a stream emission may report `{0, 0, 0}` from stale local heads,
+    // causing the latch below to resolve prematurely.
+    await this._db.flush();
+
     return await new Promise<void>((resolve, reject) => {
       scheduleTask(
         ctx,
@@ -742,7 +748,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       );
 
       const checkSyncState = (syncState: SpaceSyncState) => {
-        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(this.id, state.peerId));
+        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(state.peerId, this.id));
         if (opts?.onProgress) {
           opts.onProgress(edgePeer);
         }
@@ -804,7 +810,3 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
-
-const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
-  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId)) ||
-  peerId.startsWith(compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId));

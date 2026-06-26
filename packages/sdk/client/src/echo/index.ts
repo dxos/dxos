@@ -6,13 +6,12 @@
 
 export { isSpace, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
 export {
-  createFeedServiceLayer,
   createObject,
   createSubscription,
   type ObjectMigration,
   type Selection,
   type SubscriptionHandle,
-} from '@dxos/echo-db';
+} from '@dxos/echo-client';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';

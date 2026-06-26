@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ChatEvent } from '../Chat';
+import { type ChatEvent } from '../Chat/events';
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
@@ -30,7 +30,7 @@ export const ChatActions = ({
   debug,
   onEvent,
 }: ChatActionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className={mx('flex items-center', classNames)}>
@@ -63,12 +63,14 @@ export const ChatActions = ({
       )}
 
       <IconButton
-        disabled={!processing}
+        // disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         variant='ghost'
         icon='ph--x--regular'
         iconOnly
         label={t('cancel-processing.button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
+        onClick={() => {
+          onEvent?.({ type: 'cancel' });
+        }}
       />
     </div>
   );

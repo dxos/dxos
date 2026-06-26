@@ -2,26 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.script',
-  name: 'Scripts',
-  author: 'DXOS',
-  description: trim`
-    Write and deploy custom JavaScript functions that extend your workspace capabilities.
-    Create AI agent tools, spreadsheet formulas, and automation scripts that integrate seamlessly with other plugins.
-  `,
-  icon: 'ph--code--regular',
-  iconHue: 'sky',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
-  tags: ['labs'],
-  screenshots: ['https://dxos.network/plugin-details-scripts-dark.png'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);
 
 // TODO(ZaymonFC): Configure by scopes?
 export const defaultScriptsForIntegration: Record<string, string[]> = {
   // TODO(wittjosiah): Also include content extraction scripts in the default set.
-  'gmail.com': ['org.dxos.script.gmail'],
+  'gmail.com': [DXN.make('org.dxos.script.gmail')],
 };

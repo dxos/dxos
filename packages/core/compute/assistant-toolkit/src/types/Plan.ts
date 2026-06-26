@@ -6,9 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-
-import * as Chat from './Chat';
+import { Process } from '@dxos/compute';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 
 export const TaskId = Schema.String.pipe(Schema.brand('@dxos/assistant-toolkit/TaskId'));
 export type TaskId = Schema.Schema.Type<typeof TaskId>;
@@ -23,7 +22,21 @@ export const Task = Schema.Struct({
     description: 'Task title and description.',
   }),
 
-  status: Schema.Literal('todo', 'in-progress', 'done'),
+  status: Schema.Literal('todo', 'in-progress', 'done', 'failed'),
+
+  /**
+   * Whether this task was handed to a sub-agent via the delegation tool. Only delegated tasks are
+   * picked up by the supervisor's reconcile loop, so a task created via ordinary planning
+   * (`update-tasks`) is not double-spawned as a sub-agent.
+   */
+  delegated: Schema.optional(Schema.Boolean),
+
+  /**
+   * Sub-agent process id; set when the supervisor spawns a delegated task.
+   */
+  agentPid: Schema.optional(Process.ID).annotations({
+    description: 'Sub-agent process id for delegated tasks.',
+  }),
 
   /**
    * Parent task ID.
@@ -31,29 +44,25 @@ export const Task = Schema.Struct({
   parent: Schema.optional(TaskId).annotations({
     description: 'Parent task ID.',
   }),
-
-  /**
-   * Chat object that this task is associated with.
-   */
-  chat: Schema.optional(Ref.Ref(Chat.Chat)),
 });
 
-export interface Task extends Schema.Schema.Type<typeof Task> {}
+export type Task = Schema.Schema.Type<typeof Task>;
+
+/** Lifecycle status of a {@link Task}. */
+export type TaskStatus = Task['status'];
+
+/**
+ * Short tag label for a delegated sub-agent process id (e.g. `agent-a1b2`).
+ */
+export const formatAgentPidTag = (pid: Process.ID): string => `agent-${String(pid).replaceAll('-', '').slice(0, 4)}`;
 
 /**
  * Hierarchical collection of tasks for humans and agents to track progress.
  */
 export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.plan',
-    version: '0.1.0',
-  }),
-  Annotation.SystemTypeAnnotation.set(true),
-);
-export interface Plan extends Schema.Schema.Type<typeof Plan> {}
-
+}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
+export type Plan = Type.InstanceType<typeof Plan>;
 export const generateTaskId = (plan: Plan): TaskId => {
   const existingIds = plan.tasks
     .map((task) => {
@@ -77,7 +86,7 @@ export const generateTaskId = (plan: Plan): TaskId => {
  */
 export const addTasks = (
   plan: Obj.Mutable<Plan>,
-  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat'>>)[],
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'delegated'>>)[],
 ) => {
   for (const task of tasks) {
     const taskId = generateTaskId(plan);
@@ -87,10 +96,7 @@ export const addTasks = (
 };
 
 interface MakePlanProps {
-  tasks: {
-    title: string;
-    status?: 'todo' | 'in-progress' | 'done';
-  }[];
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status'>>)[];
 }
 
 export const makePlan = (props: MakePlanProps): Plan => {
@@ -109,3 +115,8 @@ export const formatPlan = (plan: Plan): string => {
     .map((task) => `- **${task.status?.toLocaleUpperCase()}**: ${task.title ?? 'No title'} <!-- id=${task.id} -->`)
     .join('\n');
 };
+
+/**
+ * True when the plan has any task that is not yet `done`.
+ */
+export const hasIncompleteTasks = (plan: Plan): boolean => plan.tasks.some((task) => task.status !== 'done');

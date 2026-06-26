@@ -7,7 +7,7 @@ import { type Duplex } from 'node:stream';
 import { type Event, runInContextAsync, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
@@ -60,9 +60,9 @@ export class Teleport {
   }
 
   constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportProps) {
-    invariant(typeof initiator === 'boolean');
-    invariant(PublicKey.isPublicKey(localPeerId));
-    invariant(PublicKey.isPublicKey(remotePeerId));
+    assertArgument(typeof initiator === 'boolean', 'initiator');
+    assertArgument(PublicKey.isPublicKey(localPeerId), 'localPeerId');
+    assertArgument(PublicKey.isPublicKey(remotePeerId), 'remotePeerId');
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;

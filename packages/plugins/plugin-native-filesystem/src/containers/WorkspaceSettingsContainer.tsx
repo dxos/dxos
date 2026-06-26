@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
@@ -31,7 +31,7 @@ export type WorkspaceSettingsContainerProps = {
 };
 
 export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsContainerProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const [, updateState] = useAtomCapabilityState(NativeFilesystemCapabilities.State);
@@ -71,7 +71,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
 
       const config = { icon: mergedIcon, hue: mergedHue };
       log.info('Writing composer config', { path: workspace.path, config });
-      void runAndForwardErrors(
+      void EffectEx.runAndForwardErrors(
         writeComposerConfig(workspace.path, config).pipe(
           Effect.tap((success) =>
             success
@@ -86,10 +86,10 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
 
   const handleRemove = useCallback(async () => {
     await invokePromise(NativeFilesystemOperation.CloseDirectory, { id: workspace.id });
-    const personalSpaceId = getPersonalSpace(client)?.id;
+    const personalSpaceId = AppSpace.getPersonalSpace(client)?.id;
     if (personalSpaceId) {
       await invokePromise(LayoutOperation.SwitchWorkspace, {
-        subject: getSpacePath(personalSpaceId),
+        subject: Paths.getSpacePath(personalSpaceId),
       });
     }
   }, [workspace.id, invokePromise, client]);
@@ -100,23 +100,23 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('icon.description')}>
+          <Form.Row label={label} description={t('icon.description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
               onReset={handleReset}
               classNames='justify-self-end'
             />
-          </Settings.Item>
+          </Form.Row>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('hue.description')}>
+          <Form.Row label={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
-          </Settings.Item>
+          </Form.Row>
         );
       },
     }),
@@ -124,25 +124,28 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
   );
 
   return (
-    <Settings.Viewport>
-      <Settings.Section title={t('folder-properties.title')}>
-        <Form.Root
-          fieldMap={fieldMap}
-          schema={WorkspaceSettingsSchema}
-          values={values}
-          onValuesChanged={handleValuesChanged}
-        >
-          <Form.FieldSet />
-        </Form.Root>
-      </Settings.Section>
-      <Settings.Section title={t('remove-folder.label')}>
-        <Settings.Item title={t('remove-folder.label')} description={t('remove-folder.description')}>
-          <Button variant='destructive' onClick={handleRemove}>
-            {t('remove-folder.label')}
-          </Button>
-        </Settings.Item>
-      </Settings.Section>
-    </Settings.Viewport>
+    <Form.Root
+      variant='settings'
+      fieldMap={fieldMap}
+      schema={WorkspaceSettingsSchema}
+      values={values}
+      onValuesChanged={handleValuesChanged}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('folder-properties.title')}>
+            <Form.FieldSet />
+          </Form.Section>
+          <Form.Section title={t('remove-folder.label')}>
+            <Form.Row label={t('remove-folder.label')} description={t('remove-folder.description')}>
+              <Button variant='destructive' onClick={handleRemove}>
+                {t('remove-folder.label')}
+              </Button>
+            </Form.Row>
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

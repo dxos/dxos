@@ -38,6 +38,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/lock-file"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -45,9 +48,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute-runtime"
     },
     {
       "path": "../../core/compute/ai"
@@ -62,6 +62,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/functions"
     },
     {
@@ -74,7 +77,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -86,22 +89,22 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-chess"
     },
     {
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-comments"
+    },
+    {
+      "path": "../../plugins/plugin-connector"
+    },
+    {
       "path": "../../plugins/plugin-game"
     },
     {
       "path": "../../plugins/plugin-inbox"
-    },
-    {
-      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -119,6 +122,9 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-routine"
+    },
+    {
       "path": "../../plugins/plugin-sample"
     },
     {
@@ -129,9 +135,6 @@
     },
     {
       "path": "../../plugins/plugin-table"
-    },
-    {
-      "path": "../../plugins/plugin-thread"
     },
     {
       "path": "../../plugins/plugin-transcription"

@@ -15,7 +15,7 @@ import { ChessPlugin } from '#plugin';
 import { meta } from './meta';
 import { ChessOperation } from './types';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ChessPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -28,7 +28,7 @@ describe('ChessPlugin', () => {
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupProcessManager);

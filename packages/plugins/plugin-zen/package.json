@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-zen",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Ambient sound and meditation plugin with layered soundscapes and binaural beats",
   "homepage": "https://dxos.org",
@@ -61,6 +61,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -75,7 +76,9 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -86,11 +89,9 @@
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

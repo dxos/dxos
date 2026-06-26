@@ -9,7 +9,7 @@ import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Operation, Trigger } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Feed, Obj } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
@@ -84,8 +84,10 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceFeedDXN = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
-      const invocations = traceFeedDXN ? ((await space.queues.get(traceFeedDXN).queryObjects()) ?? []) : [];
+      const traceFeedDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
+      const invocations = traceFeedDXN
+        ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceFeedDXN))).run()
+        : [];
 
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {

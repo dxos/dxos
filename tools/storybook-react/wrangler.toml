@@ -5,15 +5,15 @@
 
 name = "dxos-storybook"
 compatibility_date = "2024-04-05"
-pages_build_output_dir = "./out/stories"
+pages_build_output_dir = "./out/storybook-react"
 
 #
 # Dev
 # http://localhost:8788
-# moon run storybook:bundle
+# moon run storybook-react:bundle
 # wrangler pages dev
 #
 # Prod is pushed via GH Actions CI.
-# wrangler pages deploy out/stories
+# wrangler pages deploy out/storybook-react
 # https://dxos-storybook.pages.dev
 #

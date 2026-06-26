@@ -111,7 +111,9 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
     return null;
   }
 
-  const meta = readPluginMeta(metaSource, pkg);
+  // Inline `Plugin.makeMeta({...})` / bare object literal, else resolve the metadata from the package's
+  // `dx.config.ts` (the `Plugin.getMetaFromConfig(config)` form most plugins now use).
+  const meta = readPluginMeta(metaSource, pkg) ?? readPluginMetaFromConfig(rootPath, pkg, project);
   if (!meta) {
     return null;
   }
@@ -178,18 +180,51 @@ const dedupeBy = <T>(items: T[], keyFn: (item: T) => string): T[] => {
   return out;
 };
 
+/**
+ * Extracts the NSID (first string argument) from a `DXN.make('<nsid>'[, '<version>'])`
+ * property value — e.g. the `key` field of a plugin `Meta`.
+ */
+const readDxnName = (obj: ObjectLiteralExpression, name: string): string | undefined => {
+  const prop = obj.getProperty(name);
+  if (!prop || prop.getKind() !== SyntaxKind.PropertyAssignment) {
+    return undefined;
+  }
+  const init = prop.asKindOrThrow(SyntaxKind.PropertyAssignment).getInitializer();
+  if (!init || init.getKind() !== SyntaxKind.CallExpression) {
+    return undefined;
+  }
+  const call = init.asKindOrThrow(SyntaxKind.CallExpression);
+  if (!call.getExpression().getText().endsWith('DXN.make')) {
+    return undefined;
+  }
+  const first = call.getArguments()[0];
+  return first?.getKind() === SyntaxKind.StringLiteral
+    ? first.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue()
+    : undefined;
+};
+
 const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
-  // Match `export const meta: Plugin.Meta = { ... };`
+  // Match `export const meta = Plugin.makeMeta({ ... })` (or a legacy bare object literal).
   const metaDecl = file.getVariableDeclaration('meta');
   if (!metaDecl) {
     return null;
   }
-  const initializer = metaDecl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  // The initializer is either the options object literal directly (legacy) or a
+  // `Plugin.makeMeta({...})` call whose first argument is that object literal.
+  let initializer = metaDecl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  if (!initializer) {
+    const call = metaDecl.getInitializerIfKind(SyntaxKind.CallExpression);
+    const arg = call?.getExpression().getText().endsWith('makeMeta') ? call.getArguments()[0] : undefined;
+    if (arg?.getKind() === SyntaxKind.ObjectLiteralExpression) {
+      initializer = arg.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    }
+  }
   if (!initializer) {
     return null;
   }
 
-  const id = readStringProperty(initializer, 'id');
+  // Identity is the bare NSID of the `key` DXN; fall back to a legacy plain-string `id`.
+  const id = readDxnName(initializer, 'key') ?? readStringProperty(initializer, 'id');
   if (!id) {
     return null;
   }
@@ -199,14 +234,78 @@ const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
     package: pkg.name,
     name: readStringProperty(initializer, 'name'),
     description: readStringProperty(initializer, 'description'),
-    icon: readStringProperty(initializer, 'icon'),
-    iconHue: readStringProperty(initializer, 'iconHue'),
+    // `icon` is an object literal (`{ key, hue }`); fall back to a legacy bare-string icon.
+    icon: readNestedStringProperty(initializer, 'icon', 'key') ?? readStringProperty(initializer, 'icon'),
+    iconHue: readNestedStringProperty(initializer, 'icon', 'hue') ?? readStringProperty(initializer, 'iconHue'),
     tags: readStringArrayProperty(initializer, 'tags'),
     // Filled in by `extractPlugins` once every plugin's package mapping is
     // known — left empty here to keep the per-package walk independent.
     dependsOn: [],
     metaLocation: locationOf(file, metaDecl.getStart()),
   };
+};
+
+/**
+ * Resolve plugin metadata from a package's `dx.config.ts` for the
+ * `export const meta = Plugin.getMetaFromConfig(config)` form, where `config` is the default export
+ * `Config2.make({ plugin: { key, name, ... } })`. The config `key` is the bare NSID string (the runtime
+ * wraps it in `DXN.make`), and `icon` is an object literal (`{ key, hue }`).
+ */
+const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: Project): Plugin | null => {
+  const configPath = join(rootPath, pkg.path, 'dx.config.ts');
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  let configSource: SourceFile;
+  try {
+    configSource = project.addSourceFileAtPath(configPath);
+  } catch (err) {
+    warn(`failed to read ${configPath}`, err);
+    return null;
+  }
+
+  const exportAssignment = configSource.getExportAssignment((decl) => !decl.isExportEquals());
+  const makeCall = exportAssignment?.getExpressionIfKind(SyntaxKind.CallExpression);
+  const configArg = makeCall?.getArguments()[0];
+  if (!configArg || configArg.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+    return null;
+  }
+
+  const pluginObj = (configArg as ObjectLiteralExpression)
+    .getProperty('plugin')
+    ?.asKind(SyntaxKind.PropertyAssignment)
+    ?.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  if (!pluginObj) {
+    return null;
+  }
+
+  const id = readStringProperty(pluginObj, 'key');
+  if (!id) {
+    return null;
+  }
+
+  return {
+    id,
+    package: pkg.name,
+    name: readStringProperty(pluginObj, 'name'),
+    description: readStringProperty(pluginObj, 'description'),
+    icon: readNestedStringProperty(pluginObj, 'icon', 'key'),
+    iconHue: readNestedStringProperty(pluginObj, 'icon', 'hue'),
+    tags: readStringArrayProperty(pluginObj, 'tags'),
+    // Filled in by `extractPlugins` from workspace deps (see above).
+    dependsOn: [],
+    metaLocation: locationOf(configSource, pluginObj.getStart()),
+  };
+};
+
+/** Read `obj.<name>.<key>` when `<name>` is an object-literal property (e.g. `icon: { key, hue }`). */
+const readNestedStringProperty = (obj: ObjectLiteralExpression, name: string, key: string): string | undefined => {
+  const nested = obj
+    .getProperty(name)
+    ?.asKind(SyntaxKind.PropertyAssignment)
+    ?.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  return nested ? readStringProperty(nested, key) : undefined;
 };
 
 type Buckets = {

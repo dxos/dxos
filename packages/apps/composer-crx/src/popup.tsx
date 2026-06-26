@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { type Root as ReactRoot, createRoot } from 'react-dom/client';
 import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Chat, type ChatProps, Container, Thumbnail } from './components';
+import { Chat, type ChatProps, Container, PageActions, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.
@@ -25,6 +25,7 @@ const rootClasses = 'flex flex-col w-[500px] opacity-0 [animation:popup-fade-in_
 const Root = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [tabUrl, setTabUrl] = useState<string | null>(null);
+  const [tabId, setTabId] = useState<number | undefined>(undefined);
 
   // Load config.
   const [host, setHost] = useState<string | null>(null);
@@ -35,13 +36,14 @@ const Root = () => {
     })();
   }, []);
 
-  // Load current tab URL.
+  // Load current tab URL and id.
   useEffect(() => {
     void (async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       if (tab?.url) {
         setTabUrl(tab.url.replace(/\/$/, ''));
       }
+      setTabId(tab?.id);
     })();
   }, []);
 
@@ -102,26 +104,46 @@ const Root = () => {
     window.close();
   }, []);
 
+  // Embedded in the chat's toolbar so the chat input stays the first row of
+  // the popup; rendered standalone whenever the chat is absent or crashed.
+  const pageActions = tabId !== undefined && tabUrl ? <PageActions tabId={tabId} tabUrl={tabUrl} /> : null;
+  const standaloneActions = pageActions && <div className='flex items-center p-1'>{pageActions}</div>;
+  const showChat = !thumbnailUrl && !!host;
+
   return (
     <ErrorBoundary name='popup'>
       <Container classNames={mx(rootClasses)}>
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
-        {!thumbnailUrl && host && (
+        {showChat && (
           // Chat lives behind its own ErrorBoundary: the chat-agent endpoint
           // can be unreachable (e.g., dev worker not running) and a fetch
           // failure inside useAgentChat would otherwise take down the whole
-          // popup — including the Clip flow, which is independent of chat.
-          <ErrorBoundary name='popup/chat' fallbackRender={() => null}>
-            <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} onClip={handleClip} />
+          // popup — including the Clip and page-action flows, which are
+          // independent of chat, so the fallback keeps the actions visible.
+          <ErrorBoundary name='popup/chat' fallbackRender={() => standaloneActions}>
+            <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} onClip={handleClip} actions={pageActions} />
           </ErrorBoundary>
         )}
+        {!showChat && standaloneActions}
       </Container>
     </ErrorBoundary>
   );
 };
 
+declare global {
+  // Survives dev-mode HMR re-execution of this entry module: React warns (and
+  // detaches the old tree) if the same container is passed to createRoot twice.
+  // eslint-disable-next-line no-var
+  var __composerPopupRoot: ReactRoot | undefined;
+}
+
 const main = async () => {
-  createRoot(document.getElementById('root')!).render(<Root />);
+  const container = document.getElementById('root');
+  if (!container) {
+    throw new Error('Popup root element #root not found.');
+  }
+  globalThis.__composerPopupRoot ??= createRoot(container);
+  globalThis.__composerPopupRoot.render(<Root />);
 };
 
 void main();

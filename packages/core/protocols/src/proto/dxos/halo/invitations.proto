@@ -16,8 +16,11 @@ package dxos.halo.invitations;
 
 message InvitationOptions {
   enum Role {
-    GUEST = 0;
-    HOST = 1;
+    // Sentinel so neither real role is the proto3 default (which is stripped on the wire,
+    // causing the receiver to see `role === undefined` and reject with InvalidInvitationExtensionRoleError).
+    INVALID = 0;
+    GUEST = 1;
+    HOST = 2;
   }
 
   /// Role of the peer.

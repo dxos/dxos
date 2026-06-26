@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Obj, Query, Ref } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
@@ -30,7 +30,7 @@ type TestObject = {
 };
 
 type EditorProps = {
-  source: DocAccessor;
+  source: Doc.Accessor;
   messenger?: Messenger;
   identity?: Identity;
   autoFocus?: boolean;
@@ -41,7 +41,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,
-      initialValue: DocAccessor.getValue(source),
+      initialValue: Doc.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-2' } } }),
@@ -55,8 +55,8 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
 };
 
 const DefaultStory = () => {
-  const [object1, setObject1] = useState<DocAccessor<TestObject>>();
-  const [object2, setObject2] = useState<DocAccessor<TestObject>>();
+  const [object1, setObject1] = useState<Doc.Accessor<TestObject>>();
+  const [object2, setObject2] = useState<Doc.Accessor<TestObject>>();
 
   useEffect(() => {
     queueMicrotask(async () => {
@@ -97,7 +97,7 @@ const EchoStory = () => {
   const space = useSpace(spaceId);
   const objects = useQuery(space?.db, Query.type(TestSchema.Expando, { type: 'test' }));
 
-  const [source, setSource] = useState<DocAccessor>();
+  const [source, setSource] = useState<Doc.Accessor>();
   const init = useCallback(() => {
     const content = objects[0]?.content.target;
     if (!content) {
@@ -108,7 +108,7 @@ const EchoStory = () => {
       return;
     }
 
-    setSource(createDocAccessor(content, ['content']));
+    setSource(Doc.createAccessor(content, ['content']));
   }, [objects]);
 
   useEffect(() => {

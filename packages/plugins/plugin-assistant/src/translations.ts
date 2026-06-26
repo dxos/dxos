@@ -3,7 +3,7 @@
 //
 
 import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Skill, Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -12,24 +12,23 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 
 import { meta } from '#meta';
 
-// TODO(burdon): Standardize translation names.
 export const translations: Resource[] = [
   ...componentsTranslations,
   ...formTranslations,
   {
     'en-US': {
-      [Blueprint.Blueprint.typename]: {
-        'typename.label': 'Blueprint',
-        'typename.label_zero': 'Blueprints',
-        'typename.label_one': 'Blueprint',
-        'typename.label_other': 'Blueprints',
-        'object-name.placeholder': 'New blueprint',
-        'add-object.label': 'Add blueprint',
-        'rename-object.label': 'Rename blueprint',
-        'delete-object.label': 'Delete blueprint',
-        'object-deleted.label': 'Blueprint deleted',
+      [Type.getTypename(Skill.Skill)]: {
+        'typename.label': 'Skill',
+        'typename.label_zero': 'Skills',
+        'typename.label_one': 'Skill',
+        'typename.label_other': 'Skills',
+        'object-name.placeholder': 'New skill',
+        'add-object.label': 'Add skill',
+        'rename-object.label': 'Rename skill',
+        'delete-object.label': 'Delete skill',
+        'object-deleted.label': 'Skill deleted',
       },
-      [Type.getTypename(Routine.Routine)]: {
+      [Type.getTypename(Instructions.Instructions)]: {
         'typename.label': 'Routine',
         'typename.label_zero': 'Routines',
         'typename.label_one': 'Routine',
@@ -40,7 +39,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete routine',
         'object-deleted.label': 'Routine deleted',
       },
-      [Sequence.Sequence.typename]: {
+      [Type.getTypename(Sequence.Sequence)]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
         'typename.label_one': 'Sequence',
@@ -51,21 +50,24 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete sequence',
         'object-deleted.label': 'Sequence deleted',
       },
-      [Chat.Chat.typename]: {
-        'typename.label': 'AI Chat',
-        'object-name.placeholder': 'New AI Chat',
-        'add-object.label': 'Add AI chat',
-        'rename-object.label': 'Rename AI Chat',
-        'delete-object.label': 'Delete AI Chat',
-        'object-deleted.label': 'AI Chat deleted',
+      [Type.getTypename(Chat.Chat)]: {
+        'typename.label': 'Session',
+        'typename.label_zero': 'Sessions',
+        'typename.label_one': 'Session',
+        'typename.label_other': 'Sessions',
+        'object-name.placeholder': 'New session',
+        'add-object.label': 'Add Session',
+        'rename-object.label': 'Rename session',
+        'delete-object.label': 'Delete session',
+        'object-deleted.label': 'Session deleted',
       },
-      [McpServer.McpServer.typename]: {
+      [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
         'typename.label_zero': 'MCP Servers',
         'typename.label_one': 'MCP Server',
         'typename.label_other': 'MCP Servers',
       },
-      [Agent.Agent.typename]: {
+      [Type.getTypename(Agent.Agent)]: {
         'typename.label': 'Agent',
         'typename.label_zero': 'Agents',
         'typename.label_one': 'Agent',
@@ -77,18 +79,15 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.id]: {
+      [meta.profile.key]: {
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
         'plugin.name': 'Assistant',
-        'settings.title': 'Assistant settings',
         'object.placeholder': 'New prompt',
         'create-object.label': 'Create prompt',
         'create-trigger.label': 'Create trigger',
         'create-stack-section.label': 'Create prompt',
-        'command.placeholder': 'Enter slash command...',
-        'template.placeholder': 'Enter template...',
         'value.placeholder': 'Enter value...',
         'prompt-rules.label': 'Prompt Rules',
         'typename.placeholder': 'Enter typename of objects which this template is for',
@@ -97,7 +96,7 @@ export const translations: Resource[] = [
         'service-registry.label': 'Service Registry',
         'type-filter.placeholder': 'Type',
         'any-type-filter.label': 'Any',
-        'no-blueprint.message': 'No active blueprints',
+        'no-skill.message': 'No active skills',
         'tool-call.label': 'Calling',
         'tool-result.label': 'Success',
         'tool-error.label': 'Tool call failed',
@@ -107,7 +106,6 @@ export const translations: Resource[] = [
 
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
-        'reset-blueprints.label': 'Reset blueprints',
         'import-compute-operations.label': 'Import compute operations',
         'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
 
@@ -119,6 +117,7 @@ export const translations: Resource[] = [
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
+        'create-chat.label': 'New AI Chat',
 
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
@@ -132,7 +131,7 @@ export const translations: Resource[] = [
         'microphone.button': 'Click to speak',
         'cancel-processing.button': 'Stop processing',
 
-        'options.blueprints.title': 'Skills',
+        'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
         'remove-object.label': 'Remove object',
@@ -152,11 +151,11 @@ export const translations: Resource[] = [
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
+        'ai-service-error.label': 'AI service error',
+        'view-usage.label': 'View usage',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
-        'run-prompt.label': 'Run prompt',
-        'routine-running.label': 'Running…',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
@@ -182,6 +181,15 @@ export const translations: Resource[] = [
         'instructions.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
+
+        // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-draft-doc.label': 'Draft a new document',
+        'space-home.suggestion-data-type.label': 'Create a new data type',
+        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.prompt.placeholder': 'Ask the assistant anything…',
+
+        'nav-tree-group-ai.label': 'Assistant',
       },
     },
   },

@@ -26,7 +26,7 @@ const GITHUB_URL = 'https://github.com/dxos/dxos';
 const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
 export const HelpMenu = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
@@ -48,7 +48,7 @@ export const HelpMenu = () => {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <IconButton variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>

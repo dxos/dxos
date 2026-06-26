@@ -2,16 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.storybook-layout',
-  name: 'Storybook',
-  author: 'DXOS',
-  description: trim`
-    Development layout optimized for Storybook component testing and documentation.
-    Provides specialized views for component development and design system exploration.
-  `,
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-testing',
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

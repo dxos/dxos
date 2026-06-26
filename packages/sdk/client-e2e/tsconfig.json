@@ -1,0 +1,73 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random-access-storage"
+    },
+    {
+      "path": "../../common/sql-sqlite"
+    },
+    {
+      "path": "../../common/tracing"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-host"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../client-protocol"
+    },
+    {
+      "path": "../client-services"
+    },
+    {
+      "path": "../config"
+    }
+  ]
+}

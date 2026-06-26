@@ -12,6 +12,8 @@ export type TreeItemDataProps = {
   id: string;
   label: Label;
   parentOf?: string[];
+  /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` → section header). */
+  disposition?: string;
   /** When `false`, the item cannot be dragged (overrides tree-level `draggable`). */
   draggable?: boolean;
   /** When `false`, the item does not participate as a drop target. */
@@ -22,6 +24,10 @@ export type TreeItemDataProps = {
   iconHue?: string;
   disabled?: boolean;
   testId?: string;
+  /** Optional item count rendered as a neutral badge directly after the label. */
+  count?: number;
+  /** Optional count of new/modified items; when greater than zero it shows as a rose badge in place of `count`. */
+  modifiedCount?: number;
 };
 
 export interface TreeModel<T extends { id: string } = any> {

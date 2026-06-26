@@ -7,7 +7,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Bluesky',
         'target.my-posts.label': 'My posts',
         'target.my-likes.label': 'My liked posts',

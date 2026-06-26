@@ -63,4 +63,8 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
   async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<void> {
     // No-op in Cloudflare runtime.
   }
+
+  async getSyncState(_: FeedProtocol.GetSyncStateRequest): Promise<FeedProtocol.GetSyncStateResponse> {
+    return { namespaces: [] };
+  }
 }

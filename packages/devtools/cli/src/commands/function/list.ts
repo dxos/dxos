@@ -28,7 +28,7 @@ export const list = Command.make(
   Effect.fn(function* ({ remote }) {
     const { json } = yield* CommandConfig;
 
-    const dbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+    const dbFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const functions = remote
       ? yield* Effect.gen(function* () {
           const client = yield* ClientService;

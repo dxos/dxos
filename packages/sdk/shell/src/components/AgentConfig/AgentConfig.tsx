@@ -104,7 +104,7 @@ export const AgentConfig = ({
                     t,
                     i18nKey: 'create-agent-clickwrap',
                     components: {
-                      tosLink: <Link target='_blank' rel='noreferrer' />,
+                      tosLink: <Link />,
                     },
                   }}
                 />

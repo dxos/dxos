@@ -14,19 +14,24 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
-import { Timeline } from '@dxos/react-ui-components';
+import { Timeline, type Commit } from '@dxos/react-ui-components';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
+import { buildExecutionGraph } from '#execution-graph';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { buildExecutionGraph } from './execution-graph';
+import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
+// TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
+import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
 import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
@@ -35,10 +40,32 @@ type BaseStoryProps = PropsWithChildren<{
 }>;
 
 const BaseStory = ({ children, toolbar }: BaseStoryProps) => (
-  <Panel.Root>
+  <Panel.Root classNames='h-full min-h-0'>
     <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-    <Panel.Content asChild>{children}</Panel.Content>
+    <Panel.Content asChild classNames='min-h-0'>
+      {children}
+    </Panel.Content>
   </Panel.Root>
+);
+
+const JsonInspectorPanel = ({ data }: { data: unknown }) => (
+  <div className='min-h-0 h-full'>
+    <ScrollContainer.Root pin>
+      <ScrollContainer.Content thin>
+        <ScrollContainer.Viewport>
+          <Syntax.Root data={data}>
+            <Syntax.Content>
+              <Syntax.Viewport>
+                <Syntax.Code className='text-xs' />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        </ScrollContainer.Viewport>
+        <ScrollContainer.ScrollDownButton />
+        <ScrollContainer.Fade />
+      </ScrollContainer.Content>
+    </ScrollContainer.Root>
+  </div>
 );
 
 const DefaultStory = () => {
@@ -97,9 +124,38 @@ const SnapshotStory = () => {
     [allMessages],
   );
 
+  return <TimelinePlayback messages={sortedMessages} collapseCompletedSpans={true} />;
+};
+
+// Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()` (see
+// TracePanel). External JSON → typed at this boundary; `buildExecutionGraph` only reads
+// `meta`/`events`, so the plain data shape is sufficient.
+const subAgentMessages = subAgentFixture as unknown as Trace.Message[];
+
+const FixtureStory = () => {
+  const sortedMessages = useMemo(
+    () => [...subAgentMessages].sort((a, b) => (a.events[0]?.timestamp ?? 0) - (b.events[0]?.timestamp ?? 0)),
+    [],
+  );
+
+  return <TimelinePlayback messages={sortedMessages} />;
+};
+
+/**
+ * Step/playback over a fixed list of trace messages — renders the execution-graph Timeline at each
+ * step so layout (e.g. concurrent sub-agent lanes) can be inspected as events "stream" in.
+ */
+const TimelinePlayback = ({
+  messages: sortedMessages,
+  collapseCompletedSpans = true,
+}: {
+  messages: readonly Trace.Message[];
+  collapseCompletedSpans?: boolean;
+}) => {
   const total = sortedMessages.length;
   const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
+  const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
 
   useEffect(() => {
     setStep((current) => Math.min(Math.max(current, 0), total));
@@ -118,10 +174,13 @@ const SnapshotStory = () => {
   }, [total, stepHydrated, setStep]);
 
   const visibleMessages = useMemo(() => sortedMessages.slice(0, step), [sortedMessages, step]);
-  const { commits, branches } = useMemo(
-    () => buildExecutionGraph({ traceMessages: visibleMessages }),
-    [visibleMessages],
+  const { commits, branches, spanTree, details } = useMemo(
+    () => buildExecutionGraph({ traceMessages: visibleMessages, collapseCompletedSpans }),
+    [visibleMessages, collapseCompletedSpans],
   );
+  const selectedCommitDetail = selectedCommit
+    ? { commit: selectedCommit, detail: details[selectedCommit.id] }
+    : undefined;
 
   // Auto-play steps forward until we reach the end.
   useEffect(() => {
@@ -190,35 +249,43 @@ const SnapshotStory = () => {
   }, [handleNext, handlePrev, handleTogglePlay, handleReset, handleShowAll]);
 
   return (
-    <ScrollContainer.Root pin>
-      <BaseStory
-        toolbar={
-          <Toolbar.Root>
-            <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
-            <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
-            <IconButton
-              iconOnly
-              icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
-              label={playing ? 'Pause (Space)' : 'Play (Space)'}
-              onClick={handleTogglePlay}
-            />
-            <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
-            <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
-            <Toolbar.Text className='text-right text-sm tabular-nums opacity-70'>
-              {step} / {total}
-            </Toolbar.Text>
-          </Toolbar.Root>
-        }
-      >
-        <ScrollContainer.Content thin>
-          <ScrollContainer.Viewport>
-            <Timeline branches={branches} commits={commits} showTimestamp />
-          </ScrollContainer.Viewport>
-          <ScrollContainer.ScrollDownButton />
-          <ScrollContainer.Fade />
-        </ScrollContainer.Content>
-      </BaseStory>
-    </ScrollContainer.Root>
+    <BaseStory
+      toolbar={
+        <Toolbar.Root>
+          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
+          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
+          <IconButton
+            iconOnly
+            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={playing ? 'Pause (Space)' : 'Play (Space)'}
+            onClick={handleTogglePlay}
+          />
+          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
+          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
+          <Toolbar.Text className='text-right text-sm tabular-nums opacity-70'>
+            {step} / {total}
+          </Toolbar.Text>
+        </Toolbar.Root>
+      }
+    >
+      <div className={mx('grid h-full min-h-0 grid-cols-3 divide-x divide-separator')}>
+        <JsonInspectorPanel data={spanTree} />
+
+        <div className='min-h-0'>
+          <ScrollContainer.Root pin>
+            <ScrollContainer.Content thin>
+              <ScrollContainer.Viewport>
+                <Timeline branches={branches} commits={commits} showTimestamp onSelect={setSelectedCommit} />
+              </ScrollContainer.Viewport>
+              <ScrollContainer.ScrollDownButton />
+              <ScrollContainer.Fade />
+            </ScrollContainer.Content>
+          </ScrollContainer.Root>
+        </div>
+
+        <JsonInspectorPanel data={selectedCommitDetail} />
+      </div>
+    </BaseStory>
   );
 };
 
@@ -252,34 +319,70 @@ export const Default: Story = {
             }),
         }),
         AssistantPlugin(),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     }),
   ],
+};
+
+export const WithSubAgentFixture: Story = {
+  render: FixtureStory,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };
 
 export const WithSnapshot: Story = {
   render: SnapshotStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Trace.Message],
-          onClientInitialized: ({ client }) =>
-            Effect.promise(async () => {
-              await client.halo.createIdentity();
-              const data = await import('../../testing/data/trace-timeline.dx.json');
-              const space = await client.spaces.import({
-                filename: 'trace-events.dx.json',
-                contents: new TextEncoder().encode(JSON.stringify(data)),
-              });
-              await space.db.flush();
-            }),
+          onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-remote.dx.json'),
+          ),
+        }),
+        RoutinePlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteMultipleSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-multiple.dx.json'),
+          ),
+        }),
+        RoutinePlugin(),
       ],
     }),
   ],

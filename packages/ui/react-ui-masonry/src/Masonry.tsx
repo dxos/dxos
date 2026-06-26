@@ -5,12 +5,13 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { VirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
+import { VirtuosoMasonry as NaturalVirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
 import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
+import { composable, composableProps, scrollbar } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 //
 // Context
@@ -80,11 +81,11 @@ MasonryRoot.displayName = 'Masonry.Root';
 //
 
 type MasonryContentProps = ThemedClassName<
-  PropsWithChildren<Pick<ScrollAreaRootProps, 'centered' | 'thin' | 'padding'>>
+  PropsWithChildren<Pick<ScrollAreaRootProps, 'scrollbars' | 'centered' | 'thin' | 'padding'>>
 >;
 
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
-  ({ children, centered, thin = true, padding = true, ...props }, forwardedRef) => {
+  ({ children, scrollbars, centered, thin = true, padding = true, ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const composedRef = useComposedRefs(rootRef, forwardedRef);
     const { width = 0 } = useResizeDetector({ targetRef: rootRef });
@@ -92,7 +93,14 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
     // NOTE: Masonry currently doesn't support an external scroller.
     //  https://github.com/petyosi/react-virtuoso/issues/1305
     return (
-      <ScrollArea.Root {...composableProps(props)} centered={centered} thin={thin} padding={padding} ref={composedRef}>
+      <ScrollArea.Root
+        {...composableProps(props)}
+        scrollbars={scrollbars}
+        centered={centered}
+        thin={thin}
+        padding={padding}
+        ref={composedRef}
+      >
         <MasonryContentProvider width={width}>{children}</MasonryContentProvider>
       </ScrollArea.Root>
     );
@@ -117,7 +125,7 @@ const MasonryContent = MasonryContentInner as (
 
 type MasonryViewportProps<Item> = ThemedClassName<{
   /** Items to render in the masonry grid. */
-  items: Item[];
+  items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
 }>;
@@ -127,7 +135,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
     const { width } = useMasonryContentContext('Masonry.Viewport');
     const columnCount = useColumnCount(
-      width - (scrollbar.thin.size + scrollbar.thin.padding),
+      width - (scrollbar.md.size + scrollbar.md.padding),
       columns,
       maxColumns,
       minColumnWidth,
@@ -165,27 +173,28 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
 
     return (
       <ScrollArea.Viewport asChild>
-        <ComposableVirtuosoMasonry
-          {...arrowNavigationAttrs}
+        <VirtuosoMasonry
           {...composableProps(props)}
-          ref={forwardedRef}
-          style={{ gap: `${gutter}rem` }}
-          data={items}
-          columnCount={columnCount}
+          {...arrowNavigationAttrs}
           ItemContent={TileAdapter}
+          columnCount={columnCount}
+          style={{ gap: `${gutter}rem` }}
+          data={items as any[]}
+          // ref={forwardedRef}
         />
       </ScrollArea.Viewport>
     );
   },
 );
 
-const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(
-  ({ ...props }, _forwardedRef) => {
-    return <VirtuosoMasonry {...props} />;
-  },
-);
-
 MasonryViewportInner.displayName = 'Masonry.Viewport';
+
+/**
+ * NOTE: Required in order for our Viewport to take over the scroll area.
+ */
+const VirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }, _forwardedRef) => {
+  return <NaturalVirtuosoMasonry {...props} />;
+});
 
 const MasonryViewport = MasonryViewportInner as <Item>(
   props: MasonryViewportProps<Item> & {

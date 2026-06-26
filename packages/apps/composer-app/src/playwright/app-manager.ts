@@ -21,6 +21,10 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
+// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
+export const INITIAL_SPACE_COUNT = 1;
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -208,6 +212,39 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
+  /**
+   * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
+   * expanding the Settings section first if necessary.
+   */
+  async openSpaceSettings(): Promise<void> {
+    const generalHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.general')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await generalHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await generalHeading.click();
+  }
+
+  /**
+   * Deletes the space at the given index (default: the first non-personal space) via its
+   * settings danger zone, including the confirmation step.
+   */
+  async deleteSpace(nth = 1): Promise<void> {
+    // Select the space so its Settings section is available in the navtree.
+    await this.getSpaceItems().nth(nth).click();
+    await this.openSpaceSettings();
+    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+    await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
+  }
+
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean): Promise<void> {
     const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
@@ -225,39 +262,23 @@ export class AppManager {
     return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
   }
 
-  toggleCollectionsSection(delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId('spacePlugin.collectionsSection')
-      .getByRole('button')
-      .first()
-      .click({ delay });
-  }
-
-  toggleTypesSection(delay = 100): Promise<void> {
-    return this.currentWorkspace.getByTestId('spacePlugin.typesSection').getByRole('button').first().click({ delay });
-  }
-
-  toggleSchemaNode(typename: string, delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId(`spacePlugin.schemaNode.${typename}`)
-      .getByRole('button')
-      .first()
-      .click({ delay });
-  }
-
-  toggleTypeCollectionAll(typename: string, delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId(`spacePlugin.typeCollectionAll.${typename}`)
-      .getByRole('button')
-      .first()
-      .click({ delay });
+  async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
+    const section = this.currentWorkspace.getByTestId(testId);
+    await section.waitFor({ state: 'attached', timeout });
+    await section.getByRole('button').first().click({ delay });
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
-      await object.getByTestId('spacePlugin.createObject').click();
+      await object
+        .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+        .first()
+        .click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.getByTestId('spacePlugin.createObject').last().focus();
+      await this.page.keyboard.press('Enter');
     } else {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
@@ -281,18 +302,28 @@ export class AppManager {
 
   async renameObject(newName: string, nth = 0): Promise<void> {
     await this.getObjectLinks().nth(nth).hover();
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    // Match any tree depth: the navtree's section-group nesting varies an object's level, and the
+    // actions button testid encodes that level (`actionsLevel${level}`).
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
     await this.page.keyboard.press('Enter');
-    await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
-    await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+    await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
+    await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
   async deleteObject(nth = 0): Promise<void> {
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();

@@ -8,17 +8,20 @@ import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, type ObjectId } from '@dxos/keys';
+import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
+import * as objInternal from './internal/Obj';
 import * as Obj from './Obj';
-import type * as Type from './Type';
+import type * as Ref from './Ref';
+import type * as Tag from './Tag';
+import * as Type from './Type';
 
 export type Endpoints<Source, Target> = {
   [Source]: Source;
@@ -59,24 +62,20 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
  * ```
  */
 // TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
-export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  // TODO(dmaretskyi): Clean this up.
-  // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
-  //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
-  internal.EchoRelationSchema({
-    typename: 'org.dxos.schema.anyRelation',
-    version: '0.0.0',
-    source: Obj.Unknown,
-    target: Obj.Unknown,
+  Schema.annotations({
+    [internal.TypeAnnotationId]: {
+      kind: Entity.Kind.Relation,
+      typename: 'org.dxos.schema.anyRelation',
+      version: '0.0.0',
+      sourceSchema: DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION),
+      targetSchema: DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION),
+    },
   }),
-  (schema) =>
-    Object.assign(schema, {
-      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
-    }) as unknown as Type.Relation<Unknown, Obj.Any, Obj.Any>,
-);
+) as unknown as internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation>;
 
 /**
  * Relation type with specific source and target types.
@@ -89,7 +88,7 @@ export type OfShape<Source extends Obj.Unknown, Target extends Obj.Unknown, Prop
  */
 interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Endpoints<Source, Target> {
   readonly [Entity.SnapshotKindId]: internal.EntityKind.Relation;
-  readonly id: ObjectId;
+  readonly id: EntityId;
 }
 
 /**
@@ -129,18 +128,20 @@ export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
 /**
  * Internal props type for relation instance creation.
  */
-type MakePropsInternal<T extends Unknown> = {
-  id?: ObjectId;
-  [Meta]?: internal.ObjectMeta;
+type MakePropsInternal<T extends Endpoints<any, any>> = {
+  id?: EntityId;
+  [Meta]?: Partial<internal.EntityMeta>;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Entity.Properties<T>;
 
 /**
- * Props type for relation creation with a given schema.
- * Takes a schema type (created with Type.Relation) and extracts the props type.
+ * Props type for relation creation with a given schema. Accepts a `Type.AnyRelation`
+ * entity (created with `Type.makeRelation`) and derives the props shape via
+ * `Type.InstanceType`. Object-kind entities are rejected at the type level —
+ * use `Obj.MakeProps` for those.
  */
-export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Schema.Type<S>>;
+export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.InstanceType<S>>;
 
 /**
  * Creates new relation.
@@ -151,10 +152,11 @@ export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Sch
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.AnyRelation>(
-  schema: S,
-  props: NoInfer<MakeProps<S>>,
-): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
+export const make = <T extends Type.AnyRelation>(
+  type: T,
+  props: NoInfer<MakeProps<T>>,
+): Type.InstanceType<T> & Entity.OfKind<typeof Entity.Kind.Relation> => {
+  const schema = Type.getSchema(type);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation,
     'schema',
@@ -162,21 +164,47 @@ export const make = <S extends Type.AnyRelation>(
   );
   assertArgument(props[internal.ParentId] === undefined, 'props', 'Parent is not allowed for relations');
 
-  let meta: internal.ObjectMeta | undefined = undefined;
+  let meta: internal.EntityMeta | undefined = undefined;
 
   if (props[internal.MetaId] != null) {
     meta = props[internal.MetaId] as any;
     delete props[internal.MetaId];
   }
 
-  const sourceDXN = internal.getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
-  const targetDXN = internal.getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
+  const sourceDXN = internal.getObjectEchoUri(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = internal.getObjectEchoUri(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
   (props as any)[internal.RelationSourceDXNId] = sourceDXN;
   (props as any)[internal.RelationTargetDXNId] = targetDXN;
 
-  return internal.makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
+  // Pass the type entity through as `typeSource` so the resulting instance
+  // carries a back-reference resolvable via `Relation.getType` / `Entity.getType`.
+  return internal.makeObject(schema as any, props as any, meta, type as any) as any;
 };
+
+/**
+ * Test if a value is an instance of a given relation type.
+ *
+ * Mirrors `Obj.instanceOf` but only accepts `Type.AnyRelation` — use
+ * `Obj.instanceOf` for objects and `Type.isType` for `Type.Type` entities.
+ *
+ * @example
+ * ```ts
+ * const isEmployedBy = Relation.instanceOf(EmployedBy);
+ * if (isEmployedBy(relation)) {
+ *   // relation is EmployedBy
+ * }
+ * ```
+ */
+export const instanceOf: {
+  <S extends Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyRelation, value?: unknown]) => {
+  if (args.length === 1) {
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
+  }
+  return internal.isInstanceOf(args[0], args[1]);
+}) as any;
 
 /**
  * Type guard for relations.
@@ -203,29 +231,29 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 };
 
 /**
- * @returns Relation source DXN.
+ * @returns Relation source URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
+export const getSourceURI = (value: Unknown | Snapshot): EID.EID => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
-  const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(dxn instanceof DXN);
-  return dxn;
+  const uri = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
+  invariant(EID.isEID(uri));
+  return uri;
 };
 
 /**
- * @returns Relation target DXN.
+ * @returns Relation target URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
+export const getTargetURI = (value: Unknown | Snapshot): EID.EID => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
-  const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(dxn instanceof DXN);
-  return dxn;
+  const uri = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
+  invariant(EID.isEID(uri));
+  return uri;
 };
 
 /**
@@ -332,7 +360,7 @@ export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
  * Accepts both reactive relations and snapshots.
  */
 export const getValue = (rel: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return internal.getValue(rel, createJsonPath(path));
+  return SchemaEx.getValue(rel, SchemaEx.createJsonPath(path));
 };
 
 /**
@@ -350,21 +378,30 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the DXN of the relation.
- * Accepts both reactive relations and snapshots.
+ * Get the canonical URI of the relation. Returns `URI.URI` — today always an EID,
+ * but future entity kinds may surface other URI schemes; narrow with `EID.parse(uri)`
+ * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
+export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI =>
+  internal.getUri(entity, options);
 
 /**
  * @returns The DXN of the relation's type.
  */
-export const getTypeDXN = internal.getTypeDXN;
+export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeURI;
 
 /**
- * Get the schema of the relation.
- * Returns the branded ECHO schema used to create the relation.
+ * Get the type entity (`Type.AnyRelation`) the relation was created from.
+ *
+ * Returns `undefined` when the relation's type isn't registered in this
+ * runtime (e.g. a freshly deserialized snapshot whose type entity hasn't been
+ * wired up yet, or a relation loaded from storage before its schema is known).
+ * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getSchema: (rel: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getType = (relation: Unknown | Snapshot): Type.AnyRelation | undefined =>
+  internal.getType(relation) as Type.AnyRelation | undefined;
 
 /**
  * @returns The typename of the relation's type.
@@ -394,7 +431,7 @@ export const getDatabase = (entity: Unknown | Snapshot): Database.Database | und
 export const Meta = internal.MetaId;
 
 /**
- * Deeply read-only version of ObjectMeta.
+ * Deeply read-only version of EntityMeta.
  */
 export type ReadonlyMeta = internal.ReadonlyMeta;
 
@@ -437,7 +474,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the relation.
@@ -446,7 +483,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the relation is deleted.
@@ -461,8 +498,12 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDel
 /**
  * Get the label of the relation.
  * Accepts both reactive relations and snapshots.
+ *
+ * @param options.fallback `'typename'` returns the relation's typename when no
+ *   label is set (e.g. `org.dxos.type.table`).
  */
-export const getLabel = (entity: Unknown | Snapshot): string | undefined => internal.getLabel(entity);
+export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
+  internal.getLabel(entity, options);
 
 /**
  * Set the label of the relation.
@@ -535,3 +576,9 @@ export type Version = internal.EntityVersion;
  * Accepts both reactive relations and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom = objInternal.makeRelation;

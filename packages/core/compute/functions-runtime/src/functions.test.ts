@@ -10,19 +10,19 @@ import * as Schema from 'effect/Schema';
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
-import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Skill, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { ObjectId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
 import { AssistantTestLayer } from './testing';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const ReadName = Operation.make({
   meta: {
-    key: 'org.dxos.function.read-name',
+    key: DXN.make('org.dxos.function.readName'),
     name: 'Read Name',
     description: 'Reads the name of an organization.',
   },
@@ -36,17 +36,17 @@ const ReadName = Operation.make({
 const Handlers = OperationHandlerSet.make(
   Operation.withHandler(
     ReadName,
-    Effect.fnUntraced(function* ({ org }) {
+    Effect.fn(function* ({ org }) {
       const resolved = yield* Database.load(org);
       return resolved.name ?? '<no org>';
     }),
   ),
 );
 
-const blueprint = Blueprint.make({
-  key: 'org.dxos.blueprint.test',
-  name: 'Test blueprint',
-  tools: Blueprint.toolDefinitions({ operations: [ReadName] }),
+const skill = Skill.make({
+  key: 'org.dxos.skill.test',
+  name: 'Test skill',
+  tools: Skill.toolDefinitions({ operations: [ReadName] }),
 });
 
 const TestLayer = Layer.empty.pipe(
@@ -75,7 +75,7 @@ describe('Research', () => {
         yield* new AiRequest.Request({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({
-            blueprints: [blueprint],
+            skills: [skill],
           }),
         });
       },

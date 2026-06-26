@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { useContext, useState } from 'react';
 
 import { AiContext } from '@dxos/assistant';
-import { Feed } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { Database, Feed } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -26,9 +25,8 @@ export const useContextBinder = (
       return;
     }
 
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    const runtime = await EffectEx.runAndForwardErrors(
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed, runtime, registry });
     await binder.open();

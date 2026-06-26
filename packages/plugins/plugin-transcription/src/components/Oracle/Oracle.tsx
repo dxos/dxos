@@ -8,9 +8,10 @@ import React, { type PropsWithChildren, createContext, useContext, useMemo } fro
 
 import '@dxos/react-ui-graph/styles/graph.css';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, slottable } from '@dxos/react-ui';
 import { TextBlock } from '@dxos/react-ui-components';
 import { SVG } from '@dxos/react-ui-graph';
-import { composableProps, mx, slottable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 //

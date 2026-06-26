@@ -16,8 +16,9 @@ import React, {
   useRef,
 } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -35,7 +36,6 @@ import {
   hashtag,
   outliner,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -117,7 +117,7 @@ type OutlineContentProps = {};
 
 const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ children, ...props }, forwardedRef) => {
   const { id, text, scrollable, showSelected, autoFocus, viewRef } = useOutlineContext(OUTLINE_CONTENT_NAME);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
 
   const { parentRef, focusAttributes, view } = useTextEditor(
@@ -127,7 +127,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       selection: EditorSelection.cursor(text.content.length),
       initialValue: text.content,
       extensions: [
-        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+        createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
         createBasicExtensions({ readOnly: false, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({
@@ -173,9 +173,10 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       return item.onSelect({ view, head: view.state.selection.main.head });
     }
   }, []);
+  const getView = useCallback(() => view ?? null, [view]);
 
   return (
-    <EditorMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
+    <EditorMenuProvider getView={getView} groups={commandGroups} onSelect={handleSelect}>
       <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef)}>
         {children}
       </div>

@@ -22,7 +22,7 @@ import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode'
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { generateName } from '@dxos/display-name';
-import { type DocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
@@ -267,7 +267,7 @@ export const createThemeExtensions = ({
 
 export type DataExtensionsProps<T> = {
   id: string;
-  text?: DocAccessor<T>;
+  text?: Doc.Accessor<T>;
   messenger?: Messenger;
   identity?: Identity | null;
 };

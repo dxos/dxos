@@ -16,8 +16,8 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { type Database, Obj } from '@dxos/echo';
-import { type EchoClient, Filter, Query } from '@dxos/echo-db';
+import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { type EchoClient } from '@dxos/echo-client';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -144,8 +144,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
+      const incoming = data.spaces ?? [];
 
-      for (const space of data.spaces ?? []) {
+      // Remove proxies for spaces that are no longer present (e.g. tombstoned/deleted).
+      // `querySpaces` always emits a full snapshot, so absence means the space is gone.
+      for (let index = newSpaces.length - 1; index >= 0; --index) {
+        const spaceProxy = newSpaces[index];
+        if (!incoming.some((space) => space.spaceKey.equals(spaceProxy.key))) {
+          newSpaces.splice(index, 1);
+          void spaceProxy._destroy();
+          emitUpdate = true;
+        }
+      }
+
+      for (const space of incoming) {
         if (this._ctx.disposed) {
           return;
         }
@@ -283,10 +295,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  async import(archive: SpaceArchive): Promise<Space> {
+  async import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
     const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
-      { archive },
+      { archive, tags: options?.tags },
       { timeout: IMPORT_SPACE_TIMEOUT, ctx: this._ctx },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');

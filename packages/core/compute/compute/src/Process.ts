@@ -5,6 +5,8 @@
 // @import-as-namespace
 
 import type { Atom } from '@effect-atom/atom';
+import * as Rpc from '@effect/rpc/Rpc';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
@@ -13,12 +15,14 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
+import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
+import { DXN, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ObjectId } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
+import * as StorageService from './StorageService';
 import * as Trace from './Trace';
 
 //
@@ -39,7 +43,7 @@ export type ID = Schema.Schema.Type<typeof ID>;
  * - onAlarm -> called for processes scheduling alarms.
  * - onChildEvent -> called when child process produces output or exits.
  */
-export interface Callbacks<I, O, R> {
+export interface Callbacks<_Input, _Output, _Requirements, _Rpcs extends Rpc.Any> {
   /**
    * Called when the process is spawned.
    * Not called for processes that are resumed from a previously suspended state.
@@ -49,7 +53,7 @@ export interface Callbacks<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  onSpawn(): Effect.Effect<void, never, R | BaseServices>;
+  onSpawn(): Effect.Effect<void, never, _Requirements | BaseServices>;
 
   /**
    * Called when there's input available to process.
@@ -61,27 +65,34 @@ export interface Callbacks<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  onInput(input: I): Effect.Effect<void, never, R | BaseServices>;
+  onInput(input: _Input): Effect.Effect<void, never, _Requirements | BaseServices>;
 
   /**
    * Called when the process's alarm is triggered.
    *
    * @throws Throwing in the handler will terminate the process with an error.
    */
-  onAlarm(): Effect.Effect<void, never, R | BaseServices>;
+  onAlarm(): Effect.Effect<void, never, _Requirements | BaseServices>;
 
   /**
    * Called when the process's child process produces output or exits.
    *
    * This allows the parent process to hibernate while a long-running child process is running.
    */
-  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
+  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, _Requirements | BaseServices>;
+
+  /**
+   * Handlers for the RPCs provided by the process.
+   */
+  rpcHandlers: Context.Context<Rpc.ToHandler<_Rpcs>>;
 }
 
 /**
  * Services that are always available to all processes.
+ * Provided unconditionally by the runtime, so handlers may use them without declaring them
+ * in {@link MakeProcessOpts.services}.
  */
-export type BaseServices = Trace.TraceService;
+export type BaseServices = Trace.TraceService | StorageService.StorageService;
 
 export type ChildEvent<T> =
   | {
@@ -138,10 +149,35 @@ export interface Params {
   readonly name: string | null;
 
   /**
-   * Target object that this process is assigned to.
+   * User-defined annotations for the process.
+   * Can only be set when the process is spawned.
    */
-  readonly target: ObjectId | null;
+  readonly annotations: Annotation.Dictionary;
 }
+
+/**
+ * Attaches the process to a target object.
+ */
+export const TargetAnnotation = Annotation.make({
+  id: 'org.dxos.process.target',
+  schema: URI.Schema,
+});
+
+/**
+ * Notification descriptor for surfacing process lifecycle events to the user.
+ */
+export const NotifyAnnotation = Annotation.make({
+  id: 'org.dxos.process.notify',
+  schema: Operation.NotifyOptions,
+});
+
+/**
+ * Marks a process as the harness host for its conversation (discovery substrate).
+ */
+export const HarnessHostAnnotation = Annotation.make({
+  id: 'org.dxos.process.harnessHost',
+  schema: Schema.Boolean,
+});
 
 //
 // Executable.
@@ -156,7 +192,12 @@ export type ProcessTypeId = typeof ProcessTypeId;
  * `create` is used to instantiate a new process.
  * Can store runtime state in scope of `create` function.
  */
-export interface Process<I, O, R> extends Process.Variance<I, O, R> {
+export interface Process<
+  _Input,
+  _Output,
+  _Requirements = never,
+  _Rpcs extends Rpc.Any = never,
+> extends Process.Variance<_Input, _Output, _Requirements, _Rpcs> {
   /**
    * Unique identifier for the executable in the reverse DNS format.
    */
@@ -169,25 +210,38 @@ export interface Process<I, O, R> extends Process.Variance<I, O, R> {
 
   readonly services: readonly Context.Tag<any, any>[];
 
+  // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
+  // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
+  // structural fields would block `Process<…, never>` from being assignable to `Process.Any`.
+  // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
+  // See design spec §4.4.
+  readonly rpcs: RpcGroup.RpcGroup<any>;
+
   /**
    * Create a new instance of the process.
    */
-  create(ctx: ProcessContext<I, O>): Effect.Effect<Callbacks<I, O, R>, never, R | BaseServices | Scope.Scope>;
+  create(
+    ctx: ProcessContext<_Input, _Output>,
+  ): Effect.Effect<Callbacks<_Input, _Output, _Requirements, any>, never, _Requirements | BaseServices | Scope.Scope>;
 }
 
 export const isProcess = (executable: unknown): executable is Process.Any =>
   typeof executable === 'object' && executable !== null && ProcessTypeId in executable;
 
 export namespace Process {
-  export interface Variance<I, O, R> {
+  export interface Variance<_Input, _Output, _Requirements, _Rpcs> {
     readonly [ProcessTypeId]: {
-      readonly _Input: Types.Contravariant<I>;
-      readonly _Output: Types.Covariant<O>;
-      readonly _Requirements: Types.Covariant<R>;
+      readonly _Input: Types.Contravariant<_Input>;
+      readonly _Output: Types.Covariant<_Output>;
+      readonly _Requirements: Types.Covariant<_Requirements>;
+
+      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Process.Any` while
+      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
+      readonly _Rpcs: Types.Covariant<_Rpcs>;
     };
   }
 
-  export type Any = Process<any, any, never>;
+  export type Any = Process<any, any, any, any>;
 }
 
 export interface MakeProcessOpts {
@@ -199,6 +253,7 @@ export interface MakeProcessOpts {
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
+  readonly rpcs?: RpcGroup.RpcGroup<any>;
 }
 
 export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
@@ -210,7 +265,8 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
       Callbacks<
         Schema.Schema.Type<Opts['input']>,
         Schema.Schema.Type<Opts['output']>,
-        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+        RpcGroup.Rpcs<Opts['rpcs']>
       >
     >,
     never,
@@ -219,12 +275,14 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
 ): Process<
   Schema.Schema.Type<Opts['input']>,
   Schema.Schema.Type<Opts['output']>,
-  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+  RpcGroup.Rpcs<Opts['rpcs']>
 > => {
   assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
   return {
     [ProcessTypeId]: {} as any,
     ...opts,
+    rpcs: opts.rpcs ?? RpcGroup.make(),
     create: (ctx) =>
       create(ctx).pipe(
         Effect.map((partial) => ({
@@ -233,10 +291,41 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
           onAlarm: () => Effect.void,
           onChildEvent: () => Effect.void,
           ...partial,
+          rpcHandlers: sanitizeRpcs(opts.rpcs, partial.rpcHandlers),
         })),
       ),
   };
 };
+
+// Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
+// `Callbacks.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
+// handler contract is enforced by `make`'s `create` parameter, not by this internal helper.
+const sanitizeRpcs = <Rpcs extends Rpc.Any>(
+  defined: RpcGroup.RpcGroup<Rpcs> | undefined,
+  provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
+): Context.Context<any> => {
+  // Handlers are required only when a non-empty RPC group is declared.
+  const needsRpcs = defined !== undefined && defined.requests.size > 0;
+  if (!needsRpcs) {
+    // `Context.empty()` is `Context<never>`; `Context`'s requirement parameter is contravariant,
+    // so the empty (no-handler) context needs widening to the untyped bag.
+    return provided ?? (Context.empty() as Context.Context<any>);
+  }
+  if (!provided) {
+    throw new TypeError('Process declared RPCs but did not provide any handlers');
+  }
+  return provided;
+};
+
+/**
+ * Durable marker recording that an operation's input handler has begun executing.
+ * Persisted before the handler runs so that, after an interruption (suspend/restart), a
+ * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
+ * when the process reaches a terminal state (the runtime clears the process's storage).
+ */
+const OperationStartedCell = StorageService.cell(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
+  StorageService.withDefault(() => false),
+);
 
 export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
@@ -244,7 +333,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 ): Process<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
   make(
     {
-      key: op.meta.key,
+      key: DXN.getName(op.meta.key),
       input: op.input,
       output: op.output,
       services: op.services,
@@ -252,15 +341,31 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     (ctx) =>
       Effect.gen(function* () {
         const semaphore = yield* Effect.makeSemaphore(1);
+        // The process runtime assumes handlers are idempotent and always re-delivers an input
+        // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
+        // a re-delivery that observes the durable "started" marker fails instead of repeating
+        // side effects. Idempotent operations skip the marker and are simply re-run.
+        const idempotent = Operation.isIdempotent(op);
 
         return {
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
+              if (!idempotent) {
+                const started = yield* OperationStartedCell.get;
+                if (started) {
+                  return yield* Effect.die(
+                    new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
+                  );
+                }
+                yield* OperationStartedCell.set(true);
+              }
+
               // Emit operation start event.
               log('operation process invoking', { key: op.meta.key, name: op.meta.name });
               yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
               });
               // Emit ephemeral operation input event for live subscribers
               // (history tracker, devtools) without persisting raw input.
@@ -293,6 +398,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
                 outcome: 'success',
               });
             }).pipe(
@@ -303,6 +409,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
+                    icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
                   });

@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -21,13 +22,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -48,7 +49,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../sdk/app-framework"
@@ -57,13 +61,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -78,16 +82,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
@@ -96,13 +91,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

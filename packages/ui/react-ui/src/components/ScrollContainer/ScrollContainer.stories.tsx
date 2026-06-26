@@ -7,9 +7,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 
-import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
+import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 

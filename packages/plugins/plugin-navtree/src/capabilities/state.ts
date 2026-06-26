@@ -13,7 +13,7 @@ import { Path } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { NavTreeCapabilities } from '#types';
 
-const KEY = `${meta.id}.state.v1`;
+const KEY = `${meta.profile.key}.state.v1`;
 
 /** Default item state for new entries. */
 const defaultItemState: NavTreeCapabilities.NavTreeItemState = { open: false, current: false };
@@ -111,8 +111,8 @@ export default Capability.makeModule(
       // TODO(wittjosiah): This is setTimeout because there's a race between the keys being initialized.
       //   Keys are initialized on the first render of an item in the navtree.
       //   This could be avoided if the location was a path as well and not just an id.
+      // Defer so item path atoms exist and we do not setState during tree render.
       const timeout = setTimeout(handleUpdate, 500);
-      handleUpdate();
       return () => clearTimeout(timeout);
     });
 

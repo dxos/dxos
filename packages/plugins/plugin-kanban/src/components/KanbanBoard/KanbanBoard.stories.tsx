@@ -47,7 +47,7 @@ const DefaultStory = () => {
 
   useEffect(() => {
     const view = ViewModel.make({
-      query: Query.select(Filter.typename(Organization.Organization.typename)),
+      query: Query.select(Filter.type(Organization.Organization)),
       jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       pivotFieldName: 'status',
     });

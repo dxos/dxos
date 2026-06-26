@@ -7,9 +7,11 @@ import { cluster, curveBundle, hierarchy, lineRadial, select } from 'd3';
 import type { HierarchyNode } from 'd3-hierarchy';
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { type Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { getNodeFillForObject } from '../../../util/node-color';
 import { type TreeNode } from '../types';
 import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
 import { useContainerSize } from './useContainerSize';
@@ -34,6 +36,8 @@ export type HierarchicalEdgeBundlingProps = ThemedClassName<{
   padding?: number;
   /** Bundling tension; 0 = straight, 1 = maximally bundled. */
   tension?: number;
+  /** Leaf node circle radius (matches the cluster layout's `r`). */
+  r?: number;
   slots?: TreeLayoutSlots;
   /**
    * Called when the user hovers a leaf node (with the event so callers can dispatch
@@ -56,6 +60,7 @@ export const HierarchicalEdgeBundling = ({
   label = (d) => d.label ?? d.id,
   padding = 120,
   tension = 0.85,
+  r = 4,
   slots = defaultTreeLayoutSlots,
   onNodeHover,
 }: HierarchicalEdgeBundlingProps) => {
@@ -76,12 +81,13 @@ export const HierarchicalEdgeBundling = ({
     const radius = Math.max(0, Math.min(width, height) / 2 - padding);
     renderBundling(svgRef.current, root, {
       radius,
+      r,
       label,
       slots,
       tension,
       onNodeHover: (n, e) => handleHoverRef.current(n, e),
     });
-  }, [root, width, height, padding, tension, label, slots]);
+  }, [root, width, height, padding, tension, r, label, slots]);
 
   return (
     <div ref={setRef} className={mx('dx-expander relative', classNames)}>
@@ -103,6 +109,7 @@ type BundleHierarchy = HierarchyNode<TreeNode> & {
   incoming?: Array<[BundleHierarchy, BundleHierarchy, BundleEdge]>;
   pathEl?: SVGPathElement | null;
   text?: SVGTextElement | null;
+  circle?: SVGCircleElement | null;
 };
 
 /**
@@ -133,6 +140,7 @@ const buildBundleHierarchy = (data: TreeNode, edges: BundleEdge[]): BundleHierar
 
 type RenderOptions = {
   radius: number;
+  r: number;
   tension: number;
   label: (d: TreeNode) => string;
   slots: TreeLayoutSlots;
@@ -140,7 +148,7 @@ type RenderOptions = {
 };
 
 const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, options: RenderOptions) => {
-  const { radius, tension, label, slots, onNodeHover } = options;
+  const { radius, r, tension, label, slots, onNodeHover } = options;
   const svg = select(svgElement);
 
   // Degenerate root (no descendants yet): clear any previously rendered bundle so a stale
@@ -206,13 +214,14 @@ const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, option
     .attr('opacity', 1)
     .attr('d', ([s, t]) => line(s.path(t)));
 
-  // Render leaf labels along the perimeter.
+  // Render a circle + label per leaf along the perimeter (matches the cluster layout).
   const labels = nodesLayer
     .selectAll<SVGGElement, any>('g.dx-bundle-leaf')
     .data(leaves, (d: any) => d.data.id)
     .join(
       (enter) => {
         const ge = enter.append('g').classed('dx-bundle-leaf', true).attr('opacity', 0);
+        ge.append('circle').style('cursor', 'pointer');
         ge.append('text').attr('dy', '0.32em').attr('paint-order', 'stroke').style('cursor', 'pointer');
         return ge;
       },
@@ -234,43 +243,92 @@ const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, option
     .attr('opacity', 1)
     .attr('transform', (d: any) => `rotate(${(d.x * 180) / Math.PI - 90}) translate(${d.y},0)`);
 
+  const onEnter = function (this: SVGElement, event: MouseEvent, d: BundleHierarchy) {
+    onNodeHover(d.data, event);
+    hover(linksLayer, leaves, d, true);
+  };
+  const onLeave = function (this: SVGElement, event: MouseEvent, d: BundleHierarchy) {
+    onNodeHover(null);
+    hover(linksLayer, leaves, d, false);
+  };
+
+  labels
+    .select<SVGCircleElement>('circle')
+    .attr('class', [slots.node ?? '', 'dx-leaf'].filter(Boolean).join(' '))
+    .attr('r', r)
+    .style('fill', (d: BundleHierarchy) => getNodeFillForObject(d.data.data as Obj.Unknown | undefined))
+    .each(function (d: BundleHierarchy) {
+      d.circle = this;
+    })
+    .on('pointerenter', onEnter)
+    .on('pointerleave', onLeave);
+
   labels
     .select<SVGTextElement>('text')
     .attr('class', slots.text ?? '')
-    .attr('x', (d: any) => (d.x < Math.PI ? 6 : -6))
+    .attr('x', (d: any) => (d.x < Math.PI ? r + 4 : -(r + 4)))
     .attr('text-anchor', (d: any) => (d.x < Math.PI ? 'start' : 'end'))
     .attr('transform', (d: any) => (d.x >= Math.PI ? 'rotate(180)' : null))
     .each(function (d: BundleHierarchy) {
       d.text = this;
     })
     .text((d: any) => label(d.data))
-    .on('pointerenter', function (event: MouseEvent, d: BundleHierarchy) {
-      onNodeHover(d.data, event);
-      hover(linksLayer, leaves, d, true);
-    })
-    .on('pointerleave', function (event: MouseEvent, d: BundleHierarchy) {
-      onNodeHover(null);
-      hover(linksLayer, leaves, d, false);
-    });
+    .on('pointerenter', onEnter)
+    .on('pointerleave', onLeave);
 };
 
 const hover = (linksLayer: any, leaves: BundleHierarchy[], focused: BundleHierarchy, on: boolean) => {
   const outgoing = new Set((focused.outgoing ?? []).map(([, t]) => t));
   const incoming = new Set((focused.incoming ?? []).map(([s]) => s));
 
+  // Use D3 inline styles (highest specificity) so results are visible regardless of CSS cascade.
+  // Inline styles set to `null` are removed, restoring the element's default appearance.
   (linksLayer.selectAll('path') as any)
-    .classed('dx-bundle-out', (d: any) => on && d[0] === focused)
-    .classed('dx-bundle-in', (d: any) => on && d[1] === focused)
-    .classed('dx-bundle-dim', (d: any) => on && d[0] !== focused && d[1] !== focused);
+    .style('stroke', (d: any) => {
+      if (!on) {
+        return null;
+      }
+      if (d[0] === focused) {
+        return 'var(--color-orange-500)';
+      }
+      if (d[1] === focused) {
+        return 'var(--color-sky-500)';
+      }
+      return null;
+    })
+    .style('stroke-width', (d: any) => (on && (d[0] === focused || d[1] === focused) ? '1.5px' : null))
+    .style('opacity', (d: any) => (on && d[0] !== focused && d[1] !== focused ? '0.08' : null));
 
   for (const leaf of leaves) {
-    if (!leaf.text) {
-      continue;
+    const isOut = outgoing.has(leaf);
+    const isIn = incoming.has(leaf);
+    const isConnected = isOut || isIn;
+
+    if (leaf.text) {
+      select(leaf.text)
+        .style('fill', () => {
+          if (!on) {
+            return null;
+          }
+          if (leaf === focused) {
+            return 'var(--color-neutral-900)';
+          }
+          if (isOut) {
+            return 'var(--color-orange-500)';
+          }
+          if (isIn) {
+            return 'var(--color-sky-500)';
+          }
+          return null;
+        })
+        .style('font-weight', () => (on && leaf === focused ? '600' : null));
     }
-    select(leaf.text)
-      .classed('dx-bundle-focused', on && leaf === focused)
-      .classed('dx-bundle-out-text', on && outgoing.has(leaf))
-      .classed('dx-bundle-in-text', on && incoming.has(leaf));
+    if (leaf.circle) {
+      select(leaf.circle)
+        .style('stroke', () => (on && isConnected ? 'var(--color-orange-400)' : null))
+        .style('stroke-width', () => (on && isConnected ? '2.5px' : null))
+        .style('opacity', () => (on && !isConnected && leaf !== focused ? '0.15' : null));
+    }
   }
 };
 

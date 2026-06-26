@@ -6,27 +6,28 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Operation } from '@dxos/compute';
-import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { Type } from '@dxos/echo';
+import { getTextInRange } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 
 import { MarkdownOperation } from '#types';
 import { Markdown } from '#types';
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const config: AppCapabilities.CommentConfig = {
-      id: Markdown.Document.typename,
-      comments: 'anchored',
-      selectionMode: 'multi-range',
-      getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
-        if (doc.content) {
-          const [start, end] = anchor.split(':');
-          return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
-        }
-      },
-      scrollToAnchor: MarkdownOperation.ScrollToAnchor,
-    };
-    return Capability.contributes(AppCapabilities.CommentConfig, config);
-  }),
-);
+const activate = Effect.fnUntraced(function* () {
+  const config: AppCapabilities.CommentConfig = {
+    id: Type.getTypename(Markdown.Document),
+    comments: 'anchored',
+    selectionMode: 'multi-range',
+    getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
+      const target = doc.content?.target;
+      if (target) {
+        const [start, end] = anchor.split(':');
+        return getTextInRange(Doc.createAccessor(target, ['content']), start, end);
+      }
+    },
+    scrollToAnchor: MarkdownOperation.ScrollToAnchor,
+  };
+  return Capability.contributes(AppCapabilities.CommentConfig, config);
+});
+
+export default activate;

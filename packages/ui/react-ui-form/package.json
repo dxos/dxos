@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-form",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,7 +12,8 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": "./src/translations.ts",
+    "#types": "./src/types.ts"
   },
   "exports": {
     ".": {
@@ -34,10 +35,13 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/lang-xml": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -48,10 +52,12 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
@@ -62,12 +68,15 @@
     "tabster": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect-proto": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

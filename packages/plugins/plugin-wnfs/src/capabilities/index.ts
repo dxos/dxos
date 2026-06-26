@@ -3,14 +3,9 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+
+export const Backend = Capability.lazy('Backend', () => import('./backend'));
 
 export const Blockstore = Capability.lazy('Blockstore', () => import('./blockstore'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const FileUploader = Capability.lazy('FileUploader', () => import('./file-uploader'));
-export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
-);
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+
+export const UrlResolver = Capability.lazy('UrlResolver', () => import('./url-resolver'));

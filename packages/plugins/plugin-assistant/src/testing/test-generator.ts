@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Obj } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { random } from '@dxos/random';
 import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
@@ -19,11 +19,7 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
   });
 };
 
-export type MessageGenerator = Effect.Effect<
-  void,
-  never,
-  Database.Service | Feed.ContextFeedService | Feed.FeedService
->;
+export type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
@@ -75,7 +71,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   // so the syncer renders progressive deltas through the feed (not via the controller).
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
-    const feedService = yield* Feed.FeedService;
+    const { db } = yield* Database.Service;
     const message = createMessage('assistant', [{ _tag: 'text', text: '', pending: true }]);
     yield* Feed.append(feed, [message]);
 
@@ -92,13 +88,13 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           block.text += chunk;
         });
         // Feed queries only react to feed-level updates, not in-place object mutations.
-        await feedService.append(feed, []);
+        await db.appendToFeed(feed, []);
       }
       Obj.update(message, (message) => {
         const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });
-      await feedService.append(feed, []);
+      await db.appendToFeed(feed, []);
     });
   }),
 

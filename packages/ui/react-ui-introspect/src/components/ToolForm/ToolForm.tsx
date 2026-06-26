@@ -11,7 +11,7 @@ import React, { useMemo } from 'react';
 
 import { getPicker, type PickerKind } from '@dxos/introspect-tools';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldComponentProps } from '@dxos/react-ui-form';
+import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -53,7 +53,8 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
     if (!pickerOptions) {
       return undefined;
     }
-    return ({ schema, fieldProps }: { schema: { ast: any }; prop: string; fieldProps: FormFieldComponentProps }) => {
+
+    return ({ schema, fieldProps }: { schema: { ast: any }; prop: string; fieldProps: FormFieldRendererProps }) => {
       const kind = getPicker(schema.ast);
       if (!kind) {
         return undefined;
@@ -62,6 +63,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
       if (!options || options.length === 0) {
         return undefined;
       }
+
       const { type, getValue, onValueChange, placeholder } = fieldProps;
       return (
         <Picker
@@ -100,7 +102,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
         onCancel={onCancel}
       >
         <Form.Content>
-          <Form.FieldSet fieldProvider={fieldProvider as any} />
+          <Form.FieldSet fieldProvider={fieldProvider} />
           <Form.Submit label={t('run-tool.label')} />
         </Form.Content>
       </Form.Root>

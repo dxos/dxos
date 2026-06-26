@@ -7,18 +7,20 @@ import { deepMapValues } from '@dxos/util';
 
 import {
   KindId,
-  MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
+  ParentId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
   SchemaId,
-  SelfDXNId,
+  SelfURIId,
   SnapshotKindId,
+  TypeEntityId,
   TypeId,
 } from '../common/types';
+import { MetaId } from '../common/types/model-symbols';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.
@@ -83,16 +85,23 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   // Type introspection symbols.
   copySymbolProperty(source, snapshot, TypeId);
   copySymbolProperty(source, snapshot, SchemaId);
-  copySymbolProperty(source, snapshot, SelfDXNId);
+  copySymbolProperty(source, snapshot, TypeEntityId);
+  copySymbolProperty(source, snapshot, SelfURIId);
 
   // Database reference (required for Obj.getDatabase to work on snapshots).
   copySymbolProperty(source, snapshot, ObjectDatabaseId);
   copySymbolProperty(source, snapshot, ObjectDeletedId);
 
-  // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
+  // Parent reference (required for Obj.getParent to work on snapshots).
+  copySymbolProperty(source, snapshot, ParentId);
+
+  // Metadata symbol. Copy arrays/objects so the snapshot is not affected by mutations to the live meta.
   copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
     keys: [...(meta?.keys ?? [])],
     tags: [...(meta?.tags ?? [])],
+    ...(meta?.key != null ? { key: meta.key } : {}),
+    ...(meta?.version != null ? { version: meta.version } : {}),
+    ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
   }));
 
   // Relation endpoint symbols.

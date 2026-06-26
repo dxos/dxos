@@ -2,11 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.settings',
-  name: 'Settings',
-  author: 'DXOS',
-  tags: ['system'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

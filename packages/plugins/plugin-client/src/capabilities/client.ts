@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
@@ -56,7 +56,7 @@ export default Capability.makeModule(
         }).pipe(
           Effect.provideService(Capability.Service, capabilityManager),
           Effect.provideService(Plugin.Service, pluginManager),
-          runAndForwardErrors,
+          EffectEx.runAndForwardErrors,
         );
       }
     });
@@ -69,6 +69,7 @@ export default Capability.makeModule(
       Capability.contributes(ClientCapabilities.Client, client, () =>
         Effect.gen(function* () {
           log.info('client capability: destroying client');
+          // TODO(dmaretskyi): use scope for destroy.
           subscription.unsubscribe();
           yield* Effect.tryPromise(() => client.destroy());
         }),

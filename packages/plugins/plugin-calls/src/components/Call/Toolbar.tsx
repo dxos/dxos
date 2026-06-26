@@ -40,23 +40,28 @@ export const Toolbar = ({
   channel,
   participants,
   autoHideControls = true,
+  isInRoom,
   onJoin,
   onLeave,
 }: ToolbarProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const call = useCapability(CallsCapabilities.Manager);
-  const media = useAtomValue(call.mediaAtom);
+  const audioEnabled = useAtomValue(call.audioEnabledAtom);
+  const videoEnabled = useAtomValue(call.videoEnabledAtom);
+  const isScreensharing = useAtomValue(call.screensharingAtom);
   const joined = useAtomValue(call.joinedAtom);
   const raisedHand = useAtomValue(call.raisedHandAtom);
+  // Room-scoped membership, not the global session: when joined to a *different* room this toolbar
+  // must still offer "join". Callers pass `isInRoom`; fall back to global joined when unset.
+  const inRoom = isInRoom ?? joined;
 
   // Channel app graph node.
-  const node = useNode(graph, channel && Obj.getDXN(channel).toString());
+  const node = useNode(graph, channel && Obj.getURI(channel));
   const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
 
   // Screen sharing.
-  const isScreensharing = media.screenshareTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
@@ -65,7 +70,7 @@ export const Toolbar = ({
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
       <NaturalToolbar.Root classNames={['p-2 bg-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
-          active={media.audioEnabled}
+          active={audioEnabled}
           state={{
             on: {
               icon: 'ph--microphone--regular',
@@ -81,7 +86,7 @@ export const Toolbar = ({
           }}
         />
         <ToggleButton
-          active={media.videoEnabled}
+          active={videoEnabled}
           state={{
             on: {
               icon: 'ph--video-camera--regular',
@@ -103,7 +108,7 @@ export const Toolbar = ({
           </div>
         )) || <NaturalToolbar.Separator variant='gap' />}
 
-        {joined && (
+        {inRoom && (
           <>
             <ToggleButton
               disabled={!canSharescreen}
@@ -153,7 +158,7 @@ export const Toolbar = ({
             />
           </>
         )}
-        {joined ? (
+        {inRoom ? (
           <IconButton
             variant='destructive'
             icon='ph--phone-x--regular'

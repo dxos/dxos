@@ -30,7 +30,7 @@ export type FlattenedActions = {
 type SharedProperties = {
   testId?: string;
   disabled?: boolean;
-  position?: Position;
+  position?: Position.Position;
   label: Label;
   className?: string;
   headingClassName?: string;
@@ -43,6 +43,10 @@ export type NodeProperties = SharedProperties & {
   error?: string;
   modified?: boolean;
   palette?: string;
+  /** Optional item count rendered as a neutral badge after the label. */
+  count?: number;
+  /** Optional count of new/modified items; when greater than zero it shows as a rose badge in place of `count`. */
+  modifiedCount?: number;
 };
 
 export type ActionProperties = SharedProperties & {
@@ -58,7 +62,7 @@ export type ActionProperties = SharedProperties & {
  */
 export type KeyBinding = {
   // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
-  // TODO(thure): Dedupe (similar in react-ui-stack/next)
+  // TODO(thure): Dedupe with the other platform key-binding definitions.
   windows?: string;
   macos?: string;
   ios?: string;

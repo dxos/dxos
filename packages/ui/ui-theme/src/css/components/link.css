@@ -4,9 +4,9 @@
 
 @layer dx-components {
   .dx-link {
-    @apply text-accent-text hover:text-accent-text-hover;
+    @apply text-accent-text hover:text-accent-text-hover cursor-pointer;
   }
   .dx-link-hover {
-    @apply hover:text-accent-text-hover;
+    @apply hover:text-accent-text-hover! cursor-pointer;
   }
 }

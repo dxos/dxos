@@ -6,8 +6,9 @@ import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -35,7 +36,7 @@ export type AppBarProps = {
  */
 export const AppBar = composable<HTMLDivElement, AppBarProps>(
   ({ classNames, title, actions, showBackButton, popoverAnchorId, onAction, onBack, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const menuActions = useMenuActions(actions);
     const actionsValue = useAtomValue(actions);
     const hasActions = actionsValue.nodes.length > 0;
@@ -48,11 +49,11 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider density='fine'>
+      <DensityProvider density='md'>
         <Toolbar.Root
           {...composableProps(props, {
             role: 'banner',
-            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
+            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md',
           })}
           ref={forwardedRef}
         >
@@ -72,7 +73,7 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
           <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
           {hasActions ? (
             <AnchorRoot>
-              <Menu.Root {...menuActions} caller={meta.id} onAction={onAction}>
+              <Menu.Root {...menuActions} caller={meta.profile.key} onAction={onAction}>
                 <Menu.Trigger asChild>
                   <IconButton
                     variant='ghost'

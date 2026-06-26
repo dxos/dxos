@@ -3,94 +3,46 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
-import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
+import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { MessageRoot, MessageTextbox } from '../Message';
-import { type MessageEntity, MessageStoryText } from '../testing';
+import { createMessages, getStoryMetadata } from '../testing';
 import { Thread } from './Thread';
 
-random.seed(1);
+const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
 
 const DefaultStory = () => {
-  const [pending, setPending] = useState(false);
-  const [identityKey1] = useState(PublicKey.random());
-  const [identityKey2] = useState(PublicKey.random());
-  const [messages, setMessages] = useState<MessageEntity<{ id: string; text: string }>[]>(
-    Array.from({ length: 8 }, (_, i) => ({
-      id: `m${i + 1}`,
-      timestamp: new Date().toISOString(),
-      authorId: [identityKey1.toHex(), identityKey2.toHex()][i % 2],
-      text: random.lorem.paragraph(),
-    })),
-  );
+  const [messages, setMessages] = useState(() => createMessages(12));
 
-  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
-  const [_count, _setCount] = useState(3);
-  const rerenderEditor = () => _setCount((count) => count + 1);
-  const messageRef = useRef('');
-  const extensions = useMemo(() => [createBasicExtensions(), createThemeExtensions()], []);
-
-  // TODO(thure): Why does pressing Enter clear the text content?
-  //  Something to do with the in-memory text model perhaps?
-  const handleSend = () => {
-    setPending(true);
-    setTimeout(() => {
-      setMessages((messages) => [
-        ...messages,
-        {
-          id: `m${_count}`,
-          timestamp: new Date().toISOString(),
-          authorId: identityKey1.toHex(),
-          text: messageRef.current,
-        },
-      ]);
-      messageRef.current = '';
-      setPending(false);
-      rerenderEditor();
-    }, 2_000);
+  const handleSend = (text: string) => {
+    setMessages((prev) => [...prev, MessageType.make({ sender: IDENTITY, blocks: [{ _tag: 'text', text }] })]);
+    return true;
   };
 
   return (
-    <div className='mx-auto w-96 overflow-y-auto'>
-      <Thread.Root id='t1'>
-        {messages.map((message) => (
-          <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
-            <MessageStoryText {...message} text={message.text} onDelete={() => console.log('delete')} />
-          </MessageRoot>
-        ))}
-
-        <MessageTextbox
-          id={String(_count)}
-          authorId={identityKey1.toHex()}
-          disabled={pending}
-          extensions={extensions}
-          onSend={handleSend}
-        />
-
-        <Thread.Status activity>Processing...</Thread.Status>
-      </Thread.Root>
-    </div>
+    <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable onMessageDelete={() => {}}>
+      <Thread.Content classNames='grow min-h-0'>
+        <Thread.Messages messages={messages} />
+        <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
+        <Thread.Status />
+      </Thread.Content>
+    </Thread.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-thread/Thread',
-  component: Thread.Root,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Thread.Root>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

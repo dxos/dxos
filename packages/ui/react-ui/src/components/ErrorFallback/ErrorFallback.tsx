@@ -7,6 +7,10 @@ import { type FallbackProps } from 'react-error-boundary';
 
 import { safeStringify } from '@dxos/util';
 
+import { translationKey } from '#translations';
+
+import { useTranslation } from '../../primitives';
+import { IconButton } from '../Button';
 import { ErrorStack } from './ErrorStack';
 
 export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string; data?: any }>;
@@ -15,6 +19,7 @@ export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> 
  * Themed fallback component for `ErrorBoundary`.
  */
 export const ErrorFallback = ({ children, error, title, data }: ErrorFallbackProps) => {
+  const { t } = useTranslation(translationKey);
   const isDev = process.env.NODE_ENV === 'development';
   const message = error instanceof Error ? error.message : String(error);
 
@@ -55,14 +60,15 @@ const Section = ({ children, title, onClick }: PropsWithChildren<{ title?: strin
   return (
     <div className='flex flex-col gap-1'>
       {onClick && (
-        <button
-          type='button'
-          onClick={onClick}
-          className='flex items-center gap-1 text-xs text-subdued hover:text-primary-500 transition-colors'
-          title={`Copy ${title}`}
-        >
-          <h2 className='text-xs uppercase text-subdued'>{title}</h2>
-        </button>
+        <div>
+          <IconButton
+            classNames='text-xs uppercase'
+            label={title ?? 'Copy'}
+            icon='ph--clipboard-text--regular'
+            size={5}
+            onClick={onClick}
+          />
+        </div>
       )}
       {children}
     </div>

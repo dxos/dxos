@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
-import { TemplateEditor } from '@dxos/plugin-assistant/components';
+import { TemplateEditor } from '@dxos/plugin-routine/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
@@ -44,16 +44,11 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const extensions = useMemo(() => {
     return cell.source?.target
-      ? [
-          createDataExtensions({
-            id: cell.id,
-            text: createDocAccessor(cell.source.target, ['content']),
-          }),
-        ].filter(isNonNullable)
+      ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(cell.source.target, ['content']) })]
       : [];
   }, [cell.source?.target]);
 
@@ -90,7 +85,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       }
 
       return (
-        <>
+        <div className='flex flex-col divide-y divide-subdued-separator'>
           <TypescriptEditor
             id={cell.id}
             role='section'
@@ -105,7 +100,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             }}
           />
           <NotebookCellValue cell={cell} graph={graph} />
-        </>
+        </div>
       );
 
     case 'query':
@@ -118,7 +113,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <div className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
-            classNames={[editorStyles, 'border-b border-subdued-separator']}
+            classNames={editorStyles}
             db={db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
@@ -141,12 +136,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       return (
         <>
-          <TemplateEditor
-            id={cell.id}
-            template={cell.prompt.target.instructions}
-            lineNumbers={false}
-            classNames={editorStyles}
-          />
+          <TemplateEditor id={cell.id} source={cell.prompt.target.text} lineNumbers={false} classNames={editorStyles} />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
       );
@@ -164,12 +154,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   }
 
   return (
-    <div
-      className={mx(
-        'flex w-full bg-group-surface border-y border-subdued-separator text-description font-mono',
-        valueStyles,
-      )}
-    >
+    <div className={mx('flex w-full bg-group-surface text-description font-mono', valueStyles)}>
       {name && (
         <>
           <span className='text-success-text'>{name}</span>
@@ -186,7 +171,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
     return null;
   }
 
-  const value = promptResults?.[cell.prompt.dxn.toString()];
+  const value = promptResults?.[cell.prompt.uri];
   if (value == null) {
     return null;
   }
@@ -203,24 +188,21 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [
-      createBasicExtensions({
-        placeholder: t('notebook-markdown.placeholder'),
-        readOnly,
-      }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+      createBasicExtensions({ placeholder: t('notebook-markdown.placeholder'), readOnly }),
       createMarkdownExtensions(),
       decorateMarkdown(),
       extensionsProp,
     ].filter(isNonNullable);
-  }, [extensionsProp]);
+  }, [extensionsProp, readOnly, themeMode, t]);
 
   return (
     <Editor.Root>
-      <Editor.View {...props} extensions={extensions} selectionEnd />
+      <Editor.View classNames='border' {...props} extensions={extensions} selectionEnd />
     </Editor.Root>
   );
 };

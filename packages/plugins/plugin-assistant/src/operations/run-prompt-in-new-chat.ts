@@ -5,35 +5,36 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import { Skill, Operation, Instructions, Template } from '@dxos/compute';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewChat> =
-  AssistantOperation.RunPromptInNewChat.pipe(
+import { getChatPath } from '../paths';
+
+const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
+  RoutineOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
-        function* ({ db, prompt, objects, blueprints, background }) {
+        function* ({ db, instructions, objects, skills, background }) {
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
-          if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
+          if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
             const feedTarget = chat.feed.target;
             invariant(feedTarget, 'Chat feed not found.');
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');
-            const feedServiceLayer = createFeedServiceLayer(space.queues);
-            const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+            const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
               binder.use(async (b: AiContext.Binder) => {
@@ -43,14 +44,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                   bindingProps.objects = objects.map((obj) => Ref.make(obj));
                 }
 
-                if (blueprints && blueprints.length > 0) {
-                  const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
-                  const matchedBlueprints = allBlueprints.filter((blueprint) => {
-                    const blueprintKey = Obj.getMeta(blueprint).key;
-                    return blueprintKey !== undefined && blueprints.includes(blueprintKey);
+                if (skills && skills.length > 0) {
+                  const allSkills = await db.query(Filter.type(Skill.Skill)).run();
+                  const matchedSkills = allSkills.filter((skill) => {
+                    const skillKey = Obj.getMeta(skill).key;
+                    return skillKey !== undefined && skills.includes(skillKey);
                   });
-                  if (matchedBlueprints.length > 0) {
-                    bindingProps.blueprints = matchedBlueprints.map((blueprint) => Ref.make(blueprint));
+                  if (matchedSkills.length > 0) {
+                    bindingProps.skills = matchedSkills.map((skill) => Ref.make(skill));
                   }
                 }
 
@@ -60,21 +61,20 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
           }
 
           if (background) {
-            const promptRef =
-              typeof prompt === 'string'
+            const instructionsRef =
+              typeof instructions === 'string'
                 ? Ref.make(
-                    Routine.make({
-                      instructions: prompt,
-                      blueprints: [],
-                      context: [],
+                    Instructions.make({
+                      text: instructions,
+                      skills: [],
                     }),
                   )
-                : prompt;
+                : instructions;
             yield* Database.flush();
             yield* Operation.invoke(
-              AgentPrompt,
+              RunInstructions,
               {
-                prompt: promptRef,
+                instructions: instructionsRef,
                 input: {},
                 chat: Ref.make(chat),
               },
@@ -88,14 +88,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             return { object: chat };
           }
 
-          const chatPath = getObjectPathFromObject(chat);
+          const chatPath = getChatPath(db.spaceId, chat.id);
           const pendingPromptText =
-            typeof prompt === 'string'
-              ? prompt
+            typeof instructions === 'string'
+              ? instructions
               : yield* Effect.gen(function* () {
-                  const promptObj = yield* Effect.promise(() => prompt.load());
-                  const source = yield* Effect.promise(() => promptObj.instructions.source.load());
-                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt template source must be Text.');
+                  const instructionsObj = yield* Effect.promise(() => instructions.load());
+                  const source = yield* Effect.promise(() => instructionsObj.text.load());
+                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt text must be Text.');
                   return Template.process(source.content ?? '');
                 });
           yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({

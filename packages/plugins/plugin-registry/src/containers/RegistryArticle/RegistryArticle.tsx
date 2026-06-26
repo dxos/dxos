@@ -7,12 +7,12 @@ import React, { useMemo } from 'react';
 
 import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { BaseRegistryArticle } from '../BaseRegistryArticle';
 
 const sortByPluginMeta = (a: Plugin.Plugin, b: Plugin.Plugin) =>
-  (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
+  (a.meta.profile.name ?? a.meta.profile.key).localeCompare(b.meta.profile.name ?? b.meta.profile.key);
 
 export type RegistryArticleProps = {
   id: string;

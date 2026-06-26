@@ -12,18 +12,16 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/storybook-utils"

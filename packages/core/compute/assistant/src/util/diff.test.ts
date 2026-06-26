@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createDocAccessor } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -32,7 +32,7 @@ describe('diff', () => {
     `;
 
     const text = db.add(Text.make({ content: document }));
-    const accessor = createDocAccessor(text, ['content']);
+    const accessor = Doc.createAccessor(text, ['content']);
     const result = applyDiffs(accessor, [
       `- There'z a typo in this sentence.`,
       `+ There is a typo in this sentence.`,
@@ -54,7 +54,7 @@ describe('diff', () => {
     const document = '# Shopping list';
 
     const text = db.add(Text.make({ content: document }));
-    const accessor = createDocAccessor(text, ['content']);
+    const accessor = Doc.createAccessor(text, ['content']);
     const result = applyDiffs(accessor, ['- # Shopping list', '+ # Shopping list\n- Milk']);
 
     expect(result).toBe('# Shopping list\n- Milk');
@@ -63,10 +63,10 @@ describe('diff', () => {
   it('should append text to an empty document', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Text.Text]);
+    graph.registry.add([Text.Text]);
 
     const text = db.add(Text.make({ content: '' }));
-    const accessor = createDocAccessor(text, ['content']);
+    const accessor = Doc.createAccessor(text, ['content']);
     const result = applyDiffs(accessor, ['+ # Shopping list']);
 
     expect(result).toBe('# Shopping list');

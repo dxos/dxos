@@ -4,15 +4,18 @@
 
 export * from './errors';
 
-export * as Blueprint from './Blueprint';
+export * as AgentService from './AgentService';
+export * as Skill from './Skill';
 export * as Credential from './Credential';
-export * as McpServer from './McpServer';
+export * as Header from './Header';
+export * as Instructions from './Instructions';
 export * as LayerSpec from './LayerSpec';
+export * as McpServer from './McpServer';
 export * as Operation from './Operation';
 export * as OperationHandlerSet from './OperationHandlerSet';
 export * as OperationRegistry from './OperationRegistry';
 export * as Process from './Process';
-export * as Routine from './Routine';
+export * as Runnable from './Runnable';
 export * as Script from './Script';
 export * as ServiceResolver from './ServiceResolver';
 export * as StorageService from './StorageService';

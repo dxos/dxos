@@ -40,7 +40,8 @@
     "packages/ui/react-ui-geo/data/**",
     "packages/ui/solid-ui-geo/data/**",
     "templates/**",
-    "tmp"
+    "tmp",
+    "*.dx.json"
   ],
   "overrides": [
     {

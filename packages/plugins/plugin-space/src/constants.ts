@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 
-export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
-export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
-export const IMPORT_SPACE_DIALOG = `${meta.id}.ImportSpaceDialog`;
-export const JOIN_DIALOG = `${meta.id}.JoinDialog`;
-export const OBJECT_RENAME_POPOVER = `${meta.id}.ObjectRenamePopover`;
-export const SPACE_RENAME_POPOVER = `${meta.id}.SpaceRenamePopover`;
+export const CREATE_OBJECT_DIALOG = DXN.make(`${meta.profile.key}.createObjectDialog`);
+export const CREATE_SPACE_DIALOG = DXN.make(`${meta.profile.key}.createSpaceDialog`);
+export const IMPORT_SPACE_DIALOG = DXN.make(`${meta.profile.key}.importSpaceDialog`);
+export const JOIN_DIALOG = DXN.make(`${meta.profile.key}.joinDialog`);
+export const RENAME_POPOVER = DXN.make(`${meta.profile.key}.renamePopover`);

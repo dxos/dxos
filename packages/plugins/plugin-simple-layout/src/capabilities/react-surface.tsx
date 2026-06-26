@@ -7,16 +7,12 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { NOT_FOUND_PATH } from '@dxos/app-toolkit';
-import { NotFoundArticle } from '@dxos/app-toolkit/ui';
+import { NotFound } from '@dxos/app-toolkit';
+import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { Home, NavBranch } from '#components';
-
-type SurfaceData = {
-  attendableId: string;
-  properties: Record<string, any>;
-};
 
 const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
 
@@ -25,24 +21,21 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
-        role: 'article',
-        filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),
         component: () => <Home />,
       }),
       Surface.create({
-        id: 'not-found',
-        role: 'article',
-        filter: (data): data is SurfaceData => data.attendableId === NOT_FOUND_PATH,
+        id: 'notFound',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
         component: () => <NotFoundArticle />,
       }),
       Surface.create({
-        id: 'nav-branch',
-        role: 'article',
-        position: 'last',
-        filter: (data): data is SurfaceData => {
-          const props = data.properties as Record<string, any>;
-          return ALLOWED_DISPOSITIONS.includes(props?.disposition) || props?.role === 'branch';
-        },
+        id: 'navBranch',
+        position: Position.last,
+        filter: Surface.makeFilter(
+          AppSurface.Article,
+          (data) => ALLOWED_DISPOSITIONS.includes(data.properties?.disposition) || data.properties?.role === 'branch',
+        ),
         component: ({ data }) => <NavBranch id={data.attendableId} />,
       }),
     ]),

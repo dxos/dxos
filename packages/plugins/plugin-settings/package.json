@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-settings",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Settings plugin for managing application settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,6 +14,7 @@
   "type": "module",
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
+    "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": "./src/SettingsPlugin.ts",
@@ -45,6 +46,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
@@ -52,6 +54,8 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
@@ -63,5 +67,8 @@
   "peerDependencies": {
     "effect": "catalog:",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

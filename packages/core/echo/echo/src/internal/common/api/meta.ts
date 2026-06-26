@@ -6,18 +6,21 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { DeepReadonly } from '@dxos/util';
 
+import type * as Tag from '../../../Tag';
+import type { Ref } from '../../Ref/ref';
 import { type Mutable } from '../proxy';
-import { type AnyProperties, type ObjectMeta, getMeta as getMeta$ } from '../types';
+import { type AnyProperties } from '../types';
+import { type EntityMeta, getMeta as getMeta$ } from '../types/meta';
 
 /**
- * Deeply read-only version of ObjectMeta.
+ * Deeply read-only version of EntityMeta.
  */
-export type ReadonlyMeta = DeepReadonly<ObjectMeta>;
+export type ReadonlyMeta = DeepReadonly<EntityMeta>;
 
 /**
  * Mutable meta type received in meta mutation callbacks.
  */
-export type Meta = Mutable<ObjectMeta>;
+export type Meta = Mutable<EntityMeta>;
 
 /**
  * Get the metadata for an entity with validation.
@@ -61,26 +64,25 @@ export const deleteKeys = (entity: Mutable<AnyProperties>, source: string) => {
 };
 
 /**
- * Add a tag to the entity.
+ * Add a tag (a reference to a {@link Tag} object) to the entity. Idempotent.
  * Must be called within an Obj.update or Relation.update callback.
  */
-export const addTag = (entity: Mutable<AnyProperties>, tag: string) => {
+export const addTag = (entity: Mutable<AnyProperties>, tag: Ref<Tag.Tag>) => {
   const meta = getMetaChecked(entity);
-  meta.tags ??= [];
-  meta.tags.push(tag);
+  // Two refs to the same target are not `===`; dedupe by URI.
+  if (!meta.tags.some((existing) => existing.uri === tag.uri)) {
+    meta.tags.push(tag);
+  }
 };
 
 /**
- * Remove a tag from the entity.
+ * Remove a tag (a reference to a {@link Tag} object) from the entity. No-op when not present.
  * Must be called within an Obj.update or Relation.update callback.
  */
-export const removeTag = (entity: Mutable<AnyProperties>, tag: string) => {
+export const removeTag = (entity: Mutable<AnyProperties>, tag: Ref<Tag.Tag>) => {
   const meta = getMetaChecked(entity);
-  if (!meta.tags) {
-    return;
-  }
   for (let i = 0; i < meta.tags.length; i++) {
-    if (meta.tags[i] === tag) {
+    if (meta.tags[i].uri === tag.uri) {
       meta.tags.splice(i, 1);
       i--;
     }

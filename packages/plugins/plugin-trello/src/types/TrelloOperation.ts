@@ -7,25 +7,32 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
+import { Ref, DXN } from '@dxos/echo';
+import {
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
-const TRELLO_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Discovery only — list Trello boards reachable from the integration's token.
+ * Discovery only — list Trello boards reachable from a connection's token.
  *
  * Read-only: returns one descriptor per remote board, NEVER creates a local
- * Kanban. Materialization happens lazily in `SyncTrelloBoard` on first sync
- * of a target, so unselected boards leave no trace in the space.
+ * Kanban. Local Kanbans are materialized eagerly when a binding is created
+ * (see `materializeTarget`), so unselected boards leave no trace in the space.
  */
 export const GetTrelloBoards = Operation.make({
   meta: {
-    key: `${TRELLO_OPERATION}.get-trello-boards`,
+    key: makeKey('getTrelloBoards'),
     name: 'Get Trello Boards',
-    description: 'List Trello boards reachable from an integration without materializing local Kanbans.',
+    description: 'List Trello boards reachable from a connection without materializing local Kanbans.',
+    icon: 'ph--kanban--regular',
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
@@ -37,22 +44,38 @@ export const GetTrelloBoards = Operation.make({
 });
 
 /**
- * Bidirectional reconcile of currently-selected Trello targets in an Integration.
+ * Find-or-create the empty local Kanban for a selected Trello board so a
+ * {@link SyncBinding} relation can be created eagerly (relations require both
+ * endpoints to exist). Keyed by the board's foreign key, so it is idempotent
+ * across re-selection.
+ */
+export const MaterializeTrelloTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeTrelloTarget'),
+    name: 'Materialize Trello Target',
+    description: 'Create the empty local Kanban bound to a selected Trello board.',
+    icon: 'ph--kanban--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
+
+/**
+ * Bidirectional reconcile of a single Trello board bound by a {@link SyncBinding}.
  *
- * Does **not** discover boards or modify `integration.targets` membership. Pulls cards
- * from Trello into local Expando cards (keyed by foreign id), pushes locally-created
- * and locally-edited cards back to Trello, and updates per-target `lastSyncAt`/`lastError`.
+ * Does **not** discover boards. Pulls cards from Trello into local Expando cards
+ * (keyed by foreign id), pushes locally-created and locally-edited cards back to
+ * Trello, and updates the binding's `lastSyncAt`/`lastError`.
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {
-    key: `${TRELLO_OPERATION}.sync-trello-board`,
+    key: makeKey('syncTrelloBoard'),
     name: 'Sync Trello Board',
-    description: 'Reconcile cards for currently-selected Trello targets in an Integration.',
+    description: 'Reconcile cards for the Trello board bound by a SyncBinding.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    /** Optional: narrow to a single target Kanban. */
-    kanban: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+    binding: Ref.Ref(SyncBinding.SyncBinding),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({
@@ -68,4 +91,4 @@ export const SyncTrelloBoard = Operation.make({
   // TODO(wittjosiah): same as GetTrelloBoards above — declare
   //   `services: [Database.Service]` once the OperationInvoker has a
   //   `databaseResolver`. Handler provides the layer itself for now.
-});
+}).pipe(Operation.visible);

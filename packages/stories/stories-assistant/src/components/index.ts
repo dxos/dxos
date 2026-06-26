@@ -4,13 +4,13 @@
 
 export * from './types';
 
-export * from './BlueprintModule';
+export * from './SkillModule';
 export * from './ChatModule';
 export * from './ChessModule';
 export * from './CommentsModule';
 export * from './ContextModule';
+export * from './EphemeralDebugModule';
 export * from './ExecutionGraphModule';
-export * from './GenUiModule';
 export * from './GraphModule';
 export * from './InvocationsModule';
 export * from './MessageModule';
@@ -21,5 +21,6 @@ export * from './RoutineModule';
 export * from './ScriptModule';
 export * from './TasksModule';
 export * from './TokenManagerModule';
+export * from './TraceModule';
 export * from './TriggersModule';
 export * from './InboxModule';

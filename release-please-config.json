@@ -20,6 +20,11 @@
         },
         {
           "type": "json",
+          "path": ".agents/skills/composer-forensics/scripts/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "docs/package.json",
           "jsonpath": "$.version"
         },
@@ -55,6 +60,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/av/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/codec-protobuf/package.json",
           "jsonpath": "$.version"
         },
@@ -86,6 +96,11 @@
         {
           "type": "json",
           "path": "packages/common/effect-atom-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/effect-proto/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -130,6 +145,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/i18n/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/invariant/package.json",
           "jsonpath": "$.version"
         },
@@ -161,6 +181,11 @@
         {
           "type": "json",
           "path": "packages/common/log-store-idb/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/markdown/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -255,11 +280,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute-runtime/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/ai/package.json",
           "jsonpath": "$.version"
         },
@@ -271,6 +291,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/assistant-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/assistant-evals/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -290,7 +315,17 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/compute-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/extractor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -335,12 +370,17 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-atom/package.json",
+          "path": "packages/core/echo/echo-client/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-db/package.json",
+          "path": "packages/core/echo/echo-client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-doc/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -350,7 +390,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-pipeline/package.json",
+          "path": "packages/core/echo/echo-host/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -366,11 +406,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-react/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-registry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -431,6 +466,11 @@
         {
           "type": "json",
           "path": "packages/core/mesh/teleport/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/teleport-e2e/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -520,11 +560,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/script-toolbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-assistant/package.json",
           "jsonpath": "$.version"
         },
@@ -535,17 +570,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-automation/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-bluesky/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-board/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-bookmarks/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -570,7 +605,22 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-comments/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-commerce/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-connector/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -605,17 +655,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-duffel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-feed/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-files/package.json",
+          "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -650,11 +700,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-integration/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-iroh-beacon/package.json",
           "jsonpath": "$.version"
         },
@@ -666,6 +711,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-linear/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-magazine/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -720,6 +770,16 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-onboarding/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-osrm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-outliner/package.json",
           "jsonpath": "$.version"
         },
@@ -750,7 +810,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-routine/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-sample/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-sandbox/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -875,6 +945,16 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-trip/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-video/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-voxel/package.json",
           "jsonpath": "$.version"
         },
@@ -931,6 +1011,11 @@
         {
           "type": "json",
           "path": "packages/sdk/client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client-e2e/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -995,6 +1080,11 @@
         },
         {
           "type": "json",
+          "path": "packages/stories/stories-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/stories/stories-ui/package.json",
           "jsonpath": "$.version"
         },
@@ -1045,6 +1135,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-audio/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-board/package.json",
           "jsonpath": "$.version"
         },
@@ -1086,6 +1181,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-experimental/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1160,16 +1260,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-sfx/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-stack/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
@@ -1181,11 +1271,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-tabs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-text-tooltip/package.json",
           "jsonpath": "$.version"
         },
         {

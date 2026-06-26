@@ -17,7 +17,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Carousel, MediaPlayer, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
 // The surface registration constrains incoming data to
@@ -30,7 +30,7 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
- * plugin's `meta.description` (Markdown) and `meta.screenshots` (Carousel).
+ * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
   const manager = usePluginManager();
@@ -56,8 +56,10 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
       .getPlugins()
       .find((plugin) => plugin.modules.some((module) => module.id === owningModuleId));
     return {
-      content: owningPlugin?.meta.description ?? '',
-      screenshots: owningPlugin?.meta.screenshots ?? [],
+      content: owningPlugin?.meta.profile.description ?? '',
+      screenshots: (owningPlugin?.meta.profile.screenshots ?? [])
+        .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
+        .filter(Boolean),
     };
   }, [companionTo, manager, schemasByModule]);
 
@@ -70,21 +72,17 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
             {screenshots.length > 0 && (
-              <Carousel.Root classNames='w-full' count={screenshots.length}>
-                <Carousel.Previous />
-                <Carousel.Viewport>
-                  {screenshots.map((src, index) => (
-                    <Carousel.Slide key={src} index={index}>
-                      <MediaPlayer
-                        src={src}
-                        classNames='absolute inset-0 w-full h-full bg-baseSurface'
-                        imgClassNames='object-cover'
-                      />
-                    </Carousel.Slide>
-                  ))}
-                </Carousel.Viewport>
-                <Carousel.Next />
-                <Carousel.Indicators />
+              <Carousel.Root count={screenshots.length} transition='slide'>
+                <Carousel.Content classNames='w-full'>
+                  <Carousel.Previous />
+                  <Carousel.Viewport>
+                    {screenshots.map((src, index) => (
+                      <Carousel.Slide key={src} index={index} src={src} />
+                    ))}
+                  </Carousel.Viewport>
+                  <Carousel.Next />
+                  <Carousel.Indicators />
+                </Carousel.Content>
               </Carousel.Root>
             )}
             <MarkdownView classNames='w-full' content={content} />

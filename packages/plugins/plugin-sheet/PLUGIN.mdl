@@ -1,0 +1,359 @@
+---
+id: org.dxos.plugin.sheet
+name: SheetPlugin
+version: 0.1.0
+---
+
+Spreadsheet plugin for `DXOS` Composer — a full-featured grid backed by ECHO for local-first, real-time collaborative data entry, formula evaluation, and structured data display.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type CellValue
+  fields:
+    value: any                   # scalar: string | number | boolean | formula string
+```
+
+```mdl
+type RowColumnMeta
+  fields:
+    size?: number                # pixel width/height; absent means default
+```
+
+```mdl
+type Range
+  fields:
+    range: string                # A1-notation range (e.g. "A1:C3")
+    key: string                  # formatting key: alignment | comment | style
+    value: string                # formatting value (e.g. "center", "highlight")
+```
+
+```mdl
+type Axis
+  literals: row | col
+```
+
+```mdl
+type Sheet
+  typename: org.dxos.type.sheet
+  fields:
+    name?: string
+    cells: Map<string, CellValue>    # sparse map keyed by internal cell index
+    rows: string[]                   # ordered row indices
+    columns: string[]                # ordered column indices
+    rowMeta: Map<string, RowColumnMeta>
+    columnMeta: Map<string, RowColumnMeta>
+    ranges: Range[]                  # range-based formatting annotations
+```
+
+## Components
+
+```mdl
+component SheetArticle
+  desc: Primary spreadsheet view rendered inside an article or section role surface.
+  props:
+    subject: Sheet
+    attendableId: string
+    space: Space
+    registry: ComputeGraphRegistry
+  state:
+    selected?: CellAddress
+    activeRefs?: GridContentProps['activeRefs']
+  slots:
+    toolbar?: ReactNode
+  actions:
+    selectCell(address: CellAddress)
+    editCell(address: CellAddress, value: any)
+    insertRow(index: number)
+    insertColumn(index: number)
+    dropRow(axisIndex: string)
+    dropColumn(axisIndex: string)
+  layout: |
+    ┌───────────────────────────────────┐
+    │ [toolbar slot]                    │
+    ├───┬───┬───┬───┬───────────────────┤
+    │   │ A │ B │ C │  …  column header │
+    ├───┼───┼───┼───┤                   │
+    │ 1 │   │   │   │   cell grid       │
+    ├───┼───┼───┼───┤                   │
+    │ 2 │   │   │   │                   │
+    │ … │   │   │   │                   │
+    └───┴───┴───┴───┴───────────────────┘
+```
+
+```mdl
+component RangeList
+  desc: Object-properties panel listing named ranges and formatting annotations on a Sheet.
+  props:
+    sheet: Sheet
+  state:
+    selected?: Range
+  actions:
+    addRange(range: Range)
+    removeRange(range: Range)
+    updateRange(range: Range)
+```
+
+## Operations
+
+```mdl
+op insertAxis
+  desc: Inserts one or more rows or columns at the given index in the sheet model.
+  input:
+    model: SheetModel
+    axis: Axis
+    index: number
+    count?: number               # defaults to 1
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op dropAxis
+  desc: Removes a row or column by axis index, returning data needed to restore it (undo).
+  input:
+    model: SheetModel
+    axis: Axis
+    axisIndex: string
+  output: DropAxisOutput         # axis, axisIndex, index, axisMeta, values
+  effects: [echo:write]
+```
+
+```mdl
+op restoreAxis
+  desc: Restores a previously dropped row or column (undo of dropAxis).
+  input:
+    model: SheetModel
+    axis: Axis
+    axisIndex: string            # original axis index to restore
+    index: number                # original position
+    axisMeta: RowColumnMeta
+    values: any[]                # cell values to re-insert
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op scrollToAnchor
+  desc: Programmatically scrolls and highlights a cell range in an active grid instance.
+  input:
+    subject: string              # attendable ID of the target sheet
+    cursor: string               # A1-notation cell or range
+    ref?: any                    # active refs for highlight overlay
+  output: void
+  effects: [ui:scroll]
+```
+
+## Features
+
+```mdl
+feat F-1: Sheet Object
+
+  req F-1.1: A Sheet is an ECHO object with typename org.dxos.type.sheet persisted in the user's space.
+  req F-1.2: Cells are stored in a sparse map keyed by internal row/column indices.
+  req F-1.3: Row and column order is maintained via ordered index arrays; insertion/deletion preserves existing cell references.
+  req F-1.4: Range-based formatting annotations are stored as a flat array on the Sheet object.
+```
+
+```mdl
+feat F-2: Formula Evaluation
+
+  req F-2.1: Formulas are prefixed with "=" and evaluated by the HyperFormula engine via the ComputeGraph.
+  req F-2.2: Over 400 built-in functions are available (arithmetic, statistical, text, date/time, financial, logical).
+  req F-2.3:
+    when: a cell value changes
+    then: all dependent formula cells are recomputed reactively
+  req F-2.4: Cell references in stored formulas are translated to internal indices; A1-notation is converted on read/write.
+```
+
+```mdl
+feat F-3: Row and Column Management
+
+  req F-3.1:
+    when: op:insertAxis is called
+    then: a new row or column is inserted at the specified index; existing cells shift accordingly
+
+  req F-3.2:
+    when: op:dropAxis is called
+    then: the row or column is removed and undo data returned; op:restoreAxis reverses the operation
+
+  req F-3.3: Row and column sizes are persisted in rowMeta/columnMeta; absent size means default grid size.
+```
+
+```mdl
+feat F-4: Cell Formatting
+
+  req F-4.1: Ranges support alignment values: start | center | end.
+  req F-4.2: Ranges support comment annotations displayed as a visual overlay on the cell.
+  req F-4.3: Ranges support style values: highlight | softwrap.
+  req F-4.4: RangeList in the object-properties surface allows users to view and manage range annotations.
+```
+
+```mdl
+feat F-5: Collaborative Editing
+
+  req F-5.1: All cell edits are written through ECHO and replicated to peers in real time.
+  req F-5.2:
+    when: a peer writes a cell value
+    then: the local grid re-renders with the updated value without full reload
+
+  req F-5.3: ComputeGraphRegistry manages per-space HyperFormula instances so all peers share the same formula graph.
+```
+
+```mdl
+feat F-6: Markdown Integration
+
+  req F-6.1: SheetPlugin contributes a CodeMirror extension to plugin-markdown via MarkdownCapabilities.ExtensionProvider.
+  req F-6.2:
+    when: the extension is active in a document that belongs to a space
+    then: formula references inside Markdown fenced code blocks resolve against the space's ComputeGraph
+```
+
+```mdl
+feat F-7: Anchor Navigation
+
+  req F-7.1:
+    when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
+    then: the corresponding SheetArticle scrolls to the target cell and applies the active-ref highlight
+
+  req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create sheet and enter a value
+  given: a new Sheet is created in a space
+  when: user types "42" into cell A1
+  then:
+    - Sheet.cells contains an entry for the A1 index with value 42
+    - grid displays "42" in the A1 cell
+```
+
+```mdl
+test T-2: Formula evaluation
+  given: A1 = 10, A2 = 20
+  when: user enters "=A1+A2" in A3
+  then:
+    - A3 displays 30
+    - changing A1 to 15 causes A3 to update to 35
+```
+
+```mdl
+test T-3: Insert and drop row
+  given: a Sheet with values in rows 1 and 2
+  when: op:insertAxis runs with axis=row, index=1
+  then:
+    - a blank row is inserted between existing rows 1 and 2
+    - existing cell references remain valid
+
+  when: op:dropAxis runs on the inserted row
+  then:
+    - the row is removed
+    - op:restoreAxis re-inserts the row with its original values
+```
+
+```mdl
+test T-4: Range formatting
+  given: a Sheet open in SheetArticle
+  when: user applies "highlight" style to range B2:C4
+  then:
+    - Sheet.ranges contains an entry with range="B2:C4", key="style", value="highlight"
+    - cells in B2:C4 render with the highlight background class
+```
+
+```mdl
+test T-5: Real-time collaboration
+  given: two peers have the same Sheet open
+  when: peer A sets cell D5 to "hello"
+  then:
+    - peer B's grid displays "hello" in D5 without reload
+```
+
+```mdl
+test T-6: Scroll to anchor
+  given: a SheetArticle is mounted with attendableId "sheet-1"
+  when: op:scrollToAnchor runs with subject="sheet-1", cursor="E10"
+  then:
+    - the grid scrolls so that E10 is visible
+    - E10 is highlighted via activeRefs
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

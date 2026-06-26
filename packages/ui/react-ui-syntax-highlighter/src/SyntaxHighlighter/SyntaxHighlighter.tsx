@@ -8,7 +8,7 @@ import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-asy
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { Clipboard, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const zeroWidthSpace = '\u200b';
 
@@ -87,6 +87,10 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
             boxShadow: 'none',
             padding: 0,
             margin: 0,
+            // Non-scrolling wrapper: defer all scrolling to an enclosing `Syntax.Viewport`.
+            // The prism theme sets `overflow: auto` on the <pre>, which otherwise creates a
+            // nested native horizontal scrollbar alongside the viewport's custom one.
+            overflow: 'visible',
           }}
           {...nativeProps}
         >

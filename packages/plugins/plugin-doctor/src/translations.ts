@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/app-toolkit';
+import { Translations } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Doctor',
         'diagnostics-tab.label': 'Diagnostics',
         'run-diagnostics.label': 'Run diagnostics',
@@ -34,10 +34,10 @@ export const translations = [
         'diagnostic.operations-services.label': 'Operation services',
         'diagnostic.operations-services.description':
           'Flags saved operations that request services not registered in the runtime whitelist.',
-        'diagnostic.blueprint-tools.label': 'Blueprint tools',
-        'diagnostic.blueprint-tools.description':
-          'Flags saved blueprints that reference tools not registered by any plugin toolkit.',
+        'diagnostic.skill-tools.label': 'Skill tools',
+        'diagnostic.skill-tools.description':
+          'Flags saved skills that reference tools not registered by any plugin toolkit.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Translations.Resource[];

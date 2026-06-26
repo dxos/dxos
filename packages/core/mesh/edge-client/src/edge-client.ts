@@ -163,7 +163,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: () => void) {
+  public onReconnected(listener: ReconnectListener) {
     this._reconnectListeners.add(listener);
     if (this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
@@ -219,7 +219,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
 
     const identity = this._identity;
-    const path = `/ws/${identity.identityKey}/${identity.peerKey}`;
+    const path = `/ws/${identity.identityDid}/${identity.peerKey}`;
     const protocolHeader = this._config.disableAuth ? undefined : await this._createAuthHeader(path);
     if (this._identity !== identity) {
       log('identity changed during auth header request');
@@ -269,9 +269,23 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._currentConnection = connection;
 
     await connection.open();
-    // Race with restartRequired so that restart is not blocked by _connect execution.
-    // Wait on ready to attempt a reconnect if it times out.
-    await Promise.race([this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }), restartRequired]);
+
+    // The connection is only a successful start once the socket becomes ready. A socket that
+    // closes or errors before becoming ready (or never connects within the timeout) is a failed
+    // start: throwing lets PersistentLifecycle apply its backoff. Returning here would mark the
+    // attempt as successful and reset the backoff, degenerating reconnects into a hot loop when
+    // the server accepts then immediately drops the socket.
+    const becameReady = await Promise.race([
+      this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }).then(
+        () => true,
+        () => false,
+      ),
+      restartRequired.wait().then(() => false),
+    ]);
+    if (!becameReady) {
+      throw new EdgeConnectionClosedError();
+    }
+
     return connection;
   }
 

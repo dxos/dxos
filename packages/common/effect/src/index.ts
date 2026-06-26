@@ -2,15 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './ast';
 export * from './atom-kvs';
-export * from './context';
 export * as DynamicRuntime from './dynamic-runtime';
-export * from './errors';
-export * from './json-path';
-export * from './resource';
-export * from './types';
-export * from './url';
-export * as RuntimeProvider from './RuntimeProvider';
+export * as EffectEx from './EffectEx';
 export * as Performance from './Performance';
-export * from './async-task-tagging';
+export * as RuntimeProvider from './RuntimeProvider';
+export * as SchemaEx from './SchemaEx';
+
+// Re-export core types at the top level so TypeScript can name them in declaration files.
+// These are the branded string types that appear in public APIs (View fields, JSON schemas).
+// The associated schema values live under SchemaEx.JsonPath / SchemaEx.JsonProp.
+export type { JsonPath, JsonProp } from './internal/json-path';

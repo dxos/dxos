@@ -8,9 +8,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { InvocationTraceContainer } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
 import { PipelineArticle, PipelineProperties } from '#containers';
@@ -26,27 +23,9 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'companion.invocations',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'invocations'),
-          AppSurface.companion(AppSurface.Article, Pipeline.Pipeline),
-        ),
-        component: ({ data, role }) => {
-          const db = Obj.getDatabase(data.companionTo);
-          // TODO(wittjosiah): Filter the invocations to those relevant to the project.
-          return (
-            <Panel.Root role={role} className='dx-document'>
-              <Panel.Content asChild>
-                <InvocationTraceContainer db={db} detailAxis='block' />
-              </Panel.Content>
-            </Panel.Root>
-          );
-        },
-      }),
-      Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
-        component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
+        component: ({ data }) => <PipelineProperties subject={data.subject} />,
       }),
     ]),
   ),

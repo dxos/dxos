@@ -10,17 +10,17 @@ import { log } from '@dxos/log';
 import { type ChatProcessor } from './processor';
 
 /**
- * Object kinds we track in `--prompt --json` output. The agent's CRM blueprint
+ * Object kinds we track in `--prompt --json` output. The agent's CRM skill
  * creates Persons / Organizations / Documents / ProfileOf relations during
  * research; this is the minimal set scripts care about. Other types created
- * incidentally (Chats, Feeds, Blueprints) are deliberately filtered out so the
+ * incidentally (Chats, Feeds, Skills) are deliberately filtered out so the
  * JSON stays focused on the user-visible artefacts.
  */
 const TRACKED_TYPENAMES: ReadonlyArray<{ typename: string; kind: string }> = [
   { typename: 'org.dxos.type.person', kind: 'Person' },
   { typename: 'org.dxos.type.organization', kind: 'Organization' },
   { typename: 'org.dxos.type.markdown.document', kind: 'Document' },
-  { typename: 'org.dxos.relation.plugin-crm.profile-of', kind: 'ProfileOf' },
+  { typename: 'org.dxos.relation.plugin-crm.profileOf', kind: 'ProfileOf' },
 ];
 
 const TRACKED_TYPENAME_SET = new Set(TRACKED_TYPENAMES.map((t) => t.typename));
@@ -74,10 +74,10 @@ const diffSnapshots = (before: Map<string, SnapshotEntry>, after: Map<string, Sn
 export type RunNonInteractiveOptions = {
   space: Space;
   processor: ChatProcessor;
-  blueprints: string[];
+  skills: string[];
   prompt: string;
   model: ModelName;
-  /** When true, emit a JSON array of `{kind, dxn}`; otherwise emit the
+  /** When true, emit a JSON array of `{kind, uri}`; otherwise emit the
    * agent's final assistant reply text. */
   json: boolean;
 };
@@ -102,13 +102,13 @@ const renderText = async (space: Space, sessionFeedId: string): Promise<string> 
  * `dx chat --prompt …` for scripted research / smoke tests.
  */
 export const runNonInteractive = async (options: RunNonInteractiveOptions): Promise<void> => {
-  const { space, processor, blueprints, prompt, model, json } = options;
+  const { space, processor, skills, prompt, model, json } = options;
 
   log.info('non-interactive: snapshot before run');
   const before = await snapshotTrackedObjects(space);
 
-  log.info('non-interactive: creating session', { blueprints });
-  const session = await processor.createSession(space, blueprints);
+  log.info('non-interactive: creating session', { skills });
+  const session = await processor.createSession(space, skills);
 
   try {
     log.info('non-interactive: submitting prompt', { promptPreview: prompt.slice(0, 80) });
@@ -139,20 +139,21 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
     const result = changed
       .map(({ id, created }) => {
         // Look up the live object to get its typename.
+        // TODO(dmaretskyi): Migrate to `space.db.query(Filter.id(id)).runSync()[0]` once space.db is properly typed here.
         const live = (space.db as any).getObjectById?.(id);
         const typename = live ? Obj.getTypename(live) : undefined;
         const kind = kindForTypename(typename);
         if (!kind) {
           return undefined;
         }
-        const dxn = live ? Obj.getDXN(live).toString() : `dxn:echo:@:${id}`;
-        return { kind, dxn, created };
+        const uri = live ? Obj.getURI(live) : `echo:/${id}`;
+        return { kind, uri, created };
       })
-      .filter((x): x is { kind: string; dxn: string; created: boolean } => x !== undefined)
+      .filter((x): x is { kind: string; uri: string; created: boolean } => x !== undefined)
       .sort((a, b) => {
         const ai = TRACKED_TYPENAMES.findIndex((t) => t.kind === a.kind);
         const bi = TRACKED_TYPENAMES.findIndex((t) => t.kind === b.kind);
-        return ai === bi ? a.dxn.localeCompare(b.dxn) : ai - bi;
+        return ai === bi ? a.uri.localeCompare(b.uri) : ai - bi;
       });
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(result, null, 2));

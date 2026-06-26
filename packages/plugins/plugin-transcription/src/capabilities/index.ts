@@ -3,10 +3,9 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
+import type { OperationHandlerSet } from '@dxos/compute';
 
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const TextContent = Capability.lazy('TextContent', () => import('./text-content'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
@@ -14,3 +13,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const Transcriber = Capability.lazy('Transcriber', () => import('./transcriber'));
+export const TranscriptionSettings = Capability.lazy('TranscriptionSettings', () => import('./settings'));

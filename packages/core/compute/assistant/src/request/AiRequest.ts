@@ -6,6 +6,7 @@
 
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -25,11 +26,12 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint, Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { type Skill, Trace, Operation } from '@dxos/compute';
+import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
+import { getOperationFromTool } from '../tool-runtime/services';
 import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
@@ -42,7 +44,7 @@ export type RunRequirements =
   | ToolResolverService
   | Database.Service
   | Operation.Service
-  | OperationRegistry.Service
+  | Registry.Service
   | Trace.TraceService;
 
 export type Options = {
@@ -58,6 +60,13 @@ export type Options = {
    * This is useful for streaming the output to a queue.
    */
   onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
+
+  /**
+   * When false, turn messages are not appended to the feed or written as persisted trace blocks.
+   *
+   * @default true
+   */
+  persist?: boolean;
 };
 
 export type RunProps<R = never> = {
@@ -66,7 +75,7 @@ export type RunProps<R = never> = {
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
-  blueprints?: readonly Blueprint.Blueprint[];
+  skills?: readonly Skill.Skill[];
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
@@ -75,7 +84,7 @@ export type BeginProps = {
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
-  blueprints?: readonly Blueprint.Blueprint[];
+  skills?: readonly Skill.Skill[];
 };
 
 export type TurnProps<R = never> = {
@@ -86,6 +95,12 @@ export type TurnProps<R = never> = {
 export type TurnResult = {
   messages: Message.Message[];
   done: boolean;
+  /**
+   * Provider finish reason for this turn. `pause` means the provider paused a server-tool turn
+   * mid-execution (e.g. Anthropic `pause_turn`) and the turn must be resumed by issuing another
+   * request without mutating the trailing assistant content.
+   */
+  finishReason?: ContentBlock.FinishReason;
 };
 
 /**
@@ -137,6 +152,9 @@ export class Request {
     Effect.gen(this, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
+      if (this._options.persist === false) {
+        return message;
+      }
       for (const block of message.blocks) {
         log('write complete block', {
           messageId: message.id,
@@ -171,7 +189,7 @@ export class Request {
     prompt,
     system,
     history = [],
-    blueprints = [],
+    skills = [],
     objects = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen(this, function* () {
@@ -179,7 +197,7 @@ export class Request {
       this._history = [...history];
       this._pending = [];
 
-      const systemPrompt = yield* formatSystemPrompt({ system, blueprints, objects }).pipe(Effect.orDie);
+      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects }).pipe(Effect.orDie);
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -198,14 +216,14 @@ export class Request {
 
   /**
    * Execute a single turn: one LLM generation followed by tool execution.
-   * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled blueprints).
+   * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled skills).
    */
   runAgentTurn = <const R = never>({
     system,
     toolkit: opaqueToolkit,
   }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
-      log.info('request', {
+      log('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
         history: this._history.length,
@@ -220,6 +238,7 @@ export class Request {
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null;
+      let finishReason: ContentBlock.FinishReason | undefined;
 
       const messages = yield* LanguageModel.streamText({
         prompt,
@@ -234,9 +253,13 @@ export class Request {
           onPart: (part) => observer.onPart(part as any),
           onEnd: (summary) => observer.onEnd(summary),
         }),
+        Stream.map((block) => enrichToolCallBlock(block, toolkit)),
         Stream.mapEffect(
           (block) =>
             Effect.gen(this, function* () {
+              if (block._tag === 'stats' && block.finishReason !== undefined) {
+                finishReason = block.finishReason;
+              }
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
                 log('emit ephemeral message', { id: currentMessageId, type: block._tag });
@@ -266,18 +289,25 @@ export class Request {
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
-      log.info('messages', { messages });
+      log('messages', { messages });
+
+      // A paused server-tool turn (e.g. Anthropic `pause_turn`) is not complete: the provider
+      // expects the assistant content to be resent so it can finish executing the server tool.
+      // No local tool execution is needed — just another request.
+      if (finishReason === 'pause') {
+        return { messages, done: false, finishReason };
+      }
 
       const toolCalls = this.getToolCalls();
 
       if (toolCalls.length === 0) {
         this._ended = Date.now();
-        return { messages, done: true };
+        return { messages, done: true, finishReason };
       } else if (!toolkit) {
         throw new Error('No toolkit provided');
       }
 
-      return { messages, done: false };
+      return { messages, done: false, finishReason };
     }).pipe(Effect.withSpan('AiRequest.runAgentTurn'));
 
   runTools = <const R = never>({
@@ -314,18 +344,22 @@ export class Request {
     system: systemTemplate,
     history = [],
     objects = [],
-    blueprints = [],
+    skills = [],
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
+      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills });
 
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+      const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects }).pipe(Effect.orDie);
 
       do {
-        const { done } = yield* this.runAgentTurn({ system, toolkit });
+        const { done, finishReason } = yield* this.runAgentTurn({ system, toolkit });
         if (done) {
           break;
+        }
+        // A paused server-tool turn resumes with another request and no local tool execution.
+        if (finishReason === 'pause') {
+          continue;
         }
         yield* this.runTools({ toolkit });
       } while (true);
@@ -334,6 +368,42 @@ export class Request {
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
+
+/**
+ * Annotates `toolCall` blocks with metadata about the backing Operation, when one exists.
+ * Tool calls that resolve to a toolkit handler (no Operation) are left unchanged so callers can
+ * distinguish operation invocations from inline tool calls.
+ */
+const enrichToolCallBlock = (
+  block: ContentBlock.Any,
+  toolkit: Toolkit.WithHandler<any> | undefined,
+): ContentBlock.Any => {
+  if (block._tag !== 'toolCall' || !toolkit) {
+    return block;
+  }
+  const tool = toolkit.tools[block.name];
+  if (!tool) {
+    return block;
+  }
+  // Some tools (provider-defined, raw MCP) don't carry an Effect `Context` for annotations and
+  // `getOperationFromTool` throws. Be defensive: treat any failure as "no operation".
+  let operationOpt: Option.Option<Operation.Definition.Any>;
+  try {
+    operationOpt = getOperationFromTool(tool);
+  } catch {
+    return block;
+  }
+  if (Option.isNone(operationOpt)) {
+    return block;
+  }
+  const { meta } = operationOpt.value;
+  return {
+    ...block,
+    operationKey: meta.key,
+    operationName: meta.name,
+    operationIcon: meta.icon,
+  } satisfies ContentBlock.ToolCall;
+};
 
 const createSnippet = (text: string, len = 32) =>
   text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');

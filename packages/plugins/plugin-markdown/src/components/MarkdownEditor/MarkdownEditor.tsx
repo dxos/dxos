@@ -12,9 +12,11 @@ import { createPortal } from 'react-dom';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import {
   type EditorRootProps,
   type EditorToolbarState,
@@ -22,7 +24,6 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -74,7 +75,7 @@ export type MarkdownEditorProviderProps = {
   'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 > &
   Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-  Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>;
+  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'onSelectObject'>;
 
 export const MarkdownEditorProvider = ({
   children,
@@ -84,7 +85,7 @@ export const MarkdownEditorProvider = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
@@ -118,7 +119,7 @@ export const MarkdownEditorProvider = ({
     object,
     compact,
     viewMode,
-    selectionManager,
+    viewState,
     editorStateStore,
     previewOptions,
     settings,
@@ -215,7 +216,7 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
 type MarkdownEditorToolbarProps = ThemedClassName<
-  Omit<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
+  Omit<NaturalMarkdownToolbarProps, 'getView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
@@ -224,11 +225,15 @@ const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
 
   const { controller } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
+  // Stable getter identity (changes only when the controller does) so the FileUpload effect, whose
+  // deps include `getView`, does not re-run every render and re-upload the same file.
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
+
   return (
     <NaturalMarkdownToolbar
       {...props}
       id={attendableId ?? id}
-      editorView={controller?.view ?? undefined}
+      getView={getView}
       onAction={onAction}
       onFileUpload={onFileUpload}
       onViewModeChange={onViewModeChange}
@@ -260,13 +265,22 @@ const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
 
 MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
+// Each embed is independently attendable, keyed by the linked object's URI. The section surface
+// contract requires `attendableId` (type-specific section surfaces like sketch guard on it, else they
+// fall back to the generic preview card); keying per-embed also lets a surface enter edit mode only
+// while focused (e.g. a sketch shows its controls/grid on focus and renders read-only otherwise).
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
-  const dxn = DXN.parse(link.dxn);
+  const dxn = URI.make(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
-  const data = useMemo(() => ({ subject }), [subject]);
+  const data = useMemo(() => ({ subject, attendableId: link.dxn }), [subject, link.dxn]);
 
-  return createPortal(<Surface.Surface type={AppSurface.Card} data={data} limit={1} />, el);
+  return createPortal(
+    <AttendableContainer id={link.dxn}>
+      <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+    </AttendableContainer>,
+    el,
+  );
 };
 
 //

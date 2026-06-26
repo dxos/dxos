@@ -7,3 +7,4 @@
 // other non-DOM code that only needs the data model and pure helpers.
 export * from '../attention';
 export * from '../selection';
+export * from '../view-state';

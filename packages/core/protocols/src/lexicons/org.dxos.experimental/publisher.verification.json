@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "org.dxos.experimental.publisher.verification",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "description": "Trust attestation issued by a curator DID about a verified publisher. The rkey MUST equal the verified publisher DID (enforced by the registry indexer — records where rkey ≠ subject are rejected). Records authored by anyone other than the configured curator DID are also ignored.",
+      "record": {
+        "type": "object",
+        "required": ["subject", "handle", "displayName", "createdAt"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the verified publisher. Must match the rkey for tamper resistance."
+          },
+          "handle": {
+            "type": "string",
+            "format": "handle",
+            "description": "Publisher's atproto handle at the time of verification. Re-issued on handle change."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name bound by this verification.",
+            "maxLength": 128
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

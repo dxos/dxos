@@ -6,7 +6,7 @@ import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial, Vector3 } from 
 import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, { type RefObject, useContext, useEffect, useRef, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { type Scene, Model } from '#types';
 

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,13 +11,18 @@ import { Score } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Score.Score.typename]: {
+      [Type.getTypename(Score.Score)]: {
         'typename.label': 'Score',
         'typename.label_zero': 'Scores',
         'typename.label_one': 'Score',
         'typename.label_other': 'Scores',
+        'object-name.placeholder': 'New score',
+        'add-object.label': 'Add score',
+        'rename-object.label': 'Rename score',
+        'delete-object.label': 'Delete score',
+        'object-deleted.label': 'Score deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Sequencer',
         'add-track.label': 'Add track',
         'remove-track.label': 'Remove track',

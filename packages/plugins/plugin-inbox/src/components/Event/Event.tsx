@@ -3,18 +3,20 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useState } from 'react';
 
-import { type Database } from '@dxos/echo';
-import { Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type Database, Obj } from '@dxos/echo';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
-import { DateComponent } from '../DateComponent';
-import { EventAttendee } from './EventAttendee';
+import { Header } from '../Header';
+import { MarkdownViewer } from '../MarkdownViewer';
+import { type ViewMode } from '../ViewMode';
+import { EventBodyEditor } from './EventBodyEditor';
+import { EventDetails } from './EventDetails';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
 //
@@ -23,7 +25,11 @@ import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useT
 
 type EventContextValue = {
   attendableId?: string;
+  /** Graph node id for toolbar action lookup — differs from `attendableId` in companion mode. */
+  nodeId?: string;
   event: EventType.Event;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 };
 
 const [EventContextProvider, useEventContext] = createContext<EventContextValue>('Event');
@@ -34,10 +40,20 @@ const [EventContextProvider, useEventContext] = createContext<EventContextValue>
 
 const EVENT_ROOT_NAME = 'Event.Root';
 
-type EventRootProps = PropsWithChildren<EventContextValue>;
+type EventRootProps = PropsWithChildren<
+  Omit<EventContextValue, 'viewMode' | 'setViewMode'> & {
+    viewMode?: ViewMode;
+  }
+>;
 
-const EventRoot = ({ children, ...props }: EventRootProps) => {
-  return <EventContextProvider {...props}>{children}</EventContextProvider>;
+const EventRoot = ({ children, viewMode: viewModeProp = 'markdown', ...props }: EventRootProps) => {
+  const [viewMode, setViewMode] = useState(viewModeProp);
+
+  return (
+    <EventContextProvider viewMode={viewMode} setViewMode={setViewMode} {...props}>
+      {children}
+    </EventContextProvider>
+  );
 };
 
 EventRoot.displayName = EVENT_ROOT_NAME;
@@ -48,12 +64,26 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onNoteCreate'> & Pick<MenuRootProps, 'alwaysActive'>;
+type EventToolbarProps = Pick<
+  UseEventToolbarActionsProps,
+  'graph' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
+> &
+  Pick<MenuRootProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
-  ({ alwaysActive, onNoteCreate, ...props }, forwardedRef) => {
-    const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
-    const menuActions = useEventToolbarActions({ onNoteCreate });
+  ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
+    const { attendableId, nodeId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
+    const menuActions = useEventToolbarActions({
+      graph,
+      nodeId,
+      editing,
+      saveDisabled,
+      viewMode,
+      setViewMode,
+      onOpen,
+      onSave,
+      onDelete,
+    });
 
     return (
       <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
@@ -91,59 +121,63 @@ const EVENT_HEADER_NAME = 'Event.Header';
 
 type EventHeaderProps = {
   db?: Database.Database;
+  /** When true, the title and date range become editable (used for draft events). */
+  editable?: boolean;
   onContactCreate?: (actor: Actor.Actor) => void;
+  onOpenObject?: (object: Obj.Unknown) => void;
+  starred?: boolean;
+  onToggleStar?: () => void;
 };
 
-const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
-  const { t } = useTranslation(meta.id);
+const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onToggleStar }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex px-2 text-subdued h-[28px] items-center'>
-          <Icon icon='ph--check--regular' />
-        </div>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
-        </div>
-      </div>
-
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex px-2 text-subdued items-center'>
-          <Icon icon='ph--calendar--regular' />
-        </div>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
-        </div>
-      </div>
-
-      <div>
-        {event.attendees.map((attendee) => (
-          <EventAttendee key={attendee.email} attendee={attendee} db={db} onContactCreate={onContactCreate} />
-        ))}
-      </div>
-    </div>
+    // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
+    <Header.Root classNames={editable && 'gap-y-1'}>
+      <EventDetails
+        event={event}
+        title='heading'
+        db={db}
+        editable={editable}
+        starred={starred}
+        onContactCreate={onContactCreate}
+        onOpenObject={onOpenObject}
+        onToggleStar={onToggleStar}
+      />
+    </Header.Root>
   );
 };
 
 EventHeader.displayName = EVENT_HEADER_NAME;
 
 //
-// Content
+// Body
 //
 
-const EVENT_CONTENT_NAME = 'Event.Content';
+const EVENT_BODY_NAME = 'Event.Body';
 
-type EventContentProps = ThemedClassName<{}>;
+type EventBodyProps = ThemedClassName<{
+  /** Render the description as an editor bound to the event (used for draft events). */
+  editable?: boolean;
+}>;
 
-const EventContent = ({ classNames }: EventContentProps) => {
-  const { event } = useEventContext(EVENT_CONTENT_NAME);
+const EventBody = ({ classNames, editable }: EventBodyProps) => {
+  const { event, viewMode } = useEventContext(EVENT_BODY_NAME);
+  if (editable) {
+    return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
+  }
 
-  return event.description ? <div className={mx('p-3', classNames)}>{event.description}</div> : null;
+  if (!event.description) {
+    return null;
+  }
+
+  return (
+    <MarkdownViewer content={event.description} markdown={viewMode !== 'plain'} classNames={mx('p-3', classNames)} />
+  );
 };
 
-EventContent.displayName = EVENT_CONTENT_NAME;
+EventBody.displayName = EVENT_BODY_NAME;
 
 //
 // Event
@@ -155,7 +189,7 @@ export const Event = {
   Toolbar: EventToolbar,
   Viewport: EventViewport,
   Header: EventHeader,
-  Content: EventContent,
+  Body: EventBody,
 };
 
-export type { EventRootProps, EventToolbarProps, EventViewportProps, EventHeaderProps, EventContentProps };
+export type { EventRootProps, EventToolbarProps, EventViewportProps, EventHeaderProps, EventBodyProps };

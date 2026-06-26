@@ -12,7 +12,22 @@ import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '..
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 
+/**
+ * Replace the default `<circle>` with a custom node shape. Invoked once per
+ * entering node — append your own elements to the supplied `<g>`. Position and
+ * `attributes.node` callbacks are still applied by the renderer.
+ */
+export type RenderNode<NodeData = any> = (group: D3Selection<SVGGElement>, node: GraphLayoutNode<NodeData>) => void;
+
 const createLine = line<Point>();
+
+/** Duration for edge opacity transitions on enter / exit (ms). Matches node enter/exit timing. */
+const EDGE_FADE_MS = 300;
+
+/** Duration for node hide/show opacity transitions (ms). Matches the projector's tween
+ * duration so a cluster collapse/expand fades opacity over the same window the position
+ * is tweening toward / away from the parent group. */
+const NODE_HIDE_MS = 500;
 
 export type LabelOptions<NodeData = any> = {
   text: (node: GraphLayoutNode<NodeData>, highlight?: boolean) => string | undefined;
@@ -40,16 +55,38 @@ export type GraphRendererOptions<NodeData = any, EdgeData = any> = RendererOptio
   labels?: LabelOptions<NodeData>;
   subgraphs?: boolean;
   attributes?: AttributesOptions<NodeData>;
+  /**
+   * Override the default `<circle>` node shape. When set, the renderer appends
+   * whatever this callback creates instead. Use for lattice rects, custom icons, etc.
+   */
+  renderNode?: RenderNode<NodeData>;
+  /**
+   * Per-tick per-node callback invoked from `applyPositions` AFTER the dx-node group's
+   * transform is updated. Use it to keep node-local SVG (trail paths, gradient axes,
+   * per-frame decorations) in sync with the node's current position. The group is the
+   * dx-node `<g>` (head at 0,0 in local coords); the node is the live layout node.
+   * Runs only on the positions fast-path; full `render` calls don't invoke it.
+   */
+  applyNode?: (group: SVGGElement, node: GraphLayoutNode<NodeData>) => void;
+  /**
+   * Opacity applied to the `dx-edges` group. Set < 1 to dim edges relative to nodes
+   * (e.g. swarm trails over routing edges). Default is the inherited group opacity.
+   */
+  edgeOpacity?: number;
   transition?: () => any;
+  /**
+   * On node pointerenter, color outgoing edges orange, incoming edges sky-blue, dim
+   * unrelated edges, and stroke connected nodes / dim unrelated ones. Cleared on
+   * pointerleave. Designed for the bundle variant; harmless for variants where the
+   * topology doesn't carry meaningful direction.
+   */
+  highlightOnHover?: boolean;
   onNodeClick?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
   onNodePointerEnter?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
+  /** Fires on pointerleave from a node hit-target. Pair with `onNodePointerEnter` to clear hover state. */
+  onNodePointerLeave?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
   onLinkClick?: (link: GraphLayoutEdge<NodeData, EdgeData>, event: MouseEvent) => void;
 }>;
-
-// TODO(burdon): Perf
-// - Leaking JS event listeners.
-// - Don't update unless data changes.
-// - Cache subgraph components in layout.
 
 /**
  * Renders the Graph layout.
@@ -58,11 +95,24 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
   GraphLayout<NodeData, EdgeData>,
   GraphRendererOptions<NodeData, EdgeData>
 > {
+  // First render of this instance — used to clear DOM left behind by a previous
+  // renderer pointing at the same `<g>` (e.g. when the consumer swaps projectors
+  // and a new renderer is constructed for the same SVG root). Without this, the
+  // previous variant's node shapes (e.g. circles) would persist as d3.join sees
+  // them in the `update` set instead of `enter`.
+  #firstRender = true;
+
   override render(layout: GraphLayout<NodeData, EdgeData>) {
     // The SVG group ref is unset between mount cycles and before the container has sized;
     // skip the render rather than throw — the projector will emit again on the next tick.
     if (!this.root) {
       return;
+    }
+
+    if (this.#firstRender) {
+      this.#firstRender = false;
+      // Drop any DOM left by a prior renderer so this render's `renderNode` runs from scratch.
+      this.root.replaceChildren();
     }
 
     log('render', layout);
@@ -151,7 +201,8 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       .selectAll('g.dx-edges')
       .data([{ id: 'edges' }], (d: any) => d.id)
       .join('g')
-      .classed('dx-edges', true);
+      .classed('dx-edges', true)
+      .style('opacity', this.options.edgeOpacity != null ? String(this.options.edgeOpacity) : null);
 
     const nodeGroup = root
       .selectAll('g.dx-nodes')
@@ -171,10 +222,13 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
           enter
             .append('g')
             .attr('data-id', (d) => d.id)
-            .attr('opacity', 1)
+            // Initial opacity matches `hidden` so a node that enters already-collapsed is
+            // invisible from the first frame; updateNode's named 'hide' transition then
+            // handles any subsequent toggles.
+            .attr('opacity', (d) => (d.hidden ? 0 : 1))
             .classed('dx-node', true)
             .call(createNode, this.options),
-        (update) => update.call(updateNode, this.options),
+        (update) => update,
         (exit) => {
           // Fade out.
           return exit
@@ -187,6 +241,9 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             });
         },
       )
+      // Apply update (transform / attributes / labels) to enter+update so the first render
+      // also populates `data-*` attributes and transforms — not just subsequent ticks.
+      .call(updateNode, this.options)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     //
@@ -203,10 +260,69 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             .attr('data-id', (d) => d.id)
             .classed('dx-edge', true)
             .call(createEdge, this.options),
-        (update) => update.call(updateEdge, this.options, nodeGroup).each((d) => {}),
-        (exit) => exit.remove(),
+        (update) => update,
+        // Exit fade: edges removed by a topology change (e.g. variant switch from cluster
+        // back to force replaces hierarchy edges with data edges) ease out rather than pop.
+        (exit) =>
+          exit
+            .transition()
+            .ease(easeCubicOut)
+            .duration(EDGE_FADE_MS)
+            .attr('opacity', 0)
+            .on('end', function () {
+              select(this).remove();
+            }),
       )
+      // Apply edge updates (paths / attributes) to enter+update — see note on nodes above.
+      .call(updateEdge, this.options, nodeGroup)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+  /**
+   * Fast positions-only update. Skips enter/exit, attribute callbacks, label sizing,
+   * and the subgraph hull pass; just writes `transform` per node and `d` per edge.
+   * Called per simulation tick / animation frame.
+   */
+  override applyPositions(layout: GraphLayout<NodeData, EdgeData>) {
+    if (!this.root) {
+      return;
+    }
+
+    const root = select(this.root);
+
+    // Transforms only — no attribute callback, no label measurement.
+    const applyNode = this.options.applyNode;
+    root
+      .select('g.dx-nodes')
+      .selectAll<SVGGElement, GraphLayoutNode<NodeData>>('g.dx-node')
+      .attr('transform', (d) => (d.x != null && d.y != null ? `translate(${d.x},${d.y})` : null))
+      .each(
+        applyNode
+          ? function (d) {
+              // Per-tick consumer hook (e.g. swarm trail). Group transform is already up to date,
+              // so node-local coords land in the same frame as the head position.
+              applyNode(this, d);
+            }
+          : () => {},
+      );
+
+    // Edge geometry — either precomputed (`edge.path`) or derived from endpoint positions.
+    root
+      .select('g.dx-edges')
+      .selectAll<SVGGElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
+      .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path')
+      .attr('d', function () {
+        // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
+        const edge = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
+        if (edge.path) {
+          return edge.path;
+        }
+        const { source, target } = edge;
+        if (!source.initialized || !target.initialized) {
+          return null;
+        }
+        return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
+      });
   }
 
   /**
@@ -226,21 +342,45 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
  * @param group
  * @param options
  */
+const SHAPE_CLASS = 'dx-shape';
+
+const renderCustomShape = <Data>(group: D3Selection, options: GraphRendererOptions<Data>) => {
+  group.each(function (d) {
+    const g = select<SVGGElement, GraphLayoutNode<Data>>(this);
+    // Clear any previous custom shape so subsequent renders pick up updated
+    // node.r / node.data without leaving stale elements behind.
+    g.selectAll(`.${SHAPE_CLASS}`).remove();
+    // Wrap the consumer's drawing in a `<g class="dx-shape">` so we have a
+    // stable selector for the cleanup above.
+    const shapeGroup = g.append('g').classed(SHAPE_CLASS, true);
+    options.renderNode!(shapeGroup, d);
+  });
+};
+
 const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRendererOptions<Data>) => {
-  // Circle.
-  const circle = group.append('circle');
+  // Custom node shape: consumer appends its own elements (e.g. <rect>) and the
+  // renderer skips the default <circle>. Drag/hover handlers attach to the
+  // wrapping <g> so the custom shape acts as the hit target.
+  const useCustom = !!options.renderNode;
+  if (useCustom) {
+    renderCustomShape(group, options);
+  }
+  const hitTarget = useCustom ? group : group.append('circle');
 
   // Drag.
   // TODO(burdon): Update when layout changes.
   if (options.drag) {
-    circle.call(options.drag);
+    hitTarget.call(options.drag);
   }
 
-  // Click.
+  // Click. d3 invokes `on` listeners as `(event, datum)` where datum is the bound data on
+  // the listener's host element (the dx-node `<g>`). Use it directly — reading from
+  // `event.target` returned undefined for the inner circle / text (which don't inherit
+  // __data__), and `this` plus `select(this).datum()` was producing inconsistent results
+  // across HMR reloads.
   if (options.onNodeClick) {
-    group.on('click', (event: MouseEvent) => {
-      const node = select<SVGElement, GraphLayoutNode<Data>>(event.target as SVGGElement).datum();
-      options.onNodeClick(node, event);
+    group.on('click', (event: MouseEvent, d: GraphLayoutNode<Data>) => {
+      options.onNodeClick(d, event);
     });
   }
 
@@ -253,15 +393,25 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
   }
 
   // Hover.
-  if (options.onNodePointerEnter) {
-    circle.on('pointerenter', function (event: PointerEvent) {
-      const node = select<any, GraphLayoutNode<Data>>(this.parentElement).datum();
-      options.onNodePointerEnter(node, event);
+  if (options.onNodePointerEnter || options.onNodePointerLeave || options.highlightOnHover) {
+    hitTarget.on('pointerenter', function (event: PointerEvent) {
+      const node = select<any, GraphLayoutNode<Data>>(useCustom ? this : this.parentElement).datum();
+      options.onNodePointerEnter?.(node, event);
+      if (options.highlightOnHover) {
+        applyHoverHighlight((this as Element).closest('g.dx-graph') as SVGGElement | null, node.id);
+      }
+    });
+    hitTarget.on('pointerleave', function (event: PointerEvent) {
+      const node = select<any, GraphLayoutNode<Data>>(useCustom ? this : this.parentElement).datum();
+      options.onNodePointerLeave?.(node, event);
+      if (options.highlightOnHover) {
+        applyHoverHighlight((this as Element).closest('g.dx-graph') as SVGGElement | null, null);
+      }
     });
 
     group.attr('data-hover', 'handled');
-  } else if (options.highlight !== false) {
-    circle.on('pointerenter', function () {
+  } else if (options.highlight !== false && !useCustom) {
+    hitTarget.on('pointerenter', function () {
       select(this.closest('g.dx-node')).raise();
       if (options.labels) {
         select(this.parentElement).classed('dx-node-active', true).classed('dx-highlight', true);
@@ -294,6 +444,24 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
     return d.x != null && d.y != null ? `translate(${d.x},${d.y})` : undefined;
   });
 
+  // Hidden state: drive pointer-events + the hover opacity via the `dx-hidden` class;
+  // tween the actual opacity attribute on a named transition so it doesn't fight the
+  // CSS hover transition (different namespaces, different durations).
+  group.classed('dx-hidden', (d) => d.hidden ?? false);
+  group
+    .transition('hide')
+    .ease(easeCubicOut)
+    .duration(NODE_HIDE_MS)
+    .attr('opacity', (d) => (d.hidden ? 0 : 1));
+
+  // Re-run the custom shape on every full render so a topology / data update
+  // refreshes geometry (e.g. lattice node.r changes on resize, fill changes on
+  // typename change). The cheap fast path (`applyPositions`) doesn't touch
+  // shapes, so this only runs on the rarer topology-emit code path.
+  if (options.renderNode) {
+    renderCustomShape(group, options);
+  }
+
   // Custom attributes.
   if (options.attributes?.node) {
     try {
@@ -319,8 +487,10 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
     ? (group.transition(options.transition()) as unknown as D3Selection)
     : group;
 
-  // Update circles.
-  groupOrTransition.select<SVGCircleElement>('circle').attr('r', (d) => d.r ?? 16);
+  // Update circles. Skipped when the consumer supplied a custom node shape.
+  if (!options.renderNode) {
+    groupOrTransition.select<SVGCircleElement>('circle').attr('r', (d) => d.r ?? 16);
+  }
 
   // Update labels.
   if (options.labels) {
@@ -432,13 +602,93 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
 
   groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', function () {
     // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
-    const { source, target } = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
+    const edge = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
+    if (edge.path) {
+      return edge.path;
+    }
+    const { source, target } = edge;
     if (!source.initialized || !target.initialized) {
       return;
     }
 
     return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
   });
+};
+
+/**
+ * Hover-driven directional highlight: when `focusedId` is set, paint outgoing edges
+ * orange, incoming edges sky-blue, dim unrelated edges, stroke connected nodes, and
+ * dim unrelated nodes. When `focusedId` is null, clear every inline override so the
+ * graph returns to its default styling.
+ */
+const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null) => {
+  if (!root) {
+    return;
+  }
+  const r = select(root);
+  const on = focusedId != null;
+
+  const outgoing = new Set<string>();
+  const incoming = new Set<string>();
+  if (on) {
+    r.select('g.dx-edges')
+      .selectAll<SVGGElement, GraphLayoutEdge>('g.dx-edge')
+      .each((edge) => {
+        if (edge.source.id === focusedId) {
+          outgoing.add(edge.target.id);
+        }
+        if (edge.target.id === focusedId) {
+          incoming.add(edge.source.id);
+        }
+      });
+  }
+
+  r.select('g.dx-edges')
+    .selectAll<SVGGElement, GraphLayoutEdge>('g.dx-edge')
+    .each(function (edge) {
+      // Visible edge path — exclude the wider transparent click target when present.
+      const path = select(this).select<SVGPathElement>('path:not(.dx-click)');
+      if (!on) {
+        path.style('stroke', null).style('stroke-width', null).style('opacity', null);
+        return;
+      }
+      if (edge.source.id === focusedId) {
+        path.style('stroke', 'var(--color-orange-500)').style('stroke-width', '1.5px').style('opacity', null);
+      } else if (edge.target.id === focusedId) {
+        path.style('stroke', 'var(--color-sky-500)').style('stroke-width', '1.5px').style('opacity', null);
+      } else {
+        path.style('stroke', null).style('stroke-width', null).style('opacity', '0.8');
+      }
+    });
+
+  r.select('g.dx-nodes')
+    .selectAll<SVGGElement, GraphLayoutNode>('g.dx-node')
+    .each(function (node) {
+      const groupSel = select(this);
+      const shape = groupSel.select<SVGGraphicsElement>('circle, rect');
+      // Hidden nodes (e.g. cluster-collapsed leaves) are kept invisible via the
+      // group's `opacity` attribute — set by `updateNode`. style.opacity would
+      // override that attribute, so leave hidden nodes alone.
+      if (node.hidden) {
+        return;
+      }
+      if (!on) {
+        groupSel.style('opacity', null);
+        shape.style('stroke', null).style('stroke-width', null);
+        return;
+      }
+      const connected = outgoing.has(node.id) || incoming.has(node.id);
+      if (node.id === focusedId) {
+        groupSel.style('opacity', null);
+        shape.style('stroke', null).style('stroke-width', null);
+      } else if (connected) {
+        groupSel.style('opacity', null);
+        shape.style('stroke', 'var(--color-orange-400)').style('stroke-width', '2.5px');
+      } else {
+        groupSel.style('opacity', '0.4');
+        shape.style('stroke', null).style('stroke-width', null);
+      }
+    });
 };
 
 // TODO(burdon): Factor out.

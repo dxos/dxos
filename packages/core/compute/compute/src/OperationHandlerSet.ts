@@ -10,8 +10,9 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import { NoHandlerError } from './errors';
 import type * as Operation from './Operation';
@@ -99,7 +100,7 @@ export const reactive = (
       ),
     ),
   );
-  const getHandlers = () => (cached ??= runAndForwardErrors(compute));
+  const getHandlers = () => (cached ??= EffectEx.runAndForwardErrors(compute));
   return {
     [TypeId]: TypeId,
     getHandlers,
@@ -151,6 +152,8 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
 
 /**
  * Gets a handler for an operation by key.
+ * Accepts either a plain NSID (`org.dxos.function.database.contextAdd`) or a
+ * full DXN string (`dxn:org.dxos.function.database.contextAdd`).
  */
 export const getHandlerByKey = (
   set: OperationHandlerSet,
@@ -158,7 +161,11 @@ export const getHandlerByKey = (
 ): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
   Effect.gen(function* () {
     const handlers = yield* set.handlers;
-    const handler = handlers.find((handler) => handler.meta.key === key);
+    // Normalize both sides to plain NSID for comparison so callers can pass
+    // either a ToolId (plain NSID) or a full DXN string.
+    const normalizeKey = (k: string) => (DXN.isDXN(k) ? DXN.getName(k) : k);
+    const normalizedKey = normalizeKey(key);
+    const handler = handlers.find((handler) => normalizeKey(handler.meta.key) === normalizedKey);
     if (!handler) {
       return yield* Effect.fail(new NoHandlerError(key));
     }

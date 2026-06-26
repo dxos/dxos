@@ -4,7 +4,7 @@
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
@@ -13,8 +13,9 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
+import { MenuBuilder } from '../builder';
 import { Menu } from '../components';
-import { type ActionGraphProps, useMenuActions } from '../hooks';
+import { type ActionGraphProps, useMenuActions, useMenuBuilder } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 
 random.seed(1234);
@@ -88,6 +89,34 @@ export const UseMenuActionsToolbar: Story = {
 
     return (
       <Menu.Root {...menuActions}>
+        <Menu.Toolbar />
+      </Menu.Root>
+    );
+  },
+};
+
+/**
+ * Toolbar with both labeled and tooltip-only (iconOnly) Input.Switch items.
+ */
+export const SwitchToolbar: Story = {
+  render: () => {
+    const [wordWrap, setWordWrap] = useState(false);
+    const [lineNumbers, setLineNumbers] = useState(true);
+
+    const menuActions = useMenuBuilder(
+      () =>
+        MenuBuilder.make()
+          .root({ label: 'Editor settings' })
+          .switch('word-wrap', { label: 'Word wrap', checked: wordWrap }, () => setWordWrap((v) => !v))
+          .switch('line-numbers', { label: 'Line numbers', iconOnly: true, checked: lineNumbers }, () =>
+            setLineNumbers((v) => !v),
+          )
+          .build(),
+      [wordWrap, lineNumbers],
+    );
+
+    return (
+      <Menu.Root {...menuActions} alwaysActive>
         <Menu.Toolbar />
       </Menu.Root>
     );

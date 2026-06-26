@@ -458,7 +458,7 @@ Change the classNames in FormActions (line 248):
 
 ```ts
 return (
-  <div role='none' className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
+  <div className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
 ```
 
 - [ ] **Step 4: Build to verify**

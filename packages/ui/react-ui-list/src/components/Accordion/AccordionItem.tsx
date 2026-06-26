@@ -9,7 +9,8 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ListItemRecord } from '../List';
+// See `AccordionRoot.tsx` for the rationale on `ListItemRecord = any`.
+type ListItemRecord = any;
 import { useAccordionContext } from './AccordionRoot';
 
 const ACCORDION_ITEM_NAME = 'AccordionItem';
@@ -37,17 +38,21 @@ export const AccordionItem = <T extends ListItemRecord>({ children, classNames, 
   );
 };
 
-export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.AccordionHeaderProps>;
+export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.AccordionHeaderProps & { icon?: string }>;
 
-export const AccordionItemHeader = ({ classNames, children, ...props }: AccordionItemHeaderProps) => {
+export const AccordionItemHeader = ({ classNames, children, icon, ...props }: AccordionItemHeaderProps) => {
   return (
     <AccordionPrimitive.Header {...props} className={mx(classNames)}>
-      <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
-        {children}
+      {/* `justify-between` pins the toggle caret to the trailing edge of the row regardless of
+          the header content's intrinsic width — so the affordance lives at a predictable
+          right-end position. The content wrapper grabs the remaining space. */}
+      <AccordionPrimitive.Trigger className='group flex items-center justify-between gap-2 p-2 dx-focus-ring-inset w-full text-start'>
+        {icon && <Icon icon={icon} size={4} />}
+        <span className='min-w-0 flex-1 truncate'>{children}</span>
         <Icon
           icon='ph--caret-right--regular'
           size={4}
-          classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
+          classNames='shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-90'
         />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>

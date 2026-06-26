@@ -2,75 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { ClientEvents } from '@dxos/plugin-client';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
-import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';
+import { Channel, Message, Thread } from '@dxos/types';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
+  ChannelBackendFeed,
   CreateObject,
-  Markdown,
+  NavigationResolver,
   OperationHandler,
-  UndoMappings,
   ReactSurface,
-  ThreadState,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ThreadOperation } from '#types';
 
-// TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
-//  NOTE(burdon): Review/discuss CursorConverter semantics.
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
 // TODO(wittjosiah): Rename to ChatPlugin.
-// TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({
-    schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],
+    schema: [Channel.Channel, Message.Message, Thread.Thread],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
-  // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
-  // Plugin.addModule({
-  //   id: 'settings',
-  //   activatesOn: Events.SetupSettings,
-  //   activate: ThreadSettings,
-  // }),
+  // Default local-feed channel backend. Other plugins contribute additional
+  // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
   Plugin.addModule({
-    id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: ThreadState,
+    id: 'channel-backend-feed',
+    activatesOn: ActivationEvents.Startup,
+    activate: ChannelBackendFeed,
   }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(ThreadOperation.OnCreateSpace, params),
-        ),
-      ),
-  }),
-  Plugin.addModule({
-    id: 'markdown',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: Markdown,
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -3,17 +3,9 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
 
-import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { WnfsFile } from '#types';
 
-export const WnfsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [WnfsFile.WnfsFile] }),
-  Plugin.make,
-);
+export const WnfsPlugin = Plugin.define(meta).pipe(Plugin.make);
 
 export default WnfsPlugin;

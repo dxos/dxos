@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
-import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
+import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
@@ -44,7 +44,7 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
 export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state } = useTriggerRuntimeControls(space.db);
   const isEnabled = state?.enabled ?? false;
   const [properties] = useObject(space.properties);
@@ -80,6 +80,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
       <Popover.Trigger asChild>
         <StatusBar.Item>
           <IconButton
+            variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
             label={t(`trigger-status-${triggerState}.label`)}
@@ -114,7 +115,7 @@ const TriggerStatusPopover = ({
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
 }: TriggerStatusPopoverProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className='flex flex-col gap-2 p-2 w-[240px]'>

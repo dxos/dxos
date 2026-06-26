@@ -2,19 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.sheet',
-  name: 'Sheet',
-  author: 'DXOS',
-  description: trim`
-    Full-featured spreadsheet application with over 400 built-in formulas for calculations and data analysis.
-    Create custom JavaScript functions and integrate with AI agents for advanced automation.
-  `,
-  icon: 'ph--grid-nine--regular',
-  iconHue: 'indigo',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sheet',
-  screenshots: ['https://dxos.network/plugin-details-sheet-dark.png'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);

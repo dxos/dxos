@@ -3,7 +3,7 @@
 //
 
 export * from './field';
-export * from './field-type';
 export * from './formatting';
+export * from './omit';
 export * from './properties';
 export * from './refs';

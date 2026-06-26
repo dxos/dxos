@@ -21,22 +21,22 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as url from 'node:url';
 
-import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Skill, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
 import { EnrichTranscript, EnrichmentHandlers, SummarizeConversation } from './operations';
 import { parseConversation } from './parser';
 import { simulateStream } from './stream-simulator';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(...EnrichmentHandlers),
-  types: [Person.Person, Organization.Organization, Blueprint.Blueprint, Feed.Feed],
+  types: [Person.Person, Organization.Organization, Skill.Skill, Feed.Feed],
   disableLlmMemoization: true,
 });
 
@@ -61,14 +61,14 @@ describe('Transcript enrichment — conversation simulation', () => {
               continue;
             }
             const person = yield* Database.add(Obj.make(Person.Person, { fullName }));
-            seeded.push({ id: person.id, typename: Person.Person.typename, name: fullName });
+            seeded.push({ id: person.id, typename: Type.getTypename(Person.Person), name: fullName });
           } else if (entity.kind === 'Organization') {
             const name = entity.fields.name;
             if (!name) {
               continue;
             }
             const org = yield* Database.add(Obj.make(Organization.Organization, { name }));
-            seeded.push({ id: org.id, typename: Organization.Organization.typename, name });
+            seeded.push({ id: org.id, typename: Type.getTypename(Organization.Organization), name });
           }
         }
         yield* Database.flush();

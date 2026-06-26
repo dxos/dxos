@@ -1,0 +1,309 @@
+---
+id: org.dxos.plugin.presenter
+name: PresenterPlugin
+version: 0.1.0
+---
+
+A presentation plugin for DXOS Composer that turns existing workspace objects — markdown documents and collections — into interactive slideshows with fullscreen mode and keyboard navigation.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type PresentationTarget
+  literals: document | collection
+  desc: The kind of workspace object being presented.
+```
+
+```mdl
+type SlideIndex
+  fields:
+    current: number             # zero-based index of the active slide
+    count: number               # total number of slides in the presentation
+```
+
+```mdl
+type PresentationSettings
+  fields:
+    presentCollections?: boolean  # when true, Collections may also be presented as slideshows (experimental)
+```
+
+## Components
+
+```mdl
+component DocumentArticle
+  desc: |
+    Full-screen Reveal.js player for a single Markdown document.
+    Parses the document content into slides using horizontal/vertical `---` separators.
+    Renders in a Panel that fills the available viewport.
+  props:
+    document: Markdown.Document
+  slots:
+    (none)
+  actions:
+    exit()                      # navigates back to the originating document view
+  layout: |
+    ┌─────────────────────────────┐
+    │                             │
+    │        RevealPlayer         │
+    │  (full-screen slide canvas) │
+    │                             │
+    └─────────────────────────────┘
+```
+
+```mdl
+component CollectionArticle
+  desc: |
+    Slideshow player for a Collection.
+    Renders one slide per object in the collection's ordered items array.
+    The active slide is delegated to the AppSurface.Slide surface, so each
+    item's own plugin renders it (e.g. SlideArticle for documents).
+  props:
+    subject: Collection.Collection
+    role?: string
+  state:
+    slide: number               # zero-based index of the current slide
+    running: boolean            # whether keyboard navigation is active (from PresenterContext)
+  slots:
+    (none)
+  actions:
+    setSlide(index: number)
+    exit()
+  layout: |
+    ┌─────────────────────────────┐
+    │                             │
+    │       Surface (slide N)     │  ← AppSurface.Slide surface
+    │                             │
+    ├────────────────┬────────────┤
+    │   [Pager]      │ [PageNum]  │
+    └────────────────┴────────────┘
+```
+
+```mdl
+component SlideArticle
+  desc: |
+    Renders a single Markdown document as a slide panel inside a Collection presentation.
+    Used as the AppSurface.Slide surface implementation for Markdown.Document objects.
+  props:
+    document: Markdown.Document
+  layout: |
+    ┌─────────────────────────────┐
+    │  Panel                      │
+    │   └─ Slide (markdown)       │
+    └─────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op TogglePresentation
+  desc: |
+    Toggles presentation mode for a Markdown document or Collection.
+    Opens the presenter companion node in solo-fullscreen layout via the Deck plugin.
+    If the deck is not already in fullscreen, switches to solo--fullscreen before opening.
+  input:
+    object: Markdown.Document | Collection.Collection
+    state?: boolean             # explicit on/off override; omit to toggle
+  output: void
+  effects: [layout:navigate, deck:solo-fullscreen]
+  requires: [DeckCapabilities.State, DeckOperation.Adjust, LayoutOperation.Open]
+  note: |
+    Resolves the presenter companion node path as `<objectPath>/presenter`.
+    Keyboard shortcut: Shift+Cmd+P (macOS), Shift+Alt+P (Windows/Linux).
+```
+
+## Features
+
+```mdl
+feat F-1: Presentation Mode
+
+  req F-1.1: Every Markdown document in the workspace has a companion "Presenter" node in the app graph.
+  req F-1.2:
+    when: settings.presentCollections is true
+    then: every Collection also has a companion Presenter node
+  req F-1.3:
+    when: user activates TogglePresentation on a document or collection
+    then: Composer opens the presenter node in solo-fullscreen mode
+  req F-1.4:
+    when: user presses Shift+Cmd+P (macOS) or Shift+Alt+P (Windows)
+    then: TogglePresentation is invoked for the focused object
+```
+
+```mdl
+feat F-2: Document Slideshow (Reveal.js)
+
+  req F-2.1:
+    when: DocumentArticle mounts with a Markdown.Document
+    then: RevealPlayer parses the document content and renders slides
+  req F-2.2: Horizontal slides are separated by `---`; vertical slides by `----`.
+  req F-2.3:
+    when: user presses Escape or the exit action is triggered
+    then: presenter navigates back to the originating document view
+```
+
+```mdl
+feat F-3: Collection Slideshow
+
+  req F-3.1:
+    when: CollectionArticle mounts with a Collection
+    then: slide 0 is shown, corresponding to collection.objects[0]
+  req F-3.2:
+    when: user navigates to slide N via the Pager
+    then: the AppSurface.Slide surface renders collection.objects[N]
+  req F-3.3: PageNumber displays the current slide index and total count.
+  req F-3.4:
+    when: user presses Escape or the exit action is triggered
+    then: presenter navigates back to the collection view
+```
+
+```mdl
+feat F-4: Plugin Settings
+
+  req F-4.1: PresenterSettings panel is registered for the plugin settings surface.
+  req F-4.2:
+    when: user enables "Present collections (experimental)"
+    then: settings.presentCollections is set to true and Collection nodes gain Presenter companions
+```
+
+## Acceptance
+
+```mdl
+test T-1: Document presenter opens in fullscreen
+  given: a Markdown document exists in the workspace
+  when: user invokes TogglePresentation (keyboard or action menu)
+  then:
+    - Composer switches to solo-fullscreen layout
+    - DocumentArticle is shown with the document content
+    - RevealPlayer is visible with at least one slide
+```
+
+```mdl
+test T-2: Slide navigation via Reveal.js
+  given: a Markdown document with three `---`-separated sections
+  when: DocumentArticle renders the document
+  then:
+    - three horizontal slides are produced
+    - arrow-key navigation advances and retreats between slides
+```
+
+```mdl
+test T-3: Exit returns to document view
+  given: DocumentArticle is open in fullscreen
+  when: user presses Escape
+  then: Composer navigates back to the document article view
+```
+
+```mdl
+test T-4: Collection slideshow renders per-item surfaces
+  given: a Collection with two Markdown documents and settings.presentCollections = true
+  when: CollectionArticle mounts
+  then:
+    - slide 0 shows SlideArticle for collection.objects[0]
+    - Pager shows count = 2
+```
+
+```mdl
+test T-5: Collection slide advance
+  given: CollectionArticle at slide 0 with a three-item collection
+  when: user clicks the next-slide control in Pager
+  then:
+    - slide index advances to 1
+    - AppSurface.Slide renders collection.objects[1]
+    - PageNumber shows "2 / 3"
+```
+
+```mdl
+test T-6: Collections hidden when setting disabled
+  given: settings.presentCollections is false (default)
+  when: app graph is built for a Collection node
+  then: no Presenter companion node is created for the collection
+```
+
+```mdl
+test T-7: Keyboard shortcut registered
+  given: a Markdown document node is focused in the app graph
+  then:
+    - action with key TogglePresentation is present on the node
+    - keyBinding shows Shift+Cmd+P on macOS
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

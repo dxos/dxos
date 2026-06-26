@@ -48,4 +48,13 @@ export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
   }
 
   abstract render(layout: LAYOUT): void;
+
+  /**
+   * Fast path invoked when only positions changed.
+   * Default falls back to a full `render`; subclasses can override to skip
+   * enter/exit joins and attribute callbacks for per-tick updates.
+   */
+  applyPositions(layout: LAYOUT): void {
+    this.render(layout);
+  }
 }

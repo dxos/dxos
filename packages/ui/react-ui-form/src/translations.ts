@@ -10,6 +10,9 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'ref-editor.placeholder': "Type '@' to add a reference, or enter a value",
+        'ref-editor-auto.placeholder': 'Search by name, or enter a value',
+
         'fields.label': 'Fields',
         'hidden-fields.label': 'Hidden Fields',
         'empty-readonly-ref-field.label': '(none)',
@@ -19,12 +22,15 @@ export const translations = [
         'field-format.label': 'Type',
         'field-path.label': 'Field path',
 
+        'remove-item.button': 'Delete item',
         'add-item.button': 'Add item',
         'add-property-button.label': 'Add property',
         'boolean-input-true.value': 'Yes',
         'boolean-input-false.value': 'No',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
+        'expand-fields.label': 'Expand',
+        'collapse-fields.label': 'Collapse',
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',
@@ -85,7 +91,7 @@ export const translations = [
         // System schema message.
         'system-schema.title': 'System type',
         'system-schema.description': 'System type: cannot add or remove fields.',
-        'remove.button': 'Remove',
+        'remove.button': 'Delete',
       },
     },
   },

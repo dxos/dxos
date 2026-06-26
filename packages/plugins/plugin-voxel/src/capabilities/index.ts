@@ -3,9 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint } from '@dxos/compute';
 
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

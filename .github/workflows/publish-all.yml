@@ -87,6 +87,8 @@ jobs:
         id: npm-publish
         run: .github/workflows/scripts/publish.sh
         if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+        env:
+          DISCORD_NPM_PUBLISH_WEBHOOK: ${{ secrets.DISCORD_NPM_PUBLISH_WEBHOOK }}
 
       - name: Bundle Apps
         run: .github/workflows/scripts/bundle-apps.sh

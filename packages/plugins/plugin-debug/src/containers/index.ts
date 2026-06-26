@@ -5,6 +5,7 @@
 import { type ComponentType, lazy } from 'react';
 
 export const DebugGraph: ComponentType<any> = lazy(() => import('./DebugGraph'));
+export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings'));
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel'));
 export const DebugStatus: ComponentType<any> = lazy(() => import('./DebugStatus'));
 export const DevtoolsOverviewContainer: ComponentType<any> = lazy(() => import('./DevtoolsOverviewContainer'));
@@ -12,3 +13,4 @@ export const SpaceGenerator: ComponentType<any> = lazy(() => import('./SpaceGene
 export const Wireframe: ComponentType<any> = lazy(() => import('./Wireframe'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel'));
 export const GithubPanel: ComponentType<any> = lazy(() => import('./GithubPanel'));
+export const RegistryPanel: ComponentType<any> = lazy(() => import('./RegistryPanel'));

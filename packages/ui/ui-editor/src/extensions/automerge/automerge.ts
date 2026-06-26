@@ -8,7 +8,7 @@ import { next as A } from '@automerge/automerge';
 import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { DocAccessor } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 
 import { Cursor } from '../../util';
 import { initialSync } from '../state';
@@ -16,7 +16,11 @@ import { cursorConverter } from './cursor';
 import { type State, isReconcile, reconcileAnnotation, updateHeadsEffect } from './defs';
 import { Syncer } from './sync';
 
-export const automerge = (accessor: DocAccessor): Extension => {
+/**
+ * CodeMirror extension that two-way syncs the editor with the string the {@link Doc.Accessor} points
+ * at, reconciling local edits and remote document mutations via Automerge.
+ */
+export const automerge = (accessor: Doc.Accessor): Extension => {
   const syncState = StateField.define<State>({
     create: () => {
       return {
@@ -68,7 +72,7 @@ export const automerge = (accessor: DocAccessor): Extension => {
           accessor.handle.addListener('change', this._handleChange);
 
           requestAnimationFrame(() => {
-            const value = DocAccessor.getValue<string>(accessor);
+            const value = Doc.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {
               this._view.dispatch({

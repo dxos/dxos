@@ -8,8 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Feed, Filter } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -62,7 +61,7 @@ const meta = {
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
                 const { events } = new Builder().createEvents(count).build();
-                yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+                yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(personalSpace.db)));
               }
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));

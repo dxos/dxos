@@ -10,13 +10,7 @@
   ],
   "references": [
     {
-      "path": "../../../common/context"
-    },
-    {
       "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/log"
     },
     {
       "path": "../../../common/node-std"
@@ -34,7 +28,10 @@
       "path": "../echo"
     },
     {
-      "path": "../echo-db"
+      "path": "../echo-client"
+    },
+    {
+      "path": "../echo-doc"
     }
   ]
 }

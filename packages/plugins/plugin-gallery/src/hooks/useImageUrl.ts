@@ -5,59 +5,67 @@
 import { useEffect, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { WnfsCapabilities, getBlobUrl, getPathFromUrl, loadWnfs } from '@dxos/plugin-wnfs';
-import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
-
-const WNFS_PROTOCOL = 'wnfs://';
+import { FileCapabilities } from '@dxos/plugin-file/types';
+import { getSpace } from '@dxos/react-client/echo';
+import { File } from '@dxos/types';
 
 /**
- * Resolves an image URL for use in <img src>.
- * - http(s):// URLs are passed through as-is.
- * - wnfs:// URLs are resolved to a blob URL via the WNFS blockstore.
+ * Resolves a renderable `<img src>` URL for a {@link File.File}.
+ * - Inline bytes are turned into a `blob:` URL (revoked on unmount).
+ * - `http(s)://`, `data:`, and `blob:` URLs pass through.
+ * - Other URL schemes (e.g. `wnfs://`) are dispatched to the first matching
+ *   {@link FileCapabilities.UrlResolver} contribution.
  */
-export const useImageUrl = (url: string | undefined, type?: string): string | undefined => {
-  const [blockstore] = useCapabilities(WnfsCapabilities.Blockstore);
-  const [instances] = useCapabilities(WnfsCapabilities.Instances);
-  const client = useClient();
-  const [resolved, setResolved] = useState<string | undefined>(() =>
-    url && !url.startsWith(WNFS_PROTOCOL) ? url : undefined,
-  );
+export const useImageUrl = (file: File.File | undefined): string | undefined => {
+  const resolvers = useCapabilities(FileCapabilities.UrlResolver);
+  const [resolved, setResolved] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!url) {
+    if (!file) {
       setResolved(undefined);
       return;
     }
-    if (!url.startsWith(WNFS_PROTOCOL)) {
+
+    const { data, type } = file;
+    if (data._tag === 'inline') {
+      const url = URL.createObjectURL(new Blob([data.bytes as BlobPart], { type }));
       setResolved(url);
+      return () => URL.revokeObjectURL(url);
+    }
+
+    if (/^(?:https?|data|blob):/i.test(data.url)) {
+      setResolved(data.url);
       return;
     }
-    // Clear any prior URL (e.g. an http URL from a previous render) while wnfs
-    // resolution is pending so we don't render a stale, unrelated image.
-    setResolved(undefined);
-    if (!blockstore) {
+
+    const resolver = resolvers.find((r) => r.test(data.url));
+    if (!resolver) {
+      setResolved(undefined);
       return;
     }
 
     let cancelled = false;
     let createdBlobUrl: string | undefined;
-    void (async () => {
-      const path = getPathFromUrl(url);
-      const spaceId = path[1];
-      const space: Space | undefined = client.spaces.get().find((s) => s.id === spaceId);
-      if (!space) {
-        return;
-      }
-      const { directory, forest } = await loadWnfs({ blockstore, instances, space });
-      const blobUrl = await getBlobUrl({ wnfsUrl: url, blockstore, directory, forest, type });
-      createdBlobUrl = blobUrl;
-      if (!cancelled) {
-        setResolved(blobUrl);
-      } else {
-        URL.revokeObjectURL(blobUrl);
-      }
-    })();
+    setResolved(undefined);
+    void resolver
+      .resolve(data.url, file, getSpace(file))
+      .then((url) => {
+        if (cancelled) {
+          if (url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
+          return;
+        }
+        if (url?.startsWith('blob:')) {
+          createdBlobUrl = url;
+        }
+        setResolved(url);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolved(undefined);
+        }
+      });
 
     return () => {
       cancelled = true;
@@ -65,7 +73,7 @@ export const useImageUrl = (url: string | undefined, type?: string): string | un
         URL.revokeObjectURL(createdBlobUrl);
       }
     };
-  }, [url, blockstore, instances, client, type]);
+  }, [file, file?.data, file?.type, resolvers]);
 
   return resolved;
 };

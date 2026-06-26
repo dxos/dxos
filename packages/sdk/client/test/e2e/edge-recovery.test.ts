@@ -7,13 +7,12 @@ import { describe, expect, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { Obj, Filter, Database } from '@dxos/echo';
-import type { SpaceSyncState } from '@dxos/echo-db';
+import type { SpaceSyncState } from '@dxos/echo-client';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory } from '@dxos/network-manager';
-import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { LocalClientServices } from '../../src/services';
@@ -200,6 +199,3 @@ const waitForSync = async (db: Database.Database, timeout = 60_000) => {
 
   console.log(`  synced in ${(performance.now() - start).toFixed(0)}ms`);
 };
-
-const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
-  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);

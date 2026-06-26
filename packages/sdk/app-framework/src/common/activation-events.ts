@@ -16,7 +16,7 @@ export const Startup = ActivationEvent$.make('org.dxos.app-framework.event.start
 /**
  * Fired to load any newly available surfaces.
  */
-export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.event.setup-react-surface');
+export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.event.setupReactSurface');
 
 /**
  * Fired before the process manager is created.
@@ -25,7 +25,7 @@ export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.e
  * process manager's {@link ServiceResolver} and {@link OperationInvoker} pick
  * them up at construction time.
  */
-export const SetupProcessManager = ActivationEvent$.make('org.dxos.app-framework.event.setup-process-manager');
+export const SetupProcessManager = ActivationEvent$.make('org.dxos.app-framework.event.setupProcessManager');
 
 //
 // Triggered Events
@@ -36,4 +36,4 @@ export const SetupProcessManager = ActivationEvent$.make('org.dxos.app-framework
  * (`ProcessManagerRuntime`, `ServiceResolver`, `ProcessMonitor`, `OperationInvoker`)
  * have been contributed.
  */
-export const ProcessManagerReady = ActivationEvent$.make('org.dxos.app-framework.event.process-manager-ready');
+export const ProcessManagerReady = ActivationEvent$.make('org.dxos.app-framework.event.processManagerReady');

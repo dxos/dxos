@@ -15,14 +15,20 @@ Composer's user-facing assistance plugin. Covers two paths:
    logs) to the observability backend via the deck `--help` companion. This
    replaces the same surface previously owned by plugin-observability and
    keeps the telemetry plugin focused on instrumentation only.
+3. **GitHub issue submission** — same form, optional third action: file a
+   structured bug/feature request against the upstream repo. When the user
+   has authenticated the GitHub integration (via plugin-connector) the
+   issue is filed as them via the GitHub API; otherwise we open a prefilled
+   `issues/new` URL in a new tab so the user can finish the submission in
+   their own browser session.
 
 A future iteration will absorb plugin-help (welcome tour, contextual hints,
 keyboard shortcuts) so all user education lives here.
 
 Initial scope is a thin skeleton: a `Ticket` schema, four ticket operations
-wired to a blueprint, a `FeedbackForm` + `captureUserFeedback` operation, and
+wired to a skill, a `FeedbackForm` + `captureUserFeedback` operation, and
 two surfaces (`Ticket` article + `--help` companion). Documentation search and
-issue filing are stubbed — the blueprint exists so the assistant can be
+issue filing are stubbed — the skill exists so the assistant can be
 exercised end-to-end while the integrations land in later phases.
 
 ## Extensions
@@ -56,6 +62,37 @@ type Ticket
     status: TicketStatus
     resolution?: string          # Resolution notes written when status -> resolved.
     tags: string[]               # Free-form tags (e.g. echo, ui, performance).
+```
+
+```mdl
+type IssueType
+  literals: bug | feature
+```
+
+```mdl
+type Severity
+  # Literal strings double as GitHub label names so a triager can read
+  # the priority at a glance from the labels strip on the filed issue.
+  literals: "High priority" | "Medium priority" | "Low priority"
+```
+
+```mdl
+type SupportRequest
+  desc: >
+    Form payload submitted from the help companion. Drives all three
+    submission paths: PostHog (one-shot feedback), Discord (help thread),
+    and GitHub issue. The hidden field `version` is populated by the
+    FeedbackPanel from the runtime config; the user never edits it but
+    it is forwarded to the backend so support triage can identify the
+    build the report came from.
+  fields:
+    type: IssueType              # bug | feature
+    severity: Severity           # "High priority" | "Medium priority" | "Low priority"
+    title: string                # Short summary (becomes GH issue title).
+    body: string                 # Longer description (becomes GH issue body).
+    area?: string                # Plugin id (e.g. org.dxos.plugin.echo). Optional.
+    includeLogs?: boolean        # Forward debug logs with the submission.
+    version?: string             # Hidden: app build version. Auto-populated.
 ```
 
 ## Components
@@ -147,6 +184,13 @@ op captureUserFeedback
   output: void
 ```
 
+GitHub issue submission is performed inline by the FeedbackPanel — it
+queries the user's personal space for an `AccessToken` with source
+`github.com`, POSTs to the GitHub API if found, and falls back to opening
+a prefilled `issues/new` URL otherwise. No dedicated operation is exposed
+in this phase; if AI / CLI invocation is needed later, add one wrapping
+the same flow.
+
 ## Features
 
 ```mdl
@@ -171,11 +215,11 @@ feat F-1: Ticket Lifecycle
 ```mdl
 feat F-2: AI Support Assistant
 
-  req F-2.1: A blueprint is registered with key org.dxos.blueprint.support.
-  req F-2.2: Blueprint tools include createTicket, markInProgress, resolveTicket, searchDocs.
+  req F-2.1: A skill is registered with key org.dxos.skill.support.
+  req F-2.2: Skill tools include createTicket, markInProgress, resolveTicket, searchDocs.
   req F-2.3:
     when: a Ticket is the active object
-    then: the support blueprint is bound to the chat companion surface.
+    then: the support skill is bound to the chat companion surface.
   req F-2.4: The assistant is instructed to gather details, search docs, and only resolve when the user confirms.
 ```
 
@@ -203,6 +247,24 @@ feat F-4: One-shot Feedback
   req F-4.5:
     when: the Observability capability reports feedback is unavailable
     then: the submit button is disabled.
+```
+
+```mdl
+feat F-5: GitHub Issue Submission
+
+  req F-5.1: FeedbackForm exposes type (bug/feature), severity, title, body, and area (optional plugin) alongside the existing submit + Discord actions.
+  req F-5.2: The form auto-populates and submits a hidden `version` field (app build) without rendering it as an input.
+  req F-5.3: The area select is populated from the runtime plugin list (plugin id + name); empty selection is allowed.
+  req F-5.4:
+    when: user clicks "Create GitHub issue"
+    then: submitGitHubIssue is invoked with the form values.
+  req F-5.5:
+    when: an AccessToken with source `github.com` is present in the active space
+    then: the issue is POSTed to the GitHub API; the response URL is opened in a new tab and a success toast is shown.
+  req F-5.6:
+    when: no GitHub AccessToken is present
+    then: a prefilled `issues/new` URL is opened in a new tab; the user finishes the submission manually.
+  req F-5.7: type maps to GitHub's Issue Type field via `?type=Bug` / `?type=Feature`; severity is emitted as a label whose name matches the literal (e.g. `High priority`); area, when set, adds an `area/<plugin-id>` label. A `Composer` source-anchor label is always included.
 ```
 
 ## Acceptance

@@ -6,9 +6,8 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
 
 import {
   TableModel,
@@ -44,7 +43,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   ...props
 }: UseTableModelProps<T>): TableModel<T> | undefined => {
   const registry = useContext(RegistryContext);
-  const selected = useSelected(object && Obj.getDXN(object).toString(), 'multi');
+  const selected = useSelection(object && Obj.getURI(object), 'multi');
   const initialSelection = useMemo(() => selected, [object]);
 
   const [model, setModel] = useState<TableModel<T>>();
@@ -85,7 +84,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
     }
   }, [model, rows]);
 
-  const { multiSelect, clear } = useSelectionActions([model?.id].filter(isNonNullable));
+  const { multi, clear } = useSelectionActions(model?.id);
 
   useEffect(() => {
     if (!model) {
@@ -94,7 +93,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
 
     const unsubscribe = registry.subscribe(model.selection.selectionAtom, () => {
       const selectedItems = [...model.selection.selection];
-      multiSelect(selectedItems);
+      multi(selectedItems);
       onSelectionChanged?.(selectedItems);
     });
 

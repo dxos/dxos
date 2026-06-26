@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { isArrayType } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -162,7 +162,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       targetNode.inputs.push({
         name: edge.input,
         schema,
-        kind: isArrayType(schema.ast) ? InputKind.Array : InputKind.Scalar,
+        kind: SchemaEx.isArrayType(schema.ast) ? InputKind.Array : InputKind.Scalar,
         sources: [],
       });
     }

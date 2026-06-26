@@ -67,6 +67,8 @@ export const CellGrid = <T,>({
   classNames,
   onCellToggle,
   onSelectionCommit,
+  onDrawUpdate,
+  onDrawCommit,
 }: CellGridProps<T>) => {
   const registry = useContext(RegistryContext);
 
@@ -212,8 +214,8 @@ export const CellGrid = <T,>({
   // across consumer re-renders — otherwise an in-progress drag is torn down when
   // the parent's onCellToggle identity changes (e.g. after the very mutation we
   // just triggered), and subsequent pointermove events see drag === null.
-  const callbacksRef = useRef<PointerHandlers>({ onCellToggle, onSelectionCommit });
-  callbacksRef.current = { onCellToggle, onSelectionCommit };
+  const callbacksRef = useRef<PointerHandlers>({ onCellToggle, onSelectionCommit, onDrawUpdate, onDrawCommit });
+  callbacksRef.current = { onCellToggle, onSelectionCommit, onDrawUpdate, onDrawCommit };
   useEffect(() => {
     const element = overlayInputRef.current;
     if (!element) {
@@ -226,6 +228,8 @@ export const CellGrid = <T,>({
       handlers: {
         onCellToggle: (coord, mode) => callbacksRef.current.onCellToggle?.(coord, mode),
         onSelectionCommit: (range) => callbacksRef.current.onSelectionCommit?.(range),
+        onDrawUpdate: (start, end) => callbacksRef.current.onDrawUpdate?.(start, end),
+        onDrawCommit: (start, end) => callbacksRef.current.onDrawCommit?.(start, end),
       },
     });
     const detachWheel = attachWheelHandlers(element, { registry, atoms, headers });

@@ -7,13 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Script, Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
 import { templates } from '../templates';
 
-const SCRIPT_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const ScriptProps = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -29,7 +29,7 @@ export const NotebookProps = Schema.Struct({
 });
 
 export const CreateScript = Operation.make({
-  meta: { key: `${SCRIPT_OPERATION}.create-script`, name: 'Create Script' },
+  meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular' },
   input: Schema.extend(
     ScriptProps,
     Schema.Struct({
@@ -37,6 +37,6 @@ export const CreateScript = Operation.make({
     }),
   ),
   output: Schema.Struct({
-    object: Script.Script,
+    object: Type.getSchema(Script.Script),
   }),
 });

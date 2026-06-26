@@ -11,9 +11,8 @@ export const translations = [
   ...searchTranslations,
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Simple layout',
-        'settings.title': 'Simple layout settings',
         'workspaces.heading': 'Workspaces',
         'settings.heading': 'Settings',
         'back.label': 'Back',

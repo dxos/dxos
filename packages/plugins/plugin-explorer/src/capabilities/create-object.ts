@@ -21,13 +21,14 @@ export default Capability.makeModule(
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
-            const { view } = await ViewModel.makeFromDatabase({ db: options.db, typename: props.typename });
+            const view = props.typename
+              ? (await ViewModel.makeFromDatabase({ db: options.db, typename: props.typename })).view
+              : undefined;
             return Graph.make({ name: props.name, view });
           });
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            hidden: true,
             targetNodeId: options.targetNodeId,
           });
         }),

@@ -15,7 +15,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type EchoHost, type SpaceManager } from '@dxos/echo-pipeline';
+import { type EchoHost, type SpaceManager } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
@@ -105,6 +105,11 @@ export class SpacesServiceImpl implements SpacesService {
         case SpaceState.SPACE_INACTIVE:
           await space.deactivate(ctx);
           break;
+
+        case SpaceState.SPACE_DELETED:
+          await dataSpaceManager.markSpaceDeleted(ctx, spaceKey);
+          // The space is removed from the manager; skip any further mutations (e.g. edgeReplication).
+          return;
         default:
           throw new ApiError({ message: 'Invalid space state' });
       }
@@ -334,7 +339,7 @@ export class SpacesServiceImpl implements SpacesService {
     const format = request.archive.format ?? detectSpaceArchiveFormat(request.archive);
     if (format === SpaceArchive.Format.JSON) {
       const serialized = readSerializedSpaceArchive(request.archive);
-      const space = await dataSpaceManager.createSpace(ctx);
+      const space = await dataSpaceManager.createSpace(ctx, { tags: request.tags });
       await this._hydrateSpaceFromSerialized(space, serialized);
       await this._updateMetrics();
       return { newSpaceId: space.id };
@@ -345,6 +350,7 @@ export class SpacesServiceImpl implements SpacesService {
     const space = await dataSpaceManager.createSpace(ctx, {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
+      tags: request.tags,
     });
     await this._updateMetrics();
     return { newSpaceId: space.id };
@@ -354,7 +360,7 @@ export class SpacesServiceImpl implements SpacesService {
    * Populate a freshly-created space with the objects and feed messages described in a {@link SerializedSpace}.
    *
    * Objects are written directly into the space's automerge root document as inline
-   * {@link ObjectStructure} entries; feed messages are appended to the appropriate queue
+   * {@link EntityStructure} entries; feed messages are appended to the appropriate queue
    * via {@link EchoHost.queuesService}.
    */
   private async _hydrateSpaceFromSerialized(

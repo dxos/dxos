@@ -7,6 +7,8 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { StatsPanel, useStats } from '@dxos/devtools';
 
+import { DevtoolsOverview } from '#types';
+
 export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();
   const surfaceProfilerStats = Surface.useProfilerStats();
@@ -19,7 +21,7 @@ export const DevtoolsOverviewContainer = () => {
       onRefresh={refreshStats}
       onClearSurfaceProfiler={clearSurfaceProfiler}
     >
-      <Surface.Surface role='devtools-overview' />
+      <Surface.Surface type={DevtoolsOverview} />
     </StatsPanel>
   );
 };

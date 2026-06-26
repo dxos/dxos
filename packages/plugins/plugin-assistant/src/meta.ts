@@ -2,23 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.assistant',
-  name: 'Assistant',
-  author: 'DXOS',
-  description: trim`
-    Intelligent AI assistant that can analyze and interact with objects across your spaces.
-    Chat naturally to get insights, search content, and perform actions using AI-powered context awareness.
-  `,
-  icon: 'ph--sparkle--regular',
-  iconHue: 'sky',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
-};
+import config from '../dx.config';
 
-export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;
+export const meta = Plugin.getMetaFromConfig(config);
+
+export const ASSISTANT_DIALOG = DXN.make(`${meta.profile.key}.assistantDialog`);
 
 /** Companion variant identifier for the assistant chat panel. */
 export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';

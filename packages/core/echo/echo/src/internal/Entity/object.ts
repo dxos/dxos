@@ -6,10 +6,13 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
-import { type TypeAnnotation, TypeAnnotationId, type TypeMeta, makeTypeJsonSchemaAnnotation } from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import { EntityKind } from '../common/types';
-import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
+import { toJsonSchema } from '../JsonSchema';
+import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
  * Object schema type with kind marker.
@@ -25,11 +28,16 @@ export type EchoObjectSchema<
  */
 export const EchoObjectSchema: {
   (
-    meta: TypeMeta,
+    dxn: DXN.DXN,
+    options?: EchoTypeOptions,
   ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoObjectSchema<Self, Fields>;
-} = ({ typename, version }) => {
+} = (dxn, options) => {
+  const typename = DXN.getName(dxn);
+  const version = DXN.getVersion(dxn);
+  invariant(version, `Type.makeObject requires a versioned DXN: ${dxn}`);
+
   return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoObjectSchema<Self, Fields> => {
@@ -52,6 +60,14 @@ export const EchoObjectSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(fields, ast, typename, version, EntityKind.Object);
+    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(
+      fields,
+      ast,
+      typename,
+      version,
+      EntityKind.Object,
+      () => toJsonSchema(Schema.make(ast)),
+      options?.id,
+    );
   };
 };

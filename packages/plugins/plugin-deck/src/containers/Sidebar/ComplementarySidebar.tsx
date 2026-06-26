@@ -6,6 +6,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, type Label, Main, Panel, toLocalizedString, Toolbar, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -16,10 +17,10 @@ import { meta } from '#meta';
 import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
-import { PlankErrorFallback, PlankLoading } from '../Plank';
+import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
-const label = ['complementary-sidebar.title', { ns: meta.id }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -27,7 +28,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -87,14 +88,14 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           className={mx(
             'absolute z-1 inset-y-0 end-0 w-(--dx-r0-size)!',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
-            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
+            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
-          {/* TODO(burdon): ScrollArea. */}
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
             {companions.map((companion) => (
               <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
                 <IconButton
+                  classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
                   label={toLocalizedString(companion.properties.label, t)}
                   icon={companion.properties.icon}
                   iconOnly
@@ -117,7 +118,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
-            <Surface.Surface role='status-indicator' />
+            <Surface.Surface type={AppSurface.StatusIndicator} />
           </div>
           <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
@@ -154,7 +155,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (getLinkedVariant(companion.id) !== activeId && !data) {
     return null;
@@ -163,24 +164,22 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
-        <Toolbar.Root classNames='bg-modal-surface border-b border-subdued-separator'>
+        <Toolbar.Root style={iconSize(5)} classNames='bg-header-surface'>
           <IconButton
+            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
-            size={5}
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
             data-value={getLinkedVariant(companion.id)}
             variant='default'
           />
-          <div role='none' className='px-1'>
-            {toLocalizedString(companion.properties.label, t)}
-          </div>
+          <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='bg-base-surface'>
+      <Panel.Content classNames='bg-r1-surface'>
         <Surface.Surface
-          role={`deck-companion--${getLinkedVariant(companion.id)}`}
+          type={AppSurface.deckCompanion(getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}

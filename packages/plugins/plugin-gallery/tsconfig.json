@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -19,6 +20,9 @@
   "references": [
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -36,10 +40,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/app-graph"
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -48,7 +52,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -66,13 +70,10 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/ui-types"
-    },
-    {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-file"
     },
     {
       "path": "../plugin-graph"
@@ -85,9 +86,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-wnfs"
     }
   ]
 }

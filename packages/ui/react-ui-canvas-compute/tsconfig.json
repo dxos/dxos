@@ -45,9 +45,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute-runtime"
-    },
-    {
       "path": "../../core/compute/ai"
     },
     {
@@ -60,6 +57,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/conductor"
     },
     {
@@ -70,9 +70,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -102,6 +99,9 @@
       "path": "../react-ui-attention"
     },
     {
+      "path": "../react-ui-audio"
+    },
+    {
       "path": "../react-ui-canvas"
     },
     {
@@ -111,16 +111,13 @@
       "path": "../react-ui-editor"
     },
     {
+      "path": "../react-ui-experimental"
+    },
+    {
       "path": "../react-ui-form"
     },
     {
       "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../react-ui-sfx"
-    },
-    {
-      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

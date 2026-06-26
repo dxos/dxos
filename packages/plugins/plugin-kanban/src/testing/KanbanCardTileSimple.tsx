@@ -5,7 +5,7 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
@@ -19,7 +19,7 @@ const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
  */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
@@ -50,27 +50,29 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         >
           <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.DragHandle ref={dragHandleRef} />
                 <Card.Title>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Menu.Trigger asChild disabled={!menuItems?.length}>
-                  <Toolbar.IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    label={t('action-menu.label')}
-                  />
-                </Menu.Trigger>
-                <Menu.Content items={menuItems} />
-              </Card.Toolbar>
-              <Card.Content>
-                <Card.Section>
+                <Card.Block end>
+                  <Menu.Trigger asChild disabled={!menuItems?.length}>
+                    <IconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--dots-three-vertical--regular'
+                      label={t('action-menu.label')}
+                    />
+                  </Menu.Trigger>
+                  <Menu.Content items={menuItems} />
+                </Card.Block>
+              </Card.Header>
+              <Card.Body>
+                <Card.Row fullWidth>
                   <pre className='p-2 text-xs text-description whitespace-pre-wrap'>
                     {JSON.stringify(data, null, 2)}
                   </pre>
-                </Card.Section>
-              </Card.Content>
+                </Card.Row>
+              </Card.Body>
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

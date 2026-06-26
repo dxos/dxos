@@ -19,23 +19,23 @@ export const useTranscriber = ({
   transcriberConfig,
   onSegments,
   transcribe,
-}: Partial<TranscriptionCapabilities.GetTranscriberProps>) => {
-  const [getTranscriber] = useCapabilities(TranscriptionCapabilities.Transcriber);
+}: Partial<TranscriptionCapabilities.TranscriberProviderProps>) => {
+  const [transcriberProvider] = useCapabilities(TranscriptionCapabilities.TranscriberProvider);
 
   // Initialize audio transcription.
   const transcriber = useMemo<Transcriber | undefined>(() => {
-    if (!getTranscriber || !audioStreamTrack || !onSegments) {
+    if (!transcriberProvider || !audioStreamTrack || !onSegments) {
       return undefined;
     }
 
-    return getTranscriber({
+    return transcriberProvider({
       audioStreamTrack,
       recorderConfig,
       transcriberConfig,
       onSegments,
       transcribe,
     });
-  }, [getTranscriber, audioStreamTrack, recorderConfig, transcriberConfig, onSegments, transcribe]);
+  }, [transcriberProvider, audioStreamTrack, recorderConfig, transcriberConfig, onSegments, transcribe]);
 
   useEffect(() => {
     return () => {

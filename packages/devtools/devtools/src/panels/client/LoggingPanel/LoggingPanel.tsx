@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';

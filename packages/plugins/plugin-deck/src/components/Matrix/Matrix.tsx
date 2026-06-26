@@ -8,9 +8,9 @@ import React, { forwardRef, type PropsWithChildren, useCallback, useEffect, useI
 
 import { Obj } from '@dxos/echo';
 import { ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 //

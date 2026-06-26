@@ -8,7 +8,7 @@ import { next as A } from '@automerge/automerge';
 import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
-import { type IDocHandle } from '@dxos/echo-db';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 
 import { type State, getLastHeads, getPath, isReconcile, reconcileAnnotation, updateHeads } from './defs';
@@ -23,7 +23,7 @@ export class Syncer {
 
   // prettier-ignore
   constructor(
-    private readonly _handle: IDocHandle,
+    private readonly _handle: Doc.Handle,
     private readonly _state: StateField<State>
   ) {}
 

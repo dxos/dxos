@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Model, Scene } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Scene.Scene.typename]: {
+      [Type.getTypename(Scene.Scene)]: {
         'typename.label': 'Scene',
         'typename.label_zero': 'Scenes',
         'typename.label_one': 'Scene',
@@ -21,16 +22,14 @@ export const translations = [
         'delete-object.label': 'Delete scene',
         'object-deleted.label': 'Scene deleted',
       },
-      [Model.Object.typename]: {
+      [Type.getTypename(Model.Object)]: {
         'typename.label': 'Object',
         'typename.label_zero': 'Objects',
         'typename.label_one': 'Object',
         'typename.label_other': 'Objects',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spacetime',
-
-        'settings.title': 'Spacetime settings',
 
         'selection-mode.label': 'Selection mode',
         'selection-mode.object.label': 'Object',

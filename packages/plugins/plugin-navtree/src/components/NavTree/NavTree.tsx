@@ -6,8 +6,9 @@ import React, { forwardRef, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
+import { type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { useLoadDescendents } from '#hooks';
 
@@ -33,7 +34,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
     //  not use `react-ui-tabs` at all.
     <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
       <L0Menu
-        menuActions={topLevelActions}
+        menuActions={topLevelActions as MenuItem[]}
         topLevelItems={l0Items}
         pinnedItems={pinnedItems}
         userAccountItem={userAccountItem}
@@ -75,11 +76,11 @@ const useTopLevelNavItems = (root?: Node.Node) => {
 
     const topLevelActions = rootActions
       .filter((action) => action.properties.disposition === 'menu')
-      .toSorted((a, b) => byPosition(a.properties, b.properties));
+      .toSorted((a, b) => Position.compare(a.properties, b.properties));
     const pinnedItems = [
       ...outboundPinnedItems,
       ...rootActions.filter((action) => action.properties.disposition === 'pin-end'),
-    ].toSorted((a, b) => byPosition(a.properties, b.properties));
+    ].toSorted((a, b) => Position.compare(a.properties, b.properties));
 
     return {
       pinnedItems,

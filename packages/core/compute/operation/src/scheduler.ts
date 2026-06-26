@@ -7,7 +7,7 @@ import * as Fiber from 'effect/Fiber';
 import * as HashSet from 'effect/HashSet';
 import * as Ref from 'effect/Ref';
 
-import type { Operation } from '@dxos/compute';
+import { type Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 /**
@@ -36,7 +36,9 @@ export interface FollowupScheduler {
    */
   schedule: <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<void>;
 
   /**
@@ -89,9 +91,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   // Arrow function to preserve `this` context when destructured.
   schedule = <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ): Effect.Effect<void> => {
-    const effect = this._invoke(op, args[0] as I).pipe(
+    const effect = this._invoke(op, args[0] as I, args[1] as Operation.InvokeOptions | undefined).pipe(
       Effect.tap(() => Effect.sync(() => log('followup completed', { key: op.meta.key }))),
       Effect.catchAll((error) =>
         Effect.sync(() => {

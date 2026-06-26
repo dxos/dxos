@@ -6,43 +6,35 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
-import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { type JsonPath, type Mutable } from '@dxos/echo/internal';
+import { AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
+import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/Obj';
+import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form, ViewEditor } from '@dxos/react-ui-form';
-import { List } from '@dxos/react-ui-list';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { FormFieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
+import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
-import { mx, osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 
-const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
-const listItemGrid = 'grid grid-cols-subgrid col-span-5';
-
 const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
-export type PipelinePropertiesProps = ThemedClassName<{
-  pipeline: Pipeline.Pipeline;
-}>;
+export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.Pipeline>;
 
 /**
  * Supports editing the pipeline view.
  */
-export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const [columns, updateColumns] = useObject(pipeline, 'columns');
-  const column = useMemo(
-    () => columns.find((column) => column.view.dxn.toString() === expandedId),
-    [columns, expandedId],
-  );
+  const column = useMemo(() => columns.find((column) => column.view.uri === expandedId), [columns, expandedId]);
   const [view, updateView] = useObject(column?.view);
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
+  const [type, setType] = useState<Type.AnyEntity>();
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
@@ -58,11 +50,11 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       return;
     }
 
-    const foundSchema = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
-    if (foundSchema && foundSchema !== schema) {
-      setSchema(() => foundSchema);
+    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
+    if (foundType && foundType !== type) {
+      setType(() => foundType);
     }
-  }, [db, view, schema]);
+  }, [db, view, type]);
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) =>
@@ -73,38 +65,38 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   );
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: EID.EID) => {
       if (!view || !db) {
         return;
       }
 
-      const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
+      const queue = target;
+      const query = queue ? Query.fromAst(newQuery).from([Scope.feed(String(queue))]) : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newSchema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
-      if (!newSchema) {
+      const newType = await resolveSchemaWithRegistry(db, query.ast);
+      if (!newType) {
         return;
       }
 
       const newView = ViewModel.make({
         query,
-        jsonSchema: JsonSchema.toJsonSchema(newSchema),
+        jsonSchema: newType.jsonSchema,
       });
       updateView((view) => {
         view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 
-      setSchema(() => newSchema);
+      setType(() => newType);
     },
-    [db, view, updateView, schema],
+    [db, view, updateView, type],
   );
 
   const handleColumnValuesChanged = useCallback(
     (column: Pipeline.Column) =>
-      (newValues: { name?: string }, { changed }: { changed: Record<JsonPath, boolean> }) => {
-        if (changed['name' as JsonPath]) {
+      (newValues: { name?: string }, { changed }: { changed: Record<SchemaEx.JsonPath, boolean> }) => {
+        if (changed['name' as SchemaEx.JsonPath]) {
           const columnIndex = columns.findIndex((c) => c === column);
           if (columnIndex === -1) {
             return;
@@ -117,15 +109,9 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     [columns, updateColumns],
   );
 
-  const handleToggleField = useCallback((column: Pipeline.Column) => {
-    setExpandedId((prevExpandedId) =>
-      prevExpandedId === column.view.dxn.toString() ? undefined : column.view.dxn.toString(),
-    );
-  }, []);
-
   const handleDelete = useCallback(
     async (column: Pipeline.Column) => {
-      if (column.view.dxn.toString() === expandedId) {
+      if (column.view.uri === expandedId) {
         setExpandedId(undefined);
       }
 
@@ -143,11 +129,14 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     if (!db) {
       return;
     }
-    const newView = ViewModel.make({
-      query: Query.select(Filter.nothing()),
-      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    });
-    db.add(newView);
+
+    const newView = db.add(
+      ViewModel.make({
+        query: Query.select(Filter.nothing()),
+        jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
+      }),
+    );
+
     updateColumns((columns) => {
       columns.push({
         name: '',
@@ -160,83 +149,62 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   }, [db, updateColumns]);
 
   return (
-    <div className={mx('py-form-padding overflow-y-auto', classNames)}>
-      <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
-
-      <List.Root<Pipeline.Column>
+    <Form.Section>
+      <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
+      <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}
-        getId={(column) => column.view.dxn.toString()}
+        getId={(column) => column.view.uri}
         onMove={handleMove}
+        expandedId={expandedId}
+        onExpandedChange={setExpandedId}
       >
-        {({ items: columns }) => (
-          <>
-            <div role='list' className={mx(listGrid)}>
-              {columns.map((column) => (
-                <List.Item<Pipeline.Column>
-                  key={column.view.dxn.toString()}
-                  item={column}
-                  classNames={listItemGrid}
-                  aria-expanded={expandedId === column.view.dxn.toString()}
-                >
-                  <div className={mx(listItemGrid, 'dx-hover rounded-xs cursor-pointer min-h-10')}>
-                    <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleToggleField(column)}>
-                      {column.name || t('untitled-view.title')}
-                    </List.ItemTitle>
-                    <List.ItemDeleteButton
-                      label={t('delete-view.label')}
-                      autoHide={false}
-                      onClick={() => handleDelete(column)}
-                      data-testid='view.delete'
+        {({ items }) => (
+          <OrderedList.Content>
+            {items.map((column) => (
+              <OrderedList.DetailItem<Pipeline.Column>
+                key={column.view.uri}
+                id={column.view.uri}
+                item={column}
+                title={column.name || t('untitled-column.title')}
+                trailing={
+                  <OrderedList.DeleteButton
+                    label={t('delete-column.label')}
+                    onClick={() => handleDelete(column)}
+                    data-testid='column.delete'
+                  />
+                }
+              >
+                {column.view.target && (
+                  <>
+                    <Form.Root
+                      schema={ColumnFormSchema}
+                      values={column}
+                      onValuesChanged={handleColumnValuesChanged(column)}
+                    >
+                      <Form.Content>
+                        <Form.FieldSet />
+                      </Form.Content>
+                    </Form.Root>
+                    <ViewEditor
+                      ref={projectionRef}
+                      mode='tag'
+                      readonly
+                      type={type}
+                      view={column.view.target}
+                      registry={db?.graph.registry}
+                      db={db}
+                      tags={tags}
+                      types={types}
+                      onQueryChanged={handleQueryChanged}
                     />
-                    <IconButton
-                      iconOnly
-                      variant='ghost'
-                      label={t('toggle-expand.label', { ns: osTranslations })}
-                      icon={
-                        expandedId === column.view.dxn.toString()
-                          ? 'ph--caret-down--regular'
-                          : 'ph--caret-right--regular'
-                      }
-                      onClick={() => handleToggleField(column)}
-                    />
-                  </div>
-                  {expandedId === column.view.dxn.toString() && column?.view.target && (
-                    <div className='col-span-5 my-2 border border-separator rounded-md'>
-                      <Form.Root
-                        schema={ColumnFormSchema}
-                        values={column}
-                        onValuesChanged={handleColumnValuesChanged(column)}
-                      >
-                        <Form.Content>
-                          <Form.FieldSet />
-                        </Form.Content>
-                      </Form.Root>
-                      <ViewEditor
-                        ref={projectionRef}
-                        mode='tag'
-                        readonly
-                        schema={schema}
-                        view={column.view.target}
-                        registry={db?.schemaRegistry}
-                        db={db}
-                        tags={tags}
-                        types={types}
-                        onQueryChanged={handleQueryChanged}
-                      />
-                    </div>
-                  )}
-                </List.Item>
-              ))}
-            </div>
-          </>
+                  </>
+                )}
+              </OrderedList.DetailItem>
+            ))}
+          </OrderedList.Content>
         )}
-      </List.Root>
-
-      <div className='my-form-padding'>
-        <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
-      </div>
-    </div>
+      </OrderedList.Root>
+    </Form.Section>
   );
 };

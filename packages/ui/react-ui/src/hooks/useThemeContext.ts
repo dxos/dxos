@@ -6,6 +6,6 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { ThemeContext } from '../components';
+import { ThemeContext } from '../primitives';
 
 export const useThemeContext = () => useContext(ThemeContext) ?? raise(new Error('Missing ThemeContext'));

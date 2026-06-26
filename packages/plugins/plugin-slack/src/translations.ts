@@ -7,7 +7,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Slack',
         'sync-now.label': 'Sync now',
         'sync-this-chat.label': 'Sync this chat',

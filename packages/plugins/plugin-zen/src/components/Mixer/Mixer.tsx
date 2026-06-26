@@ -6,8 +6,8 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
+import { Icon, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
+import { OrderedList } from '@dxos/react-ui-list';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';
@@ -144,8 +144,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   }, []);
 
   return (
-    <Splitter.Root mode={selectedLayer ? 'split' : 'top'} classNames={classNames}>
-      <Splitter.Panel asChild position='top'>
+    <Splitter.Root orientation='vertical' mode={selectedLayer ? 'split' : 'start'} classNames={classNames}>
+      <Splitter.Panel asChild position='start'>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -161,30 +161,32 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>
-            <List.Root<Sequence.Sequence>
+            <OrderedList.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
               isItem={isSequence}
               onMove={handleMove}
             >
-              {({ items }) =>
-                items.map((layer) => (
-                  <LayerListItem
-                    key={layer.id}
-                    item={layer}
-                    selected={layer.id === selected}
-                    onLayerSelect={handleSelect}
-                    onLayerUpdate={handleUpdate}
-                    onLayerDelete={handleDelete}
-                  />
-                ))
-              }
-            </List.Root>
+              {({ items }) => (
+                <OrderedList.Content>
+                  {items.map((layer) => (
+                    <LayerListItem
+                      key={layer.id}
+                      item={layer}
+                      selected={layer.id === selected}
+                      onLayerSelect={handleSelect}
+                      onLayerUpdate={handleUpdate}
+                      onLayerDelete={handleDelete}
+                    />
+                  ))}
+                </OrderedList.Content>
+              )}
+            </OrderedList.Root>
           </Panel.Content>
         </Panel.Root>
       </Splitter.Panel>
 
-      <Splitter.Panel asChild position='bottom'>
+      <Splitter.Panel asChild position='end'>
         {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleUpdate} />}
       </Splitter.Panel>
     </Splitter.Root>
@@ -210,33 +212,35 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
-    <List.Item
+    <OrderedList.Item
+      id={item.id}
       item={item}
+      hover
       selected={selected}
-      classNames='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] gap-1 items-center'
+      classNames='grid grid-cols-[var(--dx-rail-item)_var(--dx-rail-item)_1fr_var(--dx-rail-item)_var(--dx-rail-item)] gap-1 items-center cursor-pointer'
       onClick={() => onLayerSelect(item.id)}
     >
-      <List.ItemDragHandle />
+      <OrderedList.DragHandle />
       <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
-      <List.ItemTitle>{item.name ?? Sequence.getSourceLabel(item.source)}</List.ItemTitle>
-      <IconButton
-        variant='ghost'
+      {/* Plain title row — there's no disclosure panel here, so we don't want
+          `OrderedList.Title`'s aria-expanded / trigger semantics. */}
+      <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>
+      <OrderedList.IconButton
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
-        iconOnly
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {
           event.stopPropagation();
           onLayerUpdate({ ...item, muted: !item.muted });
         }}
       />
-      <List.ItemDeleteButton
+      <OrderedList.DeleteButton
         onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);
         }}
       />
-    </List.Item>
+    </OrderedList.Item>
   );
 };

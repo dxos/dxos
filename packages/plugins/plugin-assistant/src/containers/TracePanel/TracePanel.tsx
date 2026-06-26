@@ -4,30 +4,29 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
+import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Process, Trace } from '@dxos/compute';
-import { Filter, Query } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
-import { FeedTraceSink } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { Process } from '@dxos/compute';
+import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
+import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
+import { useTraceMessages, getTraceMessagesAtom } from '#hooks';
 import { AssistantCapabilities } from '#types';
-
-import { buildExecutionGraph, type ExecutionGraph } from './execution-graph';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
@@ -37,20 +36,51 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
-    const { branches, commits, spanTree } = useExecutionGraph(space);
-    const monitor = useCapability(Capabilities.ProcessMonitor);
-    const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+
+    // `useDeferredValue` batches update bursts, works together with `React.memo`.
+    // See the comment in `ProcessTreeContainer` for more details.
+    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
+
+    // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
+    // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
+    // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
+    // (and logs it). Gated on `import.meta.env.DEV` so it's stripped from production builds.
+    const traceMessages = useTraceMessages(space);
+    useEffect(() => {
+      if (!import.meta.env.DEV) {
+        return;
+      }
+      // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
+      const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
+      debugGlobal.dxosDumpTrace = () => {
+        const data = traceMessages.map((message) => ({
+          meta: message.meta,
+          isEphemeral: message.isEphemeral,
+          events: message.events,
+        }));
+        const json = JSON.stringify(data, null, 2);
+        // eslint-disable-next-line no-console
+        console.log(json);
+        void navigator.clipboard?.writeText(json);
+        return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
+      };
+      return () => {
+        delete debugGlobal.dxosDumpTrace;
+      };
+    }, [traceMessages]);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
-          const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
-          if (dxn?.spaceId && dxn.echoId) {
+          const echoUri = EID.tryParse(commit.link);
+          const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
+          const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
+          if (spaceId && objectId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
             void invokePromise(LayoutOperation.Open, {
-              subject: [`${dxn.spaceId}:${dxn.echoId}`],
+              subject: [`${spaceId}:${objectId}`],
             });
           }
         }
@@ -77,17 +107,13 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           classNames: mx(
             'h-full grid divide-y divide-separator',
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[minmax(0,4lh)_1fr]',
+              ? 'grid-rows-[minmax(0,160px)_1fr_minmax(0,206px)]'
+              : 'grid-rows-[minmax(0,160px)_1fr]',
           ),
         })}
         ref={forwardedRef}
       >
-        <ProcessTree
-          processes={processes}
-          onProcessSelect={handleProcessSelect}
-          onProcessTerminate={onProcessTerminate}
-        />
+        <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
@@ -116,7 +142,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         </ScrollContainer.Root>
 
         {!tracePanelDebug && selectedCommit && (
-          <Syntax.Root data={selectedCommit}>
+          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
                 <Syntax.Code className='text-xs' />
@@ -133,16 +159,20 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 const atomEmpty = Atom.make(() => [] as const);
 
 type UseExecutionGraphOptions = {
+  collapseCompletedSpans?: boolean;
   eventLimit?: number;
 };
 
-const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+const useExecutionGraph = (
+  space: Space,
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
+): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
-  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
   const atom = useMemo(
-    () => getExecutionGraph(space, activeProcesses, { eventLimit }),
-    [space, activeProcesses, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit],
   );
 
   return useAtomValue(atom);
@@ -150,29 +180,56 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 
 const getExecutionGraph = (
   space: Space,
-  activeProcesses: readonly Process.Info[] = [],
-  { eventLimit = 300 }: UseExecutionGraphOptions = {},
+  processesAtom: Atom.Atom<readonly Process.Info[]>,
+  { collapseCompletedSpans = true, eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
-  return pipe(
-    AtomQuery.make(space.db, FeedTraceSink.query),
-    Atom.map((feeds) => {
-      log('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
-      // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-      return AtomQuery.make(
-        space.db,
-        feeds.length > 0
-          ? Query.type(Trace.Message).from(feeds[0])
-          : (Query.select(Filter.nothing()) as Query.Query<never>),
-      );
-    }),
-    (_) => Atom.make((get) => get(get(_))),
-    (_) =>
-      Atom.make((get) =>
-        buildExecutionGraph({
-          traceMessages: [...get(_)],
-          activeProcesses,
-          eventLimit,
-        }),
+  const traceMessages = getTraceMessagesAtom(space);
+
+  const activeProcesses = pipe(
+    processesAtom,
+    Atom.debounce(Duration.millis(500)),
+    Atom.map((processes) =>
+      // `Data.array` does structural comparison on the array elements.
+      Data.array(
+        processes
+          .filter((process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
+          .map(Data.struct),
       ),
+    ),
+  );
+
+  return Atom.make((get) =>
+    buildExecutionGraph({
+      traceMessages: get(traceMessages),
+      activeProcesses: get(activeProcesses),
+      collapseCompletedSpans,
+      eventLimit,
+    }),
+  );
+};
+TracePanel.displayName = 'TracePanel';
+
+// Isolate `ProcessTree` updates from the rest of the panel.
+// TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
+const ProcessTreeContainer = ({
+  onProcessSelect,
+  onProcessTerminate,
+}: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
+  const monitor = useCapability(Capabilities.ProcessMonitor);
+  const processes = useAtomValue(
+    useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
+  );
+
+  // `processes` updates in bursts (about 14 updates per navigation).
+  // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
+  // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
+  const processesDeferred = useDeferredValue(processes);
+  return (
+    <ProcessTree
+      processes={processesDeferred}
+      depth={3}
+      onProcessSelect={onProcessSelect}
+      onProcessTerminate={onProcessTerminate}
+    />
   );
 };

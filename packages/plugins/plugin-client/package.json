@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,8 +14,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/neutral/capabilities/node.mjs",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
     "#capabilities/node": {
@@ -95,6 +99,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
@@ -108,11 +113,15 @@
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
@@ -120,12 +129,11 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "@tauri-apps/api": "catalog:",
     "effect": "catalog:",
     "react-qr-rounded": "catalog:",
     "yaml": "catalog:"
@@ -152,5 +160,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

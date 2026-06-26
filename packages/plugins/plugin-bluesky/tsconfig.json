@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -24,7 +25,13 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -34,6 +41,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"
@@ -48,16 +58,37 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-feed"
+      "path": "../plugin-connector"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-magazine"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

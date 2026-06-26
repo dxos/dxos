@@ -9,9 +9,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
       Atom.make((get) => {
         const result: Obj.Unknown[] = [];
         for (const ref of boardItems ?? []) {
-          const obj = get(AtomObj.makeWithReactive(ref));
+          const obj = get(Obj.atomReactive(ref));
           if (obj) {
             result.push(obj);
           }
@@ -100,7 +100,10 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
-      const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
+      const idx = board.items.findIndex((ref) => {
+        const echoUri = EID.tryParse(ref.uri);
+        return (echoUri ? EID.getEntityId(echoUri) : undefined) === id;
+      });
       Obj.update(board, (board) => {
         if (idx !== -1) {
           board.items.splice(idx, 1);
@@ -166,7 +169,11 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                 <Board.Content>
                   {items?.map((item, index) => (
                     <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                      <Surface.Surface type={AppSurface.Card} data={{ subject: item, editable: true }} limit={1} />
+                      <Surface.Surface
+                        type={AppSurface.CardContent}
+                        data={{ subject: item, editable: true }}
+                        limit={1}
+                      />
                     </Board.Cell>
                   ))}
                 </Board.Content>

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -11,7 +11,7 @@ import {} from '@dxos/app-framework';
 import { fromPlugins } from '@dxos/app-framework/testing';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 
 import { ClientPlugin } from '#plugin';
@@ -23,7 +23,7 @@ const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), Observabilit
 
 // TODO(wittjosiah): Fix these tests.
 describe.skip('halo create', () => {
-  it('should create an identity without a display name', () =>
+  test('should create an identity without a display name', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* handler({ agent: false, displayName: Option.none() });
@@ -32,12 +32,12 @@ describe.skip('halo create', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityDid: client.halo.identity.get()?.did,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
-    }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(layer), Effect.scoped, EffectEx.runAndForwardErrors));
 
-  it('should create an identity with a display name', () =>
+  test('should create an identity with a display name', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* handler({ agent: false, displayName: Option.some('Example') });
@@ -46,8 +46,8 @@ describe.skip('halo create', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityDid: client.halo.identity.get()?.did,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
-    }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(layer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

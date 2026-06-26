@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-assistant",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Assistant plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,10 +13,10 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
     },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
@@ -32,6 +32,11 @@
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#execution-graph": {
+      "source": "./src/execution-graph/index.ts",
+      "types": "./dist/types/src/execution-graph/index.d.ts",
+      "default": "./dist/lib/neutral/execution-graph/index.mjs"
     },
     "#hooks": {
       "source": "./src/hooks/index.ts",
@@ -52,7 +57,7 @@
       "source": {
         "workerd": "./src/AssistantPlugin.workerd.ts",
         "node": "./src/AssistantPlugin.node.ts",
-        "default": "./src/AssistantPlugin.tsx"
+        "default": "./src/AssistantPlugin.ts"
       },
       "types": "./dist/types/src/AssistantPlugin.d.ts",
       "workerd": "./dist/lib/neutral/AssistantPlugin.workerd.mjs",
@@ -77,6 +82,12 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
+    },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -88,8 +99,12 @@
       "default": "./dist/lib/neutral/hooks/index.mjs"
     },
     "./plugin": {
-      "source": "./src/plugin.ts",
+      "source": {
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.ts"
+      },
       "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./testing": {
@@ -101,21 +116,24 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "assets",
     "dist",
-    "src"
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@codemirror/autocomplete": "catalog:",
-    "@codemirror/lang-html": "catalog:",
-    "@codemirror/lang-markdown": "catalog:",
-    "@codemirror/lang-xml": "catalog:",
     "@codemirror/language": "catalog:",
-    "@codemirror/lint": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
@@ -129,42 +147,30 @@
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-query": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
-    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
-    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-canvas-compute": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -176,8 +182,6 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -191,21 +195,14 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform-browser": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "effect": "catalog:",
-    "exa-js": "catalog:",
-    "json5": "catalog:",
-    "jsonpointer": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
-    "unified": "catalog:",
-    "use-deep-compare-effect": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/devtools": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-map": "workspace:*",

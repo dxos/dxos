@@ -6,25 +6,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 
 export const Text = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.text',
-    version: '0.1.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.SystemTypeAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--text-t--regular',
-    hue: 'green',
-  }),
+  Annotation.HiddenAnnotation.set(true),
+  Annotation.IconAnnotation.set({ icon: 'ph--text-t--regular', hue: 'green' }),
+  Type.makeObject(DXN.make('org.dxos.type.text', '0.1.0')),
 );
 
-export interface Text extends Schema.Schema.Type<typeof Text> {}
+export type Text = Type.InstanceType<typeof Text>;
 
 export type MakeProps = Partial<{ id: string; name: string; content: string }>;
 

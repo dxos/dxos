@@ -5,12 +5,12 @@ version: 0.1.0
 ---
 
 A plugin for AI-assisted Composer plugin development. Hosts authored DEUS specs
-(`.mdl` files), couples them to a `CodeProject`, and provides a Coder blueprint
+(`.mdl` files), couples them to a `CodeProject`, and provides a Coder skill
 that lets the assistant verify a spec, write source files into the project,
 and (eventually) dispatch a build agent. The build/sandbox itself is a
 separate EDGE service (out of scope until phase 2).
 
-Phase 1 shipped: rename, schema, blueprint scaffold, settings, credential
+Phase 1 shipped: rename, schema, skill scaffold, settings, credential
 wiring, and stub `verifySpec` / `runBuildAgent` operations.
 
 Phase 1.5 (this PR) adds an in-memory CRUD surface for source files. The agent
@@ -201,7 +201,7 @@ op verifySpec
   requires: [Database]
   note: |
     Operation key: `org.dxos.function.code.verify-spec`.
-    Exposed as a blueprint tool on CoderBlueprint.
+    Exposed as a skill tool on CoderSkill.
 ```
 
 ```mdl
@@ -305,17 +305,58 @@ op resetProject
   note:   Operation key `org.dxos.function.code.reset`.
 ```
 
-## Blueprints
+```mdl
+op buildProject
+  desc: |
+    Compile the project's TypeScript sources in-browser. F-12a transpiles a
+    single entry file (`src/hello.ts` if present, else `src/plugin.ts`) with
+    the TypeScript language service (no bundling, no imports). F-12b
+    extends to multi-file bundling via esbuild-wasm with the project's
+    SourceFiles as a virtual filesystem. Returns diagnostics from the TS
+    language service and the emitted JS for the entry. Distinct from
+    `runBuildAgent`, which targets the remote EDGE codegen service.
+  input:  { project: Ref<CodeProject> }
+  output: {
+    ok: bool,
+    diagnostics: { path?: string, line?: number, column?: number, severity: "error" | "warning", code?: number, message: string }[],
+    entry?: { path: string, source: string }
+  }
+  effects: [echo:read]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.build-project`.
+```
 
 ```mdl
-type CoderBlueprint
+op runBuild
   desc: |
-    Blueprint key `org.dxos.blueprint.coder`. Drives plugin authoring:
+    Build the project and, on a clean build, execute the entry source on the
+    main thread inside a `console`-capturing wrapper. Captures `console.log`
+    / `console.warn` (→ stdout) and `console.error` plus uncaught errors
+    (→ stderr). Synchronous-only in F-12a; the wrapper restores the original
+    console even on throw.
+  input:  { project: Ref<CodeProject> }
+  output: {
+    ok: bool,
+    stdout: string[],
+    stderr: string[],
+    diagnostics: { path?: string, line?: number, column?: number, severity: "error" | "warning", code?: number, message: string }[]
+  }
+  effects: [echo:read]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.run-build`.
+```
+
+## Skills
+
+```mdl
+type CoderSkill
+  desc: |
+    Skill key `org.dxos.skill.coder`. Drives plugin authoring:
     iterate on the Spec with the user, look up DXOS / Composer APIs through
     introspect-mcp, scaffold the project, then write/read/delete source
     files until the user is satisfied.
   fields:
-    key: org.dxos.blueprint.coder
+    key: org.dxos.skill.coder
     tools:
       - op:verifySpec
       - op:runBuildAgent
@@ -326,6 +367,8 @@ type CoderBlueprint
       - op:scaffoldProject
       - op:helloWorld
       - op:resetProject
+      - op:buildProject
+      - op:runBuild
     mcpServers:
       - introspect-mcp        # remote MCP, http; tools: list_packages,
                               # get_package, list_symbols, find_symbol,
@@ -396,10 +439,10 @@ feat F-4: Settings + credentials
 ```
 
 ```mdl
-feat F-5: Coder blueprint
+feat F-5: Coder skill
 
-  req F-5.1: A blueprint with key `org.dxos.blueprint.coder` is contributed
-             via `addBlueprintDefinitionModule`.
+  req F-5.1: A skill with key `org.dxos.skill.coder` is contributed
+             via `addSkillDefinitionModule`.
   req F-5.2: Tools include op:verifySpec and op:runBuildAgent.
   req F-5.3: System instructions describe the Coder role:
               author/refine spec with user, run verifySpec, then runBuildAgent.
@@ -411,7 +454,7 @@ feat F-6: Stub operations
   req F-6.1: op:verifySpec defined and handler returns `{ ok: true, messages: [] }`.
   req F-6.2: op:runBuildAgent defined and handler returns `{ status: "queued" }`.
   req F-6.3: Both handlers are contributed via `addOperationHandlerModule`.
-  req F-6.4: Both operations resolve from blueprint tool calls without error.
+  req F-6.4: Both operations resolve from skill tool calls without error.
 ```
 
 ```mdl
@@ -441,7 +484,7 @@ feat F-8: File CRUD operations
   req F-8.5: op:deleteFile removes the matching file from `project.files`.
   req F-8.6: op:scaffoldProject seeds package.json, src/plugin.ts, README.md and
              returns the resulting file list.
-  req F-8.7: All file ops are wired into the CoderBlueprint tool set.
+  req F-8.7: All file ops are wired into the CoderSkill tool set.
 ```
 
 ```mdl
@@ -468,7 +511,7 @@ feat F-9: CodeArticle file tree + editor
 ```mdl
 feat F-10: Coder integrates introspect-mcp
 
-  req F-10.1: CoderBlueprint declares a remote MCP server entry pointing at the
+  req F-10.1: CoderSkill declares a remote MCP server entry pointing at the
               introspect-mcp HTTP endpoint.
   req F-10.2: System prompt directs the agent to call introspect-mcp
               (find_symbol / get_symbol / list_packages …) before writing
@@ -487,7 +530,7 @@ feat F-11: Sanity + reset operations
   req F-11.2: op:resetProject removes every SourceFile from `project.files`
               and calls Database.remove + flush so the underlying ECHO
               objects are not leaked.
-  req F-11.3: Both operations are wired into the CoderBlueprint tool set.
+  req F-11.3: Both operations are wired into the CoderSkill tool set.
   req F-11.4:
     when: the user asks the agent to "build hello world"
     then: the agent invokes op:helloWorld and `src/hello.ts` shows up in the
@@ -496,6 +539,74 @@ feat F-11: Sanity + reset operations
     when: the user asks the agent to "reset the project"
     then: the agent invokes op:resetProject and the FileTree shows the
           empty-state placeholder.
+```
+
+```mdl
+feat F-12a: Local build & run — single-file entry
+
+  req F-12a.1: A `Compiler` module wraps `@typescript/vfs`'s virtual TS
+               environment. lib.d.ts files are fetched lazily from the
+               TypeScript playground CDN on first use and cached for the
+               lifetime of the page. The compiler instance is module-level
+               and reused across operation invocations.
+  req F-12a.2: op:buildProject identifies an entry file (`src/hello.ts` if
+               present, else `src/plugin.ts`), feeds its content to the
+               compiler, and returns the language service's syntactic +
+               semantic diagnostics plus the emitted JS for the entry.
+  req F-12a.3:
+    when: op:buildProject is called and no entry file exists
+    then: it returns `{ ok: false, diagnostics: [...], entry: undefined }`
+          with a diagnostic explaining the entry is missing
+  req F-12a.4: op:runBuild internally builds the project; on a clean build
+               it evaluates the emitted JS via `new Function(...)` inside a
+               wrapper that captures `console.log` / `console.warn` (→ stdout)
+               and `console.error` plus thrown errors (→ stderr).
+  req F-12a.5: The console-capture wrapper restores `console` even on throw,
+               and never leaks captured strings between concurrent calls
+               (each call uses its own arrays + per-call console shim).
+  req F-12a.6:
+    when: the entry source throws at runtime
+    then: op:runBuild returns `{ ok: false, stdout, stderr: [...err], diagnostics: [] }`
+          and does not throw
+  req F-12a.7: Both ops are registered in the OperationHandlerSet and added
+               to CoderSkill's tool set. The Coder system prompt mentions
+               `build-project` and `run-build` and the recommended sequence
+               (write source → build → run).
+  req F-12a.8: The CodeArticle toolbar exposes Build and Run buttons. Run is
+               disabled until the most recent build for the current project
+               completed cleanly. The bottom-left inspect-pane TODO is
+               replaced with a Diagnostics / Console pane showing the last
+               build's diagnostics and the last run's stdout/stderr.
+  req F-12a.9: Per-project build/run state lives in a CodePlugin capability
+               atom keyed by `CodeProject.id`. CodeArticle reads the atom for
+               the open project; remounting the article does not lose state.
+```
+
+```mdl
+feat F-12b: Local build & run — multi-file bundling
+
+  req F-12b.1: `esbuild-wasm` is added as a workspace catalog dependency.
+               Esbuild is initialized lazily on first multi-file build; the
+               WASM binary loads from the npm package URL and is cached by
+               the browser.
+  req F-12b.2: A `bundle(files, entryPath)` helper wraps esbuild with a
+               custom plugin that resolves bare and relative paths against
+               the in-memory SourceFile set. Paths the plugin cannot resolve
+               within the project surface as esbuild diagnostics.
+  req F-12b.3: op:buildProject chooses a strategy: if the project has
+               exactly one `.ts`/`.tsx` file and that file has no imports,
+               it uses the plain TS transpile path (F-12a); otherwise it
+               uses esbuild for bundling, with the TS language service still
+               providing type-check diagnostics.
+  req F-12b.4:
+    when: op:buildProject runs on a project with `src/util.ts` and
+          `src/hello.ts` (where `hello.ts` imports from `./util`)
+    then: the build returns one bundled `entry.source` containing both
+          modules, the bundle executes via op:runBuild, and stdout reflects
+          values defined in `util.ts`
+  req F-12b.5: External imports (anything not matching a path in the
+               project's SourceFiles) are treated as build errors in
+               F-12b. Host-externals via import maps are deferred to F-13.
 ```
 
 ## Acceptance
@@ -560,17 +671,17 @@ test T-6: Clear API key removes AccessToken
 ```
 
 ```mdl
-test T-7: Blueprint registers tools
+test T-7: Skill registers tools
   given: composer-app with plugin-code loaded
-  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then:
-    - the blueprint is present
+    - the skill is present
     - its tool set includes verifySpec and runBuildAgent
 ```
 
 ```mdl
 test T-8: Stub operations resolve
-  given: an assistant chat with the Coder blueprint loaded
+  given: an assistant chat with the Coder skill loaded
   when: the assistant invokes verifySpec on a Spec
   then: the call returns `{ ok: true, messages: [] }`
   when: the assistant invokes runBuildAgent on a CodeProject
@@ -605,13 +716,13 @@ test T-11: CodeArticle reflects ECHO mutations
 ```
 
 ```mdl
-test T-12: Coder blueprint exposes file tools
+test T-12: Coder skill exposes file tools
   given: composer-app with plugin-code loaded
-  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then:
-    - the blueprint's tool set includes listFiles, readFile, writeFile,
+    - the skill's tool set includes listFiles, readFile, writeFile,
       deleteFile, scaffoldProject, helloWorld, and resetProject
-    - the blueprint declares an introspect-mcp remote MCP server
+    - the skill declares an introspect-mcp remote MCP server
 ```
 
 ```mdl
@@ -637,6 +748,54 @@ test T-14: Reset clears project files
       (`Database.remove` + flush)
   when: op:resetProject is invoked on an already-empty project
   then: the result is `{ removed: 0 }`
+```
+
+```mdl
+test T-15: Build the Hello World scaffold
+  given: a CodeProject with `src/hello.ts` containing the helloWorld scaffold
+  when: op:buildProject is invoked
+  then:
+    - the result is `{ ok: true, diagnostics: [], entry: { path: "src/hello.ts", source: <non-empty JS> } }`
+    - `entry.source` is a transpiled JavaScript string (no remaining `:` type
+      annotations on declarations)
+  given: a CodeProject whose only file is `src/hello.ts` with a syntax error
+  when: op:buildProject is invoked
+  then: the result is `{ ok: false, diagnostics: [{severity: "error", ...}] }`
+        and `entry` is undefined
+```
+
+```mdl
+test T-16: Run the Hello World scaffold
+  given: a CodeProject containing only the helloWorld scaffold
+  when: op:runBuild is invoked
+  then:
+    - the result is `{ ok: true, stdout: [..., "Hello, World!"], stderr: [], diagnostics: [] }`
+  given: a CodeProject whose entry throws at runtime
+  when: op:runBuild is invoked
+  then: the result is `{ ok: false, stdout: [...], stderr: [<error message>], diagnostics: [] }`
+        and the operation does not raise
+```
+
+```mdl
+test T-17: Coder skill exposes build/run tools
+  given: composer-app with plugin-code loaded
+  when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
+  then: the skill's tool set includes buildProject and runBuild
+```
+
+```mdl
+test T-18: Multi-file bundle round-trip (F-12b)
+  given: a CodeProject with two files:
+         - src/util.ts: `export const MESSAGE = "from util";`
+         - src/hello.ts: `import { MESSAGE } from "./util"; console.log(MESSAGE);`
+  when: op:buildProject is invoked
+  then: the build is clean and `entry.source` includes the bundled contents of util.ts
+  when: op:runBuild is invoked
+  then: `stdout` includes the line "from util"
+  given: src/hello.ts also imports from "@dxos/echo"
+  when: op:buildProject is invoked
+  then: the result is `{ ok: false, diagnostics: [{severity: "error", message: <unresolved import>}] }`
+        (host externals are deferred to F-13)
 ```
 
 ---

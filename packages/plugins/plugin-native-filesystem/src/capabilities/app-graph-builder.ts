@@ -6,15 +6,14 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space';
 import { Expando, Text } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#types';
@@ -31,10 +30,10 @@ import {
 import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 
-const FILESYSTEM_TYPE = `${meta.id}.workspace`;
-const GENERAL_TYPE = `${meta.id}.general`;
-const DIRECTORY_TYPE = `${meta.id}.directory`;
-const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
+const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
+const GENERAL_TYPE = `${meta.profile.key}.general`;
+const DIRECTORY_TYPE = `${meta.profile.key}.directory`;
+const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
@@ -44,7 +43,7 @@ export const createFilesystemEntryExtensions = (
 ) =>
   Effect.all([
     GraphBuilder.createExtension({
-      id: 'workspace-entries',
+      id: 'workspaceEntries',
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -67,7 +66,7 @@ export const createFilesystemEntryExtensions = (
     }),
 
     GraphBuilder.createExtension({
-      id: 'directory-entries',
+      id: 'directoryEntries',
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -103,8 +102,8 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'primary-actions',
-        position: 'first',
+        id: 'primaryActions',
+        position: Position.first,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -117,7 +116,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['open-directory.label', { ns: meta.id }],
+                label: ['open-directory.label', { ns: meta.profile.key }],
                 icon: 'ph--folder-open--regular',
                 testId: 'nativeFilesystem.openDirectory',
                 disposition: 'menu',
@@ -137,7 +136,7 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemState = get(stateAtom);
           const client = capabilities.get(ClientCapabilities.Client);
-          const personalSpace = getPersonalSpace(client);
+          const personalSpace = AppSpace.getPersonalSpace(client);
 
           if (!state.workspaces.length || !personalSpace) {
             return Effect.succeed([]);
@@ -145,9 +144,9 @@ export default Capability.makeModule(
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(AtomQuery.make(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
+          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
           if (order) {
-            const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
+            const snapshot = get(Obj.atom(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];
             orderMap = new Map(orderArray.map((id, index) => [id, index]));
             spacesOrder = order;
@@ -208,7 +207,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'workspace-settings',
+        id: 'workspaceSettings',
         match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([
@@ -217,9 +216,9 @@ export default Capability.makeModule(
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
               properties: {
-                label: ['settings.general.label', { ns: meta.id }],
+                label: ['settings.general.label', { ns: meta.profile.key }],
                 icon: 'ph--sliders--regular',
-                position: 'first',
+                position: Position.first,
               },
             }),
           ]),
@@ -262,7 +261,7 @@ const constructEntryNode = (
     if (text) {
       return Node.make({
         id: file.id,
-        type: Text.Text.typename,
+        type: Type.getTypename(Text.Text),
         data: text,
         properties: {
           label: file.name,

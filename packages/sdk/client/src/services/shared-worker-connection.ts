@@ -13,6 +13,8 @@ import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
+
+const RPC_TIMEOUT = 5_000;
 export type SharedWorkerConnectionOptions = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
@@ -33,7 +35,7 @@ export class SharedWorkerConnection {
   private _release = new Trigger();
   private _config!: Config;
   private _transportService!: BridgeService;
-  private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
+  private _systemRpc: ProtoRpcPeer<WorkerServiceBundle> | undefined;
 
   constructor({ config, systemPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
@@ -61,9 +63,7 @@ export class SharedWorkerConnection {
         BridgeService: this._transportService,
       },
       port: this._systemPort,
-      // TODO(wittjosiah): Make longer and factor out to constant.
-      // TODO(wittjosiah): If this is too long then it breaks the reset flows in Composer.
-      timeout: 200,
+      timeout: RPC_TIMEOUT,
     });
 
     // TODO(dmaretskyi): Replace with injected locks interface.
@@ -96,12 +96,14 @@ export class SharedWorkerConnection {
   async close(): Promise<void> {
     log('shared-worker-connection: closing', { id: this._id });
     this._release.wake();
-    try {
-      await this._systemRpc.rpc.WorkerService.stop();
-    } catch {
-      // If this fails, the worker is probably already gone.
+    if (this._systemRpc) {
+      try {
+        await this._systemRpc.rpc.WorkerService.stop();
+      } catch {
+        // If this fails, the worker is probably already gone.
+      }
+      await this._systemRpc.close();
     }
-    await this._systemRpc.close();
     log('shared-worker-connection: closed');
   }
 

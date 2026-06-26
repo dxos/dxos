@@ -14,10 +14,10 @@ import { type BlobChunk, type BlobSyncService, type WantList } from '@dxos/proto
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
-import { type BlobStore } from './blob-store';
+import { type BlobStoreApi } from './blob-store';
 
 export type BlobSyncExtensionProps = {
-  blobStore: BlobStore;
+  blobStore: BlobStoreApi;
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
   onAbort: () => Promise<void>;

@@ -6,27 +6,17 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
-import { MeetingSettings } from '#components';
 import { MeetingArticle, MeetingsList } from '#containers';
-import { meta } from '#meta';
-import { Meeting, Settings } from '#types';
+import { Meeting } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <MeetingSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
-      }),
       Surface.create({
         id: 'meeting',
         filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
@@ -35,11 +25,13 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'meeting-companion',
-        role: 'article',
-        filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
-          (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
-          Obj.instanceOf(Channel.Channel, data.companionTo),
+        id: 'meetingCompanion',
+        filter: Surface.makeFilter(
+          AppSurface.Article,
+          (data) =>
+            (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
+            Obj.instanceOf(Channel.Channel, data.companionTo),
+        ),
         component: ({ role, data }) => {
           return data.subject === 'meeting' ? (
             <MeetingsList companionTo={data.companionTo} />

@@ -2,16 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Match from 'effect/Match';
-
 import { generateName } from '@dxos/display-name';
-import { type PublicKey } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
-import { type Selection } from '@dxos/react-ui-attention';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { hexToFallback, toFallback } from '@dxos/util';
-
-export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => MessageMetadata;
 
 /**
  * Stable hash for an arbitrary string — used as the avatar-fallback seed for
@@ -59,12 +53,3 @@ export const getMessageMetadata = (
     },
   };
 };
-
-export const getAnchor = Match.type<Selection | undefined>().pipe(
-  Match.when({ mode: 'single' }, (s) => s.id),
-  Match.when({ mode: 'multi' }, (s) => (s.ids.length > 0 ? s.ids.join(',') : undefined)),
-  Match.when({ mode: 'range' }, (s) => (s.from && s.to ? `${s.from}:${s.to}` : undefined)),
-  Match.when({ mode: 'multi-range' }, (s) => s.ranges[0] && `${s.ranges[0].from}:${s.ranges[0].to}`),
-  Match.when(undefined, () => undefined),
-  Match.exhaustive,
-);

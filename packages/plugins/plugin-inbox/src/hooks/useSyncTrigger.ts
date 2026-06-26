@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { type Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -56,12 +56,17 @@ export const useSyncTrigger = ({
   functionKey: string;
   /** Additional input fields merged into the trigger input alongside the subject ref. */
   input?: Record<string, unknown>;
-}) => {
+}): {
+  syncEnabled: boolean | undefined;
+  syncTrigger: Trigger.Trigger | undefined;
+  pending: boolean;
+  handleToggleSync: () => Promise<void>;
+} => {
   const client = useClient();
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
-  const subjectDXN = Obj.getDXN(subject);
+  const subjectUri = Obj.getURI(subject);
   const syncTrigger = useMemo(
     () =>
       triggers.find((trigger) => {
@@ -71,9 +76,9 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDXN);
+        return ref?.uri && ref.uri === subjectUri;
       }),
-    [triggers, subjectDXN],
+    [triggers, subjectUri],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
@@ -95,12 +100,12 @@ export const useSyncTrigger = ({
         return;
       }
 
-      const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
+      const inputKey = Obj.getTypename(subject) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
-        function: Ref.make(fn),
-        input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
+        runnable: Ref.make(fn),
+        input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
       });
 
       db.add(trigger);

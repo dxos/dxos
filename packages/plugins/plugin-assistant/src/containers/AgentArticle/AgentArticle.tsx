@@ -4,22 +4,19 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { Annotation, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { composable } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -29,21 +26,21 @@ type Tab = 'artifacts' | 'inputs';
 export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const spaceId = Obj.getDatabase(agent)?.spaceId;
-  // TODO(burdon): Clear input queue also.
+  // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
-    [QueueService, Feed.FeedService, Database.Service] as const,
+    [Database.Service] as const,
     Effect.fnUntraced(function* () {
       yield* Agent.resetChatHistory(agent);
       if (!agent.feed) {
-        const queue = yield* QueueService.createQueue();
+        const feed = yield* Database.add(Feed.make());
         Obj.update(agent, (agent) => {
-          agent.feed = Ref.fromDXN(queue.dxn);
+          agent.feed = Ref.make(feed);
         });
       }
     }),
@@ -56,10 +53,10 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const artifacts = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(agent).pipe((agent) =>
+        Obj.atom(agent).pipe((agent) =>
           Atom.make((get) => {
             return get(agent)
-              .artifacts.map((artifact) => get(AtomRef.make(artifact.data)))
+              .artifacts.map((artifact) => get(artifact.data.atom))
               .filter(isNonNullable);
           }),
         ),
@@ -68,9 +65,13 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   );
 
   const inputFeed = useAtomValue(
-    AtomObj.make(agent).pipe((_) =>
+    Obj.atom(agent).pipe((_) =>
       Atom.make((get) =>
-        Option.fromNullable(get(_).feed).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+        Option.fromNullable(get(_).feed).pipe(
+          Option.map((ref) => ref.atom),
+          Option.map(get),
+          Option.getOrUndefined,
+        ),
       ),
     ),
   );
@@ -140,36 +141,30 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
 const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ data, ...props }, forwardedRef) => {
   const objectMenuItems = useObjectMenuItems(data);
-  const icon = Function.pipe(
-    Obj.getSchema(data),
-    Option.fromNullable,
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
-  );
+  const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
   return (
     <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
-      <Card.Toolbar>
-        <Card.IconBlock padding>
-          <Card.Icon icon={icon} />
-        </Card.IconBlock>
-        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+      <Card.Header>
+        <Card.Block>
+          <Icon icon={icon} />
+        </Card.Block>
+        <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-        <Card.IconBlock padding>
+        <Card.Block end>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
-        </Card.IconBlock>
-      </Card.Toolbar>
-      <Card.Content>
+        </Card.Block>
+      </Card.Header>
+      <Card.Body>
         <Surface.Surface
-          type={AppSurface.Card}
+          type={AppSurface.CardContent}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />
-      </Card.Content>
+      </Card.Body>
     </Card.Root>
   );
 });

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(wittjosiah): Remove?
+
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
@@ -10,9 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-const DXOS_GUILD_ID = '837138313172353095';
-
-const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
+import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants';
 
 export type DiscordChannel = {
   name: string;
@@ -125,7 +125,7 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
@@ -238,7 +238,7 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { data } = useWidgetContext();
   if (!data?.instant_invite) {
     return null;

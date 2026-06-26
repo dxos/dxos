@@ -29,7 +29,7 @@ export type SimpleLayoutState = {
   popoverVariant?: 'virtual' | 'react';
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
-  popoverKind?: 'base' | 'card';
+  popoverKind?: 'base' | 'card' | 'rename';
   popoverTitle?: Label;
   popoverContent?: { component: string; props?: any } | { subject: any } | null;
   drawerState: DrawerState;
@@ -38,4 +38,4 @@ export type SimpleLayoutState = {
   companionVariant?: string;
 };
 
-export const State = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.id}.state`);
+export const State = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.profile.key}.state`);

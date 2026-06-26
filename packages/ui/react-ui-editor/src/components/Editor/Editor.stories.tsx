@@ -5,7 +5,8 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { createObject } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -36,7 +37,7 @@ const withExtensions: Decorator<EditorViewProps> = (Story, { args }) => {
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      automerge(createDocAccessor(createObject(Text.make({ content: args.initialValue })), ['content'])),
+      automerge(Doc.createAccessor(createObject(Text.make({ content: args.initialValue })), ['content'])),
     ],
     [themeMode],
   );

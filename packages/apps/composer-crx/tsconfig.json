@@ -22,7 +22,7 @@
       "path": "../../../tools/vite-plugin-shutdown"
     },
     {
-      "path": "../../common/async"
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/esbuild-plugins"
@@ -31,43 +31,25 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/protocols"
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../devtools/devtools"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/observability"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/shell"
-    },
-    {
       "path": "../../ui/brand"
-    },
-    {
-      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"

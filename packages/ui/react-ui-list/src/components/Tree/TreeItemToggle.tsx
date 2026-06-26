@@ -21,7 +21,7 @@ export const TreeItemToggle = memo(
           data-testid='treeItem.toggle'
           aria-expanded={open}
           variant='ghost'
-          density='fine'
+          density='md'
           classNames={[
             'h-full w-6 px-0',
             '[&_svg]:transition-transform [&_svg]:duration-200',

@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Plan, Agent } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -30,9 +30,17 @@ import { AgentArticle } from './AgentArticle';
 random.seed(1);
 
 type DefaultStoryProps = {
-  spec?: TypeSpec[];
   inputs?: boolean;
 };
+
+// Hoisted out of `args` because Storybook's CSF arg traversal walks every value
+// and tries to mutate `.id` on each entry — which throws on ECHO `Type.Type`
+// entities (Type.makeObject returns an immutable proxy). Keeping the spec here
+// dodges the traversal entirely.
+const defaultSpec: TypeSpec[] = [
+  { type: Organization.Organization, count: 10 },
+  { type: Person.Person, count: 10 },
+];
 
 const DefaultStory = (_: DefaultStoryProps) => {
   const [space] = useSpaces();
@@ -49,7 +57,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<DefaultStoryProps>(({ args: { spec = [], inputs } }) => ({
+    withPluginManager<DefaultStoryProps>(({ args: { inputs } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -61,12 +69,12 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
 
               const factory = createObjectFactory(space.db, random as any);
-              const artifacts = yield* Effect.promise(() => factory(spec));
+              const artifacts = yield* Effect.promise(() => factory(defaultSpec));
 
-              const inputQueue = space.queues.create();
+              const inputFeed = space.db.add(Feed.make({}));
               if (inputs) {
                 yield* Effect.promise(() =>
-                  inputQueue.append([
+                  space.db.appendToFeed(inputFeed, [
                     createMessage('user', [{ _tag: 'text', text: 'Summarize the current artifacts.' }]),
                     createMessage('assistant', [
                       { _tag: 'text', text: 'Here is a quick overview of the organizations and contacts in context.' },
@@ -79,18 +87,17 @@ const meta = {
               space.db.add(
                 Obj.make(Agent.Agent, {
                   instructions: Ref.make(Text.make()),
-                  plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: artifacts.map((obj) => ({
                     name: Obj.getLabel(obj) ?? 'Artifact',
                     data: Ref.make(obj),
                   })),
-                  feed: Ref.fromDXN(inputQueue.dxn),
+                  feed: Ref.make(inputFeed),
                   subscriptions: [],
                 }),
               );
             }),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
         AssistantPlugin(),
         PreviewPlugin(),
         StorybookPlugin({}),
@@ -110,10 +117,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     inputs: true,
-    spec: [
-      { type: Organization.Organization, count: 10 },
-      { type: Person.Person, count: 10 },
-    ],
   },
 };
 

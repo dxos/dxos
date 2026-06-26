@@ -14,7 +14,7 @@ import { meta } from '#meta';
 
 import * as Assistant from './Assistant';
 
-export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.id}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.profile.key}.capability.settings`);
 
 export const StateSchema = Schema.mutable(
   Schema.Struct({
@@ -27,9 +27,9 @@ export const StateSchema = Schema.mutable(
 
 export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.id}.capability.state`);
+export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.profile.key}.capability.state`);
 
 /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
 export const CompanionChatCache = Capability.make<Atom.Writable<Record<string, Obj.Unknown | undefined>>>(
-  `${meta.id}.capability.companion-chat-cache`,
+  `${meta.profile.key}.capability.companion-chat-cache`,
 );

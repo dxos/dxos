@@ -2,21 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.navtree',
-  name: 'Navtree',
-  author: 'DXOS',
-  description: trim`
-    Hierarchical navigation tree for browsing spaces, folders, and objects.
-    Provides sidebar navigation with collapsible sections and quick access to workspace content.
-  `,
-  tags: ['system'],
-};
+import config from '../dx.config';
+
+export const meta = Plugin.getMetaFromConfig(config);
 
 // TODO(wittjosiah): Factor out.
 export const KEY_BINDING = 'KeyBinding';
 // TODO(wittjosiah): Factor out.
-export const COMMANDS_DIALOG = `${meta.id}.commands-dialog`;
+export const COMMANDS_DIALOG = DXN.make(`${meta.profile.key}.commandsDialog`);

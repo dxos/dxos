@@ -6,23 +6,23 @@ import React from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { Message } from '@dxos/react-ui';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { InitializeEmpty } from './InitializeEmpty';
-import { useTargetIntegration } from './useTargetIntegration';
+import { useTargetConnection } from './useTargetConnection';
 
 export type InitializeProps<T extends Obj.Any> = {
-  /** The object whose Integration we're connecting / syncing. */
+  /** The object whose Connection we're connecting / syncing. */
   target: T;
-  /** Already-translated warning shown when no integration targets `target`. */
+  /** Already-translated warning shown when no connection is bound to `target`. */
   noIntegrationMessage: string;
-  /** Already-translated message shown when an integration exists but the target is still empty. */
+  /** Already-translated message shown when a connection exists but the target is still empty. */
   emptyMessage?: string;
 };
 
 /**
  * Shared empty-state body for "initialize / connect this thing" panels.
- * Renders a warning message that depends on whether an `Integration` targets
+ * Renders a warning message that depends on whether a `Connection` is bound to
  * `target`. The connect / sync action lives in `InitializeAction` so it can
  * be slotted into the surrounding panel's toolbar.
  *
@@ -30,8 +30,8 @@ export type InitializeProps<T extends Obj.Any> = {
  */
 export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
   ({ target, noIntegrationMessage, emptyMessage, ...props }, forwardedRef) => {
-    const { integration } = useTargetIntegration(target);
-    const message = integration ? emptyMessage : noIntegrationMessage;
+    const { connection } = useTargetConnection(target);
+    const message = connection ? emptyMessage : noIntegrationMessage;
 
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>

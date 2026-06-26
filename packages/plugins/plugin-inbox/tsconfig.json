@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -25,9 +26,6 @@
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/display-name"
     },
     {
       "path": "../../common/effect"
@@ -45,6 +43,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/markdown"
+    },
+    {
       "path": "../../common/random"
     },
     {
@@ -60,13 +61,10 @@
       "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/compute/assistant-toolkit"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/conductor"
+      "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/functions"
@@ -78,10 +76,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/echo/echo-query"
@@ -138,16 +136,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-grid"
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -162,19 +157,13 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
+      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-markdown"
@@ -190,9 +179,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-table"
     },
     {
       "path": "../plugin-testing"

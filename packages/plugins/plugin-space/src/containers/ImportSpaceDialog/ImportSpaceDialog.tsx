@@ -6,14 +6,14 @@ import React, { useCallback } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
 export const ImportSpaceDialog = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleFile = useCallback(
@@ -24,7 +24,7 @@ export const ImportSpaceDialog = () => {
       });
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       if (result?.space) {
-        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(result.space.id) });
+        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(result.space.id) });
       }
     },
     [invokePromise],
@@ -35,7 +35,7 @@ export const ImportSpaceDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('import-space-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

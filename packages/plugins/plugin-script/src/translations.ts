@@ -3,6 +3,7 @@
 //
 
 import { Script } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -11,7 +12,7 @@ import { Notebook } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Script.Script.typename]: {
+      [Type.getTypename(Script.Script)]: {
         'typename.label': 'Script',
         'typename.label_zero': 'Scripts',
         'typename.label_one': 'Script',
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete script',
         'object-deleted.label': 'Script deleted',
       },
-      [Notebook.Notebook.typename]: {
+      [Type.getTypename(Notebook.Notebook)]: {
         'typename.label': 'Notebook',
         'typename.label_zero': 'Notebooks',
         'typename.label_one': 'Notebook',
@@ -33,9 +34,8 @@ export const translations = [
         'delete-object.label': 'Delete notebook',
         'object-deleted.label': 'Notebook deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Scripts',
-        'settings.title': 'Scripts settings',
         'description.label': 'Description',
         'description.placeholder': 'Enter description',
         'binding.placeholder': 'Function name',
@@ -60,12 +60,12 @@ export const translations = [
         'no-github-token.label': 'This space has no GitHub access token available.',
         'open-token-manager.label': 'Open Token Manager',
         'publish.label': 'Publish',
-        'blueprint-editor.label': 'Blueprint',
-        'blueprint-editor.description': 'Create a blueprint that exposes this script as a tool.',
-        'blueprint-instructions.label': 'Instructions',
-        'blueprint-instructions.placeholder': 'Describe how this tool should be used.',
-        'create-blueprint.label': 'Create blueprint',
-        'update-blueprint.label': 'Update blueprint',
+        'skill-editor.label': 'Skill',
+        'skill-editor.description': 'Create a skill that exposes this script as a tool.',
+        'skill-instructions.label': 'Instructions',
+        'skill-instructions.placeholder': 'Describe how this tool should be used.',
+        'create-skill.label': 'Create skill',
+        'update-skill.label': 'Update skill',
         'function-panel.label': 'Debug Function',
         'script-test.label': 'Test',
         'script-logs.label': 'Logs',

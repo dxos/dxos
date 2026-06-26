@@ -1,6 +1,6 @@
 # @dxos/assistant-e2e
 
-Agent end-to-end tests that verify assistant behavior by running prompts against the full agent stack.
+Agent end-to-end tests that verify assistant behavior by running prompts against the full agent stack, using real composer plugins.
 
 ## Writing Tests
 
@@ -9,30 +9,29 @@ Each test file in `src/testing/` follows a strict uniform structure. A test cons
 ### Template
 
 ```typescript
-import { Prompt } from '@dxos/blueprints';
+import { describe, it } from '@effect/vitest';
+
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
-import { describe, it } from '@effect/vitest';
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+
+import { agentTest, agentTestTimeout, getDefaultSkills } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('DescriptiveName', () => {
   it.effect(
     'short test name',
-    agentTest(
-      Prompt.make({
-        instructions: trim`
-          Your prompt here.
+    agentTest({
+      instructions: trim`
+        Your prompt here.
 
-          Completion criteria:
-          - Expected outcome 1.
-          - Expected outcome 2.
-        `,
-        blueprints: getDefaultBlueprints(),
-      }),
-    ),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+        Completion criteria:
+        - Expected outcome 1.
+        - Expected outcome 2.
+      `,
+      skills: getDefaultSkills(),
+    }),
+    { timeout: agentTestTimeout() },
   );
 });
 ```
@@ -41,7 +40,7 @@ describe('DescriptiveName', () => {
 
 - `Obj.ID.dangerouslyDisableRandomness()` **must** appear at module scope before `describe`.
 - No extra code apart from the prompt — the test is the prompt and nothing else.
-- Always use `{ timeout: DEFAULT_TEST_TIMEOUT }`.
+- Always pass `{ timeout: agentTestTimeout() }` as the third argument.
 - Use `trim` template literal for instructions.
 
 ### Prompt Guidelines
@@ -50,19 +49,19 @@ describe('DescriptiveName', () => {
 - Add **completion criteria** so success is unambiguous.
 - The agent starts with an **empty database** — instruct it to create any required data.
 
-### Blueprints
+### Skills
 
-- `getDefaultBlueprints()` — standard tests (includes `BlueprintManagerBlueprint`, `DatabaseBlueprint`).
-- Omit `blueprints` for tests that need none (e.g., smoke tests).
-- For custom sets, pass an array of `Ref.make(SomeBlueprint.make())`.
+- `getDefaultSkills()` — standard tests (includes `SkillManagerSkill`, `DatabaseSkill`).
+- Omit `skills` for tests that need none (e.g., smoke tests).
+- For custom sets, pass an array of `Ref.make(SomeSkill.make())`.
 
 ### Expecting Failure
 
 ```typescript
-agentTest(
-  { expect: 'failure' },
-  Prompt.make({ instructions: trim`Do nothing and fail.` }),
-),
+agentTest({
+  expect: 'failure',
+  instructions: trim`Do nothing and fail.`,
+}),
 ```
 
 ## Running Tests

@@ -14,19 +14,20 @@
   ],
   "include": [
     "data/*.js",
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -74,9 +75,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
       "path": "../../ui/react-ui-components"
     },
     {
@@ -86,22 +84,13 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

@@ -6,15 +6,16 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { forwardRef } from 'react';
+import React, { type MouseEventHandler, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { composable, composableProps, slottable, type ToolbarStyleProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks';
+import { type ToolbarStyleProps } from '../../theme';
+import { composable, composableProps, slottable } from '../../util';
 import {
   Button,
   ButtonGroup,
@@ -57,6 +58,8 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
   },
 );
 
+ToolbarRoot.displayName = 'Toolbar.Root';
+
 //
 // Text
 //
@@ -74,6 +77,8 @@ const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
   );
 });
 
+ToolbarText.displayName = 'Toolbar.Text';
+
 //
 // Button
 //
@@ -88,6 +93,8 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, 
   );
 });
 
+ToolbarButton.displayName = 'Toolbar.Button';
+
 //
 // IconButton
 //
@@ -97,10 +104,12 @@ type ToolbarIconButtonProps = IconButtonProps;
 const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
   return (
     <ToolbarPrimitive.Button asChild>
-      <IconButton {...props} noTooltip ref={forwardedRef} />
+      <IconButton {...props} ref={forwardedRef} />
     </ToolbarPrimitive.Button>
   );
 });
+
+ToolbarIconButton.displayName = 'Toolbar.IconButton';
 
 type ToolbarToggleProps = ToggleProps;
 
@@ -111,6 +120,8 @@ const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, 
     </ToolbarPrimitive.Button>
   );
 });
+
+ToolbarToggle.displayName = 'Toolbar.Toggle';
 
 //
 // Link
@@ -125,6 +136,8 @@ const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forw
     </ToolbarPrimitive.Link>
   );
 });
+
+ToolbarLink.displayName = 'Toolbar.Link';
 
 type ToolbarToggleGroupProps = (
   | Omit<ToolbarPrimitive.ToolbarToggleGroupSingleProps, 'className'>
@@ -146,6 +159,8 @@ const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
   },
 );
 
+ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
+
 type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
 
 const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>(
@@ -157,6 +172,8 @@ const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupI
     );
   },
 );
+
+ToolbarToggleGroupItem.displayName = 'Toolbar.ToggleGroupItem';
 
 type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
 
@@ -182,6 +199,8 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
   },
 );
 
+ToolbarToggleGroupIconItem.displayName = 'Toolbar.ToggleGroupIconItem';
+
 //
 // Separator
 //
@@ -199,6 +218,8 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
     );
   },
 );
+
+ToolbarSeparator.displayName = 'Toolbar.Separator';
 
 //
 // DragHandle
@@ -226,22 +247,46 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
   },
 );
 
+ToolbarDragHandle.displayName = 'Toolbar.DragHandle';
+
 //
-// CloseIconButton
+// ActionIconButton
 //
 
-type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
+/**
+ * Known semantic actions a toolbar icon-button can represent. Each action
+ * picks its own phosphor icon + default translation key so call sites just
+ * declare intent (`action='delete'`) rather than re-specifying the icon /
+ * label every time.
+ */
+type ToolbarActionIconButtonAction = 'close' | 'delete';
 
-const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
-  ({ onClick, label }, forwardedRef) => {
+type ToolbarActionIconButtonProps = {
+  action: ToolbarActionIconButtonAction;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  label?: string;
+};
+
+const TOOLBAR_ACTION_ICONS: Record<ToolbarActionIconButtonAction, string> = {
+  close: 'ph--x--regular',
+  delete: 'ph--trash--regular',
+};
+
+const TOOLBAR_ACTION_LABEL_KEYS: Record<ToolbarActionIconButtonAction, string> = {
+  close: 'toolbar-close.label',
+  delete: 'toolbar-delete.label',
+};
+
+const ToolbarActionIconButton = forwardRef<HTMLButtonElement, ToolbarActionIconButtonProps>(
+  ({ action, onClick, label }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
     return (
       <ToolbarIconButton
         iconOnly
-        icon='ph--x--regular'
+        icon={TOOLBAR_ACTION_ICONS[action]}
         variant='ghost'
-        label={label ?? t('toolbar-close.label')}
+        label={label ?? t(TOOLBAR_ACTION_LABEL_KEYS[action])}
         classNames='cursor-pointer'
         onClick={onClick}
         ref={forwardedRef}
@@ -249,6 +294,8 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
     );
   },
 );
+
+ToolbarActionIconButton.displayName = 'Toolbar.ActionIconButton';
 
 //
 // Menu
@@ -265,7 +312,7 @@ type ToolbarMenuProps<T extends any | void = void> = {
 };
 
 // TODO(burdon): Make slottable.
-const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) => {
+function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) {
   const { t } = useTranslation(translationKey);
 
   return (
@@ -294,7 +341,9 @@ const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMen
       )}
     </DropdownMenu.Root>
   );
-};
+}
+
+ToolbarMenu.displayName = 'Toolbar.Menu';
 
 //
 // Toolbar
@@ -312,7 +361,7 @@ export const Toolbar = {
   ToggleGroupIconItem: ToolbarToggleGroupIconItem,
   Separator: ToolbarSeparator,
   DragHandle: ToolbarDragHandle,
-  CloseIconButton: ToolbarCloseIconButton,
+  ActionIconButton: ToolbarActionIconButton,
   Menu: ToolbarMenu,
 };
 
@@ -328,7 +377,8 @@ export type {
   ToolbarToggleGroupIconItemProps,
   ToolbarSeparatorProps,
   ToolbarDragHandleProps,
-  ToolbarCloseIconButtonProps,
+  ToolbarActionIconButtonAction,
+  ToolbarActionIconButtonProps,
   ToolbarMenuItem,
   ToolbarMenuProps,
 };

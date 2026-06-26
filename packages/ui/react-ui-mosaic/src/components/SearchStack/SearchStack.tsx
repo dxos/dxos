@@ -5,8 +5,8 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../..';
 
@@ -115,16 +115,16 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth ref={forwardedRef}>
-          <Card.Toolbar>
-            <Card.IconBlock />
+          <Card.Header>
+            <Card.Block />
             <Card.Title>{result.label}</Card.Title>
-          </Card.Toolbar>
+          </Card.Header>
           {result.snippet && (
-            <Card.Content>
+            <Card.Body>
               <Card.Row>
                 <Card.Text variant='description'>{result.snippet}</Card.Text>
               </Card.Row>
-            </Card.Content>
+            </Card.Body>
           )}
         </Card.Root>
       </Focus.Item>

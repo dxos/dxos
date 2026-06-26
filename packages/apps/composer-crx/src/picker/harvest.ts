@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ClipHints, type ClipSelection } from '../clip/types';
+import { type SnapshotHints, type SnapshotSelection } from '../page-actions/types';
 
 const MAX_HTML_LENGTH = 1_000_000;
 
@@ -11,7 +11,7 @@ const MAX_HTML_LENGTH = 1_000_000;
  * HTML is truncated to avoid extreme payloads (with a flag so the receiver can
  * surface a warning if needed).
  */
-export const harvestSelection = (element: Element): ClipSelection => {
+export const harvestSelection = (element: Element): SnapshotSelection => {
   const html = element.outerHTML ?? '';
   const truncated = html.length > MAX_HTML_LENGTH;
   const rect = 'getBoundingClientRect' in element ? (element as HTMLElement).getBoundingClientRect() : undefined;
@@ -30,7 +30,7 @@ export const harvestSelection = (element: Element): ClipSelection => {
  *
  * Accepts a Document so the same logic can be unit-tested with a jsdom tree.
  */
-export const harvestHints = (doc: Document): ClipHints => {
+export const harvestHints = (doc: Document): SnapshotHints => {
   const meta = (property: string, attr: 'property' | 'name' = 'property') =>
     doc.querySelector<HTMLMetaElement>(`meta[${attr}="${property}"]`)?.content?.trim() || undefined;
 

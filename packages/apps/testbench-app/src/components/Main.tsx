@@ -3,11 +3,10 @@
 //
 
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import type * as Schema from 'effect/Schema';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -51,15 +50,15 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, Schema.Schema<any>>()),
+      }, new Map<string, typeof Item | typeof Document>()),
     [],
   );
 
-  const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
-  const objectsOfSchema = useQuery(space?.db, Query.type(getSchema(type)));
+  const getType = (typename: string | undefined) => typeMap.get(typename ?? Type.getTypename(Item)) ?? Item;
+  const objectsOfType = useQuery(space?.db, Query.type(getType(type)));
   const objects = useMemo(
-    () => objectsOfSchema.filter((object) => match(filter, object.content)),
-    [objectsOfSchema, filter],
+    () => objectsOfType.filter((object) => match(filter, object.content)),
+    [objectsOfType, filter],
   );
 
   const identity = client.halo.identity.get();
@@ -86,7 +85,7 @@ export const Main = () => {
     Array.from({ length: n }).forEach(() => {
       let object: Obj.Unknown;
       switch (type) {
-        case Document.typename: {
+        case Type.getTypename(Document): {
           object = Obj.make(Document, {
             title: randWord(),
             content: randSentence(),
@@ -94,7 +93,7 @@ export const Main = () => {
           break;
         }
 
-        case Item.typename:
+        case Type.getTypename(Item):
         default: {
           object = Obj.make(Item, {
             content: randSentence(),
@@ -128,7 +127,7 @@ export const Main = () => {
     }
 
     // TODO(burdon): [API]: Rename delete and just provide ID?
-    const object = space.db.getObjectById(id);
+    const object = space.db.query(Filter.id(id)).runSync()[0];
     if (object) {
       space.db.remove(object);
     }
@@ -213,7 +212,7 @@ export const Main = () => {
             onViewChange={(view) => setView(view)}
           />
 
-          {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
+          {view === 'table' && <ItemTable type={getType(type)} objects={objects} />}
           {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
           {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
         </div>

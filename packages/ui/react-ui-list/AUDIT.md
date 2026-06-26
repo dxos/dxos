@@ -1,8 +1,15 @@
 # List & Selection Components — Audit and Rationalization Plan
 
-Status: living. Phases 1-5 mostly shipped; sections below describe the
-end state with deferred items called out explicitly. As of the
-consolidation work:
+Status: living. Phases 1-6 shipped; sections below describe the end state
+with deferred items called out explicitly. As of the consolidation work:
+
+- **Phase 6 complete (2026-06-13)**: the deprecated `List` component has
+  been deleted. The aspect-refactored `OrderedList` (drag handle / delete /
+  expand caret / detail panel + new `IconButton` slot) is the canonical
+  replacement for the "reorderable row with chrome" use case, and `RowList`
+  covers the selectable-listbox shape. Migrated consumers: `RangeList`
+  (plugin-sheet), `Mixer` (plugin-zen), `SelectOptionField` (react-ui-form),
+  and the higher-level `ToolList` (react-ui-mcp).
 
 - **Three packages, clean dep direction:**
 
@@ -22,7 +29,8 @@ consolidation work:
         Combobox (Popover + Picker; generic, no search dep)
         Listbox (composes RowList for plain listbox role)
         RowList (controllable single-select + ScrollArea + tabster arrow nav)
-        Tree, Accordion, deprecated List
+        OrderedList (reorderable + single-expand master-detail; aspect-based)
+        Tree, Accordion
   ```
 
 - **`Picker` is the new generic primitive.** Owns the WAI-ARIA
@@ -134,7 +142,7 @@ duplicated across at least four call sites.
 - `Mosaic.Stack` — flex linear layout of tiles.
 - `Mosaic.VirtualStack` — `Stack` + `@tanstack/react-virtual`. The
   high-water mark of the package; ~6 plugin call sites
-  (plugin-feed, plugin-inbox, plugin-assistant, plugin-search,
+  (plugin-magazine, plugin-inbox, plugin-assistant, plugin-search,
   plugin-deck Matrix).
 - `Mosaic.Board` — multi-column layout prototype.
 - `Mosaic.Focus` — selection / current-id context.
@@ -602,6 +610,6 @@ Files cited in this audit (paths relative to repo root):
 - `packages/plugins/plugin-code/src/components/FileTree/FileTree.tsx`
 - `packages/plugins/plugin-meeting/src/containers/MeetingsList/`
 - `packages/plugins/plugin-navtree/src/components/Sidebar/L1Panel.tsx`
-- `packages/plugins/plugin-feed/src/components/PostStack/PostStack.tsx`
+- `packages/plugins/plugin-magazine/src/components/PostStack/PostStack.tsx`
 - `packages/plugins/plugin-inbox/src/components/MessageStack/MessageStack.tsx`
 - `packages/ui/react-ui-introspect/src/components/ToolList/ToolList.tsx`

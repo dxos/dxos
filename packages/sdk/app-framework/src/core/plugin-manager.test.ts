@@ -15,6 +15,7 @@ import * as Queue from 'effect/Queue';
 import * as TestClock from 'effect/TestClock';
 
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents } from '../common';
@@ -31,7 +32,7 @@ const Total = Capability.make<{ total: number }>('org.dxos.test.total');
 const CountEvent = ActivationEvent.make('org.dxos.test.count');
 const FailEvent = ActivationEvent.make('org.dxos.test.fail');
 
-const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 
 // TODO(wittjosiah): Factor out?
 const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
@@ -59,7 +60,7 @@ const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
 describe('PluginManager', () => {
   let plugins: Plugin.Plugin[] = [];
   const pluginLoader = Effect.fn(function* (id: string) {
-    const plugin = plugins.find((plugin) => plugin.meta.id === id);
+    const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
     invariant(plugin, `Plugin not found: ${id}`);
     return { plugin };
   });
@@ -75,17 +76,17 @@ describe('PluginManager', () => {
       plugins = [testPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      const added = yield* manager.add(testMeta.id);
+      const added = yield* manager.add(testMeta.profile.key);
       assert.strictEqual(added, testPlugin);
       assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
       assert.deepStrictEqual(manager.getEnabled(), []);
-      const removed = yield* manager.remove(testMeta.id);
+      const removed = yield* manager.remove(testMeta.profile.key);
       assert.isTrue(removed);
       assert.deepStrictEqual(manager.getPlugins(), []);
     }),
   );
 
-  it.effect('should add plugin when locator differs from meta.id', () =>
+  it.effect('should add plugin when locator differs from meta.profile.key', () =>
     Effect.gen(function* () {
       const Test = Plugin.make(Plugin.define(testMeta));
       const testPlugin = Test();
@@ -103,8 +104,8 @@ describe('PluginManager', () => {
       assert.strictEqual(added, testPlugin);
       assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
       assert.deepStrictEqual(manager.getEnabled(), []);
-      yield* manager.enable(added.meta.id);
-      assert.deepStrictEqual(manager.getEnabled(), [testMeta.id]);
+      yield* manager.enable(added.meta.profile.key);
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.profile.key]);
     }),
   );
 
@@ -141,7 +142,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader: loader });
       yield* manager.add('prod');
-      yield* manager.enable(testMeta.id);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(
         manager.capabilities.getAll(String).map((value) => value.string),
@@ -150,9 +151,9 @@ describe('PluginManager', () => {
 
       // Loading the dev plugin with the same id swaps it into the id slot.
       yield* manager.add('dev');
-      yield* manager.enable(testMeta.id);
+      yield* manager.enable(testMeta.profile.key);
       assert.strictEqual(
-        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        manager.getPlugins().find((plugin) => plugin.meta.profile.key === testMeta.profile.key),
         devPlugin,
       );
       yield* manager.reset(ActivationEvents.Startup);
@@ -163,12 +164,12 @@ describe('PluginManager', () => {
 
       // Removing the dev plugin restores the original and re-enables it
       // because it was enabled at shadow time.
-      yield* manager.remove(testMeta.id);
+      yield* manager.remove(testMeta.profile.key);
       assert.strictEqual(
-        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        manager.getPlugins().find((plugin) => plugin.meta.profile.key === testMeta.profile.key),
         productionPlugin,
       );
-      assert.isTrue(manager.getEnabled().includes(testMeta.id));
+      assert.isTrue(manager.getEnabled().includes(testMeta.profile.key));
       yield* manager.reset(ActivationEvents.Startup);
       assert.deepStrictEqual(
         manager.capabilities.getAll(String).map((value) => value.string),
@@ -197,11 +198,11 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEnabled(), []);
 
       yield* manager.add('dev');
-      yield* manager.remove(testMeta.id);
+      yield* manager.remove(testMeta.profile.key);
 
       // Original is restored but stays disabled, matching its pre-shadow state.
       assert.strictEqual(
-        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        manager.getPlugins().find((plugin) => plugin.meta.profile.key === testMeta.profile.key),
         productionPlugin,
       );
       assert.deepStrictEqual(manager.getEnabled(), []);
@@ -229,7 +230,7 @@ describe('PluginManager', () => {
       plugins = [plugin];
 
       const manager = PluginManager.make({ plugins: [plugin], pluginLoader });
-      yield* manager.enable(testMeta.id);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       const strings = manager.capabilities.getAll(String);
       assert.strictEqual(strings.length, 2);
@@ -251,10 +252,10 @@ describe('PluginManager', () => {
 
       const testPlugin = Test();
       const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
-      yield* manager.enable(testMeta.id);
-      assert.deepStrictEqual(manager.getEnabled(), [Test.meta.id]);
+      yield* manager.enable(testMeta.profile.key);
+      assert.deepStrictEqual(manager.getEnabled(), [Test.meta.profile.key]);
       assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
-      yield* manager.disable(testMeta.id);
+      yield* manager.disable(testMeta.profile.key);
       assert.deepStrictEqual(manager.getEnabled(), []);
       assert.deepStrictEqual(manager.getModules(), []);
     }),
@@ -273,9 +274,9 @@ describe('PluginManager', () => {
 
       const testPlugin = Test();
       const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
-      yield* manager.enable(Test.meta.id);
+      yield* manager.enable(Test.meta.profile.key);
       assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
-      assert.deepStrictEqual(manager.getEnabled(), [Test.meta.id]);
+      assert.deepStrictEqual(manager.getEnabled(), [Test.meta.profile.key]);
       assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
       assert.deepStrictEqual(manager.getActive(), []);
       assert.deepStrictEqual(manager.getEventsFired(), []);
@@ -298,7 +299,7 @@ describe('PluginManager', () => {
 
       const testPlugin = Test();
       const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
-      yield* manager.enable(Test.meta.id);
+      yield* manager.enable(Test.meta.profile.key);
 
       const result = yield* manager.activate(ActivationEvents.Startup);
       assert.isTrue(result);
@@ -321,8 +322,8 @@ describe('PluginManager', () => {
       ];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       const error = yield* Effect.flip(manager.activate(FailEvent));
       assert.strictEqual(error.message, 'test');
     }),
@@ -354,8 +355,8 @@ describe('PluginManager', () => {
       ];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       const error = yield* Effect.flip(manager.activate(DefectEvent));
 
       // Verify the error was caught and propagated.
@@ -376,7 +377,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects when activate throws before returning Effect', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('org.dxos.test.defect-immediate');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defectImmediate');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -401,8 +402,8 @@ describe('PluginManager', () => {
       ];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       const error = yield* Effect.flip(manager.activate(DefectEvent));
 
       // Verify the error was caught and propagated.
@@ -466,8 +467,8 @@ describe('PluginManager', () => {
         Effect.runFork,
       );
 
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       yield* activating.await;
       yield* activated.await;
@@ -517,8 +518,8 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
 
       {
-        yield* manager.add(testMeta.id);
-        yield* manager.enable(testMeta.id);
+        yield* manager.add(testMeta.profile.key);
+        yield* manager.enable(testMeta.profile.key);
         const result = yield* manager.activate(ActivationEvents.Startup);
         assert.isTrue(result);
         assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
@@ -541,7 +542,7 @@ describe('PluginManager', () => {
   it.effect('should not fire an unknown event', () =>
     Effect.gen(function* () {
       const manager = PluginManager.make({ pluginLoader });
-      const UnknownEvent = ActivationEvent.make('unknown');
+      const UnknownEvent = ActivationEvent.make('org.dxos.test.unknown');
       const result = yield* manager.activate(UnknownEvent);
       assert.isFalse(result);
     }),
@@ -549,7 +550,7 @@ describe('PluginManager', () => {
 
   it.effect('should be able to fire custom activation events', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -557,7 +558,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -565,7 +566,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin3'), name: 'Plugin 3' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -582,20 +583,20 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getActive(), []);
       assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
 
-      yield* manager.add(Plugin1.meta.id);
-      yield* manager.enable(Plugin1.meta.id);
+      yield* manager.add(Plugin1.meta.profile.key);
+      yield* manager.enable(Plugin1.meta.profile.key);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(Number).length, 1);
 
-      yield* manager.add(Plugin2.meta.id);
-      yield* manager.enable(Plugin2.meta.id);
+      yield* manager.add(Plugin2.meta.profile.key);
+      yield* manager.enable(Plugin2.meta.profile.key);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id, plugin2.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(Number).length, 2);
 
-      yield* manager.add(Plugin3.meta.id);
-      yield* manager.enable(Plugin3.meta.id);
+      yield* manager.add(Plugin3.meta.profile.key);
+      yield* manager.enable(Plugin3.meta.profile.key);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [
         plugin1.modules[0].id,
@@ -625,8 +626,8 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getActive(), []);
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
 
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), []);
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
@@ -659,8 +660,8 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
       assert.strictEqual(count, 0);
 
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
@@ -681,7 +682,7 @@ describe('PluginManager', () => {
         state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
       };
 
-      const Count = Plugin.define({ id: 'org.dxos.test.count', name: 'Count' }).pipe(
+      const Count = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.count'), name: 'Count' })).pipe(
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
@@ -719,10 +720,10 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       {
-        yield* manager.add(Test.meta.id);
-        yield* manager.enable(Test.meta.id);
-        yield* manager.add(Count.meta.id);
-        yield* manager.enable(Count.meta.id);
+        yield* manager.add(Test.meta.profile.key);
+        yield* manager.enable(Test.meta.profile.key);
+        yield* manager.add(Count.meta.profile.key);
+        yield* manager.enable(Count.meta.profile.key);
         yield* manager.activate(ActivationEvents.Startup);
         assert.deepStrictEqual(manager.getActive(), [
           ...testPlugin.modules.map((m) => m.id),
@@ -736,7 +737,7 @@ describe('PluginManager', () => {
       }
 
       {
-        yield* manager.disable(Test.meta.id);
+        yield* manager.disable(Test.meta.profile.key);
         assert.deepStrictEqual(manager.getActive(), [countPlugin.modules[0].id]);
         assert.deepStrictEqual(manager.getPendingReset(), []);
 
@@ -747,7 +748,7 @@ describe('PluginManager', () => {
       }
 
       {
-        yield* manager.enable(Test.meta.id);
+        yield* manager.enable(Test.meta.profile.key);
         assert.deepStrictEqual(manager.getActive(), [
           countPlugin.modules[0].id,
           ...testPlugin.modules.map((m) => m.id),
@@ -763,7 +764,7 @@ describe('PluginManager', () => {
 
   it.effect('should be reactive', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -771,7 +772,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -779,7 +780,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin3'), name: 'Plugin 3' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -804,8 +805,8 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 0);
       assert.strictEqual(pendingResetUpdates.count, 0);
 
-      yield* manager.add(Plugin1.meta.id);
-      yield* manager.enable(Plugin1.meta.id);
+      yield* manager.add(Plugin1.meta.profile.key);
+      yield* manager.enable(Plugin1.meta.profile.key);
       assert.strictEqual(pluginUpdates.count, 1);
       assert.strictEqual(enabledUpdates.count, 1);
       assert.strictEqual(modulesUpdates.count, 1);
@@ -821,8 +822,8 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 1);
       assert.strictEqual(pendingResetUpdates.count, 0);
 
-      yield* manager.add(Plugin2.meta.id);
-      yield* manager.enable(Plugin2.meta.id);
+      yield* manager.add(Plugin2.meta.profile.key);
+      yield* manager.enable(Plugin2.meta.profile.key);
       assert.strictEqual(pluginUpdates.count, 2);
       assert.strictEqual(enabledUpdates.count, 2);
       assert.strictEqual(modulesUpdates.count, 2);
@@ -838,8 +839,8 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 1);
       assert.strictEqual(pendingResetUpdates.count, 2);
 
-      yield* manager.add(Plugin3.meta.id);
-      yield* manager.enable(Plugin3.meta.id);
+      yield* manager.add(Plugin3.meta.profile.key);
+      yield* manager.enable(Plugin3.meta.profile.key);
       assert.strictEqual(pluginUpdates.count, 3);
       assert.strictEqual(enabledUpdates.count, 3);
       assert.strictEqual(modulesUpdates.count, 3);
@@ -856,7 +857,7 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 1);
       assert.strictEqual(pendingResetUpdates.count, 4);
 
-      yield* manager.disable(Plugin1.meta.id);
+      yield* manager.disable(Plugin1.meta.profile.key);
       assert.strictEqual(pluginUpdates.count, 3);
       assert.strictEqual(enabledUpdates.count, 4);
       assert.strictEqual(modulesUpdates.count, 4);
@@ -864,7 +865,7 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 1);
       assert.strictEqual(pendingResetUpdates.count, 4);
 
-      yield* manager.remove(Plugin1.meta.id);
+      yield* manager.remove(Plugin1.meta.profile.key);
       assert.strictEqual(pluginUpdates.count, 4);
       assert.strictEqual(enabledUpdates.count, 4);
       assert.strictEqual(modulesUpdates.count, 4);
@@ -893,7 +894,9 @@ describe('PluginManager', () => {
       });
 
       const SlowEvent = ActivationEvent.make('org.dxos.test.slow');
-      const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-plugin', name: 'Slow Plugin' }).pipe(
+      const SlowPlugin = Plugin.define(
+        Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowPlugin'), name: 'Slow Plugin' }),
+      ).pipe(
         Plugin.addModule({
           id: 'SlowModule',
           activatesOn: SlowEvent,
@@ -910,8 +913,8 @@ describe('PluginManager', () => {
       plugins = [slowPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(SlowPlugin.meta.id);
-      yield* manager.enable(SlowPlugin.meta.id);
+      yield* manager.add(SlowPlugin.meta.profile.key);
+      yield* manager.enable(SlowPlugin.meta.profile.key);
 
       // Fork the activation so we can control time with TestClock.
       const activationFiber = yield* Effect.fork(manager.activate(SlowEvent));
@@ -936,11 +939,16 @@ describe('PluginManager', () => {
   it.effect('should prevent concurrent loads of the same module via semaphore', () =>
     Effect.gen(function* () {
       // Two different events that both can trigger the same module.
-      const EventA = ActivationEvent.make('org.dxos.test.event-a');
-      const EventB = ActivationEvent.make('org.dxos.test.event-b');
+      const EventA = ActivationEvent.make('org.dxos.test.eventA');
+      const EventB = ActivationEvent.make('org.dxos.test.eventB');
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define({ id: 'org.dxos.test.concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
+      const ConcurrentPlugin = Plugin.define(
+        Plugin.makeMeta({
+          key: DXN.make('org.dxos.test.concurrentPlugin'),
+          name: 'Concurrent Plugin',
+        }),
+      ).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
@@ -959,8 +967,8 @@ describe('PluginManager', () => {
       plugins = [concurrentPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(ConcurrentPlugin.meta.id);
-      yield* manager.enable(ConcurrentPlugin.meta.id);
+      yield* manager.add(ConcurrentPlugin.meta.profile.key);
+      yield* manager.enable(ConcurrentPlugin.meta.profile.key);
 
       // Fork two concurrent activations with DIFFERENT events.
       // Both events trigger the same module, so both will try to call _loadModule.
@@ -987,7 +995,7 @@ describe('PluginManager', () => {
 
   it.effect('should deactivate all active modules on shutdown', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin1',
@@ -995,7 +1003,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin2',
@@ -1008,10 +1016,10 @@ describe('PluginManager', () => {
       plugins = [plugin1, plugin2];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(Plugin1.meta.id);
-      yield* manager.enable(Plugin1.meta.id);
-      yield* manager.add(Plugin2.meta.id);
-      yield* manager.enable(Plugin2.meta.id);
+      yield* manager.add(Plugin1.meta.profile.key);
+      yield* manager.enable(Plugin1.meta.profile.key);
+      yield* manager.add(Plugin2.meta.profile.key);
+      yield* manager.enable(Plugin2.meta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.strictEqual(manager.getActive().length, 2);
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
@@ -1047,8 +1055,8 @@ describe('PluginManager', () => {
       plugins = [testPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.isFalse(deactivated);
 
@@ -1060,7 +1068,7 @@ describe('PluginManager', () => {
   it.effect('should deactivate modules in reverse activation order during shutdown', () =>
     Effect.gen(function* () {
       const deactivationOrder: string[] = [];
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'First',
@@ -1075,7 +1083,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Second',
@@ -1093,10 +1101,10 @@ describe('PluginManager', () => {
       plugins = [Plugin1(), Plugin2()];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(Plugin1.meta.id);
-      yield* manager.enable(Plugin1.meta.id);
-      yield* manager.add(Plugin2.meta.id);
-      yield* manager.enable(Plugin2.meta.id);
+      yield* manager.add(Plugin1.meta.profile.key);
+      yield* manager.enable(Plugin1.meta.profile.key);
+      yield* manager.add(Plugin2.meta.profile.key);
+      yield* manager.enable(Plugin2.meta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
 
       yield* manager.shutdown();
@@ -1118,8 +1126,8 @@ describe('PluginManager', () => {
       plugins = [testPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.isTrue(manager.getEventsFired().length > 0);
 
@@ -1151,8 +1159,8 @@ describe('PluginManager', () => {
       plugins = [testPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
 
       const activationFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
       yield* activationStarted.await;
@@ -1188,8 +1196,8 @@ describe('PluginManager', () => {
       plugins = [testPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
 
       const pluginsBefore = manager.getPlugins();
@@ -1224,8 +1232,8 @@ describe('PluginManager', () => {
       plugins = [testPlugin];
 
       const manager = PluginManager.make({ pluginLoader });
-      yield* manager.add(testMeta.id);
-      yield* manager.enable(testMeta.id);
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
       yield* manager.activate(ActivationEvents.Startup);
       assert.strictEqual(activateCount, 1);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
@@ -1241,7 +1249,7 @@ describe('PluginManager', () => {
   );
 
   describe('Plugin.lazy', () => {
-    const lazyMeta = { id: 'org.dxos.plugin.lazy', name: 'Lazy' };
+    const lazyMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.lazy'), name: 'Lazy' });
 
     it('exposes meta synchronously without invoking the loader', () => {
       let loaderCalls = 0;
@@ -1251,12 +1259,12 @@ describe('PluginManager', () => {
         return Promise.resolve({ default: Real });
       });
 
-      assert.strictEqual(LazyTest.meta.id, lazyMeta.id);
-      assert.strictEqual(LazyTest.meta.name, 'Lazy');
+      assert.strictEqual(LazyTest.meta.profile.key, lazyMeta.profile.key);
+      assert.strictEqual(LazyTest.meta.profile.name, 'Lazy');
       assert.strictEqual(loaderCalls, 0);
 
       const stub = LazyTest();
-      assert.strictEqual(stub.meta.id, lazyMeta.id);
+      assert.strictEqual(stub.meta.profile.key, lazyMeta.profile.key);
       assert.deepStrictEqual([...stub.modules], []);
       assert.isTrue(Plugin.isLazy(stub));
       assert.strictEqual(loaderCalls, 0);
@@ -1282,16 +1290,16 @@ describe('PluginManager', () => {
         plugins = [lazyStub];
 
         const manager = PluginManager.make({ pluginLoader });
-        yield* manager.add(lazyMeta.id);
+        yield* manager.add(lazyMeta.profile.key);
         // Loader has not been invoked yet — only meta is exposed.
         assert.strictEqual(loaderCalls, 0);
         assert.deepStrictEqual(manager.getModules(), []);
 
-        yield* manager.enable(lazyMeta.id);
+        yield* manager.enable(lazyMeta.profile.key);
         assert.strictEqual(loaderCalls, 1);
         // After enable the registered plugin should be the real one (not the stub),
         // and its modules should be registered with the manager.
-        const registered = manager.getPlugins().find((p) => p.meta.id === lazyMeta.id);
+        const registered = manager.getPlugins().find((p) => p.meta.profile.key === lazyMeta.profile.key);
         assert.isDefined(registered);
         assert.isFalse(Plugin.isLazy(registered!));
         assert.strictEqual(registered!.modules.length, 1);
@@ -1313,7 +1321,7 @@ describe('PluginManager', () => {
         plugins = [lazyStub];
 
         const manager = PluginManager.make({ pluginLoader });
-        yield* manager.add(lazyMeta.id);
+        yield* manager.add(lazyMeta.profile.key);
 
         // Activate an event that has no listeners — the lazy plugin must not load.
         yield* manager.activate(ActivationEvents.Startup);
@@ -1341,8 +1349,8 @@ describe('PluginManager', () => {
         plugins = [lazyStub];
 
         const manager = PluginManager.make({ pluginLoader });
-        yield* manager.add(lazyMeta.id);
-        yield* manager.enable(lazyMeta.id);
+        yield* manager.add(lazyMeta.profile.key);
+        yield* manager.enable(lazyMeta.profile.key);
         yield* manager.activate(ActivationEvents.Startup);
 
         const all = manager.capabilities.getAll(String);
@@ -1360,16 +1368,16 @@ describe('PluginManager', () => {
         plugins = [lazyStub];
 
         const manager = PluginManager.make({ pluginLoader });
-        yield* manager.add(lazyMeta.id);
+        yield* manager.add(lazyMeta.profile.key);
 
-        const exit = yield* Effect.exit(manager.enable(lazyMeta.id));
+        const exit = yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         assert.isTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
           const failure = Cause.failureOption(exit.cause);
           assert.isTrue(failure._tag === 'Some');
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
-            assert.strictEqual((failure.value as Plugin.LazyPluginError).context.id, lazyMeta.id);
+            assert.strictEqual((failure.value as Plugin.LazyPluginError).context.id, lazyMeta.profile.key);
             assert.strictEqual((failure.value as Plugin.LazyPluginError).context.reason, 'load-failed');
           }
         }
@@ -1387,11 +1395,13 @@ describe('PluginManager', () => {
         const manager = PluginManager.make({ pluginLoader });
         // Subscribe first so we don't miss the activating/error pair.
         const queue = yield* PubSub.subscribe(manager.activation);
-        yield* manager.add(lazyMeta.id);
-        yield* Effect.exit(manager.enable(lazyMeta.id));
+        yield* manager.add(lazyMeta.profile.key);
+        yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         const messages = yield* Queue.takeAll(queue);
 
-        const errorMessage = [...messages].find((m) => m.module === `lazy:${lazyMeta.id}` && m.state === 'error');
+        const errorMessage = [...messages].find(
+          (m) => m.module === `lazy:${lazyMeta.profile.key}` && m.state === 'error',
+        );
         assert.isDefined(errorMessage);
         assert.isDefined(errorMessage!.error);
       }).pipe(Effect.scoped),
@@ -1426,7 +1436,7 @@ describe('PluginManager', () => {
         // coalescing, the underlying factory should still run exactly once.
         plugins = [lazyStub];
         const manager = PluginManager.make({ pluginLoader, plugins });
-        yield* manager.enable(coreLazyMeta.id);
+        yield* manager.enable(coreLazyMeta.profile.key);
         assert.strictEqual(factoryCalls, 1);
       }),
     );
@@ -1439,9 +1449,9 @@ describe('PluginManager', () => {
         plugins = [lazyStub];
 
         const manager = PluginManager.make({ pluginLoader });
-        yield* manager.add(lazyMeta.id);
+        yield* manager.add(lazyMeta.profile.key);
 
-        const exit = yield* Effect.exit(manager.enable(lazyMeta.id));
+        const exit = yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         assert.isTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
           const failure = Cause.failureOption(exit.cause);
@@ -1484,8 +1494,13 @@ describe('PluginManager', () => {
 
     it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
       Effect.gen(function* () {
-        const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
-        const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-activation', name: 'Slow Activation' }).pipe(
+        const SlowEvent = ActivationEvent.make('org.dxos.test.activationTimeout');
+        const SlowPlugin = Plugin.define(
+          Plugin.makeMeta({
+            key: DXN.make('org.dxos.test.slowActivation'),
+            name: 'Slow Activation',
+          }),
+        ).pipe(
           Plugin.addModule({
             id: 'Slow',
             activatesOn: SlowEvent,
@@ -1504,8 +1519,8 @@ describe('PluginManager', () => {
           registry,
           activationTimeout: Duration.seconds(2),
         });
-        yield* manager.add(SlowPlugin.meta.id);
-        yield* manager.enable(SlowPlugin.meta.id);
+        yield* manager.add(SlowPlugin.meta.profile.key);
+        yield* manager.enable(SlowPlugin.meta.profile.key);
 
         const fiber = yield* Effect.fork(manager.activate(SlowEvent));
         // Push past the 2s activation timeout. The forked module fiber is on
@@ -1516,20 +1531,20 @@ describe('PluginManager', () => {
 
         const failed = manager.getFailed();
         assert.strictEqual(failed.length, 1);
-        assert.strictEqual(failed[0].id, SlowPlugin.meta.id);
+        assert.strictEqual(failed[0].id, SlowPlugin.meta.profile.key);
         assert.strictEqual(failed[0].phase, 'activation');
         assert.strictEqual(failed[0].reason, 'timeout');
 
         // Auto-disable runs in a forked fiber on the default runtime; wait for
         // the `enabled` atom to settle to the disabled state.
-        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(SlowPlugin.meta.id));
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(SlowPlugin.meta.profile.key));
         assert.deepStrictEqual(manager.getEnabled(), []);
       }),
     );
 
     it.effect('records and auto-disables a lazy plugin whose loader exceeds the load timeout', () =>
       Effect.gen(function* () {
-        const lazyMeta = { id: 'org.dxos.test.slow-load', name: 'Slow Load' };
+        const lazyMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowLoad'), name: 'Slow Load' });
         // The dynamic import never resolves; the manager's load timeout should
         // surface this as a `LazyPluginError` whose `cause` is `PluginTimeoutError`.
         const LazyTest = Plugin.lazy(lazyMeta, () => new Promise<{ default: Plugin.PluginFactory }>(() => {}));
@@ -1541,9 +1556,9 @@ describe('PluginManager', () => {
           registry,
           loadTimeout: Duration.seconds(1),
         });
-        yield* manager.add(lazyMeta.id);
+        yield* manager.add(lazyMeta.profile.key);
 
-        const enableFiber = yield* Effect.fork(manager.enable(lazyMeta.id));
+        const enableFiber = yield* Effect.fork(manager.enable(lazyMeta.profile.key));
         yield* TestClock.adjust(Duration.seconds(2));
         const exit = yield* Fiber.await(enableFiber);
         assert.isTrue(Exit.isFailure(exit));
@@ -1560,20 +1575,22 @@ describe('PluginManager', () => {
 
         const failed = manager.getFailed();
         assert.strictEqual(failed.length, 1);
-        assert.strictEqual(failed[0].id, lazyMeta.id);
+        assert.strictEqual(failed[0].id, lazyMeta.profile.key);
         assert.strictEqual(failed[0].phase, 'load');
         assert.strictEqual(failed[0].reason, 'timeout');
 
         // The plugin was added to `enabled` before the lazy resolution failed,
         // so the auto-disable fork should clear it.
-        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(lazyMeta.id));
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(lazyMeta.profile.key));
       }),
     );
 
     it.effect('records non-timeout activation errors as reason: error', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
-        const FailingPlugin = Plugin.define({ id: 'org.dxos.test.failing', name: 'Failing' }).pipe(
+        const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
+        const FailingPlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+        ).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1585,8 +1602,8 @@ describe('PluginManager', () => {
 
         const registry = Registry.make();
         const manager = PluginManager.make({ pluginLoader, registry });
-        yield* manager.add(FailingPlugin.meta.id);
-        yield* manager.enable(FailingPlugin.meta.id);
+        yield* manager.add(FailingPlugin.meta.profile.key);
+        yield* manager.enable(FailingPlugin.meta.profile.key);
 
         const exit = yield* Effect.exit(manager.activate(FailingEvent));
         assert.isTrue(Exit.isFailure(exit));
@@ -1596,14 +1613,16 @@ describe('PluginManager', () => {
         assert.strictEqual(failed[0].reason, 'error');
         assert.strictEqual(failed[0].error.message, 'boom');
 
-        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(FailingPlugin.meta.id));
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(FailingPlugin.meta.profile.key));
       }),
     );
 
     it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
-        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core', tags: ['system'] }).pipe(
+        const FailingEvent = ActivationEvent.make('org.dxos.test.coreFail');
+        const CorePlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] }),
+        ).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1624,7 +1643,7 @@ describe('PluginManager', () => {
 
         assert.strictEqual(manager.getFailed().length, 1);
         // Core stays enabled; host opted into it being non-removable.
-        assert.deepStrictEqual(manager.getEnabled(), [corePlugin.meta.id]);
+        assert.deepStrictEqual(manager.getEnabled(), [corePlugin.meta.profile.key]);
       }),
     );
 
@@ -1632,7 +1651,9 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         let shouldFail = true;
         const Event = ActivationEvent.make('org.dxos.test.flaky');
-        const FlakyPlugin = Plugin.define({ id: 'org.dxos.test.flaky', name: 'Flaky' }).pipe(
+        const FlakyPlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.flaky'), name: 'Flaky' }),
+        ).pipe(
           Plugin.addModule({
             id: 'Maybe',
             activatesOn: Event,
@@ -1648,22 +1669,22 @@ describe('PluginManager', () => {
 
         const registry = Registry.make();
         const manager = PluginManager.make({ pluginLoader, registry });
-        yield* manager.add(flakyPlugin.meta.id);
-        yield* manager.enable(flakyPlugin.meta.id);
+        yield* manager.add(flakyPlugin.meta.profile.key);
+        yield* manager.enable(flakyPlugin.meta.profile.key);
 
         yield* Effect.exit(manager.activate(Event));
         assert.strictEqual(manager.getFailed().length, 1);
-        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(flakyPlugin.meta.id));
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(flakyPlugin.meta.profile.key));
 
         // Calling `enable` again clears the prior failure record before
         // attempting resolution; verify the explicit API does too.
-        assert.isTrue(manager.clearFailure(flakyPlugin.meta.id));
+        assert.isTrue(manager.clearFailure(flakyPlugin.meta.profile.key));
         assert.strictEqual(manager.getFailed().length, 0);
-        assert.isFalse(manager.clearFailure(flakyPlugin.meta.id));
+        assert.isFalse(manager.clearFailure(flakyPlugin.meta.profile.key));
 
         // Retry: enable + reset the activation event so the module re-runs.
         shouldFail = false;
-        yield* manager.enable(flakyPlugin.meta.id);
+        yield* manager.enable(flakyPlugin.meta.profile.key);
         yield* manager.reset(Event);
         assert.strictEqual(manager.getFailed().length, 0);
         assert.strictEqual(manager.capabilities.getAll(String).length, 1);
@@ -1674,8 +1695,19 @@ describe('PluginManager', () => {
   describe('plugin dependencies (dependsOn)', () => {
     // Build a small plugin with a `dependsOn` chain. The helper keeps each test
     // focused on the dependency semantics rather than module wiring.
+    // These dependency-graph tests use short opaque ids (`'a'`, `'coreClient'`,
+    // `'org.dxos.missing'`) as graph keys rather than real DXNs. `id`/`dependsOn` are
     const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
-      Plugin.make(Plugin.define({ id, name: id, dependsOn, tags }))();
+      Plugin.make(
+        Plugin.define({
+          profile: {
+            key: id,
+            name: id,
+            dependsOn,
+            tags,
+          },
+        }),
+      )();
 
     it.effect('enable resolves the transitive closure in dependency-first order', () =>
       Effect.gen(function* () {
@@ -1841,11 +1873,8 @@ describe('PluginManager', () => {
         registry.set(manager.pluginRegistry.plugins, {
           entries: [
             {
-              id: 'remote',
-              name: 'Remote',
-              moduleUrl: 'about:blank',
-              repo: 'example/remote',
-              version: 'v0.0.0',
+              profile: { key: 'remote', name: 'Remote' },
+              release: { version: 'v0.0.0', moduleUrl: 'about:blank' },
             },
           ],
           loading: false,
@@ -1855,7 +1884,7 @@ describe('PluginManager', () => {
         const ok = yield* manager.enable('dependent');
         assert.isTrue(ok);
         assert.deepStrictEqual(manager.getEnabled(), ['remote', 'dependent']);
-        assert.isTrue(manager.getPlugins().some((plugin) => plugin.meta.id === 'remote'));
+        assert.isTrue(manager.getPlugins().some((plugin) => plugin.meta.profile.key === 'remote'));
       }),
     );
 
@@ -1875,11 +1904,8 @@ describe('PluginManager', () => {
         registry.set(manager.pluginRegistry.plugins, {
           entries: [
             {
-              id: 'remote-broken',
-              name: 'Broken',
-              moduleUrl: 'about:blank',
-              repo: 'example/broken',
-              version: 'v0.0.0',
+              profile: { key: 'remote-broken', name: 'Broken' },
+              release: { version: 'v0.0.0', moduleUrl: 'about:blank' },
             },
           ],
           loading: false,

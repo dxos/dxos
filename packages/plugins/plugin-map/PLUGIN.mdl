@@ -1,0 +1,411 @@
+---
+id: org.dxos.plugin.map
+name: MapPlugin
+version: 0.1.0
+---
+
+An interactive geospatial mapping plugin for `DXOS` Composer.
+Renders table records that contain latitude/longitude coordinates as pins on a zoomable map or 3-D globe.
+Supports creating map objects backed by a view over any ECHO dataset, with a geolocation field selector for automatic marker placement.
+
+The map surface is generic: any plugin can contribute a `MarkerProvider` capability that plots its own
+object type (e.g. plugin-trip plots a `Trip`'s segments). When a provider matches an object the plugin
+also offers a map **companion** for it. A configured MapTiler API key (plugin settings) selects the tile
+provider; otherwise OpenStreetMap is used.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type GeoPoint
+  desc: A geographic coordinate pair stored in GeoJSON [lng, lat] order.
+  fields:
+    lat: number
+    lng: number
+```
+
+```mdl
+type MapViewType
+  literals: map | globe
+```
+
+```mdl
+type Map
+  desc: An ECHO object representing a named geospatial map, optionally linked to a view over a dataset.
+  fields:
+    name?: string
+    view?: Ref<View>            # optional pivot view that drives marker data
+    center?: GeoPoint           # last saved viewport centre
+    zoom?: number               # last saved zoom level
+    coordinates?: GeoPoint[]    # static coordinate list (no view required)
+```
+
+```mdl
+type CreateMap
+  desc: Input schema for the create-object dialog.
+  fields:
+    name?: string
+    typename?: string           # schema typename to use as pin source
+    locationFieldName?: string  # field on the selected typename that holds a GeoPoint
+```
+
+```mdl
+type MapState
+  desc: Transient viewport state held in a plugin-scoped Atom.
+  fields:
+    type: MapViewType
+    center?: GeoPoint
+    zoom?: number
+```
+
+```mdl
+type APIKey
+  desc: A named API key scoped to a service domain (defined in @dxos/schema). Used by settings.
+  fields:
+    name: string
+    domain: string              # e.g. 'maptiler.com'
+    apiKey: string
+```
+
+```mdl
+type MapSettings
+  desc: Plugin-scoped settings surfaced as a form via AppCapabilities.Settings.
+  fields:
+    apiKeys?: APIKey[]          # annotated with recognized domains (e.g. maptiler.com)
+```
+
+```mdl
+type GeoLine
+  desc: Origin → destination arc, rendered as a great-circle line on the globe.
+  fields:
+    source: GeoPoint
+    target: GeoPoint
+```
+
+```mdl
+type MarkerSet
+  desc: Reactive marker data a MarkerProvider resolves for a subject.
+  fields:
+    markers: GeoMarker[]        # marker.id is the selectable entity id
+    lines?: GeoLine[]
+    selection?: Selection       # { contextId?, mode? } attention wiring
+```
+
+```mdl
+type MarkerProvider
+  desc: |
+    Capability (array) contributed by any plugin that can plot a subject. MapArticle and the map
+    companion resolve the first provider whose `match` accepts the subject and render its markers.
+  fields:
+    id: string                  # stable id (React remount key)
+    match: (subject) => boolean # synchronous, type-based; must not call hooks
+    useMarkers: (subject, { attendableId }) => MarkerSet   # reactive hook
+```
+
+## Components
+
+```mdl
+component MapArticle
+  desc: |
+    Generic map surface (article / section / inline 'map' role / companion). Renders the markers
+    resolved by a MarkerProvider as a map or globe. The provider, tile URL and selection writer are
+    resolved by the surface and passed in, so this container has no plugin-context hooks. Reads the
+    attention selection via useSelected; the globe tours markers and selecting recenters the view.
+  props:
+    role: article | section | map
+    subject: object             # any object a MarkerProvider matches (Map, Trip, …)
+    provider?: MarkerProvider   # resolved by the surface
+    tileUrl?: string            # MapTiler endpoint when an API key is configured; else OSM
+    type: MapViewType
+    center?: GeoPoint
+    zoom?: number
+  state:
+    center: GeoPoint            # controlled from parent via onChange
+    zoom: number
+  slots:
+    toolbar?: ReactNode
+  actions:
+    toggleView()               # switches between map and globe
+  emits:
+    onChange(center: GeoPoint, zoom: number)
+    onSelect(contextId, mode, id)   # dispatches LayoutOperation.Select
+  layout: |
+    ┌─────────────────────────────┐
+    │ [toolbar slot]              │
+    ├─────────────────────────────┤
+    │                             │
+    │   MapControl / GlobeControl │
+    │   (markers from view)       │
+    │                             │
+    └─────────────────────────────┘
+```
+
+```mdl
+component MapViewEditor
+  desc: Object-properties panel for picking the dataset view and geolocation field.
+  props:
+    object: Map
+  state:
+    typename?: string           # currently selected schema typename
+    locationFieldName?: string  # selected GeoPoint field on chosen typename
+  slots:
+    footer?: ReactNode
+  emits:
+    onChange(map: Map)
+  layout: |
+    ┌───────────────────────────┐
+    │ Pin type selector         │
+    │ Location property picker  │
+    │ [footer slot]             │
+    └───────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op createMap
+  desc: Creates a new Map ECHO object, optionally with a view derived from a dataset.
+  input:
+    name?: string
+    typename?: string
+    locationFieldName?: string
+    target?: Space | Collection
+    targetNodeId?: string
+  output: Map
+  effects: [echo:write]
+  note: |
+    When typename is provided a ViewModel is constructed first, producing the
+    backing View; the Map is then created referencing that view.
+```
+
+```mdl
+op toggleMapView
+  desc: Toggles the active MapState between map and globe rendering modes.
+  input:
+  output: void
+  note: Mutates the plugin-scoped MapState Atom in place; no ECHO write.
+```
+
+## Features
+
+```mdl
+feat F-1: Map Creation
+
+  req F-1.1: User can create a Map object from the space or collection create menu.
+  req F-1.2:
+    when: typename is provided in the creation form
+    then: a ViewModel is created for that schema; Map.view references it
+  req F-1.3:
+    when: locationFieldName is provided
+    then: the View's pivotFieldId is set to the corresponding field id
+  req F-1.4: A Map with no view can still display static coordinates from Map.coordinates.
+```
+
+```mdl
+feat F-2: Geospatial Rendering
+
+  req F-2.1:
+    when: a Map object is opened as article or section
+    then: MapArticle renders in the current MapState.type mode (map or globe)
+  req F-2.2:
+    when: Map.view is set
+    then: the plugin queries the linked dataset and converts rows to GeoMarker pins
+  req F-2.3:
+    when: a row's GeoPoint field is absent or malformed
+    then: that row is silently omitted from the marker list
+  req F-2.4:
+    when: MapState.type === globe
+    then: GlobeControl is rendered instead of MapControl
+```
+
+```mdl
+feat F-3: View Toggle
+
+  req F-3.1:
+    when: the toggle operation is invoked
+    then: MapState.type flips between map and globe
+  req F-3.2: Toggle state is plugin-scoped; all open map surfaces reflect the change.
+```
+
+```mdl
+feat F-4: Object Properties
+
+  req F-4.1:
+    when: Map object properties are opened
+    then: MapViewEditor is rendered in the properties panel
+  req F-4.2: User can change the source typename and geolocation field from the editor.
+```
+
+```mdl
+feat F-5: Skill
+
+  req F-5.1: MapPlugin contributes a Skill that enables AI to create and update maps.
+  req F-5.2: The skill instructions describe the plugin's geospatial capabilities.
+```
+
+```mdl
+feat F-6: Pluggable marker providers & companion
+
+  req F-6.1: MapPlugin registers a built-in MarkerProvider for Map objects (view rows → pins).
+  req F-6.2: Other plugins can contribute a MarkerProvider for their own object types.
+  req F-6.3:
+    when: a MarkerProvider matches an object (other than a Map itself)
+    then: a 'map' companion is offered for that object via the app graph
+  req F-6.4: Selecting a marker (map click or nearest-marker globe click) dispatches LayoutOperation.Select.
+  note: |
+    Gating the companion on a matching provider lives in the app-graph-builder connector
+    (capability-aware). Refining the surface filter itself to require non-empty markers is a
+    follow-up (it would need async/reactive resolution).
+```
+
+```mdl
+feat F-7: Tile providers via API keys
+
+  req F-7.1: Plugin settings expose an `apiKeys` list of { name, domain, apiKey }.
+  req F-7.2: The apiKeys property is annotated with recognized domains (e.g. maptiler.com).
+  req F-7.3:
+    when: an API key for 'maptiler.com' is configured
+    then: the map renders MapTiler tiles; otherwise OpenStreetMap is used
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create map without view
+  given: a space with no external schema
+  when: user creates a Map with only a name
+  then:
+    - Map object created with Map.view === undefined
+    - MapArticle renders an empty map with no markers
+```
+
+```mdl
+test T-2: Create map with view
+  given: a schema typename exists with a GeoPoint field 'location'
+  when: user creates a Map selecting that typename and 'location' as locationFieldName
+  then:
+    - ViewModel created; Map.view references the resulting View
+    - markers derived from rows appear on the map
+```
+
+```mdl
+test T-3: Toggle map/globe
+  given: MapArticle is rendered in map mode
+  when: toggleMapView operation is invoked
+  then:
+    - MapState.type === globe
+    - GlobeControl is rendered
+```
+
+```mdl
+test T-4: Malformed GeoPoint omitted
+  given: a Map view with 3 rows; 1 row has a null GeoPoint
+  when: MapArticle renders
+  then:
+    - exactly 2 markers appear
+    - no error is thrown
+```
+
+```mdl
+test T-5: Object properties editor shown
+  given: a Map object is selected
+  when: the object properties panel opens
+  then: MapViewEditor is rendered with the current typename and field selections pre-filled
+```
+
+```mdl
+test T-6: Companion offered for a provided object
+  given: a plugin contributes a MarkerProvider matching type Foo, and a Foo object is open
+  when: the app graph is built for that object
+  then:
+    - a 'map' companion node is offered
+    - opening it renders MapArticle plotting the object's markers
+```
+
+```mdl
+test T-7: MapTiler tiles when key configured
+  given: settings contain an apiKey for domain 'maptiler.com'
+  when: MapArticle renders in map mode
+  then: the Leaflet tile layer uses the MapTiler URL (key in query); otherwise OSM
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

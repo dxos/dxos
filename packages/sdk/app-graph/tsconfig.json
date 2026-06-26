@@ -25,6 +25,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -38,12 +41,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../ui/react-ui"

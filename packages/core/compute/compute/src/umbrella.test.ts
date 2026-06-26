@@ -5,14 +5,15 @@
 import { describe, test } from 'vitest';
 
 import {
-  Blueprint,
+  Skill,
   Credential,
   FunctionNotFoundError,
   Operation,
   OperationHandlerSet,
   OperationRegistry,
   Process,
-  Routine,
+  Runnable,
+  Instructions,
   Script,
   ServiceResolver,
   StorageService,
@@ -29,14 +30,15 @@ describe('umbrella re-exports', () => {
     expect(OperationHandlerSet).toBeDefined();
     expect(OperationRegistry).toBeDefined();
 
-    // Blueprint primitives.
-    expect(Blueprint).toBeDefined();
-    expect(Blueprint.make).toBeTypeOf('function');
-    expect(Routine).toBeDefined();
+    // Skill primitives.
+    expect(Skill).toBeDefined();
+    expect(Skill.make).toBeTypeOf('function');
+    expect(Instructions).toBeDefined();
     expect(Template).toBeDefined();
 
     // Function primitives.
     expect(Process).toBeDefined();
+    expect(Runnable).toBeDefined();
     expect(Trigger).toBeDefined();
     expect(TriggerEvent).toBeDefined();
     expect(Script).toBeDefined();

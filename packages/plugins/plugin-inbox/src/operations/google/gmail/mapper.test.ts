@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Entity } from '@dxos/echo';
+import { Entity, Type } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
@@ -40,7 +40,7 @@ describe('mapMessage', () => {
       const result = yield* mapMessage(makeGmailMessage());
       expect(result).toBeDefined();
 
-      const json = Entity.toJSON(result!) as any;
+      const json = Entity.toJSON(result!.message) as any;
 
       // When no contact is resolved, the contact key should be absent from the serialized sender.
       // Having an explicit `contact: undefined` causes protobuf (google.protobuf.Struct)
@@ -55,7 +55,7 @@ describe('mapMessage', () => {
       const result = yield* mapMessage(makeGmailMessage());
       expect(result).toBeDefined();
 
-      const json = Entity.toJSON(result!) as any;
+      const json = Entity.toJSON(result!.message) as any;
 
       // Simulate protobuf round-trip: undefined values in google.protobuf.Struct become null.
       if (json.sender.contact === undefined) {
@@ -67,7 +67,7 @@ describe('mapMessage', () => {
 
       // This reproduces the ParseError that QueueImpl hits during refresh:
       //   Schema.decodeUnknown rejects null for optional Ref<Person> (expects undefined).
-      const decoded = Schema.decodeUnknownEither(Message.Message)(rawData);
+      const decoded = Schema.decodeUnknownEither(Type.getSchema(Message.Message))(rawData);
       expect(decoded._tag).toBe('Left');
     }, Effect.provide(InboxResolver.Mock())),
   );
@@ -90,7 +90,7 @@ describe('mapMessage', () => {
         },
       });
       expect(result).toBeDefined();
-      const properties = result!.properties;
+      const properties = result!.message.properties;
       if (properties === undefined) {
         throw new Error('expected message properties');
       }

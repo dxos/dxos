@@ -3,7 +3,7 @@
 //
 
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ScriptEvents } from '#types';
@@ -18,7 +18,7 @@ import type { Compiler } from '../compiler';
 export const useCompiler = (): Compiler | undefined => {
   const manager = usePluginManager();
   useAsyncEffect(async () => {
-    await manager.activate(ScriptEvents.SetupCompiler).pipe(runAndForwardErrors);
+    await manager.activate(ScriptEvents.SetupCompiler).pipe(EffectEx.runAndForwardErrors);
   }, [manager]);
   const [compiler] = useCapabilities(ScriptCapabilities.Compiler);
   return compiler;

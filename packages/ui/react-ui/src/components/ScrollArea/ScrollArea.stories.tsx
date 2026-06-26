@@ -8,8 +8,8 @@ import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
 import { ThemedClassName } from '@dxos/ui-types';
 
-import { Column } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
+import { Column } from '../Column';
 import { Input } from '../Input';
 import { ScrollArea } from './ScrollArea';
 

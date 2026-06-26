@@ -24,7 +24,7 @@ const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.solid-stories.tsx';
 export const contentFiles = '*.{ts,tsx,js,jsx,css}';
-export const modules = ['ui/*/src/**'];
+export const modules = ['ui/*/src/**', 'sdk/app-framework/src/**'];
 
 export const stories = modules.map((dir) => join(packages, dir, storyFiles));
 export const content = modules.map((dir) => join(packages, dir, contentFiles));
@@ -61,7 +61,7 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
           assetPath: (name, variant) =>
             `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           spriteFile: resolve(__dirname, '../static/icons.svg'),
-          contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
+          contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}'), join(packages, '/**/dx.config.{ts,tsx,js,jsx}')],
         }),
 
         ThemePlugin({}),

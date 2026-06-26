@@ -8,9 +8,8 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
 import { Credential, LayerSpec } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
-import { credentialsLayerFromDatabase, QueueService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { credentialsLayerFromDatabase } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '#types';
@@ -20,8 +19,7 @@ import { ClientCapabilities } from '#types';
 //
 // Contributes the core client/space service layer specs:
 //   - {@link ClientService} (application affinity).
-//   - {@link Database.Service}, {@link QueueService}, {@link Feed.FeedService},
-//     {@link Credential.CredentialsService} (space affinity).
+//   - {@link Database.Service}, {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
 // {@link ClientCapabilities.Client} through the Effect layer graph (via
@@ -49,17 +47,17 @@ const ClientLayerSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped database/queue/feed services resolved from the `Client`'s space
- * registry. One spec for all three so the `client.spaces.get` /
- * `waitUntilReady` round-trip only happens once per space slice. Fails hard if
- * the context is missing a `space` id or the client cannot resolve it — both
- * indicate a configuration bug in the layer graph.
+ * Space-scoped database/feed services resolved from the `Client`'s space
+ * registry. One spec for both so the `client.spaces.get` / `waitUntilReady`
+ * round-trip only happens once per space slice. Fails hard if the context is
+ * missing a `space` id or the client cannot resolve it — both indicate a
+ * configuration bug in the layer graph.
  */
 const DatabaseLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [ClientService],
-    provides: [Database.Service, QueueService, Feed.FeedService],
+    provides: [Database.Service],
   },
   (context) =>
     Layer.unwrapEffect(
@@ -69,11 +67,7 @@ const DatabaseLayerSpec = LayerSpec.make(
         const space = client.spaces.get(context.space);
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
-        return Layer.mergeAll(
-          Database.layer(space.db),
-          QueueService.layer(space.queues),
-          createFeedServiceLayer(space.queues),
-        );
+        return Database.layer(space.db);
       }),
     ),
 );

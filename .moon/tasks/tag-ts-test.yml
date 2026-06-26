@@ -6,10 +6,11 @@ tasks:
     # all opt-in tags (flaky, LLM, sync, e2e) so local + PR CI runs only fast
     # unit tests. CI overrides this via the `VITEST_TAGS_FILTER` env to opt-in
     # specific tags (e.g. `flaky`).
-    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e}"'
+    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !manual}"'
     deps:
       - esbuild-plugins:compile
       - node-std:compile
+      - vite-plugin-import-source:compile
       - ^:compile
     inputs:
       - '@group(sources)'
@@ -33,6 +34,7 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
+      - vite-plugin-import-source:compile
       - ^:compile
     preset: server
 

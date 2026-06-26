@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -22,6 +23,9 @@
     },
     {
       "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -36,7 +40,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"
@@ -57,7 +61,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-testing"

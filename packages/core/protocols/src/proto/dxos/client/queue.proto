@@ -73,9 +73,30 @@ message SyncQueueRequest {
   optional bool should_pull = 5;
 }
 
+message GetSyncStateRequest {
+  string space_id = 1;
+  /// If empty, returns state for all namespaces synced by the client.
+  repeated string namespaces = 2;
+}
+
+message QueueNamespaceSyncState {
+  string namespace = 1;
+  /// Blocks still to pull from remote. 0 when caught up.
+  int64 blocks_to_pull = 2;
+  /// Unpositioned blocks still to push to remote. 0 when caught up.
+  int64 blocks_to_push = 3;
+  /// Total blocks stored locally for this namespace in the space.
+  int64 total_blocks = 4;
+}
+
+message GetSyncStateResponse {
+  repeated QueueNamespaceSyncState namespaces = 1;
+}
+
 service QueueService {
   rpc QueryQueue(QueryQueueRequest) returns (QueueQueryResult);
   rpc InsertIntoQueue(InsertIntoQueueRequest) returns (google.protobuf.Empty);
   rpc DeleteFromQueue(DeleteFromQueueRequest) returns (google.protobuf.Empty);
   rpc SyncQueue(SyncQueueRequest) returns (google.protobuf.Empty);
+  rpc GetSyncState(GetSyncStateRequest) returns (GetSyncStateResponse);
 }

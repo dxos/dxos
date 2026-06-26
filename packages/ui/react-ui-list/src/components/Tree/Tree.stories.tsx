@@ -21,9 +21,11 @@ import { type TreeData } from './TreeItem';
 
 random.seed(1234);
 
-const tree = createTree() as TestItem;
+const tree = createTree();
+const groupsTree = createTree(4, 4, { groups: true });
 
-const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
+const DefaultStory = ({ draggable, groups }: { draggable?: boolean; groups?: boolean }) => {
+  const rootTree = groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -43,9 +45,9 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
       map.set(item.id, item);
       item.items?.forEach(walk);
     };
-    walk(tree);
+    walk(rootTree);
     return map;
-  }, []);
+  }, [rootTree]);
 
   // Build a child IDs map keyed by parent ID.
   const childIdsMap = useMemo(() => {
@@ -61,12 +63,12 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
     };
     // Root children.
     map.set(
-      tree.id,
-      (tree.items ?? []).map((child) => child.id),
+      rootTree.id,
+      (rootTree.items ?? []).map((child) => child.id),
     );
-    walk(tree);
+    walk(rootTree);
     return map;
-  }, []);
+  }, [rootTree]);
 
   const childIdsFamily = useMemo(
     () => Atom.family((id: string) => Atom.make(() => childIdsMap.get(id) ?? []).pipe(Atom.keepAlive)),
@@ -91,8 +93,12 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
             id: parent.id,
             label: parent.name,
             icon: parent.icon,
+            disposition: parent.disposition,
             ...((parent.items?.length ?? 0) > 0 && {
               parentOf: parent.items!.map(({ id }) => id),
+              count: parent.items!.length,
+              // Demonstrate the rose "new/modified" badge on a subset of branches (replaces the neutral count).
+              ...(parent.name.length % 3 === 0 && { modifiedCount: (parent.name.length % 5) + 1 }),
             }),
           };
         }).pipe(Atom.keepAlive);
@@ -120,13 +126,13 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
 
   const model: TreeModel<TestItem> = useMemo(
     () => ({
-      childIds: (parentId?: string) => childIdsFamily(parentId ?? tree.id),
+      childIds: (parentId?: string) => childIdsFamily(parentId ?? rootTree.id),
       item: (id: string) => itemFamily(id),
       itemProps: (path: string[]) => itemPropsFamily(path.join('~')),
       itemOpen: (path: string[]) => itemOpenFamily(Path.create(...path)),
       itemCurrent: (path: string[]) => itemCurrentFamily(Path.create(...path)),
     }),
-    [childIdsFamily, itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily],
+    [childIdsFamily, itemFamily, itemPropsFamily, itemOpenFamily, itemCurrentFamily, rootTree.id],
   );
 
   const handleOpenChange = useCallback(
@@ -161,7 +167,7 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
         const instruction: Instruction | null = extractInstruction(target.data);
         if (instruction !== null) {
           updateState({
-            state: tree,
+            state: rootTree,
             instruction,
             source: source.data as TreeData,
             target: target.data as TreeData,
@@ -174,12 +180,12 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
   return (
     <Tree
       model={model}
-      id={tree.id}
-      rootId={tree.id}
+      id={rootTree.id}
+      rootId={rootTree.id}
       draggable={draggable}
       renderColumns={() => (
         <div className='flex items-center'>
-          <Icon icon='ph--placeholder--regular' />
+          <Icon icon='ph--circle-dashed--regular' />
         </div>
       )}
       onOpenChange={handleOpenChange}
@@ -206,4 +212,8 @@ export const Draggable: Story = {
   args: {
     draggable: true,
   },
+};
+
+export const WithGroups: Story = {
+  args: { groups: true },
 };

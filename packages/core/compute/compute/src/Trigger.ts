@@ -7,17 +7,18 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
-import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { failedInvariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { OptionsAnnotationId } from '@dxos/echo/Format';
+
+import * as Runnable from './Runnable';
 
 /**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['email', 'queue', 'subscription', 'timer', 'webhook'] as const;
+export const Kinds = ['email', 'feed', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
@@ -32,39 +33,33 @@ export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
  */
 export const specEmail = (): EmailSpec => ({ kind: 'email' });
 
-// TODO(burdon): Change to Feed.
 // TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
-export const QueueSpec = Schema.Struct({
-  kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
-
-  // TODO(dmaretskyi): Rename to `feed` and change to a reference.
-  queue: DXN.Schema,
+export const FeedSpec = Schema.Struct({
+  kind: Schema.Literal('feed').annotations(kindLiteralAnnotations),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Feed' })),
 });
-export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
+export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /**
- * Construct a Queue trigger spec from a queue DXN string.
+ * Construct a Feed trigger spec from a Feed object.
  */
-export const specQueue = (queueDXN: string): QueueSpec => ({
-  kind: 'queue',
-  queue: queueDXN,
+export const specFeed = (feed: Feed.Feed): FeedSpec => ({
+  kind: 'feed',
+  feed: Ref.make(feed),
 });
-
-/**
- * Construct a Queue trigger spec from a Feed object.
- */
-export const specFeed = (feed: Feed.Feed): QueueSpec =>
-  specQueue(Feed.getQueueDxn(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
 
 /**
  * Subscription.
  */
 export const SubscriptionSpec = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+
+  // TODO(burdon): Issue.
   query: Schema.Struct({
     raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
   }),
+
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -143,67 +138,68 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, QueueSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
+export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
- * Function trigger.
- * Function is invoked with the `payload` passed as input data.
- * The event that triggers the function is available in the function context.
+ * Forms the input data passed to the function.
+ * Must match the function's input schema.
+ *
+ * @example
+ * {
+ *   item: '{{event.item}}',
+ *   instructions: 'Summarize and perform entity-extraction'
+ *   mailbox: { '/': 'echo://AAA/ZZZ' }
+ * }
  */
-const TriggerSchema = Schema.Struct({
-  /**
-   * Function or workflow to invoke.
-   */
-  // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.Any });
 
-  /**
-   * Only used for workflowSchema.
-   * Specifies the input node in the circuit.
-   * @deprecated Remove and enforce a single input node in all compute graphSchema.
-   */
-  inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
+/**
+ * Function trigger.
+ * Runnable is invoked with the `payload` passed as input data.
+ * The event that fires the trigger is available in the runnable context.
+ */
+export class Trigger extends Type.declareObj<Trigger>()(
+  Schema.Struct({
+    /**
+     * Runnable (operation or workflow) to invoke.
+     */
+    runnable: Schema.optional(Ref.Ref(Runnable.Runnable).annotations({ title: 'Runnable' })),
+    spec: Schema.optional(Spec),
+    enabled: Schema.optional(Schema.Boolean),
 
-  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
-  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
-  enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
+    concurrency: Schema.Number.pipe(
+      Schema.annotations({
+        title: 'Concurrency',
+        default: 1,
+        description: 'Maximum number of concurrent invocations of the trigger.',
+      }),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
 
-  spec: Schema.optional(Spec),
+    /**
+     * Only used for workflowSchema.
+     * Specifies the input node in the circuit.
+     * @deprecated Remove and enforce a single input node in all compute graphSchema.
+     */
+    inputNodeId: Schema.String.pipe(
+      Schema.annotations({ title: 'Input Node ID' }),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
 
-  concurrency: Schema.optional(
-    Schema.Number.annotations({
-      title: 'Concurrency',
-      default: 1,
-      description:
-        'Maximum number of concurrent invocations of the trigger. For Feed triggers, this will process Feed items in parallel.',
-    }),
+    /**
+     * Passed as the input data to the runnable.
+     */
+    input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
+    HiddenAnnotation.set(true),
+    Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
   ),
-
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   *
-   * @example
-   * {
-   *   item: '{{event.item}}',
-   *   instructions: 'Summarize and perform entity-extraction'
-   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
-   * }
-   */
-  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trigger',
-    version: '0.1.0',
-  }),
-  Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-  SystemTypeAnnotation.set(true),
-);
-
-export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
-export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
+) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

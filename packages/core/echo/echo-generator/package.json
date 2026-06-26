@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-generator",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,11 +27,10 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/client": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

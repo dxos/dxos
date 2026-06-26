@@ -6,9 +6,9 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
-import { Format, Type } from '@dxos/echo';
-import { TypeEnum } from '@dxos/echo/internal';
-import { setValue } from '@dxos/effect';
+import { DXN, Format, Type } from '@dxos/echo';
+import { TypeEnum } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
 import { random } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -17,12 +17,7 @@ export const TestSchema = Schema.Struct({
   age: Schema.optional(Schema.Number),
   active: Schema.optional(Schema.Boolean),
   netWorth: Schema.optional(Schema.Number),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.test',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
 export type TestItem = {
   name: string;
@@ -99,15 +94,15 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
         // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
         switch (type) {
           case TypeEnum.String: {
-            setValue(item, path, `Updated ${Date.now()}`);
+            SchemaEx.setValue(item, path, `Updated ${Date.now()}`);
             break;
           }
           case TypeEnum.Number: {
-            setValue(item, path, Math.floor(Math.random() * 100));
+            SchemaEx.setValue(item, path, Math.floor(Math.random() * 100));
             break;
           }
           case TypeEnum.Boolean: {
-            setValue(item, path, !item[path]);
+            SchemaEx.setValue(item, path, !item[path]);
             break;
           }
         }

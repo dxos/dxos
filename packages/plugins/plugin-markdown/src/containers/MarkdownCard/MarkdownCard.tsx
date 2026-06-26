@@ -20,38 +20,47 @@ import { snippet as snippetExtension } from './snippet';
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
-  const { t } = useTranslation(meta.id);
-  const snippet = useMemo(() => getSnippet(subject), [subject]);
+  const { t } = useTranslation(meta.profile.key);
+  // NOTE: Newline is added so that Fade does not obscure the last line.
+  const snippet = useMemo(() => getSnippet(subject) + '\n', [subject]);
   const extensions = useMemo(() => [snippetExtension({ height: 300, scale: 0.8 })], []);
   const info = getInfo(subject);
 
   return (
-    <Card.Content>
+    <Card.Body>
       {snippet && (
-        <Card.Section className='relative px-1'>
-          <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
-            {(editorRootProps) => (
-              <Editor.Root {...editorRootProps}>
-                <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
-              </Editor.Root>
-            )}
-          </MarkdownEditorProvider>
-          <div
-            className={mx(
-              'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
-              'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
-            )}
-          />
+        <Card.Section className='relative'>
+          <Card.Row fullWidth>
+            <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
+              {(editorRootProps) => (
+                <Editor.Root {...editorRootProps}>
+                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} compact />
+                </Editor.Root>
+              )}
+            </MarkdownEditorProvider>
+            <Fade />
+          </Card.Row>
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Text classNames='px-1.5 text-xs text-description'>
-          {info.words} {t('words.label', { count: info.words })}
-        </Card.Text>
+        <Card.Row fullWidth>
+          <Card.Text classNames='px-2 text-xs text-description'>
+            {info.words} {t('words.label', { count: info.words })}
+          </Card.Text>
+        </Card.Row>
       </Card.Section>
-    </Card.Content>
+    </Card.Body>
   );
 };
+
+const Fade = () => (
+  <div
+    className={mx(
+      'z-10 absolute bottom-0 inset-x-0 h-6 w-full',
+      'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
+    )}
+  />
+);
 
 const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 16) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {

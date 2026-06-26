@@ -22,18 +22,13 @@ const plugins = [
   LoggerPlugin(),
   GeneratorPlugin(),
 ];
-const defaults = plugins.map((plugin) => plugin.meta.id);
-
-const Placeholder = () => {
-  return <div>Loading...</div>;
-};
+const defaults = plugins.map((plugin) => plugin.meta.profile.key);
 
 const DefaultStory = () => {
   const App = useApp({
     pluginLoader: (id: string) => Effect.sync(() => ({ plugin: createNumberPlugin(id) })),
     plugins,
     defaults,
-    placeholder: Placeholder,
   });
 
   return <App />;

@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 
-import type { DXN, SpaceId } from '@dxos/keys';
+import type { SpaceId, URI } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from './errors';
 import * as Process from './Process';
@@ -37,7 +37,12 @@ export interface ServiceResolver {
  */
 export const ServiceResolver = Context.GenericTag<ServiceResolver>('@dxos/functions/ServiceResolver');
 
-export const resolve = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
+export const resolve: {
+  <Tag extends Context.Tag<any, any>>(
+    tag: Tag,
+    context: ResolutionContext,
+  ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>;
+} = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
 
 export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
   tags: Tags,
@@ -65,9 +70,10 @@ export interface ResolutionContext {
   readonly space?: SpaceId;
 
   /**
-   * DXN of the conversation feed the process is running in.
+   * URI of the conversation feed the process is running in. Today always an EID;
+   * narrow with `EID.parse` at the point of use.
    */
-  readonly conversation?: DXN.String;
+  readonly conversation?: URI.URI;
 
   /**
    * Under which process the process is running.
@@ -105,7 +111,7 @@ export const make = (
  * Create a ServiceResolver backed by a static Context.
  * Tags present in the context are resolved; missing tags fail with ServiceNotAvailableError.
  */
-export const fromContext = (ctx: Context.Context<any>): ServiceResolver =>
+export const fromContext = <Services>(ctx: Context.Context<Services>): ServiceResolver =>
   make((tag, context) =>
     Effect.gen(function* () {
       const service = Context.getOption(ctx, tag);
@@ -158,7 +164,7 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
  * @example
  * ```ts
  * processManagerRuntime.runPromise(
- *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, QueueService))),
+ *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service))),
  * );
  * ```
  */

@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { type FunctionNotFoundError, type Operation, type OperationRegistry, Template } from '@dxos/compute';
-import { type Database, Obj } from '@dxos/echo';
-import { ObjectVersion } from '@dxos/echo-db';
-import { type ObjectNotFoundError } from '@dxos/echo/Err';
-import { type ObjectId } from '@dxos/keys';
+import { type FunctionNotFoundError, type Operation, Template } from '@dxos/compute';
+import { type Database, Obj, type Registry } from '@dxos/echo';
+import { ObjectVersion } from '@dxos/echo-client';
+import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -25,31 +25,29 @@ import { ArtifactDiffResolver } from './artifact-diff';
 // TODO(burdon): Move to AiPreprocessor.
 export const formatSystemPrompt = ({
   system,
-  blueprints = [],
+  skills = [],
   objects = [],
-}: Pick<AiRequest.RunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects'>): Effect.Effect<
   string,
-  FunctionNotFoundError | ObjectNotFoundError,
-  Database.Service | OperationRegistry.Service | Operation.Service
+  FunctionNotFoundError | EntityNotFoundError,
+  Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    const blueprintDefs = yield* Function.pipe(
-      blueprints,
-      Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
+    const skillDefs = yield* Function.pipe(
+      skills,
+      Effect.forEach((skill) => Effect.succeed(skill.instructions)),
       Effect.flatMap(
         Effect.forEach((template) =>
           Effect.gen(function* () {
             return trim`
-            <blueprint>
+            <skill>
               ${yield* Template.processTemplate(template)}
-            </blueprint>
+            </skill>
           `;
           }),
         ),
       ),
-      Effect.map((blueprints) =>
-        blueprints.length > 0 ? ['## Blueprints Definitions', ...blueprints].join('\n\n') : undefined,
-      ),
+      Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
     );
 
     const objectDefs = yield* Function.pipe(
@@ -57,7 +55,7 @@ export const formatSystemPrompt = ({
       Effect.forEach((object) =>
         Effect.succeed(trim`
           <object>
-            <dxn>${Obj.getDXN(object)}</dxn>
+            <dxn>${Obj.getURI(object)}</dxn>
             <typename>${Obj.getTypename(object)}</typename>
           </object>
         `),
@@ -66,7 +64,7 @@ export const formatSystemPrompt = ({
     );
 
     return yield* Function.pipe(
-      Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.succeed([system, skillDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));
@@ -117,8 +115,8 @@ export const formatUserPrompt = ({
     });
   }).pipe(Effect.withSpan('formatUserPrompt'));
 
-const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, ObjectVersion> => {
-  const artifactIds = new Map<ObjectId, ObjectVersion>();
+const gatherObjectVersions = (messages: Message.Message[]): Map<EntityId, ObjectVersion> => {
+  const artifactIds = new Map<EntityId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.blocks) {
       if (block._tag === 'anchor') {
@@ -131,7 +129,7 @@ const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, Object
 };
 
 const createArtifactUpdateBlock = (
-  artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
+  artifactDiff: Map<EntityId, { version: ObjectVersion; diff?: string }>,
 ): ContentBlock.Any => {
   return {
     _tag: 'text',

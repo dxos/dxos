@@ -1,22 +1,14 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
+import { Plugin } from '@dxos/app-framework';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.gallery',
-  name: 'Gallery',
-  author: 'DXOS',
-  description: trim`
-    A simple image gallery. Drop in images from your filesystem (uploaded to WNFS) or external URLs;
-    browse them in a masonry grid and present in fullscreen.
-  `,
-  icon: 'ph--images--regular',
-  iconHue: 'rose',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-gallery',
-  version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-gallery@0.8.3/PLUGIN.mdl',
-  tags: ['labs'],
-};
+import config from '../dx.config';
+
+/**
+ * Plugin metadata derived from `dx.config.ts`. The DXOS-internal `#meta` convention: a real source
+ * module (resolved via the package's `imports#meta` `source` condition) that maps the authored
+ * config to a runtime `Plugin.Meta`, replacing the build-time `#meta` synthesis.
+ */
+export const meta = Plugin.getMetaFromConfig(config);

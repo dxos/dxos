@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { FormBuilder, print } from '@dxos/cli-util';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 describe('FormBuilder', () => {
   it('option', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const builder = FormBuilder.make({ title: 'Option Test' }).pipe(
           FormBuilder.option('some', Option.some('value')),
@@ -25,7 +25,7 @@ describe('FormBuilder', () => {
     ));
 
   it('when', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const builder = FormBuilder.make({ title: 'When Test' }).pipe(
           FormBuilder.when(true, FormBuilder.set('included', 'true')),
@@ -38,7 +38,7 @@ describe('FormBuilder', () => {
     ));
 
   it('each', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const items = ['a', 'b', 'c'];
         const builder = FormBuilder.make({ title: 'Each Test' }).pipe(
@@ -51,7 +51,7 @@ describe('FormBuilder', () => {
     ));
 
   it('build', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const builder = FormBuilder.make({ title: 'Test' }).pipe(
           FormBuilder.set('foo', 100),
@@ -64,7 +64,7 @@ describe('FormBuilder', () => {
     ));
 
   it('nest', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const nested = FormBuilder.make({ title: 'Nested' }).pipe(
           FormBuilder.set('nested1', 'value1'),
@@ -83,7 +83,7 @@ describe('FormBuilder', () => {
     ));
 
   it('nestedOption', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const nested = FormBuilder.make({ title: 'Nested' }).pipe(FormBuilder.set('key', 'value'));
 
@@ -98,7 +98,7 @@ describe('FormBuilder', () => {
     ));
 
   it('multi-level nesting', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const grandchild = FormBuilder.make({ title: 'Grandchild' }).pipe(
           FormBuilder.set('grandchild1', 'value1'),
@@ -123,7 +123,7 @@ describe('FormBuilder', () => {
     ));
 
   it('pipeable build', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         const doc = FormBuilder.make({ title: 'Pipeable' }).pipe(
           FormBuilder.set('foo', 100),
@@ -135,7 +135,7 @@ describe('FormBuilder', () => {
     ));
 
   it('dual calling styles', () =>
-    runAndForwardErrors(
+    EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
         // Curried style (pipe)
         const builder1 = FormBuilder.make({ title: 'Curried' }).pipe(

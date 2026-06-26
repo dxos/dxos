@@ -6,6 +6,10 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
+import * as Obj from '../../../Obj';
+import * as Type from '../../../Type';
 import { EchoObjectSchema } from '../../Entity';
 import { getSchema } from '../types';
 import { makeObject } from './make-object';
@@ -13,14 +17,9 @@ import { change } from './reactive';
 
 const Organization = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  EchoObjectSchema({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
-interface Organization extends Schema.Schema.Type<typeof Organization> {}
+type Organization = Type.InstanceType<typeof Organization>;
 
 const Contact = Schema.Struct(
   {
@@ -30,27 +29,21 @@ const Contact = Schema.Struct(
     key: Schema.String,
     value: Schema.Any,
   },
-).pipe(
-  Schema.partial,
-  EchoObjectSchema({
-    typename: 'com.example.type.person',
-    version: '0.1.0',
-  }),
-);
+).pipe(Schema.partial, EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
-interface Contact extends Schema.Schema.Type<typeof Contact> {}
+type Contact = Type.InstanceType<typeof Contact>;
 
-const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
+const TEST_ORG = { name: 'Test' } satisfies Pick<Organization, 'name'>;
 
 describe('EchoObjectSchema class DSL', () => {
   test('can get object schema', async () => {
-    const obj = makeObject(Organization, TEST_ORG);
-    expect(getSchema(obj)).to.deep.eq(Organization);
+    const obj = Obj.make(Organization, TEST_ORG);
+    expect(getSchema(obj)).to.deep.eq(Type.getSchema(Organization));
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = makeObject(Contact, { name: 'John' });
+      const person = Obj.make(Contact, { name: 'John' });
       change(person, (p) => {
         p.name = undefined;
         p.recordField = 'hello';
@@ -98,14 +91,9 @@ describe('EchoObjectSchema class DSL', () => {
     {
       const Test2 = Schema.Struct({
         meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-      }).pipe(
-        EchoObjectSchema({
-          typename: 'org.dxos.type.functionTrigger',
-          version: '0.1.0',
-        }),
-      );
+      }).pipe(EchoObjectSchema(DXN.make('org.dxos.type.functionTrigger', '0.1.0')));
 
-      const object = makeObject(Test2, {});
+      const object = Obj.make(Test2, {});
       change(object, (o) => {
         (o.meta ??= {}).test = 100;
       });

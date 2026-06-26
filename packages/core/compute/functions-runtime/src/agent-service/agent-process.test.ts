@@ -1,0 +1,206 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import { describe, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+
+import { Process } from '@dxos/compute';
+import { storageServiceLayer } from '@dxos/compute-runtime';
+import { ContentBlock } from '@dxos/types';
+
+import { AlarmManager, computeAlarmDelay, isAgentWorkPending } from './agent-process';
+
+const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
+
+/** Builds a fresh in-memory storage service for a single test. */
+const makeStorage = Effect.gen(function* () {
+  const kvStore = yield* KeyValueStore.KeyValueStore;
+  return storageServiceLayer(kvStore, 'agent/');
+}).pipe(Effect.provide(KeyValueStore.layerMemory));
+
+/** AlarmManager with a captured `setAlarm` and a fixed clock for deterministic assertions. */
+const makeManager = Effect.fnUntraced(function* (now: number = NOW) {
+  const storageService = yield* makeStorage;
+  const alarmCalls: Array<number | undefined> = [];
+  const alarmManager = new AlarmManager({
+    storageService,
+    setAlarm: (timeout) => alarmCalls.push(timeout),
+    now: () => now,
+  });
+  return { alarmManager, alarmCalls, storageService };
+});
+
+describe('computeAlarmDelay', () => {
+  it('wakes immediately when there is pending work', ({ expect }) => {
+    expect(computeAlarmDelay({ hasPendingWork: true, wakeAt: NOW + 10_000, now: NOW })).toBe(0);
+    expect(computeAlarmDelay({ hasPendingWork: true, wakeAt: null, now: NOW })).toBe(0);
+  });
+
+  it('schedules a future self-wake when idle', ({ expect }) => {
+    expect(computeAlarmDelay({ hasPendingWork: false, wakeAt: NOW + 10_000, now: NOW })).toBe(10_000);
+  });
+
+  it('wakes immediately when a self-wake is already due', ({ expect }) => {
+    expect(computeAlarmDelay({ hasPendingWork: false, wakeAt: NOW - 10_000, now: NOW })).toBe(0);
+  });
+
+  it('schedules nothing when idle and no self-wake is set', ({ expect }) => {
+    expect(computeAlarmDelay({ hasPendingWork: false, wakeAt: null, now: NOW })).toBe(null);
+  });
+});
+
+describe('AlarmManager', () => {
+  it.effect(
+    'tracks and persists the next self-wake, syncing with setAlarm',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, alarmCalls, storageService } = yield* makeManager();
+
+      yield* alarmManager.load();
+      expect(alarmManager.wakeAt).toBe(null);
+
+      yield* alarmManager.setWakeAt(NOW + 60_000);
+      expect(alarmManager.wakeAt).toBe(NOW + 60_000);
+
+      // Reconcile schedules the underlying process alarm for the self-wake delay.
+      alarmManager.reconcile(false);
+      expect(alarmCalls).toEqual([60_000]);
+
+      // A new manager backed by the same storage recovers the persisted alarm.
+      const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
+      yield* recovered.load();
+      expect(recovered.wakeAt).toBe(NOW + 60_000);
+    }),
+  );
+
+  it.effect(
+    'reconcile prefers pending work over a future self-wake',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, alarmCalls } = yield* makeManager();
+      yield* alarmManager.setWakeAt(NOW + 60_000);
+
+      alarmManager.reconcile(true);
+      expect(alarmCalls).toEqual([0]);
+    }),
+  );
+
+  it.effect(
+    'reconcile schedules nothing when idle without a self-wake',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, alarmCalls } = yield* makeManager();
+      yield* alarmManager.load();
+
+      alarmManager.reconcile(false);
+      expect(alarmCalls).toEqual([]);
+    }),
+  );
+
+  it.effect(
+    'takeFiredAlarm clears and returns a due alarm, persisting the cleared state',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, storageService } = yield* makeManager();
+      yield* alarmManager.setWakeAt(NOW - 1_000);
+
+      const fired = yield* alarmManager.takeFiredAlarm();
+      expect(fired).toEqual({ firedAt: NOW - 1_000, message: null });
+      expect(alarmManager.wakeAt).toBe(null);
+
+      const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
+      yield* recovered.load();
+      expect(recovered.wakeAt).toBe(null);
+    }),
+  );
+
+  it.effect(
+    'takeFiredAlarm leaves a future alarm untouched',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager } = yield* makeManager();
+      yield* alarmManager.setWakeAt(NOW + 60_000);
+
+      const fired = yield* alarmManager.takeFiredAlarm();
+      expect(fired).toBe(null);
+      expect(alarmManager.wakeAt).toBe(NOW + 60_000);
+    }),
+  );
+
+  it.effect(
+    'persists and restores the reminder message alongside the self-wake',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, storageService } = yield* makeManager();
+      yield* alarmManager.setWakeAt(NOW - 1_000, 'check the build');
+      expect(alarmManager.message).toBe('check the build');
+
+      // A new manager backed by the same storage recovers both the timestamp and the message.
+      const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
+      yield* recovered.load();
+      expect(recovered.wakeAt).toBe(NOW - 1_000);
+      expect(recovered.message).toBe('check the build');
+
+      const fired = yield* recovered.takeFiredAlarm();
+      expect(fired).toEqual({ firedAt: NOW - 1_000, message: 'check the build' });
+      expect(recovered.message).toBe(null);
+    }),
+  );
+});
+
+// The completion decision (`maybeComplete` → `ctx.succeed()`) is exercised at two levels: the
+// `isAgentWorkPending` suite below covers the predicate the process consults (queue / alarm /
+// delegations / pending tool results), and `AgentService.test.ts` covers the process reaching a
+// terminal state and respawning for a follow-up turn end-to-end.
+
+describe('isAgentWorkPending', () => {
+  const makeSnapshot = (overrides: Partial<Parameters<typeof isAgentWorkPending>[0]> = {}) => {
+    const storageService = Effect.runSync(makeStorage);
+    const alarmManager = new AlarmManager({ storageService, setAlarm: () => {} });
+    return {
+      inputQueue: [],
+      alarmManager,
+      delegations: [],
+      toolCallManager: {
+        hasPendingToolResults: () => false,
+      },
+      ...overrides,
+    } satisfies Parameters<typeof isAgentWorkPending>[0];
+  };
+
+  it('is idle when nothing is pending', ({ expect }) => {
+    expect(isAgentWorkPending(makeSnapshot())).toBe(false);
+  });
+
+  it('is pending when the input queue has work', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          inputQueue: [{ _tag: 'prompt', content: [ContentBlock.Text.make({ text: 'hello' })] }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('is pending when a self-wake alarm is scheduled', ({ expect }) => {
+    const snapshot = makeSnapshot();
+    Effect.runSync(snapshot.alarmManager.setWakeAt(NOW + 60_000));
+    expect(isAgentWorkPending(snapshot)).toBe(true);
+  });
+
+  it('is pending when subprocess delegations are in flight', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          delegations: [{ pid: Process.ID.make('child-1'), id: 'task-1' }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('is pending when tool results have not been delivered', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          toolCallManager: { hasPendingToolResults: () => true },
+        }),
+      ),
+    ).toBe(true);
+  });
+});

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 /**
  * MCP server connection spec — the minimal fields needed to dial an MCP server.
  *
- * Used as a value type embedded in blueprints and passed to runtime session connect logic.
+ * Used as a value type embedded in skills and passed to runtime session connect logic.
  * The user-facing ECHO object (`@dxos/assistant-toolkit` `McpServer`) composes this struct
  * and adds instance-level fields (`name`, `enabled`) and ECHO annotations.
  */
@@ -41,4 +41,4 @@ export const McpServer = Schema.Struct({
   }),
 });
 
-export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
+export type McpServer = Schema.Schema.Type<typeof McpServer>;

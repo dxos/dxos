@@ -8,6 +8,7 @@ import React, { type MouseEvent, type WheelEvent, useCallback, useContext, useEf
 
 import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridAxisMeta,
@@ -21,7 +22,7 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
@@ -49,16 +50,20 @@ export type TableContentProps = {
   presentation?: TablePresentation;
   // TODO(burdon): Factor out attention.
   ignoreAttention?: boolean;
+  attendableId?: string;
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
 };
 
 export const TableContent = composable<HTMLDivElement, TableContentProps>(
-  ({ schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId, ...props }, forwardedRef) => {
+  (
+    { schema, model, presentation, ignoreAttention, attendableId, onCreate, onRowClick, testId, ...props },
+    forwardedRef,
+  ) => {
     const registry = useContext(RegistryContext);
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-    const { hasAttention } = useAttention(model?.id ?? 'table');
+    const { hasAttention } = useAttention(attendableId ?? model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(registry), [registry]);
     const columnMeta = useAtomValue(model?.columnMeta ?? emptyColumnMeta);
     // Subscribe to rows atom to trigger re-render when rows change.
@@ -379,7 +384,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
     }, [dxGrid, model, presentation]);
 
     if (!model || !modals) {
-      return <span role='none' className='dx-attention-surface' />;
+      return <span className='dx-attention-surface' />;
     }
 
     return (

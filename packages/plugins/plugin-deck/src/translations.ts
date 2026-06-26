@@ -9,9 +9,8 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Deck',
-        'settings.title': 'Deck settings',
         'main-header.label': 'Main header',
         'open-navigation-sidebar.label': 'Open sidebar',
         'collapse-navigation-sidebar.label': 'Close sidebar',
@@ -29,6 +28,7 @@ export const translations = [
         'undo-action.alt': 'Undo previous action',
         'undo-close.label': 'Dismiss',
         'error-fallback.message': 'Unable to open this object',
+        'error-fallback.copy.label': 'Copy',
         'plank-heading-fallback.label': 'Untitled',
         'actions-menu.label': 'Options',
         'settings.deck.label': 'Disable deck',
@@ -45,13 +45,19 @@ export const translations = [
         'show-fullscreen-plank.label': 'Fullscreen',
         'close.label': 'Close',
         'minify.label': 'Minify',
-        'open-companion.label': 'Open companion',
+        'open-companion.label': 'Open companion side-by-side',
+        'open-companion-vertical.label': 'Open companion stacked',
         'close-companion.label': 'Close companion',
         'close-current.label': 'Close current plank',
         'close-others.label': 'Close other planks',
         'close-all.label': 'Close all planks',
         'close-navigation-sidebar.button': 'Close',
         'companion-plank-heading-fallback.label': 'Related',
+        'popover-no-preview.message': 'No preview available.',
+        'plugin-failure.title': 'A plugin failed to activate',
+        'plugin-failure.description': 'See Plugin Registry for details.',
+        'plugin-failure-action.label': 'Open Registry',
+        'plugin-failure-action.alt': 'Open Plugin Registry',
       },
     },
   },

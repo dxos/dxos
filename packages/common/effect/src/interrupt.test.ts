@@ -7,7 +7,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
-import { runAndForwardErrors } from './errors';
+import { runAndForwardErrors } from './internal/errors';
 
 const doWork = Effect.fn('doWork')(function* () {
   yield* Effect.sleep('1 minute');

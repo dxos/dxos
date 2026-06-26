@@ -3,23 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
-import { Filter, type Obj, Query, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { type CallState, type MediaState, CallsCapabilities } from '@dxos/plugin-calls';
+import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Space } from '@dxos/react-client/echo';
-import { type Channel, type Message } from '@dxos/types';
+import { type Channel } from '@dxos/types';
 
-import { MeetingOperation } from '#types';
-import { Meeting, MeetingCapabilities } from '#types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -32,26 +28,16 @@ export default Capability.makeModule(
 
     const store = capabilities.get(MeetingCapabilities.State);
 
-    return Capability.contributes(CallsCapabilities.Extension, {
+    return Capability.contributes(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const client = capabilities.get(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
         invariant(identity);
 
-        // let messageEnricher;
-        // if (aiClient && settings.entityExtraction) {
-        //   messageEnricher = createEntityExtractionEnricher({
-        //     aiClient: aiClient.value,
-        //     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
-        //     //  This forced me to add a dependency on markdown plugin.
-        //     //  This will be replaced with a vector search index anyway, so its not a big deal.
-        //     contextTypes: [DocumentType, Person.Person, Organization.Organization],
-        //     space,
-        //   });
-        // }
-
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        const transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
+        const transcriptionManager = await capabilities
+          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
+          .open();
         store.updateState((current) => ({ ...current, transcriptionManager }));
       },
       onLeave: async () => {
@@ -78,48 +64,3 @@ export default Capability.makeModule(
     });
   }),
 );
-
-type EntityExtractionEnricherFactoryOptions = {
-  contextTypes: Schema.Schema.AnyNoContext[];
-  space: Space;
-};
-
-const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
-  return async (message: Message.Message) => {
-    const objects = await space.db
-      .query(
-        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))),
-      )
-      .run();
-
-    log.info('context', { objects });
-
-    const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
-      input: {
-        message,
-        objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
-      },
-      function: extractionAnthropicFunction,
-      options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
-    });
-
-    log.info('entity extraction time', { timeElapsed });
-    return enhancedMessage;
-  };
-};
-
-// TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: Obj.Unknown): Promise<any> => {
-  // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
-  // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
-  // if (Obj.instanceOf(DocumentType, object)) {
-  //   return {
-  //     ...object,
-  //     content: await object.content.load(),
-  //   };
-  // }
-
-  return object;
-};
-
-const ENTITY_EXTRACTOR_TIMEOUT = 25_000;

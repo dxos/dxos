@@ -12,13 +12,24 @@ import { join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & { spriteFile: string; verbose?: boolean };
+export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & {
+  spriteFile: string;
+  /**
+   * Globs of files scanned eagerly at build start, in addition to the module
+   * graph. Needed for icon names that only occur in sources the build never
+   * imports — e.g. descriptors contributed by other packages at runtime (the
+   * composer-crx page actions).
+   */
+  scanPaths?: string[];
+  verbose?: boolean;
+};
 
 export const IconsPlugin = ({
   assetPath,
   symbolPattern,
   spriteFile,
   contentPaths,
+  scanPaths,
   config,
   verbose,
 }: IconsPluginParams): Plugin[] => {
@@ -63,6 +74,45 @@ export const IconsPlugin = ({
   let lastWrittenSize = 0;
   const writeDebounceMs = Number(process.env.DX_ICONS_DEBOUNCE_MS) || 200;
 
+  // Single source of truth for writing the sprite to disk. Skips the write
+  // when the symbol set hasn't grown since the last write.
+  const writeSprite = async () => {
+    if (detectedSymbols.size === lastWrittenSize) {
+      return;
+    }
+    // Capture the size now; advance `lastWrittenSize` only after a successful
+    // write so a failed `makeSprite` leaves it unchanged and the next call
+    // retries instead of skipping. (`makeSprite` snapshots the set on entry, so
+    // symbols added during the await leave size > lastWrittenSize and re-fire.)
+    const writtenSize = detectedSymbols.size;
+    await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
+    lastWrittenSize = writtenSize;
+    if (verbose) {
+      const symbols = Array.from(detectedSymbols.values());
+      symbols.sort();
+      console.log(
+        'Sprite updated:',
+        JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
+      );
+    }
+  };
+
+  // Cancel any pending debounce and write immediately, coalescing concurrent
+  // callers onto a single in-flight write so the sprite is never written twice
+  // at once (svg-sprite writes to a fixed path). Returns the write so callers
+  // can await a complete sprite on disk.
+  let flushing: Promise<void> | null = null;
+  const flushSprite = () => {
+    if (writeTimer) {
+      clearTimeout(writeTimer);
+      writeTimer = null;
+    }
+    flushing ??= writeSprite().finally(() => {
+      flushing = null;
+    });
+    return flushing;
+  };
+
   return [
     {
       // Step 1: Scan source files incrementally.
@@ -74,8 +124,40 @@ export const IconsPlugin = ({
         spritePath = resolve(config.publicDir, spriteFile);
       },
 
+      // Eager scan: symbols in files outside the module graph (transform never
+      // sees them). Runs for both build and dev server starts.
+      buildStart: () => {
+        for (const pattern of scanPaths ?? []) {
+          for (const filename of fs.globSync(pattern)) {
+            try {
+              const match = scan(fs.readFileSync(filename, 'utf8'));
+              status.updated ||= match;
+            } catch {
+              // Unreadable entries (e.g. dangling symlinks) are skipped.
+            }
+          }
+        }
+      },
+
       configureServer: (_server) => {
         server = _server;
+
+        // Ensure `/icons.svg` is complete before it is served. On a cold start
+        // the browser requests the sprite as soon as the first <Icon> paints —
+        // often before the debounced write has flushed, or before the file
+        // exists at all on a fresh checkout (the sprite lives in gitignored
+        // publicDir). Either case yields blank icons until a hard reload.
+        // Flushing here guarantees the served sprite reflects every symbol
+        // detected so far. Registered before the scan middleware (and thus
+        // before Vite's public-dir serving) so the write lands first.
+        server.middlewares.use((req, res, next) => {
+          const pathname = (req.url ?? '').split('?')[0];
+          if (pathname === `/${spriteFile}` && (writeTimer || !fs.existsSync(spritePath))) {
+            void flushSprite().then(next, next);
+            return;
+          }
+          next();
+        });
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
@@ -139,36 +221,18 @@ export const IconsPlugin = ({
         if (writeTimer) {
           clearTimeout(writeTimer);
         }
-        writeTimer = setTimeout(async () => {
+        writeTimer = setTimeout(() => {
           writeTimer = null;
-          if (detectedSymbols.size === lastWrittenSize) {
-            // Same set as last write — skip. (Possible after a browser
-            // reload re-runs scanning over already-known modules.)
-            return;
-          }
-          lastWrittenSize = detectedSymbols.size;
-          await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
-          if (verbose) {
-            const symbols = Array.from(detectedSymbols.values());
-            symbols.sort();
-            console.log(
-              'Sprite updated:',
-              JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
-            );
-          }
+          // Route through `flushSprite` (not `writeSprite`) so a concurrent
+          // `/icons.svg` request coalesces onto this same in-flight write
+          // instead of racing it. No-op when the symbol set hasn't grown.
+          void flushSprite();
         }, writeDebounceMs);
       },
       // Force a final write at build close so production builds aren't
       // missing icons that were detected during the very last transforms.
       buildEnd: async () => {
-        if (writeTimer) {
-          clearTimeout(writeTimer);
-          writeTimer = null;
-        }
-        if (detectedSymbols.size !== lastWrittenSize) {
-          lastWrittenSize = detectedSymbols.size;
-          await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
-        }
+        await flushSprite();
       },
     },
   ] satisfies Plugin[];

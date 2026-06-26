@@ -12,11 +12,15 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/async"
+    },
     {
       "path": "../../common/debug"
     },
@@ -24,10 +28,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/keyboard"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -48,12 +52,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -66,19 +64,19 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/brand"
@@ -99,6 +97,12 @@
       "path": "../../ui/react-ui-markdown"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -106,6 +110,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-observability"

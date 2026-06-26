@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -11,12 +12,14 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 
+import type * as Entity from './Entity';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
-
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Type$ from './Type';
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: Types.Covariant<T> };
@@ -77,11 +80,11 @@ export const nothing = (): FilterClass => {
 };
 
 /*
- * Filter by ObjectId.
+ * Filter by EntityId.
  */
-export const id = (...ids: ObjectId[]): Any => {
+export const id = (...ids: EntityId[]): Any => {
   assertArgument(
-    ids.every((id) => ObjectId.isValid(id)),
+    ids.every((id) => EntityId.isValid(id)),
     'ids',
     'ids must be valid',
   );
@@ -100,51 +103,48 @@ export const id = (...ids: ObjectId[]): Any => {
 
 /**
  * Filter by type.
+ *
+ * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /
+ * `Type.makeRelation`), a `Schema.Union` of such entities (for filtering across a
+ * union of ECHO types), or a fully-qualified type URI — an `echo:` EID (stored schema)
+ * or a `dxn:` DXN (static schema). To filter by a bare typename, wrap it: `DXN.make(typename)`.
  */
-export const type = <S extends Schema.Schema.All>(
-  schema: S | string,
-  props?: Props<Schema.Schema.Type<S>>,
-): Filter<Schema.Schema.Type<S>> => {
-  if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
-    const typenames = schema.ast.types.map((type) => internal.getTypeDXNFromSpecifier(Schema.make(type)));
+export const type: {
+  <T extends Type$.AnyEntity>(type: T, props?: Props<Type$.InstanceType<T>>): Filter<Type$.InstanceType<T>>;
+  // Schema-side overload restricted to the well-known unknown schemas and to
+  // `Schema.Union(...)` of `Type.Type` entities (for filtering across a union
+  // of ECHO types). Other raw schemas are rejected.
+  <S extends internal.UnknownTypeSchema<any, any>>(
+    schema: S,
+    props?: Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
+  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+    union: S,
+    props?: Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
+  (uri: URI.URI, props?: Props<unknown>): Filter<any>;
+  // Passthrough overload for callers that hold a `Type.AnyEntity | URI.URI` union
+  // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
+  // typed overloads above still win for monomorphic inputs.
+  (input: Type$.AnyEntity | URI.URI, props?: Props<unknown>): Filter<unknown>;
+} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | URI.URI, props?: Props<unknown>): any => {
+  if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
+    const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({
       type: 'or',
       filters: typenames.map((typename) => ({
         type: 'object',
-        typename: typename.toString(),
+        typename,
         props: {},
       })),
     });
   }
 
-  const dxn = internal.getTypeDXNFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(input);
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: uri,
     ...propsFilterToAst(props ?? {}),
-  });
-};
-
-/**
- * Filter by non-qualified typename.
- */
-export const typename = (typename: string): Any => {
-  assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
-  return new FilterClass({
-    type: 'object',
-    typename: DXN.fromTypename(typename).toString(),
-    props: {},
-  });
-};
-
-/**
- * Filter by fully qualified type DXN.
- */
-export const typeDXN = (dxn: DXN): Any => {
-  return new FilterClass({
-    type: 'object',
-    typename: dxn.toString(),
-    props: {},
   });
 };
 
@@ -223,14 +223,14 @@ export const text = (
 /**
  * Filter by foreign keys.
  */
-export const foreignKeys = <S extends Schema.Schema.All>(
-  schema: S | string,
+export const foreignKeys = <S extends Type$.AnyEntity | URI.URI>(
+  schema: S,
   keys: ForeignKey[],
-): Filter<Schema.Schema.Type<S>> => {
-  const dxn = internal.getTypeDXNFromSpecifier(schema);
+): Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> => {
+  const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: uri,
     props: {},
     foreignKeys: keys,
   });
@@ -378,7 +378,7 @@ export type ChildOfOptions = {
 /**
  * Filter objects that are children of the specified parent(s).
  * Accepts ECHO objects, Refs, or arrays of either.
- * Refs are resolved to DXNs without loading; objects use {@link Obj.getDXN}.
+ * Refs are resolved to DXNs without loading; objects use {@link Obj.getURI}.
  * With transitive=true (default), also matches grandchildren and beyond.
  */
 export const childOf = (
@@ -388,9 +388,9 @@ export const childOf = (
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
-      return item.dxn.toString();
+      return EID.parse(item.uri);
     }
-    return internal.getDXN(item).toString();
+    return EID.parse(internal.getUri(item));
   });
   return new FilterClass({
     type: 'child-of',
@@ -432,7 +432,7 @@ export const or = <Filters extends readonly Any[]>(...filters: Filters): Filter<
 // TODO(dmaretskyi): Add `Filter.match` to support pattern matching on string props.
 
 const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
-  let idFilter: readonly ObjectId[] | undefined;
+  let idFilter: readonly EntityId[] | undefined;
   if ('id' in predicates) {
     assertArgument(
       typeof predicates.id === 'string' || Array.isArray(predicates.id),
@@ -440,7 +440,7 @@ const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, '
       'invalid id filter',
     );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-    Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
+    Schema.Array(EntityId).pipe(Schema.validateSync)(idFilter);
   }
 
   return {
@@ -483,3 +483,16 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
  * Returns a human-readable string representation of a Filter AST.
  */
 export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);
+
+/**
+ * Create a predicate from a filter.
+ */
+export const toPredicate: {
+  <T extends Entity.Unknown>(filter: Filter<T>): (entity: Entity.Unknown) => entity is T;
+  <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T;
+} = Function.dual<
+  <T extends Entity.Unknown>(filter: Filter<T>) => (entity: Entity.Unknown) => entity is T,
+  <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>) => entity is T
+>(2, <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T =>
+  internal.filterMatchEntity(filter.ast, entity),
+);

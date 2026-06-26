@@ -28,6 +28,16 @@ export type TreeProps<T extends { id: string } = any> = {
     | 'levelOffset'
   >;
 
+/** Renders a single root-level child. */
+const TreeChild = <T extends { id: string } = any>({
+  id,
+  path: parentPath,
+  last,
+  ...childProps
+}: TreeItemByIdProps & { last: boolean }) => {
+  return <TreeItemById id={id} path={parentPath} last={last} {...childProps} />;
+};
+
 export const Tree = <T extends { id: string } = any>({
   classNames,
   model,
@@ -35,7 +45,7 @@ export const Tree = <T extends { id: string } = any>({
   path,
   id,
   draggable = false,
-  gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
+  gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
   levelOffset,
   renderColumns,
   blockInstruction,
@@ -65,7 +75,7 @@ export const Tree = <T extends { id: string } = any>({
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
       <TreeProvider value={model}>
         {childIds.map((childId, index) => (
-          <TreeItemById key={childId} id={childId} last={index === childIds.length - 1} {...childProps} />
+          <TreeChild key={childId} id={childId} last={index === childIds.length - 1} {...childProps} />
         ))}
       </TreeProvider>
     </Treegrid.Root>

@@ -9,13 +9,14 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { FunctionInvocationService } from '@dxos/functions';
+import { DXN } from '@dxos/keys';
 
 import { FunctionInvocationServiceLayer } from './function-invocation-service';
 import { FunctionImplementationResolver } from './local-function-execution';
 
-const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).pipe(
+const TestLayer = Layer.mergeAll(AiService.model('ai.claude.model.claude-opus-4-0')).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       TestDatabaseLayer({
@@ -27,7 +28,7 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).
 );
 
 const Add = Operation.make({
-  meta: { key: 'example.org/function/add', name: 'Add' },
+  meta: { key: DXN.make('org.example.function.add'), name: 'Add' },
   input: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
   output: Schema.Number,
 });
@@ -40,7 +41,7 @@ const AddHandler = Operation.withHandler(
 );
 
 const Echo = Operation.make({
-  meta: { key: 'example.org/function/echo', name: 'Echo' },
+  meta: { key: DXN.make('org.example.function.echo'), name: 'Echo' },
   input: Schema.Unknown,
   output: Schema.Unknown,
 });

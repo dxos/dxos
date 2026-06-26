@@ -7,20 +7,17 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Format, type Obj, Type } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Position } from '@dxos/util';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.map',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.map', '0.1.0')));
 
-export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
+export type MapSchema = Type.InstanceType<typeof MapSchema>;
 
 // TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {
@@ -35,35 +32,15 @@ declare global {
   }
 }
 
-// TODO(dmaretskyi): Removed images from conductor GPT implementation.
-const isImage = (data: any): data is any => false;
-
 export const capabilities: Capability.Any[] = [
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({
-      id: 'plugin-image',
-      role: 'card--content',
-      filter: (data: any): data is any => isImage(data.value),
+      id: 'pluginDefault',
+      filter: Surface.makeFilter(AppSurface.CardContent),
+      position: Position.last,
       component: ({ data }) => (
-        <Card.Content>
-          <img
-            className='grow object-cover'
-            src={`data:image/jpeg;base64,${data.value.source.data}`}
-            alt={data.value.prompt ?? `Generated image [id=${data.value.id}]`}
-          />
-        </Card.Content>
-      ),
-    }),
-  ),
-  Capability.contributes(
-    Capabilities.ReactSurface,
-    Surface.create({
-      id: 'plugin-default',
-      role: 'card--content',
-      position: 'last',
-      component: ({ data }) => (
-        <Card.Content>
+        <Card.Body>
           <Syntax.Root data={data}>
             <Syntax.Content>
               <Syntax.Filter />
@@ -72,7 +49,7 @@ export const capabilities: Capability.Any[] = [
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>
-        </Card.Content>
+        </Card.Body>
       ),
     }),
   ),

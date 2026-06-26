@@ -8,7 +8,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { MAX_LIST_LIMIT, TOOL_METADATA, type PickerKind } from '@dxos/introspect-tools';
 import { Message, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 

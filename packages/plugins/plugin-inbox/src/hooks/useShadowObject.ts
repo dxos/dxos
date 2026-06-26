@@ -8,6 +8,8 @@ import { type Database, Filter, Obj, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 
+import { SHADOW_KEY_SOURCE, findShadowObject } from './shadow';
+
 /**
  * Find a shadow object for the given object and type.
  * The subject may be a queued object, or an object form another space.
@@ -18,16 +20,12 @@ export const useShadowObject = <T extends Obj.Unknown>(
   subject: T,
   type: Type.AnyObj,
 ): [T | undefined, () => T] => {
-  const id = Obj.getDXN(subject).toString();
+  const id = Obj.getURI(subject);
   const objects = useQuery(db, Filter.type(type));
 
   const [target, setTarget] = useState<T | undefined>();
   useEffect(() => {
-    const target = objects.find((event) => {
-      const meta = Obj.getMeta(event);
-      return meta.keys.find((key) => key.source === 'echo' && key.id === id);
-    });
-    setTarget(target);
+    setTarget(findShadowObject(objects as T[], id));
   }, [id, objects]);
 
   const createTarget = useCallback(() => {
@@ -36,9 +34,10 @@ export const useShadowObject = <T extends Obj.Unknown>(
       return target;
     }
 
-    const newObject = db.add(Obj.clone(subject));
+    const newObject = Obj.clone(subject);
+    db.add<Obj.Unknown>(newObject);
     Obj.update(newObject, (newObject) => {
-      Obj.getMeta(newObject).keys.push({ source: 'echo', id }); // TODO(burdon): Factor out const?
+      Obj.getMeta(newObject).keys.push({ source: SHADOW_KEY_SOURCE, id });
     });
     setTarget(newObject);
     return newObject;

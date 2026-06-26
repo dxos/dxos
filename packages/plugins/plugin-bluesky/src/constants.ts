@@ -2,8 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-/** `IntegrationProvider.id` for the Bluesky integration. */
+/** `Connector.id` for the Bluesky integration. */
 export const BLUESKY_PROVIDER_ID = 'bluesky';
+
+/** `Channel.backend.kind` for a read-only ATProto-backed channel (a public author feed). */
+export const ATPROTO_BACKEND_KIND = 'org.dxos.channel.backend.atproto';
+
+/** Polling interval (ms) for the read-only ATProto channel backend. */
+export const ATPROTO_POLL_INTERVAL = 30_000;
 
 /** `AccessToken.source` and `Obj.Meta.keys[i].source` for Bluesky. */
 export const BLUESKY_SOURCE = 'bsky.app';

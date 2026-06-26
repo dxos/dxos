@@ -7,9 +7,14 @@ import { syntaxTree } from '@codemirror/language';
 import { hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { tooltipContent } from '@dxos/ui-theme';
+import { mx, surfaceShadow } from '@dxos/ui-theme';
 
 import { type RenderCallback } from '../../types';
+
+const tooltipClassName = mx(
+  'inline-flex items-center p-1 max-w-64 text-sm bg-inverse-surface text-inverse-fg rounded-sm',
+  surfaceShadow({ elevation: 'positioned' }),
+);
 
 export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
   return hoverTooltip((view, pos, side) => {
@@ -35,7 +40,7 @@ export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
       above: true,
       create: () => {
         const el = document.createElement('div');
-        el.className = tooltipContent({});
+        el.className = tooltipClassName;
         renderTooltip(el, { url: urlText }, view);
         return { dom: el, offset: { x: 0, y: 4 } };
       },

@@ -3,13 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Annotation } from '@dxos/echo';
+import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
+import { SpaceHomeContent } from '@dxos/plugin-space';
+import { useClient } from '@dxos/react-client';
+import { useObject } from '@dxos/react-client/echo';
+import { Position } from '@dxos/util';
 
-import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
@@ -17,20 +24,22 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
+  SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
-  WelcomeArticle,
+  SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
-import { type Settings, Support } from '#types';
+import { Support, type Settings } from '#types';
 
-import { SHORTCUTS_DIALOG, WELCOME_NODE_ID } from '../constants';
+import { WelcomeDismissedAnnotation } from '../annotations';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'support-ticket',
+        id: 'supportTicket',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Support.Ticket),
           AppSurface.object(AppSurface.Section, Support.Ticket),
@@ -40,24 +49,25 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'welcome-article',
-        filter: AppSurface.literal(AppSurface.Article, WELCOME_NODE_ID),
-        component: ({ role }) => <WelcomeArticle role={role} />,
+        id: 'spaceHomeWelcome',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        position: Position.first,
+        component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',
-        role: 'deck-companion--help',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
         id: 'discord',
-        role: 'deck-companion--discord',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
         component: () => <DiscordPanel />,
       }),
       Surface.create({
-        id: 'help-menu',
-        role: 'status-indicator',
-        position: 'last',
+        id: 'helpMenu',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        position: Position.last,
         component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that
@@ -65,7 +75,7 @@ export default Capability.makeModule(() =>
       // `companion(Article)` with no schema filter; the resolver inside the
       // panel maps `companionTo` → owning plugin → `meta.description`.
       Surface.create({
-        id: 'help-companion',
+        id: 'helpCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
           AppSurface.companion(AppSurface.Article),
@@ -74,12 +84,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        role: 'hints',
+        filter: Surface.makeFilter(Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        role: 'keyshortcuts',
+        filter: Surface.makeFilter(Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({
@@ -89,10 +99,31 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
+          const client = useClient();
+          const { invokePromise } = useOperationInvoker();
+          const personal = AppSpace.getPersonalSpace(client);
+          const [properties, updateProperties] = useObject(personal?.properties);
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <SupportSettings settings={settings} onSettingsChange={updateSettings} />;
+          const welcomeDismissed = properties
+            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+            : false;
+          const handleShowWelcome = () => {
+            if (!personal) {
+              return;
+            }
+            updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
+            const workspace = Paths.getSpacePath(personal.id);
+            void invokePromise(LayoutOperation.Open, { subject: [Paths.getSpaceHomePath(personal.id)], workspace });
+          };
+          return (
+            <SupportSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              onShowWelcome={welcomeDismissed ? handleShowWelcome : undefined}
+            />
+          );
         },
       }),
     ]),

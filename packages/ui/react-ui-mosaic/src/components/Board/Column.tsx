@@ -16,8 +16,9 @@ import React, {
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -250,7 +251,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
       id: model.getColumnId(data),
       items: column?.items ?? [],
-      getId: (ref) => ref.target?.id ?? ref.dxn.toString(),
+      getId: (ref) => ref.target?.id ?? ref.uri,
       get: (refOrObj) => (Ref.isRef(refOrObj) ? refOrObj.target! : refOrObj),
       make: (object) => Ref.make(object),
       canDrop: ({ source }) => {

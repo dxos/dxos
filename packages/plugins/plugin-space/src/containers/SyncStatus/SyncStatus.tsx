@@ -30,7 +30,7 @@ export const SyncStatus = () => {
 };
 
 export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: boolean }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const summary = getSyncSummary(state);
   const offline = Object.values(state).length === 0;
   const needsToUpload = summary.differentDocuments > 0 || summary.missingOnRemote > 0;
@@ -59,7 +59,13 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon={getIcon(status)} iconOnly label={t(`${status}.label`)} classNames={classNames} />
+          <IconButton
+            variant='ghost'
+            icon={getIcon(status)}
+            iconOnly
+            label={t(`${status}.label`)}
+            classNames={classNames}
+          />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
@@ -73,7 +79,7 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
 };
 
 const EdgeConnectionPopover = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const { status } = useStream(
     () => client.services.services.EdgeAgentService!.queryEdgeStatus(),

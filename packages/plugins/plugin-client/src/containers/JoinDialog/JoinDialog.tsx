@@ -17,7 +17,7 @@ import { ClientOperation } from '#operations';
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleCancelResetStorage = useCallback(() => invokePromise(ClientOperation.ShareIdentity), [invokePromise]);
 

@@ -19,10 +19,15 @@ export type ToggleMode = 'set' | 'unset' | 'toggle';
 export type PointerHandlers = {
   onCellToggle?: (coord: CellCoord, mode: ToggleMode) => void;
   onSelectionCommit?: (range: SelectionRange) => void;
+  /** Called each time the draw cursor moves to a new cell (edit tool). */
+  onDrawUpdate?: (startCoord: CellCoord, endCoord: CellCoord) => void;
+  /** Called when the user releases after an edit-tool drag; caller commits the note. */
+  onDrawCommit?: (startCoord: CellCoord, endCoord: CellCoord) => void;
 };
 
 type DragState =
   | { kind: 'toggle'; mode: 'set' | 'unset'; touched: Set<string> }
+  | { kind: 'draw'; startCoord: CellCoord; endCoord: CellCoord }
   | { kind: 'select'; origin: CellCoord }
   | { kind: 'pan'; lastX: number; lastY: number };
 
@@ -94,6 +99,20 @@ export const attachPointerHandlers = <T>(
         drag = { kind: 'toggle', mode, touched: new Set([key]) };
         break;
       }
+      case 'edit': {
+        // Start a draw gesture: track extent and fire preview/commit callbacks
+        // instead of toggling individual cells. Constrained to the starting row.
+        drag = { kind: 'draw', startCoord: coord, endCoord: coord };
+        handlers.onDrawUpdate?.(coord, coord);
+        break;
+      }
+      case 'delete': {
+        // Always removes notes regardless of current cell state.
+        const key = cellKey(coord.col, coord.row);
+        handlers.onCellToggle?.(coord, 'unset');
+        drag = { kind: 'toggle', mode: 'unset', touched: new Set([key]) };
+        break;
+      }
       case 'select': {
         drag = { kind: 'select', origin: coord };
         registry.set(atoms.selection, {
@@ -135,6 +154,13 @@ export const attachPointerHandlers = <T>(
         drag.touched.add(key);
         handlers.onCellToggle?.(coord, drag.mode);
       }
+    } else if (drag.kind === 'draw') {
+      // Constrain to the starting row so the note stays at the same pitch.
+      const constrainedCol = coord.col;
+      if (constrainedCol !== drag.endCoord.col) {
+        drag.endCoord = { col: constrainedCol, row: drag.startCoord.row };
+        handlers.onDrawUpdate?.(drag.startCoord, drag.endCoord);
+      }
     } else if (drag.kind === 'select') {
       registry.set(atoms.selection, {
         range: { col0: drag.origin.col, row0: drag.origin.row, col1: coord.col, row1: coord.row },
@@ -152,7 +178,9 @@ export const attachPointerHandlers = <T>(
     if (!drag) {
       return;
     }
-    if (drag.kind === 'select') {
+    if (drag.kind === 'draw') {
+      handlers.onDrawCommit?.(drag.startCoord, drag.endCoord);
+    } else if (drag.kind === 'select') {
       const range = registry.get(atoms.selection).range;
       if (range) {
         handlers.onSelectionCommit?.(range);
