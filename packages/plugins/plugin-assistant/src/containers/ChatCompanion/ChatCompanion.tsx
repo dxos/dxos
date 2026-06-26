@@ -13,7 +13,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Skill } from '@dxos/compute';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery, useRegistry } from '@dxos/react-client/echo';
+import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';
@@ -73,7 +73,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'subject' | 'companionTo'>) => {
   const registry = useRegistry();
   const space = getSpace(companionTo);
-  const feedTarget = chat?.feed.target;
+  const [feedSnapshot] = useObject(chat?.feed);
+  const feedTarget = Obj.getReactiveOrUndefined(feedSnapshot);
   const binder = useContextBinder(space, feedTarget);
 
   const skillKeys = useMemo(() => {
