@@ -29,6 +29,20 @@ describe('SketchBuilder', () => {
     expect((bindings[0] as any).toId).to.eq('shape:a');
   });
 
+  test('connects via explicit points when shapes are not referenced', ({ expect }) => {
+    const content = new SketchBuilder()
+      .arrow({ id: 'arrow', start: { x: 0, y: 0 }, end: { x: 200, y: 100 } })
+      .line({ id: 'line', start: { x: 0, y: 0 }, end: { x: 100, y: 0 } })
+      .build();
+
+    const arrow: any = content['shape:arrow'];
+    const line: any = content['shape:line'];
+    // Unbound connectors carry their geometry inline; no binding records are emitted.
+    expect(arrow.props.end).to.deep.eq({ x: 200, y: 100 });
+    expect(line.props.points.a2).to.deep.eq({ id: 'a2', index: 'a2', x: 100, y: 0 });
+    expect(Object.values(content).filter((record: any) => record.typeName === 'binding')).to.have.length(0);
+  });
+
   test('produces records that pass tldraw schema validation', ({ expect }) => {
     const content = new SketchBuilder()
       .rectangle({ id: 'a', x: 0, y: 0, text: 'A' })
