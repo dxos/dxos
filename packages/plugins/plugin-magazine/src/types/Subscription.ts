@@ -15,7 +15,7 @@ import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
 /** Subscription protocol type. */
-export const FeedType = Schema.Literal('standard-site', 'rss');
+export const FeedType = Schema.Literal('standard-site', 'rss', 'atproto');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
