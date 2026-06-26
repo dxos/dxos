@@ -4,12 +4,12 @@
 
 import { type Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { Form } from '@dxos/react-ui-form';
 import { Panel, ScrollArea } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as Schema from 'effect/Schema';
 
 import { translations } from '#translations';
 

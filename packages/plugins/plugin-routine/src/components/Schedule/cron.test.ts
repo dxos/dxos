@@ -191,13 +191,22 @@ describe('minimum interval', () => {
 
   test('clampSchedule rewrites a too-frequent custom cron', ({ expect }) => {
     expect(clampSchedule({ kind: 'custom', cron: '* * * * *' }, 300)).toEqual({ kind: 'custom', cron: '*/5 * * * *' });
-    expect(clampSchedule({ kind: 'custom', cron: '*/1 * * * *' }, 300)).toEqual({ kind: 'custom', cron: '*/5 * * * *' });
+    expect(clampSchedule({ kind: 'custom', cron: '*/1 * * * *' }, 300)).toEqual({
+      kind: 'custom',
+      cron: '*/5 * * * *',
+    });
     // An hourly minimum collapses a sub-hourly step to the top of the hour.
-    expect(clampSchedule({ kind: 'custom', cron: '*/15 * * * *' }, 3600)).toEqual({ kind: 'custom', cron: '0 * * * *' });
+    expect(clampSchedule({ kind: 'custom', cron: '*/15 * * * *' }, 3600)).toEqual({
+      kind: 'custom',
+      cron: '0 * * * *',
+    });
   });
 
   test('clampSchedule leaves satisfying schedules untouched', ({ expect }) => {
-    expect(clampSchedule({ kind: 'custom', cron: '*/15 * * * *' }, 300)).toEqual({ kind: 'custom', cron: '*/15 * * * *' });
+    expect(clampSchedule({ kind: 'custom', cron: '*/15 * * * *' }, 300)).toEqual({
+      kind: 'custom',
+      cron: '*/15 * * * *',
+    });
     expect(clampSchedule({ kind: 'custom', cron: '0 9 * * 1' }, 300)).toEqual({ kind: 'custom', cron: '0 9 * * 1' });
     expect(clampSchedule({ kind: 'hourly', minute: 0 }, 3600)).toEqual({ kind: 'hourly', minute: 0 });
   });

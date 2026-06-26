@@ -190,7 +190,9 @@ export const MAX_MIN_INTERVAL_SECONDS = HOUR_SECONDS;
 /** Parses a comma-separated list of bounded integers; returns undefined if any token is not a plain integer in range. */
 const parseList = (field: string, min: number, max: number): number[] | undefined => {
   const tokens = field.split(',');
-  const values = tokens.map((token) => parseBoundedUInt(token, min, max)).filter((value): value is number => value !== undefined);
+  const values = tokens
+    .map((token) => parseBoundedUInt(token, min, max))
+    .filter((value): value is number => value !== undefined);
   return values.length === tokens.length && values.length > 0 ? values : undefined;
 };
 
