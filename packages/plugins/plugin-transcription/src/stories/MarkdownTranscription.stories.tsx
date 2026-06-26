@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type StateEffect } from '@codemirror/state';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
@@ -16,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -24,6 +25,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { appendPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -75,17 +77,26 @@ const StoryGraphPlugin = Plugin.define(
   Plugin.make,
 );
 
+type StoryArgs = {
+  /**
+   * Seed the pending-text decoration directly (final/interim text), bypassing audio capture, to
+   * showcase the recording-state preview deterministically in stories and the headless storybook test.
+   */
+  seed?: { final?: string; interim?: string };
+};
+
 // Renders the real plugin-markdown editor surface. TranscriptionPlugin contributes both the
 // start/stop toolbar button (via AppGraphBuilder) and the pending-text CodeMirror extension (via
 // MarkdownCapabilities.ExtensionProvider), so toggling the toolbar microphone streams live
 // transcription into the document as a greyed pending block with inline confirm/cancel.
-const DefaultStory = () => {
+const DefaultStory = ({ seed }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && qualifyId(Node.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed actions) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
+  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
 
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
@@ -93,6 +104,42 @@ const DefaultStory = () => {
       void Graph.expand(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
+
+  // Seed the pending-text decoration once the editor view has registered (no mic required).
+  useEffect(() => {
+    if (!seed || !attendableId || !editorViews) {
+      return;
+    }
+    let cancelled = false;
+    const trySeed = () => {
+      const entry = editorViews.get(attendableId);
+      if (!entry) {
+        return false;
+      }
+      const anchor = entry.view.state.selection.main.head;
+      const effects: StateEffect<unknown>[] = [setPendingAnchor.of({ anchor, placeholder: 'Recording…' })];
+      if (seed.final) {
+        effects.push(appendPendingText.of(seed.final));
+      }
+      if (seed.interim) {
+        effects.push(setPendingInterim.of(seed.interim));
+      }
+      entry.view.dispatch({ effects });
+      return true;
+    };
+    if (trySeed()) {
+      return;
+    }
+    const interval = setInterval(() => {
+      if (cancelled || trySeed()) {
+        clearInterval(interval);
+      }
+    }, 50);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [seed, attendableId, editorViews]);
 
   const data = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
 
@@ -144,3 +191,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Shows the recording-state decoration: finalized text on the comment surface, the volatile interim
+ * tail distinguished, and the inline confirm/cancel affordances — seeded without a microphone.
+ */
+export const Recording: Story = {
+  args: {
+    seed: {
+      final: 'The quick brown fox jumps over the lazy dog.',
+      interim: ' And the in-flight words still being transcribed',
+    },
+  },
+};
