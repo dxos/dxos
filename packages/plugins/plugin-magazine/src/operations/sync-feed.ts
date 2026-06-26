@@ -9,16 +9,16 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';
-import { browserCorsProxy, type FeedFetcher, fetchAtproto, fetchRss } from './sources';
+import { browserCorsProxy, type FeedFetcher, fetchRss, fetchStandardSite } from './sources';
 
-/** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, atproto uses the post URI). */
+/** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
 
 /** Resolves the appropriate fetcher for the given feed type. */
 const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
   switch (type) {
-    case 'atproto':
-      return fetchAtproto;
+    case 'standard-site':
+      return fetchStandardSite;
     case 'rss':
     default:
       return fetchRss;
@@ -50,8 +50,8 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       //
       // The dedup key is `guid ?? link`: `Post.guid` is optional in the schema,
       // and while every current fetcher populates it (RSS falls back to `link`,
-      // atproto uses the post URI), a future fetcher or malformed item could
-      // omit it. Falling back to `link` keeps such items dedup-able. Items
+      // Standard.site uses the record AT-URI), a future fetcher or malformed item
+      // could omit it. Falling back to `link` keeps such items dedup-able. Items
       // with neither field cannot be deduplicated and will sync as new every
       // time — that's an upstream data quality issue with no clean recovery.
       //
@@ -105,6 +105,9 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
             title: post.title,
             link: post.link,
             description: post.description,
+            // Persist the body so Standard.site articles render offline (see `load-post-content`);
+            // RSS `content:encoded` rides along but its fetch path is unchanged.
+            content: post.content,
             author: post.author,
             published: post.published,
             guid: post.guid,

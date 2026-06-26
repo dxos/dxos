@@ -15,7 +15,7 @@ import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
 /** Subscription protocol type. */
-export const FeedType = Schema.Literal('atproto', 'rss');
+export const FeedType = Schema.Literal('standard-site', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
@@ -215,7 +215,7 @@ export const CreateSubscriptionSchema = Schema.Struct({
   url: Schema.optional(
     Schema.String.annotations({
       title: 'URL',
-      description: 'RSS Subscription URL or Bluesky handle.',
+      description: 'RSS feed URL or atproto handle (e.g. dxos.org).',
     }),
   ),
   type: Schema.optional(

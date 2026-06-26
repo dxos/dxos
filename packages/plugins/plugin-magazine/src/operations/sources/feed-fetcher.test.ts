@@ -4,52 +4,86 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { fetchAtproto, parseAtprotoActor } from './atproto';
+import { fetchStandardSite, parseStandardSiteActor } from './standard-site';
 
 // RSS/Atom coverage lives in rss.test.ts.
 
-// Sample Bluesky XRPC response fixture.
-const BSKY_RESPONSE = {
-  feed: [
+// Sample Standard.site read chain: resolveHandle → plc.directory (DID doc) → listRecords → getProfile →
+// getRecord (publication). One document references its publication by `at://` URI, the other by a bare
+// `https://` URL (resolved directly, no getRecord needed).
+const DID = 'did:plc:abc123';
+const PDS = 'https://pds.example.com';
+const PUBLICATION_URI = `at://${DID}/site.standard.publication/self`;
+
+const DID_DOCUMENT = {
+  service: [{ id: '#atproto_pds', type: 'AtprotoPersonalDataServer', serviceEndpoint: PDS }],
+};
+
+const PROFILE = {
+  did: DID,
+  handle: 'alice.example.com',
+  displayName: 'Alice',
+  avatar: 'https://example.com/avatar.jpg',
+  description: 'Long-form writing.',
+};
+
+const PUBLICATION = {
+  uri: PUBLICATION_URI,
+  value: { url: 'https://alice.example.com/', name: 'Alice Blog' },
+};
+
+const LIST_RECORDS = {
+  records: [
     {
-      post: {
-        uri: 'at://did:plc:abc123/app.bsky.feed.post/rec1',
-        cid: 'bafyabc1',
-        author: {
-          did: 'did:plc:abc123',
-          handle: 'alice.bsky.social',
-          displayName: 'Alice',
-          avatar: 'https://example.com/avatar.jpg',
-        },
-        record: {
-          text: 'Hello from Bluesky!',
-          createdAt: '2025-03-01T08:00:00Z',
-        },
-        likeCount: 5,
-        repostCount: 2,
-        replyCount: 1,
-        indexedAt: '2025-03-01T08:00:01Z',
+      uri: `at://${DID}/site.standard.document/doc1`,
+      value: {
+        site: PUBLICATION_URI,
+        title: 'First Article',
+        path: '/blog/first',
+        description: 'A first long-form post.',
+        content: { $type: 'site.standard.content.markdown', text: '# First\n\nBody text.', version: '1.0' },
+        textContent: 'First Body text.',
+        publishedAt: '2026-01-02T00:00:00Z',
+        tags: ['echo'],
       },
     },
     {
-      post: {
-        uri: 'at://did:plc:abc123/app.bsky.feed.post/rec2',
-        cid: 'bafyabc2',
-        author: {
-          did: 'did:plc:abc123',
-          handle: 'alice.bsky.social',
-          displayName: 'Alice',
-        },
-        record: {
-          text: 'Second Bluesky post with more text content here.',
-          createdAt: '2025-02-28T18:00:00Z',
-        },
-        indexedAt: '2025-02-28T18:00:01Z',
+      uri: `at://${DID}/site.standard.document/doc2`,
+      value: {
+        site: 'https://alice.example.com',
+        title: 'Older Article',
+        path: '/blog/older',
+        content: { $type: 'site.standard.content.markdown', text: '# Older' },
+        publishedAt: '2026-01-01T00:00:00Z',
       },
     },
   ],
-  cursor: 'cursor-abc',
+  cursor: 'cursor-1',
 };
+
+const okJson = (data: unknown) => ({ ok: true, json: () => Promise.resolve(data) });
+
+/** Routes a mocked `fetch` by endpoint so the resolution chain is order-independent. */
+const routedFetch = () =>
+  vi.fn(async (input: unknown) => {
+    const url = String(input);
+    if (url.includes('resolveHandle')) {
+      return okJson({ did: DID });
+    }
+    if (url.includes('plc.directory')) {
+      return okJson(DID_DOCUMENT);
+    }
+    if (url.includes('listRecords')) {
+      return okJson(LIST_RECORDS);
+    }
+    if (url.includes('getProfile')) {
+      return okJson(PROFILE);
+    }
+    if (url.includes('getRecord')) {
+      return okJson(PUBLICATION);
+    }
+    throw new Error(`Unexpected fetch URL: ${url}`);
+  });
 
 describe('FeedFetcher', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -63,72 +97,79 @@ describe('FeedFetcher', () => {
     vi.restoreAllMocks();
   });
 
-  describe('fetchAtproto', () => {
-    test('fetches and parses Bluesky author feed', async ({ expect }) => {
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(BSKY_RESPONSE),
-      });
+  describe('fetchStandardSite', () => {
+    test('resolves a handle and maps Standard.site documents', async ({ expect }) => {
+      globalThis.fetch = routedFetch();
 
-      const result = await fetchAtproto('alice.bsky.social');
+      const result = await fetchStandardSite('alice.example.com');
 
-      expect(result.feed.name).toBe('Alice');
-      expect(result.feed.type).toBe('atproto');
-      expect(result.feed.description).toBe('Bluesky posts from @alice.bsky.social');
+      expect(result.feed.type).toBe('standard-site');
+      // Feed name comes from the publication; icon/description from the author profile.
+      expect(result.feed.name).toBe('Alice Blog');
+      expect(result.feed.iconUrl).toBe('https://example.com/avatar.jpg');
+      expect(result.feed.description).toBe('Long-form writing.');
+
+      // Newest first.
       expect(result.posts).toHaveLength(2);
+      const [first, second] = result.posts;
 
-      expect(result.posts[0].description).toBe('Hello from Bluesky!');
-      expect(result.posts[0].author).toBe('Alice');
-      expect(result.posts[0].guid).toBe('at://did:plc:abc123/app.bsky.feed.post/rec1');
-      expect(result.posts[0].link).toContain('bsky.app/profile/alice.bsky.social/post/rec1');
-      expect(result.posts[0].published).toBe('2025-03-01T08:00:00Z');
+      expect(first.title).toBe('First Article');
+      // Canonical link = publication url + document path (publication trailing slash stripped).
+      expect(first.link).toBe('https://alice.example.com/blog/first');
+      expect(first.content).toBe('# First\n\nBody text.');
+      expect(first.description).toBe('A first long-form post.');
+      expect(first.author).toBe('Alice');
+      expect(first.published).toBe('2026-01-02T00:00:00Z');
+      // The record AT-URI is the dedup guid.
+      expect(first.guid).toBe(`at://${DID}/site.standard.document/doc1`);
 
-      expect(result.posts[1].description).toBe('Second Bluesky post with more text content here.');
+      // `site` given as a bare https URL is used directly (no publication name → falls back is unused here).
+      expect(second.title).toBe('Older Article');
+      expect(second.link).toBe('https://alice.example.com/blog/older');
+      expect(second.content).toBe('# Older');
     });
 
-    test('handles bsky.app profile URL', async ({ expect }) => {
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(BSKY_RESPONSE),
-      });
+    test('passes a DID straight through to listRecords (no handle resolution)', async ({ expect }) => {
+      const mockFetch = routedFetch();
       globalThis.fetch = mockFetch;
 
-      await fetchAtproto('https://bsky.app/profile/alice.bsky.social');
+      await fetchStandardSite('did:plc:abc123');
 
-      const calledUrl = mockFetch.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('actor=alice.bsky.social');
+      const calls = mockFetch.mock.calls.map((call) => String(call[0]));
+      expect(calls.some((url) => url.includes('resolveHandle'))).toBe(false);
+      expect(calls.some((url) => url.includes('listRecords') && url.includes('repo=did%3Aplc%3Aabc123'))).toBe(true);
     });
 
-    test('throws on non-ok response', async ({ expect }) => {
+    test('throws on a non-ok response', async ({ expect }) => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
         statusText: 'Not Found',
       });
 
-      await expect(fetchAtproto('nonexistent.bsky.social')).rejects.toThrow('AT Protocol fetch failed: 404 Not Found');
+      await expect(fetchStandardSite('nonexistent.example.com')).rejects.toThrow('Standard.site fetch failed: 404');
     });
   });
 
-  describe('parseAtprotoActor', () => {
+  describe('parseStandardSiteActor', () => {
     test('extracts handle from bsky.app URL', ({ expect }) => {
-      expect(parseAtprotoActor('https://bsky.app/profile/alice.bsky.social')).toBe('alice.bsky.social');
+      expect(parseStandardSiteActor('https://bsky.app/profile/alice.bsky.social')).toBe('alice.bsky.social');
     });
 
     test('extracts handle from bsky.app URL with trailing path', ({ expect }) => {
-      expect(parseAtprotoActor('https://bsky.app/profile/alice.bsky.social/post/abc')).toBe('alice.bsky.social');
+      expect(parseStandardSiteActor('https://bsky.app/profile/alice.bsky.social/post/abc')).toBe('alice.bsky.social');
     });
 
     test('passes through bare handle', ({ expect }) => {
-      expect(parseAtprotoActor('alice.bsky.social')).toBe('alice.bsky.social');
+      expect(parseStandardSiteActor('dxos.org')).toBe('dxos.org');
     });
 
     test('strips leading @ from handle', ({ expect }) => {
-      expect(parseAtprotoActor('@alice.bsky.social')).toBe('alice.bsky.social');
+      expect(parseStandardSiteActor('@alice.bsky.social')).toBe('alice.bsky.social');
     });
 
     test('passes through DID', ({ expect }) => {
-      expect(parseAtprotoActor('did:plc:abc123')).toBe('did:plc:abc123');
+      expect(parseStandardSiteActor('did:plc:abc123')).toBe('did:plc:abc123');
     });
   });
 });
