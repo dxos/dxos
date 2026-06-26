@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
@@ -233,4 +234,65 @@ export const InlineMarkdownText: Story<any> = {
 
 export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
   args: {},
+};
+
+// Demonstrates the value-driven dynamic-field annotations (here backed by in-memory Effects with an
+// artificial delay rather than network calls, so the story is deterministic): a select whose options
+// derive from the `query` field, and a text field auto-filled from the `url` field. Each annotation
+// declares the fields it depends on, so it only re-runs when one of those changes. Structural validation
+// is the schema's own job (`Format.URL`).
+const isValidUrl = Schema.is(Format.URL);
+
+// Base struct (no dynamic annotations) — its value type drives the typed `deps`/`values` below.
+const DynamicFieldsBase = Schema.Struct({
+  query: Schema.String.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
+  choice: Schema.optional(Schema.String),
+  url: Format.URL.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
+  name: Schema.optional(Schema.String),
+});
+type DynamicFieldsValues = Schema.Schema.Type<typeof DynamicFieldsBase>;
+
+const DynamicFieldsSchema = Schema.mutable(
+  Schema.Struct({
+    ...DynamicFieldsBase.fields,
+    choice: Schema.optional(
+      Schema.String.pipe(
+        Annotation.OptionsLookupAnnotation.set(
+          Annotation.optionsLookup<DynamicFieldsValues>()(['query'], ({ query }) =>
+            (query && query.length > 0
+              ? Effect.succeed([1, 2, 3].map((index) => ({ value: `${query}-${index}`, label: `${query} choice ${index}` })))
+              : Effect.succeed([])
+            ).pipe(Effect.delay('600 millis')),
+          ),
+        ),
+        Schema.annotations({ title: 'Choice', description: 'Options load from the query (after a delay).' }),
+      ),
+    ),
+    name: Schema.optional(
+      Schema.String.pipe(
+        // Only derive a value once the URL is structurally valid, and only after the artificial wait —
+        // an incomplete/invalid URL produces nothing.
+        Annotation.AutofillAnnotation.set(
+          Annotation.autofill<DynamicFieldsValues>()(['url'], ({ url }) =>
+            isValidUrl(url)
+              ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('800 millis'))
+              : Effect.succeed(undefined),
+          ),
+        ),
+        Schema.annotations({ title: 'Name', description: 'Auto-filled from a valid URL (editable).' }),
+      ),
+    ),
+  }),
+);
+
+/**
+ * Exercises the dynamic-field annotations: `OptionsLookupAnnotation` (select options loaded from a
+ * sibling) and `AutofillAnnotation` (value derived from a sibling, gated on validity and delayed). Each
+ * runs a self-contained Effect from the current form values.
+ */
+export const DynamicFields: Story<Schema.Schema.Type<typeof DynamicFieldsSchema>> = {
+  args: {
+    json: true,
+    schema: DynamicFieldsSchema,
+  },
 };

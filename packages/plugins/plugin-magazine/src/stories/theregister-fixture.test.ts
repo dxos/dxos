@@ -4,6 +4,8 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
+
 import { fetchRss } from '../operations/sources';
 import registerFeedXml from './fixtures/theregister-ai.xml?raw';
 
@@ -24,7 +26,7 @@ describe('theregister fixture', () => {
   });
 
   test('parses into Posts via the mock fetcher', async ({ expect }) => {
-    const { feed, posts } = await fetchRss(REGISTER_FEED_URL);
+    const { feed, posts } = await EffectEx.runPromise(fetchRss(REGISTER_FEED_URL));
     expect(feed.name).toMatch(/register/i);
     expect(posts.length).toBe(4);
     expect(posts.some((post) => /sovereign ai/i.test(post.title ?? ''))).toBe(true);

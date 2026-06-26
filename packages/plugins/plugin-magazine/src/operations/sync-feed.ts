@@ -36,9 +36,10 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
 
       const fetcher = getFetcher(subscriptionFeed.type);
-      const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () =>
-        fetcher(url, { corsProxy: browserCorsProxy() }),
-      );
+      const { feed: feedMeta, posts } = yield* fetcher(url, {
+        corsProxy: browserCorsProxy(),
+        publication: subscriptionFeed.site,
+      });
 
       // Dedup against existing posts already in the backing queue. The
       // `cursor` field on the subscription was previously used as a single-guid

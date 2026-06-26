@@ -3,6 +3,8 @@
 //
 
 export * from './ArrayField';
+export * from './AsyncSelectField';
+export * from './AutofillField';
 export * from './BooleanField';
 export * from './DateField';
 export * from './GeoPointField';

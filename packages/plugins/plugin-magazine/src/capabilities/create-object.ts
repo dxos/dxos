@@ -14,16 +14,17 @@ import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
 import { getMagazinesPath } from '../paths';
+import { CreateSubscriptionSchema, makeSubscriptionFromCreate } from './create-subscription';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Subscription.Subscription),
-        inputSchema: Subscription.CreateSubscriptionSchema,
+        inputSchema: CreateSubscriptionSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Subscription.makeSubscription(props);
+            const object = makeSubscriptionFromCreate(props);
             const result = yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

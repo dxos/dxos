@@ -4,9 +4,14 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
+
 import { fetchRss } from './rss';
 // Real-world RSS feed (CDATA-wrapped summary + content:encoded HTML), loaded via Vite's `?raw` suffix.
 import FEED_XML from './testing/feed.xml?raw';
+
+// `fetchRss` is an Effect (it provides its own HTTP layer); run it to a promise for assertions.
+const runFetchRss = (url: string, options?: { corsProxy?: string }) => EffectEx.runPromise(fetchRss(url, options));
 
 // Sample RSS XML fixture.
 const RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -50,10 +55,9 @@ const ATOM_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </feed>`;
 
 const mockFetchOnce = (body: string) => {
-  globalThis.fetch = vi.fn().mockResolvedValue({
-    ok: true,
-    text: () => Promise.resolve(body),
-  });
+  globalThis.fetch = vi
+    .fn()
+    .mockResolvedValue(new Response(body, { status: 200, headers: { 'content-type': 'application/rss+xml' } }));
 };
 
 describe('fetchRss', () => {
@@ -71,7 +75,7 @@ describe('fetchRss', () => {
   test('parses RSS feed into Subscription objects', async ({ expect }) => {
     mockFetchOnce(RSS_XML);
 
-    const result = await fetchRss('https://example.com/rss');
+    const result = await runFetchRss('https://example.com/rss');
 
     expect(result.feed.name).toBe('Test RSS Feed');
     expect(result.feed.description).toBe('A test feed.');
@@ -86,7 +90,7 @@ describe('fetchRss', () => {
   test('parses Atom feed into Subscription objects', async ({ expect }) => {
     mockFetchOnce(ATOM_XML);
 
-    const result = await fetchRss('https://example.com/atom');
+    const result = await runFetchRss('https://example.com/atom');
 
     expect(result.feed.name).toBe('Test Atom Feed');
     expect(result.feed.description).toBe('An Atom test feed.');
@@ -115,7 +119,7 @@ describe('fetchRss', () => {
 </rss>`;
     mockFetchOnce(xmlWithAttrs);
 
-    const result = await fetchRss('https://example.com/rss');
+    const result = await runFetchRss('https://example.com/rss');
 
     expect(result.feed.name).toBe('Feed With Attrs');
     expect(result.feed.description).toBe('Feed description.');
@@ -148,7 +152,7 @@ describe('fetchRss', () => {
 </rss>`;
     mockFetchOnce(xml);
 
-    const result = await fetchRss('https://example.com/rss');
+    const result = await runFetchRss('https://example.com/rss');
 
     expect(result.posts).toHaveLength(1);
     expect(result.posts[0].title).toBe('Nested Post');
@@ -156,21 +160,22 @@ describe('fetchRss', () => {
   });
 
   test('uses CORS proxy when provided', async ({ expect }) => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve(RSS_XML),
-    });
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValue(new Response(RSS_XML, { status: 200, headers: { 'content-type': 'application/rss+xml' } }));
     globalThis.fetch = mockFetch;
 
-    await fetchRss('https://example.com/rss', { corsProxy: '/api/rss?url=' });
+    await runFetchRss('https://example.com/rss', { corsProxy: '/api/rss?url=' });
 
-    expect(mockFetch).toHaveBeenCalledWith('/api/rss?url=' + encodeURIComponent('https://example.com/rss'));
+    // FetchHttpClient calls `fetch(url, init)`; the test env resolves the relative proxy path to an
+    // absolute URL, so assert the proxied target is contained rather than matching exactly.
+    expect(String(mockFetch.mock.calls[0][0])).toContain('/api/rss?url=' + encodeURIComponent('https://example.com/rss'));
   });
 
   test('parses a real-world RSS feed, unwrapping CDATA and converting content to markdown', async ({ expect }) => {
     mockFetchOnce(FEED_XML);
 
-    const result = await fetchRss('https://www.theregister.com/headlines.atom');
+    const result = await runFetchRss('https://www.theregister.com/headlines.atom');
 
     expect(result.feed.name).toBe('www.theregister.com - Articles');
     expect(result.feed.description).toBe('Articles from www.theregister.com');

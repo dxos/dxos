@@ -25,8 +25,11 @@ const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts
     let cancelled = false;
     const load = async () => {
       if (feedUrl) {
-        const { fetchRss } = await import('../../operations/sources/rss');
-        const result = await fetchRss(feedUrl, { corsProxy: '/api/rss?url=' });
+        const [{ fetchRss }, { EffectEx }] = await Promise.all([
+          import('../../operations/sources/rss'),
+          import('@dxos/effect'),
+        ]);
+        const result = await EffectEx.runPromise(fetchRss(feedUrl, { corsProxy: '/api/rss?url=' }));
         if (!cancelled) {
           setData(result);
         }

@@ -4,7 +4,13 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { fetchStandardSite, parseStandardSiteActor } from './standard-site';
+import { EffectEx } from '@dxos/effect';
+
+import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site';
+import { type FetchOptions } from './feed-fetcher';
+
+// The Standard.site fetchers are Effects (they provide their own HTTP layer); run them for assertions.
+const runFetchStandardSite = (url: string, options?: FetchOptions) => EffectEx.runPromise(fetchStandardSite(url, options));
 
 // RSS/Atom coverage lives in rss.test.ts.
 
@@ -61,7 +67,8 @@ const LIST_RECORDS = {
   cursor: 'cursor-1',
 };
 
-const okJson = (data: unknown) => ({ ok: true, json: () => Promise.resolve(data) });
+const okJson = (data: unknown) =>
+  new Response(JSON.stringify(data), { status: 200, headers: { 'content-type': 'application/json' } });
 
 /** Routes a mocked `fetch` by endpoint so the resolution chain is order-independent. */
 const routedFetch = () =>
@@ -101,7 +108,7 @@ describe('FeedFetcher', () => {
     test('resolves a handle and maps Standard.site documents', async ({ expect }) => {
       globalThis.fetch = routedFetch();
 
-      const result = await fetchStandardSite('alice.example.com');
+      const result = await runFetchStandardSite('alice.example.com');
 
       expect(result.feed.type).toBe('standard-site');
       // Feed name comes from the publication; icon/description from the author profile.
@@ -133,21 +140,43 @@ describe('FeedFetcher', () => {
       const mockFetch = routedFetch();
       globalThis.fetch = mockFetch;
 
-      await fetchStandardSite('did:plc:abc123');
+      await runFetchStandardSite('did:plc:abc123');
 
       const calls = mockFetch.mock.calls.map((call) => String(call[0]));
       expect(calls.some((url) => url.includes('resolveHandle'))).toBe(false);
       expect(calls.some((url) => url.includes('listRecords') && url.includes('repo=did%3Aplc%3Aabc123'))).toBe(true);
     });
 
-    test('throws on a non-ok response', async ({ expect }) => {
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-      });
+    test('fails on a non-ok response', async ({ expect }) => {
+      globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 404, statusText: 'Not Found' }));
 
-      await expect(fetchStandardSite('nonexistent.example.com')).rejects.toThrow('Standard.site fetch failed: 404');
+      await expect(runFetchStandardSite('nonexistent.example.com')).rejects.toThrow(/Fetch failed/);
+    });
+
+    test('filters to the selected publication', async ({ expect }) => {
+      globalThis.fetch = routedFetch();
+
+      // Only the document whose `site` matches the selected publication is included.
+      const result = await runFetchStandardSite('alice.example.com', { publication: PUBLICATION_URI });
+
+      expect(result.posts).toHaveLength(1);
+      expect(result.posts[0].title).toBe('First Article');
+      // Feed name resolves from the selected publication.
+      expect(result.feed.name).toBe('Alice Blog');
+    });
+  });
+
+  describe('listStandardSitePublications', () => {
+    test('lists the distinct publications a handle publishes under', async ({ expect }) => {
+      globalThis.fetch = routedFetch();
+
+      const publications = await EffectEx.runPromise(listStandardSitePublications('alice.example.com'));
+
+      // One `at://` publication (resolved via getRecord) and one bare `https://` site.
+      expect(publications).toHaveLength(2);
+      const bySite = new Map(publications.map((publication) => [publication.site, publication]));
+      expect(bySite.get(PUBLICATION_URI)?.name).toBe('Alice Blog');
+      expect(bySite.get('https://alice.example.com')?.url).toBe('https://alice.example.com');
     });
   });
 

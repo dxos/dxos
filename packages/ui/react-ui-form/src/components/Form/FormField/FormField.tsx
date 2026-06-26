@@ -21,6 +21,8 @@ import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
+  AsyncSelectField,
+  AutofillField,
   BooleanField,
   DateField,
   GeoPointField,
@@ -157,6 +159,20 @@ export const FormField = (props: FormFieldProps) => {
     if (component) {
       return component;
     }
+  }
+
+  //
+  // Dynamic, value-driven fields (options/value/validation loaded via a self-contained Effect annotation).
+  //
+
+  const optionsLookup = Option.getOrUndefined(Annotation.OptionsLookupAnnotation.getFromAst(type));
+  if (optionsLookup) {
+    return <AsyncSelectField {...fieldProps} lookup={optionsLookup} />;
+  }
+
+  const autofill = Option.getOrUndefined(Annotation.AutofillAnnotation.getFromAst(type));
+  if (autofill) {
+    return <AutofillField {...fieldProps} autofill={autofill} />;
   }
 
   //
