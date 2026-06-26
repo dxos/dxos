@@ -45,7 +45,7 @@ export type EditListFormConfig = {
 
 export type EditListProps<T> = ThemedClassName<{
   items: readonly T[];
-  getId?: (item: T) => string;                       // default: (item as { id: string }).id
+  getId?: (item: T) => string; // default: (item as { id: string }).id
   /** Closed-row content. `actions` sit outside the clickable title; the expand caret is appended after. */
   renderSummary: (item: T) => { title: ReactNode; actions?: ReactNode };
   /** Open-view Form configuration for an item. */
@@ -83,6 +83,7 @@ export type EditListProps<T> = ThemedClassName<{
 ## Refactor: `FieldList` (ViewEditor.tsx)
 
 `FieldList` becomes a thin wrapper over `EditList`:
+
 - `items` = `viewSnapshot.projection.fields`; `getId` = `field.id`.
 - `onMove` = existing `handleMove` (keeps it ordered).
 - `renderSummary(field)` = `{ title: field.path (subdued when hidden), actions: <eye ToggleIconButton> }`.
@@ -96,6 +97,7 @@ Net: `FieldList` keeps all current behaviour; the `OrderedList` plumbing moves i
 ## Refactor: `RoutineCompanion`
 
 Replace `MasterDetail` with `EditList` (unordered — no `onMove`):
+
 - `items` = `automations`; create flow unchanged (draft still appended as a row, expanded on create).
 - `renderSummary(routine)` = `{ title: label-or-placeholder, actions: undefined }` (lightning icon
   can live in the title node).
