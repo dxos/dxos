@@ -26,7 +26,11 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
       if (spec?.kind === 'instructions') {
         // The instructions carry their own context objects and skills; RunInstructions binds them when it
         // executes. No Chat session object is created — the run appears in the process monitor only.
-        yield* Operation.schedule(RunInstructions, { instructions: spec.instructions, input: {} }, { spaceId: db.spaceId });
+        yield* Operation.schedule(
+          RunInstructions,
+          { instructions: spec.instructions, input: {} },
+          { spaceId: db.spaceId },
+        );
         return;
       }
 
