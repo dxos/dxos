@@ -26,7 +26,10 @@ export const Empty = ({ classNames, label, icon }: EmptyProps) => {
   return (
     <div
       role='none'
-      className={mx('flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description', classNames)}
+      className={mx(
+        'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
+        classNames,
+      )}
     >
       {icon && <Icon icon={icon} size={6} classNames='text-subdued' />}
       <span>{message}</span>

@@ -23,10 +23,15 @@ export const Fallback: Story = {};
 
 /** Caller-supplied (already-translated) label. */
 export const WithLabel: Story = {
-  args: { label: 'No automations' },
+  args: {
+    label: 'No automations',
+  },
 };
 
 /** Label plus a leading icon. */
 export const WithIcon: Story = {
-  args: { label: 'No automations', icon: 'ph--lightning--regular' },
+  args: {
+    label: 'No automations',
+    icon: 'ph--lightning--regular',
+  },
 };
