@@ -18,25 +18,27 @@ import { Kanban } from '#types';
 import { useKanbanBoardModel } from './useKanbanBoardModel';
 
 // TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.
-const KanbanTaskSchema = Schema.Struct({
-  title: Schema.optional(Schema.String),
-  status: Schema.Literal('__uncategorized__', 'a', 'b').pipe(
-    FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-    Schema.annotations({
-      title: 'Status',
-      [PropertyMetaAnnotationId]: {
-        singleSelect: {
-          options: [
-            { id: '__uncategorized__', title: 'Uncategorized', color: 'neutral' },
-            { id: 'a', title: 'A', color: 'blue' },
-            { id: 'b', title: 'B', color: 'green' },
-          ],
+const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.optional(Schema.String),
+    status: Schema.Literal('__uncategorized__', 'a', 'b').pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      Schema.annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: '__uncategorized__', title: 'Uncategorized', color: 'neutral' },
+              { id: 'a', title: 'A', color: 'blue' },
+              { id: 'b', title: 'B', color: 'green' },
+            ],
+          },
         },
-      },
-    }),
-    Schema.optional,
-  ),
-}).pipe(Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0')));
+      }),
+      Schema.optional,
+    ),
+  }),
+);
 
 type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
 

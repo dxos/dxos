@@ -19,6 +19,9 @@ export type ServiceCredential = {
 
   // TODO(dmaretskyi): Build out.
   apiKey?: string;
+
+  /** Non-secret secondary identifier carried alongside the credential (e.g. an account id or report id). */
+  account?: string;
 };
 
 export class CredentialsService extends Context.Tag('@dxos/functions/CredentialsService')<

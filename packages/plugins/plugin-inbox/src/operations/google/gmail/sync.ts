@@ -18,7 +18,10 @@ import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
+// Connection is referenced in the inferred type of this module's default export via
+// InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 

@@ -1,0 +1,630 @@
+---
+id: org.dxos.plugin.ibkr
+name: IbkrPlugin
+version: 0.1.0
+---
+
+An Interactive Brokers plugin for `DXOS` Composer: a once-a-day background sync
+captures a Flex Web Service report into a per-space feed, and the assistant
+answers portfolio, cash, and trade questions from the latest stored snapshot.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+
+## Types
+
+The two persistent types are ECHO objects, identified by their DXN typename.
+`Portfolio` is the navigable owner that appears in the navtree; `PortfolioReport`
+is an append-only snapshot of the raw Flex XML. The `Position`, `Cash`, and
+`Trade` structs are not stored — they are parsed from `PortfolioReport.xml` on
+read and form the shape of the operation outputs.
+
+```mdl
+type Portfolio
+  desc: |
+    DXN typename: org.dxos.type.ibkr.Portfolio@0.1.0.
+    Navigable owner of the Interactive Brokers reports feed. Appears in the
+    navtree and opens the reports Article; its feed is hidden and carries the
+    daily PortfolioReport snapshots. The feed is parented to the Portfolio so it
+    cascade-deletes with it.
+  fields:
+    name?: string
+    feed: Ref<Feed>             # hidden per-space feed of PortfolioReport snapshots
+```
+
+```mdl
+type PortfolioReport
+  desc: |
+    DXN typename: org.dxos.type.ibkr.PortfolioReport@0.1.0.
+    A persisted Flex report captured by the daily sync. Stores the raw Flex Web
+    Service XML verbatim; read operations parse it so the rate-limited API is
+    touched only by the once-a-day sync, never by chat.
+  fields:
+    xml: string                 # raw <FlexQueryResponse> document
+    fetchedAt: string           # ISO timestamp the report was fetched from IBKR
+```
+
+```mdl
+type Position
+  desc: An open position parsed from a report's OpenPosition rows.
+  fields:
+    symbol: string
+    quantity: number
+    markPrice?: number
+    costBasis?: number          # costBasisPrice, falling back to costBasisMoney
+    positionValue?: number
+    unrealizedPnl?: number      # fifoPnlUnrealized, falling back to unrealizedPnl
+    currency?: string           # the instrument's own currency
+```
+
+```mdl
+type Cash
+  desc: An ending cash balance for a single currency (the BASE_SUMMARY rollup row is dropped).
+  fields:
+    currency: string
+    endingCash: number
+```
+
+```mdl
+type Trade
+  desc: A single executed trade parsed from a report's Trade rows.
+  fields:
+    date: string                # tradeDate (YYYYMMDD), falling back to dateTime
+    side: string                # BUY | SELL (buySell)
+    quantity: number            # signed; negative for sells
+    symbol: string
+    price?: number              # tradePrice
+    commission?: number         # ibCommission
+    currency?: string
+```
+
+```mdl
+type Lot
+  desc: |
+    A single tax lot (one acquisition). An OPEN lot — still held, parsed from a per-lot Open Positions
+    row (identified by its openDateTime; levelOfDetail="LOT" when the query emits that column) — has no
+    sold date and carries the current markPrice/value and unrealizedPnl.
+    A CLOSED lot — a realized disposal, parsed from a <Lot> row in the Trades section — has a sold
+    date plus proceeds and realizedPnl (the capital-gains data for tax reporting; long-vs-short term
+    is derived from the holding period, indicative — IBKR is authoritative). Presence of sold
+    discriminates the two.
+  fields:
+    symbol: string
+    quantity: number
+    acquired?: string           # openDateTime (acquisition)
+    sold?: string               # tradeDate / dateTime (disposal); absent while open
+    costBasis?: number          # costBasisMoney (open) / cost (closed)
+    markPrice?: number          # open lots only
+    value?: number              # positionValue; open lots only
+    proceeds?: number           # closed lots only
+    unrealizedPnl?: number      # fifoPnlUnrealized; open lots only
+    realizedPnl?: number        # fifoPnlRealized; closed lots only
+    currency?: string
+```
+
+## Components
+
+```mdl
+component PortfolioArticle
+  desc: |
+    Article view for a Portfolio: lists the stored daily PortfolioReport
+    snapshots (newest first) from the Portfolio's backing feed. The toolbar
+    carries the connect/sync action; clicking a report opens it in the
+    complementary plank.
+  props:
+    subject: Portfolio
+  state:
+    reports: PortfolioReport[]   # snapshots from the Portfolio's feed, newest first
+    selected?: PortfolioReport
+  slots:
+    toolbar?: ReactNode          # hosts PortfolioSyncAction
+  actions:
+    selectReport(report: PortfolioReport)
+  emits:
+    onOpenReport(report: PortfolioReport)   # opens report in the companion plank
+  layout: |
+    ┌─────────────────────────┐
+    │ [Connect / Sync]        │
+    ├─────────────────────────┤
+    │ Report list             │
+    │  ┌───────────────────┐  │
+    │  │ 2026-06-25  · N/M  │  │  # date · positions/trades
+    │  └───────────────────┘  │
+    │  ┌───────────────────┐  │
+    │  │ 2026-06-24  · N/M  │  │
+    │  └───────────────────┘  │
+    └─────────────────────────┘
+```
+
+```mdl
+component PortfolioSyncAction
+  desc: |
+    Toolbar action mirroring the Gmail mailbox connect/sync switch. The IBKR
+    connection is detected space-wide by connectorId: when none exists it renders
+    the connector's auth Surface (a "Connect Interactive Brokers" button); once
+    connected it renders a Sync button that invokes SyncPortfolioReport for the
+    Portfolio's space.
+  props:
+    subject: Portfolio
+  state:
+    connected: boolean           # a Connection with connectorId === ibkr exists in the space
+    syncing: boolean
+  actions:
+    connect()                    # delegated to the connector's auth Surface
+    sync()                       # invokes op:SyncPortfolioReport for subject's space
+  layout: |
+    ┌─────────────────────────┐
+    │ not connected:          │
+    │   [Connect Interactive  │
+    │    Brokers]             │
+    │ connected:              │
+    │   [⟳ Sync]              │
+    └─────────────────────────┘
+```
+
+```mdl
+component PortfolioProperties
+  desc: |
+    Companion properties panel for a Portfolio: a single toggle that creates the
+    daily sync trigger on first enable and enables/disables it thereafter. The
+    user keeps a single trigger per space.
+  props:
+    subject: Portfolio
+  state:
+    syncEnabled: boolean         # reflects the daily-sync timer trigger's enabled flag
+    pending: boolean
+  actions:
+    toggleDailySync()            # first enable creates the trigger; later toggles flip it
+  layout: |
+    ┌─────────────────────────┐
+    │ Daily sync       [ ●—— ] │
+    └─────────────────────────┘
+```
+
+```mdl
+component PortfolioReportDetail
+  desc: |
+    Companion plank showing one PortfolioReport parsed into sections: aggregated
+    open positions, trades, and cash balances, plus the per-lot breakdown (open
+    tax lots) and realized closed lots when the query emits them. Parses the
+    report's XML on render; purely a read view with no actions.
+  props:
+    subject: PortfolioReport
+  state:
+    positions: Position[]
+    trades: Trade[]
+    cash: Cash[]
+    openLots: Lot[]             # per-lot breakdown; section shown only when non-empty
+    closedLots: Lot[]           # realized disposals; section shown only when non-empty
+  layout: |
+    ┌─────────────────────────────────────┐
+    │ Open Positions (N)                  │
+    │ Symbol  Qty  Mark  Cost  Value  P&L │
+    │ ─────────────────────────────────── │
+    │ ACME     15  ...   ...   ...    +.. │
+    ├─────────────────────────────────────┤
+    │ Open Lots (L)        # when present │
+    │ Symbol Acquired   Qty Cost Value P&L│
+    │ ─────────────────────────────────── │
+    │ ACME   2024-01-15  10 ...  ...   +..│
+    ├─────────────────────────────────────┤
+    │ Trades (M)                          │
+    │ Date  Symbol  Side  Qty  Price      │
+    │ ─────────────────────────────────── │
+    │ 06-25 ACME   [SELL]  4   200        │
+    ├─────────────────────────────────────┤
+    │ Realized Gains (K)   # when present │
+    ├─────────────────────────────────────┤
+    │ Cash                                │
+    │ Currency   Ending Cash              │
+    │ USD        1,000                    │
+    └─────────────────────────────────────┘
+```
+
+## Services
+
+```mdl
+service FlexWebService
+  desc: |
+    Client for the Interactive Brokers Flex Web Service. A two-step flow:
+    SendRequest yields a reference code, then GetStatement is polled until the
+    report is generated. Calls route through the EDGE CORS proxy because Flex
+    sends no CORS headers. Only the daily sync touches this service.
+  loading: lazy
+  ops:
+    fetchReportXml(token: string, queryId: string) → string   # raw <FlexQueryResponse>
+    fetchReport(token: string, queryId: string) → FlexReport  # parsed positions/trades/cash
+  errors:
+    RateLimited: |
+      Flex returned code 1018 or 1025. IBKR caps a token at 1 req/sec and 10/min;
+      1025 locks the token after repeated failures. Stops immediately — retrying
+      extends the lockout.
+    SendRequestFailed: SendRequest returned a non-Success status
+    NoReferenceCode: SendRequest succeeded but returned no reference code
+    GetStatementFailed: GetStatement returned a non-retryable error code
+    Timeout: report still generating after the maximum poll attempts
+  effects: [http]
+  note: |
+    Pacing stays under IBKR's per-token cap: one SendRequest, a brief wait to
+    space the first poll, then a poll every ~7s for at most 8 attempts (~50s).
+    RETRYABLE codes (1001/1004-1009/1019/1021) keep polling; RATE_LIMIT codes
+    (1018/1025) stop the flow; anything else fails fast.
+```
+
+## Operations
+
+All operations take an empty input (`{}`). The two read operations parse the
+latest stored report and never call IBKR; only `SyncPortfolioReport` reaches the
+network, via `service:FlexWebService`.
+
+```mdl
+op SyncPortfolioReport
+  desc: |
+    Fetches a fresh Flex report from IBKR and appends it to the Portfolio feed as
+    a PortfolioReport. Driven by the daily timer trigger, and also invokable
+    on-demand from the toolbar or the assistant.
+  input: {}
+  output:
+    fetchedAt: string
+    positions: number           # count in the fetched report
+    trades: number
+    cash: number
+  errors:
+    MissingCredentials: connection is missing the Flex token or query id
+    RateLimited: Flex rate-limit / lockout code returned (1018/1025)
+    FetchFailed: SendRequest/GetStatement failed or timed out
+  effects: [http, echo:read, echo:write]
+  requires: [FlexWebService, CredentialsService, Database]
+  note: |
+    Resolves the credential (token from AccessToken.token, query id from
+    AccessToken.account), fetches the raw XML, then finds-or-creates the
+    per-space feed (keyed by IBKR_FEED_KIND) and appends one PortfolioReport.
+```
+
+```mdl
+op GetPortfolio
+  desc: |
+    Reads the open positions and cash balances from the most recent stored
+    report. Touches no network — parses the latest PortfolioReport.xml.
+  input: {}
+  output:
+    fetchedAt?: string          # absent if no sync has run yet
+    positions: Position[]
+    cash: Cash[]
+  effects: [echo:read]
+  requires: [Database]
+  note: |
+    Finds the per-space feed, takes the report with the greatest fetchedAt
+    (ISO timestamps sort lexicographically), and parses it. Returns empty
+    positions/cash when no report exists.
+```
+
+```mdl
+op GetTrades
+  desc: |
+    Reads the trade history from the most recent stored report, limited to the
+    last 7 days. Touches no network — parses the latest PortfolioReport.xml.
+  input: {}
+  output:
+    fetchedAt?: string          # absent if no sync has run yet
+    trades: Trade[]             # trades with date within the last 7 days
+  effects: [echo:read]
+  requires: [Database]
+  note: |
+    Same latest-report selection as GetPortfolio, then filters parsed trades to
+    those on or after the cutoff (now − 7 days, as YYYYMMDD; IBKR trade dates
+    sort lexicographically).
+```
+
+## Features
+
+```mdl
+feat F-1: Connection
+
+  req F-1.1:
+    desc: |
+      The user connects Interactive Brokers via the Flex Web Service by supplying
+      a Flex token and a Flex query id through a Composer Connection.
+  req F-1.2:
+    when: the credential form is submitted
+    then: |
+      an AccessToken is created with the Flex token in token (the secret) and the
+      Flex query id in account (non-secret); a Connection referencing it is created
+  req F-1.3:
+    desc: The connection is read-only — the plugin never places orders or mutates the IBKR account.
+  req F-1.4:
+    when: a connection already exists in the space
+    then: component:PortfolioSyncAction shows the Sync button instead of Connect
+```
+
+```mdl
+feat F-2: Daily Sync
+
+  req F-2.1:
+    when: the daily timer trigger fires (cron 0 6 * * *, 06:00 UTC)
+    then: op:SyncPortfolioReport runs for the space
+
+  req F-2.2:
+    when: op:SyncPortfolioReport completes successfully
+    then: |
+      a PortfolioReport holding the raw Flex XML is appended to the per-space
+      hidden feed; the report list in component:PortfolioArticle updates
+
+  req F-2.3:
+    desc: |
+      Sync is the only path that calls IBKR. Read operations parse stored XML so
+      the rate-limited API is touched at most once per day plus explicit manual
+      refreshes.
+
+  req F-2.4:
+    when: the user toggles "Daily sync" on in component:PortfolioProperties for the first time
+    then: the daily timer trigger is created (enabled); subsequent toggles enable/disable it
+
+  req F-2.5:
+    desc: |
+      The local timer fires only while the app is open; gaps are covered by the
+      manual Sync action and by the assistant invoking SyncPortfolioReport.
+    tags: [limitation]
+```
+
+```mdl
+feat F-3: Rate Limiting
+
+  req F-3.1:
+    desc: |
+      IBKR Flex is rate-limited (1 request/sec, 10/min). The client paces
+      SendRequest and the GetStatement polls to stay under both caps.
+
+  req F-3.2:
+    when: Flex returns a rate-limit / lockout code (1018 or 1025)
+    then: service:FlexWebService fails immediately with RateLimited; it never retries
+    errors: [RateLimited]
+
+  req F-3.3:
+    when: Flex returns a retryable "still generating" code (e.g. 1019)
+    then: the client waits and polls again, up to the attempt cap, then fails with Timeout
+
+  req F-3.4:
+    desc: |
+      The assistant runs op:SyncPortfolioReport at most once per request and never
+      in a loop; repeated attempts extend the token lockout.
+```
+
+```mdl
+feat F-4: Assistant Skill
+
+  req F-4.1:
+    desc: |
+      The IBKR skill exposes op:GetPortfolio, op:GetTrades, and
+      op:SyncPortfolioReport as tools the assistant binds to a conversation.
+
+  req F-4.2:
+    when: the user asks about positions or cash
+    then: the assistant calls op:GetPortfolio and answers from the stored snapshot
+
+  req F-4.3:
+    when: the user asks about recent trades
+    then: the assistant calls op:GetTrades and answers from the stored snapshot
+
+  req F-4.4:
+    when: the latest read result is empty (no sync yet) or the user asks to refresh
+    then: the assistant may call op:SyncPortfolioReport once to populate or refresh
+
+  req F-4.5:
+    desc: |
+      Each result includes fetchedAt; the assistant relays it so the user knows the
+      data is an end-of-day snapshot, not a live quote stream. Amounts are reported
+      in each instrument's own currency.
+```
+
+```mdl
+feat F-5: Report Browsing
+
+  req F-5.1:
+    when: component:PortfolioArticle is shown
+    then: stored reports are listed newest first, each with its date and position/trade counts
+
+  req F-5.2:
+    when: the user selects a report
+    then: |
+      component:PortfolioReportDetail opens in the companion plank, parsing the
+      report into open positions, trades, and cash sections
+
+  req F-5.3:
+    desc: Report rows and the detail view parse PortfolioReport.xml on read; no IBKR call is made.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Connect stores token and query id
+  given: the user opens the Interactive Brokers connector form
+  when: the user submits a Flex token and a Flex query id
+  then:
+    - an AccessToken is created with source interactivebrokers.com
+    - AccessToken.token === the Flex token
+    - AccessToken.account === the Flex query id
+    - a Connection referencing the AccessToken exists in the space
+```
+
+```mdl
+test T-2: Daily sync appends a report
+  given: a connected Portfolio and a stubbed Flex response
+  when: op:SyncPortfolioReport runs
+  then:
+    - a PortfolioReport is appended to the per-space feed
+    - PortfolioReport.xml === the fetched <FlexQueryResponse>
+    - the output counts match the parsed positions, trades, and cash
+    - component:PortfolioArticle lists the new report at the top
+```
+
+```mdl
+test T-3: Reads come from the latest snapshot only
+  given: two stored reports with different fetchedAt timestamps
+  when: op:GetPortfolio is invoked
+  then:
+    - positions and cash are parsed from the report with the greatest fetchedAt
+    - no IBKR / FlexWebService call is made
+    - fetchedAt in the result equals the latest report's fetchedAt
+```
+
+```mdl
+test T-4: GetTrades is limited to the last 7 days
+  given: a stored report containing trades older and newer than 7 days ago
+  when: op:GetTrades is invoked
+  then:
+    - only trades on or after (now − 7 days) are returned
+    - older trades are excluded
+```
+
+```mdl
+test T-5: Reads return empty before any sync
+  given: a Portfolio whose feed has no reports
+  when: op:GetPortfolio is invoked
+  then:
+    - positions === []
+    - cash === []
+    - fetchedAt is absent
+```
+
+```mdl
+test T-6: Rate-limit code stops the flow
+  given: Flex SendRequest returns error code 1018
+  when: service:FlexWebService.fetchReportXml runs
+  then:
+    - a RateLimited error is raised
+    - no GetStatement poll is attempted
+    - the error message advises waiting before retrying
+```
+
+```mdl
+test T-7: Retryable code is polled then resolved
+  given: the first GetStatement returns code 1019, the second returns the report
+  when: service:FlexWebService.fetchReport runs
+  then:
+    - the client polls GetStatement twice
+    - the parsed report is returned (positions, trades, cash)
+    - no RateLimited error is raised
+```
+
+```mdl
+test T-8: Sync without a connection fails clearly
+  given: a space with no IBKR connection
+  when: op:SyncPortfolioReport runs
+  then:
+    - a MissingCredentials error is raised
+    - the message tells the user to reconnect under Settings → Connections
+    - no PortfolioReport is appended
+```
+
+```mdl
+test T-9: First daily-sync toggle creates the trigger
+  given: component:PortfolioProperties for a Portfolio with no sync trigger
+  when: the user toggles "Daily sync" on
+  then:
+    - a timer trigger on cron 0 6 * * * bound to SyncPortfolioReport is created, enabled
+    - toggling off disables the same trigger without deleting it
+    - exactly one sync trigger exists per space
+```
+
+```mdl
+test T-10: Assistant answers from the snapshot
+  given: a stored report and the IBKR skill bound to the conversation
+  when: the user asks "what's my portfolio?"
+  then:
+    - the assistant calls op:GetPortfolio (not the network)
+    - positions and cash are reported in each instrument's own currency
+    - the answer relays fetchedAt as the as-of time
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```

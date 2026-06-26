@@ -120,7 +120,7 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
             disposition: 'hidden',
           },
         };
-      }),
+      }).pipe(Effect.orDie),
   });
 
 export default Capability.makeModule(
@@ -481,7 +481,7 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             };
-          }),
+          }).pipe(Effect.orDie),
       }),
 
       createFeedObjectNodeExtension<Calendar.Calendar, Event.Event>({

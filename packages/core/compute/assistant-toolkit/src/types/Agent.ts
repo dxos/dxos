@@ -23,82 +23,81 @@ import * as Chat from './Chat';
 /**
  * Agent schema definition.
  */
-export const Agent = Schema.Struct({
-  name: Schema.optional(Schema.String),
+export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
 
-  /**
-   * When false, agent triggers are disabled after sync-triggers runs.
-   */
-  enabled: Schema.optional(Schema.Boolean).annotations({
-    title: 'Enabled',
-    description: 'Master switch for agent automation; propagated to all triggers on sync.',
-  }),
-
-  /**
-   * Instructions for the agent.
-   */
-  instructions: Ref.Ref(Text.Text).pipe(
-    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ title: 'Instructions' }),
-  ),
-
-  /**
-   * Primary chat for the agent.
-   */
-  // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
-  chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
-
-  // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
-  artifacts: Schema.Array(
-    Schema.Struct({
-      // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
-      name: Schema.String,
-      // TODO(burdon): Rename object.
-      data: Ref.Ref(Obj.Unknown),
+    /**
+     * When false, agent triggers are disabled after sync-triggers runs.
+     */
+    enabled: Schema.optional(Schema.Boolean).annotations({
+      title: 'Enabled',
+      description: 'Master switch for agent automation; propagated to all triggers on sync.',
     }),
-  ).pipe(FormInputAnnotation.set(false)),
 
-  /**
-   * References to objects with a canonical queue property.
-   * Schema must have the QueueAnnotation.
-   */
-  // Change to trigger.
-  // TODO(dmaretskyi): Turn into an array of objects when form-data
-  subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
+    /**
+     * Instructions for the agent.
+     */
+    instructions: Ref.Ref(Text.Text).pipe(
+      Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+      Schema.annotations({ title: 'Instructions' }),
+    ),
 
-  /**
-   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
-   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
-   */
-  // Change to trigger.
-  cron: Schema.optional(Schema.String).annotations({
-    title: 'Cron',
-    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
-  }),
+    /**
+     * Primary chat for the agent.
+     */
+    // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
+    chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
-  /**
-   * Input feed for subscriptions.
-   * @deprecated Subscriptions will write directly to the agent.
-   */
-  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
+    // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
+    artifacts: Schema.Array(
+      Schema.Struct({
+        // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
+        name: Schema.String,
+        // TODO(burdon): Rename object.
+        data: Ref.Ref(Obj.Unknown),
+      }),
+    ).pipe(FormInputAnnotation.set(false)),
 
-  /**
-   * Allow the agent to filter events.
-   * Related events will be added to the input queue of the agent.
-   * It is recommended to enable this.
-   * @deprecated
-   */
-  filterEvents: Schema.optional(Schema.Boolean).annotations({
-    title: 'Filter events',
-    description: 'Allow the agent to filter events.',
-  }),
-}).pipe(
-  Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.agent', '0.1.0')),
-);
+    /**
+     * References to objects with a canonical queue property.
+     * Schema must have the QueueAnnotation.
+     */
+    // Change to trigger.
+    // TODO(dmaretskyi): Turn into an array of objects when form-data
+    subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 
-export type Agent = Type.InstanceType<typeof Agent>;
+    /**
+     * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+     * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+     */
+    // Change to trigger.
+    cron: Schema.optional(Schema.String).annotations({
+      title: 'Cron',
+      description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
+    }),
+
+    /**
+     * Input feed for subscriptions.
+     * @deprecated Subscriptions will write directly to the agent.
+     */
+    feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
+
+    /**
+     * Allow the agent to filter events.
+     * Related events will be added to the input queue of the agent.
+     * It is recommended to enable this.
+     * @deprecated
+     */
+    filterEvents: Schema.optional(Schema.Boolean).annotations({
+      title: 'Filter events',
+      description: 'Allow the agent to filter events.',
+    }),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
+  ),
+) {}
 
 export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'artifacts' | 'subscriptions' | 'chat'> &
   Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {

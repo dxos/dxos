@@ -25,22 +25,21 @@ import { mockAiService } from './testing/mock-ai';
 // Test types.
 //
 
-const Note = Schema.Struct({ text: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.Note', '0.1.0')));
-interface Note extends Type.InstanceType<typeof Note> {}
+class Note extends Type.makeObject<Note>(DXN.make('com.example.type.Note', '0.1.0'))(
+  Schema.Struct({ text: Schema.String }),
+) {}
 
-const Contact = Schema.Struct({
-  email: Schema.String,
-  name: Schema.optional(Schema.String),
-}).pipe(Type.makeObject(DXN.make('com.example.type.Contact', '0.1.0')));
-interface Contact extends Type.InstanceType<typeof Contact> {}
-
-const ExtractedRel = Schema.Struct({ id: Obj.ID }).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('com.example.relation.extracted', '0.1.0'),
-    source: Obj.Unknown,
-    target: Obj.Unknown,
+class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type.Contact', '0.1.0'))(
+  Schema.Struct({
+    email: Schema.String,
+    name: Schema.optional(Schema.String),
   }),
-);
+) {}
+
+const ExtractedRel = Type.makeRelation(DXN.make('com.example.relation.extracted', '0.1.0'))({
+  source: Obj.Unknown,
+  target: Obj.Unknown,
+})(Schema.Struct({ id: Obj.ID }));
 
 //
 // Template + code wiring.

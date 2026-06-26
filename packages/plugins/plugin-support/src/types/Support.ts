@@ -18,30 +18,29 @@ export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
  * companion; this object is the persistent record of the issue and its
  * resolution.
  */
-export const Ticket = Schema.Struct({
-  title: Schema.String.annotations({
-    description: 'Short summary of the issue.',
-  }),
-  body: Schema.optional(
-    Schema.String.annotations({
-      description: 'Initial description of the problem.',
+export class Ticket extends Type.makeObject<Ticket>(DXN.make('org.dxos.type.support.ticket', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String.annotations({
+      description: 'Short summary of the issue.',
     }),
+    body: Schema.optional(
+      Schema.String.annotations({
+        description: 'Initial description of the problem.',
+      }),
+    ),
+    status: TicketStatus.pipe(FormInputAnnotation.set(false)),
+    resolution: Schema.optional(
+      Schema.String.annotations({
+        description: 'Resolution notes recorded when the ticket is resolved.',
+      }),
+    ),
+    tags: Schema.optional(Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false))),
+  }).pipe(
+    LabelAnnotation.set(['title']),
+    Annotation.IconAnnotation.set({ icon: 'ph--lifebuoy--regular', hue: 'rose' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   ),
-  status: TicketStatus.pipe(FormInputAnnotation.set(false)),
-  resolution: Schema.optional(
-    Schema.String.annotations({
-      description: 'Resolution notes recorded when the ticket is resolved.',
-    }),
-  ),
-  tags: Schema.optional(Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false))),
-}).pipe(
-  LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({ icon: 'ph--lifebuoy--regular', hue: 'rose' }),
-  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
-);
-
-export type Ticket = Type.InstanceType<typeof Ticket>;
+) {}
 
 /**
  * Creates a Ticket with default lifecycle fields (status: 'open', empty tags).
