@@ -75,7 +75,8 @@ const ObjectsTreeRow = ({
 
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
-  const showOpen = onOpen != null && !node.deleted && node.type === 'object' && (canOpen == null || canOpen(node.entity));
+  const showOpen =
+    onOpen != null && !node.deleted && node.type === 'object' && (canOpen == null || canOpen(node.entity));
   const handleOpen = useCallback(async () => {
     const obj = await model.database.query(Query.select(Filter.id(node.id))).first();
     if (obj && Obj.isObject(obj)) {

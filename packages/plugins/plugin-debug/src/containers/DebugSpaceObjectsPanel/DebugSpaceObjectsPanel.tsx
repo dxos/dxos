@@ -38,7 +38,12 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
           <Grid rows={2} classNames='divide-y divide-separator'>
             <ScrollArea.Root>
               <ScrollArea.Viewport>
-                <ObjectsTree db={space.db} onSelect={(entity) => setSelectedId(entity.id)} onOpen={onOpen} canOpen={canOpen} />
+                <ObjectsTree
+                  db={space.db}
+                  onSelect={(entity) => setSelectedId(entity.id)}
+                  onOpen={onOpen}
+                  canOpen={canOpen}
+                />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
             {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}

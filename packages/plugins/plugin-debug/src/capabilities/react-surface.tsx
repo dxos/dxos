@@ -92,9 +92,7 @@ const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoke
   const spaceSettings = useAtomCapability(SpaceCapabilities.Settings);
   const showHidden = spaceSettings?.showHidden ?? false;
 
-  const allTypes = useAtomValue(
-    useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]),
-  );
+  const allTypes = useAtomValue(useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]));
 
   const hiddenTypenames = useMemo(() => {
     const result = new Set<string>();

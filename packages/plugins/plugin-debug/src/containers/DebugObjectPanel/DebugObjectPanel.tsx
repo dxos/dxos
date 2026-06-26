@@ -42,7 +42,13 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
             {db && (
               <ScrollArea.Root>
                 <ScrollArea.Viewport>
-                  <ObjectsTree db={db} root={companionTo} onSelect={(entity) => setSelectedId(entity.id)} onOpen={onOpen} canOpen={canOpen} />
+                  <ObjectsTree
+                    db={db}
+                    root={companionTo}
+                    onSelect={(entity) => setSelectedId(entity.id)}
+                    onOpen={onOpen}
+                    canOpen={canOpen}
+                  />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
