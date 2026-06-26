@@ -120,11 +120,13 @@ export default Capability.makeModule(
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
           // Not yet resolved — subscribe to child connections so we re-try
-          // when graph builder extensions add companion nodes (after expand).
+          // when graph builder extensions add companion nodes (after expand). This subscription
+          // outlives the current `provision()` run, so re-read the latest variant at callback time
+          // rather than closing over the one captured here.
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, 'child'), () => {
-              if (provisionForPlank(plankId, companionVariant)) {
+              if (provisionForPlank(plankId, registry.get(variantAtom).variant)) {
                 unsubPlank(plankId);
               }
             }),
