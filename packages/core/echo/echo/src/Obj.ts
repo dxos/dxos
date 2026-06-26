@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
+import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -298,6 +299,22 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
  */
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));
+
+/**
+ * Synchronous version of `Obj.getReactive` that returns `undefined` instead of throwing.
+ * Accepts `undefined` input so callers can pass the result of `useObject` directly.
+ *
+ * @param snapshot - A snapshot of the object (from `Obj.getSnapshot` or `useObject`), or `undefined`.
+ * @returns The reactive object, or `undefined` if the snapshot is `undefined` or unresolvable.
+ */
+export const getReactiveOrUndefined = <T extends Unknown>(snapshot: Snapshot<T> | undefined): T | undefined => {
+  if (snapshot === undefined) {
+    return undefined;
+  }
+  return Effect.runSyncExit(getReactive(snapshot)).pipe(
+    Exit.match({ onSuccess: (value) => value, onFailure: () => undefined }),
+  );
+};
 
 export type CloneOptions = {
   /**

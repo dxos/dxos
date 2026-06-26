@@ -77,7 +77,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     return (
       <ChatComponent.Root
         chat={chat}
-        feed={chat?.feed.target}
         db={space?.db}
         processor={processor}
         onEvent={onEvent}
