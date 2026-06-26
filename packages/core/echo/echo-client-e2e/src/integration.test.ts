@@ -527,6 +527,99 @@ describe('Integration tests', () => {
         expect(target.name).toEqual('Alice');
       }
     });
+
+    // Expected to fail: the query pipeline filters a relation only by its own deleted flag, not by
+    // its endpoints — so a relation whose target object is deleted is still returned by a default
+    // query. Unskip once dangling relations (with a deleted source/target) are excluded.
+    test.fails('a relation with a deleted target is excluded from queries', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: bob,
+          [Relation.Target]: alice,
+        }),
+      );
+      await db.flush();
+
+      // Delete the relation's target object (Alice, the manager).
+      db.remove(alice);
+      await db.flush();
+
+      // A relation pointing at a deleted endpoint is treated as deleted and not returned.
+      const relations = await db.query(Query.select(Filter.type(TestSchema.HasManager))).run();
+      expect(relations.length).to.eq(0);
+    });
+
+    test('relation getTarget resolves a deleted target object', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const hasManager = db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: bob,
+          [Relation.Target]: alice,
+        }),
+      );
+      await db.flush();
+
+      // The relation is returned before its target is deleted.
+      const before = await db.query(Query.select(Filter.type(TestSchema.HasManager))).run();
+      expect(before.length).to.eq(1);
+
+      // Deleting the target only marks it; resolution is deletion-agnostic, so the relation keeps
+      // resolving its endpoint to the deleted object instead of throwing.
+      db.remove(alice);
+      await db.flush();
+
+      const target = Relation.getTarget(hasManager);
+      expect(target.id).to.eq(alice.id);
+      expect(Obj.isDeleted(target)).to.be.true;
+    });
+
+    test('a relation with a deleted target is returned when querying with deleted: include', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const hasManager = db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: bob,
+          [Relation.Target]: alice,
+        }),
+      );
+      const relationId = hasManager.id;
+      await db.flush();
+
+      // Delete the relation's target object (Alice, the manager).
+      db.remove(alice);
+      await db.flush();
+
+      // The `deleted: 'include'` option surfaces the relation despite its deleted endpoint.
+      const relations = await db
+        .query(Query.select(Filter.type(TestSchema.HasManager)).options({ deleted: 'include' }))
+        .run();
+      expect(relations.length).to.eq(1);
+      expect(relations[0].id).to.eq(relationId);
+    });
   });
 
   describe('dynamic schema', () => {
