@@ -35,6 +35,9 @@ const DefaultStory = () => {
     <Dialog.Root open>
       <Dialog.Overlay>
         <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Create object</Dialog.Title>
+          </Dialog.Header>
           <Dialog.Body>
             <CreateObjectPanel
               options={mockOptions}

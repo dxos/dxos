@@ -19,7 +19,7 @@ import { configuredCredentialsLayer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
+import { type CanvasGraphModel, Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -240,92 +240,38 @@ const ServiceLayer = Layer.empty.pipe(
   Layer.orDie,
 );
 
-export const Default: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createEmptyCircuit(), ManagedRuntime.make(ServiceLayer)),
+// Wraps a circuit factory in a render function so ECHO objects are created per mount,
+// not at module evaluation time. Module-level ECHO proxies from multiple stories can
+// trigger ownership invariant violations when their nested records are shared.
+const makeStory = (createCircuit: () => CanvasGraphModel<ComputeShape>): Story => ({
+  render: (args) => {
+    const props = useMemo(
+      () => ({
+        id: 'test',
+        registry: new ShapeRegistry(computeShapes),
+        ...createComputeGraphController(createCircuit(), ManagedRuntime.make(ServiceLayer)),
+      }),
+      [],
+    );
+    return <DefaultStory {...props} {...args} />;
   },
-};
+});
 
-export const Beacon: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createBasicCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const Default: Story = makeStory(createEmptyCircuit);
+export const Beacon: Story = makeStory(createBasicCircuit);
+export const Transform: Story = makeStory(createTransformCircuit);
+export const Logic: Story = makeStory(createLogicCircuit);
+export const Control: Story = makeStory(createControlCircuit);
+export const Template: Story = makeStory(createTemplateCircuit);
 
-export const Transform: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTransformCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const GPT: Story = makeStory(() => createGptCircuit({ history: true }));
 
-export const Logic: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createLogicCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const Plugins: Story = makeStory(() => createGptCircuit({ history: true, image: true, artifact: true }));
 
-export const Control: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createControlCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const Artifact: Story = makeStory(createArtifactCircuit);
 
-export const Template: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTemplateCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const ImageGen: Story = makeStory(() => createGptCircuit({ image: true, artifact: true }));
 
-export const GPT: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGptCircuit({ history: true }), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const Audio: Story = makeStory(createAudioCircuit);
 
-export const Plugins: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGptCircuit({ history: true, image: true, artifact: true }),
-      ManagedRuntime.make(ServiceLayer),
-    ),
-  },
-};
-
-export const Artifact: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createArtifactCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
-
-export const ImageGen: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGptCircuit({ image: true, artifact: true }),
-      ManagedRuntime.make(ServiceLayer),
-    ),
-  },
-};
-
-export const Audio: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createAudioCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
-
-export const Voice: Story = {
-  args: {
-    registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createGPTRealtimeCircuit(), ManagedRuntime.make(ServiceLayer)),
-  },
-};
+export const Voice: Story = makeStory(createGPTRealtimeCircuit);
