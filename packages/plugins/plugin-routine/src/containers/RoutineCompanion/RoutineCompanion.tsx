@@ -37,24 +37,11 @@ export type RoutineCompanionProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  * and committed on Save with a single `Database.add` (which cascades the owned children). Existing routines
  * are edited in place.
  */
-export const RoutineCompanion = ({ subject, attendableId }: RoutineCompanionProps) => {
-  const db = Obj.getDatabase(subject);
-  if (!db) {
-    return null;
-  }
+export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompanionProps) => {
+  // A non-persisted subject has no database; `db` may be undefined. Every hook below tolerates that, and the
+  // render is guarded after the last hook (see below) so hook order is identical across renders either way.
+  const db = Obj.getDatabase(object);
 
-  return <RoutineCompanionImpl db={db} object={subject} attendableId={attendableId} />;
-};
-
-const RoutineCompanionImpl = ({
-  db,
-  object,
-  attendableId,
-}: {
-  db: Database.Database;
-  object: Obj.Unknown;
-  attendableId?: string;
-}) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { items, statusFor } = useConnectedRoutines(db, object);
@@ -83,6 +70,10 @@ const RoutineCompanionImpl = ({
 
   const handleCreateFromTemplate = useCallback(
     async (template: RoutineCapabilities.Template) => {
+      if (!db) {
+        return;
+      }
+
       // The scaffold returns a fully-wired in-memory routine draft graph (its owned trigger/instructions
       // bound and parented); nothing is persisted until Save.
       const scaffolded = await EffectEx.runPromise(
@@ -113,7 +104,7 @@ const RoutineCompanionImpl = ({
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!draft) {
+    if (!draft || !db) {
       return;
     }
 
@@ -131,6 +122,10 @@ const RoutineCompanionImpl = ({
 
   const handleDelete = useCallback(
     (routine: Routine.Routine) => {
+      if (!db) {
+        return;
+      }
+
       setSavedRoutine((current) => (current?.id === routine.id ? undefined : current));
       setSelectedId((current) => (current === routine.id ? undefined : current));
       // Route through the space operation so the deletion is undoable (toast + RestoreObjects), rather than
@@ -140,8 +135,8 @@ const RoutineCompanionImpl = ({
     [invokePromise, db],
   );
 
-  // Per-row overflow menu: delete. (A routine's on/off state is toggled per-trigger inline in the form, not
-  // from the list.)
+  // Per-row overflow menu: delete. (A routine's on/off state is toggled per-trigger inline in the form,
+  // not from the list.)
   const getMenu = useGetMenu({ t, handleDelete });
 
   // Row icon, reactive per row: an enabled routine takes its type's hue (amber); disabled uses the default
@@ -168,6 +163,12 @@ const RoutineCompanionImpl = ({
         : undefined,
     [statusFor, t],
   );
+
+  // Render guard placed after every hook so hook order stays stable: a non-persisted subject (no database)
+  // has nothing to list.
+  if (!db) {
+    return null;
+  }
 
   // One form for both flows. A selected (persisted) routine is edited in place. The create-from-template draft
   // is the only Save/Cancel flow: an in-memory routine shown editable, discarded on Cancel and persisted by a
@@ -226,7 +227,7 @@ const RoutineCompanionImpl = ({
  * them. A freshly-saved routine appears once the query reflects it.
  */
 const useConnectedRoutines = (
-  db: Database.Database,
+  db: Database.Database | undefined,
   object: Obj.Unknown,
 ): { items: Routine.Routine[]; statusFor: (id: string) => Status } => {
   const connected = useQuery(db, connectedRoutinesQuery(object));

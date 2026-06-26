@@ -106,6 +106,16 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   );
 };
 
+type MasterDetailRowProps<T extends MasterDetailRecord> = {
+  item: T;
+  selected: boolean;
+  getLabel: (get: Atom.Context, item: T) => string;
+  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
+  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
+  onSelect?: (id: string | undefined) => void;
+};
+
 const MasterDetailRow = <T extends MasterDetailRecord>({
   item,
   selected,
@@ -114,15 +124,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   getAdornment,
   getMenu,
   onSelect,
-}: {
-  item: T;
-  selected: boolean;
-  getLabel: (get: Atom.Context, item: T) => string;
-  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
-  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
-  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
-  onSelect?: (id: string | undefined) => void;
-}) => {
+}: MasterDetailRowProps<T>) => {
   const { t } = useTranslation(meta.profile.key);
   // Resolve the label, icon, adornment, and actions reactively per row — each subscribes (via `get`) only to
   // this item's state, so a change (rename, toggling enabled) updates just this row.
@@ -130,6 +132,7 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
   const icon = useAtomValue(useMemo(() => Atom.make((get) => getIcon?.(get, item)), [getIcon, item]));
   const adornment = useAtomValue(useMemo(() => Atom.make((get) => getAdornment?.(get, item)), [getAdornment, item]));
   const menu = useMenuBuilder((get) => getMenu?.(get, item) ?? EMPTY_MENU, [getMenu, item]);
+
   return (
     <OrderedList.Item
       id={item.id}
