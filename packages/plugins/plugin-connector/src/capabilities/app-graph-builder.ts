@@ -37,6 +37,25 @@ const queryConnectionBindings = (connection: Connection.Connection): Effect.Effe
   );
 };
 
+/**
+ * Reactive matcher: matches an ECHO object that has a {@link SyncBinding} targeting
+ * it and returns that binding. Read through the atom context so the match
+ * re-evaluates when bindings are created or removed. The first binding is chosen
+ * when multiple target one object; the companion receives it as its article subject.
+ */
+const whenObjectSyncBinding: NodeMatcher.NodeMatcher<SyncBinding.SyncBinding> = (node, get) => {
+  if (!Obj.isObject(node.data)) {
+    return Option.none();
+  }
+  const db = Obj.getDatabase(node.data);
+  if (!db) {
+    return Option.none();
+  }
+  const bindings = get(db.query(Query.select(Filter.id(node.data.id)).targetOf(SyncBinding.SyncBinding)).atom);
+  const binding = bindings.find(SyncBinding.instanceOf);
+  return binding ? Option.some(binding) : Option.none();
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
@@ -119,27 +138,16 @@ export default Capability.makeModule(
       // Reactively appears and disappears as bindings are created or removed.
       GraphBuilder.createExtension({
         id: 'connectorCompanion',
-        match: NodeMatcher.whenEchoObject,
-        connector: (object, get) => {
-          const db = Obj.getDatabase(object);
-          if (!db) {
-            return Effect.succeed([]);
-          }
-          const bindings = get(
-            db.query(Query.select(Filter.id(object.id)).targetOf(SyncBinding.SyncBinding)).atom,
-          );
-          if (bindings.length === 0) {
-            return Effect.succeed([]);
-          }
-          return Effect.succeed([
+        match: whenObjectSyncBinding,
+        connector: (binding) =>
+          Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('connector'),
               label: ['connection-companion.label', { ns: meta.profile.key }],
               icon: 'ph--plugs-connected--regular',
-              data: 'connector',
+              data: binding,
             }),
-          ]);
-        },
+          ]),
       }),
 
       // Connection objects listed under the connections section node.

@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Relation } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -22,38 +24,33 @@ import { connectionDeckSubject } from '../../constants';
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};
 
-export type ConnectorCompanionProps = {
-  companionTo: Obj.Any;
-  role?: string;
-  attendableId?: string;
-};
+export type ConnectorCompanionProps = AppSurface.ArticleProps<SyncBinding.SyncBinding>;
 
 /**
  * Companion panel focused on the {@link SyncBinding} that connects the primary
  * plank's object to its external service. Shows the connection header (name and
- * account) and the sync status for that binding. When the object has multiple
- * bindings (unusual edge case) only the first is shown.
+ * account) and the sync status for that binding. The binding is resolved by the
+ * app-graph matcher and handed in as the companion subject; when an object has
+ * multiple bindings (unusual edge case) the matcher picks the first.
  */
-export const ConnectorCompanion = ({ companionTo, role }: ConnectorCompanionProps) => {
+export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const db = Obj.getDatabase(companionTo);
   const { invokePromise } = useOperationInvoker();
 
-  // All bindings targeting this object — pick the first.
-  const allBindings = useQuery(
-    db,
-    db ? Query.select(Filter.id(companionTo.id)).targetOf(SyncBinding.SyncBinding) : Query.select(Filter.nothing()),
-  );
-  const binding = allBindings.find(SyncBinding.instanceOf);
+  // The subject is an ECHO relation. Subscribe to it so its mutable fields
+  // (sync status, options) re-render; field reads use the live relation.
+  useAtomValue(useMemo(() => Relation.atom(subject), [subject]));
+  const db = Obj.getDatabase(subject);
 
-  // Traverse to the source connection via the same path.
-  const allConnections = useQuery(
-    db,
-    db
-      ? Query.select(Filter.id(companionTo.id)).targetOf(SyncBinding.SyncBinding).source()
-      : Query.select(Filter.nothing()),
-  );
-  const connection = allConnections.find(Connection.instanceOf);
+  // Source connection of the binding.
+  const connection = useMemo(() => {
+    try {
+      const source = Relation.getSource(subject);
+      return Connection.instanceOf(source) ? source : undefined;
+    } catch {
+      return undefined;
+    }
+  }, [subject]);
 
   const [connectionObj] = useObject(connection);
   const [accessToken] = useObject(connection?.accessToken);
@@ -61,15 +58,12 @@ export const ConnectorCompanion = ({ companionTo, role }: ConnectorCompanionProp
 
   // Detect whether the binding's target has been deleted so a cleanup option can be offered.
   const target = useMemo(() => {
-    if (!binding) {
-      return undefined;
-    }
     try {
-      return Relation.getTarget(binding);
+      return Relation.getTarget(subject);
     } catch {
       return undefined;
     }
-  }, [binding]);
+  }, [subject]);
   const [resolvedTarget] = useObject(target);
   const targetMissing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
 
@@ -84,27 +78,21 @@ export const ConnectorCompanion = ({ companionTo, role }: ConnectorCompanionProp
   }, [invokePromise, connection, db]);
 
   const handleRemoveBinding = useCallback(() => {
-    if (!binding) {
-      return;
-    }
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [binding] });
-  }, [invokePromise, binding]);
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
+  }, [invokePromise, subject]);
 
   // Seed the options form from the binding's current options; changes persist via Relation.update.
-  const optionsDefaultValues = useMemo(() => ({ ...(binding?.options ?? {}) }), [binding?.options]);
+  const optionsDefaultValues = useMemo(() => ({ ...(subject.options ?? {}) }), [subject.options]);
   const handleOptionsChanged = useCallback(
     (values: Record<string, any>) => {
-      if (!binding) {
-        return;
-      }
-      Relation.update(binding, (binding) => {
+      Relation.update(subject, (binding) => {
         binding.options = { ...values };
       });
     },
-    [binding],
+    [subject],
   );
 
-  if (!connection || !binding) {
+  if (!connection) {
     return null;
   }
 
@@ -117,8 +105,8 @@ export const ConnectorCompanion = ({ companionTo, role }: ConnectorCompanionProp
 
   const status = targetMissing
     ? t('binding-target-missing.message')
-    : binding.lastSyncAt
-      ? `${t('last-sync.label')}: ${new Date(binding.lastSyncAt).toLocaleString()}`
+    : subject.lastSyncAt
+      ? `${t('last-sync.label')}: ${new Date(subject.lastSyncAt).toLocaleString()}`
       : t('never-synced.label');
 
   return (
@@ -134,8 +122,8 @@ export const ConnectorCompanion = ({ companionTo, role }: ConnectorCompanionProp
                       label={t('sync-target.label')}
                       description={status}
                       validation={
-                        !targetMissing && binding.lastError ? (
-                          <span className='text-sm text-error-text'>{binding.lastError}</span>
+                        !targetMissing && subject.lastError ? (
+                          <span className='text-sm text-error-text'>{subject.lastError}</span>
                         ) : undefined
                       }
                     >

@@ -19,7 +19,7 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth } from '#types';
+import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth, SyncBinding } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
@@ -41,12 +41,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'connectorCompanion',
         filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'connector'),
+          AppSurface.object(AppSurface.Article, SyncBinding.SyncBinding),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data, role }) => (
-          <ConnectorCompanion role={role} companionTo={data.companionTo} attendableId={data.attendableId} />
-        ),
+        component: ({ data, role }) => <ConnectorCompanion {...data} role={role} />,
       }),
       Surface.create({
         id: 'connectorAuth',

@@ -686,7 +686,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
-  match: (node: Node.Node) => Option.Option<TMatched>;
+  match: (node: Node.Node, get: Atom.Context) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
     get: Atom.Context,
@@ -736,7 +736,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
           Atom.make((get) =>
             Function.pipe(
               get(node),
-              Option.flatMap(match),
+              Option.flatMap((matchedNode) => match(matchedNode, get)),
               Option.map((matched) =>
                 runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
@@ -769,14 +769,14 @@ export const createExtension = <TMatched = Node.Node, R = never>(
  * The factory's data type is inferred from the matcher's return type.
  */
 export const createConnector = <TData>(
-  matcher: (node: Node.Node) => Option.Option<TData>,
+  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
   factory: (data: TData, get: Atom.Context) => Node.NodeArg<any>[],
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
       Function.pipe(
         get(node),
-        Option.flatMap(matcher),
+        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => factory(data, get)),
         Option.getOrElse(() => []),
       ),
@@ -790,7 +790,7 @@ export const createConnector = <TData>(
  */
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
-  matcher: (node: Node.Node) => Option.Option<TData>,
+  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
   factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
@@ -798,7 +798,7 @@ const createConnectorWithRuntime = <TData, R>(
     Atom.make((get) =>
       Function.pipe(
         get(node),
-        Option.flatMap(matcher),
+        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
         Option.getOrElse(() => []),
       ),

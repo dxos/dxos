@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import { describe, expect, test } from 'vitest';
 
@@ -10,6 +11,11 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
+
+// Real reactive context for matchers that take `get`. The matchers under test
+// inspect only the node, so the context is never read — it satisfies the arity.
+const captureContext = (): Atom.Context => Registry.make().get(Atom.make((context): Atom.Context => context));
+const get = captureContext();
 
 describe('NodeMatcher', () => {
   describe('whenRoot', () => {
@@ -105,7 +111,7 @@ describe('NodeMatcher', () => {
         data: { name: 'Test' },
       };
       const matcher = NodeMatcher.whenEchoType(TestSchema.Person);
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isNone(result)).to.be.true;
     });
 
@@ -118,7 +124,7 @@ describe('NodeMatcher', () => {
         data: testObject,
       };
       const matcher = NodeMatcher.whenEchoType(TestSchema.Person);
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isSome(result)).to.be.true;
       expect(Option.getOrNull(result)).to.equal(testObject);
     });
@@ -159,7 +165,7 @@ describe('NodeMatcher', () => {
         data: testObject,
       };
       const matcher = NodeMatcher.whenEchoTypeMatches(TestSchema.Person);
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isSome(result)).to.be.true;
       expect(Option.getOrNull(result)).to.equal(node);
     });
@@ -172,7 +178,7 @@ describe('NodeMatcher', () => {
         data: { name: 'Test' },
       };
       const matcher = NodeMatcher.whenEchoTypeMatches(TestSchema.Person);
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isNone(result)).to.be.true;
     });
   });
@@ -212,7 +218,7 @@ describe('NodeMatcher', () => {
         data: null,
       };
       const matcher = NodeMatcher.whenNot(NodeMatcher.whenRoot);
-      const result = matcher(rootNode);
+      const result = matcher(rootNode, get);
       expect(Option.isNone(result)).to.be.true;
     });
 
@@ -224,7 +230,7 @@ describe('NodeMatcher', () => {
         data: null,
       };
       const matcher = NodeMatcher.whenNot(NodeMatcher.whenRoot);
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isSome(result)).to.be.true;
       expect(Option.getOrNull(result)).to.equal(node);
     });
@@ -242,7 +248,7 @@ describe('NodeMatcher', () => {
         NodeMatcher.whenEchoObjectMatches,
         NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(TestSchema.Person)),
       );
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isNone(result)).to.be.true;
     });
   });
@@ -256,7 +262,7 @@ describe('NodeMatcher', () => {
         data: null,
       };
       const matcher = NodeMatcher.whenAll(NodeMatcher.whenId('test-id'), NodeMatcher.whenNodeType('test-type'));
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isSome(result)).to.be.true;
     });
 
@@ -268,7 +274,7 @@ describe('NodeMatcher', () => {
         data: null,
       };
       const matcher = NodeMatcher.whenAll(NodeMatcher.whenId('test-id'), NodeMatcher.whenNodeType('other-type'));
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isNone(result)).to.be.true;
     });
   });
@@ -282,7 +288,7 @@ describe('NodeMatcher', () => {
         data: null,
       };
       const matcher = NodeMatcher.whenAny(NodeMatcher.whenId('other-id'), NodeMatcher.whenNodeType('test-type'));
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isSome(result)).to.be.true;
     });
 
@@ -294,7 +300,7 @@ describe('NodeMatcher', () => {
         data: null,
       };
       const matcher = NodeMatcher.whenAny(NodeMatcher.whenId('other-id'), NodeMatcher.whenNodeType('other-type'));
-      const result = matcher(node);
+      const result = matcher(node, get);
       expect(Option.isNone(result)).to.be.true;
     });
   });
