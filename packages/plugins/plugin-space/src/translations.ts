@@ -229,7 +229,8 @@ export const translations = [
         'add-tag.label': 'Add tag',
         'advanced-settings.label': 'Advanced',
         'settings.show-hidden.label': 'Show hidden types',
-        'settings.show-hidden.description': 'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
+        'settings.show-hidden.description':
+          'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
         'settings.space-list.label': 'Spaces',
         'settings.space-list.description': 'Settings for each space you belong to.',
         'settings.open-settings.label': 'Open settings',
