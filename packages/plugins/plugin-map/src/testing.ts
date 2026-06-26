@@ -11,8 +11,10 @@ import { DXN, Format, Type } from '@dxos/echo';
 export * from './MapPlugin';
 
 export const createLocationSchema = () =>
-  Schema.Struct({
-    name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
-    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-    location: Schema.optional(Format.GeoPoint).annotations({ title: 'Location' }),
-  }).pipe(Type.makeObject(DXN.make('com.example.type.location', '0.1.0')));
+  Type.makeObject(DXN.make('com.example.type.location', '0.1.0'))(
+    Schema.Struct({
+      name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
+      description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+      location: Schema.optional(Format.GeoPoint).annotations({ title: 'Location' }),
+    }),
+  );

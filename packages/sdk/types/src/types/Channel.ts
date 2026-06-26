@@ -20,20 +20,18 @@ export const FeedBackendKind = 'org.dxos.channel.backend.feed';
  * (a `Feed` for the default backend). Providers are contributed via the
  * `ChannelBackend` capability in `@dxos/plugin-thread`.
  */
-export const Channel = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  backend: Schema.Struct({
-    /** Provider id; matches `ChannelBackendProvider.kind`. */
-    kind: Schema.String,
-    /** Provider-owned config object (a `Feed` for the default backend). */
-    config: Ref.Ref(Obj.Unknown),
-  }).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--hash--regular', hue: 'rose' }),
-  Type.makeObject(DXN.make('org.dxos.type.channel', '0.2.0')),
-);
+export class Channel extends Type.makeObject<Channel>(DXN.make('org.dxos.type.channel', '0.2.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    backend: Schema.Struct({
+      /** Provider id; matches `ChannelBackendProvider.kind`. */
+      kind: Schema.String,
+      /** Provider-owned config object (a `Feed` for the default backend). */
+      config: Ref.Ref(Obj.Unknown),
+    }).pipe(FormInputAnnotation.set(false)),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--hash--regular', hue: 'rose' })),
+) {}
 
-export type Channel = Type.InstanceType<typeof Channel>;
 export const instanceOf = (value: unknown): value is Channel => Obj.instanceOf(Channel, value);
 
 type ChannelProps = Omit<Obj.MakeProps<typeof Channel>, 'backend'> & {

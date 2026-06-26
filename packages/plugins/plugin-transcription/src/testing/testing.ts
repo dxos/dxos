@@ -14,16 +14,18 @@ import { random } from '@dxos/random';
 import { type ContentBlock, Message } from '@dxos/types';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
-export const TestItem = Schema.Struct({
-  title: Schema.String.annotations({
-    title: 'Title',
-    description: 'Product title',
+export const TestItem = Type.makeObject(DXN.make('org.dxos.type.test', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String.annotations({
+      title: 'Title',
+      description: 'Product title',
+    }),
+    description: Schema.String.annotations({
+      title: 'Description',
+      description: 'Product description',
+    }),
   }),
-  description: Schema.String.annotations({
-    title: 'Description',
-    description: 'Product description',
-  }),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.test', '0.1.0')));
+);
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {

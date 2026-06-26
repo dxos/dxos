@@ -19,34 +19,34 @@ import * as ContentBlock from './ContentBlock';
 // TODO(wittjosiah): Add read status:
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
-export const Message = Schema.Struct({
-  id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
-  parentMessage: Schema.optional(Obj.ID),
-  /** Optional grouping identifier for related messages. */
-  threadId: Schema.optional(Schema.String),
-  /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
-  created: Schema.String.pipe(
-    Schema.annotations({ description: 'ISO date string when the message was sent.' }),
-    GeneratorAnnotation.set('date.iso8601'),
-  ),
-  sender: Actor.Actor.pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
-  blocks: Schema.Array(ContentBlock.Any).annotations({
-    description: 'Contents of the message.',
-    default: [],
-  }),
-  // TODO(dmaretskyi): Add tool call ID here.
-  properties: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
-      description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
+export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.message', '0.1.0'))(
+  Schema.Struct({
+    id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
+    parentMessage: Schema.optional(Obj.ID),
+    /** Optional grouping identifier for related messages. */
+    threadId: Schema.optional(Schema.String),
+    /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
+    created: Schema.String.pipe(
+      Schema.annotations({ description: 'ISO date string when the message was sent.' }),
+      GeneratorAnnotation.set('date.iso8601'),
+    ),
+    sender: Actor.Actor.pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
+    blocks: Schema.Array(ContentBlock.Any).annotations({
+      description: 'Contents of the message.',
+      default: [],
     }),
+    // TODO(dmaretskyi): Add tool call ID here.
+    properties: Schema.optional(
+      Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+        description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
+      }),
+    ),
+  }).pipe(
+    LabelAnnotation.set(['properties.subject']),
+    Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
   ),
-}).pipe(
-  LabelAnnotation.set(['properties.subject']),
-  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
-  Type.makeObject(DXN.make('org.dxos.type.message', '0.1.0')),
-);
+) {}
 
-export type Message = Type.InstanceType<typeof Message>;
 export const make = ({
   created,
   sender,

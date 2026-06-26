@@ -38,101 +38,105 @@ export const TraceEventException = Schema.Struct({
 
 export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
-export const InvocationTraceStartEvent = Schema.Struct({
-  /**
-   * Queue message id.
-   */
-  id: EntityId,
-  type: Schema.Literal(InvocationTraceEventType.START),
-  /**
-   * Invocation id, the same for invocation start and end events.
-   */
-  invocationId: EntityId,
+export class InvocationTraceStartEvent extends Type.makeObject<InvocationTraceStartEvent>(
+  DXN.make('org.dxos.type.invocationTraceStart', '0.1.0'),
+)(
+  Schema.Struct({
+    /**
+     * Queue message id.
+     */
+    id: EntityId,
+    type: Schema.Literal(InvocationTraceEventType.START),
+    /**
+     * Invocation id, the same for invocation start and end events.
+     */
+    invocationId: EntityId,
 
-  /**
-   * Id of the parent invocation.
-   */
-  parentInvocationId: Schema.optional(EntityId),
+    /**
+     * Id of the parent invocation.
+     */
+    parentInvocationId: Schema.optional(EntityId),
 
-  /**
-   * Event generation time.
-   */
-  timestamp: Schema.Number,
-  /**
-   * Data passed to function / workflow as an argument.
-   */
-  input: Schema.Unknown,
-  /**
-   * Feed for function/workflow invocation events.
-   * If missing, events are assumed to be in the same Feed.
-   */
-  invocationTraceFeed: Schema.optional(Ref.Ref(Feed.Feed)),
-  /**
-   * DXN of the invoked function/workflow.
-   */
-  invocationTarget: Schema.optional(Ref.Ref(Obj.Unknown)),
-  /**
-   * Present for automatic invocations.
-   */
-  trigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
-  /**
-   * Chat that the invocation is run in.
-   * For invocations resulting from submitting a prompt in a chat thread.
-   */
-  chat: Schema.optional(Ref.Ref(Obj.Unknown)),
-  /**
-   * Process-specific metadata.
-   */
-  process: Schema.optional(
-    Schema.Struct({
-      pid: Process.ID,
-      parentPid: Schema.optional(Process.ID),
-      /**
-       * Key of the executable.
-       */
-      key: Schema.String,
+    /**
+     * Event generation time.
+     */
+    timestamp: Schema.Number,
+    /**
+     * Data passed to function / workflow as an argument.
+     */
+    input: Schema.Unknown,
+    /**
+     * Feed for function/workflow invocation events.
+     * If missing, events are assumed to be in the same Feed.
+     */
+    invocationTraceFeed: Schema.optional(Ref.Ref(Feed.Feed)),
+    /**
+     * DXN of the invoked function/workflow.
+     */
+    invocationTarget: Schema.optional(Ref.Ref(Obj.Unknown)),
+    /**
+     * Present for automatic invocations.
+     */
+    trigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
+    /**
+     * Chat that the invocation is run in.
+     * For invocations resulting from submitting a prompt in a chat thread.
+     */
+    chat: Schema.optional(Ref.Ref(Obj.Unknown)),
+    /**
+     * Process-specific metadata.
+     */
+    process: Schema.optional(
+      Schema.Struct({
+        pid: Process.ID,
+        parentPid: Schema.optional(Process.ID),
+        /**
+         * Key of the executable.
+         */
+        key: Schema.String,
 
-      /**
-       * Process name.
-       */
-      name: Schema.optional(Schema.String),
+        /**
+         * Process name.
+         */
+        name: Schema.optional(Schema.String),
 
-      /**
-       * Target object that the process is assigned to.
-       */
-      target: Schema.optional(Schema.String),
-    }),
-  ),
-  /**
-   * Runtime executing the function.
-   */
-  runtime: Schema.optional(FunctionRuntimeKind),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceStart', '0.1.0')));
+        /**
+         * Target object that the process is assigned to.
+         */
+        target: Schema.optional(Schema.String),
+      }),
+    ),
+    /**
+     * Runtime executing the function.
+     */
+    runtime: Schema.optional(FunctionRuntimeKind),
+  }),
+) {}
 
-export interface InvocationTraceStartEvent extends Type.InstanceType<typeof InvocationTraceStartEvent> {}
+export class InvocationTraceEndEvent extends Type.makeObject<InvocationTraceEndEvent>(
+  DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0'),
+)(
+  Schema.Struct({
+    /**
+     * Trace event id.
+     */
+    id: EntityId,
+    type: Schema.Literal(InvocationTraceEventType.END),
+    /**
+     * Invocation id, will be the same for invocation start and end.
+     */
+    invocationId: EntityId,
+    /**
+     * Event generation time.
+     */
+    // TODO(burdon): Remove ms suffix.
+    timestamp: Schema.Number,
 
-export const InvocationTraceEndEvent = Schema.Struct({
-  /**
-   * Trace event id.
-   */
-  id: EntityId,
-  type: Schema.Literal(InvocationTraceEventType.END),
-  /**
-   * Invocation id, will be the same for invocation start and end.
-   */
-  invocationId: EntityId,
-  /**
-   * Event generation time.
-   */
-  // TODO(burdon): Remove ms suffix.
-  timestamp: Schema.Number,
+    outcome: Schema.Enums(InvocationOutcome),
 
-  outcome: Schema.Enums(InvocationOutcome),
-
-  error: Schema.optional(SerializedError),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0')));
-
-export interface InvocationTraceEndEvent extends Type.InstanceType<typeof InvocationTraceEndEvent> {}
+    error: Schema.optional(SerializedError),
+  }),
+) {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
@@ -143,18 +147,18 @@ export const TraceEventLog = Schema.Struct({
   context: Schema.optional(Schema.Object),
 });
 
-export const TraceEvent = Schema.Struct({
-  id: EntityId,
-  // TODO(burdon): Need enum/numeric result (not string).
-  outcome: Schema.String,
-  truncated: Schema.Boolean,
-  /** Time when the event was persisted. */
-  ingestionTimestamp: Schema.Number,
-  logs: Schema.Array(TraceEventLog),
-  exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.traceEvent', '0.1.0')));
-
-export type TraceEvent = Type.InstanceType<typeof TraceEvent>;
+export class TraceEvent extends Type.makeObject<TraceEvent>(DXN.make('org.dxos.type.traceEvent', '0.1.0'))(
+  Schema.Struct({
+    id: EntityId,
+    // TODO(burdon): Need enum/numeric result (not string).
+    outcome: Schema.String,
+    truncated: Schema.Boolean,
+    /** Time when the event was persisted. */
+    ingestionTimestamp: Schema.Number,
+    logs: Schema.Array(TraceEventLog),
+    exceptions: Schema.Array(TraceEventException),
+  }),
+) {}
 
 /**
  * InvocationTrace event format.

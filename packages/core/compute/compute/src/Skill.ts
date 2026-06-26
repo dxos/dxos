@@ -10,6 +10,10 @@ import * as Schema from 'effect/Schema';
 import { ToolId } from '@dxos/ai';
 import { DXN, Annotation, Database, Filter, Obj, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
+// Text is referenced in the inferred type of Skill (via Template.Template → Ref.Ref(Text.Text));
+// the import lets TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Text } from '@dxos/schema';
 
 import * as McpServer from './McpServer';
 import * as Operation from './Operation';
@@ -23,57 +27,53 @@ import * as Template from './Template';
  * The registry `key` and `version` are stored in the object meta — access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
  */
-export const Skill = Schema.Struct({
-  /**
-   * Human-readable name of the skill.
-   */
-  name: Schema.String.annotations({
-    description: 'Human-readable name of the skill',
-  }),
+export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill', '0.1.0'))(
+  Schema.Struct({
+    /**
+     * Human-readable name of the skill.
+     */
+    name: Schema.String.annotations({
+      description: 'Human-readable name of the skill',
+    }),
 
-  /**
-   * Description of the skill's purpose and functionality.
-   */
-  description: Schema.optional(Schema.String).annotations({
-    description: "Description of the skill's purpose and functionality",
-  }),
+    /**
+     * Description of the skill's purpose and functionality.
+     */
+    description: Schema.optional(Schema.String).annotations({
+      description: "Description of the skill's purpose and functionality",
+    }),
 
-  /**
-   * Instructions that guide the AI assistant's behavior and responses.
-   * These are system prompts or guidelines that the AI should follow.
-   */
-  instructions: Template.Template.annotations({
-    description: "Instructions that guide the AI assistant's behavior and responses",
-  }),
+    /**
+     * Instructions that guide the AI assistant's behavior and responses.
+     * These are system prompts or guidelines that the AI should follow.
+     */
+    instructions: Template.Template.annotations({
+      description: "Instructions that guide the AI assistant's behavior and responses",
+    }),
 
-  /**
-   * Array of tools that the AI assistant can use when this skill is active.
-   */
-  tools: Schema.Array(ToolId).annotations({
-    description: 'Array of tools that the AI assistant can use when this skill is active',
-  }),
+    /**
+     * Array of tools that the AI assistant can use when this skill is active.
+     */
+    tools: Schema.Array(ToolId).annotations({
+      description: 'Array of tools that the AI assistant can use when this skill is active',
+    }),
 
-  /**
-   * Whether an agent is allowed to auto-enable this skill in a conversation.
-   */
-  agentCanEnable: Schema.optional(Schema.Boolean).annotations({
-    description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
-  }),
+    /**
+     * Whether an agent is allowed to auto-enable this skill in a conversation.
+     */
+    agentCanEnable: Schema.optional(Schema.Boolean).annotations({
+      description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
+    }),
 
-  /**
-   * Array of MCP servers that the AI assistant can use when this skill is active.
-   */
-  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(
-  Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.skill', '0.1.0')),
-);
-
-/**
- * TypeScript type for Skill.
- */
-export type Skill = Type.InstanceType<typeof Skill>;
+    /**
+     * Array of MCP servers that the AI assistant can use when this skill is active.
+     */
+    mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
+  ),
+) {}
 
 /**
  * Create a new Skill.

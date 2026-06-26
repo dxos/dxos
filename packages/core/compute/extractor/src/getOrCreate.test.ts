@@ -14,11 +14,12 @@ import { EffectEx } from '@dxos/effect';
 import { getOrCreate } from './getOrCreate';
 import { fromResolvers } from './Resolver';
 
-const Contact = Schema.Struct({
-  email: Schema.String,
-  name: Schema.optional(Schema.String),
-}).pipe(Type.makeObject(DXN.make('com.example.type.Contact', '0.1.0')));
-interface Contact extends Type.InstanceType<typeof Contact> {}
+class Contact extends Type.makeObject<Contact>(DXN.make('com.example.type.Contact', '0.1.0'))(
+  Schema.Struct({
+    email: Schema.String,
+    name: Schema.optional(Schema.String),
+  }),
+) {}
 
 describe('getOrCreate', () => {
   let builder: EchoTestBuilder;
