@@ -20,6 +20,28 @@ export class EntityNotFoundError extends BaseError.extend('EntityNotFoundError',
 }
 
 /**
+ * Thrown when a `Text` mutation is attempted on an object whose reactive handler does not implement
+ * string CRDT editing (e.g. a snapshot or a non-reactive value).
+ */
+export class TextNotSupportedError extends BaseError.extend(
+  'TextNotSupportedError',
+  'Text operation is not supported for this object',
+) {
+  constructor(operation: string, options?: BaseErrorOptions) {
+    super({ context: { operation }, ...options });
+  }
+}
+
+/**
+ * Thrown by `Text.applyEdits` when a non-`replaceAll` edit's `oldString` is not found in the text.
+ */
+export class TextEditNotFoundError extends BaseError.extend('TextEditNotFoundError', 'Edit text not found') {
+  constructor(oldString: string, options?: BaseErrorOptions) {
+    super({ context: { oldString }, ...options });
+  }
+}
+
+/**
  * Reason why getting a reactive object from a snapshot failed.
  * - `no-database`: The snapshot is not associated with a database.
  * - `object-not-found`: The object was removed or does not exist in the database.

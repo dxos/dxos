@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
-import { Doc, applyEdits } from '@dxos/echo-doc';
+import { Database, Obj, Text } from '@dxos/echo';
 
 import { MarkdownOperation } from '../types';
 
@@ -19,8 +18,10 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         Effect.flatMap(Database.load),
       );
 
-      const accessor = Doc.createAccessor(content, ['content']);
-      const newContent = applyEdits(accessor, edits);
+      let newContent = '';
+      Obj.update(content, () => {
+        newContent = Text.applyEdits(content, 'content', edits);
+      });
       return { newContent };
     }),
   ),
