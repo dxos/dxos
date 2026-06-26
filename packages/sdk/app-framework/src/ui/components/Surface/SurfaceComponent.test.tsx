@@ -19,7 +19,13 @@ import { setSurfaceDebug } from './SurfaceDebug';
 import { surfaceMetrics } from './SurfaceMetrics';
 import { type Definition, create, makeFilter, makeType } from './types';
 
-const flushMetrics = () => act(async () => void (await new Promise((resolve) => setTimeout(resolve, 30))));
+// Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
+const flushMetrics = () =>
+  act(async () => {
+    await new Promise<void>((resolve) =>
+      typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => resolve()) : queueMicrotask(resolve),
+    );
+  });
 
 const RoleA = makeType<Record<string, unknown>>('org.dxos.test.role.alpha');
 const RoleB = makeType<Record<string, unknown>>('org.dxos.test.role.beta');
@@ -49,9 +55,8 @@ const probe = (counts: { value: number }) => () => {
 describe('SurfaceComponent dispatch', () => {
   test('limit={0} renders nothing', async ({ expect }) => {
     await using harness = await createTestApp({ plugins: [TestPlugin()] });
+    // Dispatch is synchronous (render() flushes effects in act), so the surface either rendered or it didn't.
     const view = render(harness, <SurfaceComponent type={RoleA} limit={0} />);
-    // Allow any async dispatch to settle, then assert the surface did not render.
-    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(view.queryByTestId('a')).toBeNull();
   });
 });

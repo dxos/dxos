@@ -175,6 +175,10 @@ export const surfaceMetrics = new SurfaceMetricsStore();
  * @returns the new churn count (0 when `data` changed value or is unchanged).
  */
 export const nextDataChurn = (previous: unknown, next: unknown, churn: number): number => {
+  // Unchanged reference: preserve churn. NOTE: do NOT reset to 0 here — `useDefaultValue`
+  // (used for the `data` default) lags one render, so each prop change yields two renders
+  // (stale-then-new); resetting on the stale (Object.is) render would wipe accumulated churn
+  // and never flag genuinely unstable data. The flag clears on the next genuine value change.
   if (Object.is(previous, next)) {
     return churn;
   }

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { StatsPanel, useStats } from '@dxos/devtools';
@@ -14,6 +14,12 @@ export const DevtoolsOverviewContainer = () => {
   const surfaceProfilerStats = Surface.useProfilerStats();
   const surfaceMetrics = Surface.useMetrics();
   const clearSurfaceProfiler = Surface.useProfilerClear();
+
+  // The panel joins profiler stats with dispatch metrics, so reset must clear both.
+  const handleClearSurfaceProfiler = useCallback(() => {
+    clearSurfaceProfiler?.();
+    Surface.clearMetrics();
+  }, [clearSurfaceProfiler]);
 
   // Join dispatch metrics onto the render-timing stats (both keyed by `surface/<id>/<role>`).
   const enrichedStats = useMemo(() => {
@@ -37,7 +43,7 @@ export const DevtoolsOverviewContainer = () => {
       stats={stats}
       surfaceProfilerStats={enrichedStats}
       onRefresh={refreshStats}
-      onClearSurfaceProfiler={clearSurfaceProfiler}
+      onClearSurfaceProfiler={handleClearSurfaceProfiler}
     >
       <Surface.Surface type={DevtoolsOverview} />
     </StatsPanel>
