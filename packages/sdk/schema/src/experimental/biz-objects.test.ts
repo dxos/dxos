@@ -52,9 +52,7 @@ namespace Proposition {
     children?: Fields[];
   }
 
-  export const Object = Fields.pipe(Type.makeObject(DXN.make('org.dxos.type.proposition', '0.1.0')));
-
-  export type Object = Type.InstanceType<typeof Object>;
+  export class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.proposition', '0.1.0'))(Fields) {}
 
   // TODO(burdon): Obfuscates Obj.make?
   export const make = (props: Pick<Object, 'text'>) => Obj.make(Object, Fields.make(props));
@@ -83,9 +81,7 @@ export namespace OKR {
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
-  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.okr', '0.1.0')));
-
-  export type Object = Type.InstanceType<typeof Object>;
+  class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.okr', '0.1.0'))(Properties) {}
 
   export const make = () => Obj.make(Object, { objectives: [], keyResults: [] });
 }
@@ -115,7 +111,7 @@ export namespace SWOT {
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
-  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.swot', '0.1.0')));
+  const Object = Type.makeObject(DXN.make('org.dxos.type.swot', '0.1.0'))(Properties);
 
   export type Any = Type.InstanceType<typeof Object>;
 
@@ -127,9 +123,7 @@ export namespace Plan {
     name: Schema.String,
   });
 
-  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
-
-  export type Object = Type.InstanceType<typeof Object>;
+  class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.plan', '0.1.0'))(Properties) {}
 
   export const make = ({ name }: Object) => Obj.make(Object, { name });
 }

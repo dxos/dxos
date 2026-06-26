@@ -136,10 +136,9 @@ const describeSymbol = (
   rootPath: string,
   packageName: string,
 ): ExtractedSymbol | null => {
-  // ECHO idiom emits a value AND a same-named interface companion:
-  //   export const Task = Schema.Struct({...}).pipe(Type.makeObject({...}));
-  //   export type Task = Type.InstanceType<typeof Task>;
-  // We surface them as a single symbol so callers see both forms in `source`.
+  // ECHO idiom uses a class declaration:
+  //   export class Task extends Type.makeObject<Task>(DXN.make(...))(Schema.Struct({...})) {}
+  // We surface the class as a single symbol so callers see the full pattern in `source`.
   // The "primary" declaration drives signature/location/kind; the rest contribute
   // their text so the full pattern is visible.
   const primary = pickPrimary(declarations);

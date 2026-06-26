@@ -12,8 +12,14 @@ import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { ConnectorAuthButton } from '#components';
-import { ConnectionArticle, ConnectionSettingsArticle, CustomTokenDialog, SyncTargetsDialog } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth } from '#types';
+import {
+  ConnectionArticle,
+  ConnectionSettingsArticle,
+  ConnectorCompanion,
+  CustomTokenDialog,
+  SyncTargetsDialog,
+} from '#containers';
+import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth, SyncBinding } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
@@ -31,6 +37,14 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <ConnectionArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      Surface.create({
+        id: 'connectorCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.object(AppSurface.Article, SyncBinding.SyncBinding),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data, role }) => <ConnectorCompanion {...data} role={role} />,
       }),
       Surface.create({
         id: 'connectorAuth',

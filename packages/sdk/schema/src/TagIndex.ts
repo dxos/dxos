@@ -25,12 +25,12 @@ import { type EntityId } from '@dxos/keys';
  * The tag id is an existing {@link Tag} object's id/URI; labels are never duplicated here — they
  * live on the {@link Tag} object and stay editable in one place.
  */
-export const TagIndex = Schema.Struct({
-  /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
-  index: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(FormInputAnnotation.set(false)),
-}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.tagIndex', '0.1.0')));
-
-export type TagIndex = Type.InstanceType<typeof TagIndex>;
+export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.tagIndex', '0.1.0'))(
+  Schema.Struct({
+    /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
+    index: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(FormInputAnnotation.set(false)),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 
 /** Creates an empty TagIndex object. */
 export const make = (): TagIndex => Obj.make(TagIndex, { index: {} });

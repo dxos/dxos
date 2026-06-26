@@ -124,6 +124,19 @@ export const SkillForm = Schema.Struct({
   description: Schema.optional(Schema.String),
 });
 
+export const GenerateHomeSuggestions = Operation.make({
+  meta: {
+    key: makeKey('generateHomeSuggestions'),
+    name: 'Generate Home Suggestions',
+    icon: 'ph--sparkle--regular',
+    // Internal UI operation — not exposed as an agent tool.
+    skipRegistry: true,
+  },
+  services: [Capability.Service, AiService.AiService],
+  input: Schema.Struct({ db: Database.Database }),
+  output: Schema.Struct({ prompts: Schema.Array(Schema.String) }),
+});
+
 export const ToggleTracePanelDebug = Operation.make({
   meta: {
     key: makeKey('toggleTracePanelDebug'),

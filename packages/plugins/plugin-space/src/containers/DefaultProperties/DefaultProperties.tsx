@@ -53,9 +53,9 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
     );
 
     return (
-      <Panel.Root role={role} className='dx-document' ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root />
+      <Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Toolbar>
+          <Toolbar.Root className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>

@@ -18,7 +18,10 @@ import {
   MaterializeTargetOutput,
   SyncBinding,
 } from '@dxos/plugin-connector';
-import { Actor, Event, Message } from '@dxos/types';
+// Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
+// TypeScript to name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 

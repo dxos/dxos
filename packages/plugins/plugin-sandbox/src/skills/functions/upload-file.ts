@@ -7,6 +7,9 @@ import * as Effect from 'effect/Effect';
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+// Imported so TypeScript can name this type in the emitted .d.ts (UploadFile → File).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type File } from '@dxos/types';
 
 import { createSandboxClient } from '../../services/sandbox-url';
 import { UploadFile } from './definitions';

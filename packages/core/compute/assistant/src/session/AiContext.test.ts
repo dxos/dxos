@@ -19,7 +19,7 @@ describe('AiContext.Binder', () => {
       const feed = yield* Database.add(Feed.make());
       const runtime = yield* Effect.runtime<Database.Service>();
 
-      const TestSchema = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.type.example', '0.1.0')));
+      const TestSchema = Type.makeObject(DXN.make('org.dxos.type.example', '0.1.0'))(Schema.Struct({}));
 
       const obj = Obj.make(TestSchema, {});
       const ref = Ref.make(obj);
