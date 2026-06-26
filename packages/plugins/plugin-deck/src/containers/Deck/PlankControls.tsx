@@ -159,13 +159,22 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
         )}
 
         {capabilities.companion && (
-          <PlankControl
-            label={t('open-companion.label')}
-            classNames={buttonClassNames}
-            data-testid='plankHeading.companion'
-            icon='ph--square-split-horizontal--regular'
-            onClick={() => onClick?.('companion')}
-          />
+          <ButtonGroup>
+            <PlankControl
+              label={t('open-companion.label')}
+              classNames={buttonClassNames}
+              data-testid='plankHeading.companion'
+              icon='ph--square-split-horizontal--regular'
+              onClick={() => onClick?.('companion')}
+            />
+            <PlankControl
+              label={t('open-companion-vertical.label')}
+              classNames={buttonClassNames}
+              data-testid='plankHeading.companion-vertical'
+              icon='ph--square-split-vertical--regular'
+              onClick={() => onClick?.('companion-vertical')}
+            />
+          </ButtonGroup>
         )}
         {children}
       </ButtonGroup>

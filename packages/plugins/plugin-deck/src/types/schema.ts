@@ -33,8 +33,8 @@ export const DeckState = Schema.Struct({
   plankSizing: Schema.mutable(PlankSizing),
   /** Whether the companion pane is visible alongside the active plank(s). */
   companionOpen: Schema.Boolean,
-  /** Which companion variant to display when the companion pane is open. */
-  companionVariant: Schema.optional(Schema.String),
+  /** Orientation of the companion splitter: `horizontal` (side-by-side) or `vertical` (stacked). */
+  companionOrientation: Schema.optional(Schema.Literal('horizontal', 'vertical')),
   /** Persisted companion frame widths in rem, keyed by frame ID. */
   companionFrameSizing: Schema.mutable(PlankSizing),
 });
@@ -48,7 +48,7 @@ export const defaultDeck: DeckState = {
   fullscreen: false,
   plankSizing: {},
   companionOpen: false,
-  companionVariant: undefined,
+  companionOrientation: 'horizontal',
   companionFrameSizing: {},
 };
 
@@ -116,7 +116,8 @@ export type DeckPluginState = StoredDeckState & EphemeralDeckState;
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(
     Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-    Schema.Literal('companion').annotations({ description: 'Open the companion plank.' }),
+    Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
+    Schema.Literal('companion-vertical').annotations({ description: 'Open the companion plank stacked vertically.' }),
     Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
     Schema.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
     Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),

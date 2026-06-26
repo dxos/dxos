@@ -101,7 +101,7 @@ export const subscription = Command.make(
       });
 
       const trigger = Trigger.make({
-        function: Ref.make(fn),
+        runnable: Ref.make(fn),
         enabled,
         spec: Trigger.specSubscription(
           subscriptionQuery,

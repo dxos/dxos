@@ -24,7 +24,6 @@ export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
 
 export const MAILBOXES_SECTION_TYPE = `${meta.profile.key}.mailboxes-section`;
-export const MAILBOX_ALL_MAIL_TYPE = `${meta.profile.key}.all-mail`;
 export const MAILBOX_DRAFTS_TYPE = `${meta.profile.key}.drafts`;
 
 /**

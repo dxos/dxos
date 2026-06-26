@@ -15,7 +15,7 @@ import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Input, Message, Panel, ScrollArea, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { translationKey } from '#translations';
@@ -53,7 +53,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
             </Message.Root>
           </div>
         )}
-        {state === 'empty' && <p className='p-3 text-sm text-description'>{t('no-result.message')}</p>}
+        {state === 'empty' && <Empty label={t('no-result.message')} />}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -130,7 +130,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <p className='p-3 text-sm text-description'>{t('no-matching-rows.message')}</p>
+                <Empty label={t('no-matching-rows.message')} />
               ) : (
                 <Listbox.Viewport>
                   <Listbox.Content

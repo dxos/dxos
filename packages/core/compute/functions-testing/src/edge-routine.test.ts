@@ -79,7 +79,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(fn),
+        runnable: Ref.make(fn),
         spec: Trigger.specTimer('* * * * * *'),
         input: {
           instructions: Ref.make(instructions),

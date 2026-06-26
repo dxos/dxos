@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Registry from '@effect-atom/atom/Registry';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -581,6 +582,70 @@ describe('Database', () => {
       const result = Obj.getReactiveOption(snapshot).pipe(Effect.runSync);
 
       expect(Option.isNone(result)).toBe(true);
+    });
+  });
+
+  describe('ref atom deletion reactivity', () => {
+    test('ref.atom fires and resolves to undefined when target is removed', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const registry = Registry.make();
+
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const ref = Ref.make(obj);
+
+      let fireCount = 0;
+      registry.subscribe(ref.atom, () => {
+        fireCount++;
+      });
+
+      expect(registry.get(ref.atom)).toBe(obj);
+
+      db.remove(obj);
+
+      expect(fireCount).toBeGreaterThan(0);
+      expect(registry.get(ref.atom)).toBeUndefined();
+    });
+
+    test('Obj.atom(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const registry = Registry.make();
+
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const ref = Ref.make(obj);
+
+      const atom = Obj.atom(ref);
+      let fireCount = 0;
+      registry.subscribe(atom, () => {
+        fireCount++;
+      });
+
+      expect(registry.get(atom)).not.toBeUndefined();
+
+      db.remove(obj);
+
+      expect(fireCount).toBeGreaterThan(0);
+      expect(registry.get(atom)).toBeUndefined();
+    });
+
+    test('Obj.atomReactive(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const registry = Registry.make();
+
+      const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
+      const ref = Ref.make(obj);
+
+      const atom = Obj.atomReactive(ref);
+      let fireCount = 0;
+      registry.subscribe(atom, () => {
+        fireCount++;
+      });
+
+      expect(registry.get(atom)).toBe(obj);
+
+      db.remove(obj);
+
+      expect(fireCount).toBeGreaterThan(0);
+      expect(registry.get(atom)).toBeUndefined();
     });
   });
 

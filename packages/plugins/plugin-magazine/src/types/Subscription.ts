@@ -106,7 +106,7 @@ export const Subscription = Schema.Struct({
   tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name', 'url']),
-  Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'orange' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
   FeedAnnotation.set(true),
   FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
   Type.makeObject(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),

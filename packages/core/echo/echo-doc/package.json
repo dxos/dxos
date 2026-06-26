@@ -1,7 +1,6 @@
 {
   "name": "@dxos/echo-doc",
   "version": "0.9.0",
-  "private": true,
   "description": "Opinionated Automerge document wrapper for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,5 +32,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

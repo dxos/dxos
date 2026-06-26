@@ -41,7 +41,7 @@ const DefaultStory = (props: MasonryRootProps) => {
 
   return (
     <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content>
+      <Masonry.Content centered scrollbars={false}>
         <Masonry.Viewport items={organizations} />
       </Masonry.Content>
     </Masonry.Root>

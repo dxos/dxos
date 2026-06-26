@@ -61,15 +61,15 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: 'routineHistory',
+        id: 'routineRuns',
         type: Routine.Routine,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'history',
-              label: ['routine-history.label', { ns: meta.profile.key }],
+              id: 'runs',
+              label: ['routine-runs.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
-              data: 'history',
+              data: 'runs',
             }),
           ]),
       }),

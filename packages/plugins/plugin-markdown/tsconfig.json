@@ -125,6 +125,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-sketch"
+    },
+    {
       "path": "../plugin-space"
     },
     {

@@ -134,7 +134,7 @@ export const makeInitialized = (
     const runtime = yield* Effect.runtime<Database.Service>();
     const contextBinder = new AiContext.Binder({ feed, runtime });
     // TODO(dmaretskyi): Skill registry.
-    const agentSkill = yield* Database.add(Obj.clone(skill, { deep: true }));
+    const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
 
     const chat = yield* Database.add(
       Chat.make({

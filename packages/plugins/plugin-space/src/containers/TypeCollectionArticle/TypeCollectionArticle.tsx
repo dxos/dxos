@@ -11,6 +11,7 @@ import { type URI } from '@dxos/keys';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -68,9 +69,7 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
       <Panel.Toolbar />
       <Panel.Content>
         {objects.length === 0 ? (
-          <div className='flex items-center justify-center bs-full text-subdued text-sm'>
-            {t('type-collection-empty.message')}
-          </div>
+          <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
         ) : (
           <Masonry.Root Tile={TileAdapter}>
             <Masonry.Content classNames='dx-document'>

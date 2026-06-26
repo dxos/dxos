@@ -44,8 +44,10 @@ type DeckState
     fullscreen: boolean           # true when the solo plank is displayed without any chrome
     plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID
     companionOpen: boolean        # whether the companion pane is visible
-    companionVariant?: string     # which companion variant to display
+    companionOrientation?: 'horizontal' | 'vertical'   # companion splitter orientation (side-by-side / stacked)
     companionFrameSizing: Record<string, number>  # companion frame widths in rem
+    # NOTE: the selected companion variant and per-orientation split size now live in react-ui-attention
+    # view state (global, localStorage), not on DeckState — see util/companion-view-state.ts.
 ```
 
 ```mdl

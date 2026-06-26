@@ -77,6 +77,7 @@ export default defineConfig({
       contentPaths: [
         path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+        path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
       // Page-action descriptor icons are contributed by Composer plugins at
       // runtime; those sources are never imported by the extension bundle, so

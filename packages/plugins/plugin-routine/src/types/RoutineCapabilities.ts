@@ -47,9 +47,11 @@ export type Template = {
    */
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
-   * Build the Automation from the user's input. The returned Automation is added to the database by the
-   * create flow; any auxiliary objects (runnable, triggers) must be added by the scaffold itself via
-   * Database.Service. `subject` is set when scaffolding from an object's companion.
+   * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
+   * trigger and instructions, assembled by `Routine.make`. The create flow persists it with a single
+   * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
+   * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `subject` is set
+   * when scaffolding from an object's companion.
    */
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };

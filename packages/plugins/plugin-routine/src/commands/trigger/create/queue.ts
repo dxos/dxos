@@ -64,7 +64,7 @@ export const queue = Command.make(
       });
 
       const trigger = Trigger.make({
-        function: Ref.make(fn),
+        runnable: Ref.make(fn),
         enabled,
         spec: Trigger.specFeed(feed),
         input,
