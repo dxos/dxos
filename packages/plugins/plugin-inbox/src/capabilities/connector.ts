@@ -20,7 +20,7 @@ import {
   GOOGLE_CONTACTS_PROVIDER_ID,
   GOOGLE_INTEGRATION_SOURCE,
   JMAP_DEFAULT_HOST,
-  JMAP_PROVIDER_ID,
+  JMAP_MAIL_PROVIDER_ID,
 } from '../constants';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
 import { jmapCredentialForm } from './jmap-credential-form';
@@ -91,10 +91,10 @@ export default Capability.makeModule(
         onTokenCreated,
       },
       {
-        id: JMAP_PROVIDER_ID,
+        id: JMAP_MAIL_PROVIDER_ID,
         // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
         source: JMAP_DEFAULT_HOST,
-        label: 'JMAP',
+        label: 'JMAP Mail',
         // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
         credentialForm: jmapCredentialForm,
         optionsSchema: SyncOptions,

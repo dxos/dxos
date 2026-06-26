@@ -15,7 +15,7 @@ const session = (username?: string): Jmap.Session => ({
   username,
 });
 
-const connector = { id: 'jmap', label: 'JMAP' };
+const connector = { id: 'jmap-mail', label: 'JMAP Mail' };
 
 describe('jmapCredentialForm', () => {
   it('defaults the host to the Fastmail endpoint', ({ expect }) => {
@@ -33,8 +33,8 @@ describe('jmapCredentialForm', () => {
     expect(accessToken.source).toBe('mail.example.com');
     expect(accessToken.account).toBe('me@example.com');
     expect(accessToken.token).toBe('secret');
-    expect(connection.connectorId).toBe('jmap');
-    expect(connection.name).toBe('JMAP');
+    expect(connection.connectorId).toBe('jmap-mail');
+    expect(connection.name).toBe('JMAP Mail');
     expect(connection.accessToken).toBeDefined();
   });
 

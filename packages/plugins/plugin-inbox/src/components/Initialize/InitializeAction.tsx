@@ -15,7 +15,7 @@ import { useTargetSync } from './useTargetConnection';
 export type InitializeActionProps<T extends Obj.Any> = {
   /** The object whose Connection we're connecting / syncing. */
   target: T;
-  /** Connector ids offered by the auth Surface's connect dropdown (e.g. `['gmail', 'jmap']`). */
+  /** Connector ids offered by the auth Surface's connect dropdown (e.g. `['gmail', 'jmap-mail']`). */
   connectorIds: readonly string[];
   /** Already-translated label for the sync action. */
   syncLabel: string;
