@@ -13,15 +13,14 @@ import { trim } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const Spec = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
-  Type.makeObject(DXN.make('org.dxos.type.spec', '0.1.0')),
-);
-
-export type Spec = Type.InstanceType<typeof Spec>;
+export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
+  ),
+) {}
 
 export const isSpec = (object: unknown): object is Spec =>
   Schema.is(Type.getSchema(Spec) as Schema.Schema<Spec>)(object);

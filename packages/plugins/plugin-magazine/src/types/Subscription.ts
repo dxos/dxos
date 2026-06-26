@@ -48,71 +48,70 @@ export const DEFAULT_KEEP = 10;
 /**
  * Subscription feed schema: an RSS/Atom/AT Protocol subscription.
  */
-export const Subscription = Schema.Struct({
-  /** User-facing title of the feed. */
-  name: Schema.String.pipe(Schema.optional),
-  /** The URL of the RSS/Atom feed or AT Protocol handle/DID. */
-  url: Schema.String.pipe(Schema.optional),
-  /** Protocol type — determines which fetcher is used for sync. */
-  type: FeedType.pipe(Schema.optional),
-  /** Description of the feed. */
-  description: Schema.String.pipe(Schema.optional),
-  /** URL of the feed's associated website. */
-  link: Schema.String.pipe(Schema.optional),
-  /** URL of the feed's icon/image. */
-  iconUrl: Schema.String.pipe(Schema.optional),
-  /**
-   * Maximum number of (non-starred) Posts retained in the feed's queue when syncing.
-   * Older posts beyond this bound are dropped; starred posts are preserved regardless.
-   * Defaults to {@link DEFAULT_KEEP} when unset.
-   */
-  keep: Schema.Number.pipe(
-    Schema.annotations({
-      title: 'Keep',
-      description: 'Number of synced items.',
-    }),
-    Schema.optional,
+export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dxos.type.subscription.feed', '0.1.0'))(
+  Schema.Struct({
+    /** User-facing title of the feed. */
+    name: Schema.String.pipe(Schema.optional),
+    /** The URL of the RSS/Atom feed or AT Protocol handle/DID. */
+    url: Schema.String.pipe(Schema.optional),
+    /** Protocol type — determines which fetcher is used for sync. */
+    type: FeedType.pipe(Schema.optional),
+    /** Description of the feed. */
+    description: Schema.String.pipe(Schema.optional),
+    /** URL of the feed's associated website. */
+    link: Schema.String.pipe(Schema.optional),
+    /** URL of the feed's icon/image. */
+    iconUrl: Schema.String.pipe(Schema.optional),
+    /**
+     * Maximum number of (non-starred) Posts retained in the feed's queue when syncing.
+     * Older posts beyond this bound are dropped; starred posts are preserved regardless.
+     * Defaults to {@link DEFAULT_KEEP} when unset.
+     */
+    keep: Schema.Number.pipe(
+      Schema.annotations({
+        title: 'Keep',
+        description: 'Number of synced items.',
+      }),
+      Schema.optional,
+    ),
+    /** Opaque sync cursor — protocol-specific. */
+    cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    /** Backing ECHO feed (queue) for Posts: immutable feed entries appended by sync. */
+    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    /**
+     * Backing ECHO feed (queue) for fetched article bodies — one
+     * {@link PostContent} entry per Post whose content has been loaded.
+     *
+     * Feeds (not the {@link postState} side map) are the right home for big
+     * immutable payloads: they're append-only, lazily replicated, and don't
+     * inflate the Subscription document. The side map keeps only the small
+     * per-Post user state (read/archived/star/imageUrl).
+     *
+     * Optional for backwards compatibility with older Subscription documents
+     * that pre-date this feed; new subscriptions always have one via
+     * {@link makeSubscription}.
+     */
+    contentFeed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
+    /**
+     * Per-Post mutable state keyed by Post id, shared across every Magazine that references the Post.
+     * Posts live immutably in the `feed` queue; their `readAt` marker lives here. (`snippet`/`imageUrl`
+     * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
+     * are tags — see `tags`.)
+     */
+    postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
+    /**
+     * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
+     * {@link SYSTEM_TAGS}) are modelled as {@link Tag} objects so they
+     * participate in the space-wide tag system. Stored as a child {@link TagIndex} object.
+     */
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    LabelAnnotation.set(['name', 'url']),
+    Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
+    FeedAnnotation.set(true),
+    FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
   ),
-  /** Opaque sync cursor — protocol-specific. */
-  cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-  /** Backing ECHO feed (queue) for Posts: immutable feed entries appended by sync. */
-  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Backing ECHO feed (queue) for fetched article bodies — one
-   * {@link PostContent} entry per Post whose content has been loaded.
-   *
-   * Feeds (not the {@link postState} side map) are the right home for big
-   * immutable payloads: they're append-only, lazily replicated, and don't
-   * inflate the Subscription document. The side map keeps only the small
-   * per-Post user state (read/archived/star/imageUrl).
-   *
-   * Optional for backwards compatibility with older Subscription documents
-   * that pre-date this feed; new subscriptions always have one via
-   * {@link makeSubscription}.
-   */
-  contentFeed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
-  /**
-   * Per-Post mutable state keyed by Post id, shared across every Magazine that references the Post.
-   * Posts live immutably in the `feed` queue; their `readAt` marker lives here. (`snippet`/`imageUrl`
-   * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
-   * are tags — see `tags`.)
-   */
-  postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
-   * {@link SYSTEM_TAGS}) are modelled as {@link Tag} objects so they
-   * participate in the space-wide tag system. Stored as a child {@link TagIndex} object.
-   */
-  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  LabelAnnotation.set(['name', 'url']),
-  Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
-  FeedAnnotation.set(true),
-  FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
-  Type.makeObject(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
-);
-
-export type Subscription = Type.InstanceType<typeof Subscription>;
+) {}
 
 /** Checks if a value is a Subscription.Subscription object. */
 export const instanceOf = (value: unknown): value is Subscription => Obj.instanceOf(Subscription, value);
@@ -149,30 +148,29 @@ export const makeSubscription = (
  * {@link Subscription.Subscription.postState} keyed by Post id; curation
  * outputs (snippet, rank) live on `Magazine.postState`.
  */
-export const Post = Schema.Struct({
-  /** Source subscription feed; populated by `SyncSubscription` so curated posts can show provenance. */
-  source: Ref.Ref(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
-  /** Post title. */
-  title: Schema.String.pipe(Schema.optional),
-  /** URL link to the original article. */
-  link: Schema.String.pipe(Schema.optional),
-  /** Plain-text or summary. */
-  description: Schema.String.pipe(Schema.optional),
-  /** Plain-text or HTML content. */
-  content: Schema.String.pipe(Schema.optional),
-  /** Author name. */
-  author: Schema.String.pipe(Schema.optional),
-  /** ISO 8601 publication date. */
-  published: Schema.String.pipe(Schema.optional),
-  /** Unique identifier (guid) from the feed. */
-  guid: Schema.String.pipe(Schema.optional),
-}).pipe(
-  LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'orange' }),
-  Type.makeObject(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
-);
-
-export type Post = Type.InstanceType<typeof Post>;
+export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.subscription.post', '0.1.0'))(
+  Schema.Struct({
+    /** Source subscription feed; populated by `SyncSubscription` so curated posts can show provenance. */
+    source: Ref.Ref(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
+    /** Post title. */
+    title: Schema.String.pipe(Schema.optional),
+    /** URL link to the original article. */
+    link: Schema.String.pipe(Schema.optional),
+    /** Plain-text or summary. */
+    description: Schema.String.pipe(Schema.optional),
+    /** Plain-text or HTML content. */
+    content: Schema.String.pipe(Schema.optional),
+    /** Author name. */
+    author: Schema.String.pipe(Schema.optional),
+    /** ISO 8601 publication date. */
+    published: Schema.String.pipe(Schema.optional),
+    /** Unique identifier (guid) from the feed. */
+    guid: Schema.String.pipe(Schema.optional),
+  }).pipe(
+    LabelAnnotation.set(['title']),
+    Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'orange' }),
+  ),
+) {}
 
 /** Creates a Subscription.Post object. */
 export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.make(Post, props);
@@ -187,23 +185,22 @@ export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.ma
  * unboundedly and force every reader to download every body. The queue is
  * lazily replicated and append-only — a natural fit for immutable content.
  */
-export const PostContent = Schema.Struct({
-  /** Source Post (in the Subscription's `feed` queue). */
-  post: Ref.Ref(Post).pipe(FormInputAnnotation.set(false)),
-  /** Extracted article body, in Markdown. */
-  text: Schema.String,
-  /** Refined snippet derived from the full article (preferred over the description-derived one). */
-  snippet: Schema.optional(Schema.String),
-  /** Refined hero image derived from the full article (preferred over the description-derived one). */
-  imageUrl: Schema.optional(Schema.String),
-  /** ISO 8601 timestamp when the content was fetched. */
-  fetchedAt: Schema.String,
-}).pipe(
-  Annotation.HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')),
-);
-
-export type PostContent = Type.InstanceType<typeof PostContent>;
+export class PostContent extends Type.makeObject<PostContent>(
+  DXN.make('org.dxos.type.subscription.postContent', '0.1.0'),
+)(
+  Schema.Struct({
+    /** Source Post (in the Subscription's `feed` queue). */
+    post: Ref.Ref(Post).pipe(FormInputAnnotation.set(false)),
+    /** Extracted article body, in Markdown. */
+    text: Schema.String,
+    /** Refined snippet derived from the full article (preferred over the description-derived one). */
+    snippet: Schema.optional(Schema.String),
+    /** Refined hero image derived from the full article (preferred over the description-derived one). */
+    imageUrl: Schema.optional(Schema.String),
+    /** ISO 8601 timestamp when the content was fetched. */
+    fetchedAt: Schema.String,
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 
 /** Schema for the create-feed dialog form. */
 export const CreateSubscriptionSchema = Schema.Struct({

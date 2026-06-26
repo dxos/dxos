@@ -5,10 +5,10 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Column, Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Empty, OrderedList } from '@dxos/react-ui-list';
 import { Menu, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -72,31 +72,36 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   emptyLabel,
   detail,
 }: MasterDetailProps<T>) => {
+  // The gutter is owned by a `Column.Root` (not an ad-hoc wrapper) so the list aligns to the surface's
+  // column system: rows and their selection highlight sit in the centre track (`Column.Center`), matching
+  // the inset of the detail's form. The detail bleeds the full width since its own `Form` owns its gutter.
   return (
-    <div className={mx('flex flex-col min-bs-0', classNames)}>
-      {(items.length === 0 && <Empty label={emptyLabel} />) || (
-        <OrderedList.Root<T> items={items}>
-          {({ items }) => (
-            <OrderedList.Content>
-              {items.map((item) => (
-                <MasterDetailRow
-                  key={item.id}
-                  item={item}
-                  selected={item.id === selectedId}
-                  getLabel={getLabel}
-                  getIcon={getIcon}
-                  getAdornment={getAdornment}
-                  getMenu={getMenu}
-                  onSelect={onSelect}
-                />
-              ))}
-            </OrderedList.Content>
-          )}
-        </OrderedList.Root>
-      )}
+    <Column.Root gutter='sm' classNames={classNames}>
+      <Column.Center>
+        {(items.length === 0 && <Empty label={emptyLabel} />) || (
+          <OrderedList.Root<T> items={items}>
+            {({ items }) => (
+              <OrderedList.Content>
+                {items.map((item) => (
+                  <MasterDetailRow
+                    key={item.id}
+                    item={item}
+                    selected={item.id === selectedId}
+                    getLabel={getLabel}
+                    getIcon={getIcon}
+                    getAdornment={getAdornment}
+                    getMenu={getMenu}
+                    onSelect={onSelect}
+                  />
+                ))}
+              </OrderedList.Content>
+            )}
+          </OrderedList.Root>
+        )}
+      </Column.Center>
 
-      <div className='pt-trim-md'>{detail}</div>
-    </div>
+      <div className='col-span-full pt-trim-md'>{detail}</div>
+    </Column.Root>
   );
 };
 

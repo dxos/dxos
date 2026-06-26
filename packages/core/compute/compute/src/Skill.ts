@@ -8,12 +8,17 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Obj, Registry, Type, URI } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
+// Text is referenced in the inferred type of Skill (via Template.Template → Ref.Ref(Text.Text));
+// the import lets TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Text } from '@dxos/schema';
 
 import * as McpServer from './McpServer';
 import * as Operation from './Operation';
 import * as Template from './Template';
+import * as Trigger from './Trigger';
 
 /**
  * Skill schema defines the structure for AI assistant skills.
@@ -23,57 +28,98 @@ import * as Template from './Template';
  * The registry `key` and `version` are stored in the object meta — access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
  */
-export const Skill = Schema.Struct({
-  /**
-   * Human-readable name of the skill.
-   */
-  name: Schema.String.annotations({
-    description: 'Human-readable name of the skill',
-  }),
+export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill', '0.2.0'))(
+  Schema.Struct({
+    /**
+     * Human-readable name of the skill.
+     */
+    name: Schema.String.annotations({
+      description: 'Human-readable name of the skill',
+    }),
 
-  /**
-   * Description of the skill's purpose and functionality.
-   */
-  description: Schema.optional(Schema.String).annotations({
-    description: "Description of the skill's purpose and functionality",
-  }),
+    /**
+     * Description of the skill's purpose and functionality.
+     */
+    description: Schema.optional(Schema.String).annotations({
+      description: "Description of the skill's purpose and functionality",
+    }),
 
-  /**
-   * Instructions that guide the AI assistant's behavior and responses.
-   * These are system prompts or guidelines that the AI should follow.
-   */
-  instructions: Template.Template.annotations({
-    description: "Instructions that guide the AI assistant's behavior and responses",
-  }),
+    /**
+     * Instructions that guide the AI assistant's behavior and responses.
+     * These are system prompts or guidelines that the AI should follow.
+     */
+    instructions: Template.Template.annotations({
+      description: "Instructions that guide the AI assistant's behavior and responses",
+    }),
 
-  /**
-   * Array of tools that the AI assistant can use when this skill is active.
-   */
-  tools: Schema.Array(ToolId).annotations({
-    description: 'Array of tools that the AI assistant can use when this skill is active',
-  }),
+    /**
+     * Array of tools that the AI assistant can use when this skill is active.
+     */
+    tools: Schema.Array(ToolId).annotations({
+      description: 'Array of tools that the AI assistant can use when this skill is active',
+    }),
 
-  /**
-   * Whether an agent is allowed to auto-enable this skill in a conversation.
-   */
-  agentCanEnable: Schema.optional(Schema.Boolean).annotations({
-    description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
-  }),
+    /**
+     * Whether an agent is allowed to auto-enable this skill in a conversation.
+     */
+    agentCanEnable: Schema.optional(Schema.Boolean).annotations({
+      description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
+    }),
 
+    /**
+     * Array of MCP servers that the AI assistant can use when this skill is active.
+     */
+    mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+
+    /**
+     * Hooks triggered automatically at certain points in the agent's lifecycle.
+     */
+    hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
+  ),
+) {}
+
+/**
+ * Controls when the hook is triggered.
+ */
+export const HookSpec = Schema.Union(
   /**
-   * Array of MCP servers that the AI assistant can use when this skill is active.
+   * Triggered when the agent is about to start a request.
+   * A request is a series of agent/tool turns that the model drives.
    */
-  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(
-  Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.skill', '0.1.0')),
+  Schema.TaggedStruct('begin-request', {}),
+  /**
+   * Triggered when the agent has completed a request.
+   * A request is a series of agent/tool turns that the model drives.
+   */
+  Schema.TaggedStruct('end-request', {}),
 );
 
 /**
- * TypeScript type for Skill.
+ * Allows hooking into the agent's lifecycle.
+ * NOTE: Intentionally similar to Trigger, perhaps we should merge them.
  */
-export type Skill = Type.InstanceType<typeof Skill>;
+export const Hook = Schema.Struct({
+  /**
+   * What to do when the hook is triggered.
+   *
+   * Can be a Ref to a PersistentOperation.
+   */
+  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+
+  /**
+   * Controls when the hook is triggered.
+   */
+  spec: HookSpec,
+
+  /**
+   * Passed as the input data to the function.
+   * Must match the function's input schema.
+   */
+  input: Trigger.InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+});
 
 /**
  * Create a new Skill.

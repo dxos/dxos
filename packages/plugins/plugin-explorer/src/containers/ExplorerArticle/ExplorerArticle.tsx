@@ -12,13 +12,10 @@ import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { type TreeNode } from '#components';
+import { type ExplorerArticleVariant, type TreeNode, VARIANTS, Visualization, isVariant } from '#components';
 import { useGraphModel } from '#hooks';
 
-import { type ExplorerArticleVariant, VARIANTS, isVariant } from './variants';
-import { Visualization } from './Visualization';
-
-export type { ExplorerArticleVariant } from './variants';
+export type { ExplorerArticleVariant } from '#components';
 
 export type ExplorerArticleProps = AppSurface.ObjectArticleProps<View.View>;
 
@@ -107,13 +104,14 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         </Panel.Toolbar>
       )}
       <Panel.Content>
-        <Visualization
+        <Visualization.Root
           classNames='bg-base-surface'
           variant={selected}
           model={model}
-          onNodeHover={handleHover}
           onSurfaceClick={handleDismiss}
-        />
+        >
+          <Visualization.Graph onNodeHover={handleHover} />
+        </Visualization.Root>
       </Panel.Content>
     </Panel.Root>
   );

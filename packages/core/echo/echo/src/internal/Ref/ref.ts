@@ -189,7 +189,14 @@ export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * @returns Promise that will resolves with the target object.
    * Will load the object from disk if it is not present in the working set.
+   * Short-circuits immediately when the target is already loaded.
    * @throws If the object is not available locally.
+   *
+   * @idiom org.dxos.echo.refLoad
+   *   applies: Resolving a ref inside an async function or Effect handler — guarantees the object is available before proceeding
+   *   instead-of: `ref.target` — not guaranteed to be defined in async contexts; use `await ref.load()` (or `yield* Database.load(ref)` in Effect) to ensure the target is present
+   *   uses: {@link load}
+   *   related: org.dxos.echo-react.useObjectReactive
    */
   load(): Promise<T>;
 

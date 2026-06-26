@@ -18,22 +18,21 @@ import * as Provider from './Provider';
  * and any non-credential identity at a third-party provider.
  * Distinct from AccessToken, which holds the API credential.
  */
-export const Account = Schema.Struct({
-  provider: Provider.Provider,
-  kind: Schema.Literal('airline', 'rail', 'hotel', 'car', 'cruise', 'travel', 'other').pipe(Schema.optional),
-  accountNumber: Schema.optional(Schema.String),
-  displayName: Schema.optional(Schema.String),
-  tier: Schema.optional(Schema.String),
-  status: Schema.Literal('active', 'expired').pipe(Schema.optional),
-  notes: Schema.optional(Schema.String),
-  accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
-}).pipe(
-  LabelAnnotation.set(['displayName']),
-  Annotation.IconAnnotation.set({ icon: 'ph--identification-card--regular', hue: 'teal' }),
-  Type.makeObject(DXN.make('org.dxos.type.account', '0.1.0')),
-);
-
-export interface Account extends Type.InstanceType<typeof Account> {}
+export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.account', '0.1.0'))(
+  Schema.Struct({
+    provider: Provider.Provider,
+    kind: Schema.Literal('airline', 'rail', 'hotel', 'car', 'cruise', 'travel', 'other').pipe(Schema.optional),
+    accountNumber: Schema.optional(Schema.String),
+    displayName: Schema.optional(Schema.String),
+    tier: Schema.optional(Schema.String),
+    status: Schema.Literal('active', 'expired').pipe(Schema.optional),
+    notes: Schema.optional(Schema.String),
+    accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
+  }).pipe(
+    LabelAnnotation.set(['displayName']),
+    Annotation.IconAnnotation.set({ icon: 'ph--identification-card--regular', hue: 'teal' }),
+  ),
+) {}
 
 export const instanceOf = (value: unknown): value is Account => Obj.instanceOf(Account, value);
 

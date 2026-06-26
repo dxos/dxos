@@ -1,0 +1,25 @@
+<FlexQueryResponse queryName="Composer" type="AF">
+<FlexStatements count="1">
+<FlexStatement accountId="U0000000" fromDate="20250101" toDate="20251231">
+<OpenPositions>
+<!-- Mirrors live Flex output: no levelOfDetail attribute. The aggregate row per instrument has an
+     empty openDateTime (it spans every lot); each tax-lot row carries its own openDateTime. -->
+<OpenPosition accountId="U0000000" currency="USD" symbol="ACME" position="15" markPrice="200" positionValue="3000" costBasisPrice="160" costBasisMoney="2400" fifoPnlUnrealized="600" openDateTime="" />
+<OpenPosition accountId="U0000000" currency="USD" symbol="ACME" position="10" markPrice="200" positionValue="2000" costBasisPrice="150" costBasisMoney="1500" fifoPnlUnrealized="500" openDateTime="20240115;120000" />
+<OpenPosition accountId="U0000000" currency="USD" symbol="ACME" position="5" markPrice="200" positionValue="1000" costBasisPrice="180" costBasisMoney="900" fifoPnlUnrealized="100" openDateTime="20250820;120000" />
+<OpenPosition accountId="U0000000" currency="EUR" symbol="GLBX" position="8" markPrice="50" positionValue="400" costBasisPrice="55" costBasisMoney="440" fifoPnlUnrealized="-40" openDateTime="" />
+<OpenPosition accountId="U0000000" currency="EUR" symbol="GLBX" position="8" markPrice="50" positionValue="400" costBasisPrice="55" costBasisMoney="440" fifoPnlUnrealized="-40" openDateTime="20250610;100000" />
+</OpenPositions>
+<Trades>
+<Trade accountId="U0000000" currency="USD" symbol="ACME" tradeDate="20240115" buySell="BUY" quantity="10" tradePrice="150" ibCommission="-1" />
+<Trade accountId="U0000000" currency="USD" symbol="WIDG" tradeDate="20260521" buySell="SELL" quantity="-4" tradePrice="200" ibCommission="-1" />
+<Lot accountId="U0000000" currency="USD" symbol="WIDG" openDateTime="20240301" tradeDate="20260521" quantity="-4" cost="700" proceeds="804.8" fifoPnlRealized="104.8" />
+</Trades>
+<CashReport>
+<CashReportCurrency accountId="U0000000" currency="USD" endingCash="1234.56" />
+<CashReportCurrency accountId="U0000000" currency="EUR" endingCash="789.01" />
+<CashReportCurrency accountId="U0000000" currency="BASE_SUMMARY" endingCash="2099.57" />
+</CashReport>
+</FlexStatement>
+</FlexStatements>
+</FlexQueryResponse>

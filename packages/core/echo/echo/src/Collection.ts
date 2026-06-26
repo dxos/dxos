@@ -17,17 +17,15 @@ import * as Type from './Type';
 /**
  * A an ordered set of objects.
  */
-export const Collection = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' }),
-  Type.makeObject(DXN.make('org.dxos.type.collection', '0.1.0')),
-);
+export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.type.collection', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' })),
+) {}
 
-export type Collection = Type.InstanceType<typeof Collection>;
-
-export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
+export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Type.InstanceType<typeof Collection> =>
   Obj.make(Collection, { objects: [], ...props });
 
-export const isCollection: (value: unknown) => value is Collection = Obj.instanceOf(Collection);
+export const isCollection: (value: unknown) => value is Type.InstanceType<typeof Collection> =
+  Obj.instanceOf(Collection);

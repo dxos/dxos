@@ -3,3 +3,4 @@
 //
 
 export * from './useGraphModel';
+export * from './useNeighborhoodModel';

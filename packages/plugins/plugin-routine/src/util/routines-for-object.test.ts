@@ -18,10 +18,12 @@ import { Routine } from '#types';
 import { routinesForObject, connectedRoutinesQuery } from './routines-for-object';
 
 // A minimal feed-annotated host (like a mailbox): an object holding a `feed` ref.
-const FeedHost = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  feed: Ref.Ref(Feed.Feed),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0')));
+const FeedHost = Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    feed: Ref.Ref(Feed.Feed),
+  }),
+);
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, FeedHost];
 
