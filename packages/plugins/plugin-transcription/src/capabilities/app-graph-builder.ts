@@ -24,7 +24,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'transcriptionToolbar',
-        match: (node) => whenMarkdownDocument(node),
+        match: (node, get) => whenMarkdownDocument(node, get),
         actions: (matched, get) => {
           const sessionAtom = capabilities.get(TranscriptionCapabilities.RecordingSession);
           const session = get(sessionAtom);
