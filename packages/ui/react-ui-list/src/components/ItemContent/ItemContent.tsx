@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, forwardRef } from 'react';
+import React, { type ReactElement, type ReactNode, forwardRef } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type ItemContentProps = ThemedClassName<{
-  /** Leading icon name; rendered in a rail-sized slot centered on the title line. */
-  icon?: string;
-  /** Extra classes for the leading icon (e.g. a status colour). */
-  iconClassNames?: string;
+  /**
+   * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
+   * carrying its own size/colour (e.g. `<Icon icon='…' classNames='text-success-text' />`).
+   */
+  icon?: string | ReactElement;
   /** Primary line. */
   title: ReactNode;
   /** Optional secondary line, aligned under the title in the content column. */
@@ -28,13 +29,15 @@ export type ItemContentProps = ThemedClassName<{
  * content up under the same content column.
  */
 export const ItemContent = forwardRef<HTMLDivElement, ItemContentProps>(
-  ({ classNames, icon, iconClassNames, title, description }, forwardedRef) => (
+  ({ classNames, icon, title, description }, forwardedRef) => (
     <div
       ref={forwardedRef}
       className={mx('grid grid-cols-[var(--dx-rail-item)_1fr] items-center gap-x-2 is-full min-is-0', classNames)}
     >
-      {icon && (
-        <Icon icon={icon} size={5} classNames={mx('col-start-1 row-start-1 place-self-center', iconClassNames)} />
+      {icon != null && (
+        <div className='col-start-1 row-start-1 place-self-center'>
+          {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
+        </div>
       )}
       <span className='col-start-2 row-start-1 truncate'>{title}</span>
       {description != null && (

@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ItemContent } from './ItemContent';
@@ -17,8 +18,7 @@ const meta = {
       <ItemContent {...args} classNames='p-2' />
       <ItemContent icon='ph--clock--regular' title='Title only, no description' classNames='p-2' />
       <ItemContent
-        icon='ph--x-circle--regular'
-        iconClassNames='text-error'
+        icon={<Icon icon='ph--x-circle--regular' size={5} classNames='text-error-text' />}
         title='Failed run'
         description='Failed · 2.6s'
         classNames='p-2'
@@ -34,8 +34,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    icon: 'ph--check-circle--regular',
-    iconClassNames: 'text-success',
+    icon: <Icon icon='ph--check-circle--regular' size={5} classNames='text-success-text' />,
     title: '6/26/2026, 5:00:00 AM',
     description: 'Success · 2.5s',
   },

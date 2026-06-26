@@ -70,6 +70,7 @@ import {
   useListNavigation,
   useListSelection,
 } from '../../aspects';
+import { ItemContent, type ItemContentProps } from '../ItemContent';
 
 const LISTBOX_NAME = 'Listbox';
 const LISTBOX_ROOT_NAME = 'Listbox.Root';
@@ -344,11 +345,13 @@ const Listbox = {
   Content,
   Item,
   ItemLabel,
+  ItemContent,
   Indicator,
 };
 
 export { Listbox, useListboxSelection };
 export type {
+  ItemContentProps,
   RootProps as ListboxRootProps,
   ViewportProps as ListboxViewportProps,
   ContentProps as ListboxContentProps,

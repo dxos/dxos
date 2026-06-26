@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { ItemContent, Listbox } from '@dxos/react-ui-list';
+import { Icon, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -73,10 +73,9 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
     <Listbox.Root onValueChange={handleValueChange}>
       <Listbox.Content classNames='gap-1' aria-label={t('trigger-kind.placeholder')}>
         {OPTIONS.map(({ kind, icon, disabled }) => (
-          <Listbox.Item key={kind} id={kind} disabled={disabled} classNames='rounded-sm bg-input-surface'>
-            <ItemContent
-              icon={icon}
-              iconClassNames='text-description'
+          <Listbox.Item key={kind} id={kind} disabled={disabled} classNames='bg-input-surface rounded-sm'>
+            <Listbox.ItemContent
+              icon={<Icon icon={icon} size={5} classNames='text-description' />}
               title={<span className='font-medium'>{t(`trigger-kind.${kind}.label`)}</span>}
               description={t(`trigger-kind.${kind}.description`)}
             />

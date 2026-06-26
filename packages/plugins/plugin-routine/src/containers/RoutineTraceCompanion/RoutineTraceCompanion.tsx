@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Accordion, Empty, ItemContent } from '@dxos/react-ui-list';
+import { Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Accordion, Empty, Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
@@ -87,9 +87,10 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                     {items.map((run) => (
                       <Accordion.Item key={run.pid} item={run} classNames='border-b border-subdued-separator'>
                         <Accordion.ItemHeader hover>
-                          <ItemContent
-                            icon={STATUS_ICONS[run.status]}
-                            iconClassNames={STATUS_CLASSES[run.status]}
+                          <Listbox.ItemContent
+                            icon={
+                              <Icon icon={STATUS_ICONS[run.status]} size={5} classNames={STATUS_CLASSES[run.status]} />
+                            }
                             title={formatTimestamp(run.startedAt)}
                             description={`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
                           />
