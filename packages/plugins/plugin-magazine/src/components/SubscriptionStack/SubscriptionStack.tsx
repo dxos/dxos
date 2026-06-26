@@ -95,7 +95,7 @@ const icons: Record<Subscription.FeedType, { icon: string; className?: string }>
     icon: 'ph--rss--regular',
     className: 'text-green-500',
   },
-  atproto: {
+  bluesky: {
     icon: 'ph--butterfly--regular',
     className: 'text-blue-500',
   },
