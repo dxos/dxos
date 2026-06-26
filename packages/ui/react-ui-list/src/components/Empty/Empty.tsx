@@ -25,7 +25,7 @@ export const Empty = ({ classNames, label, icon }: EmptyProps) => {
   const message = label ?? t('empty.label', { defaultValue: 'No items' });
   return (
     <div
-      role='none'
+      role='status'
       className={mx(
         'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
         classNames,
