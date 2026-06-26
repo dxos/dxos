@@ -25,7 +25,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { appendPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
+import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -107,7 +107,12 @@ const DefaultStory = ({ seed }: StoryArgs) => {
 
   // Seed the pending-text decoration once the editor view has registered (no mic required).
   useEffect(() => {
-    if (!seed || !attendableId || !editorViews) {
+    if (!attendableId || !editorViews) {
+      return;
+    }
+    // Clear any previously-seeded decoration when seeding stops.
+    if (!seed) {
+      editorViews.get(attendableId)?.view.dispatch({ effects: cancelPendingText.of() });
       return;
     }
     let cancelled = false;
