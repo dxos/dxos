@@ -18,7 +18,6 @@ import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
-import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from '../../../apis/jmap/util/query';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { InboxResolver, JmapCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
@@ -139,14 +138,14 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     // against this account's folders.
     const options = readBindingOptions(binding);
     const userFilter = options.filter
-      ? parseMailQuery(options.filter, {
+      ? JmapMail.parseMailQuery(options.filter, {
           now: new Date(),
-          resolveMailbox: (nameOrRole) => resolveMailboxByNameOrRole(folders, nameOrRole),
+          resolveMailbox: (nameOrRole) => JmapMail.resolveMailboxByNameOrRole(folders, nameOrRole),
         })
       : Option.none<Jmap.Filter>();
     // When the user filter already scopes a mailbox (e.g. `label:School`), don't also force the Inbox:
     // an email in `School` is rarely also in the Inbox, so AND-ing them would yield nothing.
-    const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: filterScopesMailbox });
+    const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: JmapMail.filterScopesMailbox });
 
     const conditions: Jmap.Filter[] = [];
     if (inbox && !scopesMailbox) {
