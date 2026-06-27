@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Filter, Obj, Relation, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ExtractError, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
@@ -16,6 +16,21 @@ import { Message } from '@dxos/types';
 
 import { ExtractedFrom, InboxCapabilities, InboxOperation } from '../../types';
 import handler from './extract-message';
+
+const runExtractMessage = (
+  input: { source: Obj.Any; extractorId?: string },
+  layers: {
+    db: Database.Database;
+    capabilityService: ReturnType<typeof makeCapabilityService>;
+  },
+) =>
+  handler
+    .handler(input)
+    .pipe(
+      Effect.provideService(Database.Service, Database.makeService(layers.db)),
+      Effect.provideService(Capability.Service, layers.capabilityService),
+      Effect.provide(AiService.notAvailable),
+    );
 
 // Stub builder for ObjectExtractor instances. The `operation` field is optional and unused by
 // the dispatcher (which calls `extract` directly), but kept here for parity with real extractors.
@@ -78,14 +93,9 @@ describe('ExtractMessage operation handler', () => {
     const noMatchExtractor = stubExtractor({ id: 'no-match', matched: false });
     const capabilityService = makeCapabilityService([noMatchExtractor]);
 
-    const result = await handler
-      .handler({ db, source: message })
-      .pipe(
-        Effect.provideService(Capability.Service, capabilityService),
-        Effect.provide(AiService.notAvailable),
-        Effect.either,
-      )
-      .pipe(Effect.runPromise);
+    const result = await runExtractMessage({ source: message }, { db, capabilityService }).pipe(Effect.either).pipe(
+      Effect.runPromise,
+    );
 
     expect(result._tag).toBe('Left');
   });
@@ -121,10 +131,9 @@ describe('ExtractMessage operation handler', () => {
 
     const capabilityService = makeCapabilityService([lowConfidence, highConfidence]);
 
-    const result = await handler
-      .handler({ db, source: message })
-      .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.provide(AiService.notAvailable))
-      .pipe(EffectEx.runAndForwardErrors);
+    const result = await runExtractMessage({ source: message }, { db, capabilityService }).pipe(
+      EffectEx.runAndForwardErrors,
+    );
 
     expect(calledExtractorId).toBe('high');
     expect(result.extractorId).toBe('high');
@@ -153,10 +162,9 @@ describe('ExtractMessage operation handler', () => {
 
     const capabilityService = makeCapabilityService([extractorWithCreated]);
 
-    const result = await handler
-      .handler({ db, source: message })
-      .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.provide(AiService.notAvailable))
-      .pipe(EffectEx.runAndForwardErrors);
+    const result = await runExtractMessage({ source: message }, { db, capabilityService }).pipe(
+      EffectEx.runAndForwardErrors,
+    );
 
     expect(result.created).toBe(1);
     expect(result.extractorId).toBe(extractorId);

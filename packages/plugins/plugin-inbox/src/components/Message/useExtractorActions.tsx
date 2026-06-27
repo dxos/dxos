@@ -53,7 +53,7 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
       return invoker
         .invokePromise(
           InboxOperation.ExtractMessage,
-          { db: space.db, source: message, extractorId },
+          { source: message, extractorId },
           { spaceId: space.id },
         )
         .catch((err) => {
