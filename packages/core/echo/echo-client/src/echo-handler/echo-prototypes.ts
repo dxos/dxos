@@ -214,22 +214,18 @@ const resolveStrongDepFromWorkingSet = (database: EchoDatabase, uri: URI.URI): a
   return result;
 };
 
+/**
+ * Resolve a strong-dependency endpoint (relation source/target, parent) referenced by `ref`:
+ * via the database working set once bound, or the object's local link cache beforehand.
+ */
+const resolveEndpoint = (core: ObjectCore, ref: EncodedReference): any => {
+  const database = getEchoDatabase(core);
+  return database ? resolveStrongDepFromWorkingSet(database, EncodedReference.toURI(ref)) : core.lookupInLinkCache(ref);
+};
+
 export const getParent = (target: ProxyTarget): any => {
   const parentRef = target[symbolInternals].getParent();
-  if (parentRef === undefined) {
-    return undefined;
-  }
-  const parentDXN = EncodedReference.toURI(parentRef);
-  const database = getEchoDatabase(target[symbolInternals]);
-  if (database) {
-    return resolveStrongDepFromWorkingSet(database, parentDXN);
-  } else {
-    invariant(target[symbolInternals].linkCache);
-    const parentEchoUri = EID.tryParse(parentDXN);
-    const echoUri = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
-    invariant(echoUri);
-    return target[symbolInternals].linkCache.get(echoUri);
-  }
+  return parentRef === undefined ? undefined : resolveEndpoint(target[symbolInternals], parentRef);
 };
 
 export const setParent = (target: ProxyTarget, value: any): void => {
@@ -246,33 +242,13 @@ export const setParent = (target: ProxyTarget, value: any): void => {
 export const getRelationSource = (target: ProxyTarget): any => {
   const sourceRef = target[symbolInternals].getSource();
   invariant(sourceRef);
-  const sourceDXN = EncodedReference.toURI(sourceRef);
-  const database = getEchoDatabase(target[symbolInternals]);
-  if (database) {
-    return resolveStrongDepFromWorkingSet(database, sourceDXN);
-  } else {
-    invariant(target[symbolInternals].linkCache);
-    const sourceEchoId = EID.tryParse(sourceDXN);
-    const echoUri = sourceEchoId ? EID.getEntityId(sourceEchoId) : undefined;
-    invariant(echoUri);
-    return target[symbolInternals].linkCache.get(echoUri);
-  }
+  return resolveEndpoint(target[symbolInternals], sourceRef);
 };
 
 export const getRelationTarget = (target: ProxyTarget): any => {
   const targetRef = target[symbolInternals].getTarget();
   invariant(targetRef);
-  const targetDXN = EncodedReference.toURI(targetRef);
-  const database = getEchoDatabase(target[symbolInternals]);
-  if (database) {
-    return resolveStrongDepFromWorkingSet(database, targetDXN);
-  } else {
-    invariant(target[symbolInternals].linkCache);
-    const targetEchoId = EID.tryParse(targetDXN);
-    const echoUri = targetEchoId ? EID.getEntityId(targetEchoId) : undefined;
-    invariant(echoUri);
-    return target[symbolInternals].linkCache.get(echoUri);
-  }
+  return resolveEndpoint(target[symbolInternals], targetRef);
 };
 
 /**
@@ -475,6 +451,13 @@ export class EchoRecord {
   declare readonly [symbolPath]: Doc.KeyPath;
   declare readonly [EventId]: Event<void>;
 
+  // This class is never instantiated: it exists only so its `.prototype` can back proxy
+  // targets via `setPrototypeOf`. `protected` (rather than `private`) so {@link EchoRoot}
+  // can still extend it.
+  protected constructor() {
+    throw new Error('EchoRecord is a behaviour prototype and must not be instantiated.');
+  }
+
   get [SchemaId](): Schema.Schema.AnyNoContext | undefined {
     return getSchema(this);
   }
@@ -494,6 +477,12 @@ export class EchoRecord {
  * former `isRootDataObject(target)` branching in the `get`/`has` traps.
  */
 export class EchoRoot extends EchoRecord {
+  // Never instantiated; see {@link EchoRecord}. The `super()` call reaches the base's
+  // throwing constructor, so any `new EchoRoot()` fails.
+  private constructor() {
+    super();
+  }
+
   get id(): string {
     return this[symbolInternals].id;
   }

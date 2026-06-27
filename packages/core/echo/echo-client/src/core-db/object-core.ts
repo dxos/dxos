@@ -508,6 +508,18 @@ export class ObjectCore {
   }
 
   /**
+   * Resolve a linked object held in the local link cache, keyed by entity id. Used to dereference
+   * endpoint/parent references before the object is bound to a database.
+   */
+  lookupInLinkCache(ref: EncodedReference): Entity.Unknown | undefined {
+    invariant(this.linkCache);
+    const echoUri = EID.tryParse(EncodedReference.toURI(ref));
+    const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    invariant(entityId, 'Invalid DXN');
+    return this.linkCache.get(entityId);
+  }
+
+  /**
    * Returns the Unix ms timestamp stored in system.createdAt, or undefined for objects
    * created before this field was introduced.
    */
