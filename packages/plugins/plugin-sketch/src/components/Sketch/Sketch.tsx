@@ -117,6 +117,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         });
         if (readonly || hideUi) {
           editor.setCurrentTool('hand');
+          editor.setCameraOptions({ isLocked: true });
         }
       }
     }, [editor, settings, hideUi, readonly]);
