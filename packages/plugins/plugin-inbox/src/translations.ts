@@ -58,8 +58,7 @@ export const translations = [
         'event.label': 'Event',
         'inbox.label': 'Inbox',
 
-        'no-integrations.label': 'No integrations configured',
-        'manage-integrations-button.label': 'Manage Integrations',
+        'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync mailbox',
         'sync-mailbox-error.title': 'Failed to sync mailbox',

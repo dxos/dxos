@@ -45,7 +45,8 @@ const MockAuthSurfacePlugin = Plugin.define(
             filter: Surface.makeFilter(ConnectorAuth),
             component: ({ data }) => (
               <div className='text-description'>
-                Mock auth surface for <code>{(data as { connectorId?: string }).connectorId}</code>
+                Mock auth surface for{' '}
+                <code>{(data as { connectorIds?: readonly string[] }).connectorIds?.join(', ')}</code>
               </div>
             ),
           }),

@@ -23,7 +23,7 @@ import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
-import { GMAIL_PROVIDER_ID } from '../../../constants';
+import { GMAIL_CONNECTOR_ID } from '../../../constants';
 import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
@@ -172,7 +172,7 @@ const setup = async () => {
   const connection = space.db.add(
     Connection.make({
       name: 'Gmail',
-      connectorId: GMAIL_PROVIDER_ID,
+      connectorId: GMAIL_CONNECTOR_ID,
       accessToken: Ref.make(accessToken),
     }),
   );
