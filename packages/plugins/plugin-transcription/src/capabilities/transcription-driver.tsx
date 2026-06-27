@@ -143,11 +143,14 @@ const TranscriptionDriver = () => {
     [settings?.transcribeAfterMs],
   );
 
+  // Stable identity: a fresh object would change useTranscriber's memo deps every render, recreating
+  // (and reopening) the transcriber and discarding its buffered audio.
+  const recorderConfig = useMemo(() => ({ interval: RECORDER_INTERVAL_MS }), []);
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
     transcriberConfig,
-    recorderConfig: { interval: RECORDER_INTERVAL_MS },
+    recorderConfig,
   });
   const transcriberRef = useRef(transcriber);
   transcriberRef.current = transcriber;
