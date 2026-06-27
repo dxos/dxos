@@ -183,7 +183,7 @@ export const translations: Resource[] = [
         'subscriptions.label': 'Subscriptions',
 
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
-        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestions.heading': 'Things to try',
         'space-home.suggestion-draft-doc.label': 'Draft a new document',
         'space-home.suggestion-data-type.label': 'Create a new data type',
         'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
