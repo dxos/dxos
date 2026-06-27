@@ -26,9 +26,13 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          persist-credentials: false
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-scope: publish
+          verify-integrity: 'true'
 
       - name: Bundle storybook
         run: moon run storybook-react:bundle
