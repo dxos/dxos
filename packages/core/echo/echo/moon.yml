@@ -26,6 +26,7 @@ tasks:
       - '--entryPoint=src/QueryResult.ts'
       - '--entryPoint=src/Query.ts'
       - '--entryPoint=src/Tag.ts'
+      - '--entryPoint=src/Text.ts'
       - '--entryPoint=src/Order.ts'
       - '--entryPoint=src/Key.ts'
       - '--entryPoint=src/Migration.ts'
