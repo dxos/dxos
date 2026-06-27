@@ -8,8 +8,8 @@ import React, { useCallback, useState } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
 import { Clipboard, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
 import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { type AccountCacheInvitation, ClientCapabilities } from '#types';

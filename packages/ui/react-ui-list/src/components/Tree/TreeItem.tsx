@@ -37,8 +37,8 @@ import {
 
 import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '../Treegrid';
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
-import { TreeDropIndicator } from './TreeDropIndicator';
 import { useTree } from './TreeContext';
+import { TreeDropIndicator } from './TreeDropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
 

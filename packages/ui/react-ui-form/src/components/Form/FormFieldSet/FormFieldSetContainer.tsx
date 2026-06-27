@@ -9,9 +9,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { formTheme } from '../Form.theme';
 import { FormFieldHeader } from '../FormField/FormFieldHeader';
 import { type FormFieldPresentation } from '../FormField/presentation';
-import { formTheme } from '../Form.theme';
 
 const styles = formTheme.styles();
 

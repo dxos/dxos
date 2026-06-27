@@ -33,40 +33,41 @@ drag-to-reorder cards, or a kanban board.
 
 ### Aspects
 
-| Hook                  | Owns                                       | Returns                                   |
-| --------------------- | ------------------------------------------ | ----------------------------------------- |
-| `useListNavigation`   | roving-tabindex keyboard nav + ARIA role   | `containerProps`, `itemProps()`           |
-| `useListSelection`    | single/multi selection (`aria-selected`)   | `bind(id) → { selected, rowProps, … }`    |
-| `useListDisclosure`   | single/multi expand (`aria-expanded`)      | `bind(id) → { expanded, triggerProps, … }`|
-| `useListGrid`         | row grid template (handle/title/actions)   | `rowProps { className, style }`           |
-| `useReorderList`      | drag-reorder controller (pragmatic-dnd)    | `{ controller, active }`                  |
-| `useReorderItem`      | per-row drag wiring                         | `{ rowRef, handleRef, state, closestEdge }`|
-| `useReorderAutoScroll`| auto-scroll the viewport while dragging     | callback `ref`                            |
+| Hook                   | Owns                                     | Returns                                     |
+| ---------------------- | ---------------------------------------- | ------------------------------------------- |
+| `useListNavigation`    | roving-tabindex keyboard nav + ARIA role | `containerProps`, `itemProps()`             |
+| `useListSelection`     | single/multi selection (`aria-selected`) | `bind(id) → { selected, rowProps, … }`      |
+| `useListDisclosure`    | single/multi expand (`aria-expanded`)    | `bind(id) → { expanded, triggerProps, … }`  |
+| `useListGrid`          | row grid template (handle/title/actions) | `rowProps { className, style }`             |
+| `useReorderList`       | drag-reorder controller (pragmatic-dnd)  | `{ controller, active }`                    |
+| `useReorderItem`       | per-row drag wiring                      | `{ rowRef, handleRef, state, closestEdge }` |
+| `useReorderAutoScroll` | auto-scroll the viewport while dragging  | callback `ref`                              |
 
 All selection/disclosure hooks support **controlled and uncontrolled** use and
-key controlled-ness off the *presence* of the `value` prop (so clearing to
+key controlled-ness off the _presence_ of the `value` prop (so clearing to
 `undefined` / empty set works — Radix's `useControllableState` does not).
 
 ### Components
 
-| Component     | Shape                              | Aspects used                                              |
-| ------------- | ---------------------------------- | --------------------------------------------------------- |
-| `Listbox`     | styled list; **selection opt-in**  | `useListNavigation`, `useListSelection('single')` when wired |
-| `OrderedList` | reorderable master-detail rows     | `useReorder*`, `useListDisclosure('single')`, `useListNavigation('list')`, `useListGrid` |
-| `Tree`        | reactive hierarchical tree          | atom-based `TreeModel` (own model — see note) + pragmatic-dnd; renders via `Treegrid` |
-| `Treegrid`    | `role=treegrid` grid layout (rows/cells) | own `tv` theme + arrow-key row nav (`@fluentui/react-tabster`) |
-| `Accordion`   | collapsible sections                | Radix Accordion (own disclosure — see note)               |
-| `Combobox`    | popover list + text input           | composes `Picker`                                          |
-| `Picker`      | input-driven option list (virtual focus) | own registry + keyboard (activedescendant pattern)    |
-| `ItemContent` | presentational row layout (icon/title/desc) | none (layout only)                               |
-| `Empty`       | empty-state placeholder             | none                                                       |
+| Component     | Shape                                       | Aspects used                                                                             |
+| ------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `Listbox`     | styled list; **selection opt-in**           | `useListNavigation`, `useListSelection('single')` when wired                             |
+| `OrderedList` | reorderable master-detail rows              | `useReorder*`, `useListDisclosure('single')`, `useListNavigation('list')`, `useListGrid` |
+| `Tree`        | reactive hierarchical tree                  | atom-based `TreeModel` (own model — see note) + pragmatic-dnd; renders via `Treegrid`    |
+| `Treegrid`    | `role=treegrid` grid layout (rows/cells)    | own `tv` theme + arrow-key row nav (`@fluentui/react-tabster`)                           |
+| `Accordion`   | collapsible sections                        | Radix Accordion (own disclosure — see note)                                              |
+| `Combobox`    | popover list + text input                   | composes `Picker`                                                                        |
+| `Picker`      | input-driven option list (virtual focus)    | own registry + keyboard (activedescendant pattern)                                       |
+| `ItemContent` | presentational row layout (icon/title/desc) | none (layout only)                                                                       |
+| `Empty`       | empty-state placeholder                     | none                                                                                     |
 
 > **`Listbox` selection is opt-in.** Pass `value`/`defaultValue`/`onValueChange` on
 > `Listbox.Root` for a single-select `role=listbox` (options carry `aria-selected`
-> + `dx-selected`, selection follows focus); omit them for plain `role=list` rows
-> (hover only, no selection) — the styled-content-list shape that replaces the
-> deprecated `@dxos/react-ui` `List`/`ListItem`. (To be renamed `List` once that
-> legacy component is deleted.)
+>
+> - `dx-selected`, selection follows focus); omit them for plain `role=list` rows
+>   (hover only, no selection) — the styled-content-list shape that replaces the
+>   deprecated `@dxos/react-ui` `List`/`ListItem`. (To be renamed `List` once that
+>   legacy component is deleted.)
 
 > **Note on divergence.** `Tree` uses an `@effect-atom` model (per-node reactive,
 > for large trees) rather than the useState-based selection/disclosure aspects;
@@ -146,7 +147,7 @@ Accordion.Root                     items + getId; multi-expand
    └─ Accordion.ItemBody           slide-animated content
 ```
 
-### Combobox — popover list + input  (composes Picker)
+### Combobox — popover list + input (composes Picker)
 
 ```
 Combobox.Root                      open + value state; wraps Popover.Root
@@ -186,4 +187,7 @@ fuzzy/search filtering, pair with `@dxos/react-ui-search`.
   port (atlaskit ships no `tree-item` renderer).
 - **Refs.** Use `forwardRef` with the `forwardedRef` parameter name; import React
   symbols by name.
+
+```
+
 ```

@@ -65,9 +65,7 @@ const content = {
 } as StorybookNode;
 
 function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean): Generator<StorybookIteratorNode> {
-  const stack: StorybookIteratorNode[] = [
-    { node, path: [node.id], parentOf: (node.nodes ?? []).map(({ id }) => id) },
-  ];
+  const stack: StorybookIteratorNode[] = [{ node, path: [node.id], parentOf: (node.nodes ?? []).map(({ id }) => id) }];
   while (stack.length > 0) {
     const { node, path, parentOf } = stack.pop()!;
     if (path.length > 1) {

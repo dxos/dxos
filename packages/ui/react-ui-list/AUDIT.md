@@ -91,13 +91,13 @@ These were agreed with the maintainer and drive the plan below:
 
 Adoption (plugin import counts, this pass):
 
-| Package              | Plugin imports | Notes                                          |
-| -------------------- | :------------: | ---------------------------------------------- |
-| `react-ui-mosaic`    |      ~53       | 18 plugins; kanban/inbox/trip/magazine heavy.  |
-| `react-ui-list`      |      ~28       | 14 plugins; navtree heaviest.                  |
-| `react-ui` List/Tree |  see §4.2      | `ListItem` ~7 real call sites; `Treegrid` 3.   |
-| `react-ui-dnd`       |       7        | mosaic + chat + deck + calls.                  |
-| `react-list`         |       0        | primitive; consumed by the layers above only.  |
+| Package              | Plugin imports | Notes                                         |
+| -------------------- | :------------: | --------------------------------------------- |
+| `react-ui-mosaic`    |      ~53       | 18 plugins; kanban/inbox/trip/magazine heavy. |
+| `react-ui-list`      |      ~28       | 14 plugins; navtree heaviest.                 |
+| `react-ui` List/Tree |    see §4.2    | `ListItem` ~7 real call sites; `Treegrid` 3.  |
+| `react-ui-dnd`       |       7        | mosaic + chat + deck + calls.                 |
+| `react-list`         |       0        | primitive; consumed by the layers above only. |
 
 ---
 
@@ -125,13 +125,13 @@ pass. See follow-up **F1**.
 
 Path: `packages/ui/react-ui/src/components/List/`.
 
-| Export                              | Role                                                                | Fate                                                                 |
-| ----------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `List`, `ListItem.*`                | Themed wrapper over `react-list` (density, endcap, open-trigger).   | **Deprecate.** Migrate ~7 call sites (§4.2) to `react-ui-list`.      |
-| `Tree.*`, `TreeItem.*`              | Themed tree wrapper (`role=tree`/`treeitem`).                        | **Deprecate.** Only consumer is `react-ui-list` `TreeItem` (drop indicator). |
-| `Treegrid.*`                        | `role=treegrid` grid layout + tabster row nav.                      | **Move up** into `react-ui-list` (§4.1). Used by it + navtree + devtools. |
-| `ListDropIndicator`                 | Tailwind port of atlaskit box drop-indicator.                       | **Move** into `react-ui-dnd` (§4.3) — atlaskit-bound, shared.        |
-| `TreeDropIndicator`                 | Tailwind port of atlaskit tree-item instruction indicator.          | **Move** into `react-ui-dnd` (§4.3).                                 |
+| Export                 | Role                                                              | Fate                                                                         |
+| ---------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `List`, `ListItem.*`   | Themed wrapper over `react-list` (density, endcap, open-trigger). | **Deprecate.** Migrate ~7 call sites (§4.2) to `react-ui-list`.              |
+| `Tree.*`, `TreeItem.*` | Themed tree wrapper (`role=tree`/`treeitem`).                     | **Deprecate.** Only consumer is `react-ui-list` `TreeItem` (drop indicator). |
+| `Treegrid.*`           | `role=treegrid` grid layout + tabster row nav.                    | **Move up** into `react-ui-list` (§4.1). Used by it + navtree + devtools.    |
+| `ListDropIndicator`    | Tailwind port of atlaskit box drop-indicator.                     | **Move** into `react-ui-dnd` (§4.3) — atlaskit-bound, shared.                |
+| `TreeDropIndicator`    | Tailwind port of atlaskit tree-item instruction indicator.        | **Move** into `react-ui-dnd` (§4.3).                                         |
 
 `Treegrid` registers its theme centrally via `react-ui`'s `tx()` system
 (`defaultTheme.ts` → `treegrid: treegridTheme`) and consumes `useThemeContext`.
@@ -147,15 +147,15 @@ reorderable component has already been deleted; `OrderedList` replaced it.)
 
 **Aspects** (`aspects/`) — the reusable hooks the maintainer wants standardized:
 
-| Aspect              | Concern                          | Backing                                       |
-| ------------------- | -------------------------------- | --------------------------------------------- |
-| `useListNavigation` | keyboard nav + focus-on-entry    | `@fluentui/react-tabster` arrow groups        |
-| `useListSelection`  | single/multi selection model     | controllable state                            |
-| `useListDisclosure` | single/multi expand model        | controllable state                            |
-| `useListGrid`       | row grid template (rail tracks)  | CSS grid                                       |
-| `useReorder*`       | drag-reorder + auto-scroll       | `@atlaskit/pragmatic-drag-and-drop`           |
+| Aspect              | Concern                         | Backing                                |
+| ------------------- | ------------------------------- | -------------------------------------- |
+| `useListNavigation` | keyboard nav + focus-on-entry   | `@fluentui/react-tabster` arrow groups |
+| `useListSelection`  | single/multi selection model    | controllable state                     |
+| `useListDisclosure` | single/multi expand model       | controllable state                     |
+| `useListGrid`       | row grid template (rail tracks) | CSS grid                               |
+| `useReorder*`       | drag-reorder + auto-scroll      | `@atlaskit/pragmatic-drag-and-drop`    |
 
-**Gap vs. decision #5:** *focus* and *virtualization* are not yet aspects here.
+**Gap vs. decision #5:** _focus_ and _virtualization_ are not yet aspects here.
 `Focus` currently lives in `react-ui` (re-exported by mosaic); virtualization is
 mosaic-only (correctly). A `useListFocus` aspect (or a documented re-export of
 `react-ui` `Focus`) would complete the "common aspects" set — follow-up **F4**.
@@ -220,12 +220,14 @@ originally listed 7 call sites; a full grep found the surface is **larger** — 
 both groups:
 
 **Migrated (✅, Phase 5a):**
+
 - `plugin-connector` `SyncTargetsDialog`
 - `plugin-space` `ForeignKeys`, `SpaceSettings`
 - `plugin-client` `InvitationsContainer`, `RecoveryCredentialsContainer`
 - `plugin-sample` `RelatedItemsList`
 
 **Remaining (⛔, blocks the `react-ui` List/Tree deletion — Phase 5b):**
+
 - `sdk/shell` `IdentityListItem` — uses `ListItem.Root`'s `labelId` prop (ties to
   `Avatar.Root` `aria-labelledby`); a shared `forwardRef` template rendered by the
   parents below, so migrating ripples.
@@ -282,7 +284,7 @@ Not yet themed (intentionally — they're context/DOM-less or atom-driven):
 `Tree`/`TreeItem` (their styling is tied to `Treegrid` and moves with §4.1),
 `Accordion.Root` (no DOM classes of its own).
 
-Follow-up **F2**: audit `react-ui-form` for *consistent* theme use (some
+Follow-up **F2**: audit `react-ui-form` for _consistent_ theme use (some
 literals likely remain outside `Form.theme.ts`), and consider whether the two
 themes share structural slots worth hoisting.
 
@@ -328,7 +330,7 @@ decided, expensive to redo if guessed wrong (they set repo-wide conventions).
   (what `Mosaic.DropIndicator` already uses) and **delete** `react-ui`'s
   `ListDropIndicator`. `react-ui-list`'s `OrderedListItem` switches to the atlaskit
   box indicator (add the `react-drop-indicator` dep to `react-ui-list`).
-  - *Tree sub-case:* `TreeDropIndicator` renders from a tree-item `Instruction`
+  - _Tree sub-case:_ `TreeDropIndicator` renders from a tree-item `Instruction`
     (reorder-above/below / make-child / reparent) — atlaskit's `react-drop-indicator`
     ships `box`/`list-item` but no matching `tree-item` renderer, so this port has
     no drop-in atlaskit equivalent. It moves **with `Tree`** into `react-ui-list`
@@ -343,16 +345,16 @@ decided, expensive to redo if guessed wrong (they set repo-wide conventions).
 
 Ordered so each phase is independently shippable and later phases assume earlier.
 
-| Phase | Work                                                                                          | Risk   | Blocked on |
-| :---: | --------------------------------------------------------------------------------------------- | ------ | ---------- |
-| **0** | ✅ Theme extraction into `List.theme.ts` (§5).                                                | done   | —          |
-| **1** | Document `react-list` purpose in-package (§3.1).                                               | low    | —          |
-| **2** | ✅ Drop indicators: `react-ui-list` `OrderedList` + navtree `L0Menu` use atlaskit's box `DropIndicator`; `TreeDropIndicator` ported into `react-ui-list`. `Size` resolved in D3. react-ui's port indicators now have no external consumers. | done | —          |
-| **3** | ✅ `Treegrid` moved to `react-ui-list` with a self-contained `tv` theme (D1); navtree + devtools repointed; removed from `react-ui` (files, barrel, theme registry). All four packages build + lint. | done | —          |
-| **4** | ✅ `Listbox` made selection opt-in (§4.2, D2) — plain `role=list`/`listitem` rows when no value model; single-select listbox when wired. Backward-compatible; builds + lints. | done | —          |
-| **5a** | 🟡 Migrated 6 sites to `Listbox`: `SyncTargetsDialog`, `ForeignKeys`, `SpaceSettings`, `InvitationsContainer`, `RecoveryCredentialsContainer`, `RelatedItemsList` (all build + lint). | partial | — |
+| Phase  | Work                                                                                                                                                                                                                                                                                                                                                                                                        | Risk    | Blocked on   |
+| :----: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| **0**  | ✅ Theme extraction into `List.theme.ts` (§5).                                                                                                                                                                                                                                                                                                                                                              | done    | —            |
+| **1**  | Document `react-list` purpose in-package (§3.1).                                                                                                                                                                                                                                                                                                                                                            | low     | —            |
+| **2**  | ✅ Drop indicators: `react-ui-list` `OrderedList` + navtree `L0Menu` use atlaskit's box `DropIndicator`; `TreeDropIndicator` ported into `react-ui-list`. `Size` resolved in D3. react-ui's port indicators now have no external consumers.                                                                                                                                                                 | done    | —            |
+| **3**  | ✅ `Treegrid` moved to `react-ui-list` with a self-contained `tv` theme (D1); navtree + devtools repointed; removed from `react-ui` (files, barrel, theme registry). All four packages build + lint.                                                                                                                                                                                                        | done    | —            |
+| **4**  | ✅ `Listbox` made selection opt-in (§4.2, D2) — plain `role=list`/`listitem` rows when no value model; single-select listbox when wired. Backward-compatible; builds + lints.                                                                                                                                                                                                                               | done    | —            |
+| **5a** | 🟡 Migrated 6 sites to `Listbox`: `SyncTargetsDialog`, `ForeignKeys`, `SpaceSettings`, `InvitationsContainer`, `RecoveryCredentialsContainer`, `RelatedItemsList` (all build + lint).                                                                                                                                                                                                                       | partial | —            |
 | **5b** | ❌ Delete `react-ui` `List`/`Tree`/`TreeItem` — **blocked**: the real consumer surface is larger than the audit's 7 (see §4.2). The remaining cluster (shell `IdentityListItem`/`InvitationList`/`SpaceMemberList`/`DeviceList`, `DevicesContainer`, plugin-registry `PluginList`, app-toolkit playground, + stories) must migrate first; several touch sensitive shell UI + the `ListItem` `labelId` prop. | blocked | 5a + cluster |
-| **6** | Aspect convergence (§9): `Accordion` → `useListDisclosure`; hoist shared DnD helpers → `react-ui-dnd`; `useListFocus` aspect (F4); `Picker` primitive docs. | low | —          |
+| **6**  | Aspect convergence (§9): `Accordion` → `useListDisclosure`; hoist shared DnD helpers → `react-ui-dnd`; `useListFocus` aspect (F4); `Picker` primitive docs.                                                                                                                                                                                                                                                 | low     | —            |
 
 Phases 1 and 6 and the F-tasks are unblocked and low-risk; phases 2–5 wait on
 the D-forks above.
@@ -374,7 +376,7 @@ the D-forks above.
   form-chrome structural literals into `Form.theme.ts` slots (`actions`, `submit`,
   `fieldSetBody`, `fieldSetBox`, `fieldSetBoxOuter`) and wired `FormActions`,
   `FormSubmit`, `FormFieldSetContainer` to them (removing a `// This should be
-  styled` TODO). **Proposed, not implemented** (per the task): (a) field-specific
+styled` TODO). **Proposed, not implemented** (per the task): (a) field-specific
   grids in `ArrayField`/`DateField`/`GeoPointField`/`SelectOptionField` — several
   are `OrderedList.Item` overrides that belong in `List.theme.ts`, not the form
   theme; (b) a shared layout-slot helper in `@dxos/ui-theme` for the patterns that
@@ -392,15 +394,15 @@ the D-forks above.
 two components actually consume it. The rest re-derive navigation / selection /
 disclosure independently. Current reality:
 
-| Component       | Keyboard nav            | Selection / current      | Disclosure            | Reorder            |
-| --------------- | ----------------------- | ------------------------ | --------------------- | ------------------ |
-| `Listbox`       | `useListNavigation`     | `useListSelection`       | —                     | —                  |
-| `OrderedList`   | `useListNavigation`     | (`aria-current` row prop)| `useListDisclosure`   | `useReorder*`      |
-| `Tree`          | `Treegrid` (own)        | `TreeModel` atom         | `TreeModel` atom      | direct `@atlaskit` |
-| `Accordion`     | — (Radix)               | —                        | Radix Accordion       | —                  |
-| `Picker`        | own (activedescendant)  | own `selectedValue`      | —                     | —                  |
-| `Combobox`      | via `Picker`            | via `Picker`             | —                     | —                  |
-| mosaic `Stack`  | `Focus.Group` (own)     | Container `currentId`    | —                     | direct `@atlaskit` |
+| Component      | Keyboard nav           | Selection / current       | Disclosure          | Reorder            |
+| -------------- | ---------------------- | ------------------------- | ------------------- | ------------------ |
+| `Listbox`      | `useListNavigation`    | `useListSelection`        | —                   | —                  |
+| `OrderedList`  | `useListNavigation`    | (`aria-current` row prop) | `useListDisclosure` | `useReorder*`      |
+| `Tree`         | `Treegrid` (own)       | `TreeModel` atom          | `TreeModel` atom    | direct `@atlaskit` |
+| `Accordion`    | — (Radix)              | —                         | Radix Accordion     | —                  |
+| `Picker`       | own (activedescendant) | own `selectedValue`       | —                   | —                  |
+| `Combobox`     | via `Picker`           | via `Picker`              | —                   | —                  |
+| mosaic `Stack` | `Focus.Group` (own)    | Container `currentId`     | —                   | direct `@atlaskit` |
 
 The divergences are **not** all accidental — three are deliberate and shouldn't
 be forced into the useState-based aspects:
@@ -418,31 +420,31 @@ be forced into the useState-based aspects:
 
 Ordered by value / safety:
 
-1. **`Accordion` → `useListDisclosure('multi')`** *(low risk, real win).* Replace
+1. **`Accordion` → `useListDisclosure('multi')`** _(low risk, real win)._ Replace
    the Radix-Accordion state/ARIA with the aspect; keep the CSS slide animation.
    Unifies disclosure semantics + `aria-controls`/`aria-labelledby` id wiring
    with `OrderedList`, and drops a Radix dependency from the component.
-2. **Extract shared low-level DnD helpers into `react-ui-dnd`** *(low risk).*
+2. **Extract shared low-level DnD helpers into `react-ui-dnd`** _(low risk)._
    `useReorder*` (react-ui-list) and mosaic both hand-roll closest-edge +
    auto-scroll wrappers over the same `@atlaskit` packages. Hoist the thin
    wrappers (edge extraction, `autoScrollForElements` ref) into `react-ui-dnd`
    (the shared atlaskit home, decision #6) and have both consume them. Keeps the
-   two reorder *controllers* separate but removes the duplicated plumbing.
+   two reorder _controllers_ separate but removes the duplicated plumbing.
 3. **Formalize a `useListFocus` aspect (or bless `Focus` as the aspect)**
-   *(low risk).* mosaic and the multi-pane chrome use `react-ui` `Focus`; the
+   _(low risk)._ mosaic and the multi-pane chrome use `react-ui` `Focus`; the
    aspect set has no focus member. Either re-export `Focus` from `react-ui-list`
    `aspects` with docs, or wrap it as `useListFocus` so "focus" sits alongside
    navigation/selection/disclosure in one place. (This is follow-up F4.)
-4. **Document `Picker` as the canonical activedescendant primitive** *(docs).*
+4. **Document `Picker` as the canonical activedescendant primitive** _(docs)._
    Rather than force it onto `useListNavigation`, name it explicitly in the
    primer (done in `DESIGN.md`) as the input-driven counterpart to the
    roving-tabindex lists, so developers know which to reach for.
-5. **`OrderedList` selection → `useListSelection`** *(optional).* `OrderedList`
+5. **`OrderedList` selection → `useListSelection`** _(optional)._ `OrderedList`
    sets `aria-current` directly via an item prop rather than through the
    selection aspect. If a list needs genuine single-select-follows-focus it
    should adopt `useListSelection`; the current `aria-current` row highlight is a
    lighter "active layer" signal and may be left as-is. Decide per real consumer.
-6. **`Tree` — leave the model atom-based.** Do *not* migrate `Tree` onto the
+6. **`Tree` — leave the model atom-based.** Do _not_ migrate `Tree` onto the
    useState aspects. The only safe sharing is the keyboard/ARIA surface once
    `Treegrid` moves into this package (§4.1) — at that point `Treegrid`'s row
    navigation and `useListNavigation('grid')` could be reconciled, but only if it
@@ -479,41 +481,41 @@ is called out per group. (Whole stack builds + lints green after every phase.)
 Class-preserving refactor (static `tv` slots emit the same Tailwind). Inspect for
 regressions: spacing, hover, selected/`dx-*` states, truncation. Stories pre-existed.
 
-| Story                          | Check                                                |
-| ------------------------------ | ---------------------------------------------------- |
-| `ui/react-ui-list/Accordion`   | header hover, caret rotation, body slide animation   |
-| `ui/react-ui-list/Combobox`    | trigger text/placeholder, list padding, item rows    |
-| `ui/react-ui-list/Empty`       | centered message + icon                              |
-| `ui/react-ui-list/ItemContent` | icon/title/description grid alignment                |
-| `ui/react-ui-list/Picker`      | item hover/selected, gutter padding                  |
+| Story                          | Check                                              |
+| ------------------------------ | -------------------------------------------------- |
+| `ui/react-ui-list/Accordion`   | header hover, caret rotation, body slide animation |
+| `ui/react-ui-list/Combobox`    | trigger text/placeholder, list padding, item rows  |
+| `ui/react-ui-list/Empty`       | centered message + icon                            |
+| `ui/react-ui-list/ItemContent` | icon/title/description grid alignment              |
+| `ui/react-ui-list/Picker`      | item hover/selected, gutter padding                |
 
 ### B. Treegrid move + theme conversion (Phase 3) — expect NO visual change
 
 `Treegrid` moved react-ui → react-ui-list and its theme went from the central
 `tx()` registry to a self-contained `tv` theme. Should look identical.
 
-| Story                         | Check                                                              |
-| ----------------------------- | ------------------------------------------------------------------ |
-| `ui/react-ui-list/Treegrid`   | **(new, ported)** per-level indentation (levels 1–8), bold root row, arrow-key row nav |
-| `ui/react-ui-list/Tree`       | (consumes Treegrid) indentation, row hover, expand/collapse        |
-| in-app: navtree sidebar       | NavTreeItemColumns renders; devtools ObjectsTree renders           |
+| Story                       | Check                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| `ui/react-ui-list/Treegrid` | **(new, ported)** per-level indentation (levels 1–8), bold root row, arrow-key row nav |
+| `ui/react-ui-list/Tree`     | (consumes Treegrid) indentation, row hover, expand/collapse                            |
+| in-app: navtree sidebar     | NavTreeItemColumns renders; devtools ObjectsTree renders                               |
 
 ### C. Drop-indicator swap to atlaskit (Phase 2) — drag to verify the indicator
 
 `OrderedList` + navtree `L0Menu` now draw the atlaskit box `DropIndicator`
 (theme-aware `bg-accent-bg`); `Tree` uses the ported instruction indicator.
 
-| Story / surface               | Check                                                              |
-| ----------------------------- | ------------------------------------------------------------------ |
-| `ui/react-ui-list/OrderedList`| drag a row — line+terminal indicator appears at the drop edge      |
-| `ui/react-ui-list/Tree`       | drag a node — sibling/child instruction indicator appears          |
-| in-app: navtree L0 sidebar    | drag an L0 item — box drop indicator appears                       |
+| Story / surface                | Check                                                         |
+| ------------------------------ | ------------------------------------------------------------- |
+| `ui/react-ui-list/OrderedList` | drag a row — line+terminal indicator appears at the drop edge |
+| `ui/react-ui-list/Tree`        | drag a node — sibling/child instruction indicator appears     |
+| in-app: navtree L0 sidebar     | drag an L0 item — box drop indicator appears                  |
 
 ### D. Listbox selection opt-in (Phase 4)
 
-| Story                       | Check                                                                |
-| --------------------------- | -------------------------------------------------------------------- |
-| `ui/react-ui-list/Listbox`  | existing stories: row hover, `dx-selected`, label truncation         |
+| Story                                | Check                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| `ui/react-ui-list/Listbox`           | existing stories: row hover, `dx-selected`, label truncation                    |
 | `ui/react-ui-list/Listbox` → `Plain` | **(new)** opt-in mode: rows are `role=listitem`, hover only, no `aria-selected` |
 
 ### E. Migrated call sites → Listbox (Phase 5a) — behaviour change, inspect closely
@@ -521,21 +523,21 @@ regressions: spacing, hover, selected/`dx-*` states, truncation. Stories pre-exi
 Mostly in-app (no isolated story except where noted). All now render via `Listbox`
 plain rows (`role=list`); verify hover + the per-row affordance still works.
 
-| Site                                            | Storybook / where        | Check                                              |
-| ----------------------------------------------- | ------------------------ | -------------------------------------------------- |
-| `plugin-space` `SpaceSettings`                  | `plugins/plugin-space/containers/SpaceSettings` | space rows + settings icon button click |
-| `plugin-space` `ForeignKeys`                    | in-app (object settings) | rows + delete button                               |
-| `plugin-connector` `SyncTargetsDialog`          | in-app (sync dialog)     | checkbox per row toggles; label click toggles      |
-| `plugin-client` `InvitationsContainer`          | in-app (devices/identity)| available/redeemed rows; copy button               |
-| `plugin-client` `RecoveryCredentialsContainer`  | in-app                   | read-only rows (cursor-default), key icon + date   |
-| `plugin-sample` `RelatedItemsList`              | in-app (sample object)   | navigate-only rows (click navigates), caret        |
+| Site                                           | Storybook / where                               | Check                                            |
+| ---------------------------------------------- | ----------------------------------------------- | ------------------------------------------------ |
+| `plugin-space` `SpaceSettings`                 | `plugins/plugin-space/containers/SpaceSettings` | space rows + settings icon button click          |
+| `plugin-space` `ForeignKeys`                   | in-app (object settings)                        | rows + delete button                             |
+| `plugin-connector` `SyncTargetsDialog`         | in-app (sync dialog)                            | checkbox per row toggles; label click toggles    |
+| `plugin-client` `InvitationsContainer`         | in-app (devices/identity)                       | available/redeemed rows; copy button             |
+| `plugin-client` `RecoveryCredentialsContainer` | in-app                                          | read-only rows (cursor-default), key icon + date |
+| `plugin-sample` `RelatedItemsList`             | in-app (sample object)                          | navigate-only rows (click navigates), caret      |
 
 ### F. Earlier ad-hoc migrations (F1) — new stories
 
-| Story                                 | Check                                                              |
-| ------------------------------------- | ------------------------------------------------------------------ |
+| Story                                 | Check                                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
 | `plugins/plugin-sequencer/TrackList`  | `Listbox`: click selects, arrow nav, mute/remove don't select, Add track outside list |
-| `plugins/plugin-sidekick/ActionItems` | `react-list` rows: checkboxes toggle, strike-through, empty state  |
+| `plugins/plugin-sidekick/ActionItems` | `react-list` rows: checkboxes toggle, strike-through, empty state                     |
 
 ### G. No render change — no inspection needed
 

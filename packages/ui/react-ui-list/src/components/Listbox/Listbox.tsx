@@ -76,8 +76,8 @@ import {
   useListNavigation,
   useListSelection,
 } from '../../aspects';
-import { listTheme } from '../List.theme';
 import { ItemContent, type ItemContentProps } from '../ItemContent';
+import { listTheme } from '../List.theme';
 
 const styles = listTheme.styles();
 

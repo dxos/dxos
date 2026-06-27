@@ -7,8 +7,8 @@ import React from 'react';
 import { AppSpace } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
 import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { type Settings } from '#types';

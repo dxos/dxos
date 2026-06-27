@@ -30,7 +30,6 @@ import { type Density, type Elevation, Input, type ThemedClassName, useThemeCont
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
-
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,

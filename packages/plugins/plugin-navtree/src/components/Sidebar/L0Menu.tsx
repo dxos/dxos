@@ -7,11 +7,11 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
-import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type MouseEvent,

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
@@ -12,8 +13,6 @@ import React, {
   type RefCallback,
   useCallback,
 } from 'react';
-
-import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 
 import {
   IconBlock,

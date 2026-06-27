@@ -7,8 +7,8 @@ import React from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, Message, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
 import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
