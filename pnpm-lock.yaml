@@ -15887,6 +15887,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -15938,6 +15941,9 @@ importers:
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
+      '@dxos/transcription-pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/transcription-pipeline
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

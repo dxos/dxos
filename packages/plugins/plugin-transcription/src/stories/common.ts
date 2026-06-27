@@ -217,7 +217,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
 
 // TODO(mykola): Make API easier to use.
 // TODO(mykola): Delete after enabling vector indexing by default.
-const enableQueryIndexes = (services: { QueryService?: any }) =>
+export const enableQueryIndexes = (services: { QueryService?: any }) =>
   Effect.gen(function* () {
     yield* Effect.promise(() =>
       services.QueryService!.setConfig({
