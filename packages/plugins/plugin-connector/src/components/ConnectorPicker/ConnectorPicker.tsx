@@ -40,6 +40,7 @@ export const ConnectorPicker = ({ connectorId, db, existingTarget }: ConnectorPi
   // itself needs the live entity (not the snapshot), read from the ref in the handler.
   const [existingTargetLoaded] = useObject(existingTarget);
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
+  const connectorIds = useMemo(() => [connectorId], [connectorId]);
   const connections = useMemo(
     () => allConnections.filter((connection) => connection.connectorId === connectorId),
     [allConnections, connectorId],
@@ -84,7 +85,7 @@ export const ConnectorPicker = ({ connectorId, db, existingTarget }: ConnectorPi
           </Listbox.Viewport>
         </Listbox.Root>
       )}
-      <ConnectorAuthButton connectorIds={[connectorId]} db={db} existingTarget={existingTarget} />
+      <ConnectorAuthButton connectorIds={connectorIds} db={db} existingTarget={existingTarget} />
     </div>
   );
 };

@@ -32,37 +32,6 @@ const TestLayer = Layer.mergeAll(
   InboxResolver.Mock(),
 );
 
-const makeEmail = (id: string) => ({
-  id,
-  threadId: `t-${id}`,
-  mailboxIds: { 'mb-inbox': true },
-  from: [{ name: 'Alice', email: 'alice@x.com' }],
-  to: [{ email: 'bob@x.com' }],
-  subject: `Subject ${id}`,
-  receivedAt: '2026-01-15T10:00:00.000Z',
-  preview: `preview ${id}`,
-  bodyValues: { body: { value: `body ${id}` } },
-  textBody: [{ partId: 'body' }],
-});
-
-const respondToPost = (body: any): unknown => {
-  const [name, args] = body.methodCalls[0];
-  switch (name) {
-    case 'Mailbox/get':
-      return {
-        methodResponses: [
-          ['Mailbox/get', { accountId: ACCOUNT_ID, list: [{ id: 'mb-inbox', name: 'Inbox', role: 'inbox' }] }, '0'],
-        ],
-      };
-    case 'Email/query':
-      return { methodResponses: [['Email/query', { accountId: ACCOUNT_ID, ids: ['e1', 'e2', 'e3'], total: 3 }, '0']] };
-    case 'Email/get':
-      return { methodResponses: [['Email/get', { accountId: ACCOUNT_ID, list: args.ids.map(makeEmail) }, '0']] };
-    default:
-      return { methodResponses: [['error', { type: 'unknownMethod' }, '0']] };
-  }
-};
-
 let originalFetch: typeof globalThis.fetch;
 
 beforeEach(() => {
@@ -123,3 +92,34 @@ describe('JMAP sync read path', () => {
     }, Effect.provide(TestLayer)),
   );
 });
+
+const makeEmail = (id: string) => ({
+  id,
+  threadId: `t-${id}`,
+  mailboxIds: { 'mb-inbox': true },
+  from: [{ name: 'Alice', email: 'alice@x.com' }],
+  to: [{ email: 'bob@x.com' }],
+  subject: `Subject ${id}`,
+  receivedAt: '2026-01-15T10:00:00.000Z',
+  preview: `preview ${id}`,
+  bodyValues: { body: { value: `body ${id}` } },
+  textBody: [{ partId: 'body' }],
+});
+
+const respondToPost = (body: any): unknown => {
+  const [name, args] = body.methodCalls[0];
+  switch (name) {
+    case 'Mailbox/get':
+      return {
+        methodResponses: [
+          ['Mailbox/get', { accountId: ACCOUNT_ID, list: [{ id: 'mb-inbox', name: 'Inbox', role: 'inbox' }] }, '0'],
+        ],
+      };
+    case 'Email/query':
+      return { methodResponses: [['Email/query', { accountId: ACCOUNT_ID, ids: ['e1', 'e2', 'e3'], total: 3 }, '0']] };
+    case 'Email/get':
+      return { methodResponses: [['Email/get', { accountId: ACCOUNT_ID, list: args.ids.map(makeEmail) }, '0']] };
+    default:
+      return { methodResponses: [['error', { type: 'unknownMethod' }, '0']] };
+  }
+};

@@ -40,7 +40,7 @@ export class JmapCredentials extends Context.Tag('JmapCredentials')<JmapCredenti
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const accessToken = yield* Database.load(connection.accessToken);
-        log('using connection access token', { source: accessToken.source, account: accessToken.account });
+        log('using connection access token', { source: accessToken.source });
         return { host: accessToken.source, account: accessToken.account, token: accessToken.token };
       }),
     );

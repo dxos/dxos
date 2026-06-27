@@ -75,6 +75,12 @@ export class JmapApiError extends BaseError.extend('JmapApiError', 'JMAP API req
   }
 }
 
+/** JMAP send payload missing required fields (`to` or body text). */
+export class JmapSendMessageInvalidError extends BaseError.extend(
+  'JmapSendMessageInvalidError',
+  'Missing "to" or content in message.',
+) {}
+
 /** No JMAP identity permits the connection account as a `from` address, so the email cannot be sent. */
 export class JmapSendIdentityNotFoundError extends BaseError.extend(
   'JmapSendIdentityNotFoundError',

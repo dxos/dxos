@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { Jmap, JmapMail } from '../../../apis';
-import { GmailSendMessageInvalidError, JmapApiError, JmapSendIdentityNotFoundError } from '../../../errors';
+import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
 import { JmapCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
 
@@ -30,7 +30,7 @@ export default InboxOperation.JmapSend.pipe(
       const text = textBlock?._tag === 'text' ? textBlock.text : undefined;
 
       if (!to || !text) {
-        return yield* Effect.fail(new GmailSendMessageInvalidError());
+        return yield* Effect.fail(new JmapSendMessageInvalidError());
       }
 
       const session = yield* Jmap.getSession;

@@ -82,7 +82,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
       return 0;
     }
     const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
-    log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId, username: session.username });
+    log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
 
     const feed = yield* Database.load(mailbox.feed);
     if (mailbox.tags) {
@@ -130,7 +130,12 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     const filter: Jmap.Filter | undefined =
       conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : { operator: 'AND', conditions };
 
-    log('starting jmap sync', { username: session.username, existingIds: existingIds.size, filter });
+    // Log only non-PII context: counts and a sanitized filter shape (not the raw user query string).
+    log('starting jmap sync', {
+      existingIds: existingIds.size,
+      hasFilter: filter !== undefined,
+      conditions: conditions.length,
+    });
 
     // Stream pages of ids → concurrent email fetch → map → batch append.
     // Mirrors Gmail's streamGmailMessagesToFeed structure: Stream.flatMap with concurrency

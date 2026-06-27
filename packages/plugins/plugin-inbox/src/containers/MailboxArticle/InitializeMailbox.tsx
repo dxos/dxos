@@ -13,6 +13,9 @@ import { type Mailbox } from '#types';
 import { Initialize, InitializeAction } from '../../components';
 import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../../constants';
 
+// Stable reference for the ConnectorAuth Surface's `connectorIds` (avoids a new array each render).
+const CONNECTOR_IDS = [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID];
+
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
 };
@@ -41,7 +44,7 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
   return (
     <InitializeAction
       target={mailbox}
-      connectorIds={[GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID]}
+      connectorIds={CONNECTOR_IDS}
       syncLabel={t('sync-mailbox.label')}
       notify={{
         success: ['sync-mailbox-success.title', { ns: meta.profile.key }],

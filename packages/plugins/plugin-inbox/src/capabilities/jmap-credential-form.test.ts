@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Jmap } from '../apis';
@@ -18,11 +18,11 @@ const session = (username?: string): Jmap.Session => ({
 const connector = { id: 'jmap-mail', label: 'JMAP Mail' };
 
 describe('jmapCredentialForm', () => {
-  it('defaults the host to the Fastmail endpoint', ({ expect }) => {
+  test('defaults the host to the Fastmail endpoint', ({ expect }) => {
     expect(jmapCredentialForm.defaultValues?.host).toBe(JMAP_DEFAULT_HOST);
   });
 
-  it('builds an AccessToken + Connection from the form email', ({ expect }) => {
+  test('builds an AccessToken + Connection from the form email', ({ expect }) => {
     const { accessToken, connection } = buildJmapCredential({
       host: 'mail.example.com',
       email: 'me@example.com',
@@ -38,7 +38,7 @@ describe('jmapCredentialForm', () => {
     expect(connection.accessToken).toBeDefined();
   });
 
-  it('falls back to the session username when the email is blank', ({ expect }) => {
+  test('falls back to the session username when the email is blank', ({ expect }) => {
     const { accessToken } = buildJmapCredential({
       host: 'api.fastmail.com',
       email: '',

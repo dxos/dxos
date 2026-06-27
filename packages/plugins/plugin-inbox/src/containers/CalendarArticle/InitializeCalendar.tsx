@@ -13,6 +13,9 @@ import { type Calendar } from '#types';
 import { Initialize, InitializeAction } from '../../components';
 import { GOOGLE_CALENDAR_CONNECTOR_ID } from '../../constants';
 
+// Stable reference for the ConnectorAuth Surface's `connectorIds` (avoids a new array each render).
+const CONNECTOR_IDS = [GOOGLE_CALENDAR_CONNECTOR_ID];
+
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;
 };
@@ -39,7 +42,7 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
   return (
     <InitializeAction
       target={calendar}
-      connectorIds={[GOOGLE_CALENDAR_CONNECTOR_ID]}
+      connectorIds={CONNECTOR_IDS}
       syncLabel={t('sync-calendar.label')}
       notify={{
         success: ['sync-calendar-success.title', { ns: meta.profile.key }],

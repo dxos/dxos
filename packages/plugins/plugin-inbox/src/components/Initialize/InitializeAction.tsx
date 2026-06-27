@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
@@ -41,6 +41,10 @@ export const InitializeAction = <T extends Obj.Any>({
   const pluginManager = usePluginManager();
   const { connection, sync, syncing } = useTargetSync(target, notify);
 
+  // Stable Surface data so the downstream ConnectorAuth Surface (ConnectorAuthButton) doesn't
+  // re-render on every parent render with a fresh `connectorIds` array / `existingTarget` ref.
+  const data = useMemo(() => ({ connectorIds, existingTarget: Ref.make(target) }), [connectorIds, target]);
+
   if (connection) {
     return (
       <IconButton
@@ -54,7 +58,6 @@ export const InitializeAction = <T extends Obj.Any>({
     );
   }
 
-  const data = { connectorIds, existingTarget: Ref.make(target) };
   return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data }) ? (
     <Surface.Surface type={ConnectorAuth} data={data} limit={1} />
   ) : null;
