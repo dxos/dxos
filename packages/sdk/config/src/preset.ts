@@ -28,12 +28,13 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
     Match.exhaustive,
   );
 
+// TODO(burdon): Hosted environments share a single worker until per-env deployments exist.
 const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
   Match.value(sandbox).pipe(
     Match.when('local', () => 'http://localhost:8792'),
-    Match.when('dev', () => 'https://sandbox.dxos.workers.dev'),
-    Match.when('main', () => 'https://sandbox-main.dxos.workers.dev'),
-    Match.when('production', () => 'https://sandbox-production.dxos.workers.dev'),
+    Match.when('dev', () => 'https://sandbox-service.dxos.workers.dev'),
+    Match.when('main', () => 'https://sandbox-service.dxos.workers.dev'),
+    Match.when('production', () => 'https://sandbox-service.dxos.workers.dev'),
     Match.exhaustive,
   );
 
