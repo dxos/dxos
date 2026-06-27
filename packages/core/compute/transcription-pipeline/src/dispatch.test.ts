@@ -4,13 +4,13 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
 import { Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Transcript } from '@dxos/types';
 
-import { StageWrite } from './Stage';
 import { makeEchoCommit } from './dispatch';
+import { StageWrite } from './Stage';
 
 describe('makeEchoCommit', () => {
   let builder: EchoTestBuilder;

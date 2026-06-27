@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_STAGE_MODEL, findPreset } from './PipelineConfig';
 import { resolveModel } from './model-routing';
+import { DEFAULT_STAGE_MODEL, findPreset } from './PipelineConfig';
 import { makeCorrectionStage } from './stages';
 
 describe('PipelineConfig', () => {

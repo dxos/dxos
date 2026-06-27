@@ -8,12 +8,12 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
+import { captureCommit } from './dispatch';
 import { PipelineRuntime, type TelemetryEvent } from './PipelineRuntime';
 import { StageWrite, type Stage } from './Stage';
-import { TranscriptEvent } from './TranscriptEvent';
-import { captureCommit } from './dispatch';
 import { makeCorrectionStage, makeSummarizationStage } from './stages';
 import { SAMPLE_MEETING, scriptedSource } from './testing';
+import { TranscriptEvent } from './TranscriptEvent';
 
 describe('PipelineRuntime', () => {
   test('runs correction per block and summarizes on silence', async ({ expect }) => {

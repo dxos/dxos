@@ -13,8 +13,29 @@ import { type BlockUpdate, type Stage, StageWrite } from '../Stage';
 export type ExtractionInput = { window: ContentBlock.Transcript[] };
 
 const STOP_WORDS = new Set([
-  'I', 'Yes', 'No', 'But', 'And', 'Or', 'So', 'They', 'We', 'He', 'She', 'It',
-  'The', 'A', 'An', 'Is', 'Are', 'Was', 'Were', 'Be', 'Been', 'This', 'That',
+  'I',
+  'Yes',
+  'No',
+  'But',
+  'And',
+  'Or',
+  'So',
+  'They',
+  'We',
+  'He',
+  'She',
+  'It',
+  'The',
+  'A',
+  'An',
+  'Is',
+  'Are',
+  'Was',
+  'Were',
+  'Be',
+  'Been',
+  'This',
+  'That',
 ]);
 
 /**

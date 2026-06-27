@@ -13,10 +13,10 @@ import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
+import { resolveModel } from './model-routing';
 import { type StageConfig } from './PipelineConfig';
 import { type Stage, type StageContext, type StageWrite } from './Stage';
 import { type TranscriptEvent } from './TranscriptEvent';
-import { resolveModel } from './model-routing';
 
 /** Upper bound on retained blocks; bounds memory for long sessions (stages slice their own window). */
 const MAX_WINDOW = 128;

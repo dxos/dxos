@@ -18,5 +18,4 @@ export const resolveModel = (
   stageConfig: StageConfig | undefined,
   stage: Stage<any, any>,
   presetDefault?: ModelName,
-): ModelName =>
-  (stageConfig?.model as ModelName | undefined) ?? stage.model ?? presetDefault ?? DEFAULT_STAGE_MODEL;
+): ModelName => (stageConfig?.model as ModelName | undefined) ?? stage.model ?? presetDefault ?? DEFAULT_STAGE_MODEL;
