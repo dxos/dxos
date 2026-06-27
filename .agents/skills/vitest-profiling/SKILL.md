@@ -61,6 +61,7 @@ pnpm exec vitest run --project=node --no-file-parallelism --reporter=verbose
 
 The summary line breaks time into **Transform / Setup / Import / Tests /
 Environment / Prepare** — note which dominates:
+
 - **Transform/Import** high → import-graph / barrel-file problem (see §6).
 - **Setup** high → `setupFiles` or `globalSetup` cost (shared across every file).
 - **Tests** high → real test work; drill into specific files/tests.
@@ -108,8 +109,10 @@ export default {
     ...base.test,
     fileParallelism: false,
     execArgv: [
-      '--cpu-prof', '--cpu-prof-dir=test-runner-profile',
-      '--heap-prof', '--heap-prof-dir=test-runner-profile',
+      '--cpu-prof',
+      '--cpu-prof-dir=test-runner-profile',
+      '--heap-prof',
+      '--heap-prof-dir=test-runner-profile',
     ],
   },
 };
@@ -145,7 +148,7 @@ parse the `.cpuprofile` JSON and sum `selfTime` by `node.callFrame.functionName`
 
 ## High-impact levers (verify with profiles before applying)
 
-- **Shared setup files** run once per test *file* (or once globally for
+- **Shared setup files** run once per test _file_ (or once globally for
   `globalSetup`). Anything expensive there is multiplied by file count.
 - **`Error.stackTraceLimit = Infinity`** in `tools/vitest/setup.ts` makes every
   thrown error capture an unbounded stack — costly in suites that construct many
