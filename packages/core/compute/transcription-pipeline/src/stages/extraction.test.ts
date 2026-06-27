@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Organization } from '@dxos/types';
 
 import { extractProperNouns, makeExtractionStage } from './extraction';
 
@@ -20,5 +23,31 @@ describe('extraction', () => {
     const candidates = (write.blockUpdates?.[0].candidates ?? []).map((candidate) => candidate.text);
     expect(candidates).toContain('Munich');
     expect(candidates).toContain('Friday');
+  });
+});
+
+describe('extraction (with full-text index)', () => {
+  let builder: EchoTestBuilder;
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('links matching proper nouns to objects and reports the rest as candidates', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Organization.Organization] });
+    db.add(Obj.make(Organization.Organization, { name: 'Amco' }));
+    await db.flush({ indexes: true });
+
+    const stage = makeExtractionStage();
+    const block = { _tag: 'transcript' as const, started: 's', text: 'we met Amco and Globex today' };
+    const write = await EffectEx.runPromise(stage.run({ window: [block] }, { db, model: stage.model! }));
+
+    const update = write.blockUpdates![0];
+    expect(update.references).toHaveLength(1);
+    const candidates = (update.candidates ?? []).map((candidate) => candidate.text);
+    expect(candidates).toContain('Globex');
+    expect(candidates).not.toContain('Amco');
   });
 });

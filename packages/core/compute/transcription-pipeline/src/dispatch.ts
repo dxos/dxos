@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Obj } from '@dxos/echo';
 import { type ContentBlock, type Transcript } from '@dxos/types';
 
 import { type CommitFn } from './PipelineRuntime';
@@ -32,7 +33,8 @@ export const captureCommit = (): CaptureCommit => {
  * transcript patch is applied to the `Transcript` object. Mutating a live ECHO object propagates
  * via reactivity; a containing `Obj.update` transaction (when present) batches the writes.
  */
-export const makeEchoCommit = (transcript: Transcript.Transcript): CommitFn =>
+export const makeEchoCommit =
+  (transcript: Transcript.Transcript): CommitFn =>
   (write, window) =>
     Effect.sync(() => {
       for (const update of write.blockUpdates ?? []) {
@@ -41,9 +43,14 @@ export const makeEchoCommit = (transcript: Transcript.Transcript): CommitFn =>
           continue;
         }
         const { index: _index, ...patch } = update;
-        Object.assign(block, patch);
+        // Live ECHO objects must be mutated inside Obj.update; plain blocks (testbench) assign directly.
+        if (Obj.isObject(block)) {
+          Obj.update(block, (block) => Object.assign(block, patch));
+        } else {
+          Object.assign(block, patch);
+        }
       }
       if (write.transcriptUpdate) {
-        Object.assign(transcript, write.transcriptUpdate);
+        Obj.update(transcript, (transcript) => Object.assign(transcript, write.transcriptUpdate));
       }
     });
