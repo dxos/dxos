@@ -200,6 +200,23 @@ const isBehaviourAccessor = (target: object, prop: symbol): boolean => {
 };
 
 /**
+ * Enforce that user-data mutations only happen inside `Obj.update()`. A root object owns an
+ * `EventId` once initialized; before that (and for non-root records or symbol-keyed system
+ * properties) mutations pass through. Returns whether the root is initialized so callers can gate
+ * change notifications.
+ */
+const assertMutableWithinChange = (echoRoot: object, prop: string | symbol): boolean => {
+  const isInitialized = EventId in echoRoot;
+  if (isInitialized && typeof prop !== 'symbol' && !isInChangeContext(echoRoot)) {
+    throw new Error(
+      `Cannot modify object property "${String(prop)}" outside of Obj.update(). ` +
+        'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
+    );
+  }
+  return isInitialized;
+};
+
+/**
  * Move a record's per-object metadata (symbol-keyed hidden properties) onto a fresh instance-state
  * object inserted between the target and {@link TypedObjectPrototype}. The target keeps only its
  * user data as own properties. Arrays are exempt — they keep their own (ReactiveArray) prototype chain.
@@ -318,18 +335,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     const echoRoot = getEchoRoot(target);
-
-    // Check readonly enforcement - mutations only allowed within Obj.update().
-    // A root object owns an `EventId` once initialized; before that (and on non-root records)
-    // mutations are allowed. Skip for symbol properties (internal infrastructure, not user data).
-    const isInitialized = EventId in echoRoot;
-    const isSymbolProp = typeof prop === 'symbol';
-    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
-      throw new Error(
-        `Cannot modify object property "${String(prop)}" outside of Obj.update(). ` +
-          'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
-      );
-    }
+    const isInitialized = assertMutableWithinChange(echoRoot, prop);
 
     let result: boolean = false;
     this._inSet = true;
@@ -379,17 +385,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const echoRoot = getEchoRoot(target);
-
-    // Check readonly enforcement - mutations only allowed within Obj.update().
-    // A root object owns an `EventId` once initialized. Skip for symbol properties.
-    const isInitialized = EventId in echoRoot;
-    const isSymbolProp = typeof property === 'symbol';
-    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
-      throw new Error(
-        `Cannot modify object property "${String(property)}" outside of Obj.update(). ` +
-          'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
-      );
-    }
+    const isInitialized = assertMutableWithinChange(echoRoot, property);
 
     const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {
