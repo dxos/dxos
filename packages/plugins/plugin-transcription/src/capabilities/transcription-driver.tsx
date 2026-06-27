@@ -42,7 +42,9 @@ const TranscriptionDriver = () => {
   // the drain finishes and sets 'idle'. This lets the final transcription + enrichment complete.
   const [phase, setPhase] = useState<'idle' | 'recording' | 'draining'>('idle');
   const active = phase !== 'idle';
-  const track = useAudioTrack(phase === 'recording');
+  // Keep the track (and thus the transcriber) alive across the drain — releasing it would close the
+  // transcriber before it can flush its buffered audio. Released only when the phase returns to idle.
+  const track = useAudioTrack(active);
 
   useEffect(() => {
     setPhase((current) => (recording ? 'recording' : current === 'recording' ? 'draining' : current));
