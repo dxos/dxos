@@ -528,7 +528,7 @@ describe('Integration tests', () => {
       }
     });
 
-    test('a relation whose target is deleted is still returned by a default query', async () => {
+    test('a relation with a deleted target is excluded from queries', async () => {
       await using peer = await builder.createPeer();
       await using db = await peer.createDatabase(PublicKey.random(), {
         reactiveSchemaQuery: false,
@@ -550,12 +550,10 @@ describe('Integration tests', () => {
       db.remove(alice);
       await db.flush();
 
-      // The query pipeline filters a relation only by the relation's own deleted flag, not by its
-      // endpoints — so a relation pointing at a deleted target is still returned by a default query.
-      // TODO(dmaretskyi): Exclude dangling relations (with a deleted source/target) from default
-      // queries; once that lands this expectation flips to `0` and this test turns red to prompt it.
+      // A relation with a deleted endpoint is a dangling edge and is treated as deleted, so it is
+      // excluded from a default query.
       const relations = await db.query(Query.select(Filter.type(TestSchema.HasManager))).run();
-      expect(relations.length).to.eq(1);
+      expect(relations.length).to.eq(0);
     });
 
     test('relation getTarget resolves a deleted target object', async () => {
