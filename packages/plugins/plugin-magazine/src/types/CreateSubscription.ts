@@ -48,8 +48,8 @@ export type CreateSubscriptionInput =
   | { type: 'standard-site'; handle: string; publication: string }
   | { type: 'rss'; url: string; name?: string };
 
-/** Normalizes a create-form union member into the stored {@link SubscriptionType} fields. */
-export const makeSubscriptionFromCreate = (input: CreateSubscriptionInput): Subscription.SubscriptionType => {
+/** Normalizes a create-form union member into the stored {@link Subscription.Subscription} fields. */
+export const makeSubscriptionFromCreate = (input: CreateSubscriptionInput): Subscription.Subscription => {
   switch (input.type) {
     case 'standard-site':
       // `url` stores the publication site reference (at:// or https://); sync derives the author DID
