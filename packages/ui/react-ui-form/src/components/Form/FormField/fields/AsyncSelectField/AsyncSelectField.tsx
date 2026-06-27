@@ -35,8 +35,12 @@ export const AsyncSelectField = ({ lookup, ...fieldProps }: AsyncSelectFieldProp
   // resolved `data` and current value (avoids an effect-refire loop).
   const onValueChangeRef = useRef(fieldProps.onValueChange);
   onValueChangeRef.current = fieldProps.onValueChange;
+  // Track which `data` reference has already been auto-selected so clearing the field does not trigger
+  // repeated re-selection of the same single option.
+  const autoSelectedDataRef = useRef<typeof data>(undefined);
   useEffect(() => {
-    if ((current == null || current === '') && data?.length === 1) {
+    if ((current == null || current === '') && data?.length === 1 && data !== autoSelectedDataRef.current) {
+      autoSelectedDataRef.current = data;
       onValueChangeRef.current(type, data[0].value);
     }
   }, [current, data, type]);

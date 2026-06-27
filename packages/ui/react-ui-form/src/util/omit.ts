@@ -9,14 +9,13 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Annotation, Type } from '@dxos/echo';
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S extends Schema.Schema.AnyNoContext | Type.AnyEntity> = Omit<
-  S extends Type.AnyEntity
-    ? Type.InstanceType<S>
-    : S extends Schema.Schema.AnyNoContext
-      ? Schema.Schema.Type<S>
-      : never,
-  'id'
->;
+// Distributive: applied per union member so `ExcludeId<A | B>` → `ExcludeId<A> | ExcludeId<B>` rather
+// than `Omit<InstanceType<A> | InstanceType<B>, 'id'>` (which would intersect away per-member narrowing).
+export type ExcludeId<S extends Schema.Schema.AnyNoContext | Type.AnyEntity> = S extends Type.AnyEntity
+  ? Omit<Type.InstanceType<S>, 'id'>
+  : S extends Schema.Schema.AnyNoContext
+    ? Omit<Schema.Schema.Type<S>, 'id'>
+    : never;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(

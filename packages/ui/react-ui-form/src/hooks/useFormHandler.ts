@@ -329,6 +329,7 @@ export const useFormHandler = <T extends AnyProperties>({
     }),
     [
       schema,
+      autoSave,
       values,
       errors,
       touched,

@@ -40,10 +40,16 @@ export const AutofillField = ({ autofill, ...fieldProps }: AutofillFieldProps) =
   const lastFilledRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
+    const current = getValueRef.current();
     if (typeof data !== 'string' || data.length === 0) {
+      // Derivation stopped returning a value — clear the field if it still holds our last fill so stale
+      // auto-filled text doesn't persist after the source field is cleared.
+      if (lastFilledRef.current != null && current === lastFilledRef.current) {
+        lastFilledRef.current = undefined;
+        onValueChangeRef.current(type, '');
+      }
       return;
     }
-    const current = getValueRef.current();
     if (current === data) {
       lastFilledRef.current = data;
       return;

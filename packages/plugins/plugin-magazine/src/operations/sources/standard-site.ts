@@ -297,15 +297,25 @@ const extractPds = (
     : Effect.fail(new FeedFetchError({ message: `No PDS endpoint found for DID: ${did}` }));
 };
 
-/** Lists the actor's `site.standard.document` records (newest window). */
+/** Lists ALL of the actor's `site.standard.document` records by following pagination cursors. */
 const listDocuments = (
   pds: string,
   did: string,
   proxy?: string,
 ): Effect.Effect<readonly DocumentRecord[], FeedFetchError, HttpClient.HttpClient> =>
-  getJson(ListRecordsResponse, endpoints.listRecords(pds, did, DOCUMENT_COLLECTION, 50), proxy).pipe(
-    Effect.map((listed) => listed.records ?? []),
-  );
+  Effect.gen(function* () {
+    const all: DocumentRecord[] = [];
+    let cursor: string | undefined;
+    do {
+      const url =
+        endpoints.listRecords(pds, did, DOCUMENT_COLLECTION, 100) +
+        (cursor ? `&cursor=${encodeURIComponent(cursor)}` : '');
+      const page = yield* getJson(ListRecordsResponse, url, proxy);
+      all.push(...(page.records ?? []));
+      cursor = page.cursor;
+    } while (cursor);
+    return all;
+  });
 
 /** Best-effort author profile lookup (display name / avatar / bio); undefined on any failure. */
 const fetchProfile = (

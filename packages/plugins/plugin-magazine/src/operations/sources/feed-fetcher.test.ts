@@ -64,41 +64,7 @@ const LIST_RECORDS = {
       },
     },
   ],
-  cursor: 'cursor-1',
 };
-
-const okJson = (data: unknown) =>
-  new Response(JSON.stringify(data), { status: 200, headers: { 'content-type': 'application/json' } });
-
-/**
- * Routes a mocked `fetch` by endpoint so the resolution chain is order-independent.
- * The new `fetchStandardSite` takes a site reference as `url`:
- *   - `at://did:plc:abc123/…` → extract DID → plc.directory → listRecords → getProfile → getRecord
- *   - `https://alice.example.com` → /.well-known/atproto-did → plc.directory → listRecords → getProfile
- */
-const routedFetch = () =>
-  vi.fn(async (input: unknown) => {
-    const url = String(input);
-    if (url.includes('/.well-known/atproto-did')) {
-      return okJson({ did: DID });
-    }
-    if (url.includes('resolveHandle')) {
-      return okJson({ did: DID });
-    }
-    if (url.includes('plc.directory')) {
-      return okJson(DID_DOCUMENT);
-    }
-    if (url.includes('listRecords')) {
-      return okJson(LIST_RECORDS);
-    }
-    if (url.includes('getProfile')) {
-      return okJson(PROFILE);
-    }
-    if (url.includes('getRecord')) {
-      return okJson(PUBLICATION);
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`);
-  });
 
 describe('FeedFetcher', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -197,3 +163,38 @@ describe('FeedFetcher', () => {
     });
   });
 });
+
+// Helpers
+
+const okJson = (data: unknown) =>
+  new Response(JSON.stringify(data), { status: 200, headers: { 'content-type': 'application/json' } });
+
+/**
+ * Routes a mocked `fetch` by endpoint so the resolution chain is order-independent.
+ * `fetchStandardSite` takes a site reference as `url`:
+ *   - `at://did:plc:abc123/…` → extract DID → plc.directory → listRecords → getProfile → getRecord
+ *   - `https://alice.example.com` → /.well-known/atproto-did → plc.directory → listRecords → getProfile
+ */
+const routedFetch = () =>
+  vi.fn(async (input: unknown) => {
+    const url = String(input);
+    if (url.includes('/.well-known/atproto-did')) {
+      return okJson({ did: DID });
+    }
+    if (url.includes('resolveHandle')) {
+      return okJson({ did: DID });
+    }
+    if (url.includes('plc.directory')) {
+      return okJson(DID_DOCUMENT);
+    }
+    if (url.includes('listRecords')) {
+      return okJson(LIST_RECORDS);
+    }
+    if (url.includes('getProfile')) {
+      return okJson(PROFILE);
+    }
+    if (url.includes('getRecord')) {
+      return okJson(PUBLICATION);
+    }
+    throw new Error(`Unexpected fetch URL: ${url}`);
+  });
