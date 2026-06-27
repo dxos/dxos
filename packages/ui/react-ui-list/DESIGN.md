@@ -189,7 +189,3 @@ fuzzy/search filtering, pair with `@dxos/react-ui-search`.
   component (it isn't in those node-test graphs). See `AUDIT.md` D4.
 - **Refs.** Use `forwardRef` with the `forwardedRef` parameter name; import React
   symbols by name.
-
-```
-
-```
