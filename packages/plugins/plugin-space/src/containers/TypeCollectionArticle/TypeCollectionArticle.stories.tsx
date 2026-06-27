@@ -43,10 +43,7 @@ class PlainType extends Type.makeObject<PlainType>(DXN.make('org.dxos.type.test.
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--circle--regular', hue: 'indigo' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--circle--regular', hue: 'indigo' })),
 ) {}
 
 const OBJECT_COUNT = 6;
