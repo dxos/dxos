@@ -115,6 +115,9 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
           isGridMode: settings?.showGrid !== false && !hideUi,
           isReadonly: readonly || hideUi,
         });
+        if (readonly || hideUi) {
+          editor.setCurrentTool('hand');
+        }
       }
     }, [editor, settings, hideUi, readonly]);
 
