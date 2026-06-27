@@ -9,6 +9,7 @@ import { Transcript } from '@dxos/types';
 
 import {
   AppGraphBuilder,
+  EntityLookup,
   MarkdownExtension,
   RecordingSession,
   SkillDefinition,
@@ -39,6 +40,11 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     id: 'transcription',
     activatesOn: AppActivationEvents.SetupAppGraph,
     activate: Transcriber,
+  }),
+  Plugin.addModule({
+    id: 'entity-lookup',
+    activatesOn: AppActivationEvents.SetupAppGraph,
+    activate: EntityLookup,
   }),
   Plugin.addModule({
     id: 'recording-session',

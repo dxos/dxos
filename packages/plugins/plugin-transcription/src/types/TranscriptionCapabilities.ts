@@ -7,6 +7,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
+import { type EntityLookup as EntityLookupFn } from '@dxos/transcription-pipeline';
 
 import { meta } from '#meta';
 
@@ -53,3 +54,11 @@ export type RecordingSession = { id: string; recording: boolean };
 export const RecordingSession = Capability.make<Atom.Writable<RecordingSession | null>>(
   `${meta.profile.key}.capability.recording-session`,
 );
+
+/**
+ * Resolves entity references for live-transcription enrichment. Backend-agnostic (full-text, vector,
+ * a remote service, …) so the headless driver depends on the function, not the database.
+ */
+export type EntityLookup = EntityLookupFn;
+
+export const EntityLookup = Capability.make<EntityLookupFn>(`${meta.profile.key}.capability.entity-lookup`);

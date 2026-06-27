@@ -41,6 +41,7 @@ import {
   type TelemetryEvent,
   TranscriptEvent,
   makeCorrectionStage,
+  makeDatabaseLookup,
   makeExtractionStage,
   makeSummarizationStage,
 } from '@dxos/transcription-pipeline';
@@ -55,6 +56,7 @@ import { enableQueryIndexes } from './common';
 
 // Properly-cased transcript that names seeded entities (DXOS, Cyberdyne, Amco, Sarah Johnson,
 // Michael Chen) so the deterministic extraction heuristic + full-text lookup link them.
+// TODO(burdon): Use trim (@dxos/util).
 const SCRIPT = [
   'So I caught up with Sarah Johnson this morning',
   'We talked about the DXOS and Cyberdyne partnership',
@@ -170,7 +172,7 @@ const DefaultStory = ({ stages }: StoryArgs) => {
       PipelineRuntime.run({
         source,
         stages: stageList,
-        db: space.db,
+        lookup: makeDatabaseLookup(space.db),
         commit,
         onTelemetry: (event) => {
           if (!cancelled) {
@@ -192,15 +194,15 @@ const DefaultStory = ({ stages }: StoryArgs) => {
   }
 
   return (
-    <div role='none' className='flex bs-full overflow-hidden' {...attentionAttrs}>
+    <div role='none' className='grid grid-cols-2 gap-2 w-full overflow-hidden' {...attentionAttrs}>
       <div role='none' className='flex-1 min-is-0'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
-      <div role='none' className='is-80 bs-full overflow-y-auto border-is border-separator p-2 text-xs'>
+      <div role='none' className='is-80 bs-full overflow-y-auto border-is border-separator p-2 text-sm'>
         <h3 className='mlb-1 font-medium'>Stages</h3>
         <div className='text-description'>{stages.join(' → ') || '(none)'}</div>
         <h3 className='mlb-1 font-medium'>Telemetry</h3>
-        <table className='is-full'>
+        <table className='is-full border-separate border-spacing-x-4'>
           <tbody>
             {telemetry.map((event, index) => (
               <tr key={index}>
@@ -226,7 +228,7 @@ const meta = {
   title: 'plugins/plugin-transcription/stories/Pipeline',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [

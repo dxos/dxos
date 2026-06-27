@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { linkEntities } from '@dxos/transcription-pipeline';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
@@ -29,6 +30,8 @@ const TranscriptionDriver = () => {
   const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   // `useCapabilities` (not `useCapability`) so the driver does not throw when plugin-markdown is absent.
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
+  const [lookup] = useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
 
   const recording = session?.recording ?? false;
@@ -49,10 +52,13 @@ const TranscriptionDriver = () => {
 
     // Clicking the toolbar blurs the editor and hides the caret, so anchor + placeholder give
     // immediate feedback while the first transcription is buffered.
+    // When entity extraction is enabled and a lookup is available, rewrite settled text with inline
+    // `[noun](echo:/<id>)` links — decorated as dx-anchors by the markdown editor's preview extension.
+    const entityExtraction = settings?.entityExtraction !== false;
     const streamer = new PendingTextStreamer(editorPendingTextSink(entry.view), {
       mode: settings?.streamMode ?? 'word',
       wordIntervalMs: settings?.wordIntervalMs ?? 80,
-      // TODO(burdon): postProcess seam for entity extraction → dx-anchor links.
+      postProcess: entityExtraction && lookup ? (text) => linkEntities(text, lookup) : undefined,
     });
     streamer.start({ anchor: entry.view.state.selection.main.head, placeholder: 'Recording…' });
     streamerRef.current = streamer;
@@ -68,7 +74,15 @@ const TranscriptionDriver = () => {
         current.view.dispatch({ effects: cancelPendingText.of() });
       }
     };
-  }, [recording, sessionId, editorViews, settings?.streamMode, settings?.wordIntervalMs]);
+  }, [
+    recording,
+    sessionId,
+    editorViews,
+    lookup,
+    settings?.streamMode,
+    settings?.wordIntervalMs,
+    settings?.entityExtraction,
+  ]);
 
   const handleSegments = useCallback(async (segments: ContentBlock.Transcript[]) => {
     const text = segments
