@@ -6,7 +6,8 @@ import React from 'react';
 
 import { AppSpace } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -41,28 +42,30 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSetting
           </Form.Section>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Row label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
-              <List classNames='flex flex-col w-full gap-trim-sm'>
-                {spaces?.map((space) => (
-                  <ListItem.Root key={space.id} classNames='w-full items-center'>
-                    {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
-                    <ListItem.Heading classNames='grow truncate min-h-0!'>
-                      {toLocalizedString(
-                        getSpaceDisplayName(space, {
-                          personal: AppSpace.isPersonalSpace(space),
-                        }),
-                        t,
-                      )}
-                    </ListItem.Heading>
-                    <IconButton
-                      icon='ph--faders--regular'
-                      iconOnly
-                      label={t('settings.open-settings.label')}
-                      disabled={!onOpenSpaceSettings}
-                      onClick={() => onOpenSpaceSettings?.(space)}
-                    />
-                  </ListItem.Root>
-                ))}
-              </List>
+              <Listbox.Root>
+                <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
+                  {spaces?.map((space) => (
+                    <Listbox.Item key={space.id} id={space.id} classNames='w-full items-center'>
+                      {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
+                      <Listbox.ItemLabel classNames='min-h-0!'>
+                        {toLocalizedString(
+                          getSpaceDisplayName(space, {
+                            personal: AppSpace.isPersonalSpace(space),
+                          }),
+                          t,
+                        )}
+                      </Listbox.ItemLabel>
+                      <IconButton
+                        icon='ph--faders--regular'
+                        iconOnly
+                        label={t('settings.open-settings.label')}
+                        disabled={!onOpenSpaceSettings}
+                        onClick={() => onOpenSpaceSettings?.(space)}
+                      />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
             </Form.Row>
           </Form.Section>
         </Form.Content>

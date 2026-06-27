@@ -177,6 +177,26 @@ const PopoverStory = () => {
   );
 };
 
+//
+// Plain (non-selectable) — no value model on Root, so rows render as `role=list`/`listitem`
+// with hover but no `aria-selected`. This is the styled-content-list mode that replaces the
+// deprecated `@dxos/react-ui` `List`/`ListItem`.
+//
+
+const PlainStory = () => (
+  <Listbox.Root>
+    <Listbox.Viewport>
+      <Listbox.Content aria-label='Items'>
+        {allItems.slice(0, 6).map((item) => (
+          <Listbox.Item key={item.id} id={item.id} onClick={() => {}}>
+            <Listbox.ItemLabel>{item.name}</Listbox.ItemLabel>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Viewport>
+  </Listbox.Root>
+);
+
 const meta = {
   title: 'ui/react-ui-list/Listbox',
   render: (args) => <DefaultStory {...args} />,
@@ -196,3 +216,5 @@ export const WithDisabled: Story = { args: { items: allItems.slice(0, 6), disabl
 export const MasterDetail: Story = { render: () => <MasterDetailStory /> };
 export const WithToolbar: Story = { render: () => <WithToolbarStory /> };
 export const Popover: Story = { render: () => <PopoverStory /> };
+/** Non-selectable: opt-out of the selection model — plain styled rows (role=list/listitem). */
+export const Plain: Story = { render: () => <PlainStory /> };

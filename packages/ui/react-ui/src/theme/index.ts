@@ -18,7 +18,6 @@ export * from '../components/Icon/Icon.theme';
 export * from '../components/Input/Input.theme';
 export * from '../components/Link/Link.theme';
 export * from '../components/List/List.theme';
-export * from '../components/List/Treegrid.theme';
 export * from '../components/Main/Main.theme';
 export * from '../components/Menu/Menu.theme';
 export * from '../components/Message/Message.theme';

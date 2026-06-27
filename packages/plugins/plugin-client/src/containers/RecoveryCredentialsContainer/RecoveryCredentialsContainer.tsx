@@ -6,7 +6,8 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { useCredentials } from '@dxos/react-client/halo';
-import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Message, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -51,16 +52,20 @@ export const RecoveryCredentialsContainer = () => {
                 <Message.Content>{t('no-credentials.message')}</Message.Content>
               </Message.Root>
             ) : (
-              <List>
-                {recoveryCredentials.map((credential) => (
-                  <ListItem.Root key={credential.id?.toHex()}>
-                    <ListItem.Endcap>
+              <Listbox.Root>
+                <Listbox.Content classNames='gap-1'>
+                  {recoveryCredentials.map((credential, index) => (
+                    <Listbox.Item
+                      key={credential.id?.toHex() ?? index}
+                      id={credential.id?.toHex() ?? `${index}`}
+                      classNames='gap-2'
+                    >
                       <Icon icon='ph--key--regular' />
-                    </ListItem.Endcap>
-                    <ListItem.Heading>{credential.issuanceDate.toLocaleString()}</ListItem.Heading>
-                  </ListItem.Root>
-                ))}
-              </List>
+                      <Listbox.ItemLabel>{credential.issuanceDate.toLocaleString()}</Listbox.ItemLabel>
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
             )}
           </Form.Section>
         </Form.Content>

@@ -144,7 +144,7 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
           <Card.Block>
             <Icon icon={icon} classNames={iconStyles?.text} />
           </Card.Block>
-          <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
+          <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
       </Card.Root>

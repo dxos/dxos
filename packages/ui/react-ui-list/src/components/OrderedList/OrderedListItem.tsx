@@ -13,11 +13,12 @@ import React, {
   useCallback,
 } from 'react';
 
+import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
+
 import {
   IconBlock,
   IconButton,
   type IconButtonProps,
-  ListItem as NaturalListItem,
   type ThemedClassName,
   ToggleIconButton,
   useTranslation,
@@ -25,7 +26,10 @@ import {
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListGrid, useReorderItem } from '../../aspects';
+import { listTheme } from '../List.theme';
 import { type ListItemRecord, useOrderedListContext } from './OrderedListRoot';
+
+const styles = listTheme.styles();
 
 const ORDERED_LIST_ITEM_NAME = 'OrderedListItem';
 
@@ -106,15 +110,12 @@ export const OrderedListItem = <T extends ListItemRecord>({
         style={style}
         aria-current={selected || undefined}
         onClick={onClick}
-        className={mx(
-          'relative dx-current',
-          hover && 'dx-hover',
-          state.type === 'dragging' && 'opacity-50',
-          classNames,
-        )}
+        className={styles.orderedListItem({
+          class: mx(hover && 'dx-hover', state.type === 'dragging' && 'opacity-50', classNames),
+        })}
       >
         {children}
-        {closestEdge && <NaturalListItem.DropIndicator edge={closestEdge} />}
+        {closestEdge && <DropIndicator edge={closestEdge} />}
       </div>
     </OrderedListItemProvider>
   );
@@ -169,7 +170,7 @@ export const OrderedListTitle = ({
       id={triggerProps.id}
       aria-expanded={triggerProps['aria-expanded']}
       aria-controls={triggerProps['aria-controls']}
-      className={mx('flex grow items-center truncate cursor-pointer', classNames)}
+      className={styles.orderedListTitle({ class: mx(classNames) })}
       onClick={handleClick}
     >
       {children}
@@ -310,15 +311,15 @@ export const OrderedListDetailItem = <T extends ListItemRecord>({
       classNames={mx(grid.rowProps.className, 'pb-1', classNames)}
     >
       <OrderedListDragHandle />
-      <div className='flex flex-col ring-1 ring-subdued-separator rounded-sm overflow-hidden'>
-        <div className='flex items-center min-h-[var(--dx-rail-item)]'>
+      <div className={styles.orderedListDetailColumn()}>
+        <div className={styles.orderedListDetailTitleRow()}>
           {expandable ? (
             <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
           ) : (
             // When the row is not expandable, render a plain (non-toggling) title so a click
             // doesn't mutate hidden disclosure state. Mirrors `OrderedListTitle`'s structure
             // minus the trigger plumbing.
-            <div className={mx('flex grow items-center truncate px-2', titleClassNames)}>{title}</div>
+            <div className={styles.orderedListTitle({ class: mx('cursor-auto px-2', titleClassNames) })}>{title}</div>
           )}
           {actions}
           {expandable && <OrderedListExpandCaret />}
@@ -341,7 +342,7 @@ const DetailPanel = ({ children }: PropsWithChildren) => {
     return null;
   }
   return (
-    <div {...panelProps} className='px-2 pb-2'>
+    <div {...panelProps} className={styles.orderedListDetailPanel()}>
       {children}
     </div>
   );

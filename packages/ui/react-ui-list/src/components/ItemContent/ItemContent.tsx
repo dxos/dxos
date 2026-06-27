@@ -7,6 +7,8 @@ import React, { type ReactElement, type ReactNode, forwardRef } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { listTheme } from '../List.theme';
+
 export type ItemContentProps = ThemedClassName<{
   /**
    * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
@@ -28,24 +30,18 @@ export type ItemContentProps = ThemedClassName<{
  * (e.g. an `Accordion.ItemBody`) can reuse `grid-cols-[var(--dx-rail-item)_1fr]` to line its
  * content up under the same content column.
  */
+const styles = listTheme.styles();
+
 export const ItemContent = forwardRef<HTMLDivElement, ItemContentProps>(
   ({ classNames, icon, title, description }, forwardedRef) => (
-    <div
-      ref={forwardedRef}
-      className={mx(
-        'grid grid-cols-[var(--dx-rail-item)_minmax(0,1fr)] items-center gap-x-2 is-full min-is-0',
-        classNames,
-      )}
-    >
+    <div ref={forwardedRef} className={styles.itemContentRoot({ class: mx(classNames) })}>
       {icon != null && (
-        <div className='col-start-1 row-start-1 place-self-center'>
+        <div className={styles.itemContentIcon()}>
           {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
         </div>
       )}
-      <span className='col-start-2 row-start-1 min-is-0 truncate'>{title}</span>
-      {description != null && (
-        <span className='col-start-2 row-start-2 min-is-0 truncate text-sm text-description'>{description}</span>
-      )}
+      <span className={styles.itemContentTitle()}>{title}</span>
+      {description != null && <span className={styles.itemContentDescription()}>{description}</span>}
     </div>
   ),
 );

@@ -9,3 +9,4 @@ export * from './Listbox';
 export * from './OrderedList';
 export * from './Picker';
 export * from './Tree';
+export * from './Treegrid';

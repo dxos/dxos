@@ -2,15 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Migrate to `RowList` once the multi-select model lands.
-// `RowList` ships with single-selection (`selectedId` /
-// `onSelectChange` paired with `aria-selected` / `dx-selected`). What
-// this component needs is the *multi-select* `completed: boolean` per
-// item (toggled by checkbox) — that explicit-action half is not yet
-// tracked by `RowList`. See `react-ui-list/AUDIT.md` §6 / §11.
-
 import React from 'react';
 
+import { List, ListItem } from '@dxos/react-list';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -35,9 +29,11 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
       {items.length === 0 ? (
         <p className='text-sm text-description italic'>{t('no-action-items.label')}</p>
       ) : (
-        <ul className='space-y-1'>
+        // Non-selectable: each row carries its own `completed` checkbox state, not a
+        // list-selection highlight — so this renders the plain ARIA list structure.
+        <List variant='unordered' className='space-y-1'>
           {items.map((item) => (
-            <li key={item.id} className='flex items-center gap-2 text-sm'>
+            <ListItem key={item.id} className='flex items-center gap-2 text-sm'>
               <label className='flex items-center gap-2 cursor-pointer'>
                 <input
                   type='checkbox'
@@ -47,9 +43,9 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
                 />
                 <span className={item.completed ? 'line-through text-description' : ''}>{item.text}</span>
               </label>
-            </li>
+            </ListItem>
           ))}
-        </ul>
+        </List>
       )}
     </Form.Section>
   );

@@ -9,11 +9,15 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { listTheme } from '../List.theme';
+
 // See `AccordionRoot.tsx` for the rationale on `ListItemRecord = any`.
 type ListItemRecord = any;
 import { useAccordionContext } from './AccordionRoot';
 
 const ACCORDION_ITEM_NAME = 'AccordionItem';
+
+const styles = listTheme.styles();
 
 type AccordionItemContext<T extends ListItemRecord> = {
   item: T;
@@ -31,7 +35,7 @@ export const AccordionItem = <T extends ListItemRecord>({ children, classNames, 
 
   return (
     <AccordionItemProvider {...{ item }}>
-      <AccordionPrimitive.Item value={getId(item)} className={mx('overflow-hidden', classNames)}>
+      <AccordionPrimitive.Item value={getId(item)} className={styles.accordionItem({ class: mx(classNames) })}>
         {children}
       </AccordionPrimitive.Item>
     </AccordionItemProvider>
@@ -52,21 +56,16 @@ export const AccordionItemHeader = ({ classNames, children, icon, hover, ...prop
       {/* `justify-between` pins the toggle caret to the trailing edge of the row regardless of
           the header content's intrinsic width — so the affordance lives at a predictable
           right-end position. The content wrapper grabs the remaining space. */}
-      <AccordionPrimitive.Trigger
-        className={mx(
-          'group flex items-start justify-between gap-2 p-2 dx-focus-ring-inset w-full text-start',
-          hover && 'dx-hover',
-        )}
-      >
+      <AccordionPrimitive.Trigger className={styles.accordionTrigger({ class: hover && 'dx-hover' })}>
         {/* Leading icon and caret center within a single line-height band (`h-6`) so they sit on
             the same centerline as the first line of the content, which may span multiple lines. */}
         {icon && (
-          <span className='flex items-center h-6 shrink-0'>
+          <span className={styles.accordionTriggerIcon()}>
             <Icon icon={icon} size={4} />
           </span>
         )}
-        <div className='min-w-0 flex-1'>{children}</div>
-        <span className='flex items-center h-6 shrink-0'>
+        <div className={styles.accordionTriggerContent()}>{children}</div>
+        <span className={styles.accordionTriggerIcon()}>
           <Icon
             icon='ph--caret-right--regular'
             size={4}
@@ -82,8 +81,8 @@ export type AccordionItemBodyProps = ThemedClassName<PropsWithChildren>;
 
 export const AccordionItemBody = ({ children, classNames }: AccordionItemBodyProps) => {
   return (
-    <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-      <div className={mx('p-2', classNames)}>{children}</div>
+    <AccordionPrimitive.Content className={styles.accordionBody()}>
+      <div className={styles.accordionBodyContent({ class: mx(classNames) })}>{children}</div>
     </AccordionPrimitive.Content>
   );
 };

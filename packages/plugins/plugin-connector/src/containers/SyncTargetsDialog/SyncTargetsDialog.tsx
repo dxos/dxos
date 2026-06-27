@@ -10,8 +10,8 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, Input, List, ListItem, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -128,33 +128,35 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         ) : (
           <ScrollArea.Root classNames='my-4' padding>
             <ScrollArea.Viewport>
-              <List classNames='flex flex-col gap-1'>
-                {availableTargets.map((target) => {
-                  // Associate the visible label with the checkbox so clicking the name toggles it.
-                  const checkboxId = `sync-target-${target.id}`;
-                  return (
-                    <ListItem.Root key={target.id} classNames='gap-1'>
-                      <Input.Root>
-                        <ListItem.Endcap>
-                          <Input.Checkbox
-                            id={checkboxId}
-                            checked={selected.has(target.id)}
-                            onCheckedChange={() => handleToggle(target.id)}
-                            disabled={submitting}
-                            aria-label={target.name}
-                          />
-                        </ListItem.Endcap>
-                        <div>
-                          <Input.Label htmlFor={checkboxId} classNames='pt-1 text-base text-base-text'>
-                            {target.name}
-                          </Input.Label>
-                          {target.description && <p className='text-description text-sm'>{target.description}</p>}
-                        </div>
-                      </Input.Root>
-                    </ListItem.Root>
-                  );
-                })}
-              </List>
+              <Listbox.Root>
+                <Listbox.Content classNames='gap-1'>
+                  {availableTargets.map((target) => {
+                    // Associate the visible label with the checkbox so clicking the name toggles it.
+                    const checkboxId = `sync-target-${target.id}`;
+                    return (
+                      <Listbox.Item key={target.id} id={target.id}>
+                        <Input.Root>
+                          <div className='flex items-start gap-2'>
+                            <Input.Checkbox
+                              id={checkboxId}
+                              checked={selected.has(target.id)}
+                              onCheckedChange={() => handleToggle(target.id)}
+                              disabled={submitting}
+                              aria-label={target.name}
+                            />
+                            <div>
+                              <Input.Label htmlFor={checkboxId} classNames='pt-1 text-base text-base-text'>
+                                {target.name}
+                              </Input.Label>
+                              {target.description && <p className='text-description text-sm'>{target.description}</p>}
+                            </div>
+                          </div>
+                        </Input.Root>
+                      </Listbox.Item>
+                    );
+                  })}
+                </Listbox.Content>
+              </Listbox.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}

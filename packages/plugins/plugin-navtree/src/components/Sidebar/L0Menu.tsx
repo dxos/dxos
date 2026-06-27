@@ -11,6 +11,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
+import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type MouseEvent,
@@ -30,7 +31,6 @@ import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
   IconButton,
-  ListItem,
   ScrollArea,
   type ThemedClassName,
   Tooltip,
@@ -239,7 +239,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+      {closestEdge && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });
