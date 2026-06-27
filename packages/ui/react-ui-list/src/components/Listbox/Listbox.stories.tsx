@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
 import { useListDisclosure } from '../../aspects';
 import { Listbox } from './Listbox';
@@ -199,41 +200,37 @@ const PlainStory = () => (
 );
 
 //
-// Disclosure — selectable items showing icon + title + description (`Listbox.ItemContent`),
-// each with an expand caret that reveals a detail panel via the `useListDisclosure` aspect
-// (multi-expand). The row stays the selectable option; the caret toggles disclosure.
+// Disclosure — expandable rows showing icon + title, each with a single full-row header
+// button (icon + title + caret on one line) that toggles a description panel via the
+// `useListDisclosure` aspect. Plain (non-selectable) list, so the header button is the only
+// focusable element per row — arrow keys move row-to-row, not into the caret.
 //
 
 const DisclosureStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(allItems[0]?.id);
   const disclosure = useListDisclosure({ mode: 'multi' });
   return (
-    <Listbox.Root value={selected} onValueChange={setSelected}>
+    <Listbox.Root>
       <Listbox.Viewport>
         <Listbox.Content aria-label='Items'>
           {allItems.slice(0, 8).map((item) => {
-            const { expanded, toggle, triggerProps, panelProps } = disclosure.bind(item.id);
+            const { expanded, triggerProps, panelProps } = disclosure.bind(item.id);
             return (
-              <Listbox.Item key={item.id} id={item.id} classNames='flex-col items-stretch gap-1'>
-                <div className='flex items-center gap-2'>
-                  <Listbox.ItemContent icon='ph--package--regular' title={item.name} description={item.description} />
-                  <IconButton
-                    iconOnly
-                    variant='ghost'
+              <Listbox.Item key={item.id} id={item.id} classNames='flex-col items-stretch p-0'>
+                <button
+                  {...triggerProps}
+                  type='button'
+                  className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
+                >
+                  <Icon icon='ph--package--regular' size={5} classNames='shrink-0' />
+                  <span className='flex-1 min-w-0 truncate'>{item.name}</span>
+                  <Icon
                     icon='ph--caret-right--regular'
-                    label={expanded ? 'Collapse' : 'Expand'}
-                    aria-expanded={triggerProps['aria-expanded']}
-                    aria-controls={triggerProps['aria-controls']}
-                    classNames={['transition-transform', expanded && 'rotate-90']}
-                    // Toggle disclosure without changing the row's selection.
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggle();
-                    }}
+                    size={4}
+                    classNames={mx('shrink-0 transition-transform', expanded && 'rotate-90')}
                   />
-                </div>
+                </button>
                 {expanded && (
-                  <div {...panelProps} className='ps-[var(--dx-rail-item)] pb-1 text-sm text-description'>
+                  <div {...panelProps} className='ps-[var(--dx-rail-item)] px-3 pb-2 text-sm text-description'>
                     {item.description}
                   </div>
                 )}
