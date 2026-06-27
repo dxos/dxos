@@ -29,8 +29,7 @@ const MARKDOWN_CONTENT_TYPE = 'site.standard.content.markdown';
 const endpoints = {
   resolveHandle: (handle: string) =>
     `${BSKY_PUBLIC_API}/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`,
-  getProfile: (actor: string) =>
-    `${BSKY_PUBLIC_API}/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`,
+  getProfile: (actor: string) => `${BSKY_PUBLIC_API}/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`,
   searchActors: (query: string, limit: number) =>
     `${BSKY_PUBLIC_API}/app.bsky.actor.searchActorsTypeahead?q=${encodeURIComponent(query)}&limit=${limit}`,
   plcDoc: (did: string) => `${PLC_DIRECTORY}/${did}`,
@@ -222,7 +221,10 @@ const PublicationRecord = Schema.Struct({
  * - `at://did:…/…` → DID extracted directly from the URI.
  * - `https://…` → DID fetched from `/.well-known/atproto-did` on that domain.
  */
-const resolveDidFromSite = (site: string, proxy?: string): Effect.Effect<string, FeedFetchError, HttpClient.HttpClient> => {
+const resolveDidFromSite = (
+  site: string,
+  proxy?: string,
+): Effect.Effect<string, FeedFetchError, HttpClient.HttpClient> => {
   if (site.startsWith('at://')) {
     const parsed = parseAtUri(site);
     return parsed
@@ -310,9 +312,7 @@ const fetchProfile = (
   actor: string,
   proxy?: string,
 ): Effect.Effect<Profile | undefined, never, HttpClient.HttpClient> =>
-  getJson(Profile, endpoints.getProfile(actor), proxy).pipe(
-    Effect.catchAll(() => Effect.succeed(undefined)),
-  );
+  getJson(Profile, endpoints.getProfile(actor), proxy).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
 
 /**
  * Resolves a publication `site` reference to its {@link Publication} metadata:

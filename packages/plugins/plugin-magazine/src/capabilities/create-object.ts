@@ -15,13 +15,13 @@ import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } 
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
-import { getMagazinesPath } from '../paths';
 import {
   browserCorsProxy,
   fetchRss,
   listStandardSitePublications,
   searchStandardSiteHandles,
 } from '../operations/sources';
+import { getMagazinesPath } from '../paths';
 
 // Structural gates (regex / URL format), used as form-field validation and to short-circuit the network
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup

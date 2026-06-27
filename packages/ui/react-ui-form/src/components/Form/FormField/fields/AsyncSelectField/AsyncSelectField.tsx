@@ -26,10 +26,7 @@ export const AsyncSelectField = ({ lookup, ...fieldProps }: AsyncSelectFieldProp
   const values = useFormValues<AnyProperties>(AsyncSelectField.displayName);
   const subset = useMemo(() => pickValues(values, lookup.deps), [values, lookup.deps]);
   const key = useMemo(() => JSON.stringify(subset), [subset]);
-  const { loading, data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(
-    () => lookup.load(subset),
-    key,
-  );
+  const { loading, data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(subset), key);
   const options = data ?? [];
 
   const { type, placeholder } = fieldProps;

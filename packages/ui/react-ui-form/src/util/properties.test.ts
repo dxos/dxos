@@ -12,7 +12,6 @@ import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
 import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../annotations';
-
 import { omitId } from './omit';
 import { getFormProperties, getRootFormProperties } from './properties';
 
@@ -183,9 +182,7 @@ describe('getRootFormProperties', () => {
         ),
       ),
       publication: StandardSiteBase.fields.publication.pipe(
-        OptionsLookupAnnotation.set(
-          optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([])),
-        ),
+        OptionsLookupAnnotation.set(optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]))),
       ),
     });
 
@@ -198,9 +195,7 @@ describe('getRootFormProperties', () => {
     const Rss = Schema.Struct({
       ...RssBase.fields,
       name: Schema.optional(
-        Schema.String.pipe(
-          AutofillAnnotation.set(autofill<RssValues>()(['url'], () => Effect.succeed(undefined))),
-        ),
+        Schema.String.pipe(AutofillAnnotation.set(autofill<RssValues>()(['url'], () => Effect.succeed(undefined)))),
       ),
     });
 

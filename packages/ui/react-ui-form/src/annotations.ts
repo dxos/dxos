@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
 import type * as Effect from 'effect/Effect';
+
+import { createAnnotationHelper } from '@dxos/echo/internal';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };

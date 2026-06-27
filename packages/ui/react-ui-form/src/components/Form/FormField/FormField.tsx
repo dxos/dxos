@@ -10,14 +10,13 @@ import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-
-import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';

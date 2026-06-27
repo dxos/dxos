@@ -7,10 +7,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Combobox } from '@dxos/react-ui-list';
 
-import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
-
 import { type FormFieldRendererProps } from '#types';
 
+import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
 import { FormRow } from '../../FormRow';
 
