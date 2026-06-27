@@ -56,6 +56,46 @@ if (isTrue(process.env.DX_DEBUG)) {
 }
 
 /**
+ * Rolldown wraps circular-dependency module init code in `(()=>{})` callbacks but forgets
+ * `async` when the body contains top-level `await`, producing invalid syntax.
+ * Walk `code` char-by-char and promote every `(()=>{` whose balanced body holds `await `
+ * to `(async ()=>{`.
+ */
+const fixAsyncWrappers = (code: string): string => {
+  const MARKER = '(()=>{';
+  const ASYNC_MARKER = '(async ()=>{';
+  let result = '';
+  let pos = 0;
+  while (pos < code.length) {
+    const idx = code.indexOf(MARKER, pos);
+    if (idx === -1) {
+      result += code.slice(pos);
+      break;
+    }
+    // Scan the balanced body starting at idx + MARKER.length - 1 (the '{')
+    const bodyStart = idx + MARKER.length;
+    let depth = 1;
+    let cur = bodyStart;
+    let hasAwait = false;
+    while (cur < code.length && depth > 0) {
+      const ch = code[cur];
+      if (ch === '{') {
+        depth++;
+      } else if (ch === '}') {
+        depth--;
+      } else if (depth === 1 && code.startsWith('await ', cur)) {
+        hasAwait = true;
+      }
+      cur++;
+    }
+    result += code.slice(pos, idx);
+    result += hasAwait ? ASYNC_MARKER : MARKER;
+    pos = bodyStart;
+  }
+  return result;
+};
+
+/**
  * Storybook and Vite configuration.
  *
  * https://storybook.js.org/docs/configure
@@ -313,6 +353,28 @@ export const createConfig = ({
           }),
 
           ThemePlugin({}),
+
+          // Rolldown bug workaround: circular-import lazy-init wrappers omit `async` when
+          // the factory body contains top-level `await`, producing invalid syntax. Scan every
+          // output chunk and fix `(()=>{…await…})` → `(async ()=>{…await…})`.
+          // Remove once https://github.com/rolldown/rolldown/issues/9502 is resolved.
+          {
+            name: 'fix-rolldown-async-lazy-init',
+            generateBundle(_opts, bundle) {
+              for (const chunk of Object.values(bundle)) {
+                if (chunk.type !== 'chunk') {
+                  continue;
+                }
+                if (!chunk.code.includes('await ')) {
+                  continue;
+                }
+                // Replace every sync arrow-function wrapper that contains an `await` expression.
+                // Regex: find `(()=>{` blocks where the interior holds `await ` before the
+                // matching `})`  — we do a single-pass replace using a stateful scanner.
+                chunk.code = fixAsyncWrappers(chunk.code);
+              }
+            },
+          },
         ],
       },
     ) as InlineConfig;
