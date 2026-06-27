@@ -16,7 +16,7 @@ import React, { Fragment, useEffect, useMemo, useState } from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
@@ -50,6 +50,7 @@ import { seedTestData } from '@dxos/types/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { translations } from '#translations';
+import { TranscriptionCapabilities } from '#types';
 
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { enableQueryIndexes } from './common';
@@ -114,6 +115,9 @@ const DefaultStory = ({ stages }: StoryArgs) => {
   const attentionAttrs = useAttentionAttributes(attendableId);
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([]);
   const [summary, setSummary] = useState<string>();
+  // Live driver state (mic + pipeline lifecycle), published by the transcription driver.
+  const status = useAtomCapability(TranscriptionCapabilities.PipelineStatus);
+  const phase = status?.phase ?? 'idle';
 
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
@@ -199,6 +203,14 @@ const DefaultStory = ({ stages }: StoryArgs) => {
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <div role='none' className='dx-expander shrink-0 overflow-y-auto p-2 text-sm'>
+        <h3 className='mb-1 font-medium'>Status</h3>
+        <div className='mb-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-description'>
+          <span>Mic</span>
+          <span>{phase === 'recording' ? '● on' : '○ off'}</span>
+          <span>Pipeline</span>
+          <span>{phase}</span>
+        </div>
+
         <h3 className='mb-1 font-medium'>Stages</h3>
         <div className='mb-3 text-description'>{stages.join(' → ') || '(none)'}</div>
 

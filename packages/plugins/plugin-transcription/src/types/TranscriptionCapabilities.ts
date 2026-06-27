@@ -62,3 +62,13 @@ export const RecordingSession = Capability.make<Atom.Writable<RecordingSession |
 export type EntityLookup = EntityLookupFn;
 
 export const EntityLookup = Capability.make<EntityLookupFn>(`${meta.profile.key}.capability.entity-lookup`);
+
+/**
+ * Live transcription lifecycle, published by the driver for observers (toolbar spinner, testbench):
+ * `recording` (mic capturing) → `draining` (mic off, finishing the pipeline) → `idle`.
+ */
+export type PipelinePhase = 'idle' | 'recording' | 'draining';
+
+export const PipelineStatus = Capability.make<Atom.Writable<{ phase: PipelinePhase }>>(
+  `${meta.profile.key}.capability.pipeline-status`,
+);

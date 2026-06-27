@@ -34,6 +34,8 @@ const TranscriptionDriver = () => {
   const [lookup] = useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
 
+  const [, setStatus] = useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
+
   const recording = session?.recording ?? false;
   const sessionId = session?.id;
 
@@ -42,13 +44,42 @@ const TranscriptionDriver = () => {
   // the drain finishes and sets 'idle'. This lets the final transcription + enrichment complete.
   const [phase, setPhase] = useState<'idle' | 'recording' | 'draining'>('idle');
   const active = phase !== 'idle';
-  // Keep the track (and thus the transcriber) alive across the drain — releasing it would close the
-  // transcriber before it can flush its buffered audio. Released only when the phase returns to idle.
-  const track = useAudioTrack(active);
 
   useEffect(() => {
     setPhase((current) => (recording ? 'recording' : current === 'recording' ? 'draining' : current));
   }, [recording]);
+
+  // Publish the phase so the toolbar / testbench can reflect mic + pipeline state in real time.
+  useEffect(() => {
+    setStatus(() => ({ phase }));
+  }, [phase, setStatus]);
+
+  // Mic capture stops the instant recording ends (track released → indicator drops). The transcriber,
+  // however, must outlive the drain to flush its buffer — so it binds to the track captured for the
+  // session, retained (even once stopped) until the phase returns to idle.
+  const liveTrack = useAudioTrack(phase === 'recording');
+  const [transcriberTrack, setTranscriberTrack] = useState<MediaStreamTrack>();
+  useEffect(() => {
+    if (phase === 'recording' && liveTrack) {
+      setTranscriberTrack(liveTrack);
+    } else if (phase === 'idle') {
+      setTranscriberTrack(undefined);
+    }
+  }, [phase, liveTrack]);
+
+  // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
+  const editorViewsRef = useRef(editorViews);
+  editorViewsRef.current = editorViews;
+
+  // The user cancelled (✕) if the pending decoration was cleared mid-session; guards against
+  // resurrecting it with late transcription / post-process writes during the drain.
+  const isCancelled = useCallback(() => {
+    const id = sessionIdRef.current;
+    const view = id ? editorViewsRef.current?.get(id)?.view : undefined;
+    return view ? view.state.field(pendingTextState, false) == null : false;
+  }, []);
 
   // Streams transcribed text into the editor's pending-text block (buffering + word-by-word reveal).
   // Kept alive across the whole session (incl. drain); disposed only when the phase returns to idle.
@@ -96,15 +127,18 @@ const TranscriptionDriver = () => {
     settings?.entityExtraction,
   ]);
 
-  const handleSegments = useCallback(async (segments: ContentBlock.Transcript[]) => {
-    const text = segments
-      .map((segment) => segment.text)
-      .join(' ')
-      .trim();
-    if (text.length > 0) {
-      streamerRef.current?.push(text);
-    }
-  }, []);
+  const handleSegments = useCallback(
+    async (segments: ContentBlock.Transcript[]) => {
+      const text = segments
+        .map((segment) => segment.text)
+        .join(' ')
+        .trim();
+      if (text.length > 0 && !isCancelled()) {
+        streamerRef.current?.push(text);
+      }
+    },
+    [isCancelled],
+  );
 
   // Derive the transcriber's chunk threshold from the configured initial buffering time.
   const transcriberConfig = useMemo(
@@ -118,7 +152,7 @@ const TranscriptionDriver = () => {
   );
 
   const transcriber = useTranscriber({
-    audioStreamTrack: track,
+    audioStreamTrack: transcriberTrack,
     onSegments: handleSegments,
     transcriberConfig,
     recorderConfig: { interval: RECORDER_INTERVAL_MS },
@@ -160,8 +194,12 @@ const TranscriptionDriver = () => {
     let cancelled = false;
     void (async () => {
       try {
+        // Flush buffered audio (final transcription) then settle the streamer's post-process, unless
+        // the user cancelled (✕) — in which case skip the writes so the decoration stays cleared.
         await transcriberRef.current?.flush();
-        await streamerRef.current?.flush();
+        if (!isCancelled()) {
+          await streamerRef.current?.flush();
+        }
       } catch (err) {
         log.catch(err);
       } finally {
@@ -173,7 +211,7 @@ const TranscriptionDriver = () => {
     return () => {
       cancelled = true;
     };
-  }, [phase]);
+  }, [phase, isCancelled]);
 
   return null;
 };

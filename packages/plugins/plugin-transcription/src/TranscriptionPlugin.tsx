@@ -11,6 +11,7 @@ import {
   AppGraphBuilder,
   EntityLookup,
   MarkdownExtension,
+  PipelineStatus,
   RecordingSession,
   SkillDefinition,
   OperationHandler,
@@ -50,6 +51,11 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     id: 'recording-session',
     activatesOn: AppActivationEvents.SetupSettings,
     activate: RecordingSession,
+  }),
+  Plugin.addModule({
+    id: 'pipeline-status',
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: PipelineStatus,
   }),
   Plugin.addModule({
     id: 'markdown',
