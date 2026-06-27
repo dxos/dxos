@@ -1,5 +1,6 @@
 //
 // Copyright 2024 DXOS.org
+//
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
