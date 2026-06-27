@@ -66,6 +66,7 @@ packages/plugins/plugin-transcription/
 ## Task 1: Schema deltas — `ContentBlock.Transcript`
 
 **Files:**
+
 - Modify: `packages/sdk/types/src/types/ContentBlock.ts` (the `Transcript` TaggedStruct ~line 319)
 - Test: `packages/sdk/types/src/types/ContentBlock.test.ts` (create if absent)
 
@@ -137,6 +138,7 @@ export const Transcript = Schema.TaggedStruct('transcript', {
 ## Task 2: Schema deltas — `Transcript` object
 
 **Files:**
+
 - Modify: `packages/sdk/types/src/types/Transcript.ts`
 - Test: extend `packages/sdk/types/src/types/Transcript.test.ts` (create if absent)
 
@@ -193,7 +195,7 @@ Schema.Struct({
   ),
   /** PipelineConfig that drove this transcript (absent → default preset). */
   pipeline: Schema.optional(Ref.Ref(Obj.Unknown)), // typed loosely to avoid a cross-pkg cycle into transcription-pipeline
-})
+});
 ```
 
 > NOTE: `Transcript` lives in `@dxos/types`, which must NOT depend on `@dxos/transcription-pipeline` (cycle). Therefore `pipeline` is typed as `Ref.Ref(Obj.Unknown)`; the pipeline package resolves it to `PipelineConfig` at use sites.
@@ -221,8 +223,16 @@ Schema.Struct({
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": { "source": "./src/index.ts", "types": "./dist/types/src/index.d.ts", "default": "./dist/lib/neutral/index.mjs" },
-    "./testing": { "source": "./src/testing/index.ts", "types": "./dist/types/src/testing/index.d.ts", "default": "./dist/lib/neutral/testing/index.mjs" }
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": ["dist", "src"],
@@ -352,7 +362,8 @@ describe('Stage', () => {
       id: 'upper',
       trigger: 'per-block',
       concurrency: 'latest-wins',
-      run: ({ blocks }) => Effect.succeed(StageWrite.blocks(blocks.map((b, index) => ({ index, corrected: b.text.toUpperCase() })))),
+      run: ({ blocks }) =>
+        Effect.succeed(StageWrite.blocks(blocks.map((b, index) => ({ index, corrected: b.text.toUpperCase() })))),
     };
     const out = await Effect.runPromise(upper.run({ blocks: [{ text: 'hi' }] }, {} as any));
     expect(out.blockUpdates?.[0].corrected).toEqual('HI');
@@ -465,8 +476,14 @@ import { TranscriptEvent } from './TranscriptEvent';
 import { StageWrite, type Stage } from './Stage';
 
 const upper: Stage<{ window: any[] }> = {
-  id: 'upper', trigger: 'per-block', window: { blocks: 4 }, concurrency: 'latest-wins',
-  run: ({ window }) => Effect.succeed(StageWrite.blocks(window.map((b: any, index: number) => ({ index, corrected: String(b.text).toUpperCase() })))),
+  id: 'upper',
+  trigger: 'per-block',
+  window: { blocks: 4 },
+  concurrency: 'latest-wins',
+  run: ({ window }) =>
+    Effect.succeed(
+      StageWrite.blocks(window.map((b: any, index: number) => ({ index, corrected: String(b.text).toUpperCase() }))),
+    ),
 };
 
 describe('PipelineRuntime', () => {
@@ -477,7 +494,14 @@ describe('PipelineRuntime', () => {
       TranscriptEvent.block({ _tag: 'transcript', started: 's', text: 'two' }),
     ]);
     await Effect.runPromise(
-      PipelineRuntime.run({ source, stages: [upper], commit: (w) => Effect.sync(() => { writes.push(w); }) }),
+      PipelineRuntime.run({
+        source,
+        stages: [upper],
+        commit: (w) =>
+          Effect.sync(() => {
+            writes.push(w);
+          }),
+      }),
     );
     const corrected = writes.flatMap((w) => w.blockUpdates ?? []).map((u: any) => u.corrected);
     expect(corrected).toContain('TWO');
@@ -597,4 +621,7 @@ describe('PipelineRuntime', () => {
 - **Deterministic-first testing:** every stage test runs under `StubAiLayer` — offline-green (Task 9). Real-model paths exercised only by the `live` story variant.
 - **Type consistency:** `StageWrite`/`BlockUpdate`/`TranscriptUpdate` defined once (Task 5) and reused by runtime (8), dispatch (12), stages (10–13).
 - **Cycle guard:** `Transcript.pipeline` typed as `Ref.Ref(Obj.Unknown)` (Task 2) to keep `@dxos/types` free of a dep on the pipeline package.
+
+```
+
 ```
