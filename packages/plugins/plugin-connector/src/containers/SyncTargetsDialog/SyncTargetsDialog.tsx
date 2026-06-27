@@ -126,31 +126,33 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         {availableTargets.length === 0 ? (
           <Empty label={t('no-available-targets.message')} />
         ) : (
-          <ScrollArea.Root classNames='my-4' padding>
+          <ScrollArea.Root padding>
             <ScrollArea.Viewport>
               <Listbox.Root>
-                <Listbox.Content classNames='gap-1'>
+                <Listbox.Content>
                   {availableTargets.map((target) => {
                     // Associate the visible label with the checkbox so clicking the name toggles it.
                     const checkboxId = `sync-target-${target.id}`;
                     return (
                       <Listbox.Item key={target.id} id={target.id}>
                         <Input.Root>
-                          <div className='flex items-start gap-2'>
-                            <Input.Checkbox
-                              id={checkboxId}
-                              checked={selected.has(target.id)}
-                              onCheckedChange={() => handleToggle(target.id)}
-                              disabled={submitting}
-                              aria-label={target.name}
-                            />
-                            <div>
-                              <Input.Label htmlFor={checkboxId} classNames='pt-1 text-base text-base-text'>
+                          <Listbox.ItemContent
+                            icon={
+                              <Input.Checkbox
+                                id={checkboxId}
+                                checked={selected.has(target.id)}
+                                onCheckedChange={() => handleToggle(target.id)}
+                                disabled={submitting}
+                                aria-label={target.name}
+                              />
+                            }
+                            title={
+                              <Input.Label htmlFor={checkboxId} classNames='text-base text-base-text'>
                                 {target.name}
                               </Input.Label>
-                              {target.description && <p className='text-description text-sm'>{target.description}</p>}
-                            </div>
-                          </div>
+                            }
+                            description={target.description}
+                          />
                         </Input.Root>
                       </Listbox.Item>
                     );

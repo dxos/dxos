@@ -7,3 +7,4 @@ export * from './DayAhead';
 export * from './Permissions';
 export * from './ProfileGrid';
 export * from './ProfileSummary';
+export * from './Section';

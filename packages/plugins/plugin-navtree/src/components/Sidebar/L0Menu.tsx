@@ -37,7 +37,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
-import { ListDropIndicator } from '@dxos/react-ui-list';
+import { DropIndicator } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
@@ -239,7 +239,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <ListDropIndicator edge={closestEdge} />}
+      {closestEdge && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });

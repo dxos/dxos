@@ -6,9 +6,10 @@ import React from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+
+import { Section } from './Section';
 
 export type ActionItem = {
   id: string;
@@ -25,7 +26,7 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Form.Section title={t('action-items.title')}>
+    <Section title={t('action-items.title')}>
       {items.length === 0 ? (
         <p className='text-sm text-description italic'>{t('no-action-items.label')}</p>
       ) : (
@@ -47,6 +48,6 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
           ))}
         </List>
       )}
-    </Form.Section>
+    </Section>
   );
 };

@@ -12,16 +12,36 @@ import { type Track } from '#types';
 import { TrackList } from './TrackList';
 
 const initialTracks: Track.Track[] = [
-  { id: 'drums', name: 'Drums', hue: 'red', muted: false },
-  { id: 'bass', name: 'Bass', hue: 'amber', muted: true },
-  { id: 'keys', name: 'Keys', hue: 'sky', muted: false },
-  { id: 'lead', name: 'Lead synth with a long name that should truncate', hue: 'fuchsia', muted: false },
+  {
+    id: 'drums',
+    name: 'Drums',
+    hue: 'red',
+    muted: false,
+  },
+  {
+    id: 'bass',
+    name: 'Bass',
+    hue: 'amber',
+    muted: true,
+  },
+  {
+    id: 'keys',
+    name: 'Keys',
+    hue: 'sky',
+    muted: false,
+  },
+  {
+    id: 'lead',
+    name: 'Lead synth with a long name that should truncate',
+    hue: 'fuchsia',
+    muted: false,
+  },
 ];
 
 const hues = ['red', 'amber', 'sky', 'fuchsia', 'green', 'violet'];
 
 const meta = {
-  title: 'plugins/plugin-sequencer/TrackList',
+  title: 'plugins/plugin-sequencer/components/TrackList',
   component: TrackList,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof TrackList>;

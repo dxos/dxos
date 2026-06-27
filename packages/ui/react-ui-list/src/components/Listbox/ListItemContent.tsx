@@ -9,18 +9,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
 
-export type ItemContentProps = ThemedClassName<{
-  /**
-   * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
-   * carrying its own size/colour (e.g. `<Icon icon='…' classNames='text-success-text' />`).
-   */
-  icon?: string | ReactElement;
-  /** Primary line. */
-  title: ReactNode;
-  /** Optional secondary line, aligned under the title in the content column. */
-  description?: ReactNode;
-}>;
-
 /**
  * Presentational row layout: a rail-sized leading icon centered on the primary line, with an
  * optional secondary line aligned beneath the title in the content column. Drop inside a
@@ -32,7 +20,19 @@ export type ItemContentProps = ThemedClassName<{
  */
 const styles = listTheme.styles();
 
-export const ItemContent = forwardRef<HTMLDivElement, ItemContentProps>(
+export type ListItemContentProps = ThemedClassName<{
+  /**
+   * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
+   * carrying its own size/colour (e.g. `<Icon icon='…' classNames='text-success-text' />`).
+   */
+  icon?: string | ReactElement;
+  /** Primary line. */
+  title: ReactNode;
+  /** Optional secondary line, aligned under the title in the content column. */
+  description?: ReactNode;
+}>;
+
+export const ListItemContent = forwardRef<HTMLDivElement, ListItemContentProps>(
   ({ classNames, icon, title, description }, forwardedRef) => (
     <div ref={forwardedRef} className={styles.itemContentRoot({ class: mx(classNames) })}>
       {icon != null && (
@@ -46,4 +46,4 @@ export const ItemContent = forwardRef<HTMLDivElement, ItemContentProps>(
   ),
 );
 
-ItemContent.displayName = 'ItemContent';
+ListItemContent.displayName = 'ItemContent';

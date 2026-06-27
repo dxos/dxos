@@ -24,8 +24,8 @@ import {
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListGrid, useReorderItem } from '../../aspects';
+import { DropIndicator } from '../DropIndicator';
 import { listTheme } from '../List.theme';
-import { ListDropIndicator } from '../ListDropIndicator';
 import { type ListItemRecord, useOrderedListContext } from './OrderedListRoot';
 
 const styles = listTheme.styles();
@@ -114,7 +114,7 @@ export const OrderedListItem = <T extends ListItemRecord>({
         })}
       >
         {children}
-        {closestEdge && <ListDropIndicator edge={closestEdge} />}
+        {closestEdge && <DropIndicator edge={closestEdge} />}
       </div>
     </OrderedListItemProvider>
   );

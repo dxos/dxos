@@ -38,8 +38,8 @@ const strokeSize = 2;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 
-/** Props for {@link ListDropIndicator}. */
-export type ListDropIndicatorProps = {
+/** Props for {@link DropIndicator}. */
+export type DropIndicatorProps = {
   edge: Edge;
   gap?: number;
   terminalInset?: number;
@@ -47,12 +47,12 @@ export type ListDropIndicatorProps = {
 };
 
 /** Themed box-edge drop indicator (line + circular terminal) for pragmatic-dnd reorder. */
-export const ListDropIndicator = ({
+export const DropIndicator = ({
   edge,
   gap = 0,
   lineInset = 0,
   terminalInset = lineInset - terminalSize,
-}: ListDropIndicatorProps) => {
+}: DropIndicatorProps) => {
   const orientation = edgeToOrientationMap[edge];
 
   return (

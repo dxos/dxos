@@ -76,8 +76,8 @@ import {
   useListNavigation,
   useListSelection,
 } from '../../aspects';
-import { ItemContent, type ItemContentProps } from '../ItemContent';
 import { listTheme } from '../List.theme';
+import { ListItemContent, type ListItemContentProps } from './ListItemContent';
 
 const styles = listTheme.styles();
 
@@ -376,13 +376,14 @@ const Listbox = {
   Content,
   Item,
   ItemLabel,
-  ItemContent,
+  ItemContent: ListItemContent,
   Indicator,
 };
 
 export { Listbox, useListboxSelection };
+
 export type {
-  ItemContentProps,
+  ListItemContentProps as ItemContentProps,
   RootProps as ListboxRootProps,
   ViewportProps as ListboxViewportProps,
   ContentProps as ListboxContentProps,

@@ -100,7 +100,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
 
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: 'py-trim-sm' })}
+        {...composableProps(props, { classNames: 'pt-trim-sm' })}
         scrollbars={scrollbars}
         centered={centered}
         thin={thin}
