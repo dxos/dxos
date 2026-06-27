@@ -6,6 +6,3 @@
 export * as Jmap from './Jmap';
 // JmapMail: mail-specific helpers and types (mailboxGet, emailQuery, Email, Mailbox, …).
 export * as JmapMail from './JmapMail';
-// Flat re-exports so callers can import Jmap, JmapMail, getSession, Filter, etc. directly.
-export * from './Jmap';
-export * from './JmapMail';
