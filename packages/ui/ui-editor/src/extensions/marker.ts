@@ -62,20 +62,14 @@ export const markerTheme = (): Extension =>
       borderRadius: '4px',
       cursor: 'pointer',
     },
-    '.cm-marker-button-success': {
-      backgroundColor: 'var(--color-success-bg)',
+    '.cm-marker-button:hover': {
+      backgroundColor: 'var(--color-hover-bg)',
     },
     '.cm-marker-button-success:hover': {
       backgroundColor: 'var(--color-success-bg)',
     },
-    '.cm-marker-button-error': {
-      backgroundColor: 'var(--color-error-surface)',
-    },
     '.cm-marker-button-error:hover': {
-      backgroundColor: 'var(--color-error-surface)',
-    },
-    '.cm-marker-button:hover': {
-      backgroundColor: 'var(--color-hover-surface)',
+      backgroundColor: 'var(--color-error-bg)',
     },
   });
 
@@ -112,7 +106,13 @@ export const markerText = (
   return span;
 };
 
-export type MarkerButton = { icon: string; label: string; testId?: string; onClick: () => void };
+export type MarkerButton = {
+  icon: string;
+  label: string;
+  className?: string;
+  testId?: string;
+  onClick: () => void;
+};
 
 /** Inline group of icon buttons (e.g. confirm/cancel affordances). */
 export const markerButtons = (buttons: MarkerButton[]): Domino<HTMLElement> =>
@@ -121,7 +121,7 @@ export const markerButtons = (buttons: MarkerButton[]): Domino<HTMLElement> =>
     .append(
       ...buttons.map((button) =>
         Domino.of('button')
-          .classNames('cm-marker-button')
+          .classNames('cm-marker-button', button.className)
           .attributes({
             type: 'button',
             'aria-label': button.label,

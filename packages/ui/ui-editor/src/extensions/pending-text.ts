@@ -173,10 +173,17 @@ class PendingTextWidget extends WidgetType {
         {
           icon: 'ph--check--regular',
           label: 'Confirm',
+          className: 'cm-marker-button-success',
           testId: 'pending-text.confirm',
           onClick: () => commitPending(view),
         },
-        { icon: 'ph--x--regular', label: 'Cancel', testId: 'pending-text.cancel', onClick: () => cancelPending(view) },
+        {
+          icon: 'ph--x--regular',
+          label: 'Cancel',
+          className: 'cm-marker-button-error',
+          testId: 'pending-text.cancel',
+          onClick: () => cancelPending(view),
+        },
       ]),
     );
     return root.root;
