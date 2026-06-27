@@ -162,6 +162,7 @@ class PendingTextWidget extends WidgetType {
       root.append(
         markerText(this._state.placeholder, {
           hue: PLACEHOLDER_HUE,
+          className: 'cm-pending-text-indicator',
           icon: 'ph--circle-notch--regular',
           iconClassNames: 'animate-spin',
         }),
@@ -227,6 +228,10 @@ const styles = EditorView.theme({
   // The interim tail is distinguished from the finalized text only by reduced opacity.
   '.cm-pending-text-interim': {
     opacity: 0.6,
+  },
+  // Keep the "Recording…" indicator (text + spinner) on a single line.
+  '.cm-pending-text-indicator': {
+    whiteSpace: 'nowrap',
   },
 });
 

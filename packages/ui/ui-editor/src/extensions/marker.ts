@@ -50,8 +50,10 @@ export const markerTheme = (): Extension =>
     '.cm-marker-text': {
       display: 'inline-block',
     },
-    // Align a trailing icon (e.g. the recording spinner) with the text.
+    // Align a trailing icon (e.g. the recording spinner) inline with the text — the global reset
+    // sets `svg { display: block }`, which would otherwise push it onto its own line.
     '.cm-marker-text svg': {
+      display: 'inline-block',
       verticalAlign: '-0.15em',
       marginInlineStart: '0.25rem',
     },
