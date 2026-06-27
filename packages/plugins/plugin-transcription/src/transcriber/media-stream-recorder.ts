@@ -64,29 +64,40 @@ export class MediaStreamRecorder implements AudioRecorder {
     this._onChunk = onChunk;
   }
 
+  // `@synchronized` serializes start/stop (they share the instance lock) so a rapid stop→start cycle
+  // (e.g. React StrictMode double-mount) cannot initiate a new WAV encoding before the previous one
+  // has flushed — which throws "Another request was made to initiate an encoding" and kills capture.
+  @synchronized
   async start(): Promise<void> {
     await (initializingPromise ??= initializeExtendableMediaRecorder()).catch((err) =>
       log.info('initializeExtendableMediaRecorder', { err }),
     );
 
-    if (!this._mediaRecorder) {
-      const stream = new MediaStream([this._mediaStreamTrack]);
-      this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
-    }
-
-    if (this._mediaRecorder.state === 'recording') {
+    if (this._mediaRecorder?.state === 'recording') {
       return;
     }
     invariant(this._onChunk, 'MediaStreamRecorder: onChunk is not set');
-    this._mediaRecorder.ondataavailable = (event) => this._ondataavailable(event);
-    this._mediaRecorder.start(this._config.interval);
+    // Fresh recorder per session so a previously-stopped (encoder-flushed) instance is never reused.
+    const stream = new MediaStream([this._mediaStreamTrack]);
+    const recorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
+    recorder.ondataavailable = (event) => this._ondataavailable(event);
+    this._mediaRecorder = recorder;
+    recorder.start(this._config.interval);
   }
 
+  @synchronized
   async stop(): Promise<void> {
-    if (this._mediaRecorder?.state !== 'recording') {
+    const recorder = this._mediaRecorder;
+    if (!recorder || recorder.state !== 'recording') {
       return;
     }
-    this._mediaRecorder.stop();
+    // Await the actual stop (final dataavailable + encoder flush) before releasing the recorder, so a
+    // subsequent start() does not collide with an in-progress encoding.
+    await new Promise<void>((resolve) => {
+      recorder.addEventListener('stop', () => resolve(), { once: true });
+      recorder.stop();
+    });
+    this._mediaRecorder = undefined;
   }
 
   @synchronized
