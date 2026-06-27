@@ -46,20 +46,33 @@ type ItemData = {
 // Root
 //
 
-type PickerRootProps = PropsWithChildren<{}>;
+type PickerRootProps = PropsWithChildren<{
+  /**
+   * When the item set changes, snap the highlight back to the first item (command-palette behavior),
+   * instead of only re-selecting when the current selection disappears. Use for type-to-filter lists so
+   * the top result stays highlighted as results update. Does not fire on keyboard navigation (which
+   * changes the selection, not the item set). Defaults to false.
+   */
+  resetSelectionOnChange?: boolean;
+}>;
 
-const PickerRoot = ({ children }: PickerRootProps) => {
+const PickerRoot = ({ children, resetSelectionOnChange = false }: PickerRootProps) => {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
   const itemsRef = useRef<Map<string, ItemData>>(new Map());
   // Bumped on every (un)register to retrigger auto-select.
   const [itemVersion, setItemVersion] = useState(0);
+  // Tracks the last-seen item set so a reset fires only when items change, not on selection change.
+  const prevItemVersionRef = useRef(itemVersion);
 
-  // Auto-select first non-disabled item when the current selection is
-  // gone or disabled.
+  // Auto-select the first non-disabled item when the current selection is gone or disabled — or, when
+  // `resetSelectionOnChange`, whenever the item set itself changes.
   useEffect(() => {
+    const itemsChanged = prevItemVersionRef.current !== itemVersion;
+    prevItemVersionRef.current = itemVersion;
+
     const current = selectedValue !== undefined ? itemsRef.current.get(selectedValue) : undefined;
     const isValid = current !== undefined && !current.disabled;
-    if (!isValid && itemsRef.current.size > 0) {
+    if ((!isValid || (resetSelectionOnChange && itemsChanged)) && itemsRef.current.size > 0) {
       const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
       if (entries.length > 0) {
         entries.sort(([, a], [, b]) => {
@@ -80,7 +93,7 @@ const PickerRoot = ({ children }: PickerRootProps) => {
         setSelectedValue(undefined);
       }
     }
-  }, [itemVersion, selectedValue]);
+  }, [itemVersion, selectedValue, resetSelectionOnChange]);
 
   const registerItem = useCallback(
     (value: string, element: HTMLElement | null, onSelect: (() => void) | undefined, disabled?: boolean) => {

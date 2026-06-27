@@ -126,6 +126,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
     "date-fns": "catalog:",
     "defuddle": "catalog:",
     "fast-xml-parser": "catalog:"
