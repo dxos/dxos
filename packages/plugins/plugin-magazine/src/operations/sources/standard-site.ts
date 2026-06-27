@@ -25,6 +25,21 @@ const PLC_DIRECTORY = 'https://plc.directory';
 const DOCUMENT_COLLECTION = 'site.standard.document';
 const MARKDOWN_CONTENT_TYPE = 'site.standard.content.markdown';
 
+/** URL builders for the AT Protocol XRPC endpoints used by this module. */
+const endpoints = {
+  resolveHandle: (handle: string) =>
+    `${BSKY_PUBLIC_API}/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`,
+  getProfile: (actor: string) =>
+    `${BSKY_PUBLIC_API}/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`,
+  searchActors: (query: string, limit: number) =>
+    `${BSKY_PUBLIC_API}/app.bsky.actor.searchActorsTypeahead?q=${encodeURIComponent(query)}&limit=${limit}`,
+  plcDoc: (did: string) => `${PLC_DIRECTORY}/${did}`,
+  listRecords: (pds: string, did: string, collection: string, limit: number) =>
+    `${pds}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}&limit=${limit}`,
+  getRecord: (pds: string, did: string, collection: string, rkey: string) =>
+    `${pds}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}&rkey=${encodeURIComponent(rkey)}`,
+};
+
 /** A publication a handle publishes under, keyed by its Standard.site `site` reference. */
 export type Publication = {
   /** The document `site` reference (`at://…` URI or `https://…` URL); the stable selection key. */
@@ -78,11 +93,7 @@ export const searchStandardSiteHandles = (
 ): Effect.Effect<HandleSuggestion[], never> =>
   query.trim().length === 0
     ? Effect.succeed([])
-    : getJson(
-        SearchActorsResponse,
-        `${BSKY_PUBLIC_API}/app.bsky.actor.searchActorsTypeahead?q=${encodeURIComponent(query.trim())}&limit=8`,
-        options?.corsProxy,
-      ).pipe(
+    : getJson(SearchActorsResponse, endpoints.searchActors(query.trim(), 8), options?.corsProxy).pipe(
         Effect.map((response) =>
           (response.actors ?? []).map((actor) => ({ handle: actor.handle, displayName: actor.displayName })),
         ),
@@ -239,11 +250,7 @@ const resolveDidFromSite = (site: string, proxy?: string): Effect.Effect<string,
 const resolveDid = (actor: string, proxy?: string): Effect.Effect<string, FeedFetchError, HttpClient.HttpClient> =>
   actor.startsWith('did:')
     ? Effect.succeed(actor)
-    : getJson(
-        ResolveHandleResponse,
-        `${BSKY_PUBLIC_API}/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(actor)}`,
-        proxy,
-      ).pipe(
+    : getJson(ResolveHandleResponse, endpoints.resolveHandle(actor), proxy).pipe(
         Effect.flatMap((resolved) =>
           resolved.did
             ? Effect.succeed(resolved.did)
@@ -257,7 +264,7 @@ const resolveDid = (actor: string, proxy?: string): Effect.Effect<string, FeedFe
  */
 const resolvePds = (did: string, proxy?: string): Effect.Effect<string, FeedFetchError, HttpClient.HttpClient> => {
   if (did.startsWith('did:plc:')) {
-    return getJson(DidDocument, `${PLC_DIRECTORY}/${did}`, proxy).pipe(Effect.flatMap((doc) => extractPds(doc, did)));
+    return getJson(DidDocument, endpoints.plcDoc(did), proxy).pipe(Effect.flatMap((doc) => extractPds(doc, did)));
   }
   if (did.startsWith('did:web:')) {
     // Per the did:web spec `:` separates host from path segments (each percent-encoded); a bare host
@@ -294,18 +301,16 @@ const listDocuments = (
   did: string,
   proxy?: string,
 ): Effect.Effect<readonly DocumentRecord[], FeedFetchError, HttpClient.HttpClient> =>
-  getJson(
-    ListRecordsResponse,
-    `${pds}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${DOCUMENT_COLLECTION}&limit=50`,
-    proxy,
-  ).pipe(Effect.map((listed) => listed.records ?? []));
+  getJson(ListRecordsResponse, endpoints.listRecords(pds, did, DOCUMENT_COLLECTION, 50), proxy).pipe(
+    Effect.map((listed) => listed.records ?? []),
+  );
 
 /** Best-effort author profile lookup (display name / avatar / bio); undefined on any failure. */
 const fetchProfile = (
   actor: string,
   proxy?: string,
 ): Effect.Effect<Profile | undefined, never, HttpClient.HttpClient> =>
-  getJson(Profile, `${BSKY_PUBLIC_API}/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`, proxy).pipe(
+  getJson(Profile, endpoints.getProfile(actor), proxy).pipe(
     Effect.catchAll(() => Effect.succeed(undefined)),
   );
 
@@ -330,8 +335,7 @@ const resolvePublication = (
       const pds = yield* resolvePds(parsed.did, proxy);
       const record = yield* getJson(
         PublicationRecord,
-        `${pds}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(parsed.did)}` +
-          `&collection=${encodeURIComponent(parsed.collection)}&rkey=${encodeURIComponent(parsed.rkey)}`,
+        endpoints.getRecord(pds, parsed.did, parsed.collection, parsed.rkey),
         proxy,
       );
       const value = record.value ?? {};
