@@ -37,7 +37,9 @@ export default Capability.makeModule(
     );
 
     const admin = OllamaAdmin.make({ endpoint: OLLAMA_HOST });
-    const stateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], pulls: {} }).pipe(Atom.keepAlive);
+    const stateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], loaded: [], pulls: {} }).pipe(
+      Atom.keepAlive,
+    );
 
     // Forcing the scoped sidecar layer spawns the process idempotently — the runtime is lazy and
     // only spawns on first force, so opening settings starts Ollama rather than hitting a refused
@@ -52,6 +54,22 @@ export default Capability.makeModule(
       registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'failed', error });
     };
 
+    // Refresh only the loaded-into-memory set (cheap; no spawn). Logs load/unload transitions so the
+    // console reflects which model is resident when a chat request triggers a load.
+    const refreshLoaded = async (): Promise<void> => {
+      const result = await admin.ps();
+      if (!result.ok) {
+        return;
+      }
+      const current = registry.get(stateAtom);
+      const before = current.loaded.map((model) => model.name);
+      const after = result.models.map((model) => model.name);
+      if (before.join() !== after.join()) {
+        log.info('ollama loaded models changed', { loaded: after });
+      }
+      registry.set(stateAtom, { ...current, loaded: result.models });
+    };
+
     const refresh = async (): Promise<void> => {
       registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'loading', error: undefined });
       try {
@@ -62,11 +80,12 @@ export default Capability.makeModule(
       // The sidecar process spawns before its HTTP server is listening, so retry until the first
       // `list` succeeds rather than reporting a spurious failure on startup.
       const result = await listWhenReady(admin);
-      if (result.ok) {
-        registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'ready', models: result.models, error: undefined });
-      } else {
-        fail(result.error);
+      if (!result.ok) {
+        return fail(result.error);
       }
+      registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'ready', models: result.models, error: undefined });
+      log.info('ollama models', { installed: result.models.map((model) => model.name) });
+      await refreshLoaded();
     };
 
     // Write (or clear, when `progress` is undefined) the in-flight progress for `name`.
@@ -88,6 +107,7 @@ export default Capability.makeModule(
         return fail(formatError(error));
       }
 
+      log.info('ollama pull started', { name });
       const controller = new AbortController();
       pullControllers.set(name, controller);
       // Ollama reports `completed`/`total` per layer (digest); aggregate across layers so the
@@ -118,12 +138,15 @@ export default Capability.makeModule(
 
       // A cancelled pull surfaces as an aborted fetch; treat it as a no-op, not a failure.
       if (!result.ok && !controller.signal.aborted) {
+        log.warn('ollama pull failed', { name, error: result.error });
         return fail(result.error);
       }
+      log.info('ollama pull finished', { name, cancelled: controller.signal.aborted });
       await refresh();
     };
 
     const cancel = (name: string): void => {
+      log.info('ollama pull cancelled', { name });
       pullControllers.get(name)?.abort();
       pullControllers.delete(name);
       setProgress(name, undefined);
@@ -146,6 +169,7 @@ export default Capability.makeModule(
       endpoint: OLLAMA_HOST,
       state: stateAtom,
       refresh,
+      refreshLoaded,
       pull,
       cancel,
       remove,

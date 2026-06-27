@@ -14,6 +14,8 @@ import { type OllamaAdmin } from '@dxos/ai/resolvers';
 export type ModelsState = {
   kind: 'idle' | 'loading' | 'ready' | 'failed';
   models: OllamaAdmin.Model[];
+  /** Models currently loaded into memory (from `/api/ps`). */
+  loaded: OllamaAdmin.RunningModel[];
   /** In-flight pulls keyed by model name. */
   pulls: Record<string, OllamaAdmin.PullProgress>;
   error?: string;
@@ -26,7 +28,10 @@ export type ModelsState = {
 export type Manager = {
   readonly endpoint: string;
   state: Atom.Writable<ModelsState>;
+  /** List installed models (and currently-loaded models). Ensures the sidecar is running. */
   refresh: () => Promise<void>;
+  /** Refresh only the currently-loaded models; cheap, for polling while a chat runs. */
+  refreshLoaded: () => Promise<void>;
   pull: (name: string) => Promise<void>;
   /** Abort an in-flight pull, leaving any already-downloaded layers in place. */
   cancel: (name: string) => void;

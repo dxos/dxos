@@ -58,6 +58,29 @@ describe('OllamaAdmin', () => {
     });
   });
 
+  describe('ps', () => {
+    test('maps running models to camelCase', async ({ expect }) => {
+      const fetch = mockFetch(() =>
+        jsonResponse({
+          models: [{ name: 'llama3.2:1b', size: 2000, size_vram: 1500, expires_at: '2026-01-01T00:05:00Z' }],
+        }),
+      );
+      const admin = OllamaAdmin.make({ endpoint: ENDPOINT, fetch });
+      const result = await admin.ps();
+      expect(result).toEqual({
+        ok: true,
+        models: [{ name: 'llama3.2:1b', size: 2000, sizeVram: 1500, expiresAt: '2026-01-01T00:05:00Z' }],
+      });
+    });
+
+    test('returns an empty list when nothing is loaded', async ({ expect }) => {
+      const fetch = mockFetch(() => jsonResponse({ models: [] }));
+      const admin = OllamaAdmin.make({ endpoint: ENDPOINT, fetch });
+      const result = await admin.ps();
+      expect(result).toEqual({ ok: true, models: [] });
+    });
+  });
+
   describe('pull', () => {
     test('streams progress and resolves on success', async ({ expect }) => {
       const fetch = mockFetch(() =>

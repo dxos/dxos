@@ -7,8 +7,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { Button, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Combobox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { AssistantCapabilities, type Ollama } from '#types';
@@ -18,6 +19,9 @@ const OLLAMA_MODEL_PREFIX = 'ai.ollama.model.';
 
 /** Quick-pick model names sourced from the curated defaults. */
 const QUICK_PICKS = DEFAULT_OLLAMA_MODELS.map((id) => id.slice(OLLAMA_MODEL_PREFIX.length));
+
+/** Poll interval for the loaded-into-memory set while the settings panel is open. */
+const LOADED_POLL_INTERVAL = 3_000;
 
 /**
  * Manage locally-installed Ollama models. The {@link AssistantCapabilities.OllamaManager}
@@ -35,9 +39,10 @@ export const OllamaModels = () => {
 
 export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) => {
   const { t } = useTranslation(meta.profile.key);
-  // Explicit subscription: the picker and rows must re-render as pulls/installs land.
+  // Explicit subscription: the list and badges must re-render as pulls/installs/loads land.
   const state = useAtomValue(manager.state);
-  const [name, setName] = useState('');
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
   // UI-level gate keyed by model name, guaranteeing a visible busy state across the click handler.
   const [pending, setPending] = useState<Record<string, boolean>>({});
 
@@ -46,8 +51,15 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
     void manager.refresh();
   }, [manager]);
 
+  // Poll the loaded-into-memory set so the panel reflects which model is resident in real time.
+  useEffect(() => {
+    const interval = setInterval(() => void manager.refreshLoaded(), LOADED_POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [manager]);
+
   const installed = new Set(state.models.map((model) => model.name));
-  const pullingNames = Object.keys(state.pulls);
+  const loaded = new Map(state.loaded.map((model) => [model.name, model]));
+  const pulling = Object.keys(state.pulls).filter((name) => !installed.has(name));
 
   const withPending = useCallback(
     (key: string, action: () => Promise<void>) => async () => {
@@ -67,11 +79,18 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
       if (trimmed.length === 0) {
         return;
       }
-      setName('');
+      setQuery('');
+      setOpen(false);
       void withPending(trimmed, () => manager.pull(trimmed))();
     },
     [manager, withPending],
   );
+
+  // Caller-driven filtering: curated picks not yet installed, matching the typed query.
+  const filter = query.trim();
+  const suggestions = QUICK_PICKS.filter((pick) => !installed.has(pick) && (filter === '' || pick.includes(filter)));
+  const offerCustom = filter.length > 0 && !installed.has(filter) && !suggestions.includes(filter);
+  const empty = state.models.length === 0 && pulling.length === 0;
 
   return (
     <Form.Section title={t('settings.ollama.title')}>
@@ -79,91 +98,99 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
         <Form.Row
           label={t('settings.ollama.failed.label')}
           description={t('settings.ollama.failed.message', { error: state.error })}
-        >
-          <Button onClick={() => void manager.refresh()}>{t('settings.ollama.refresh.label')}</Button>
-        </Form.Row>
+        />
       )}
 
-      {state.models.map((model) => (
-        <Form.Row
-          key={model.name}
-          label={model.name}
-          description={model.size != null ? formatBytes(model.size) : undefined}
-        >
-          <IconButton
-            icon='ph--trash--regular'
-            iconOnly
-            label={t('settings.ollama.remove.label')}
-            disabled={pending[model.name]}
-            onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
-          />
-        </Form.Row>
-      ))}
-
-      {pullingNames
-        .filter((pullName) => !installed.has(pullName))
-        .map((pullName) => {
-          const progress = state.pulls[pullName];
-          // Show a percent only during download phases (which report a total); other phases
-          // (manifest, verifying, writing) show their status label so the bar does not flash to 0%.
-          const description = progress?.total
-            ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
-            : (progress?.status ?? t('settings.ollama.pulling.label'));
-          return (
-            <Form.Row key={pullName} label={pullName} description={description}>
-              <IconButton
-                icon='ph--x--regular'
-                iconOnly
-                label={t('settings.ollama.cancel.label')}
-                onClick={() => manager.cancel(pullName)}
-              />
-            </Form.Row>
-          );
-        })}
-
-      {state.kind === 'ready' && state.models.length === 0 && pullingNames.length === 0 && (
-        <Form.Row label={t('settings.ollama.installed.label')} description={t('settings.ollama.empty.message')} />
-      )}
-
-      <Form.Row label={t('settings.ollama.pull.label')}>
-        <div role='none' className='flex gap-2'>
-          <Input.Root>
-            <Input.Label srOnly>{t('settings.ollama.pull.label')}</Input.Label>
-            <Input.TextInput
-              placeholder={t('settings.ollama.pull.placeholder')}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && handlePull(name)}
-            />
-          </Input.Root>
-          <Button
-            variant='primary'
-            disabled={name.trim().length === 0 || pending[name.trim()]}
-            onClick={() => handlePull(name)}
-          >
-            {t('settings.ollama.pull.label')}
-          </Button>
-        </div>
+      <Form.Row label={t('settings.ollama.installed.label')}>
+        {empty ? (
+          <p className='text-sm text-description'>{t('settings.ollama.empty.message')}</p>
+        ) : (
+          <div role='list' className='flex flex-col gap-1'>
+            {state.models.map((model) => {
+              const running = loaded.get(model.name);
+              return (
+                <div role='listitem' key={model.name} className='flex items-center gap-2'>
+                  <span className='flex-1 truncate'>{model.name}</span>
+                  {running && (
+                    <span className='text-xs text-success-text'>
+                      {running.sizeVram
+                        ? t('settings.ollama.loaded.vram', { size: formatBytes(running.sizeVram) })
+                        : t('settings.ollama.loaded.label')}
+                    </span>
+                  )}
+                  {model.size != null && <span className='text-xs text-description'>{formatBytes(model.size)}</span>}
+                  <IconButton
+                    icon='ph--trash--regular'
+                    iconOnly
+                    label={t('settings.ollama.remove.label')}
+                    disabled={pending[model.name]}
+                    onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
+                  />
+                </div>
+              );
+            })}
+            {pulling.map((name) => {
+              const progress = state.pulls[name];
+              const status = progress?.total
+                ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
+                : (progress?.status ?? t('settings.ollama.pulling.label'));
+              return (
+                <div role='listitem' key={name} className='flex items-center gap-2'>
+                  <span className='flex-1 truncate text-description'>{name}</span>
+                  <span className='text-xs text-description'>{status}</span>
+                  <IconButton
+                    icon='ph--x--regular'
+                    iconOnly
+                    label={t('settings.ollama.cancel.label')}
+                    onClick={() => manager.cancel(name)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Form.Row>
 
-      <Form.Row label={t('settings.ollama.quick-pick.label')}>
-        <div role='none' className='flex flex-wrap gap-2'>
-          {QUICK_PICKS.filter((pick) => !installed.has(pick)).map((pick) => (
-            <Button
-              key={pick}
-              disabled={!!pending[pick] || pullingNames.includes(pick)}
-              onClick={() => handlePull(pick)}
-            >
-              {pick}
-            </Button>
-          ))}
-          <IconButton
-            icon='ph--arrows-clockwise--regular'
-            label={t('settings.ollama.refresh.label')}
-            disabled={state.kind === 'loading'}
-            onClick={() => void manager.refresh()}
-          />
-        </div>
+      <Form.Row label={t('settings.ollama.pull.label')}>
+        {/* Root value is held empty so the trigger always shows the placeholder; the live text is
+            the separate `query` driving the input and suggestion filter. */}
+        <Combobox.Root
+          open={open}
+          onOpenChange={setOpen}
+          value=''
+          onValueChange={() => {}}
+          placeholder={t('settings.ollama.pull.placeholder')}
+        >
+          <Combobox.Trigger classNames='is-full' />
+          <Combobox.Portal>
+            <Combobox.Content>
+              <Combobox.Input
+                value={query}
+                onValueChange={setQuery}
+                placeholder={t('settings.ollama.pull.placeholder')}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && filter.length > 0) {
+                    handlePull(filter);
+                  }
+                }}
+              />
+              <Combobox.List>
+                {offerCustom && (
+                  <Combobox.Item
+                    value={filter}
+                    label={t('settings.ollama.pull-custom.label', { name: filter })}
+                    icon='ph--download-simple--regular'
+                    onSelect={() => handlePull(filter)}
+                  />
+                )}
+                {suggestions.map((pick) => (
+                  <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
+                ))}
+              </Combobox.List>
+              <Combobox.Arrow />
+            </Combobox.Content>
+          </Combobox.Portal>
+        </Combobox.Root>
       </Form.Row>
     </Form.Section>
   );

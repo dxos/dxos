@@ -28,7 +28,7 @@ const presetOptions = (provider: string) =>
   }));
 
 // Stable fallback so `useAtomValue` is always called with a valid atom when the manager is absent.
-const emptyStateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], pulls: {} });
+const emptyStateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], loaded: [], pulls: {} });
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -44,11 +44,22 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
   // Form `fieldMap` is keyed by dotted JSON path, so nested struct leaves are addressed directly.
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
+      // The bundled sidecar (manager present) is the "Built-in" provider; a user-run server is "Ollama".
+      modelProvider: createSelectField({
+        options: [
+          { value: 'edge', label: t('settings.provider.edge.label') },
+          {
+            value: 'ollama',
+            label: t(ollamaManager ? 'settings.provider.builtin.label' : 'settings.provider.ollama.label'),
+          },
+          { value: 'lmstudio', label: t('settings.provider.lmstudio.label') },
+        ],
+      }),
       'modelDefaults.edge': createSelectField({ options: presetOptions('dxos-remote') }),
       'modelDefaults.ollama': createSelectField({ options: ollamaOptions }),
       'modelDefaults.lmstudio': createSelectField({ options: presetOptions('lm-studio') }),
     }),
-    [ollamaOptions],
+    [t, ollamaManager, ollamaOptions],
   );
 
   return (

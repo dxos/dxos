@@ -29,7 +29,7 @@ const PRESET_PROVIDER: Record<Assistant.ModelProvider, AiServicePreset['provider
 
 // Stable fallback so `useAtomValue` is always called with a valid atom when the (desktop-only)
 // Ollama manager capability is absent.
-const EMPTY_OLLAMA_STATE: Ollama.ModelsState = { kind: 'idle', models: [], pulls: {} };
+const EMPTY_OLLAMA_STATE: Ollama.ModelsState = { kind: 'idle', models: [], loaded: [], pulls: {} };
 const emptyStateAtom = Atom.make(EMPTY_OLLAMA_STATE);
 
 /**

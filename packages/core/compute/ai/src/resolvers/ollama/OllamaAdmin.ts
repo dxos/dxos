@@ -30,6 +30,17 @@ export type PullProgress = {
 };
 
 /**
+ * A model currently loaded into memory, as reported by `GET /api/ps`. `sizeVram` is the resident
+ * VRAM footprint; `expiresAt` is when Ollama will unload it if idle.
+ */
+export type RunningModel = {
+  name: string;
+  size?: number;
+  sizeVram?: number;
+  expiresAt?: string;
+};
+
+/**
  * Result of an admin operation. Network/transport failures (e.g. the sidecar is not running)
  * are surfaced as `{ ok: false }` rather than thrown, so callers never have to wrap calls.
  */
@@ -39,6 +50,8 @@ export type Admin = {
   readonly endpoint: string;
   /** List installed models. */
   list: (signal?: AbortSignal) => Promise<Result<{ models: Model[] }>>;
+  /** List models currently loaded into memory. */
+  ps: (signal?: AbortSignal) => Promise<Result<{ models: RunningModel[] }>>;
   /** Pull (download) a model, streaming progress. Resolves once the download terminates. */
   pull: (name: string, onProgress?: (progress: PullProgress) => void, signal?: AbortSignal) => Promise<Result>;
   /** Delete an installed model. */
@@ -74,6 +87,28 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fe
           modifiedAt: model.modified_at,
           digest: model.digest,
           details: model.details,
+        }),
+      );
+      return { ok: true, models };
+    } catch (error) {
+      return { ok: false, error: formatError(error) };
+    }
+  };
+
+  const ps: Admin['ps'] = async (signal) => {
+    try {
+      const response = await fetch(`${endpoint}/api/ps`, { signal });
+      if (!response.ok) {
+        return { ok: false, error: `HTTP ${response.status}` };
+      }
+      const data = await response.json();
+      const raw: RawRunningModel[] = data?.models ?? [];
+      const models = raw.map(
+        (model): RunningModel => ({
+          name: model.name ?? '',
+          size: model.size,
+          sizeVram: model.size_vram,
+          expiresAt: model.expires_at,
         }),
       );
       return { ok: true, models };
@@ -141,7 +176,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fe
     }
   };
 
-  return { endpoint, list, pull, remove };
+  return { endpoint, list, ps, pull, remove };
 };
 
 /**
@@ -154,6 +189,14 @@ type RawModel = {
   modified_at?: string;
   digest?: string;
   details?: Record<string, unknown>;
+};
+
+/** Snake_case wire shape of a running model from `/api/ps`. */
+type RawRunningModel = {
+  name?: string;
+  size?: number;
+  size_vram?: number;
+  expires_at?: string;
 };
 
 /**

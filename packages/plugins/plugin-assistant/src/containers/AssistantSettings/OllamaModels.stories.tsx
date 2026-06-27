@@ -21,6 +21,7 @@ const makeFakeManager = (state: Ollama.ModelsState): Ollama.Manager => ({
   endpoint: 'http://localhost:21434',
   state: Atom.make(state),
   refresh: async () => {},
+  refreshLoaded: async () => {},
   pull: async () => {},
   cancel: () => {},
   remove: async () => {},
@@ -55,7 +56,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Empty: Story = {
   args: {
-    state: { kind: 'ready', models: [], pulls: {} },
+    state: { kind: 'ready', models: [], loaded: [], pulls: {} },
   },
 };
 
@@ -67,6 +68,8 @@ export const Populated: Story = {
         { name: 'llama3.2:1b', size: 1_321_098_329 },
         { name: 'qwen2.5:14b', size: 9_001_234_567 },
       ],
+      // llama3.2:1b is currently loaded into memory.
+      loaded: [{ name: 'llama3.2:1b', sizeVram: 1_400_000_000 }],
       pulls: {},
     },
   },
@@ -77,6 +80,7 @@ export const Pulling: Story = {
     state: {
       kind: 'ready',
       models: [{ name: 'llama3.2:1b', size: 1_321_098_329 }],
+      loaded: [],
       pulls: {
         'gpt-oss:20b': { status: 'downloading', completed: 4_200_000_000, total: 13_000_000_000 },
       },
@@ -89,6 +93,7 @@ export const Failed: Story = {
     state: {
       kind: 'failed',
       models: [],
+      loaded: [],
       pulls: {},
       error: 'Connection refused',
     },
