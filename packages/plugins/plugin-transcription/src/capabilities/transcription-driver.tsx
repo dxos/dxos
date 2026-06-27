@@ -37,7 +37,7 @@ const TranscriptionDriver = () => {
   const [, setStatus] = useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
 
   const recording = session?.recording ?? false;
-  const sessionId = session?.id;
+  const liveSessionId = session?.id;
 
   // Lifecycle phase. Driven from `recording` via an effect (not derived synchronously) so that when
   // the mic switches off the phase is still 'recording' for that commit — nothing tears down until
@@ -45,9 +45,25 @@ const TranscriptionDriver = () => {
   const [phase, setPhase] = useState<'idle' | 'recording' | 'draining'>('idle');
   const active = phase !== 'idle';
 
+  // The toolbar clears the RecordingSession on stop, but the driver must keep targeting the same
+  // editor through the drain — capture the session id for the lifetime of the active phase (the
+  // editor stays open). Cleared once the phase returns to idle.
+  const [sessionId, setSessionId] = useState<string>();
+  useEffect(() => {
+    if (recording && liveSessionId) {
+      setSessionId(liveSessionId);
+    }
+  }, [recording, liveSessionId]);
+
   useEffect(() => {
     setPhase((current) => (recording ? 'recording' : current === 'recording' ? 'draining' : current));
   }, [recording]);
+
+  useEffect(() => {
+    if (phase === 'idle') {
+      setSessionId(undefined);
+    }
+  }, [phase]);
 
   // Publish the phase so the toolbar / testbench can reflect mic + pipeline state in real time.
   useEffect(() => {
