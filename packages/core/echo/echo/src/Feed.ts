@@ -6,6 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -19,7 +20,7 @@ import type * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
+import * as QueryResult from './QueryResult';
 import * as Type from './Type';
 
 /**
@@ -218,35 +219,48 @@ export const remove = (
 /**
  * Creates a reactive query over items in a feed.
  *
+ * Returns a {@link QueryResult.QueryResultEffect}: yielding it produces a subscribable
+ * `QueryResult`, while its `.run` / `.first` shorthands execute the query once. This mirrors
+ * `Database.query` so feed and database queries chain identically.
+ *
+ * Supports both data-first and data-last (curried) forms; the latter composes with `pipe`.
+ *
  * In non-Effect code, query a feed directly through the database with a feed scope:
  * `db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed))))`.
  *
  * @example
  * ```ts
  * const result = yield* Feed.query(feed, Filter.type(Person));
+ * result.subscribe(...);
+ *
+ * const objects = yield* Feed.query(feed, Filter.type(Person)).run;
+ * const object = yield* Feed.query(feed, Filter.type(Person)).first;
+ *
+ * // Data-last (curried) form composes with `pipe`:
+ * const objects = yield* pipe(feed, Feed.query(Filter.type(Person))).run;
  * ```
  */
-// TODO(dmaretskyi): Suport chained queries:
-//                   const result = yield* feed.pipe(Feed.query(Filter.type(Person))); result.subscribe(...)
-//                   const objects = yield* feed.pipe(Feed.query(Filter.type(Person))).run;
-//                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
-// ... unify for Database and schema queries.
 export const query: {
+  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
   <Q extends Query.Any>(
-    feed: Feed,
     query: Q,
-  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Database.Service>;
+  ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
   <F extends Filter.Any>(
-    feed: Feed,
     filter: F,
-  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Database.Service>;
-} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
+  ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
   Database.Service.pipe(
-    Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter as any) as QueryResult.QueryResult<any>),
-  );
+    Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter)),
+    Effect.withSpan('Feed.query'),
+    QueryResult.makeQueryResultEffect,
+  ),
+);
 
 /**
  * Executes a feed query once and returns the results.
+ *
+ * Convenience shorthand for `Feed.query(feed, filter).run`.
  *
  * @example
  * ```ts
@@ -257,7 +271,9 @@ export const runQuery: {
   <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Database.Service>;
   <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Database.Service>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+  // Cast required: the `Query.Any | Filter.Any` union does not satisfy either branch of the
+  // overloaded `query` signature individually; `queryFeed` dispatches on the runtime value.
+  query(feed, queryOrFilter as any).run;
 
 /**
  * Syncs the feed with the server.

@@ -6,9 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Effectable from 'effect/Effectable';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { EffectEx } from '@dxos/effect';
@@ -27,7 +25,7 @@ import { isInstanceOf } from './internal/Entity/type-uri';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
+import * as QueryResult from './QueryResult';
 import type * as Registry from './Registry';
 import type * as Type from './Type';
 
@@ -376,22 +374,5 @@ export const query: {
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
-    makeQueryResultEffect,
+    QueryResult.makeQueryResultEffect,
   );
-
-const makeQueryResultEffect = <T>(
-  eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
-): QueryResult.QueryResultEffect<T, never, Service> => {
-  return {
-    run: Effect.flatMap(eff, (result) => EffectEx.promiseWithCauseCapture(() => result.run())),
-    first: Effect.flatMap(eff, (result) =>
-      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
-    ),
-
-    // Effect internals
-    ...Effectable.CommitPrototype,
-    commit() {
-      return eff;
-    },
-  } as any;
-};

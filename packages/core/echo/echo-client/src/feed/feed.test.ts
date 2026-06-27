@@ -3,6 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -76,6 +78,61 @@ describe('Feed', () => {
       const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(results).toHaveLength(2);
       expect(results.map((item: any) => item.name).sort()).toEqual(['alice', 'bob']);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('query.run returns all results', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'runnable' }));
+
+      yield* Feed.append(feed, [
+        Obj.make(TestSchema.Person, { name: 'alice' }),
+        Obj.make(TestSchema.Person, { name: 'bob' }),
+      ]);
+
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+      expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('query.first returns the first result as an Option', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'first' }));
+
+      const empty = yield* Feed.query(feed, Filter.type(TestSchema.Person)).first;
+      expect(Option.isNone(empty)).toBe(true);
+
+      yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+
+      const first = yield* Feed.query(feed, Filter.type(TestSchema.Person)).first;
+      expect(Option.isSome(first)).toBe(true);
+      expect(Option.getOrThrow(first).name).toBe('alice');
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('query composes data-last with pipe', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'curried' }));
+
+      yield* Feed.append(feed, [
+        Obj.make(TestSchema.Person, { name: 'alice' }),
+        Obj.make(TestSchema.Person, { name: 'bob' }),
+      ]);
+
+      const results = yield* pipe(feed, Feed.query(Filter.type(TestSchema.Person))).run;
+      expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
