@@ -11515,6 +11515,9 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)(react@19.2.6)(scheduler@0.27.0)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.96.1(effect@3.21.3)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -15859,6 +15862,12 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -15898,6 +15907,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)(react@19.2.6)(scheduler@0.27.0)
       '@radix-ui/react-primitive':
         specifier: 'catalog:'
         version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -15907,6 +15919,9 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
       extendable-media-recorder:
         specifier: 'catalog:'
         version: 9.2.24
@@ -15920,6 +15935,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -15932,6 +15950,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -15947,9 +15968,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)(react@19.2.6)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.3)
@@ -15959,9 +15977,6 @@ importers:
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
-      effect:
-        specifier: 3.21.3
-        version: 3.21.3
       react:
         specifier: ~19.2.3
         version: 19.2.6

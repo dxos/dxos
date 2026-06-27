@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
@@ -10,6 +11,8 @@ import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
+import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../annotations';
+import { omitId } from './omit';
 import { getFormProperties, getRootFormProperties } from './properties';
 
 describe('getFormProperties', () => {
@@ -161,5 +164,72 @@ describe('getRootFormProperties', () => {
 
   test('falls back to the discriminator alone when no value selects a member', ({ expect }) => {
     expect(getRootFormProperties(Union.ast, {}).map((prop) => prop.name)).toEqual(['kind']);
+  });
+
+  describe('magazine-shaped union (base struct + spread + piped dynamic annotations + Format.URL)', () => {
+    const StandardSiteBase = Schema.Struct({
+      type: Schema.Literal('standard-site'),
+      handle: Schema.String,
+      publication: Schema.String,
+      name: Schema.optional(Schema.String),
+    });
+    type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteBase>;
+    const StandardSite = Schema.Struct({
+      ...StandardSiteBase.fields,
+      handle: StandardSiteBase.fields.handle.pipe(
+        OptionsLookupAnnotation.set(
+          optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]), { combobox: true }),
+        ),
+      ),
+      publication: StandardSiteBase.fields.publication.pipe(
+        OptionsLookupAnnotation.set(optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]))),
+      ),
+    });
+
+    const RssBase = Schema.Struct({
+      type: Schema.Literal('rss'),
+      url: Format.URL,
+      name: Schema.optional(Schema.String),
+    });
+    type RssValues = Schema.Schema.Type<typeof RssBase>;
+    const Rss = Schema.Struct({
+      ...RssBase.fields,
+      name: Schema.optional(
+        Schema.String.pipe(AutofillAnnotation.set(autofill<RssValues>()(['url'], () => Effect.succeed(undefined)))),
+      ),
+    });
+
+    const CreateUnion = Schema.Union(StandardSite, Rss);
+
+    test('expands to the standard-site member fields', ({ expect }) => {
+      expect(getRootFormProperties(CreateUnion.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([
+        'type',
+        'handle',
+        'publication',
+        'name',
+      ]);
+    });
+
+    test('expands to the rss member fields', ({ expect }) => {
+      expect(getRootFormProperties(CreateUnion.ast, { type: 'rss' }).map((prop) => prop.name)).toEqual([
+        'type',
+        'url',
+        'name',
+      ]);
+    });
+
+    test('shows only the discriminator before a type is selected', ({ expect }) => {
+      expect(getRootFormProperties(CreateUnion.ast, {}).map((prop) => prop.name)).toEqual(['type']);
+    });
+
+    test('survives omitId (applied by CreateObjectPanel) — union discriminant must be preserved', ({ expect }) => {
+      const omitted = omitId(CreateUnion);
+      expect(getRootFormProperties(omitted.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([
+        'type',
+        'handle',
+        'publication',
+        'name',
+      ]);
+    });
   });
 });

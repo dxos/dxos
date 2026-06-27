@@ -33,11 +33,11 @@ const defaultItems: StoryItem[] = random.helpers.uniqueArray(random.commerce.pro
 // Default Story - Basic composition with SearchList.Item
 //
 
-type DefaultStoryProps = {
+type StoryArgs = {
   items?: StoryItem[];
 };
 
-const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
+const DefaultStory = ({ items = defaultItems }: StoryArgs) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
@@ -74,7 +74,7 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
 // Controlled Story - Controlled query state
 //
 
-const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
+const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<StoryItem[]>(items);
 
@@ -167,7 +167,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
   );
 };
 
-const CustomRenderingStory = ({ items = defaultItems }: DefaultStoryProps) => {
+const CustomRenderingStory = ({ items = defaultItems }: StoryArgs) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
@@ -227,7 +227,7 @@ const WithEmptyStory = () => {
 // Without Viewport Story - Content without scrolling
 //
 
-const WithoutViewportStory = ({ items = defaultItems }: DefaultStoryProps) => {
+const WithoutViewportStory = ({ items = defaultItems }: StoryArgs) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
@@ -364,7 +364,7 @@ const CustomInput = () => {
   );
 };
 
-const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
+const CustomInputStory = ({ items = defaultItems }: StoryArgs) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
