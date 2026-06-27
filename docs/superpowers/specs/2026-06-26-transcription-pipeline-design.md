@@ -36,16 +36,16 @@ and the hook-orchestrator sketched in `packages/plugins/plugin-transcription/ENR
 
 ## Key decisions (from brainstorming)
 
-| # | Decision |
-|---|----------|
-| Altitude | Build a reusable streaming pipeline framework; plugin is a thin consumer. |
-| Configurability | Code-defined stages; ECHO-persisted `PipelineConfig`; users toggle/reorder + pick per-stage model. |
-| Substrate | Purpose-built lightweight `Effect.Stream` runtime; stage logic optionally backed by `Operation`; `AiService` for models. NOT the `conductor` graph. |
-| Local models | Per-stage model routing now (edge models). Local backend deferred. |
-| Use cases | Meeting + personal notes in production; file import is testbench-only; one shared runtime with presets. |
-| v1 real stages | Correction, entity extraction (FTS), summarization. Translation + diarization interface-only. |
-| Testbench | Full: swap sources, live stage toggle/reorder + model pick, per-stage telemetry, seeded entities. |
-| Package | `@dxos/transcription-pipeline` under `packages/core/compute/` (`private: true`). |
+| #               | Decision                                                                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Altitude        | Build a reusable streaming pipeline framework; plugin is a thin consumer.                                                                           |
+| Configurability | Code-defined stages; ECHO-persisted `PipelineConfig`; users toggle/reorder + pick per-stage model.                                                  |
+| Substrate       | Purpose-built lightweight `Effect.Stream` runtime; stage logic optionally backed by `Operation`; `AiService` for models. NOT the `conductor` graph. |
+| Local models    | Per-stage model routing now (edge models). Local backend deferred.                                                                                  |
+| Use cases       | Meeting + personal notes in production; file import is testbench-only; one shared runtime with presets.                                             |
+| v1 real stages  | Correction, entity extraction (FTS), summarization. Translation + diarization interface-only.                                                       |
+| Testbench       | Full: swap sources, live stage toggle/reorder + model pick, per-stage telemetry, seeded entities.                                                   |
+| Package         | `@dxos/transcription-pipeline` under `packages/core/compute/` (`private: true`).                                                                    |
 
 ## Architecture
 
@@ -60,7 +60,7 @@ block / silence edge / periodic tick.
 Two distinct notions of "stream" — do not conflate:
 
 - **Pipeline stream** (continuous, runtime-owned): blocks / silence / ticks arrive over time.
-- **Intra-invocation stream** (optional): a single invocation may token-stream its *output*
+- **Intra-invocation stream** (optional): a single invocation may token-stream its _output_
   (`Effect.Stream`) for live word-by-word reveal into the editor. This lives inside one
   invocation, not the pipeline loop.
 
@@ -70,20 +70,20 @@ The ASR source emits an `Effect.Stream<TranscriptEvent>`:
 
 ```ts
 type TranscriptEvent =
-  | { kind: 'block'; block: ContentBlock.Transcript }  // new transcript block appended
-  | { kind: 'silence'; sinceMs: number }               // speaker paused
-  | { kind: 'tick' };                                   // periodic timer
+  | { kind: 'block'; block: ContentBlock.Transcript } // new transcript block appended
+  | { kind: 'silence'; sinceMs: number } // speaker paused
+  | { kind: 'tick' }; // periodic timer
 ```
 
 ### `Stage`
 
 ```ts
 interface Stage<In, Out> {
-  id: string;                                   // 'correct' | 'extract' | 'summarize' | ...
+  id: string; // 'correct' | 'extract' | 'summarize' | ...
   trigger: 'per-block' | 'on-silence' | 'periodic';
-  window?: { blocks: number };                  // sliding context snapshot
-  concurrency: 'latest-wins' | 'skip-if-busy';  // policy when a call is still in flight
-  model?: ModelName;                            // default model (config overrides)
+  window?: { blocks: number }; // sliding context snapshot
+  concurrency: 'latest-wins' | 'skip-if-busy'; // policy when a call is still in flight
+  model?: ModelName; // default model (config overrides)
   // The discrete per-trigger computation. For LLM stages, delegates to Operation.invoke(...);
   // for pure stages (regex cleanup, diarization adapter) this is a plain Effect — no Operation.
   run(input: In, ctx: StageContext): Effect.Effect<StageWrite, StageError>;
@@ -114,7 +114,7 @@ One instance per active transcript. Responsibilities:
 
 ```ts
 {
-  name: string;  // 'Meeting' | 'Notes' | custom
+  name: string; // 'Meeting' | 'Notes' | custom
   stages: Array<{
     id: string;
     enabled: boolean;
@@ -169,6 +169,7 @@ peering with `assistant` / `conductor`.
 ```
 
 Notes:
+
 - Stage outputs live **on the block** (`corrected` / `references` / `candidates`), not a parallel
   structure — renderers already key off the block and provenance stays local.
 - `Transcript.summary` is an **inline string** (the live cumulative summary), distinct from
@@ -177,13 +178,13 @@ Notes:
 
 ## v1 stages
 
-| Stage | Trigger | Window | Concurrency | Default model | Writes |
-|-------|---------|--------|-------------|---------------|--------|
-| ① Correction | per-block | 8 blocks | latest-wins | Haiku | `block.corrected` |
-| ② Entity extraction | per-block | 8 blocks | latest-wins | Haiku | `block.references[]`, `block.candidates[]` |
-| ④ Summarization | on-silence (≥5s) + periodic (≥60s) | cumulative | skip-if-busy | Haiku | `Transcript.summary`, `resolvedReferents` |
-| ③ Translation | per-block | — | latest-wins | (interface only) | `block.translation` (deferred) |
-| ◆ Diarization | per-block | — | — | (interface only) | `block.sender` (deferred) |
+| Stage               | Trigger                            | Window     | Concurrency  | Default model    | Writes                                     |
+| ------------------- | ---------------------------------- | ---------- | ------------ | ---------------- | ------------------------------------------ |
+| ① Correction        | per-block                          | 8 blocks   | latest-wins  | Haiku            | `block.corrected`                          |
+| ② Entity extraction | per-block                          | 8 blocks   | latest-wins  | Haiku            | `block.references[]`, `block.candidates[]` |
+| ④ Summarization     | on-silence (≥5s) + periodic (≥60s) | cumulative | skip-if-busy | Haiku            | `Transcript.summary`, `resolvedReferents`  |
+| ③ Translation       | per-block                          | —          | latest-wins  | (interface only) | `block.translation` (deferred)             |
+| ◆ Diarization       | per-block                          | —          | —            | (interface only) | `block.sender` (deferred)                  |
 
 - **Correction + Extraction share one `run`/Operation** (the existing `EnrichTranscript`
   op already returns `{ corrected, referenceIds, candidates }` together), registered as two
@@ -252,8 +253,8 @@ Deferred behind the stage interface: translation stage, diarization stage, local
   this measurable before rollout.
 - **Migration surface** — moving extraction out of `@dxos/assistant` touches existing call sites;
   must be done in one change with all sites updated.
+  NOTE: Migration not a factor since not yet released to production.
 - **`@dxos/types` schema deltas** affect persisted data; all deltas are additive and existing
   data renders unchanged.
 - **Naming** — `@dxos/transcription-pipeline` chosen over bare `@dxos/transcription` for clarity;
   revisit if a bare-noun core package is preferred.
-```
