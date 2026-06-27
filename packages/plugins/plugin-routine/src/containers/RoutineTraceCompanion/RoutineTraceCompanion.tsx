@@ -15,11 +15,6 @@ import { Routine } from '#types';
 import { type RoutineRun, type RunStatus } from './runs';
 import { useRoutineRuns } from './useRoutineRuns';
 
-export type RoutineTraceCompanionProps = {
-  role?: string;
-  subject: Routine.Routine;
-};
-
 const STATUS_ICONS: Record<RunStatus, string> = {
   success: 'ph--check-circle--regular',
   failure: 'ph--x-circle--regular',
@@ -32,46 +27,10 @@ const STATUS_CLASSES: Record<RunStatus, string> = {
   pending: 'text-description',
 };
 
-const formatDuration = (ms: number): string => {
-  if (ms < 1000) {
-    return `${ms}ms`;
-  }
-  if (ms < 60_000) {
-    return `${(ms / 1000).toFixed(1)}s`;
-  }
-  const totalSeconds = Math.round(ms / 1000);
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${mins}m ${secs}s`;
+export type RoutineTraceCompanionProps = {
+  role?: string;
+  subject: Routine.Routine;
 };
-
-const formatTimestamp = (ts: number): string =>
-  new Date(ts).toLocaleString(undefined, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-
-const toJsonData = (run: RoutineRun) => ({
-  pid: run.pid,
-  startedAt: new Date(run.startedAt).toISOString(),
-  duration: run.duration,
-  status: run.status,
-  ...(run.conversation && { conversation: run.conversation.uri }),
-  events: run.events.map((evt) => ({
-    type: evt.type,
-    timestamp: new Date(evt.timestamp).toISOString(),
-    ...(evt.pid && { pid: evt.pid }),
-    ...(evt.processName && { processName: evt.processName }),
-    data: evt.data,
-  })),
-});
-
-const getRunId = (run: RoutineRun) => run.pid;
 
 /** Companion panel showing the execution trace (runs) of a Routine. */
 export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionProps) => {
@@ -123,3 +82,44 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
     </Panel.Root>
   );
 };
+
+const formatDuration = (ms: number): string => {
+  if (ms < 1000) {
+    return `${ms}ms`;
+  }
+  if (ms < 60_000) {
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+  const totalSeconds = Math.round(ms / 1000);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}m ${secs}s`;
+};
+
+const formatTimestamp = (ts: number): string =>
+  new Date(ts).toLocaleString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+const toJsonData = (run: RoutineRun) => ({
+  pid: run.pid,
+  startedAt: new Date(run.startedAt).toISOString(),
+  duration: run.duration,
+  status: run.status,
+  ...(run.conversation && { conversation: run.conversation.uri }),
+  events: run.events.map((evt) => ({
+    type: evt.type,
+    timestamp: new Date(evt.timestamp).toISOString(),
+    ...(evt.pid && { pid: evt.pid }),
+    ...(evt.processName && { processName: evt.processName }),
+    data: evt.data,
+  })),
+});
+
+const getRunId = (run: RoutineRun) => run.pid;

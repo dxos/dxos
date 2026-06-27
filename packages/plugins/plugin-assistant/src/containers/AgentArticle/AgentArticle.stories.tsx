@@ -29,7 +29,7 @@ import { AgentArticle } from './AgentArticle';
 
 random.seed(1);
 
-type DefaultStoryProps = {
+type StoryArgs = {
   inputs?: boolean;
 };
 
@@ -42,7 +42,7 @@ const defaultSpec: TypeSpec[] = [
   { type: Person.Person, count: 10 },
 ];
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [agent] = useQuery(space?.db, Filter.type(Agent.Agent));
   if (!agent) {
@@ -57,7 +57,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<DefaultStoryProps>(({ args: { inputs } }) => ({
+    withPluginManager<StoryArgs>(({ args: { inputs } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -108,7 +108,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof MaterializeBlueskyTarget> = Material
           [Obj.Meta]: { keys: [{ source: BLUESKY_SOURCE, id: remoteId }] },
           name: remoteTarget.name,
           url: remoteIdToFeedUrl(remoteId),
-          type: 'atproto',
+          type: 'bluesky',
         });
         const created = yield* Database.add(subscription);
         return { target: Ref.make(created) };

@@ -50,9 +50,9 @@ const TestPlugin = Plugin.define<{ error?: boolean }>(
   Plugin.make,
 );
 
-type DefaultStoryProps = { plugins?: Plugin.Plugin[] };
+type StoryArgs = { plugins?: Plugin.Plugin[] };
 
-const DefaultStory = ({ plugins }: DefaultStoryProps) => {
+const DefaultStory = ({ plugins }: StoryArgs) => {
   const App = useApp({ plugins });
 
   return <App />;

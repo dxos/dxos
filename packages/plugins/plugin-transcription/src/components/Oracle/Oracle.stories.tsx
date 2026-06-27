@@ -19,11 +19,11 @@ import { translations } from '#translations';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { Oracle } from './Oracle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   delay?: number;
 };
 
-const DefaultStory = ({ delay }: DefaultStoryProps) => {
+const DefaultStory = ({ delay }: StoryArgs) => {
   const [recording, setRecording] = useState(false);
   const [text, setText] = useState('');
   const elapsed = useStopwatch(recording);

@@ -42,12 +42,12 @@ const SAMPLE_FILES: ReadonlyArray<Ref.Ref<File.File>> = [
   mockFileRef('lima', 800, 450),
 ];
 
-type DefaultStoryProps = {
+type StoryArgs = {
   initialFiles: ReadonlyArray<Ref.Ref<File.File>>;
   enableDelete?: boolean;
 };
 
-const DefaultStory = ({ initialFiles, enableDelete }: DefaultStoryProps) => {
+const DefaultStory = ({ initialFiles, enableDelete }: StoryArgs) => {
   const [images, setImages] = useState<ReadonlyArray<Ref.Ref<File.File>>>(initialFiles);
   const gallery = { name: 'Sample Gallery', images };
 

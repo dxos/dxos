@@ -40,9 +40,9 @@ const presets = [
   },
 ];
 
-type DefaultStoryProps = Pick<ChatOptionsProps, 'presets'>;
+type StoryArgs = Pick<ChatOptionsProps, 'presets'>;
 
-const DefaultStory = ({ presets }: DefaultStoryProps) => {
+const DefaultStory = ({ presets }: StoryArgs) => {
   const [space] = useSpaces();
   const [feed] = useQuery(space?.db, Filter.type(Feed.Feed));
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
