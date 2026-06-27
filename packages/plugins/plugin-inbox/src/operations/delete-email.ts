@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { GoogleMail, JmapMail, getSession } from '../apis';
+import { Jmap, GoogleMail, JmapMail } from '../apis';
 import { GMAIL_SOURCE, JMAP_MESSAGE_SOURCE } from '../constants';
 import { GoogleCredentials, JmapCredentials } from '../services';
 import { DraftMessage, InboxOperation, Mailbox } from '../types';
@@ -78,7 +78,7 @@ export default InboxOperation.DeleteEmail.pipe(
 // Moves a JMAP email to the Trash folder by replacing its `mailboxIds` (idempotent).
 const trashJmapMessage = (emailId: string) =>
   Effect.gen(function* () {
-    const session = yield* getSession;
+    const session = yield* Jmap.getSession;
     const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
     if (!accountId) {
       return;

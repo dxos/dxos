@@ -11,8 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { withAuthorization } from '@dxos/functions';
 
-import { JmapApiError } from '../../errors';
-import { JmapCredentials } from '../../services/jmap-credentials';
+import { JmapApiError } from '../../../errors';
+import { JmapCredentials } from '../../../services/jmap-credentials';
 import { MethodError, Response, Session } from './types';
 
 const REQUEST_TIMEOUT = '10 seconds';

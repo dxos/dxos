@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { JmapApiError } from '../../../errors';
-import { MAIL_CAPABILITIES, SUBMISSION_CAPABILITIES, getMethodResponse, jmapRequest } from '../jmap-api';
+import { MAIL_CAPABILITIES, SUBMISSION_CAPABILITIES, getMethodResponse, jmapRequest } from '../Jmap/api';
 import {
   EmailGetResult,
   EmailQueryResult,

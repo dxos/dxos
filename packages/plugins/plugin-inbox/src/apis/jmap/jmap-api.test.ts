@@ -10,7 +10,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 
 import { JmapApiError } from '../../errors';
 import { JmapCredentials } from '../../services';
-import { JmapMail, getSession } from './index';
+import { Jmap, JmapMail } from './index';
 
 const HOST = 'api.fastmail.com';
 const ACCOUNT_ID = 'u9999';
@@ -69,7 +69,7 @@ describe('JMAP API', () => {
         expect(url).toContain('/.well-known/jmap');
         return { body: SESSION };
       };
-      const session = yield* getSession;
+      const session = yield* Jmap.getSession;
       expect(session.apiUrl).toBe(API_URL);
       expect(session.primaryAccounts['urn:ietf:params:jmap:mail']).toBe(ACCOUNT_ID);
       expect(session.username).toBe('alice@fastmail.com');
@@ -238,7 +238,7 @@ describe('JMAP API', () => {
     'a 401 status surfaces as a JmapApiError carrying the status',
     Effect.fnUntraced(function* ({ expect }) {
       respond = () => ({ status: 401, body: { type: 'about:blank', status: 401 } });
-      const error = yield* Effect.flip(getSession);
+      const error = yield* Effect.flip(Jmap.getSession);
       expect(error).toBeInstanceOf(JmapApiError);
       expect(error.status).toBe(401);
     }, Effect.provide(TestLayer)),

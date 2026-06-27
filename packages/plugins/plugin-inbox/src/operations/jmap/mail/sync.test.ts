@@ -11,7 +11,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { JmapMail, getSession } from '../../../apis';
+import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { InboxResolver, JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
@@ -85,7 +85,7 @@ describe('JMAP sync read path', () => {
   it.effect(
     'reads inbox ids, dedups against existing ones, fetches + maps the new emails',
     Effect.fnUntraced(function* ({ expect }) {
-      const session = yield* getSession;
+      const session = yield* Jmap.getSession;
       const accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
       if (!accountId) {
         throw new Error('expected a mail account');

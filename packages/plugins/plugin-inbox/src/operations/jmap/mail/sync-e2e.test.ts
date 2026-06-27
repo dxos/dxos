@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 
-import { JmapMail, getSession } from '../../../apis';
+import { Jmap, JmapMail } from '../../../apis';
 import { InboxResolver, JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
 
@@ -33,7 +33,7 @@ describe.runIf(TOKEN)('JMAP live', { timeout: 30_000 }, () => {
   it.effect(
     'discovers the session, queries the inbox, and maps messages',
     Effect.fnUntraced(function* ({ expect }) {
-      const session = yield* getSession;
+      const session = yield* Jmap.getSession;
       const accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
       if (!accountId) {
         throw new Error('JMAP session has no mail account');

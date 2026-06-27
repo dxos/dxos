@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
-import { JmapMail, getSession } from '../../../apis';
+import { Jmap, JmapMail } from '../../../apis';
 import { GmailSendMessageInvalidError, JmapApiError, JmapSendIdentityNotFoundError } from '../../../errors';
 import { JmapCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
@@ -33,7 +33,7 @@ export default InboxOperation.JmapSend.pipe(
         return yield* Effect.fail(new GmailSendMessageInvalidError());
       }
 
-      const session = yield* getSession;
+      const session = yield* Jmap.getSession;
       const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
       if (!accountId) {
         return yield* Effect.fail(new JmapApiError(undefined, 'JMAP session has no mail account.'));
