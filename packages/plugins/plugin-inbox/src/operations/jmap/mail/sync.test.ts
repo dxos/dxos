@@ -11,9 +11,9 @@ import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { Jmap } from '../../apis';
-import { JMAP_MESSAGE_SOURCE } from '../../constants';
-import { InboxResolver, JmapCredentials } from '../../services';
+import { Jmap } from '../../../apis';
+import { JMAP_MESSAGE_SOURCE } from '../../../constants';
+import { InboxResolver, JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
 
 const HOST = 'api.fastmail.com';

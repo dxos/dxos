@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Message, Person } from '@dxos/types';
 
-import { Jmap } from '../../apis';
-import { JMAP_MESSAGE_SOURCE } from '../../constants';
+import { Jmap } from '../../../apis';
+import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 
 /**
  * Result of mapping a JMAP email. `mailboxIds` (the folders the email belongs to) is propagated

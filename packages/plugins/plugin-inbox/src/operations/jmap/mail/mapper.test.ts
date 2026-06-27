@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
-import { Jmap } from '../../apis';
-import { JMAP_MESSAGE_SOURCE } from '../../constants';
-import { InboxResolver } from '../../services';
+import { Jmap } from '../../../apis';
+import { JMAP_MESSAGE_SOURCE } from '../../../constants';
+import { InboxResolver } from '../../../services';
 import { mapEmail } from './mapper';
 
 const makeJmapEmail = (overrides?: Partial<Jmap.Email>): Jmap.Email => ({

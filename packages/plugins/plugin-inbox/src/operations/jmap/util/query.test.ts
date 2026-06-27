@@ -6,7 +6,7 @@ import { subDays, subMonths, subWeeks, subYears } from 'date-fns';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { Jmap } from '../../apis';
+import { Jmap } from '../../../apis';
 import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from './query';
 
 const FOLDERS: Jmap.Mailbox[] = [

@@ -6,7 +6,7 @@ import { subDays, subMonths, subWeeks, subYears } from 'date-fns';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Jmap } from '../../apis';
+import { Jmap } from '../../../apis';
 
 /** Context for {@link parseMailQuery}: a clock (for relative dates) and a label/folder resolver. */
 export type ParseContext = {

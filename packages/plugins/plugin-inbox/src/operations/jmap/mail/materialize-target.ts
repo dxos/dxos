@@ -8,7 +8,7 @@ import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { InboxOperation, Mailbox } from '../../types';
+import { InboxOperation, Mailbox } from '../../../types';
 
 /**
  * Eagerly materializes a local Mailbox so a {@link SyncBinding} can be created (relations require

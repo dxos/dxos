@@ -17,13 +17,13 @@ import { SyncBinding } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Jmap } from '../../apis';
-import { JMAP_MESSAGE_SOURCE } from '../../constants';
-import { InboxResolver, JmapCredentials } from '../../services';
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
-import { isAiServiceUnavailable } from '../extractor';
+import { Jmap } from '../../../apis';
+import { JMAP_MESSAGE_SOURCE } from '../../../constants';
+import { InboxResolver, JmapCredentials } from '../../../services';
+import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
+import { isAiServiceUnavailable } from '../../extractor';
+import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from '../util/query';
 import { mapEmail } from './mapper';
-import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from './query';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
