@@ -329,6 +329,7 @@ export const useFormHandler = <T extends AnyProperties>({
     }),
     [
       schema,
+      autoSave,
       values,
       errors,
       touched,
@@ -339,8 +340,8 @@ export const useFormHandler = <T extends AnyProperties>({
       getValue,
       onBlur,
       onValueChange,
-      onSave,
-      onCancel,
+      handleSave,
+      handleCancel,
     ],
   );
 };

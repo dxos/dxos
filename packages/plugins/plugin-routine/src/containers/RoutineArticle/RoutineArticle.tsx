@@ -68,11 +68,10 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='bg-toolbar-surface'>
+        <Panel.Toolbar>
           <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-document'>
-          {/* TODO(wittjosiah): Make read-only while routine is enabled. */}
+        <Panel.Content>
           <RoutineForm db={db} routine={subject} />
         </Panel.Content>
       </Panel.Root>

@@ -24,9 +24,9 @@ import { translations } from '#translations';
 
 import { ScriptProperties } from './ScriptProperties';
 
-type DefaultStoryProps = {};
+type StoryArgs = {};
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [script] = useQuery(space?.db, Filter.type(Script.Script));
   if (!script) {
@@ -67,7 +67,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

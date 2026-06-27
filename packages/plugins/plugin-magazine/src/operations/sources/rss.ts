@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as Effect from 'effect/Effect';
 import { XMLParser } from 'fast-xml-parser';
 
 import { normalizeText } from '@dxos/markdown';
@@ -9,8 +11,8 @@ import { normalizeText } from '@dxos/markdown';
 import { Subscription } from '#types';
 
 import { decodeEntities } from '../../util/text';
-import { applyCorsProxy } from './cors';
-import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
+import { FeedFetchError, type FeedFetcher, type FetchResult } from './feed-fetcher';
+import { getText } from './http';
 
 /**
  * Unwrap `<![CDATA[ ... ]]>` sections, returning the inner content.
@@ -65,10 +67,17 @@ const text = (value: unknown): string | undefined => {
 const markdown = (value: string | undefined): string | undefined => (value != null ? normalizeText(value) : undefined);
 
 /** Fetches and parses an RSS/Atom feed URL into Subscription objects. */
-export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOptions = {}): Promise<FetchResult> => {
-  const fetchUrl = applyCorsProxy(url, corsProxy);
-  const response = await fetch(fetchUrl);
-  const xml = await response.text();
+export const fetchRss: FeedFetcher = (url, options) =>
+  Effect.gen(function* () {
+    const xml = yield* getText(url, options?.corsProxy);
+    return yield* Effect.try({
+      try: () => parseFeed(url, xml),
+      catch: (cause) => new FeedFetchError({ message: `Unrecognized feed format: ${url}`, cause }),
+    });
+  }).pipe(Effect.provide(FetchHttpClient.layer));
+
+/** Parses RSS/Atom XML into a normalized {@link FetchResult}; throws on an unrecognized shape. */
+const parseFeed = (url: string, xml: string): FetchResult => {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',

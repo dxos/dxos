@@ -174,7 +174,18 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
         }
       };
 
+      // Mark the drag as a move at the native level. pragmatic-drag-and-drop only sets `dropEffect` (on
+      // dragover via `getDropEffect`), never `effectAllowed`, so the first dragstart frame shows the
+      // browser's default green "+" copy cursor until the first drop target is entered.
+      const handleNativeDragStart = (event: DragEvent) => {
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+        }
+      };
+      root.addEventListener('dragstart', handleNativeDragStart);
+
       return combine(
+        () => root.removeEventListener('dragstart', handleNativeDragStart),
         // Source.
         draggable({
           element: root,
@@ -216,6 +227,8 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
             const data = getSourceData(source);
             return (data && eventHandler.canDrop?.({ source: data })) || false;
           },
+          // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+          getDropEffect: () => 'move',
           onDragEnter: ({ self, source }) => {
             handleChange({ self, source });
           },
@@ -289,7 +302,9 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
           {children}
         </Comp>
 
-        {/* Dragging preview. */}
+        {/* Dragging preview. Cloned at the source size; the live tile is removed from the list while
+            dragging, so this clone is what the user sees following the cursor. NOTE: external SVG sprite
+            `<use>` icons do not rasterize here — use inline SVG (see Mosaic.DragHandle) for drag affordances. */}
         {state.type === 'preview' &&
           createPortal(
             <Comp

@@ -42,3 +42,14 @@ export const TranscriptionManagerProvider = Capability.make<TranscriptionManager
 );
 
 export const Settings = Capability.make<Atom.Writable<Settings$.Settings>>(`${meta.profile.key}.capability.settings`);
+
+/**
+ * The single active editor transcription session. `id` is the editor's attendable id (the key it
+ * registered under in `MarkdownCapabilities.EditorViews`); `recording` gates audio capture. `null`
+ * when no session is active.
+ */
+export type RecordingSession = { id: string; recording: boolean };
+
+export const RecordingSession = Capability.make<Atom.Writable<RecordingSession | null>>(
+  `${meta.profile.key}.capability.recording-session`,
+);

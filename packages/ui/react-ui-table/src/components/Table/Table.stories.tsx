@@ -150,7 +150,7 @@ const DefaultStory = () => {
   );
 };
 
-type DefaultStoryProps = { rows?: number };
+type StoryArgs = { rows?: number };
 
 //
 // Story definitions.
@@ -338,7 +338,7 @@ export const RequiredSchema: StoryObj = {
   },
 };
 
-export const Tags: Meta<DefaultStoryProps> = {
+export const Tags: Meta<StoryArgs> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [

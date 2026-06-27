@@ -65,13 +65,8 @@ const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef
   </Panel.Root>
 ));
 
-// Section embeds (e.g. transcluded in a document) are framed with a border; `overflow-hidden` clips
-// the canvas to the rounded corners.
 const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
-  <Flex
-    {...composableProps(props, { classNames: 'aspect-square border border-separator rounded-md overflow-hidden' })}
-    ref={forwardRef}
-  >
+  <Flex {...composableProps(props, { classNames: 'aspect-square overflow-hidden' })} ref={forwardRef}>
     {props.children}
   </Flex>
 ));

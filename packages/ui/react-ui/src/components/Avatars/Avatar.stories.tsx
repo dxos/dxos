@@ -11,7 +11,7 @@ import { hexToFallback } from '@dxos/util';
 import { withTheme } from '../../testing';
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
-type DefaultStoryProps = PropsWithChildren<{
+type StoryArgs = PropsWithChildren<{
   id?: string;
   imgSrc?: string;
   fallbackText?: string;
@@ -24,7 +24,7 @@ type DefaultStoryProps = PropsWithChildren<{
   hue?: ChromaticPalette;
 }>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const {
     id = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     status,
