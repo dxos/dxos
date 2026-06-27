@@ -68,7 +68,7 @@ export const ListDropIndicator = ({
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none bg-accent-bg before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
+      className={`absolute z-10 pointer-events-none bg-accent-bg before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
     />
   );
 };
