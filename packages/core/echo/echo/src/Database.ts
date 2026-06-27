@@ -11,15 +11,16 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId, type URI } from '@dxos/keys';
+import { SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Feed from './Feed';
 import type * as Filter from './Filter';
-import type * as Hypergraph from './Hypergraph';
+import * as Hypergraph from './Hypergraph';
 import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
@@ -276,9 +277,17 @@ export const resolve: {
 ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
+    const scope = yield* Effect.serviceOption(Hypergraph.Service);
     const dxn = typeof ref === 'string' ? ref : ref.uri;
+    // Resolve against a graph scoped to the allowlist when a confined session provides
+    // Hypergraph.Service, so the session cannot reach a space outside it. Defaults to the home
+    // `db.graph` (non-agent path).
+    const graph = Option.match(scope, {
+      onNone: () => db.graph,
+      onSome: ({ allowlist }) => db.graph.scoped([...allowlist]),
+    });
     const object = yield* EffectEx.promiseWithCauseCapture(() =>
-      db.graph
+      graph
         .createRefResolver({
           context: {
             space: db.spaceId,
@@ -373,11 +382,48 @@ export const query: {
   <Q extends Query.Any>(query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Service>;
   <F extends Filter.Any>(filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Service>;
 } = (queryOrFilter: Query.Any | Filter.Any) =>
-  Service.pipe(
-    Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
-    Effect.withSpan('Database.query'),
-    makeQueryResultEffect,
-  );
+  Effect.gen(function* () {
+    const { db } = yield* Service;
+    const scope = yield* Effect.serviceOption(Hypergraph.Service);
+    // A confined session (Hypergraph.Service present) may not read outside its allowlist. A query
+    // that explicitly selects a foreign space is routed through a scoped graph, which has no source
+    // for that space and so yields nothing. Every other query keeps `db.query`, preserving its
+    // owning-space binding and feed/queue handling — and already confined to the home space, since
+    // `db.query` binds unscoped selections to the owning space. See docs/design/agent-firewall.md.
+    // TODO(wittjosiah): A T1 session (allowlist beyond the home space) needs a scoped multi-space
+    // fan-out that still applies `db.query`'s feed handling; today only the home space is read.
+    if (Option.isSome(scope) && queryTargetsForeignSpace(queryOrFilter, scope.value.allowlist)) {
+      return db.graph.scoped([...scope.value.allowlist]).query(queryOrFilter as any) as QueryResult.QueryResult<any>;
+    }
+    return db.query(queryOrFilter as any) as QueryResult.QueryResult<any>;
+  }).pipe(Effect.withSpan('Database.query'), makeQueryResultEffect);
+
+/**
+ * True when the query explicitly selects from a space outside `allowlist`. A `Scope.space` without a
+ * `spaceId` targets the owning space (no explicit restriction); filters carry no space scope.
+ */
+const queryTargetsForeignSpace = (queryOrFilter: Query.Any | Filter.Any, allowlist: readonly SpaceId[]): boolean => {
+  // A Filter carries no space scope; only a Query selects a space via `from(Scope.space)`. Test the
+  // Filter brand inline (a value import of Filter would cycle through Database).
+  if (!isQuery(queryOrFilter)) {
+    return false;
+  }
+  let foreign = false;
+  QueryAST.visit(queryOrFilter.ast, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'space' && scope.spaceId !== undefined && !allowlist.includes(SpaceId.make(scope.spaceId))) {
+          foreign = true;
+        }
+      }
+    }
+  });
+  return foreign;
+};
+
+/** Narrows the `query`/`filter` union to a Query via the Filter brand (see {@link queryTargetsForeignSpace}). */
+const isQuery = (queryOrFilter: Query.Any | Filter.Any): queryOrFilter is Query.Any =>
+  typeof queryOrFilter === 'object' && queryOrFilter !== null && !('~Filter' in queryOrFilter);
 
 const makeQueryResultEffect = <T>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,

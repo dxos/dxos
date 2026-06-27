@@ -159,11 +159,38 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
+   * Database lookup honoring an optional scope allowlist. When `allowed` is set, a space outside it
+   * is treated as absent (returns undefined), so resolution against a scoped view cannot reach it.
+   * Unset `allowed` (the default, non-agent path) is identical to a plain `_databases.get`.
+   */
+  #getDb(spaceId: SpaceId, allowed?: ReadonlySet<SpaceId>): DatabaseImpl | undefined {
+    if (allowed != null && !allowed.has(spaceId)) {
+      return undefined;
+    }
+    return this._databases.get(spaceId);
+  }
+
+  /**
+   * Returns a narrow-only scoped view of this hypergraph confined to `allowlist`. See
+   * {@link Hypergraph.Hypergraph.scoped}.
+   */
+  scoped(allowlist: readonly SpaceId[]): Hypergraph.Hypergraph {
+    return new ScopedHypergraph(this, new Set(allowlist));
+  }
+
+  /**
    * @param hostDb Host database for reference resolution.
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  createRefResolver({ context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions): Ref.Resolver {
+  createRefResolver(
+    { context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions,
+    /**
+     * Optional scope allowlist. When set (by {@link ScopedHypergraph}), synchronous resolution of a
+     * space-qualified URI outside the set misses, so a scoped view cannot reach a foreign space.
+     */
+    allowed?: ReadonlySet<SpaceId>,
+  ): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
 
     return {
@@ -175,7 +202,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
         if (EID.isEID(uri)) {
-          const res = this._resolveSync(uri, context, onLoad);
+          const res = this._resolveSync(uri, context, allowed, onLoad);
           return res ? middleware(res) : undefined;
         }
 
@@ -486,6 +513,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private _resolveSync(
     uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
+    allowed?: ReadonlySet<SpaceId>,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | undefined {
     const parsedEchoUri = EID.tryParse(uri);
@@ -499,7 +527,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       throw new Error(`Unable to determine the Space to resolve the reference: ${uri}`);
     }
 
-    const db = this._databases.get(spaceId);
+    const db = this.#getDb(spaceId, allowed);
     if (db) {
       // Resolve remote reference. Feeds are regular ECHO objects, so a feed URI resolves here.
       const obj = db.getObjectById(objectId);
@@ -757,25 +785,109 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this._updateEvent.emit(updateEvent);
   }
 
-  private _createLiveObjectQueryContext(): QueryContext {
-    const context = new GraphQueryContext({
-      onStart: () => {
-        this._queryContexts.add(context);
-      },
-      onStop: () => {
-        this._queryContexts.delete(context);
-      },
-    });
+  /**
+   * @internal Exposed for {@link ScopedHypergraph}.
+   * @param allowed When set, fan-out is confined to these spaces: only their {@link SpaceQuerySource}s
+   *   are added, the context is NOT tracked in `_queryContexts` (so a later `_registerDatabase` cannot
+   *   push a foreign source into it), and the not-yet-scope-aware custom providers (e.g. the remote
+   *   index) are omitted to prevent hydrating a foreign space. A confined view is used only for
+   *   resolution and foreign-scope denial (which the {@link SpaceQuerySource}s satisfy); a confined
+   *   agent's own reads run through `db.query`, which uses the full (home-bound) index.
+   */
+  // TODO(wittjosiah): Make query source providers (remote index) scope-aware (filter hits to the
+  // allowlist) once a confined view becomes a multi-space read path (agent firewall T1).
+  _createLiveObjectQueryContext(allowed?: ReadonlySet<SpaceId>): QueryContext {
+    const scoped = allowed != null;
+    const context = new GraphQueryContext(
+      scoped
+        ? { onStart: () => {}, onStop: () => {} }
+        : {
+            onStart: () => {
+              this._queryContexts.add(context);
+            },
+            onStop: () => {
+              this._queryContexts.delete(context);
+            },
+          },
+    );
 
     for (const database of this._databases.values()) {
+      if (allowed != null && !allowed.has(database.spaceId)) {
+        continue;
+      }
       context.addQuerySource(new SpaceQuerySource(database));
     }
+    // Registry holds code-shipped/keyed entities (types, operations, skills) — not space-scoped.
     context.addQuerySource(new RegistryQuerySource(this._registry));
-    for (const provider of this._querySourceProviders) {
-      context.addQuerySource(provider.create());
+    if (!scoped) {
+      for (const provider of this._querySourceProviders) {
+        context.addQuerySource(provider.create());
+      }
     }
 
     return context;
+  }
+}
+
+/**
+ * A narrow-only view of a {@link HypergraphImpl} confined to a fixed set of spaces: queries fan out
+ * only to those spaces, `getDatabase` returns undefined outside the set, and synchronous resolution
+ * cannot reach a foreign space. The confinement is structural — the foreign spaces are simply absent
+ * from the view, so there is nothing to "deny" — and `scoped` can only further narrow the set.
+ *
+ * Shares the root's databases, registry and resolution machinery (it is a view, not a copy); only
+ * the reachable space set differs. Used to confine an AI agent's `Database.Service` to an allowlist.
+ * See `docs/design/agent-firewall.md`.
+ */
+export class ScopedHypergraph implements Hypergraph.Hypergraph {
+  readonly #root: HypergraphImpl;
+  readonly #allowed: ReadonlySet<SpaceId>;
+
+  constructor(root: HypergraphImpl, allowed: ReadonlySet<SpaceId>) {
+    this.#root = root;
+    this.#allowed = allowed;
+  }
+
+  get registry(): Registry.Registry {
+    return this.#root.registry;
+  }
+
+  declare query: Database.QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(queryOrFilter: Query.Any | Filter.Any) {
+    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    // Fresh result (not the root's shared query cache) over the scope-filtered source set, so a
+    // confined query can never read — nor be served a cached result from — a space outside the set.
+    return new QueryResultImpl(this.#root._createLiveObjectQueryContext(this.#allowed), query);
+  }
+
+  makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
+    const ref = Ref.fromURI(uri);
+    setRefResolver(ref, this.createRefResolver({}));
+    return ref;
+  }
+
+  createRefResolver(options: Hypergraph.RefResolverOptions): Ref.Resolver {
+    return this.#root.createRefResolver(options, this.#allowed);
+  }
+
+  getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
+    return this.#allowed.has(spaceId) ? this.#root.getDatabase(spaceId) : undefined;
+  }
+
+  scoped(allowlist: readonly SpaceId[]): Hypergraph.Hypergraph {
+    // Narrow-only: intersect with the current set; the result can never reach a space this view
+    // could not already reach.
+    const next = new Set<SpaceId>();
+    for (const spaceId of allowlist) {
+      if (this.#allowed.has(spaceId)) {
+        next.add(spaceId);
+      }
+    }
+    return new ScopedHypergraph(this.#root, next);
   }
 }
 

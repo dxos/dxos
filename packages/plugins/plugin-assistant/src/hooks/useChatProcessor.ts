@@ -13,7 +13,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
-import { Database, Obj, Ref, Registry } from '@dxos/echo';
+import { Database, Hypergraph, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useObject, type Space } from '@dxos/react-client/echo';
@@ -55,8 +55,11 @@ export const useChatProcessor = ({
       return;
     }
 
+    // Confine the agent session to its own space (agent firewall): resolve/query route through a
+    // Hypergraph scoped to the session space, so the agent cannot reach the user's other spaces.
+    // See docs/design/agent-firewall.md.
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(confinedSpaceLayer(space))),
     );
     const session = new AiSession.Session({
       feed,
@@ -78,15 +81,21 @@ export const useChatProcessor = ({
       return undefined;
     }
 
-    const spaceLayer = ServiceResolver.provide(
-      { space: space.id },
-      Database.Service,
-      Credential.CredentialsService,
-      AiService.AiService,
-      AgentService.AgentService,
-      Registry.Service,
-      OpaqueToolkit.OpaqueToolkitProvider,
-    ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
+    // Provide a session-space Database.Service plus a scoped Hypergraph.Service (agent firewall)
+    // instead of resolving Database.Service unscoped via the shared, space-affinity
+    // DatabaseLayerSpec — so the agent's tools cannot reach other spaces. The remaining services
+    // resolve as usual.
+    const spaceLayer = Layer.merge(
+      ServiceResolver.provide(
+        { space: space.id },
+        Credential.CredentialsService,
+        AiService.AiService,
+        AgentService.AgentService,
+        Registry.Service,
+        OpaqueToolkit.OpaqueToolkitProvider,
+      ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver))),
+      confinedSpaceLayer(space),
+    );
 
     log('creating processor', { preset, model: preset?.model, settings });
     return new AiChatProcessor(session, runtime, feed, spaceLayer, {
@@ -99,3 +108,11 @@ export const useChatProcessor = ({
 
   return processor;
 };
+
+/**
+ * Layer confining an agent session to a single space (agent firewall): the home `Database.Service`
+ * (where writes go) plus a `Hypergraph.Service` scoped to that space, so `resolve`/`query` cannot
+ * reach the user's other spaces. See `docs/design/agent-firewall.md`.
+ */
+const confinedSpaceLayer = (space: Space): Layer.Layer<Database.Service | Hypergraph.Service> =>
+  Layer.merge(Database.layer(space.db), Hypergraph.scopedLayer([space.id]));

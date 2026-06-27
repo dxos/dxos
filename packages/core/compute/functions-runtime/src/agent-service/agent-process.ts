@@ -29,7 +29,7 @@ import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
+import { Annotation, Database, Feed, Hypergraph, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
@@ -98,7 +98,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Database.Service>();
+
+        // Confine this space-resident agent (T0) to its own space (agent firewall): the session and
+        // its tools resolve/query through a Hypergraph scoped to the home space, so the agent cannot
+        // reach the user's other spaces even when handed a foreign URI or query scope. Writes still
+        // target the home Database.Service (broad reads never imply broad writes). The scope rides on
+        // the per-process context — not the shared, space-affinity Database.Service slice — so it is
+        // independent per agent. See docs/design/agent-firewall.md.
+        const { db } = yield* Database.Service;
+        const hypergraphScope = Hypergraph.scopedLayer([db.spaceId]);
+
+        const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(hypergraphScope));
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
@@ -306,6 +316,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 }),
                 AsynchronousExectionToolkitLayer,
                 requestModelLayer,
+                // Confine tool resolve/query to the agent's space (agent firewall); see above.
+                hypergraphScope,
               ).pipe(Layer.orDie),
             ),
           ),
