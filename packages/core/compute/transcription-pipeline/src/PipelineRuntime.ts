@@ -122,7 +122,10 @@ const run = (options: RunOptions): Effect.Effect<void> =>
           }
         }
         yield* Ref.update(busy, (set) => new Set(set).add(stage.id));
-        const fiber = yield* Effect.fork(runStage(stage, kind));
+        // forkDaemon (not fork): stage work outlives the Stream.runForEach element scope, so an async
+        // stage (e.g. an entity-lookup query) is not interrupted when the triggering event is consumed.
+        // The runtime owns these fibers explicitly — latest-wins interrupts them; drain awaits them.
+        const fiber = yield* Effect.forkDaemon(runStage(stage, kind));
         yield* Ref.update(fibers, (map) => new Map(map).set(stage.id, fiber));
       });
 
