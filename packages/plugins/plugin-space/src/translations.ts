@@ -148,7 +148,7 @@ export const translations = [
         'object.placeholder': 'Type a title here…',
         'personal-space.label': 'Personal Space',
         'spaces.label': 'Spaces',
-        'space-settings.label': 'Spaces',
+        'space-settings.label': 'Your spaces',
         'space-settings.description':
           'Per-space settings for properties, membership, integrations, and other space-specific objects.',
         'save-files-to-directory.label': 'Save files to disk',
@@ -228,6 +228,9 @@ export const translations = [
         'expose-object.label': 'Expose in navtree',
         'add-tag.label': 'Add tag',
         'advanced-settings.label': 'Advanced',
+        'settings.show-hidden.label': 'Show hidden types',
+        'settings.show-hidden.description':
+          'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
         'settings.space-list.label': 'Spaces',
         'settings.space-list.description': 'Settings for each space you belong to.',
         'settings.open-settings.label': 'Open settings',

@@ -6,25 +6,39 @@ import React from 'react';
 
 import { AppSpace } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { type Settings } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
 export type SpaceSettingsProps = {
   spaces?: Space[];
   onOpenSpaceSettings?: (space: Space) => void;
+  settings?: Settings.Settings;
+  onSettingsChange?: (updater: (prev: Settings.Settings) => Settings.Settings) => void;
 };
 
-export const SpaceSettings = ({ spaces, onOpenSpaceSettings }: SpaceSettingsProps) => {
+export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSettingsChange }: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
+          <Form.Section title={t('plugin.name')}>
+            <Form.Row label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
+              <Input.Root>
+                <Input.Switch
+                  disabled={!onSettingsChange}
+                  checked={settings?.showHidden}
+                  onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
+                />
+              </Input.Root>
+            </Form.Row>
+          </Form.Section>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
             <Form.Row label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
               <List classNames='flex flex-col w-full gap-trim-sm'>

@@ -10,7 +10,7 @@ import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 
 import { raise } from '@dxos/debug';
@@ -26,9 +26,11 @@ export interface ObjectsTreeProps {
   db: Database.Database;
   root?: Entity.Unknown;
   onSelect?: (entity: Entity.Snapshot) => void;
+  onOpen?: (object: Obj.Unknown) => void;
+  canOpen?: (entity: Entity.Snapshot) => boolean;
 }
 
-export const ObjectsTree = ({ db, root, onSelect }: ObjectsTreeProps) => {
+export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
     setModel((prev) =>
@@ -39,9 +41,10 @@ export const ObjectsTree = ({ db, root, onSelect }: ObjectsTreeProps) => {
   }, [db, root]);
 
   const rootNodes = useAtomValue(model.rootNodes);
+  const contextValue = useMemo(() => ({ model, onOpen, canOpen }), [model, onOpen, canOpen]);
 
   return (
-    <ObjectsTreeContext.Provider value={model}>
+    <ObjectsTreeContext.Provider value={contextValue}>
       <Treegrid.Root
         gridTemplateColumns='[tree-row-start] 1fr min-content [tree-row-end]'
         classNames='grid-cols-1 gap-0'
@@ -63,7 +66,7 @@ const ObjectsTreeRow = ({
   level: number;
   parent: ObjectsTreeItem | null;
 }) => {
-  const model = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
+  const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const expanded = useAtomValue(model.expanded(node.id, level));
   const setExpanded = useAtomSet(model.expanded(node.id, level));
   const children = useAtomValue(model.getChildren(node.id));
@@ -71,6 +74,15 @@ const ObjectsTreeRow = ({
   const parentOf = hasChildren ? children.map((child) => child.id).join(TREEGRID_PARENT_OF_SEPARATOR) : undefined;
 
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
+
+  const showOpen =
+    onOpen != null && !node.deleted && node.type === 'object' && (canOpen == null || canOpen(node.entity));
+  const handleOpen = useCallback(async () => {
+    const obj = await model.database.query(Query.select(Filter.id(node.id))).first();
+    if (obj && Obj.isObject(obj)) {
+      onOpen?.(obj);
+    }
+  }, [node.id, model.database, onOpen]);
 
   const handleCopyDXN = useCallback(() => {
     void navigator.clipboard.writeText(Entity.getURI(node.entity) ?? '');
@@ -130,6 +142,12 @@ const ObjectsTreeRow = ({
                 />
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
+                {showOpen && (
+                  <DropdownMenu.Item onClick={handleOpen}>
+                    <Icon icon='ph--arrow-square-out--regular' />
+                    Open
+                  </DropdownMenu.Item>
+                )}
                 {!node.deleted && (
                   <DropdownMenu.Item onClick={handleDelete}>
                     <Icon icon='ph--trash--regular' />
@@ -170,7 +188,12 @@ const ObjectsTreeRow = ({
 };
 ObjectsTreeRow.displayName = 'ObjectsTreeRow';
 
-const ObjectsTreeContext = createContext<ObjectsTreeModel | null>(null);
+type ObjectsTreeContextValue = {
+  model: ObjectsTreeModel;
+  onOpen?: (object: Obj.Unknown) => void;
+  canOpen?: (entity: Entity.Snapshot) => boolean;
+};
+const ObjectsTreeContext = createContext<ObjectsTreeContextValue | null>(null);
 
 export type ObjectsTreeItem = {
   id: string;
