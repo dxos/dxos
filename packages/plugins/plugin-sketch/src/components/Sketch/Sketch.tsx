@@ -117,7 +117,6 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         });
         if (readonly || hideUi) {
           editor.setCurrentTool('hand');
-          editor.setCameraOptions({ isLocked: true });
         }
       }
     }, [editor, settings, hideUi, readonly]);
@@ -131,24 +130,36 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         return;
       }
 
+      const isLocked = readonly || hideUi;
+
+      // Unlock to allow programmatic camera positioning.
+      editor.setCameraOptions({ isLocked: false });
+
       // Set frame so that top left of grid is inset with our border (if no content).
       editor.setCamera({ x: -1, y: -1, z: 1 }, { animation: { duration: 0 } });
       editor.resetZoom();
 
       setReady(true);
       if (!autoZoom) {
+        editor.setCameraOptions({ isLocked: isLocked });
         return;
       }
 
-      const zoom = (animate = true) => {
-        zoomToFit(editor, width, height, maxZoom, animate);
+      const zoom = () => {
+        zoomToFit(editor, width, height, maxZoom, false);
       };
 
-      zoom(false);
-      const onUpdate = debounce(zoom, 200);
-      const subscription = readonly ? adapter.store?.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
+      zoom();
+      editor.setCameraOptions({ isLocked: isLocked });
+
+      const onUpdate = debounce(() => {
+        editor.setCameraOptions({ isLocked: false });
+        zoom();
+        editor.setCameraOptions({ isLocked: isLocked });
+      }, 200);
+      const subscription = isLocked ? adapter.store?.listen(() => onUpdate(), { scope: 'document' }) : undefined;
       return () => subscription?.();
-    }, [editor, adapter, width, height, autoZoom]);
+    }, [editor, adapter, width, height, autoZoom, readonly, hideUi]);
 
     // NOTE: Currently copying assets to composer-app public/assets/tldraw.
     // https://tldraw.dev/installation#Self-hosting-static-assets
