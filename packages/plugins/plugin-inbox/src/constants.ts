@@ -10,7 +10,7 @@ import { meta } from '#meta';
 export const GOOGLE_INTEGRATION_SOURCE = 'com.google';
 
 /** Foreign-key `Meta.keys[].source` stamped on synced Gmail messages (see gmail mapper). */
-export const GMAIL_SOURCE = 'com.google.gmail';
+export const GMAIL_SOURCE = 'com.google.mail';
 
 /** `Connector.id` for Gmail OAuth / sync; stored as `Connection.connectorId`. */
 export const GMAIL_CONNECTOR_ID = 'gmail';
