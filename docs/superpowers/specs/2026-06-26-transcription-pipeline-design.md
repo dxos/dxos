@@ -164,7 +164,9 @@ peering with `assistant` / `conductor`.
   summary?: string;              // cumulative live summary (inline string, per decision)
   summaryUpdatedAt?: string;
   resolvedReferents?: Array<{ surface: string; referent: string; ref?: Ref.Ref<any> }>;
-  pipeline?: Ref.Ref<PipelineConfig>;
+  // Loose ref (Ref.Ref<Obj.Unknown>) — a concrete Ref.Ref<PipelineConfig> would reintroduce the
+  // `@dxos/types` → `@dxos/transcription-pipeline` cycle; callers resolve it to PipelineConfig.
+  pipeline?: Ref.Ref<unknown>;
 }
 ```
 

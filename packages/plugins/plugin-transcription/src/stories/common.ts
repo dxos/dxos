@@ -211,9 +211,10 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
       PreviewPlugin(),
       TranscriptionPlugin(),
     ],
-    // SetupSettings activates the transcription session/settings/status capabilities the always-mounted
-    // driver reads; SetupAppGraph activates the graph + transcriber contributions.
-    fireEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph],
+    // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted
+    // driver renders: SetupSettings registers the session/settings/status capabilities it reads,
+    // SetupAppGraph the graph + transcriber contributions.
+    setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph],
   }),
 ];
 

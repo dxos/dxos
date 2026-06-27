@@ -44,7 +44,7 @@ const DefaultStory = () => {
   const [pipelineSummary, setPipelineSummary] = useState<string>();
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([]);
 
-  const phase: Phase = recording ? 'recording' : draining ? 'draining' : 'idle';
+  const phase: Phase = draining ? 'draining' : recording ? 'recording' : 'idle';
   // Keep the track alive through the drain so the transcriber can flush its buffer.
   const track = useAudioTrack(recording || draining);
 
@@ -92,13 +92,15 @@ const DefaultStory = () => {
   }, []);
 
   const handleStop = useCallback(async () => {
+    // Show 'draining' (and disable the button) before awaiting flush; the track stays alive because
+    // useAudioTrack is gated on `recording || draining`.
+    setRecording(false);
     setDraining(true);
     try {
       // Flush the buffered audio (final transcription) while the track is still alive.
       await transcriber?.flush();
     } finally {
       setDraining(false);
-      setRecording(false);
     }
   }, [transcriber]);
 

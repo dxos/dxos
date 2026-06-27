@@ -17,8 +17,8 @@ export const StageConfig = Schema.Struct({
   enabled: Schema.Boolean,
   /** Optional per-stage model override (a `ModelName`); resolved by the runtime. */
   model: Schema.optional(Schema.String),
-  /** Optional sliding-window override in blocks. */
-  window: Schema.optional(Schema.Struct({ blocks: Schema.Number })),
+  /** Optional sliding-window override in blocks. Positive integer; bad values fail validation. */
+  window: Schema.optional(Schema.Struct({ blocks: Schema.Number.pipe(Schema.int(), Schema.positive()) })),
 });
 export type StageConfig = Schema.Schema.Type<typeof StageConfig>;
 

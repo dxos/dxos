@@ -141,10 +141,19 @@ const run = (options: RunOptions): Effect.Effect<void> =>
         }
       });
 
-    yield* Stream.runForEach(source, handle);
+    // Interrupt any outstanding daemon fibers if the run fails or is interrupted, so stage work
+    // (and its writes) cannot continue after the pipeline has ended on an abnormal exit path.
+    const interruptRemaining = Effect.gen(function* () {
+      const outstanding = yield* Ref.get(fibers);
+      yield* Effect.forEach([...outstanding.values()], (fiber) => Fiber.interrupt(fiber), { discard: true });
+    });
+    yield* Stream.runForEach(source, handle).pipe(
+      Effect.onError(() => interruptRemaining),
+      Effect.onInterrupt(() => interruptRemaining),
+    );
 
-    // Drain in-flight invocations triggered near the end of the stream. `await` (not `join`) so a
-    // fiber that ended via latest-wins interruption does not re-raise and fail the pipeline.
+    // Normal completion: drain in-flight invocations triggered near the end of the stream. `await`
+    // (not `join`) so a fiber that ended via latest-wins interruption does not re-raise.
     const remaining = yield* Ref.get(fibers);
     yield* Effect.forEach([...remaining.values()], (fiber) => Fiber.await(fiber), { discard: true });
   });

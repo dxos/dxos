@@ -4,7 +4,7 @@
 
 import { WaveFile } from 'wavefile';
 
-import { DeferredTask, Trigger } from '@dxos/async';
+import { DeferredTask, Trigger, synchronized } from '@dxos/async';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -187,6 +187,9 @@ export class Transcriber extends Resource {
     }
   }
 
+  // Serialized so a threshold-scheduled run and a flush()/deferred run cannot read the same buffer
+  // concurrently and duplicate or drop tail segments.
+  @synchronized
   private async _transcribe(): Promise<void> {
     log('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
@@ -241,14 +244,25 @@ export class Transcriber extends Resource {
       // TODO(burdon): Create separate endpoint?
       const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
       this._transcribeAbort = new AbortController();
-      const response = await fetch(`${endpoint}/transcribe`, {
-        method: 'POST',
-        body: JSON.stringify({ audio }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: this._transcribeAbort.signal,
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${endpoint}/transcribe`, {
+          method: 'POST',
+          body: JSON.stringify({ audio }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: this._transcribeAbort.signal,
+        });
+      } catch (err) {
+        // Aborting (user cancelled the drain) is a clean stop, not a failed transcription cycle.
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return [];
+        }
+        throw err;
+      } finally {
+        this._transcribeAbort = undefined;
+      }
 
       if (!response.ok) {
         throw new Error(`Transcription failed: ${response.statusText}`);

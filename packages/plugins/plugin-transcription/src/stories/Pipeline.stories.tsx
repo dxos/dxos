@@ -55,8 +55,9 @@ import { TranscriptionCapabilities } from '#types';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { enableQueryIndexes } from './common';
 
-// Properly-cased transcript that names seeded entities (DXOS, Cyberdyne, Amco, Sarah Johnson,
-// Michael Chen) so the deterministic extraction heuristic + full-text lookup link them.
+// Properly-cased transcript that names seeded entities
+// (DXOS, Cyberdyne, Amco, Sarah Johnson, Michael Chen)
+// so the deterministic extraction heuristic + full-text lookup link them.
 const SCRIPT = trim`
   So I caught up with Sarah Johnson this morning
   We talked about the DXOS and Cyberdyne partnership
@@ -92,6 +93,7 @@ const StoryGraphPlugin = Plugin.define(
             if (!space) {
               return [];
             }
+
             const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
             return docs
               .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
@@ -104,7 +106,9 @@ const StoryGraphPlugin = Plugin.define(
   Plugin.make,
 );
 
-type StoryArgs = { stages: readonly StageId[] };
+type StoryArgs = {
+  stages: readonly StageId[];
+};
 
 const DefaultStory = ({ stages }: StoryArgs) => {
   const { graph } = useAppGraph();
@@ -274,10 +278,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Simplest: correction only (punctuation / capitalization). */
-export const CorrectionOnly: Story = { args: { stages: ['correct'] } };
+export const CorrectionOnly: Story = {
+  args: {
+    stages: ['correct'],
+  },
+};
 
 /** Correction + entity extraction: recognized entities become dx-anchor links in the document. */
-export const WithExtraction: Story = { args: { stages: ['correct', 'extract'] } };
+export const WithExtraction: Story = {
+  args: {
+    stages: ['correct', 'extract'],
+  },
+};
 
 /** Full pipeline: correction + extraction + a cumulative summary (shown in the side column). */
-export const Full: Story = { args: { stages: ['correct', 'extract', 'summarize'] } };
+export const Full: Story = {
+  args: {
+    stages: ['correct', 'extract', 'summarize'],
+  },
+};
