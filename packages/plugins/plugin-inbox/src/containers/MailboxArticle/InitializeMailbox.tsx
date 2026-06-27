@@ -27,7 +27,7 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
       <Initialize
         {...props}
         target={mailbox}
-        noIntegrationMessage={t('no-integrations.label')}
+        noIntegrationMessage={t('no-connections.label')}
         emptyMessage={t('empty-mailbox.message')}
         ref={forwardedRef}
       />
