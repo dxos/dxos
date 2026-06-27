@@ -12,12 +12,12 @@ import { Sketch } from '#types';
 
 export type SketchCardProps = AppSurface.ObjectCardProps<Sketch.Sketch>;
 
-export const SketchCard = ({ subject }: SketchCardProps) => {
+export const SketchCard = ({ subject, editable = false }: SketchCardProps) => {
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
         <Card.Row fullWidth>
-          <SketchComponent sketch={subject} hideUi autoZoom readonly maxZoom={1} />
+          <SketchComponent sketch={subject} autoZoom maxZoom={1} readonly={!editable} hideUi={!editable} />
         </Card.Row>
       </Card.Section>
     </Card.Body>

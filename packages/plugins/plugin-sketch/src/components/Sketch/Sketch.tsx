@@ -12,7 +12,6 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useMergeRefs } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -152,14 +151,21 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
       zoom();
       editor.setCameraOptions({ isLocked: isLocked });
 
-      const onUpdate = debounce(() => {
-        editor.setCameraOptions({ isLocked: false });
-        zoom();
-        editor.setCameraOptions({ isLocked: isLocked });
-      }, 200);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const onUpdate = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          editor.setCameraOptions({ isLocked: false });
+          zoom();
+          editor.setCameraOptions({ isLocked: isLocked });
+        }, 200);
+      };
       const subscription = isLocked ? adapter.store?.listen(() => onUpdate(), { scope: 'document' }) : undefined;
-      return () => subscription?.();
-    }, [editor, adapter, width, height, autoZoom, readonly, hideUi]);
+      return () => {
+        clearTimeout(timer);
+        subscription?.();
+      };
+    }, [editor, adapter, width, height, autoZoom, maxZoom, readonly, hideUi]);
 
     // NOTE: Currently copying assets to composer-app public/assets/tldraw.
     // https://tldraw.dev/installation#Self-hosting-static-assets

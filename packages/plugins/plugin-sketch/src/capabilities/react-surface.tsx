@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'sketchCard',
         filter: AppSurface.object(AppSurface.CardContent, Sketch.Sketch),
-        component: ({ data, role }) => <SketchCard role={role} subject={data.subject} />,
+        component: ({ data, role }) => <SketchCard role={role} subject={data.subject} editable={data.editable} />,
       }),
     ]),
   ),

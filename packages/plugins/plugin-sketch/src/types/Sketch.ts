@@ -33,11 +33,11 @@ export class Sketch extends Type.makeObject<Sketch>(DXN.make('org.dxos.type.sket
   ),
 ) {}
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
+export type MakeOptions = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
   canvas?: Partial<Obj.MakeProps<typeof Canvas>>;
 };
 
-export const make = ({ canvas: canvasProps, ...props }: MakeProps = {}) => {
+export const make = ({ canvas: canvasProps, ...props }: MakeOptions = {}) => {
   const { schema = TLDRAW_SCHEMA, content = {} } = canvasProps ?? {};
   const canvas = Obj.make(Canvas, { schema, content });
   return Obj.make(Sketch, { ...props, canvas: Ref.make(canvas) });
