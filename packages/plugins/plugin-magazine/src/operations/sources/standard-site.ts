@@ -61,7 +61,11 @@ export const listStandardSitePublications = (
     const pds = yield* resolvePds(did, proxy);
     const records = yield* listDocuments(pds, did, proxy);
     const sites = distinct(records.map((record) => record.value.site).filter(isString));
-    return yield* resolvePublications(sites, did, pds, proxy);
+    return yield* Effect.forEach(
+      sites,
+      (site) => resolvePublication(site, proxy).pipe(Effect.catchAll(() => Effect.succeed({ site }))),
+      { concurrency: 'unbounded' },
+    );
   }).pipe(Effect.provide(FetchHttpClient.layer));
 
 /** A handle suggestion returned by typeahead search. */
@@ -86,37 +90,38 @@ export const searchStandardSiteHandles = (
         Effect.provide(FetchHttpClient.layer),
       );
 
-/** Fetches a public Standard.site long-form feed (real articles, full markdown body, canonical link). */
+/**
+ * Fetches a Standard.site feed. `url` is the publication's `site` reference — either an `at://` URI
+ * (DID extracted directly) or an `https://` URL (DID resolved via `/.well-known/atproto-did`). In both
+ * cases, all documents in the author's repo filtered to that publication are fetched.
+ */
 export const fetchStandardSite: FeedFetcher = (url, options) =>
   Effect.gen(function* () {
     const proxy = options?.corsProxy;
-    const selectedSite = options?.publication;
-    const actor = parseStandardSiteActor(url);
-    const did = yield* resolveDid(actor, proxy);
+    const did = yield* resolveDidFromSite(url, proxy);
     const pds = yield* resolvePds(did, proxy);
 
+    // List all documents in the author's repo scoped to this publication.
     const allRecords = yield* listDocuments(pds, did, proxy);
-    // Scope the feed to the selected publication (single-required at create time); absent ⇒ all records.
-    const records = selectedSite ? allRecords.filter((record) => record.value.site === selectedSite) : allRecords;
+    const records = allRecords.filter((record) => record.value.site === url);
 
     // Author profile (best-effort) supplies feed name/icon and per-post author.
     const profile = yield* fetchProfile(did, proxy);
-    const authorName = profile?.displayName ?? profile?.handle ?? actor;
+    const authorName = profile?.displayName ?? profile?.handle ?? did;
 
-    // Resolve each distinct publication `site` reference once per fetch.
-    const sites = distinct(records.map((record) => record.value.site).filter(isString));
-    const publications = new Map((yield* resolvePublications(sites, did, pds, proxy)).map((pub) => [pub.site, pub]));
+    // Resolve the publication record once to get the canonical URL and name.
+    const publication = yield* resolvePublication(url, proxy).pipe(
+      Effect.catchAll((): Effect.Effect<Publication> => Effect.succeed({ site: url })),
+    );
 
     const posts = records.map((record) => {
       const value = record.value;
-      const publication = value.site ? publications.get(value.site) : undefined;
-      // Full markdown body travels in `Post.content` so articles read offline (no second round-trip).
       const content = value.content?.$type === MARKDOWN_CONTENT_TYPE ? value.content.text : undefined;
       const description = value.description ?? (value.textContent ? makeSnippet(value.textContent) : undefined);
 
       return Subscription.makePost({
         title: value.title,
-        link: joinUrl(publication?.url, value.path),
+        link: joinUrl(publication.url, value.path),
         description,
         content,
         author: authorName,
@@ -129,14 +134,10 @@ export const fetchStandardSite: FeedFetcher = (url, options) =>
     // Newest first so `sync-feed`'s cursor (posts[0]) advances correctly.
     posts.sort((postA, postB) => (postB.published ?? '').localeCompare(postA.published ?? ''));
 
-    // Feed name prefers the (selected) publication title; fall back to the author profile.
-    const namedSite = selectedSite ?? records[0]?.value.site;
-    const publicationName = namedSite ? publications.get(namedSite)?.name : undefined;
-
     const feed = Subscription.makeSubscription({
-      name: publicationName ?? authorName,
+      name: publication.name ?? authorName,
       url,
-      description: profile?.description ?? `Standard.site articles from @${profile?.handle ?? actor}`,
+      description: profile?.description ?? `Standard.site articles from @${profile?.handle ?? did}`,
       iconUrl: profile?.avatar,
       type: 'standard-site',
     });
@@ -204,6 +205,35 @@ const PublicationRecord = Schema.Struct({
 //
 // Resolution chain (each step requires an `HttpClient`, provided by the public entrypoints above).
 //
+
+/**
+ * Resolves a publication `site` reference to its author's DID:
+ * - `at://did:…/…` → DID extracted directly from the URI.
+ * - `https://…` → DID fetched from `/.well-known/atproto-did` on that domain.
+ */
+const resolveDidFromSite = (site: string, proxy?: string): Effect.Effect<string, FeedFetchError, HttpClient.HttpClient> => {
+  if (site.startsWith('at://')) {
+    const parsed = parseAtUri(site);
+    return parsed
+      ? Effect.succeed(parsed.did)
+      : Effect.fail(new FeedFetchError({ message: `Malformed at:// site reference: ${site}` }));
+  }
+  if (site.startsWith('https://')) {
+    const { hostname } = new URL(site);
+    return getJson(
+      Schema.Struct({ did: Schema.optional(Schema.String) }),
+      `https://${hostname}/.well-known/atproto-did`,
+      proxy,
+    ).pipe(
+      Effect.flatMap((result) =>
+        result.did
+          ? Effect.succeed(result.did)
+          : Effect.fail(new FeedFetchError({ message: `No atproto DID found at ${hostname}/.well-known/atproto-did` })),
+      ),
+    );
+  }
+  return Effect.fail(new FeedFetchError({ message: `Cannot resolve DID from site reference: ${site}` }));
+};
 
 /** Resolves a handle to a DID (no-op when already a DID) via the public `resolveHandle` XRPC. */
 const resolveDid = (actor: string, proxy?: string): Effect.Effect<string, FeedFetchError, HttpClient.HttpClient> =>
@@ -279,28 +309,13 @@ const fetchProfile = (
     Effect.catchAll(() => Effect.succeed(undefined)),
   );
 
-/** Resolves each `site` reference to a {@link Publication}; a failed resolution degrades to bare `{ site }`. */
-const resolvePublications = (
-  sites: readonly string[],
-  actorDid: string,
-  actorPds: string,
-  proxy?: string,
-): Effect.Effect<Publication[], FeedFetchError, HttpClient.HttpClient> =>
-  Effect.forEach(
-    sites,
-    (site) => resolvePublication(site, actorDid, actorPds, proxy).pipe(Effect.catchAll(() => Effect.succeed({ site }))),
-    { concurrency: 'unbounded' },
-  );
-
 /**
- * Resolves a document's `site` reference to its publication: an `https://` value is the canonical URL
- * directly; an `at://` value is `getRecord`-ed for its `url`/`name` (reusing the actor's PDS when the
- * record lives in the actor's own repo).
+ * Resolves a publication `site` reference to its {@link Publication} metadata:
+ * - `https://` → canonical URL directly (no record fetch needed).
+ * - `at://` → `getRecord` the publication record for `url`/`name`.
  */
 const resolvePublication = (
   site: string,
-  actorDid: string,
-  actorPds: string,
   proxy?: string,
 ): Effect.Effect<Publication, FeedFetchError, HttpClient.HttpClient> => {
   if (site.startsWith('http')) {
@@ -312,7 +327,7 @@ const resolvePublication = (
       return Effect.succeed({ site });
     }
     return Effect.gen(function* () {
-      const pds = parsed.did === actorDid ? actorPds : yield* resolvePds(parsed.did, proxy);
+      const pds = yield* resolvePds(parsed.did, proxy);
       const record = yield* getJson(
         PublicationRecord,
         `${pds}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(parsed.did)}` +

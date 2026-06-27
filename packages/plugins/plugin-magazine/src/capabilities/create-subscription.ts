@@ -111,8 +111,9 @@ export type CreateSubscriptionInput = Schema.Schema.Type<typeof CreateSubscripti
 export const makeSubscriptionFromCreate = (input: CreateSubscriptionInput): Subscription.Subscription => {
   switch (input.type) {
     case 'standard-site':
-      // Name is left unset; sync resolves it from the selected publication.
-      return Subscription.makeSubscription({ type: 'standard-site', url: input.handle, site: input.publication });
+      // `url` stores the publication site reference (at:// or https://); sync derives the author DID
+      // from it directly — no handle stored, name resolved from the publication at sync time.
+      return Subscription.makeSubscription({ type: 'standard-site', url: input.publication });
     case 'rss':
       return Subscription.makeSubscription({ type: 'rss', url: input.url, name: input.name });
   }

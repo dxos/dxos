@@ -59,12 +59,6 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     url: Schema.String.pipe(Schema.optional),
     /** Protocol type — determines which fetcher is used for sync. */
     type: FeedType.pipe(Schema.optional),
-    /**
-     * Selected publication for protocols with multiple publications per source (Standard.site `site`
-     * reference). When set, sync is scoped to that publication's records; absent ⇒ all records. Set via
-     * the create flow, not user-editable in the form.
-     */
-    site: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** Description of the feed. */
     description: Schema.String.pipe(Schema.optional),
     /** URL of the feed's associated website. */

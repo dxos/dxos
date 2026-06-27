@@ -9,11 +9,6 @@ import { type Subscription } from '#types';
 
 export type FetchOptions = {
   corsProxy?: string;
-  /**
-   * Restrict the fetch to a single publication, identified by its Standard.site `site` reference. Ignored
-   * by protocols (e.g. RSS) that have no notion of multiple publications per source.
-   */
-  publication?: string;
 };
 
 export type FetchResult = {

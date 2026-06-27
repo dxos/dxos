@@ -6,12 +6,11 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { type FetchOptions } from './feed-fetcher';
 import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site';
 
 // The Standard.site fetchers are Effects (they provide their own HTTP layer); run them for assertions.
-const runFetchStandardSite = (url: string, options?: FetchOptions) =>
-  EffectEx.runPromise(fetchStandardSite(url, options));
+// `fetchStandardSite` now takes the publication site reference (`at://` or `https://`) as `url`.
+const runFetchStandardSite = (url: string) => EffectEx.runPromise(fetchStandardSite(url));
 
 // RSS/Atom coverage lives in rss.test.ts.
 
@@ -71,10 +70,18 @@ const LIST_RECORDS = {
 const okJson = (data: unknown) =>
   new Response(JSON.stringify(data), { status: 200, headers: { 'content-type': 'application/json' } });
 
-/** Routes a mocked `fetch` by endpoint so the resolution chain is order-independent. */
+/**
+ * Routes a mocked `fetch` by endpoint so the resolution chain is order-independent.
+ * The new `fetchStandardSite` takes a site reference as `url`:
+ *   - `at://did:plc:abc123/…` → extract DID → plc.directory → listRecords → getProfile → getRecord
+ *   - `https://alice.example.com` → /.well-known/atproto-did → plc.directory → listRecords → getProfile
+ */
 const routedFetch = () =>
   vi.fn(async (input: unknown) => {
     const url = String(input);
+    if (url.includes('/.well-known/atproto-did')) {
+      return okJson({ did: DID });
+    }
     if (url.includes('resolveHandle')) {
       return okJson({ did: DID });
     }
@@ -106,64 +113,51 @@ describe('FeedFetcher', () => {
   });
 
   describe('fetchStandardSite', () => {
-    test('resolves a handle and maps Standard.site documents', async ({ expect }) => {
+    test('takes an at:// publication reference, fetches only matching documents', async ({ expect }) => {
       globalThis.fetch = routedFetch();
 
-      const result = await runFetchStandardSite('alice.example.com');
+      // `url` is the publication site reference; DID is extracted directly from the at:// URI.
+      const result = await runFetchStandardSite(PUBLICATION_URI);
 
       expect(result.feed.type).toBe('standard-site');
-      // Feed name comes from the publication; icon/description from the author profile.
+      // Feed name and url come from the publication record; icon/description from the author profile.
       expect(result.feed.name).toBe('Alice Blog');
+      expect(result.feed.url).toBe(PUBLICATION_URI);
       expect(result.feed.iconUrl).toBe('https://example.com/avatar.jpg');
       expect(result.feed.description).toBe('Long-form writing.');
 
-      // Newest first.
-      expect(result.posts).toHaveLength(2);
-      const [first, second] = result.posts;
-
+      // Only the document whose `site` matches PUBLICATION_URI is included.
+      expect(result.posts).toHaveLength(1);
+      const [first] = result.posts;
       expect(first.title).toBe('First Article');
-      // Canonical link = publication url + document path (publication trailing slash stripped).
       expect(first.link).toBe('https://alice.example.com/blog/first');
       expect(first.content).toBe('# First\n\nBody text.');
       expect(first.description).toBe('A first long-form post.');
       expect(first.author).toBe('Alice');
       expect(first.published).toBe('2026-01-02T00:00:00Z');
-      // The record AT-URI is the dedup guid.
       expect(first.guid).toBe(`at://${DID}/site.standard.document/doc1`);
-
-      // `site` given as a bare https URL is used directly (no publication name → falls back is unused here).
-      expect(second.title).toBe('Older Article');
-      expect(second.link).toBe('https://alice.example.com/blog/older');
-      expect(second.content).toBe('# Older');
     });
 
-    test('passes a DID straight through to listRecords (no handle resolution)', async ({ expect }) => {
+    test('takes an https:// publication reference, resolves DID via /.well-known/atproto-did', async ({ expect }) => {
       const mockFetch = routedFetch();
       globalThis.fetch = mockFetch;
 
-      await runFetchStandardSite('did:plc:abc123');
+      // The https:// site reference triggers a /.well-known/atproto-did lookup for the DID.
+      const result = await runFetchStandardSite('https://alice.example.com');
 
       const calls = mockFetch.mock.calls.map((call) => String(call[0]));
+      expect(calls.some((url) => url.includes('/.well-known/atproto-did'))).toBe(true);
       expect(calls.some((url) => url.includes('resolveHandle'))).toBe(false);
-      expect(calls.some((url) => url.includes('listRecords') && url.includes('repo=did%3Aplc%3Aabc123'))).toBe(true);
+
+      // The document whose `site` is 'https://alice.example.com' is the only match.
+      expect(result.posts).toHaveLength(1);
+      expect(result.posts[0].title).toBe('Older Article');
     });
 
     test('fails on a non-ok response', async ({ expect }) => {
       globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 404, statusText: 'Not Found' }));
 
-      await expect(runFetchStandardSite('nonexistent.example.com')).rejects.toThrow(/Fetch failed/);
-    });
-
-    test('filters to the selected publication', async ({ expect }) => {
-      globalThis.fetch = routedFetch();
-
-      // Only the document whose `site` matches the selected publication is included.
-      const result = await runFetchStandardSite('alice.example.com', { publication: PUBLICATION_URI });
-
-      expect(result.posts).toHaveLength(1);
-      expect(result.posts[0].title).toBe('First Article');
-      // Feed name resolves from the selected publication.
-      expect(result.feed.name).toBe('Alice Blog');
+      await expect(runFetchStandardSite(PUBLICATION_URI)).rejects.toThrow(/Fetch failed/);
     });
   });
 
