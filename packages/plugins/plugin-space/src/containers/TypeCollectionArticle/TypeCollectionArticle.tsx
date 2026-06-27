@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Filter, Obj } from '@dxos/echo';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppAnnotation, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
@@ -72,7 +74,7 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
           <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
         ) : (
           <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content classNames='dx-document'>
+            <Masonry.Content>
               <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
@@ -117,6 +119,12 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
+  // Render a content preview body only for types that opt in via `CardAnnotation`.
+  const type = Obj.getType(object);
+  const showCardContent =
+    !!type && Option.getOrElse(AppAnnotation.CardAnnotation.get(Type.getSchema(type)), () => false);
+  const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
+
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   const handleCurrentChange = useCallback(() => onOpen(object), [onOpen, object]);
 
@@ -144,9 +152,10 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
           <Card.Block>
             <Icon icon={icon} classNames={iconStyles?.text} />
           </Card.Block>
-          <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
+          <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
+        {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>
   );

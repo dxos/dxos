@@ -7,6 +7,7 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
+import { Card } from '@dxos/react-ui';
 
 import { TicTacToeBoard, getWinningCells } from '#components';
 import { TicTacToe } from '#types';
@@ -26,8 +27,12 @@ export const TicTacToeCard = ({ variant }: TicTacToeCardProps) => {
   const winningCells = getWinningCells(board, size, winCondition);
 
   return (
-    <div className='flex items-center justify-center p-2'>
-      <TicTacToeBoard board={board} size={size} winningCells={winningCells} disabled />
-    </div>
+    <Card.Body>
+      <Card.Section classNames='aspect-square'>
+        <Card.Row fullWidth>
+          <TicTacToeBoard board={board} size={size} winningCells={winningCells} disabled />
+        </Card.Row>
+      </Card.Section>
+    </Card.Body>
   );
 };

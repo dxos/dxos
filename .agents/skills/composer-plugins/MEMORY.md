@@ -4,6 +4,13 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-27 — plugin-space TypeCollectionArticle (card-content annotation)
+
+- `AppAnnotation.CardAnnotation` (`@dxos/app-toolkit`, boolean, `org.dxos.annotation.card-content`) marks a schema type whose collection tile renders a preview body. Set it in the type's `.pipe(...)` (alongside Icon/Label). Applied to `Markdown.Document`, `Game.Game`, `Sketch.Sketch`.
+- Read a SCHEMA-LEVEL annotation off an object via `Option.getOrElse(CardAnnotation.get(Type.getSchema(Obj.getType(object))), () => false)` — NOT `Annotation.get(entity, ann)` (that reads the entity meta DICTIONARY, only for `.set`-on-instance annotations like `RootCollectionAnnotation`).
+- `TypeCollectionTile` (plugin-space) gates `<Surface.Surface type={AppSurface.CardContent} data={{subject:object}} limit={1}/>` on the annotation. Pass the LIVE `object` (not `useObject`'s return — that's `Obj.Snapshot`, fails `ObjectCardData.subject: Obj.Unknown`). Card containers emit `Card.Body` themselves; the tile should NOT wrap in an extra `Card.Body`.
+- Story harness for the card body: cannot import `MarkdownPlugin` into plugin-space (plugin-markdown DEPS plugin-space → cycle). Use `PreviewPlugin` (already a devDep) — its `fallbackPopover` renders a `FormCard` for any object's `CardContent`. Define story-local annotated/non-annotated ECHO types instead. DXN final segment must be camelCase (`org.dxos.type.test.cardType`, NOT `card-type`).
+
 ## 2026-06-26 — plugin-conductor / react-ui-canvas-compute / react-ui-canvas-editor (circuit editor render + selection/delete)
 
 - plugin-conductor is a thin shell; the circuit editor lives in `@dxos/react-ui-canvas-editor` (Editor/Frame/Path/Shape, selection, shortcuts) + `@dxos/react-ui-canvas-compute` (compute shapes, registry, `createComputeGraph`, controller). The circuit STORIES are `react-ui-canvas-compute/src/compute.stories.tsx` (`ui/react-ui-canvas-compute/compute` — Default/Beacon/Transform/Logic/Control/Template/GPT/Plugins/Artifact/ImageGen/Audio/Voice). Story `args` build `createComputeGraphController(createXCircuit(), …)` at MODULE LOAD, so ALL circuits build on import — one throwing aborts the module and EVERY story shows the same error.

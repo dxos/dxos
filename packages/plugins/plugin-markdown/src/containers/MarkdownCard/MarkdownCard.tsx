@@ -29,7 +29,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Body>
       {snippet && (
-        <Card.Section className='relative'>
+        <Card.Section className='aspect-square relative'>
           <Card.Row fullWidth>
             <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (
