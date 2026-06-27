@@ -39,6 +39,7 @@ const SAMPLE_CONTENT = [
   '',
   'Live transcription appears inline as greyed text — confirm (✓) to insert it into the document, or cancel (✕) to discard.',
   '',
+  '',
 ].join('\n');
 
 /**

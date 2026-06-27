@@ -19,6 +19,7 @@ export * from './folding';
 export * from './hashtag';
 export * from './json';
 export * from './listener';
+export * from './marker';
 export * from './markdown';
 export * from './mention';
 export * from './modal';

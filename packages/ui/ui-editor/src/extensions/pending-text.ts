@@ -8,6 +8,7 @@ import { type Command, Decoration, EditorView, WidgetType, keymap } from '@codem
 import { Domino } from '@dxos/ui';
 
 import { busy, setBusy } from './busy-state';
+import { type MarkerHue, markerButtons, markerText, markerTheme } from './marker';
 
 //
 // State.
@@ -122,16 +123,10 @@ const commitOrConsumePending: Command = (view) => {
 // Decorations.
 //
 
-const iconButton = (icon: string, label: string, testId: string, onClick: () => void): Domino<HTMLElement> =>
-  Domino.of('button')
-    .classNames('cm-pending-text-button')
-    .attributes({ type: 'button', 'aria-label': label, 'data-testid': testId })
-    .append(Domino.svg(icon))
-    // `mousedown` + preventDefault so clicking the affordance does not steal the editor selection.
-    .on('mousedown', (event) => {
-      event.preventDefault();
-      onClick();
-    });
+// Finalized + interim text share one teal marker (a single transcription); the placeholder uses a
+// rose marker with a pulsing icon to signal active recording.
+const TEXT_HUE: MarkerHue = 'teal';
+const PLACEHOLDER_HUE: MarkerHue = 'rose';
 
 class PendingTextWidget extends WidgetType {
   constructor(private readonly _state: PendingTextState) {
@@ -148,18 +143,29 @@ class PendingTextWidget extends WidgetType {
 
   override toDOM(view: EditorView): HTMLElement {
     const root = Domino.of('span').classNames('cm-pending-text');
-    if (this._state.final.length > 0) {
-      root.append(Domino.of('span').classNames('cm-pending-text-final').text(this._state.final));
+    if (this._state.final.length > 0 || this._state.interim.length > 0) {
+      const marker = Domino.of('span').classNames('cm-marker-text').attributes({ 'data-hue': TEXT_HUE });
+      if (this._state.final.length > 0) {
+        marker.append(Domino.of('span').text(this._state.final));
+      }
+      if (this._state.interim.length > 0) {
+        marker.append(Domino.of('span').classNames('cm-pending-text-interim').text(this._state.interim));
+      }
+      root.append(marker);
+    } else if (this._state.placeholder) {
+      root.append(markerText(this._state.placeholder, { hue: PLACEHOLDER_HUE, pulseIcon: 'ph--microphone--regular' }));
     }
-    if (this._state.interim.length > 0) {
-      root.append(Domino.of('span').classNames('cm-pending-text-interim').text(this._state.interim));
-    }
-    if (this._state.final.length === 0 && this._state.interim.length === 0 && this._state.placeholder) {
-      root.append(Domino.of('span').classNames('cm-pending-text-placeholder').text(this._state.placeholder));
-    }
+
     root.append(
-      iconButton('ph--check--regular', 'Confirm', 'pending-text.confirm', () => commitPending(view)),
-      iconButton('ph--x--regular', 'Cancel', 'pending-text.cancel', () => cancelPending(view)),
+      markerButtons([
+        {
+          icon: 'ph--check--regular',
+          label: 'Confirm',
+          testId: 'pending-text.confirm',
+          onClick: () => commitPending(view),
+        },
+        { icon: 'ph--x--regular', label: 'Cancel', testId: 'pending-text.cancel', onClick: () => cancelPending(view) },
+      ]),
     );
     return root.root;
   }
@@ -193,34 +199,15 @@ const busyListener = EditorView.updateListener.of((update) => {
 });
 
 const styles = EditorView.theme({
-  // Keep the text and affordances on a single line (it already sits on its own line at the anchor).
+  // Keep the marker and affordances on a single line (it already sits on its own line at the anchor).
   '.cm-pending-text': {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.25rem',
+    gap: '0.5rem',
   },
-  // Finalized, interim, and placeholder text all share the comment-like surface (one transcription);
-  // the interim tail is only distinguished by reduced opacity.
-  '.cm-pending-text-final, .cm-pending-text-interim, .cm-pending-text-placeholder': {
-    boxShadow: '0 0 0 3px var(--color-cm-comment-surface)',
-    backgroundColor: 'var(--color-cm-comment-surface)',
-    color: 'var(--color-cm-comment-text) !important',
-  },
+  // The interim tail is distinguished from the finalized text only by reduced opacity.
   '.cm-pending-text-interim': {
     opacity: 0.6,
-  },
-  '.cm-pending-text-placeholder': {
-    // fontStyle: 'italic',
-  },
-  // TOOD(burdon): Factor out (reusable).
-  '.cm-pending-text-button': {
-    display: 'inline-flex',
-    padding: '4px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  '.cm-pending-text-button:hover': {
-    backgroundColor: 'var(--color-hover-surface)',
   },
 });
 
@@ -241,6 +228,7 @@ export const pendingText = (): Extension => [
   busy(),
   pendingDecorations,
   busyListener,
+  markerTheme(),
   styles,
   keymap.of([
     { key: 'Enter', run: commitOrConsumePending },
