@@ -131,8 +131,9 @@ export const createConfig = ({
         },
         build: {
           assetsInlineLimit: 0,
-          // Target modern browsers that support top-level await natively.
-          target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
+          // Target browsers with native `using` (TC39 Explicit Resource Management) support.
+          // Chrome 132 (Jan 2025), Edge 132, Firefox 134 (Jan 2025), Safari 18.2 (Dec 2024).
+          target: ['chrome132', 'edge132', 'firefox134', 'safari18'],
           rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
