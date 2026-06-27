@@ -27,7 +27,7 @@ export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarP
       <Initialize
         {...props}
         target={calendar}
-        noIntegrationMessage={t('no-integrations.label')}
+        noConnectionsMessage={t('no-connections.label')}
         emptyMessage={t('empty-calendar.message')}
         ref={forwardedRef}
       />
