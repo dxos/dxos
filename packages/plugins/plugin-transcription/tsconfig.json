@@ -67,7 +67,13 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/transcription-pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../sdk/app-framework"
@@ -95,6 +101,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-audio"
@@ -130,7 +139,16 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

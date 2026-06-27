@@ -111,9 +111,9 @@ const TestExtension = Capability.contributes(
   }),
 );
 
-type DefaultStoryProps = Pick<MatrixRootProps, 'Tile'>;
+type StoryArgs = Pick<MatrixRootProps, 'Tile'>;
 
-const DefaultStory = ({ Tile }: DefaultStoryProps) => {
+const DefaultStory = ({ Tile }: StoryArgs) => {
   const items = useMemo(
     () => [
       Organization.make({ name: random.company.name() }),

@@ -22,7 +22,7 @@ const DEFAULT_RECORDER_CONFIG = {
   interval: 200,
 };
 
-type DefaultStoryProps = {
+type StoryArgs = {
   detectSpeaking?: boolean;
   transcriberConfig?: TranscriberProps['config'];
   recorderConfig?: MediaStreamRecorderProps['config'];
@@ -34,7 +34,7 @@ const DefaultStory = ({
   transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
   recorderConfig = DEFAULT_RECORDER_CONFIG,
   audioConstraints,
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [running, setRunning] = useState(false);
   const track = useAudioTrack(running, audioConstraints);
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;

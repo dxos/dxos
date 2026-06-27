@@ -22,6 +22,7 @@ import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePo
 
 import {
   applyOpfsPragmas,
+  checkpointWal,
   DEFAULT_JOURNAL_MODE,
   DEFAULT_SYNCHRONOUS,
   type SqliteJournalMode,
@@ -115,6 +116,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
             case 'export': {
               const [, id] = message;
               messageId = id;
+              // Checkpoint so the snapshot reflects all committed WAL frames and the on-disk
+              // main file is left authoritative (raw pool reads stay correct).
+              checkpointWal(sqlite3, db);
               const data = sqlite3.serialize(db, 'main');
               options.port.postMessage([id, undefined, data], [data.buffer]);
               return;

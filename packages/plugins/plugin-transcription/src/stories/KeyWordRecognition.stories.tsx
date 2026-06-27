@@ -15,11 +15,11 @@ type Word = {
   matched: boolean;
 };
 
-type DefaultStoryProps = {
+type StoryArgs = {
   keywords: string[];
 };
 
-const DefaultStory = ({ keywords }: DefaultStoryProps) => {
+const DefaultStory = ({ keywords }: StoryArgs) => {
   const [running, setRunning] = useState(false);
   const [matchingWords, setMatchingWords] = useState<Word[]>(keywords.map((word) => ({ text: word, matched: false })));
 

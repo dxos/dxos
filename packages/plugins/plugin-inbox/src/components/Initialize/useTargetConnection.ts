@@ -4,10 +4,10 @@
 
 import { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Connection, Connector, SyncBinding } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 
 /**
@@ -34,10 +34,10 @@ export const useTargetConnection = <T extends Obj.Any>(
 };
 
 /**
- * Build a `sync` callback that resolves the {@link SyncBinding} for `target` and
- * invokes `operation` with a `{ binding }` payload, tracking an in-flight
- * `syncing` flag so the empty-state UI can render a spinner / disabled button
- * without each callsite repeating the boilerplate.
+ * Build a `sync` callback for `target`: resolves its {@link SyncBinding} and the `sync` operation of
+ * the bound connection's {@link Connector} entry, then invokes that op with a `{ binding }` payload —
+ * so the action works for any connector that contributes a `sync` op, with no per-provider branching.
+ * Tracks an in-flight `syncing` flag for the empty-state UI.
  *
  * `connection` exposes whether the target is bound (drives "connect vs. sync").
  *
@@ -45,7 +45,6 @@ export const useTargetConnection = <T extends Obj.Any>(
  */
 export const useTargetSync = <T extends Obj.Any>(
   target: T,
-  operation: Operation.Definition<any, any>,
   notify?: Operation.NotifyOptions,
 ): {
   connection: Connection.Connection | undefined;
@@ -53,6 +52,10 @@ export const useTargetSync = <T extends Obj.Any>(
   syncing: boolean;
 } => {
   const { connection } = useTargetConnection(target);
+  const connectors = useCapabilities(Connector).flat();
+  const operation = connection
+    ? connectors.find((connector) => connector.id === connection.connectorId)?.sync
+    : undefined;
   const db = Obj.getDatabase(target);
   const bindings = useQuery(db, Query.select(Filter.id(target.id)).targetOf(SyncBinding.SyncBinding));
   const binding = bindings.find(SyncBinding.instanceOf);
@@ -60,7 +63,7 @@ export const useTargetSync = <T extends Obj.Any>(
   const [syncing, setSyncing] = useState(false);
 
   const sync = useCallback(async () => {
-    if (!binding) {
+    if (!binding || !operation) {
       return;
     }
     setSyncing(true);

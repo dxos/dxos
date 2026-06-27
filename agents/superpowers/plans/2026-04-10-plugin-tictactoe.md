@@ -1935,13 +1935,13 @@ import { TicTacToe } from '#types';
 import { translations } from '../../translations';
 import { TicTacToeArticle } from './TicTacToeArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   size?: number;
   winCondition?: number;
   difficulty?: string;
 };
 
-const DefaultStory = ({ size = 3, winCondition, difficulty }: DefaultStoryProps) => {
+const DefaultStory = ({ size = 3, winCondition, difficulty }: StoryArgs) => {
   const game = useMemo(
     () => TicTacToe.make({ name: 'Test Game', size, winCondition, difficulty }),
     [size, winCondition, difficulty],

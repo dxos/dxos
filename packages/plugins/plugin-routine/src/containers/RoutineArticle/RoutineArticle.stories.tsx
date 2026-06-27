@@ -106,7 +106,7 @@ const TwoColumnStory = () => {
     return <Loading />;
   }
   return (
-    <div role='none' className='grid grid-cols-2 gap-px bg-separator divide-x divide-separator min-bs-0'>
+    <div role='none' className='w-full grid grid-cols-2 gap-px'>
       <RoutineArticle role='article' subject={automation} attendableId='story' />
       <div role='none' className='overflow-y-auto p-2 bg-baseSurface'>
         <ObjectProperties object={automation} />

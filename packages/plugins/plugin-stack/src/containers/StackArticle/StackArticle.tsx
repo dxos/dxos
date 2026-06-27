@@ -167,9 +167,9 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   );
 
   return (
-    <Panel.Root classNames='dx-document'>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
+    <Panel.Root>
+      <Panel.Toolbar classNames='bg-toolbar-surface'>
+        <Toolbar.Root classNames='dx-document'>
           <Toolbar.IconButton
             square
             icon='ph--plus--regular'
@@ -205,14 +205,9 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
           onMoveDown={handleMoveDown}
           onDelete={handleDelete}
         >
-          <Stack.Content data-testid='main.stack'>
+          <Stack.Content centered padding data-testid='main.stack'>
             <Stack.Viewport>
-              <Mosaic.Stack
-                orientation='vertical'
-                items={items}
-                getId={(item) => item.id}
-                Tile={(tileProps) => <Stack.Section {...tileProps} />}
-              />
+              <Mosaic.Stack classNames='dx-document' items={items} getId={getId} Tile={Stack.Section} />
             </Stack.Viewport>
           </Stack.Content>
         </Stack.Root>
@@ -220,6 +215,8 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
     </Panel.Root>
   );
 };
+
+const getId = (item: StackSectionItem) => item.id;
 
 const createCollectionObjects = Atom.family((collection: Collection.Collection) =>
   Atom.make((get) => {

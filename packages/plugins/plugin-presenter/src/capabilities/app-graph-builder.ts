@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -18,9 +19,9 @@ import { PresenterOperation } from '#types';
 import { PresenterCapabilities } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */
-const whenPresentable = (node: Node.Node) =>
-  Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node), () =>
-    NodeMatcher.whenEchoType(Markdown.Document)(node),
+const whenPresentable = (node: Node.Node, get: Atom.Context) =>
+  Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node, get), () =>
+    NodeMatcher.whenEchoType(Markdown.Document)(node, get),
   );
 
 export default Capability.makeModule(

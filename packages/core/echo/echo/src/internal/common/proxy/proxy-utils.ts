@@ -42,6 +42,23 @@ export const getProxyHandler = <T extends object>(proxy: any): ReactiveHandler<T
 };
 
 /**
+ * Clamp a splice range to `Array.prototype.splice` semantics for a string of the given `length`:
+ * a negative `start` counts from the end, a `start` past the end appends, and `deleteCount` is bounded
+ * to the remaining characters. Shared by both reactive handlers so the string CRDT API behaves
+ * identically across the in-memory and Automerge backends (Automerge's `splice` otherwise throws on
+ * out-of-range indices).
+ */
+export const normalizeSpliceRange = (
+  length: number,
+  start: number,
+  deleteCount: number,
+): { start: number; deleteCount: number } => {
+  const safeStart = start < 0 ? Math.max(length + start, 0) : Math.min(start, length);
+  const safeDeleteCount = Math.max(0, Math.min(deleteCount, length - safeStart));
+  return { start: safeStart, deleteCount: safeDeleteCount };
+};
+
+/**
  * Unsafe method to override id for debugging/testing and migration purposes.
  * @deprecated
  */

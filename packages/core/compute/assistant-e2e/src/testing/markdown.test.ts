@@ -30,4 +30,33 @@ describe('Markdown', () => {
     }),
     { timeout: agentTestTimeout() },
   );
+
+  it.effect(
+    'append text to empty document',
+    agentTest({
+      instructions: trim`
+        The database starts empty.
+
+        Enable the markdown skill (key: org.dxos.skill.markdown) using the skill manager.
+
+        Create a new markdown document named "Empty Notes" with empty content (no body text).
+
+        Open the document and confirm its content is empty.
+
+        Use the markdown Update operation (org.dxos.function.markdown.update) to append this exact line
+        without providing oldString (omit oldString entirely — do not pass an empty string):
+        "Hello from an empty document."
+
+        Open the document again and confirm the content is exactly "Hello from an empty document."
+      `,
+      completionCriteria: [
+        'Agent enabled the markdown skill successfully.',
+        'A markdown document was created with initially empty content.',
+        'The Update operation completed without error when appending with no oldString.',
+        'Final document content is exactly "Hello from an empty document."',
+      ],
+      plugins: [MarkdownPlugin()],
+    }),
+    { timeout: agentTestTimeout() },
+  );
 });
