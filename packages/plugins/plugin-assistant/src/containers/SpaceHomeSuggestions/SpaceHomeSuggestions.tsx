@@ -42,7 +42,7 @@ export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
 
   return (
     <div className='flex justify-center w-full'>
-      <div className='flex flex-col gap-2 w-full max-w-[40rem]'>
+      <div className='flex flex-col gap-trim-sm w-full max-w-[40rem]'>
         <h2 className='text-sm font-medium text-description'>{t('space-home.suggestions.heading')}</h2>
         <div className='flex flex-col gap-3'>
           {suggestions.map((prompt, index) => (
