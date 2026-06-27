@@ -4,6 +4,7 @@
 
 export * from './TranscriptEvent';
 export * from './Stage';
+export * from './lookup';
 export * from './PipelineConfig';
 export * from './model-routing';
 export * from './PipelineRuntime';

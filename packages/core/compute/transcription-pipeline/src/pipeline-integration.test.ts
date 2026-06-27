@@ -11,6 +11,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 
+import { makeDatabaseLookup } from './lookup';
 import { PipelineRuntime } from './PipelineRuntime';
 import { type CommitFn } from './PipelineRuntime';
 import { makeCorrectionStage, makeExtractionStage } from './stages';
@@ -55,7 +56,12 @@ describe('pipeline integration (correction + extraction)', () => {
       });
 
     await EffectEx.runPromise(
-      PipelineRuntime.run({ source, stages: [makeCorrectionStage(), makeExtractionStage()], db, commit }),
+      PipelineRuntime.run({
+        source,
+        stages: [makeCorrectionStage(), makeExtractionStage()],
+        lookup: makeDatabaseLookup(db),
+        commit,
+      }),
     );
 
     expect(blocks[0].corrected).toMatch(/\[Sarah Johnson\]\(echo:\/[^)]+\)/);

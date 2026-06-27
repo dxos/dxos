@@ -9,6 +9,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Organization } from '@dxos/types';
 
+import { makeDatabaseLookup } from '../lookup';
 import { extractProperNouns, makeExtractionStage } from './extraction';
 
 describe('extraction', () => {
@@ -42,7 +43,9 @@ describe('extraction (with full-text index)', () => {
 
     const stage = makeExtractionStage();
     const block = { _tag: 'transcript' as const, started: 's', text: 'we met Amco and Globex today' };
-    const write = await EffectEx.runPromise(stage.run({ window: [block] }, { db, model: stage.model! }));
+    const write = await EffectEx.runPromise(
+      stage.run({ window: [block] }, { lookup: makeDatabaseLookup(db), model: stage.model! }),
+    );
 
     const update = write.blockUpdates![0];
     expect(update.references).toHaveLength(1);

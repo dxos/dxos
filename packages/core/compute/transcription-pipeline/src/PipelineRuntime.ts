@@ -9,10 +9,10 @@ import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
 import { type ModelName } from '@dxos/ai';
-import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
+import { type EntityLookup } from './lookup';
 import { resolveModel } from './model-routing';
 import { type StageConfig } from './PipelineConfig';
 import { type Stage, type StageContext, type StageWrite } from './Stage';
@@ -44,8 +44,8 @@ export type RunOptions = {
   readonly stages: readonly Stage<any, any>[];
   /** Sink for stage outputs (in-memory capture in tests; ECHO dispatcher in production). */
   readonly commit: CommitFn;
-  /** Space database injected into each stage context (entity lookups). */
-  readonly db?: Database.Database;
+  /** Entity-reference resolver injected into each stage context (backend-agnostic). */
+  readonly lookup?: EntityLookup;
   /** Per-stage configuration (enabled / model / window). Absent → stage runs with its defaults. */
   readonly configs?: readonly StageConfig[];
   /** Default model when neither config nor stage specifies one. */
@@ -66,7 +66,7 @@ const triggerMatches = (stage: Stage<any, any>, kind: TranscriptEvent['kind']): 
  */
 const run = (options: RunOptions): Effect.Effect<void> =>
   Effect.gen(function* () {
-    const { source, stages, commit, db, configs, presetDefault, onTelemetry } = options;
+    const { source, stages, commit, lookup, configs, presetDefault, onTelemetry } = options;
 
     const windowRef = yield* Ref.make<ContentBlock.Transcript[]>([]);
     const fibers = yield* Ref.make(new Map<string, Fiber.RuntimeFiber<void, never>>());
@@ -85,7 +85,7 @@ const run = (options: RunOptions): Effect.Effect<void> =>
         const slice = sliceFor(stage, window);
         const model = resolveModel(configFor(stage.id), stage, presetDefault);
         const input = stage.select ? stage.select(slice) : { window: slice };
-        const context: StageContext = { db, model };
+        const context: StageContext = { lookup, model };
         const started = yield* Effect.sync(() => Date.now());
         const write = yield* stage.run(input, context);
         yield* commit(write, slice);

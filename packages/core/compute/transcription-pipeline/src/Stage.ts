@@ -5,8 +5,10 @@
 import type * as Effect from 'effect/Effect';
 
 import { type ModelName } from '@dxos/ai';
-import { type Database, type Ref } from '@dxos/echo';
+import { type Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
+
+import { type EntityLookup } from './lookup';
 
 /**
  * When a stage's discrete computation fires, relative to the pipeline stream.
@@ -55,8 +57,8 @@ export const StageWrite = Object.freeze({
 
 /** Context supplied to a stage's `run` by the runtime. */
 export type StageContext = {
-  /** Space database for index lookups (e.g. entity reference resolution). */
-  readonly db?: Database.Database;
+  /** Resolves entity references for extraction. Backend-agnostic (full-text, vector, …). */
+  readonly lookup?: EntityLookup;
   /** The model resolved for this stage by the runtime (config → stage → preset default). */
   readonly model: ModelName;
 };

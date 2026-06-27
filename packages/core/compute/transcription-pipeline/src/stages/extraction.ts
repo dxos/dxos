@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { insertReferences } from '@dxos/assistant/extraction';
-import { Filter, Query, Ref } from '@dxos/echo';
+import { type Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
+import { type EntityLookup } from '../lookup';
 import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';
 import { type BlockUpdate, type Stage, StageWrite } from '../Stage';
 
@@ -49,11 +50,56 @@ export const extractProperNouns = (text: string): string[] => {
 };
 
 /** Marker that a block's text already carries inline echo links, so extraction can skip it. */
-const isLinked = (text: string): boolean => text.includes('](echo:');
+export const isLinked = (text: string): boolean => text.includes('](echo:');
+
+/** Result of resolving a block's proper nouns against the {@link EntityLookup}. */
+export type ExtractedEntities = {
+  references: Ref.Ref<any>[];
+  quotes: { quote: string; id: string }[];
+  candidates: ContentBlock.Candidate[];
+};
+
+/** Resolve a block's proper nouns: matched → references/quotes, unmatched → candidates. */
+export const resolveEntities = async (text: string, lookup?: EntityLookup): Promise<ExtractedEntities> => {
+  const nouns = extractProperNouns(text);
+  const references: Ref.Ref<any>[] = [];
+  const quotes: { quote: string; id: string }[] = [];
+  const matched = new Set<string>();
+  if (lookup) {
+    for (const noun of nouns) {
+      // TODO(LLM seam): replace heuristic nouns with model NER (the lookup backend stays injected).
+      const match = await lookup(noun);
+      if (match) {
+        references.push(match.ref);
+        quotes.push({ quote: noun, id: match.id });
+        matched.add(noun.toLowerCase());
+      }
+    }
+  }
+  const candidates: ContentBlock.Candidate[] = nouns
+    .filter((noun) => !matched.has(noun.toLowerCase()))
+    .map((noun) => {
+      const start = Math.max(0, text.indexOf(noun));
+      return { text: noun, kind: 'proper-noun' as const, start, end: start + noun.length };
+    });
+  return { references, quotes, candidates };
+};
 
 /**
- * Stage ②: surface proper nouns across the window, link those that match objects in the space
- * (full-text index), and report the rest as candidates the user can act on.
+ * Rewrite text with inline `[noun](echo:/<id>)` links for entities matched by `lookup`, so markdown
+ * consumers decorate them as dx-anchors. Reused by the live recording driver's post-process seam.
+ */
+export const linkEntities = async (text: string, lookup: EntityLookup): Promise<string> => {
+  if (isLinked(text)) {
+    return text;
+  }
+  const { quotes } = await resolveEntities(text, lookup);
+  return quotes.length > 0 ? insertReferences(text, { references: quotes }) : text;
+};
+
+/**
+ * Stage ②: surface proper nouns across the window, link those that match objects (via the injected
+ * {@link EntityLookup}), and report the rest as candidates the user can act on.
  *
  * Processes every not-yet-linked block in the window (not just the newest). Under `latest-wins`
  * with a fast stream, earlier per-block invocations are interrupted, so the surviving invocation
@@ -75,35 +121,7 @@ export const makeExtractionStage = (): Stage<ExtractionInput> => ({
         if (isLinked(text)) {
           continue;
         }
-        const nouns = extractProperNouns(text);
-        if (nouns.length === 0) {
-          continue;
-        }
-
-        const references: Ref.Ref<any>[] = [];
-        const quotes: { quote: string; id: string }[] = [];
-        const matched = new Set<string>();
-        if (ctx.db) {
-          const db = ctx.db;
-          for (const noun of nouns) {
-            // TODO(LLM seam): replace heuristic nouns with model NER; swap 'full-text' → 'vector' later.
-            const objects = yield* Effect.promise(() =>
-              db.query(Query.select(Filter.text(noun, { type: 'full-text' }))).run(),
-            );
-            if (objects.length > 0) {
-              references.push(Ref.make(objects[0]));
-              quotes.push({ quote: noun, id: objects[0].id.toString() });
-              matched.add(noun.toLowerCase());
-            }
-          }
-        }
-
-        const candidates: ContentBlock.Candidate[] = nouns
-          .filter((noun) => !matched.has(noun.toLowerCase()))
-          .map((noun) => {
-            const start = Math.max(0, text.indexOf(noun));
-            return { text: noun, kind: 'proper-noun' as const, start, end: start + noun.length };
-          });
+        const { references, quotes, candidates } = yield* Effect.promise(() => resolveEntities(text, ctx.lookup));
 
         const update: BlockUpdate = { index };
         if (references.length > 0) {
@@ -112,8 +130,7 @@ export const makeExtractionStage = (): Stage<ExtractionInput> => ({
         if (candidates.length > 0) {
           update.candidates = candidates;
         }
-        // Rewrite the rendered text with inline `[noun](echo:/<id>)` links for matched entities, so
-        // markdown consumers decorate them as dx-anchors. Structured `references` stay for other consumers.
+        // Inline links so markdown consumers render dx-anchors; structured references stay for others.
         if (quotes.length > 0) {
           update.corrected = insertReferences(text, { references: quotes });
         }
