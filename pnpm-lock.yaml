@@ -5780,6 +5780,9 @@ importers:
 
   packages/core/echo/echo-client-e2e:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
