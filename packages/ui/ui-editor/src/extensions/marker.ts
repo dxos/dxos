@@ -46,10 +46,14 @@ export const markerTheme = (): Extension =>
       color: 'var(--cm-marker-text) !important',
       borderRadius: '0.25rem',
     },
+    // `inline-block` (not flex) so the finalized + interim spans flow as one continuous block.
     '.cm-marker-text': {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.25rem',
+      display: 'inline-block',
+    },
+    // Align a trailing icon (e.g. the recording spinner) with the text.
+    '.cm-marker-text svg': {
+      verticalAlign: '-0.15em',
+      marginInlineStart: '0.25rem',
     },
     '.cm-marker-buttons': {
       display: 'inline-flex',
