@@ -7,7 +7,7 @@ import { type Operation, OperationHandlerSet } from '@dxos/compute';
 import Send from './mail/send';
 import Sync from './mail/sync';
 
-export const JmapFunctions: {
+export const JmapOperations: {
   Send: Operation.WithHandler<Operation.Definition.Any>;
   Sync: Operation.WithHandler<Operation.Definition.Any>;
 } = {

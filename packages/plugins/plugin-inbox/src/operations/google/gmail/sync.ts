@@ -12,7 +12,6 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
@@ -22,14 +21,13 @@ import { log } from '@dxos/log';
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
 import { InboxResolver, GoogleCredentials } from '../../../services';
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
-import { isAiServiceUnavailable } from '../../extractor';
+import { InboxOperation, Mailbox } from '../../../types';
+import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -51,17 +49,6 @@ const STREAMING_CONFIG = {
   maxResults: 500,
   restrictedMax: 20,
 } as const;
-
-const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
-  const raw = binding.options;
-  if (!raw || typeof raw !== 'object') {
-    return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
-  }
-  return {
-    syncBackDays: typeof raw.syncBackDays === 'number' ? raw.syncBackDays : undefined,
-    filter: typeof raw.filter === 'string' ? raw.filter : undefined,
-  };
-};
 
 const syncSingleMailbox = (input: {
   binding: SyncBinding.SyncBinding;
@@ -97,13 +84,7 @@ const syncSingleMailbox = (input: {
 
     const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
     const lastMessage = objects.at(-1);
-    const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
-    const existingGmailIds = new Set(
-      recentMessages.flatMap((msg) => {
-        const meta = Obj.getMeta(msg);
-        return meta.keys.filter((key) => key.source === GMAIL_SOURCE).map((key) => key.id);
-      }),
-    );
+    const existingGmailIds = collectForeignIds(objects, GMAIL_SOURCE, STREAMING_CONFIG.maxResults);
 
     const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
     log('starting sync', {
@@ -177,6 +158,9 @@ export default InboxOperation.GoogleMailSync.pipe(
         );
       }),
   ),
+  // Erase the inferred handler type (which transitively references Capability.Service via
+  // appendBatchToFeed) so the default export is portably nameable in the emitted .d.ts (TS2883).
+  Operation.opaqueHandler,
 );
 
 // Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
@@ -305,80 +289,16 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
       Effect.gen(function* () {
         const mapped = Chunk.toArray(batch);
         const messages = mapped.map((m) => m.message);
-        log('appending batch to feed', {
-          count: messages.length,
+        log('appending batch to feed', { count: messages.length });
+        yield* appendBatchToFeed(feed, mailbox, messages, (message) => {
+          const entry = mapped.find((m) => m.message === message);
+          return (
+            entry?.labelIds.flatMap((labelId) => {
+              const uri = labelMap.get(labelId);
+              return uri ? [uri] : [];
+            }) ?? []
+          );
         });
-        yield* Feed.append(feed, messages);
-
-        // Apply provider-label tags: index each just-appended message under the Tag uri for every
-        // Gmail label assigned to it (`syncLabels` created/updated those Tag objects).
-        for (const { message, labelIds } of mapped) {
-          for (const labelId of labelIds) {
-            const uri = labelMap.get(labelId);
-            if (uri) {
-              Tagging.set(message, uri, { index: mailbox.tags.target });
-            }
-          }
-        }
-
-        const extractorsConfig = mailbox.extractors;
-        if (extractorsConfig && extractorsConfig.enabled.length > 0) {
-          const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
-          const db = Obj.getDatabase(mailbox);
-          if (db) {
-            for (const message of messages) {
-              let best: { extractor: (typeof extractors)[number]; confidence: number } | undefined;
-              for (const extractor of extractors) {
-                if (!extractorsConfig.enabled.includes(extractor.id)) {
-                  continue;
-                }
-                let result;
-                try {
-                  result = extractor.match(message);
-                } catch (err) {
-                  log.warn('auto-on-arrival match failed', {
-                    err,
-                    extractorId: extractor.id,
-                    messageId: message.id,
-                  });
-                  continue;
-                }
-                if (!result.matched) {
-                  continue;
-                }
-                const confidence = result.confidence ?? 0;
-                if (confidence >= extractorsConfig.threshold && (!best || confidence > best.confidence)) {
-                  best = { extractor, confidence };
-                }
-              }
-              if (best) {
-                yield* Operation.invoke(
-                  InboxOperation.ExtractMessage,
-                  {
-                    db,
-                    source: message,
-                    extractorId: best.extractor.id,
-                  },
-                  { spaceId: db.spaceId },
-                ).pipe(
-                  Effect.catchAll((err) => {
-                    // The AI service can be momentarily absent from the process-manager LayerStack
-                    // during startup (the assistant plugin's `AiService` LayerSpec races the
-                    // runtime build). Treat that as a deferrable skip — a later sync (or app load,
-                    // once the stack carries the spec) re-attempts — rather than a hard failure.
-                    if (isAiServiceUnavailable(err)) {
-                      log.info('auto-on-arrival extract skipped: AI service not ready', { messageId: message.id });
-                    } else {
-                      log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
-                    }
-                    return Effect.void;
-                  }),
-                );
-              }
-            }
-          }
-        }
-
         return messages.length;
       }),
     ),
