@@ -57,11 +57,24 @@ export const DEFAULT_OPENAI_MODELS = [
   'ai.openai.model.o3-mini',
 ] as const;
 
-export const ModelName = Schema.Literal(
-  ...DEFAULT_EDGE_MODELS,
-  ...DEFAULT_LMSTUDIO_MODELS,
-  ...DEFAULT_OLLAMA_MODELS,
-  ...DEFAULT_OPENAI_MODELS,
+/**
+ * Any locally-installed Ollama model id, beyond the curated {@link DEFAULT_OLLAMA_MODELS}. Ollama
+ * models are pulled at runtime, so their ids cannot be enumerated; this open template admits them
+ * without a cast.
+ */
+export const OllamaModelId = Schema.TemplateLiteral('ai.ollama.model.', Schema.String);
+export type OllamaModelId = typeof OllamaModelId.Type;
+
+// The curated literals stay enumerable (for select fields / autocomplete), unioned with the open
+// Ollama template so runtime-pulled models validate and type-check without a cast.
+export const ModelName = Schema.Union(
+  Schema.Literal(
+    ...DEFAULT_EDGE_MODELS,
+    ...DEFAULT_LMSTUDIO_MODELS,
+    ...DEFAULT_OLLAMA_MODELS,
+    ...DEFAULT_OPENAI_MODELS,
+  ),
+  OllamaModelId,
 );
 
 export type ModelName = Schema.Schema.Type<typeof ModelName>;

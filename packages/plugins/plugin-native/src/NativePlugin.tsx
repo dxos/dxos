@@ -3,8 +3,7 @@
 //
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { AssistantEvents } from '@dxos/plugin-assistant';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { NativeSettings, Ollama, ReactSurface, SpotlightListener, Updater } from '#capabilities';
 import { meta } from '#meta';
@@ -28,8 +27,11 @@ export const NativePlugin = Plugin.define(meta).pipe(
     activate: Updater,
   }),
   Plugin.addModule({
+    // Activate before `SetupProcessManager` (when `SetupAiServiceProviders` fires) so the bundled
+    // sidecar's `OllamaManager` capability is committed before the assistant's `LocalModelResolver`
+    // decides whether to contribute a competing default-endpoint Ollama resolver.
     id: 'ollama',
-    activatesOn: AssistantEvents.SetupAiServiceProviders,
+    activatesOn: AppActivationEvents.SetupSettings,
     activate: Ollama,
   }),
   AppPlugin.addPluginAssetModule({

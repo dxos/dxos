@@ -12,6 +12,7 @@ export * as Assistant from './Assistant';
 export * as AssistantOperation from './AssistantOperation';
 export * as AssistantCapabilities from './AssistantCapabilities';
 export * as AssistantEvents from './AssistantEvents';
+export * as Ollama from './Ollama';
 
 // TODO(wittjosiah): Namespace.
 export * from './preset';

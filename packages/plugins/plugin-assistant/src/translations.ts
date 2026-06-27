@@ -154,6 +154,20 @@ export const translations: Resource[] = [
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 
+        // Ollama local model management (desktop only).
+        'settings.ollama.title': 'Local models (Ollama)',
+        'settings.ollama.installed.label': 'Installed models',
+        'settings.ollama.empty.message': 'No models installed. Pull one below to get started.',
+        'settings.ollama.pull.label': 'Pull model',
+        'settings.ollama.pull.placeholder': 'Model name (e.g. llama3.2:1b)',
+        'settings.ollama.pulling.label': 'Pulling…',
+        'settings.ollama.pulling.message': 'Downloading… {{percent}}%',
+        'settings.ollama.quick-pick.label': 'Suggested models',
+        'settings.ollama.remove.label': 'Delete model',
+        'settings.ollama.refresh.label': 'Refresh',
+        'settings.ollama.failed.label': 'Local models unavailable',
+        'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
+
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
         'typename.label': 'Typename',

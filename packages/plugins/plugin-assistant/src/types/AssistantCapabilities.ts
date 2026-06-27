@@ -16,6 +16,11 @@ import * as Assistant from './Assistant';
 
 export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.profile.key}.capability.settings`);
 
+// Inline import avoids an `Ollama` namespace alias colliding with capability constants.
+export const OllamaManager = Capability.make<import('./Ollama').Manager>(
+  `${meta.profile.key}.capability.ollama-manager`,
+);
+
 export const StateSchema = Schema.mutable(
   Schema.Struct({
     /** Map of primary object dxn to current chat dxn. */
