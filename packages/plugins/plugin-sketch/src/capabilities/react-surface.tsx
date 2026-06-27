@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { SketchArticle } from '#containers';
+import { SketchArticle, SketchCard } from '#containers';
 import { Sketch, SketchCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
@@ -27,6 +27,11 @@ export default Capability.makeModule(() =>
           const settings = useAtomCapability(SketchCapabilities.Settings);
           return <SketchArticle role={role} attendableId={attendableId} subject={subject} settings={settings} />;
         },
+      }),
+      Surface.create({
+        id: 'sketchCard',
+        filter: AppSurface.object(AppSurface.CardContent, Sketch.Sketch),
+        component: ({ data, role }) => <SketchCard role={role} subject={data.subject} />,
       }),
     ]),
   ),
