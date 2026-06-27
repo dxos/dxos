@@ -14,7 +14,7 @@ const meta = {
   title: 'ui/react-ui-list/ItemContent',
   component: ItemContent,
   render: (args) => (
-    <div className='flex flex-col w-[24rem] divide-y divide-subdued-separator'>
+    <div className='flex flex-col divide-y divide-subdued-separator'>
       <ItemContent {...args} classNames='p-2' />
       <ItemContent icon='ph--clock--regular' title='Title only, no description' classNames='p-2' />
       <ItemContent

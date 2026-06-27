@@ -157,7 +157,7 @@ const popoverOptions: Option[] = random.helpers.multiple(
 const PopoverStory = () => {
   const [selected, setSelected] = useState<string | undefined>(popoverOptions[0]?.value);
   return (
-    <div className='max-w-xs p-2 ring-1 ring-subdued-separator rounded'>
+    <div className='max-w-xs p-2 border-1 border-subdued-separator rounded'>
       <Listbox.Root value={selected} onValueChange={setSelected}>
         <Listbox.Content aria-label='Models'>
           {popoverOptions.map((option) => (
@@ -188,7 +188,7 @@ const PlainStory = () => (
     <Listbox.Viewport>
       <Listbox.Content aria-label='Items'>
         {allItems.slice(0, 6).map((item) => (
-          <Listbox.Item key={item.id} id={item.id} onClick={() => {}}>
+          <Listbox.Item key={item.id} id={item.id}>
             <Listbox.ItemLabel>{item.name}</Listbox.ItemLabel>
           </Listbox.Item>
         ))}
@@ -211,10 +211,36 @@ export default meta;
 type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
-export const Thin: Story = { args: { thin: true, padding: true, showDescription: false } };
-export const WithDisabled: Story = { args: { items: allItems.slice(0, 6), disabledIndex: 2 } };
-export const MasterDetail: Story = { render: () => <MasterDetailStory /> };
-export const WithToolbar: Story = { render: () => <WithToolbarStory /> };
-export const Popover: Story = { render: () => <PopoverStory /> };
+
+export const Thin: Story = {
+  args: {
+    thin: true,
+    padding: true,
+    showDescription: false,
+  },
+};
+
+export const WithDisabled: Story = {
+  args: {
+    items: allItems.slice(0, 6),
+    disabledIndex: 2,
+  },
+};
+
+export const MasterDetail: Story = {
+  render: () => <MasterDetailStory />,
+};
+
+export const WithToolbar: Story = {
+  render: () => <WithToolbarStory />,
+};
+
+export const Popover: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  render: () => <PopoverStory />,
+};
+
 /** Non-selectable: opt-out of the selection model — plain styled rows (role=list/listitem). */
-export const Plain: Story = { render: () => <PlainStory /> };
+export const Plain: Story = {
+  render: () => <PlainStory />,
+};
