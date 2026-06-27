@@ -44,6 +44,7 @@ export const markerTheme = (): Extension =>
       backgroundColor: 'var(--cm-marker-surface)',
       boxShadow: '0 0 0 3px var(--cm-marker-surface)',
       color: 'var(--cm-marker-text) !important',
+      borderRadius: '0.25rem',
     },
     '.cm-marker-text': {
       display: 'inline-flex',
@@ -61,6 +62,18 @@ export const markerTheme = (): Extension =>
       borderRadius: '4px',
       cursor: 'pointer',
     },
+    '.cm-marker-button-success': {
+      backgroundColor: 'var(--color-success-bg)',
+    },
+    '.cm-marker-button-success:hover': {
+      backgroundColor: 'var(--color-success-bg)',
+    },
+    '.cm-marker-button-error': {
+      backgroundColor: 'var(--color-error-surface)',
+    },
+    '.cm-marker-button-error:hover': {
+      backgroundColor: 'var(--color-error-surface)',
+    },
     '.cm-marker-button:hover': {
       backgroundColor: 'var(--color-hover-surface)',
     },
@@ -76,19 +89,24 @@ export const markerMark = (hue: MarkerHue, options: { class?: string; attributes
 export type MarkerTextOptions = {
   hue: MarkerHue;
   className?: string;
-  /** Optional trailing icon rendered with a pulse animation (e.g. a recording indicator). */
-  pulseIcon?: string;
+  /** Optional trailing icon (e.g. a recording indicator). */
+  icon?: string;
+  /** Extra classes for the trailing icon (e.g. `animate-spin`). */
+  iconClassNames?: string;
 };
 
-/** A hue-tinted text span for use inside widgets; optionally trailed by a pulsing icon. */
-export const markerText = (text: string, { hue, className, pulseIcon }: MarkerTextOptions): Domino<HTMLElement> => {
+/** A hue-tinted text span for use inside widgets; optionally trailed by an icon. */
+export const markerText = (
+  text: string,
+  { hue, className, icon, iconClassNames }: MarkerTextOptions,
+): Domino<HTMLElement> => {
   const span = Domino.of('span')
     .classNames('cm-marker-text', className)
     .attributes({ 'data-hue': hue })
     .append(Domino.of('span').text(text));
-  if (pulseIcon) {
+  if (icon) {
     // Preserve the sprite sizing (`Domino.svg` sets `h-[1em] w-[1em]`) since `classNames` replaces.
-    span.append(Domino.svg(pulseIcon).classNames('shrink-0 h-[1em] w-[1em] animate-pulse'));
+    span.append(Domino.svg(icon).classNames('shrink-0 h-[1em] w-[1em]', iconClassNames));
   }
 
   return span;

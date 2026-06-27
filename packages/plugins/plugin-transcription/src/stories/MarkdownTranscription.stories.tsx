@@ -25,7 +25,14 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
+import {
+  PendingTextStreamer,
+  appendPendingText,
+  cancelPendingText,
+  editorPendingTextSink,
+  setPendingAnchor,
+  setPendingInterim,
+} from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -78,19 +85,28 @@ const StoryGraphPlugin = Plugin.define(
   Plugin.make,
 );
 
+// Scripted transcript batches for the streaming variant (stand in for the transcriber's onSegments).
+const STREAM_TRANSCRIPT = [
+  'The quick brown fox jumps over the lazy dog.',
+  'Meanwhile the assistant keeps listening for names.',
+  'Confirm to insert, or cancel to discard.',
+];
+
 type StoryArgs = {
   /**
    * Seed the pending-text decoration directly (final/interim text), bypassing audio capture, to
    * showcase the recording-state preview deterministically in stories and the headless storybook test.
    */
   seed?: { final?: string; interim?: string };
+  /** Drive a scripted transcript through a PendingTextStreamer into the editor (no microphone). */
+  stream?: { mode?: 'batch' | 'word'; initialBufferMs?: number; wordIntervalMs?: number };
 };
 
 // Renders the real plugin-markdown editor surface. TranscriptionPlugin contributes both the
 // start/stop toolbar button (via AppGraphBuilder) and the pending-text CodeMirror extension (via
 // MarkdownCapabilities.ExtensionProvider), so toggling the toolbar microphone streams live
 // transcription into the document as a greyed pending block with inline confirm/cancel.
-const DefaultStory = ({ seed }: StoryArgs) => {
+const DefaultStory = ({ seed, stream }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
@@ -148,6 +164,45 @@ const DefaultStory = ({ seed }: StoryArgs) => {
       clearInterval(interval);
     };
   }, [seed, attendableId, editorViews]);
+
+  // Drive a scripted transcript through a PendingTextStreamer into the editor (no microphone).
+  useEffect(() => {
+    if (!stream || !attendableId || !editorViews) {
+      return;
+    }
+    let cancelled = false;
+    let streamer: PendingTextStreamer | null = null;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const begin = () => {
+      const entry = editorViews.get(attendableId);
+      if (!entry) {
+        return false;
+      }
+      streamer = new PendingTextStreamer(editorPendingTextSink(entry.view), {
+        mode: stream.mode ?? 'word',
+        initialBufferMs: stream.initialBufferMs ?? 0,
+        wordIntervalMs: stream.wordIntervalMs ?? 80,
+      });
+      streamer.start({ anchor: entry.view.state.doc.length, placeholder: 'Recording…' });
+      STREAM_TRANSCRIPT.forEach((batch, index) => {
+        timers.push(setTimeout(() => streamer?.push(batch), (index + 1) * 1500));
+      });
+      return true;
+    };
+    if (!begin()) {
+      const interval = setInterval(() => {
+        if (cancelled || begin()) {
+          clearInterval(interval);
+        }
+      }, 50);
+      timers.push(interval);
+    }
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      streamer?.dispose();
+    };
+  }, [stream, attendableId, editorViews]);
 
   const data = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
 
@@ -221,5 +276,15 @@ export const Recording: Story = {
 export const RecordingIndicator: Story = {
   args: {
     seed: {},
+  },
+};
+
+/**
+ * Streams a scripted transcript into the editor word-by-word via PendingTextStreamer (no microphone)
+ * — the same mechanism the live driver uses, exercising buffering + reveal pacing in CodeMirror.
+ */
+export const Streaming: Story = {
+  args: {
+    stream: { mode: 'word', wordIntervalMs: 80 },
   },
 };

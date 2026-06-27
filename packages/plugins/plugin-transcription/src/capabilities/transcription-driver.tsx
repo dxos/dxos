@@ -3,18 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { Fragment, useCallback, useEffect, useRef } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { type ContentBlock } from '@dxos/types';
-import { appendPendingText, cancelPendingText, pendingTextState, setPendingAnchor } from '@dxos/ui-editor';
+import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
 import { useAudioTrack, useTranscriber } from '#hooks';
 import { meta } from '#meta';
 import { TranscriptionCapabilities } from '#types';
+
+// Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
+const RECORDER_INTERVAL_MS = 200;
 
 /**
  * Headless controller driving live transcription into a Markdown editor. Reads the active recording
@@ -26,16 +29,15 @@ const TranscriptionDriver = () => {
   const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   // `useCapabilities` (not `useCapability`) so the driver does not throw when plugin-markdown is absent.
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const settings = useAtomCapability(TranscriptionCapabilities.Settings);
 
   const recording = session?.recording ?? false;
   const sessionId = session?.id;
   const track = useAudioTrack(recording);
 
-  // Whether any text has been appended in the current session (controls inter-batch spacing).
-  const appended = useRef(false);
+  // Streams transcribed text into the editor's pending-text block (buffering + word-by-word reveal).
+  const streamerRef = useRef<PendingTextStreamer | null>(null);
 
-  // On recording start, anchor a pending session at the caret with a placeholder. Clicking the
-  // toolbar blurs the editor and hides the caret, so this gives immediate visual feedback.
   useEffect(() => {
     if (!recording || !editorViews || !sessionId) {
       return;
@@ -44,14 +46,21 @@ const TranscriptionDriver = () => {
     if (!entry) {
       return;
     }
-    appended.current = false;
-    entry.view.dispatch({
-      effects: setPendingAnchor.of({
-        anchor: entry.view.state.selection.main.head,
-        placeholder: 'Recording…',
-      }),
+
+    // Clicking the toolbar blurs the editor and hides the caret, so anchor + placeholder give
+    // immediate feedback while the first transcription is buffered.
+    const streamer = new PendingTextStreamer(editorPendingTextSink(entry.view), {
+      mode: settings?.streamMode ?? 'word',
+      wordIntervalMs: settings?.wordIntervalMs ?? 80,
+      // TODO(burdon): postProcess seam for entity extraction → dx-anchor links.
     });
+    streamer.start({ anchor: entry.view.state.selection.main.head, placeholder: 'Recording…' });
+    streamerRef.current = streamer;
+
     return () => {
+      streamer.flush();
+      streamer.dispose();
+      streamerRef.current = null;
       // On stop, drop the placeholder if nothing was transcribed; otherwise leave the block for review.
       const current = editorViews.get(sessionId);
       const pending = current?.view.state.field(pendingTextState, false);
@@ -59,34 +68,35 @@ const TranscriptionDriver = () => {
         current.view.dispatch({ effects: cancelPendingText.of() });
       }
     };
-  }, [recording, sessionId, editorViews]);
+  }, [recording, sessionId, editorViews, settings?.streamMode, settings?.wordIntervalMs]);
 
-  const handleSegments = useCallback(
-    async (segments: ContentBlock.Transcript[]) => {
-      if (!editorViews || !sessionId) {
-        return;
-      }
-      const entry = editorViews.get(sessionId);
-      if (!entry) {
-        return;
-      }
+  const handleSegments = useCallback(async (segments: ContentBlock.Transcript[]) => {
+    const text = segments
+      .map((segment) => segment.text)
+      .join(' ')
+      .trim();
+    if (text.length > 0) {
+      streamerRef.current?.push(text);
+    }
+  }, []);
 
-      const text = segments
-        .map((segment) => segment.text)
-        .join(' ')
-        .trim();
-      if (text.length === 0) {
-        return;
-      }
-
-      // Separate successive batches with a single space.
-      entry.view.dispatch({ effects: appendPendingText.of((appended.current ? ' ' : '') + text) });
-      appended.current = true;
-    },
-    [editorViews, sessionId],
+  // Derive the transcriber's chunk threshold from the configured initial buffering time.
+  const transcriberConfig = useMemo(
+    () => ({
+      transcribeAfterChunksAmount: Math.max(
+        1,
+        Math.round((settings?.transcribeAfterMs ?? 4000) / RECORDER_INTERVAL_MS),
+      ),
+    }),
+    [settings?.transcribeAfterMs],
   );
 
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    onSegments: handleSegments,
+    transcriberConfig,
+    recorderConfig: { interval: RECORDER_INTERVAL_MS },
+  });
   useEffect(() => {
     if (!transcriber) {
       return;

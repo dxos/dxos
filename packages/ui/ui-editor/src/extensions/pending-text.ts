@@ -36,6 +36,9 @@ export const appendPendingText = StateEffect.define<string>();
 /** Replace the volatile in-flight tail. */
 export const setPendingInterim = StateEffect.define<string>();
 
+/** Replace the finalized buffer wholesale (e.g. with post-processed text). */
+export const setPendingFinal = StateEffect.define<string>();
+
 /** Discard the pending buffer without modifying the document. */
 export const cancelPendingText = StateEffect.define<void>();
 
@@ -60,6 +63,9 @@ export const pendingTextState = StateField.define<PendingTextState | null>({
       } else if (effect.is(setPendingInterim)) {
         const base = next ?? emptyAt(tr.state.selection.main.head);
         next = { ...base, interim: effect.value };
+      } else if (effect.is(setPendingFinal)) {
+        const base = next ?? emptyAt(tr.state.selection.main.head);
+        next = { ...base, final: effect.value, placeholder: undefined };
       } else if (effect.is(cancelPendingText)) {
         next = null;
       }
@@ -153,7 +159,13 @@ class PendingTextWidget extends WidgetType {
       }
       root.append(marker);
     } else if (this._state.placeholder) {
-      root.append(markerText(this._state.placeholder, { hue: PLACEHOLDER_HUE, pulseIcon: 'ph--microphone--regular' }));
+      root.append(
+        markerText(this._state.placeholder, {
+          hue: PLACEHOLDER_HUE,
+          icon: 'ph--circle-notch--regular',
+          iconClassNames: 'animate-spin',
+        }),
+      );
     }
 
     root.append(
