@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { insertReferences } from '@dxos/assistant/extraction';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
@@ -71,6 +72,7 @@ export const makeExtractionStage = (): Stage<ExtractionInput> => ({
       }
 
       const references: Ref.Ref<any>[] = [];
+      const quotes: { quote: string; id: string }[] = [];
       const matched = new Set<string>();
       if (ctx.db) {
         const db = ctx.db;
@@ -81,6 +83,7 @@ export const makeExtractionStage = (): Stage<ExtractionInput> => ({
           );
           if (objects.length > 0) {
             references.push(Ref.make(objects[0]));
+            quotes.push({ quote: noun, id: objects[0].id.toString() });
             matched.add(noun.toLowerCase());
           }
         }
@@ -99,6 +102,11 @@ export const makeExtractionStage = (): Stage<ExtractionInput> => ({
       }
       if (candidates.length > 0) {
         update.candidates = candidates;
+      }
+      // Rewrite the rendered text with inline `[noun](echo:/<id>)` links for matched entities, so
+      // markdown consumers decorate them as dx-anchors. Structured `references` stay for other consumers.
+      if (quotes.length > 0) {
+        update.corrected = insertReferences(text, { references: quotes });
       }
       return StageWrite.blocks([update]);
     }),

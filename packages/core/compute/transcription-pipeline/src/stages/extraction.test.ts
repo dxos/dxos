@@ -46,6 +46,8 @@ describe('extraction (with full-text index)', () => {
 
     const update = write.blockUpdates![0];
     expect(update.references).toHaveLength(1);
+    // Matched entity is rewritten as an inline echo link (dx-anchor) in the corrected text.
+    expect(update.corrected).toMatch(/\[Amco\]\(echo:\/[^)]+\)/);
     const candidates = (update.candidates ?? []).map((candidate) => candidate.text);
     expect(candidates).toContain('Globex');
     expect(candidates).not.toContain('Amco');
