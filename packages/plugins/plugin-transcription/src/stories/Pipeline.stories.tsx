@@ -47,7 +47,7 @@ import {
 } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, trim } from '@dxos/util';
 
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
@@ -57,13 +57,12 @@ import { enableQueryIndexes } from './common';
 
 // Properly-cased transcript that names seeded entities (DXOS, Cyberdyne, Amco, Sarah Johnson,
 // Michael Chen) so the deterministic extraction heuristic + full-text lookup link them.
-// TODO(burdon): Use trim (@dxos/util).
-const SCRIPT = [
-  'So I caught up with Sarah Johnson this morning',
-  'We talked about the DXOS and Cyberdyne partnership',
-  'Amco might join the project later this year',
-  'I should follow up with Michael Chen next week',
-];
+const SCRIPT = trim`
+  So I caught up with Sarah Johnson this morning
+  We talked about the DXOS and Cyberdyne partnership
+  Amco might join the project later this year
+  I should follow up with Michael Chen next week
+`.split('\n');
 
 type StageId = 'correct' | 'extract' | 'summarize';
 

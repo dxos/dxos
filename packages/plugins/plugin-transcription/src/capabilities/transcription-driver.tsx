@@ -54,18 +54,10 @@ const TranscriptionDriver = () => {
     setStatus(() => ({ phase }));
   }, [phase, setStatus]);
 
-  // Mic capture stops the instant recording ends (track released → indicator drops). The transcriber,
-  // however, must outlive the drain to flush its buffer — so it binds to the track captured for the
-  // session, retained (even once stopped) until the phase returns to idle.
-  const liveTrack = useAudioTrack(phase === 'recording');
-  const [transcriberTrack, setTranscriberTrack] = useState<MediaStreamTrack>();
-  useEffect(() => {
-    if (phase === 'recording' && liveTrack) {
-      setTranscriberTrack(liveTrack);
-    } else if (phase === 'idle') {
-      setTranscriberTrack(undefined);
-    }
-  }, [phase, liveTrack]);
+  // Keep the track (and thus the transcriber) alive across the whole active session — including the
+  // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
+  // mic indicator therefore lingers for the brief drain after stop.
+  const track = useAudioTrack(active);
 
   // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
   const sessionIdRef = useRef(sessionId);
@@ -152,7 +144,7 @@ const TranscriptionDriver = () => {
   );
 
   const transcriber = useTranscriber({
-    audioStreamTrack: transcriberTrack,
+    audioStreamTrack: track,
     onSegments: handleSegments,
     transcriberConfig,
     recorderConfig: { interval: RECORDER_INTERVAL_MS },
