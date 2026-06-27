@@ -121,6 +121,7 @@ const DefaultStory = ({ seed }: StoryArgs) => {
       if (!entry) {
         return false;
       }
+
       // Anchor the pending block at the end of the document.
       const anchor = entry.view.state.doc.length;
       const effects: StateEffect<unknown>[] = [setPendingAnchor.of({ anchor, placeholder: 'Recording…' })];

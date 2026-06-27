@@ -46,7 +46,10 @@ const TranscriptionDriver = () => {
     }
     appended.current = false;
     entry.view.dispatch({
-      effects: setPendingAnchor.of({ anchor: entry.view.state.selection.main.head, placeholder: 'Recording…' }),
+      effects: setPendingAnchor.of({
+        anchor: entry.view.state.selection.main.head,
+        placeholder: 'Recording…',
+      }),
     });
     return () => {
       // On stop, drop the placeholder if nothing was transcribed; otherwise leave the block for review.
