@@ -11,7 +11,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Connection, type CredentialForm } from '@dxos/plugin-connector';
 import { AccessToken } from '@dxos/types';
 
-import { Jmap } from '../apis';
+import { getSession, type Session } from '../apis';
 import { JMAP_DEFAULT_HOST } from '../constants';
 import { JmapApiError } from '../errors';
 import { JmapCredentials } from '../services';
@@ -81,7 +81,7 @@ export const buildJmapCredential = ({
   host: string;
   email: string;
   token: string;
-  session: Jmap.Session;
+  session: Session;
   connector: { id?: string; label?: string };
 }) => {
   const account = email.length > 0 ? email : session.username;
@@ -100,7 +100,7 @@ export const buildJmapCredential = ({
 
 /** Discovers the JMAP session for the given host/token, surfacing a friendly message on 401. */
 const fetchSession = (host: string, token: string) =>
-  Jmap.getSession.pipe(
+  getSession.pipe(
     Effect.provide(Layer.mergeAll(FetchHttpClient.layer, JmapCredentials.fromValues({ host, token }))),
     Effect.mapError((error) =>
       error instanceof JmapApiError && error.status === 401

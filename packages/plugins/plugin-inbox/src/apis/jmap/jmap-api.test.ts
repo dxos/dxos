@@ -10,7 +10,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 
 import { JmapApiError } from '../../errors';
 import { JmapCredentials } from '../../services';
-import { Jmap } from './index';
+import { JmapMail, getSession } from './index';
 
 const HOST = 'api.fastmail.com';
 const ACCOUNT_ID = 'u9999';
@@ -28,7 +28,7 @@ const SESSION = {
   state: 'cyrus-0',
 };
 
-const TARGET: Jmap.Target = { apiUrl: API_URL, accountId: ACCOUNT_ID };
+const TARGET: JmapMail.Target = { apiUrl: API_URL, accountId: ACCOUNT_ID };
 
 const TestLayer = Layer.mergeAll(
   FetchHttpClient.layer,
@@ -69,7 +69,7 @@ describe('JMAP API', () => {
         expect(url).toContain('/.well-known/jmap');
         return { body: SESSION };
       };
-      const session = yield* Jmap.getSession;
+      const session = yield* getSession;
       expect(session.apiUrl).toBe(API_URL);
       expect(session.primaryAccounts['urn:ietf:params:jmap:mail']).toBe(ACCOUNT_ID);
       expect(session.username).toBe('alice@fastmail.com');
@@ -99,7 +99,7 @@ describe('JMAP API', () => {
           },
         };
       };
-      const result = yield* Jmap.mailboxGet(TARGET);
+      const result = yield* JmapMail.mailboxGet(TARGET);
       expect(result.list).toHaveLength(2);
       expect(result.list.find((folder) => folder.role === 'inbox')?.id).toBe('mb-inbox');
     }, Effect.provide(TestLayer)),
@@ -119,7 +119,7 @@ describe('JMAP API', () => {
           body: { methodResponses: [['Email/query', { accountId: ACCOUNT_ID, ids: ['e1', 'e2'], total: 2 }, '0']] },
         };
       };
-      const result = yield* Jmap.emailQuery(TARGET, {
+      const result = yield* JmapMail.emailQuery(TARGET, {
         filter: { inMailbox: 'mb-inbox' },
         sort: [{ property: 'receivedAt', isAscending: false }],
         limit: 50,
@@ -159,7 +159,7 @@ describe('JMAP API', () => {
           },
         };
       };
-      const result = yield* Jmap.emailGet(TARGET, ['e1']);
+      const result = yield* JmapMail.emailGet(TARGET, ['e1']);
       expect(result.list[0].id).toBe('e1');
       expect(result.list[0].bodyValues?.body?.value).toBe('hi');
     }, Effect.provide(TestLayer)),
@@ -188,7 +188,7 @@ describe('JMAP API', () => {
           },
         };
       };
-      const result = yield* Jmap.submitEmail(TARGET, {
+      const result = yield* JmapMail.submitEmail(TARGET, {
         identityId: 'id-1',
         draftsMailboxId: 'mb-drafts',
         sentMailboxId: 'mb-sent',
@@ -215,7 +215,7 @@ describe('JMAP API', () => {
           },
         };
       };
-      const result = yield* Jmap.identityGet(TARGET);
+      const result = yield* JmapMail.identityGet(TARGET);
       expect(result.list[0].email).toBe('me@x.com');
     }, Effect.provide(TestLayer)),
   );
@@ -229,7 +229,7 @@ describe('JMAP API', () => {
         expect(args.update).toEqual({ e1: { mailboxIds: { 'mb-trash': true } } });
         return { body: { methodResponses: [['Email/set', { accountId: ACCOUNT_ID, updated: { e1: null } }, '0']] } };
       };
-      const result = yield* Jmap.emailSetUpdate(TARGET, 'e1', { mailboxIds: { 'mb-trash': true } });
+      const result = yield* JmapMail.emailSetUpdate(TARGET, 'e1', { mailboxIds: { 'mb-trash': true } });
       expect(result.updated?.e1).toBeNull();
     }, Effect.provide(TestLayer)),
   );
@@ -238,7 +238,7 @@ describe('JMAP API', () => {
     'a 401 status surfaces as a JmapApiError carrying the status',
     Effect.fnUntraced(function* ({ expect }) {
       respond = () => ({ status: 401, body: { type: 'about:blank', status: 401 } });
-      const error = yield* Effect.flip(Jmap.getSession);
+      const error = yield* Effect.flip(getSession);
       expect(error).toBeInstanceOf(JmapApiError);
       expect(error.status).toBe(401);
     }, Effect.provide(TestLayer)),
@@ -250,7 +250,7 @@ describe('JMAP API', () => {
       respond = () => ({
         body: { methodResponses: [['error', { type: 'unknownMethod', description: 'nope' }, '0']] },
       });
-      const error = yield* Effect.flip(Jmap.mailboxGet(TARGET));
+      const error = yield* Effect.flip(JmapMail.mailboxGet(TARGET));
       expect(error).toBeInstanceOf(JmapApiError);
       expect(error.type).toBe('unknownMethod');
     }, Effect.provide(TestLayer)),

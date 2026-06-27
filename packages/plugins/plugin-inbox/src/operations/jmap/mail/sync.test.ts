@@ -11,7 +11,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { Jmap } from '../../../apis';
+import { JmapMail, getSession } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { InboxResolver, JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
@@ -85,21 +85,21 @@ describe('JMAP sync read path', () => {
   it.effect(
     'reads inbox ids, dedups against existing ones, fetches + maps the new emails',
     Effect.fnUntraced(function* ({ expect }) {
-      const session = yield* Jmap.getSession;
+      const session = yield* getSession;
       const accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
       if (!accountId) {
         throw new Error('expected a mail account');
       }
-      const target: Jmap.Target = { apiUrl: session.apiUrl, accountId };
+      const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
 
-      const { list: folders } = yield* Jmap.mailboxGet(target);
+      const { list: folders } = yield* JmapMail.mailboxGet(target);
       const inbox = folders.find((folder) => folder.role === 'inbox');
       if (!inbox) {
         throw new Error('expected an inbox folder');
       }
       expect(inbox.id).toBe('mb-inbox');
 
-      const { ids } = yield* Jmap.emailQuery(target, {
+      const { ids } = yield* JmapMail.emailQuery(target, {
         filter: { inMailbox: inbox.id },
         sort: [{ property: 'receivedAt', isAscending: false }],
         limit: 50,
@@ -111,7 +111,7 @@ describe('JMAP sync read path', () => {
       const newIds = ids.filter((id) => !existingIds.has(id));
       expect(newIds).toEqual(['e2', 'e3']);
 
-      const { list: emails } = yield* Jmap.emailGet(target, newIds);
+      const { list: emails } = yield* JmapMail.emailGet(target, newIds);
       const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullable);
       expect(mapped).toHaveLength(2);
 

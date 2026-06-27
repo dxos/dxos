@@ -17,7 +17,7 @@ import { SyncBinding } from '@dxos/plugin-connector';
 import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Jmap } from '../../../apis';
+import { JmapMail, getSession, type Filter as JmapFilter } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { InboxResolver, JmapCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
@@ -91,13 +91,13 @@ const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
 
 const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; mailbox: Mailbox.Mailbox }) =>
   Effect.gen(function* () {
-    const session = yield* Jmap.getSession;
+    const session = yield* getSession;
     const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
     if (!accountId) {
       log.warn('jmap session has no mail account', { username: session.username });
       return 0;
     }
-    const target: Jmap.Target = { apiUrl: session.apiUrl, accountId };
+    const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
     log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId, username: session.username });
 
     const feed = yield* Database.load(mailbox.feed);
@@ -109,7 +109,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     // Build a `folder id -> Tag uri` map (one Tag per JMAP folder, keyed by the folder id) and locate
     // the Inbox. Mirrors Gmail's `syncLabels`.
     const db = Obj.getDatabase(mailbox);
-    const { list: folders } = yield* Jmap.mailboxGet(target);
+    const { list: folders } = yield* JmapMail.mailboxGet(target);
     const folderMap = new Map<string, string>();
     if (db) {
       for (const folder of folders) {
@@ -143,12 +143,12 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
           now: new Date(),
           resolveMailbox: (nameOrRole) => resolveMailboxByNameOrRole(folders, nameOrRole),
         })
-      : Option.none<Jmap.Filter>();
+      : Option.none<JmapFilter>();
     // When the user filter already scopes a mailbox (e.g. `label:School`), don't also force the Inbox:
     // an email in `School` is rarely also in the Inbox, so AND-ing them would yield nothing.
     const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: filterScopesMailbox });
 
-    const conditions: Jmap.Filter[] = [];
+    const conditions: JmapFilter[] = [];
     if (inbox && !scopesMailbox) {
       conditions.push({ inMailbox: inbox.id });
     }
@@ -158,7 +158,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     if (Option.isSome(userFilter)) {
       conditions.push(userFilter.value);
     }
-    const filter: Jmap.Filter | undefined =
+    const filter: JmapFilter | undefined =
       conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : { operator: 'AND', conditions };
 
     log('starting jmap sync', { username: session.username, existingIds: existingIds.size, filter });
@@ -166,7 +166,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     let position = 0;
     let total = 0;
     while (position < MAX_SCAN) {
-      const { ids } = yield* Jmap.emailQuery(target, {
+      const { ids } = yield* JmapMail.emailQuery(target, {
         filter,
         sort: [{ property: 'receivedAt', isAscending: false }],
         position,
@@ -180,7 +180,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
       const newIds = ids.filter((id) => !existingIds.has(id));
       log('jmap sync: deduped page', { position, queried: ids.length, fresh: newIds.length });
       if (newIds.length > 0) {
-        const { list: emails } = yield* Jmap.emailGet(target, newIds);
+        const { list: emails } = yield* JmapMail.emailGet(target, newIds);
         const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullable);
         const messages = mapped.map((entry) => entry.message);
         // When `fetched > mapped`, emails were dropped by `mapEmail` (no sender or no extractable body).

@@ -6,10 +6,10 @@ import { subDays, subMonths, subWeeks, subYears } from 'date-fns';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { Jmap } from '../../../apis';
+import { JmapMail, type Filter } from '../../../apis';
 import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from './query';
 
-const FOLDERS: Jmap.Mailbox[] = [
+const FOLDERS: JmapMail.Mailbox[] = [
   { id: 'mb-inbox', name: 'Inbox', role: 'inbox' },
   { id: 'mb-sent', name: 'Sent', role: 'sent' },
   { id: 'mb-junk', name: 'Spam', role: 'junk' },
@@ -21,7 +21,7 @@ const NOW = new Date('2026-06-15T00:00:00.000Z');
 const ctx = { now: NOW, resolveMailbox: (nameOrRole: string) => resolveMailboxByNameOrRole(FOLDERS, nameOrRole) };
 
 // Returns the parsed filter, or `null` when the query yields no filter.
-const parse = (query: string): Jmap.Filter | null => Option.getOrNull(parseMailQuery(query, ctx));
+const parse = (query: string): Filter | null => Option.getOrNull(parseMailQuery(query, ctx));
 
 describe('parseMailQuery', () => {
   test('empty / whitespace yields no filter', ({ expect }) => {

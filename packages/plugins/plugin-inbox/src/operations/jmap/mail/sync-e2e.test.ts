@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 
-import { Jmap } from '../../../apis';
+import { JmapMail, getSession } from '../../../apis';
 import { InboxResolver, JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
 
@@ -33,25 +33,25 @@ describe.runIf(TOKEN)('JMAP live', { timeout: 30_000 }, () => {
   it.effect(
     'discovers the session, queries the inbox, and maps messages',
     Effect.fnUntraced(function* ({ expect }) {
-      const session = yield* Jmap.getSession;
+      const session = yield* getSession;
       const accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
       if (!accountId) {
         throw new Error('JMAP session has no mail account');
       }
-      const target: Jmap.Target = { apiUrl: session.apiUrl, accountId };
+      const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
 
-      const { list: folders } = yield* Jmap.mailboxGet(target);
+      const { list: folders } = yield* JmapMail.mailboxGet(target);
       const inbox = folders.find((folder) => folder.role === 'inbox');
       if (!inbox) {
         throw new Error('JMAP account has no inbox');
       }
 
-      const { ids } = yield* Jmap.emailQuery(target, {
+      const { ids } = yield* JmapMail.emailQuery(target, {
         filter: { inMailbox: inbox.id },
         sort: [{ property: 'receivedAt', isAscending: false }],
         limit: 5,
       });
-      const { list: emails } = yield* Jmap.emailGet(target, ids);
+      const { list: emails } = yield* JmapMail.emailGet(target, ids);
       const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullable);
 
       console.log(`JMAP live: ${folders.length} folders, ${ids.length} inbox ids, ${mapped.length} mapped messages`);

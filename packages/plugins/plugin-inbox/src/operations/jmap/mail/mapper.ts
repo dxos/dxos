@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Message, Person } from '@dxos/types';
 
-import { Jmap } from '../../../apis';
+import { JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 
 /**
@@ -25,8 +25,8 @@ export type MappedEmail = { message: Message.Message; mailboxIds: readonly strin
  * (unlike Gmail) there is no header parsing or base64 decoding. Returns `null` when the email has no
  * sender or no text body.
  */
-export const mapEmail: (email: Jmap.Email) => Effect.Effect<MappedEmail | null, never, Resolver> = Effect.fnUntraced(
-  function* (email) {
+export const mapEmail: (email: JmapMail.Email) => Effect.Effect<MappedEmail | null, never, Resolver> =
+  Effect.fnUntraced(function* (email) {
     const fromAddress = email.from?.[0];
     if (!fromAddress) {
       log('jmap mapEmail: dropping email with no sender', { id: email.id });
@@ -84,15 +84,14 @@ export const mapEmail: (email: Jmap.Email) => Effect.Effect<MappedEmail | null, 
     });
 
     return { message: echoMessage, mailboxIds: email.mailboxIds ? Object.keys(email.mailboxIds) : [] };
-  },
-);
+  });
 
 /** Formats a JMAP address as `"Name <email>"`, or just the address when unnamed. */
-const formatAddress = (address: Jmap.EmailAddress): string =>
+const formatAddress = (address: JmapMail.EmailAddress): string =>
   address.name ? `${address.name} <${address.email}>` : address.email;
 
 /** Joins an address list into a header-style string, or `undefined` when empty. */
-const formatAddresses = (addresses: readonly Jmap.EmailAddress[] | null | undefined): string | undefined =>
+const formatAddresses = (addresses: readonly JmapMail.EmailAddress[] | null | undefined): string | undefined =>
   addresses && addresses.length > 0 ? addresses.map(formatAddress).join(', ') : undefined;
 
 /**
@@ -100,7 +99,7 @@ const formatAddresses = (addresses: readonly Jmap.EmailAddress[] | null | undefi
  * fetched `bodyValues` entry (e.g. an HTML-only message whose text alternative isn't referenced from
  * `textBody`). `Email/get` is requested with `fetchTextBodyValues`, so values are already decoded.
  */
-const getBodyText = (email: Jmap.Email): string | undefined => {
+const getBodyText = (email: JmapMail.Email): string | undefined => {
   for (const part of email.textBody ?? []) {
     const value = part.partId ? email.bodyValues?.[part.partId]?.value : undefined;
     if (value && value.trim().length > 0) {

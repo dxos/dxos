@@ -5,11 +5,11 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Jmap } from '../apis';
+import { type Session } from '../apis';
 import { JMAP_DEFAULT_HOST } from '../constants';
 import { buildJmapCredential, jmapCredentialForm } from './jmap-credential-form';
 
-const session = (username?: string): Jmap.Session => ({
+const session = (username?: string): Session => ({
   apiUrl: 'https://api.fastmail.com/jmap/api/',
   primaryAccounts: { 'urn:ietf:params:jmap:mail': 'u1' },
   username,

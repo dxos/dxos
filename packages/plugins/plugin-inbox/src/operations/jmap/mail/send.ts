@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
-import { Jmap } from '../../../apis';
+import { JmapMail, getSession } from '../../../apis';
 import { GmailSendMessageInvalidError, JmapApiError, JmapSendIdentityNotFoundError } from '../../../errors';
 import { JmapCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
@@ -33,19 +33,19 @@ export default InboxOperation.JmapSend.pipe(
         return yield* Effect.fail(new GmailSendMessageInvalidError());
       }
 
-      const session = yield* Jmap.getSession;
+      const session = yield* getSession;
       const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
       if (!accountId) {
         return yield* Effect.fail(new JmapApiError(undefined, 'JMAP session has no mail account.'));
       }
-      const target: Jmap.Target = { apiUrl: session.apiUrl, accountId };
+      const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
 
       const credentials = yield* JmapCredentials;
       const account = credentials.account ?? session.username;
 
       // The submission requires an identity whose email the server permits as `from`; pick the one
       // matching the connection account (fall back to the first if the account is unknown).
-      const { list: identities } = yield* Jmap.identityGet(target);
+      const { list: identities } = yield* JmapMail.identityGet(target);
       const identity = account
         ? identities.find((candidate) => candidate.email.toLowerCase() === account.toLowerCase())
         : identities[0];
@@ -53,7 +53,7 @@ export default InboxOperation.JmapSend.pipe(
         return yield* Effect.fail(new JmapSendIdentityNotFoundError(account));
       }
 
-      const { list: folders } = yield* Jmap.mailboxGet(target);
+      const { list: folders } = yield* JmapMail.mailboxGet(target);
       const drafts = folders.find((folder) => folder.role === 'drafts');
       const sent = folders.find((folder) => folder.role === 'sent');
       if (!drafts || !sent) {
@@ -62,7 +62,7 @@ export default InboxOperation.JmapSend.pipe(
 
       const fromAddress = identity.name ? { email: identity.email, name: identity.name } : { email: identity.email };
 
-      const result = yield* Jmap.submitEmail(target, {
+      const result = yield* JmapMail.submitEmail(target, {
         identityId: identity.id,
         draftsMailboxId: drafts.id,
         sentMailboxId: sent.id,
