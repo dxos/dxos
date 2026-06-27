@@ -35,9 +35,9 @@ export type ViewEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
+type StoryArgs = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const { space } = useClientStory();
   const [type, setType] = useState<Type.AnyEntity>();
   const [view, setView] = useState<View.View>();

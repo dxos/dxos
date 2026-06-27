@@ -5,6 +5,10 @@
 import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
 
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
+export const RecordingSession = Capability.lazy('RecordingSession', () => import('./recording-session'));
+export const TranscriptionDriver = Capability.lazy('TranscriptionDriver', () => import('./transcription-driver'));
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const TextContent = Capability.lazy('TextContent', () => import('./text-content'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

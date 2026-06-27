@@ -15,11 +15,11 @@ import { Chess } from '#types';
 
 import { ChessArticle } from './ChessArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   pgn?: string;
 };
 
-const DefaultStory = ({ pgn }: DefaultStoryProps) => {
+const DefaultStory = ({ pgn }: StoryArgs) => {
   const { game, state } = useMemo(() => {
     const state = Chess.make(pgn ? { pgn } : undefined);
     const game = makeGame({ name: 'Story game', variant: state as Obj.Unknown });

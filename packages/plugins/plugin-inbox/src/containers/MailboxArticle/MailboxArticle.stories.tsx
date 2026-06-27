@@ -48,11 +48,11 @@ const MockDeckOperationsPlugin = Plugin.define(
   Plugin.make,
 );
 
-type DefaultStoryProps = {
+type StoryArgs = {
   count?: number;
 };
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0].id);
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
@@ -68,7 +68,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),

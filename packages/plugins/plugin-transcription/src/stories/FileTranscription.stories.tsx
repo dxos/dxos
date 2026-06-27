@@ -27,7 +27,7 @@ const DEFAULT_RECORDER_CONFIG = {
   interval: 200,
 };
 
-type DefaultStoryProps = {
+type StoryArgs = {
   detectSpeaking?: boolean;
   normalizeSentences?: boolean;
   audioUrl: string;
@@ -43,7 +43,7 @@ const DefaultStory = ({
   transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
   recorderConfig = DEFAULT_RECORDER_CONFIG,
   audioConstraints,
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [running, setRunning] = useState(false);
 
   // Optional uploaded file overrides the default URL; revoke the previous URL on change/unmount.
@@ -118,7 +118,7 @@ const meta = {
   title: 'plugins/plugin-transcription/stories/FileTranscription',
   render: DefaultStory,
   decorators: createStoryDecorators(),
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

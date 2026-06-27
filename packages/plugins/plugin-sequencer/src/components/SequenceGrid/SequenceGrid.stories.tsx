@@ -36,11 +36,11 @@ const sampleNotes = (): Note.Note[] => {
   return notes;
 };
 
-type StoryProps = {
+type StoryArgs = {
   playback: boolean;
 };
 
-const DefaultStory = ({ playback }: StoryProps) => {
+const DefaultStory = ({ playback }: StoryArgs) => {
   const [sequence, setSequence] = useState<Sequence.Sequence>(() => ({
     id: 'seq-1',
     trackId: sampleTrack.id,
