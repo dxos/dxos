@@ -86,23 +86,33 @@ const Root = forwardRef<ChessboardController, RootProps>(({ state, children }, f
   );
 
   // Keyboard navigation — fires regardless of which descendant (Board or Info) has focus.
+  // Gated to elements marked data-chessboard-arrow-navigation to avoid intercepting toolbar controls.
   const handleKeyDown = useCallback(
     (ev: React.KeyboardEvent) => {
+      const target = ev.target instanceof HTMLElement ? ev.target : undefined;
+      if (!target?.closest('[data-chessboard-arrow-navigation]')) {
+        return;
+      }
+
       const moveIndex = registry.get(model.moveIndex);
       switch (ev.key) {
         case 'ArrowUp':
+          ev.preventDefault();
           model.setMoveIndex(0);
           break;
         case 'ArrowDown':
+          ev.preventDefault();
           model.setMoveIndex(model.game.history().length);
           break;
         case 'ArrowLeft':
           if (moveIndex > 0) {
+            ev.preventDefault();
             model.setMoveIndex(moveIndex - 1);
           }
           break;
         case 'ArrowRight':
           if (moveIndex < model.game.history().length) {
+            ev.preventDefault();
             model.setMoveIndex(moveIndex + 1);
           }
           break;
@@ -145,7 +155,11 @@ const BOARD_NAME = 'Chessboard.Board';
 
 type BoardProps = NaturalChessboardProps;
 
-const Board = (props: BoardProps) => <NaturalChessboard {...props} />;
+const Board = (props: BoardProps) => (
+  <div className='contents' data-chessboard-arrow-navigation>
+    <NaturalChessboard {...props} />
+  </div>
+);
 
 Board.displayName = BOARD_NAME;
 
