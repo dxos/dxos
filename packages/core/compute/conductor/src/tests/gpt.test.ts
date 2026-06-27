@@ -51,7 +51,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           .pipe(Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
-        expect(text.length).toBeGreaterThan(0);
+        // Content-sensitive: the GPT output addresses the prompt. The memoized conversation is keyed on the
+        // full prompt, so a broken prompt->GPT wiring would also fail to match a fixture.
+        expect(text.toLowerCase()).toContain('life');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -72,7 +74,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           .pipe(Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
-        expect(text.length).toBeGreaterThan(0);
+        // Content-sensitive: the GPT output addresses the prompt. The template feeds `systemPrompt`, which is
+        // part of the memoized conversation key — if that edge were dropped the prompt would no longer match a
+        // recorded fixture and this test would fail, so a passing match exercises the template->GPT wiring.
+        expect(text.toLowerCase()).toContain('life');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
