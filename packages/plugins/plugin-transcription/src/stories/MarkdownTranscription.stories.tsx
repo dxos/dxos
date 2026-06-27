@@ -27,6 +27,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
   PendingTextStreamer,
+  type PendingTextStreamerOptions,
   appendPendingText,
   cancelPendingText,
   editorPendingTextSink,
@@ -99,7 +100,7 @@ type StoryArgs = {
    */
   seed?: { final?: string; interim?: string };
   /** Drive a scripted transcript through a PendingTextStreamer into the editor (no microphone). */
-  stream?: { mode?: 'batch' | 'word'; initialBufferMs?: number; wordIntervalMs?: number };
+  stream?: Pick<PendingTextStreamerOptions, 'mode' | 'initialBufferMs' | 'wordIntervalMs'>;
 };
 
 // Renders the real plugin-markdown editor surface. TranscriptionPlugin contributes both the
@@ -285,6 +286,9 @@ export const RecordingIndicator: Story = {
  */
 export const Streaming: Story = {
   args: {
-    stream: { mode: 'word', wordIntervalMs: 80 },
+    stream: {
+      mode: 'word',
+      wordIntervalMs: 80,
+    },
   },
 };

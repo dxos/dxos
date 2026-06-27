@@ -34,9 +34,9 @@ const SKETCH_CONTENT = new SketchBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .build();
 
-type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
+type StoryArgs = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const handleLinkQuery = useLinkQuery(space?.db, doc);

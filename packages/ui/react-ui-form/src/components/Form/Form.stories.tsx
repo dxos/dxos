@@ -21,14 +21,14 @@ import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
 
-type DefaultStoryProps<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
+type StoryArgs<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
   json = true,
   ...props
-}: DefaultStoryProps<T>) => {
+}: StoryArgs<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
@@ -95,7 +95,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps<any>>;
+} satisfies Meta<StoryArgs<any>>;
 
 export default meta;
 
@@ -110,7 +110,7 @@ const values: Partial<Person> = {
   reminderAt: '09:00:00',
 };
 
-type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<StoryArgs<T>>;
 
 /**
  * Build a data-entry surface by handing an Effect schema to `Form.Root` — the form derives its fields,
@@ -199,7 +199,7 @@ const InlineMarkdownTextSchema = Schema.mutable(
   }),
 );
 
-const InlineMarkdownTextStory = (args: DefaultStoryProps<any>) => {
+const InlineMarkdownTextStory = (args: StoryArgs<any>) => {
   const spaces = useSpaces();
   const space = spaces[0];
   const [text] = useQuery(space?.db, Filter.type(Text.Text));

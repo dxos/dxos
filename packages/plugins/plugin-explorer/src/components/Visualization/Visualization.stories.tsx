@@ -77,9 +77,9 @@ const EDGES: SpaceGraphEdge[] = [
   ),
 ];
 
-type StoryProps = { variant: VisualizationVariantId; focus?: string };
+type StoryArgs = { variant: VisualizationVariantId; focus?: string };
 
-const DefaultStory = ({ variant, focus }: StoryProps) => {
+const DefaultStory = ({ variant, focus }: StoryArgs) => {
   const model = useMemo(() => new SpaceGraphModel(Registry.make(), { nodes: NODES, edges: EDGES }), []);
   return (
     <Visualization.Root classNames='bg-base-surface' model={model} variant={variant} focus={focus}>
@@ -88,7 +88,7 @@ const DefaultStory = ({ variant, focus }: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-explorer/components/Visualization',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

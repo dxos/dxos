@@ -25,12 +25,12 @@ import { translations } from '#translations';
 
 import { ScriptArticle } from './ScriptArticle';
 
-type DefaultStoryProps = {};
+type StoryArgs = {};
 
 /**
  * Loads the script source ref so `script.source.target` is available for the editor.
  */
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [script] = useQuery(space?.db, Filter.type(Script.Script));
   const [sourceReady, setSourceReady] = useState(false);
@@ -98,7 +98,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

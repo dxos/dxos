@@ -56,9 +56,9 @@ const useTestGenerate = () => {
   return generate;
 };
 
-type DefaultStoryProps = Pick<EditorViewProps, 'value'>;
+type StoryArgs = Pick<EditorViewProps, 'value'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const generate = useTestGenerate();
   const extensions = useMemo(

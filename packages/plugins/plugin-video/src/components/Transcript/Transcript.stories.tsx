@@ -23,9 +23,9 @@ const SAMPLE_TRANSCRIPT = [
   '[2:30](https://youtu.be/dQw4w9WgXcQ?t=150) >> Let me show you the solar singularity: in Africa, solar power is just absolutely mooning.',
 ].join('\n');
 
-type DefaultStoryProps = { content: string };
+type StoryArgs = { content: string };
 
-const DefaultStory = ({ content }: DefaultStoryProps) => {
+const DefaultStory = ({ content }: StoryArgs) => {
   const client = useClient();
   const [text] = useState(() => client.spaces.get()[0].db.add(Text.make({ content })));
   return (
