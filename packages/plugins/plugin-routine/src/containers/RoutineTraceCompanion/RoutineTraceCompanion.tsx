@@ -45,7 +45,16 @@ const formatDuration = (ms: number): string => {
   return `${mins}m ${secs}s`;
 };
 
-const formatTimestamp = (ts: number): string => new Date(ts).toLocaleString();
+const formatTimestamp = (ts: number): string =>
+  new Date(ts).toLocaleString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
 
 const toJsonData = (run: RoutineRun) => ({
   pid: run.pid,
@@ -91,7 +100,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                             icon={
                               <Icon icon={STATUS_ICONS[run.status]} size={5} classNames={STATUS_CLASSES[run.status]} />
                             }
-                            title={formatTimestamp(run.startedAt)}
+                            title={<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
                             description={`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
                           />
                         </Accordion.ItemHeader>
