@@ -194,16 +194,16 @@ const DefaultStory = ({ stages }: StoryArgs) => {
   }
 
   return (
-    <div role='none' className='grid grid-cols-2 gap-2 h-full overflow-hidden' {...attentionAttrs}>
-      <div role='none' className='flex-1 min-w-0'>
+    <div role='none' className='dx-container grid grid-cols-2 gap-2' {...attentionAttrs}>
+      <div role='none' className='dx-expander'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
-      <div role='none' className='w-80 shrink-0 h-full overflow-y-auto border-l border-separator p-2 text-sm'>
+      <div role='none' className='dx-expander shrink-0 overflow-y-auto p-2 text-sm'>
         <h3 className='mb-1 font-medium'>Stages</h3>
         <div className='mb-3 text-description'>{stages.join(' → ') || '(none)'}</div>
 
         <h3 className='mb-1 font-medium'>Telemetry</h3>
-        <div className='grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1'>
+        <div className='w-fit grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1'>
           {telemetry.map((event, index) => (
             <Fragment key={index}>
               <span>{event.stageId}</span>

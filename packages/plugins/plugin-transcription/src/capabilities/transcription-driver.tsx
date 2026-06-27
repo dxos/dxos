@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { Fragment, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
@@ -36,13 +36,24 @@ const TranscriptionDriver = () => {
 
   const recording = session?.recording ?? false;
   const sessionId = session?.id;
-  const track = useAudioTrack(recording);
+
+  // Lifecycle phase. Driven from `recording` via an effect (not derived synchronously) so that when
+  // the mic switches off the phase is still 'recording' for that commit — nothing tears down until
+  // the drain finishes and sets 'idle'. This lets the final transcription + enrichment complete.
+  const [phase, setPhase] = useState<'idle' | 'recording' | 'draining'>('idle');
+  const active = phase !== 'idle';
+  const track = useAudioTrack(phase === 'recording');
+
+  useEffect(() => {
+    setPhase((current) => (recording ? 'recording' : current === 'recording' ? 'draining' : current));
+  }, [recording]);
 
   // Streams transcribed text into the editor's pending-text block (buffering + word-by-word reveal).
+  // Kept alive across the whole session (incl. drain); disposed only when the phase returns to idle.
   const streamerRef = useRef<PendingTextStreamer | null>(null);
 
   useEffect(() => {
-    if (!recording || !editorViews || !sessionId) {
+    if (!active || !editorViews || !sessionId) {
       return;
     }
     const entry = editorViews.get(sessionId);
@@ -64,10 +75,9 @@ const TranscriptionDriver = () => {
     streamerRef.current = streamer;
 
     return () => {
-      streamer.flush();
       streamer.dispose();
       streamerRef.current = null;
-      // On stop, drop the placeholder if nothing was transcribed; otherwise leave the block for review.
+      // On teardown, drop the placeholder if nothing was transcribed; otherwise leave it for review.
       const current = editorViews.get(sessionId);
       const pending = current?.view.state.field(pendingTextState, false);
       if (current && pending && pending.final.length === 0) {
@@ -75,7 +85,7 @@ const TranscriptionDriver = () => {
       }
     };
   }, [
-    recording,
+    active,
     sessionId,
     editorViews,
     lookup,
@@ -111,16 +121,19 @@ const TranscriptionDriver = () => {
     transcriberConfig,
     recorderConfig: { interval: RECORDER_INTERVAL_MS },
   });
+  const transcriberRef = useRef(transcriber);
+  transcriberRef.current = transcriber;
+
   useEffect(() => {
     if (!transcriber) {
       return;
     }
     let cancelled = false;
-    // Clear `recording` if `open()` rejects (e.g. mic permission denied) so the toolbar does not
+    // Clear the session if `open()` rejects (e.g. mic permission denied) so the toolbar does not
     // report "stop" forever while nothing is captured.
     void transcriber.open().then(
       () => {
-        if (!cancelled && recording) {
+        if (!cancelled && phase === 'recording') {
           transcriber.startChunksRecording();
         }
       },
@@ -133,9 +146,32 @@ const TranscriptionDriver = () => {
     );
     return () => {
       cancelled = true;
-      transcriber.stopChunksRecording();
     };
-  }, [transcriber, recording, setSession]);
+  }, [transcriber, phase, setSession]);
+
+  // Drain on stop: flush buffered audio (final transcription) and the streamer's post-process
+  // (entity linking) before tearing down — so the tail of speech and its enrichment are not lost.
+  useEffect(() => {
+    if (phase !== 'draining') {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        await transcriberRef.current?.flush();
+        await streamerRef.current?.flush();
+      } catch (err) {
+        log.catch(err);
+      } finally {
+        if (!cancelled) {
+          setPhase((current) => (current === 'draining' ? 'idle' : current));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [phase]);
 
   return null;
 };

@@ -170,8 +170,11 @@ export class PendingTextStreamer {
     }
   }
 
-  /** Reveal everything immediately and run any pending post-process (e.g. on stop). */
-  flush(): void {
+  /**
+   * Reveal everything immediately and run any pending post-process (e.g. on stop). Resolves once the
+   * post-process pass (entity linking, …) has settled, so callers can drain before disposing.
+   */
+  async flush(): Promise<void> {
     this.#clear(this.#bufferHandle);
     this.#bufferHandle = null;
     this.#buffering = false;
@@ -181,10 +184,10 @@ export class PendingTextStreamer {
       this.#appendFinal(this.#queue.shift()!);
     }
     this.#sink.interim('');
-    if (this.#options.postProcess && this.#postHandle != null) {
-      this.#clear(this.#postHandle);
-      this.#postHandle = null;
-      void this.#runPostProcess();
+    this.#clear(this.#postHandle);
+    this.#postHandle = null;
+    if (this.#options.postProcess && this.#final.length > 0) {
+      await this.#runPostProcess();
     }
   }
 

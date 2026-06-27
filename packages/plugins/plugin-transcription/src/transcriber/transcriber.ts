@@ -149,6 +149,20 @@ export class Transcriber extends Resource {
     log.info('stopped');
   }
 
+  /**
+   * Stop recording and transcribe any buffered audio, resolving once the final segments have been
+   * delivered via `onSegments`. Used to drain the pipeline when recording stops so the tail of speech
+   * (and its downstream enrichment) is not lost.
+   */
+  async flush(): Promise<void> {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
+      return;
+    }
+
+    this._recording = false;
+    await this._transcribe();
+  }
+
   private _saveAudioChunk(chunk: AudioChunk): void {
     log('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
