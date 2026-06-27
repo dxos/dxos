@@ -326,13 +326,8 @@ export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Re
   const database = getEchoDatabase(target[symbolInternals]);
   if (database) {
     const refImpl = new RefImpl(dxn);
-    setRefResolver(
-      refImpl,
-      database.graph.createRefResolver({
-        context: { space: database.spaceId },
-        middleware: (obj) => handleStoredSchema(target, obj),
-      }),
-    );
+    // The resolver materializes persisted schema objects into their registered `Type.Type` entity.
+    setRefResolver(refImpl, database.graph.createRefResolver({ context: { space: database.spaceId } }));
     return refImpl;
   } else {
     invariant(target[symbolInternals].linkCache);
