@@ -194,28 +194,28 @@ const DefaultStory = ({ stages }: StoryArgs) => {
   }
 
   return (
-    <div role='none' className='grid grid-cols-2 gap-2 w-full overflow-hidden' {...attentionAttrs}>
-      <div role='none' className='flex-1 min-is-0'>
+    <div role='none' className='grid grid-cols-2 gap-2 h-full overflow-hidden' {...attentionAttrs}>
+      <div role='none' className='flex-1 min-w-0'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
-      <div role='none' className='is-80 bs-full overflow-y-auto border-is border-separator p-2 text-sm'>
-        <h3 className='mlb-1 font-medium'>Stages</h3>
-        <div className='text-description'>{stages.join(' → ') || '(none)'}</div>
-        <h3 className='mlb-1 font-medium'>Telemetry</h3>
-        <table className='is-full border-separate border-spacing-x-4'>
-          <tbody>
-            {telemetry.map((event, index) => (
-              <tr key={index}>
-                <td>{event.stageId}</td>
-                <td>{event.outcome}</td>
-                <td className='text-end tabular-nums'>{event.durationMs}ms</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div role='none' className='w-80 shrink-0 h-full overflow-y-auto border-l border-separator p-2 text-sm'>
+        <h3 className='mb-1 font-medium'>Stages</h3>
+        <div className='mb-3 text-description'>{stages.join(' → ') || '(none)'}</div>
+
+        <h3 className='mb-1 font-medium'>Telemetry</h3>
+        <div className='grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1'>
+          {telemetry.map((event, index) => (
+            <Fragment key={index}>
+              <span>{event.stageId}</span>
+              <span className='text-description'>{event.outcome}</span>
+              <span className='text-right tabular-nums text-description'>{event.durationMs}ms</span>
+            </Fragment>
+          ))}
+        </div>
+
         {summary && (
           <Fragment>
-            <h3 className='mlb-1 font-medium'>Summary</h3>
+            <h3 className='mt-3 mb-1 font-medium'>Summary</h3>
             <p className='text-description'>{summary}</p>
           </Fragment>
         )}
