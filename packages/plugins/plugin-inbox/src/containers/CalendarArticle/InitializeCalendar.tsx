@@ -11,7 +11,7 @@ import { meta } from '#meta';
 import { type Calendar } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
-import { GOOGLE_CALENDAR_PROVIDER_ID } from '../../constants';
+import { GOOGLE_CALENDAR_CONNECTOR_ID } from '../../constants';
 
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;
@@ -39,7 +39,7 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
   return (
     <InitializeAction
       target={calendar}
-      connectorIds={[GOOGLE_CALENDAR_PROVIDER_ID]}
+      connectorIds={[GOOGLE_CALENDAR_CONNECTOR_ID]}
       syncLabel={t('sync-calendar.label')}
       notify={{
         success: ['sync-calendar-success.title', { ns: meta.profile.key }],

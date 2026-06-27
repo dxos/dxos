@@ -11,7 +11,7 @@ import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';
-import { GMAIL_PROVIDER_ID, JMAP_MAIL_PROVIDER_ID } from '../../constants';
+import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../../constants';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
@@ -41,7 +41,7 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
   return (
     <InitializeAction
       target={mailbox}
-      connectorIds={[GMAIL_PROVIDER_ID, JMAP_MAIL_PROVIDER_ID]}
+      connectorIds={[GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID]}
       syncLabel={t('sync-mailbox.label')}
       notify={{
         success: ['sync-mailbox-success.title', { ns: meta.profile.key }],

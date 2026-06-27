@@ -13,16 +13,16 @@ export const GOOGLE_INTEGRATION_SOURCE = 'google.com';
 export const GMAIL_SOURCE = 'gmail.com';
 
 /** `Connector.id` for Gmail OAuth / sync; stored as `Connection.connectorId`. */
-export const GMAIL_PROVIDER_ID = 'gmail';
+export const GMAIL_CONNECTOR_ID = 'gmail';
 
 /** `Connector.id` for Google Calendar OAuth / sync; stored as `Connection.connectorId`. */
-export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
+export const GOOGLE_CALENDAR_CONNECTOR_ID = 'google-calendar';
 
 /** `Connector.id` for Google Contacts OAuth / sync; stored as `Connection.connectorId`. */
-export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
+export const GOOGLE_CONTACTS_CONNECTOR_ID = 'google-contacts';
 
 /** `Connector.id` for the JMAP mail connector (RFC 8620/8621); stored as `Connection.connectorId`. */
-export const JMAP_MAIL_PROVIDER_ID = 'jmap-mail';
+export const JMAP_MAIL_CONNECTOR_ID = 'jmap-mail';
 
 /**
  * Default JMAP server host pre-filled in the credential form. Fastmail is the canonical JMAP
