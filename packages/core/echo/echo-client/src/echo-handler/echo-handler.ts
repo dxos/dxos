@@ -180,11 +180,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
-    // The ECHO system surface (id, [Type], [Meta], [Parent], toJSON, ...) is
-    // defined as accessors/methods on the prototype chain, which is null-terminated
-    // so only that surface is reported here — root objects expose the full set,
-    // nested/meta records the empty base. Everything else is virtual user data
-    // backed by the document.
+    // The ECHO system surface (id, [Type], [Meta], [Parent], toJSON, ...) is defined as
+    // accessors/methods on the prototype chain (instanceState → EchoRoot/EchoRecord.prototype →
+    // Object.prototype); root objects expose the full set, nested/meta records the empty base.
+    // `Reflect.has` reports that surface (plus Object.prototype members, which resolve normally,
+    // as on a plain object); everything else is absent here and is virtual user data backed by
+    // the document. See the layering diagram in echo-prototypes.ts.
     if (Reflect.has(target, prop)) {
       return Reflect.get(target, prop, receiver);
     }

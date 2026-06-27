@@ -2,6 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
+//
+// Object layering for a database-backed ECHO object (the `EchoReactiveHandler`).
+//
+// What the consumer holds is a Proxy; everything below is its target's prototype chain:
+//
+//   proxy ──Proxy(target, ProxyHandlerSlot → EchoReactiveHandler)
+//     │         the handler's get/set/has/... traps run here
+//     ▼
+//   target            a CLEAN, empty object (`{}`). User data is NOT stored here — it is
+//     │ [[Prototype]] virtual, decoded on demand from the Automerge document via `ObjectCore`.
+//     ▼
+//   instanceState     per-object, created by `createInstanceState`. Hidden (non-enumerable) data
+//     │ [[Prototype]] properties: [symbolInternals]=ObjectCore, [symbolNamespace], [symbolPath],
+//     │               [EventId]. Swapping the handler that backs an object = re-pointing the
+//     │               target at a fresh instanceState (`adoptInstanceState`) — identity preserved.
+//     ▼
+//   EchoRoot.prototype | EchoRecord.prototype   shared behaviour (one per class, not per object).
+//     │ [[Prototype]] Carries the ECHO system surface as accessors/methods: `id`, [SchemaId],
+//     │               [TypeId], [MetaId], [ParentId], [ChangeId], toJSON, ... A root object's
+//     │               prototype is EchoRoot (the larger surface, incl. EchoRecord's via `extends`);
+//     │               nested/meta records get the EchoRecord base. This replaces the old
+//     │               `isRootDataObject(target)` branching in the traps.
+//     ▼
+//   Object.prototype ──▶ null     ordinary class-prototype termination. The get/has traps use
+//                     `Reflect.has(target, prop)` to split "system property" (present on the chain
+//                     → delegate to the accessor) from "virtual user data" (absent → read from the
+//                     document). Object.prototype members (`toString`, `hasOwnProperty`, ...) are
+//                     therefore treated as system and resolve to their normal implementations,
+//                     which is exactly how a plain object behaves — and a `getPrototypeOf` trap
+//                     reports `Object.prototype` so consumers do observe a plain object. (Practical
+//                     consequence: a user-data field literally named `toString` would be shadowed,
+//                     same as on a plain `{}`.)
+//
+// `this` inside the accessors/methods below:
+//   - Reached THROUGH the proxy (the common case): the get trap calls
+//     `Reflect.get(target, prop, receiver)`, so `this` === the PROXY (the receiver).
+//   - Reached on the RAW target directly (e.g. internal code holding the unwrapped target):
+//     `this` === the raw target.
+//   Both resolve `this[symbolInternals]` (and the other hidden props) the same way, through the
+//   shared instanceState on the prototype chain, so accessors that only read `[symbolInternals]`
+//   are agnostic. Accessors that need the underlying object *identity* — e.g. `[ChangeId]`
+//   (which keys the change context by the raw target) or `set [ParentId]` — normalize with
+//   `rawTarget(this)` and keep `this` as the receiver for any re-entrant reads.
+//
+
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
@@ -437,8 +482,13 @@ const isRootDataObject = (target: ProxyTarget): boolean =>
 
 /**
  * Behaviour prototype shared by every ECHO data record (root, nested and meta).
- * The fields are `declare`d so that `this` in the accessors is typed as the proxy
- * target (with `[symbolInternals]` etc.) without materializing them on instances.
+ *
+ * The fields below are `declare`d (type-only, not materialized): they describe the hidden
+ * properties that live on each object's `instanceState` (one prototype hop down), so that `this`
+ * inside the accessors is typed with `[symbolInternals]` etc. At runtime `this` is the PROXY when
+ * an accessor is reached through the get trap (`Reflect.get(target, prop, receiver)` → `this` ===
+ * receiver), or the raw target when read directly; either way `this[symbolInternals]` resolves to
+ * the same `ObjectCore` via the chain. See the layering diagram at the top of this file.
  */
 export class EchoRecord {
   declare readonly [symbolInternals]: ObjectCore;
@@ -497,10 +547,16 @@ export class EchoRoot extends EchoRecord {
   }
 
   set [ParentId](value: any) {
+    // `this` is the proxy when set through the trap; `setParent` writes the parent ref onto the
+    // raw target's core, so normalize to the raw target first.
     setParent(rawTarget(this), value);
   }
 
   get [ChangeId](): (callback: (mutableObj: any) => void) => void {
+    // `executeChange` keys the change context by the raw target (object identity) and emits on it,
+    // but re-applies mutations through the proxy `receiver`. So capture both: the raw target
+    // (`rawTarget(this)`) as the context key, and `this` (the proxy, when reached via the trap) as
+    // the receiver.
     const core = this[symbolInternals];
     const target = rawTarget(this);
     const receiver = this;

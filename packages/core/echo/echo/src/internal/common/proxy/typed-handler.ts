@@ -138,6 +138,41 @@ const copyHiddenProperties = (source: any, target: any): void => {
   }
 };
 
+//
+// Object layering for an in-memory typed reactive object (`TypedReactiveHandler`).
+//
+// Unlike the database-backed handler (echo-client/echo-prototypes.ts), here USER DATA lives as
+// real OWN properties on the target — there is no document behind it. Only the per-object metadata
+// is relocated onto a prototype, so swapping handlers doesn't disturb the data shape:
+//
+//   proxy ──Proxy(target, ProxyHandlerSlot → TypedReactiveHandler)
+//     │         get/set/has/... traps run here
+//     ▼
+//   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
+//     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
+//     ▼
+//   instanceState     `Object.create(TypedObjectPrototype)`. Holds the relocated symbol-keyed
+//     │ [[Prototype]] metadata as hidden props: [EventId] (root only), [ObjectDeletedId], [SchemaId],
+//     │               [TypeId], [TypeEntityId], cached [StaticTypeSchemaSlot], ... (Arrays are
+//     │               exempt — they keep their ReactiveArray chain and are never compacted.)
+//     ▼
+//   TypedObjectPrototype     shared behaviour. Carries [symbolReactivePrototype]=true (so the
+//     │ [[Prototype]] "plain object" gates still treat the record as data) plus the system
+//     │               accessors [objectData], [ChangeId], [StaticTypeSchemaSlot]; the get trap
+//     │               delegates to these via `isBehaviourAccessor` instead of switching.
+//     ▼
+//   Object.prototype ──▶ null     a `getPrototypeOf` trap reports `Object.prototype` so consumers
+//                     see a plain object; the real instanceState prototype stays hidden.
+//
+// Root vs nested: a root object owns an `[EventId]`; nested records share their root's reactivity
+// and have none. That presence is the "is this an initialized root" signal (it replaced an earlier
+// `[ChangeId] === true` marker).
+//
+// `this` in the accessors below: the get trap calls `Reflect.get(target, prop, receiver)`, so
+// `this` is the PROXY (receiver) on the common path, or the raw target when read directly.
+// `getRawTarget(this)` normalizes to the underlying target — needed here because user data and the
+// metadata chain both hang off the raw target, and `executeChange` keys the change context by it.
+//
 /**
  * Behaviour prototype for typed reactive records. A record's per-object metadata is moved onto an
  * intermediate instance-state object whose prototype is this, so that swapping the handler that
@@ -149,8 +184,8 @@ const TypedObjectPrototype: object = Object.create(Object.prototype);
 defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 
 // The ECHO system surface is exposed as accessors on the behaviour prototype rather than as
-// branches in the `get` trap. `this` is the proxy target (or the proxy receiver, when reached
-// through a trap); `getRawTarget` resolves either to the underlying target.
+// branches in the `get` trap. `this` is the proxy receiver (or the raw target when read directly);
+// `getRawTarget` resolves either to the underlying target.
 Object.defineProperties(TypedObjectPrototype, {
   // TODO(burdon): Remove?
   [objectData]: {
