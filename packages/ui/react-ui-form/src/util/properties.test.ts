@@ -11,6 +11,8 @@ import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
+import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../annotations';
+
 import { omitId } from './omit';
 import { getFormProperties, getRootFormProperties } from './properties';
 
@@ -176,13 +178,13 @@ describe('getRootFormProperties', () => {
     const StandardSite = Schema.Struct({
       ...StandardSiteBase.fields,
       handle: StandardSiteBase.fields.handle.pipe(
-        Annotation.OptionsLookupAnnotation.set(
-          Annotation.optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]), { combobox: true }),
+        OptionsLookupAnnotation.set(
+          optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]), { combobox: true }),
         ),
       ),
       publication: StandardSiteBase.fields.publication.pipe(
-        Annotation.OptionsLookupAnnotation.set(
-          Annotation.optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([])),
+        OptionsLookupAnnotation.set(
+          optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([])),
         ),
       ),
     });
@@ -197,7 +199,7 @@ describe('getRootFormProperties', () => {
       ...RssBase.fields,
       name: Schema.optional(
         Schema.String.pipe(
-          Annotation.AutofillAnnotation.set(Annotation.autofill<RssValues>()(['url'], () => Effect.succeed(undefined))),
+          AutofillAnnotation.set(autofill<RssValues>()(['url'], () => Effect.succeed(undefined))),
         ),
       ),
     });

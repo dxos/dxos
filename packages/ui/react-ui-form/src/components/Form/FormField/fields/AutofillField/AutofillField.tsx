@@ -4,22 +4,22 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
 import { type FormFieldRendererProps } from '#types';
 
+import { type Autofill } from '../../../../../annotations';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
 import { TextField } from '../TextField';
 
 export type AutofillFieldProps = FormFieldRendererProps<string> & {
   /** Derives this field's value from the autofill's declared dependency fields (e.g. a sibling URL). */
-  autofill: Annotation.Autofill;
+  autofill: Autofill;
 };
 
 /**
  * An editable text field that pre-fills its value (debounced) from the fields the autofill declares in
- * its `deps`, via an {@link Annotation.Autofill}. Re-runs only when one of those values changes. The
+ * its `deps`, via an {@link Autofill}. Re-runs only when one of those values changes. The
  * derived value is written only while the user has not typed their own (the field is empty or still
  * holds the last auto-filled value), so a manual edit is never clobbered.
  */

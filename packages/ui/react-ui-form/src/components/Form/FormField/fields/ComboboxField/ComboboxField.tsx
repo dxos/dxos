@@ -4,9 +4,10 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { Combobox } from '@dxos/react-ui-list';
+
+import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -15,13 +16,13 @@ import { FormRow } from '../../FormRow';
 
 export type ComboboxFieldProps = FormFieldRendererProps<string> & {
   /** Loads suggestions from the lookup's declared dependency fields (typically the field's own value). */
-  lookup: Annotation.OptionsLookup;
+  lookup: OptionsLookup;
 };
 
 /**
  * An editable combobox built on the shared {@link Combobox} primitive (trigger + popover search list,
  * the same family as `ObjectPicker`/`SearchList`). The trigger shows the current value; opening it reveals
- * a search input that loads suggestions (debounced) via an {@link Annotation.OptionsLookup} and filters
+ * a search input that loads suggestions (debounced) via an {@link OptionsLookup} and filters
  * them as you type. The literal typed text is offered as a fallback option at the bottom (deduped), so a
  * value not among the suggestions can still be selected. No options are shown until something is typed.
  */
@@ -40,7 +41,7 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
     return subset;
   }, [values, lookup.deps, ownKey, query]);
   const key = useMemo(() => JSON.stringify(lookupValues), [lookupValues]);
-  const { data } = useAsyncFieldEffect<readonly Annotation.OptionsLookupEntry[]>(() => lookup.load(lookupValues), key);
+  const { data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(lookupValues), key);
 
   const trimmed = query.trim();
   const normalized = trimmed.toLowerCase();

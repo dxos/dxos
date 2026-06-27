@@ -18,6 +18,7 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
+import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../../annotations';
 import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
@@ -260,8 +261,8 @@ const DynamicFieldsSchema = Schema.mutable(
     ...DynamicFieldsBase.fields,
     choice: Schema.optional(
       Schema.String.pipe(
-        Annotation.OptionsLookupAnnotation.set(
-          Annotation.optionsLookup<DynamicFieldsValues>()(['query'], ({ query }) =>
+        OptionsLookupAnnotation.set(
+          optionsLookup<DynamicFieldsValues>()(['query'], ({ query }) =>
             (query && query.length > 0
               ? Effect.succeed(
                   [1, 2, 3].map((index) => ({ value: `${query}-${index}`, label: `${query} choice ${index}` })),
@@ -276,8 +277,8 @@ const DynamicFieldsSchema = Schema.mutable(
     // Combobox: the field's own value is the query; the typed text is the auto-selected first option.
     tag: Schema.optional(
       Schema.String.pipe(
-        Annotation.OptionsLookupAnnotation.set(
-          Annotation.optionsLookup<DynamicFieldsValues>()(
+        OptionsLookupAnnotation.set(
+          optionsLookup<DynamicFieldsValues>()(
             // No deps: the pool is fetched once; the combobox filters it by the typed text client-side.
             [],
             () =>
@@ -292,8 +293,8 @@ const DynamicFieldsSchema = Schema.mutable(
       Schema.String.pipe(
         // Only derive a value once the URL is structurally valid, and only after the artificial wait —
         // an incomplete/invalid URL produces nothing.
-        Annotation.AutofillAnnotation.set(
-          Annotation.autofill<DynamicFieldsValues>()(['url'], ({ url }) =>
+        AutofillAnnotation.set(
+          autofill<DynamicFieldsValues>()(['url'], ({ url }) =>
             isValidUrl(url)
               ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('800 millis'))
               : Effect.succeed(undefined),
@@ -334,8 +335,8 @@ type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
 const StandardSiteCreate = Schema.Struct({
   ...StandardSiteCreateBase.fields,
   handle: StandardSiteCreateBase.fields.handle.pipe(
-    Annotation.OptionsLookupAnnotation.set(
-      Annotation.optionsLookup<StandardSiteValues>()(
+    OptionsLookupAnnotation.set(
+      optionsLookup<StandardSiteValues>()(
         ['handle'],
         () =>
           Effect.succeed(HANDLE_SUGGESTIONS.map((value) => ({ value, label: value }))).pipe(Effect.delay('300 millis')),
@@ -344,8 +345,8 @@ const StandardSiteCreate = Schema.Struct({
     ),
   ),
   publication: StandardSiteCreateBase.fields.publication.pipe(
-    Annotation.OptionsLookupAnnotation.set(
-      Annotation.optionsLookup<StandardSiteValues>()(['handle'], ({ handle }) =>
+    OptionsLookupAnnotation.set(
+      optionsLookup<StandardSiteValues>()(['handle'], ({ handle }) =>
         Effect.succeed(
           handle
             ? [
@@ -370,8 +371,8 @@ const RssCreate = Schema.Struct({
   ...RssCreateBase.fields,
   name: Schema.optional(
     Schema.String.pipe(
-      Annotation.AutofillAnnotation.set(
-        Annotation.autofill<RssValues>()(['url'], ({ url }) =>
+      AutofillAnnotation.set(
+        autofill<RssValues>()(['url'], ({ url }) =>
           isValidUrl(url)
             ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('500 millis'))
             : Effect.succeed(undefined),

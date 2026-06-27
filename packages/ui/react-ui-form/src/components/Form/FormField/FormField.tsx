@@ -10,6 +10,8 @@ import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
+
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
@@ -166,7 +168,7 @@ export const FormField = (props: FormFieldProps) => {
   // Dynamic, value-driven fields (options/value/validation loaded via a self-contained Effect annotation).
   //
 
-  const optionsLookup = Option.getOrUndefined(Annotation.OptionsLookupAnnotation.getFromAst(type));
+  const optionsLookup = Option.getOrUndefined(OptionsLookupAnnotation.getFromAst(type));
   if (optionsLookup) {
     return optionsLookup.combobox ? (
       <ComboboxField {...fieldProps} lookup={optionsLookup} />
@@ -175,7 +177,7 @@ export const FormField = (props: FormFieldProps) => {
     );
   }
 
-  const autofill = Option.getOrUndefined(Annotation.AutofillAnnotation.getFromAst(type));
+  const autofill = Option.getOrUndefined(AutofillAnnotation.getFromAst(type));
   if (autofill) {
     return <AutofillField {...fieldProps} autofill={autofill} />;
   }

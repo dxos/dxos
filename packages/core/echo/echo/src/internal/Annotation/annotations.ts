@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -464,67 +463,6 @@ export const FormLayoutAnnotation = createAnnotationHelper<FormLayoutMap>(FormLa
 
 /** Name used when no explicit form-layout variant is requested. */
 export const DEFAULT_LAYOUT_NAME = 'default';
-
-/** One selectable option produced by an {@link OptionsLookup}. */
-export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
-
-/**
- * Loads a select field's options dynamically from a declared subset of the form values, so a select can
- * depend on a sibling field (e.g. publications for a typed handle). `deps` are the field names the loader
- * reads; the form re-runs it only when one of those values changes. The returned Effect must be
- * self-contained (`R = never`): it provides its own dependencies (network layer, etc.) in the closure,
- * mirroring {@link FactoryAnnotation}. Construct via {@link optionsLookup} for typed `deps`/`values`.
- */
-export type OptionsLookup = {
-  readonly deps: readonly string[];
-  // `values` is type-erased here (like `FactoryFn`); `optionsLookup` is the typed construction surface.
-  readonly load: (values: any) => Effect.Effect<readonly OptionsLookupEntry[], unknown>;
-  /**
-   * Render as an editable combobox (type-to-search, with the typed text offered as the auto-selected first
-   * option) rather than a constrained select. The loader is then driven by the field's own value, so its
-   * `deps` typically include the field itself.
-   */
-  readonly combobox?: boolean;
-};
-
-export const OptionsLookupAnnotationId = Symbol.for('@dxos/schema/annotation/OptionsLookup');
-export const OptionsLookupAnnotation = createAnnotationHelper<OptionsLookup>(OptionsLookupAnnotationId);
-
-/**
- * Builds an {@link OptionsLookup} typed against a schema's value type `Values` (e.g.
- * `Schema.Schema.Type<typeof CreateFooBase>`): `deps` is checked against its field names, and `load`
- * receives only those fields, narrowed. Pass `{ combobox: true }` to render an editable combobox.
- */
-export const optionsLookup =
-  <Values>() =>
-  <const Deps extends readonly (keyof Values & string)[]>(
-    deps: Deps,
-    load: (values: Pick<Values, Deps[number]>) => Effect.Effect<readonly OptionsLookupEntry[], unknown>,
-    options?: { combobox?: boolean },
-  ): OptionsLookup => ({ deps, load, combobox: options?.combobox });
-
-/**
- * Derives a (text) field's value from a declared subset of the form values, so a field can be pre-filled
- * from a sibling (e.g. a feed name fetched from a typed URL). `deps` are the field names the derivation
- * reads; the form re-runs it only when one of those changes. The returned Effect must be self-contained
- * (`R = never`); `undefined` means "no value to fill". The form pre-fills only while the user has not
- * typed their own value, so a manual edit is never clobbered. Construct via {@link autofill}.
- */
-export type Autofill = {
-  readonly deps: readonly string[];
-  readonly derive: (values: any) => Effect.Effect<string | undefined, unknown>;
-};
-
-export const AutofillAnnotationId = Symbol.for('@dxos/schema/annotation/Autofill');
-export const AutofillAnnotation = createAnnotationHelper<Autofill>(AutofillAnnotationId);
-
-/** Builds an {@link Autofill} typed against a schema's value type `Values` (see {@link optionsLookup}). */
-export const autofill =
-  <Values>() =>
-  <const Deps extends readonly (keyof Values & string)[]>(
-    deps: Deps,
-    derive: (values: Pick<Values, Deps[number]>) => Effect.Effect<string | undefined, unknown>,
-  ): Autofill => ({ deps, derive });
 
 /**
  * Default field to be used on referenced schema to lookup the value.

@@ -5,6 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { EffectEx } from '@dxos/effect';
+
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -25,10 +27,7 @@ const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts
     let cancelled = false;
     const load = async () => {
       if (feedUrl) {
-        const [{ fetchRss }, { EffectEx }] = await Promise.all([
-          import('../../operations/sources/rss'),
-          import('@dxos/effect'),
-        ]);
+        const { fetchRss } = await import('../../operations/sources/rss');
         const result = await EffectEx.runPromise(fetchRss(feedUrl, { corsProxy: '/api/rss?url=' }));
         if (!cancelled) {
           setData(result);

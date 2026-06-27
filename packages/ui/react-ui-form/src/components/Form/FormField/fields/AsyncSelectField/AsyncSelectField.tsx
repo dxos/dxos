@@ -4,17 +4,17 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
 import { type FormFieldRendererProps } from '#types';
 
+import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
 import { SelectField } from '../SelectField';
 
 export type AsyncSelectFieldProps = FormFieldRendererProps<string> & {
   /** Loads the selectable options from the lookup's declared dependency fields. */
-  lookup: Annotation.OptionsLookup;
+  lookup: OptionsLookup;
 };
 
 /**
@@ -26,7 +26,7 @@ export const AsyncSelectField = ({ lookup, ...fieldProps }: AsyncSelectFieldProp
   const values = useFormValues<AnyProperties>(AsyncSelectField.displayName);
   const subset = useMemo(() => pickValues(values, lookup.deps), [values, lookup.deps]);
   const key = useMemo(() => JSON.stringify(subset), [subset]);
-  const { loading, data } = useAsyncFieldEffect<readonly Annotation.OptionsLookupEntry[]>(
+  const { loading, data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(
     () => lookup.load(subset),
     key,
   );
