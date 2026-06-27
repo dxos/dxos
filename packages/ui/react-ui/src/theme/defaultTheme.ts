@@ -17,7 +17,6 @@ import { focusTheme } from '../components/Focus/Focus.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
 import { inputTheme } from '../components/Input/Input.theme';
 import { linkTheme } from '../components/Link/Link.theme';
-import { listTheme } from '../components/List/List.theme';
 import { mainTheme } from '../components/Main/Main.theme';
 import { menuTheme } from '../components/Menu/Menu.theme';
 import { messageTheme } from '../components/Message/Message.theme';
@@ -61,7 +60,6 @@ export const defaultTheme: Theme<Record<string, any>> = {
   iconButton: iconButtonTheme,
   input: inputTheme,
   link: linkTheme,
-  list: listTheme,
   main: mainTheme,
   message: messageTheme,
   menu: menuTheme,
