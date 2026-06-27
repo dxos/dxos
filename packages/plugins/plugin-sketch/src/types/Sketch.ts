@@ -37,6 +37,9 @@ export type MakeOptions = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
   canvas?: Partial<Obj.MakeProps<typeof Canvas>>;
 };
 
+/**
+ * Creates a {@link Sketch} with an optional inline canvas definition.
+ */
 export const make = ({ canvas: canvasProps, ...props }: MakeOptions = {}) => {
   const { schema = TLDRAW_SCHEMA, content = {} } = canvasProps ?? {};
   const canvas = Obj.make(Canvas, { schema, content });
