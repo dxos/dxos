@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
 
       let newContent = '';
       Obj.update(content, () => {
-        newContent = Text.applyEdits(content, 'content', edits);
+        newContent = Text.apply(content, 'content', edits);
       });
       return { newContent };
     }),

@@ -33,7 +33,7 @@ export class TextNotSupportedError extends BaseError.extend(
 }
 
 /**
- * Thrown by `Text.applyEdits` when a non-`replaceAll` edit's `oldString` is not found in the text.
+ * Thrown by `Text.apply` when a non-`replaceAll` edit's `oldString` is not found in the text.
  */
 export class TextEditNotFoundError extends BaseError.extend('TextEditNotFoundError', 'Edit text not found') {
   constructor(oldString: string, options?: BaseErrorOptions) {

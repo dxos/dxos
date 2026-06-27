@@ -68,7 +68,7 @@ export const splice = (
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
  */
-export const applyEdits = (obj: Obj.Unknown, path: KeyPath | string | number, edits: readonly Edit[]): string => {
+export const apply = (obj: Obj.Unknown, path: KeyPath | string | number, edits: readonly Edit[]): string => {
   const keyPath = normalizePath(path);
   for (const edit of edits) {
     const text: string = Obj.getValue(obj, keyPath) ?? '';

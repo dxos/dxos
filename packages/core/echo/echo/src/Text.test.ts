@@ -87,11 +87,11 @@ describe('Text', () => {
     });
   });
 
-  describe('applyEdits', () => {
+  describe('apply', () => {
     test('replaces the first occurrence', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'foo foo foo' });
       Obj.update(obj, () => {
-        Text.applyEdits(obj, 'name', [{ oldString: 'foo', newString: 'bar' }]);
+        Text.apply(obj, 'name', [{ oldString: 'foo', newString: 'bar' }]);
       });
       expect(Obj.getValue(obj, ['name'])).toBe('bar foo foo');
     });
@@ -99,7 +99,7 @@ describe('Text', () => {
     test('replaces all occurrences', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'foo foo foo' });
       Obj.update(obj, () => {
-        Text.applyEdits(obj, 'name', [{ oldString: 'foo', newString: 'bar', replaceAll: true }]);
+        Text.apply(obj, 'name', [{ oldString: 'foo', newString: 'bar', replaceAll: true }]);
       });
       expect(Obj.getValue(obj, ['name'])).toBe('bar bar bar');
     });
@@ -107,7 +107,7 @@ describe('Text', () => {
     test('replaceAll does not re-match inserted text', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'a a a' });
       Obj.update(obj, () => {
-        Text.applyEdits(obj, 'name', [{ oldString: 'a', newString: 'aa', replaceAll: true }]);
+        Text.apply(obj, 'name', [{ oldString: 'a', newString: 'aa', replaceAll: true }]);
       });
       expect(Obj.getValue(obj, ['name'])).toBe('aa aa aa');
     });
@@ -115,7 +115,7 @@ describe('Text', () => {
     test('appends when oldString is missing', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'hello' });
       Obj.update(obj, () => {
-        Text.applyEdits(obj, 'name', [{ newString: ' world' }]);
+        Text.apply(obj, 'name', [{ newString: ' world' }]);
       });
       expect(Obj.getValue(obj, ['name'])).toBe('hello world');
     });
@@ -123,7 +123,7 @@ describe('Text', () => {
     test('appends when oldString is empty', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'hello' });
       Obj.update(obj, () => {
-        Text.applyEdits(obj, 'name', [{ oldString: '', newString: '!' }]);
+        Text.apply(obj, 'name', [{ oldString: '', newString: '!' }]);
       });
       expect(Obj.getValue(obj, ['name'])).toBe('hello!');
     });
@@ -132,7 +132,7 @@ describe('Text', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'hello' });
       let result = '';
       Obj.update(obj, () => {
-        result = Text.applyEdits(obj, 'name', [{ oldString: 'hello', newString: 'hi' }, { newString: ' there' }]);
+        result = Text.apply(obj, 'name', [{ oldString: 'hello', newString: 'hi' }, { newString: ' there' }]);
       });
       expect(result).toBe('hi there');
       expect(Obj.getValue(obj, ['name'])).toBe('hi there');
@@ -142,7 +142,7 @@ describe('Text', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'hello' });
       expect(() =>
         Obj.update(obj, () => {
-          Text.applyEdits(obj, 'name', [{ oldString: 'missing', newString: 'x' }]);
+          Text.apply(obj, 'name', [{ oldString: 'missing', newString: 'x' }]);
         }),
       ).toThrow();
     });
@@ -159,9 +159,9 @@ describe('Text', () => {
       expect(() => Text.splice(obj, 'name', 0, 1, 'x')).toThrow(/Obj\.update/);
     });
 
-    test('applyEdits throws outside Obj.update', ({ expect }) => {
+    test('apply throws outside Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'hello' });
-      expect(() => Text.applyEdits(obj, 'name', [{ oldString: 'h', newString: 'H' }])).toThrow(/Obj\.update/);
+      expect(() => Text.apply(obj, 'name', [{ oldString: 'h', newString: 'H' }])).toThrow(/Obj\.update/);
     });
   });
 

@@ -66,12 +66,12 @@ describe('Text (database)', () => {
       }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors));
   });
 
-  describe('applyEdits', () => {
+  describe('apply', () => {
     test('replaces the first occurrence', ({ expect }) =>
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'foo foo foo' }));
         Obj.update(obj, () => {
-          Text.applyEdits(obj, 'name', [{ oldString: 'foo', newString: 'bar' }]);
+          Text.apply(obj, 'name', [{ oldString: 'foo', newString: 'bar' }]);
         });
         expect(obj.name).toBe('bar foo foo');
       }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors));
@@ -80,7 +80,7 @@ describe('Text (database)', () => {
       Effect.gen(function* () {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'foo foo foo' }));
         Obj.update(obj, () => {
-          Text.applyEdits(obj, 'name', [{ oldString: 'foo', newString: 'bar', replaceAll: true }]);
+          Text.apply(obj, 'name', [{ oldString: 'foo', newString: 'bar', replaceAll: true }]);
         });
         expect(obj.name).toBe('bar bar bar');
       }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors));
@@ -90,7 +90,7 @@ describe('Text (database)', () => {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello' }));
         let result = '';
         Obj.update(obj, () => {
-          result = Text.applyEdits(obj, 'name', [{ newString: ' world' }]);
+          result = Text.apply(obj, 'name', [{ newString: ' world' }]);
         });
         expect(result).toBe('hello world');
         expect(obj.name).toBe('hello world');
@@ -101,7 +101,7 @@ describe('Text (database)', () => {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello' }));
         expect(() =>
           Obj.update(obj, () => {
-            Text.applyEdits(obj, 'name', [{ oldString: 'missing', newString: 'x' }]);
+            Text.apply(obj, 'name', [{ oldString: 'missing', newString: 'x' }]);
           }),
         ).toThrow();
       }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors));
@@ -113,7 +113,7 @@ describe('Text (database)', () => {
         const obj = yield* Database.add(Obj.make(TestSchema.Person, { name: 'hello' }));
         expect(() => Text.update(obj, 'name', 'x')).toThrow(/Obj\.update/);
         expect(() => Text.splice(obj, 'name', 0, 1, 'x')).toThrow(/Obj\.update/);
-        expect(() => Text.applyEdits(obj, 'name', [{ oldString: 'h', newString: 'H' }])).toThrow(/Obj\.update/);
+        expect(() => Text.apply(obj, 'name', [{ oldString: 'h', newString: 'H' }])).toThrow(/Obj\.update/);
       }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors));
   });
 
