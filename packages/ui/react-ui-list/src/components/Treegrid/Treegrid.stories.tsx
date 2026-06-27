@@ -65,7 +65,14 @@ const content = {
 } as StorybookNode;
 
 function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean): Generator<StorybookIteratorNode> {
-  const stack: StorybookIteratorNode[] = [{ node, path: [node.id], parentOf: (node.nodes ?? []).map(({ id }) => id) }];
+  // `parentOf` must reference rows by their full path-based id (the row's DOM id) so `aria-owns` resolves.
+  const stack: StorybookIteratorNode[] = [
+    {
+      node,
+      path: [node.id],
+      parentOf: (node.nodes ?? []).map(({ id }) => [node.id, id].join(TREEGRID_PATH_SEPARATOR)),
+    },
+  ];
   while (stack.length > 0) {
     const { node, path, parentOf } = stack.pop()!;
     if (path.length > 1) {
@@ -76,10 +83,13 @@ function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean
     if (path.length === 1 || isOpen?.(node)) {
       for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i];
+        const childPath = [...path, child.id];
         stack.push({
           node: child,
-          path: [...path, child.id],
-          ...((child.nodes?.length ?? 0) > 0 && { parentOf: child.nodes!.map(({ id }) => id) }),
+          path: childPath,
+          ...((child.nodes?.length ?? 0) > 0 && {
+            parentOf: child.nodes!.map(({ id }) => [...childPath, id].join(TREEGRID_PATH_SEPARATOR)),
+          }),
         });
       }
     }

@@ -37,11 +37,13 @@ const strokeSize = 2;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 
+/** Props for {@link TreeDropIndicator}. */
 export type TreeDropIndicatorProps = {
   instruction: Instruction;
   gap?: number;
 };
 
+/** Themed drop indicator for a tree-item pragmatic-dnd `Instruction` (sibling reorder / make-child). */
 export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';

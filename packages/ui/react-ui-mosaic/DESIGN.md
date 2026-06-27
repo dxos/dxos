@@ -122,8 +122,8 @@ Focus.Group                        focus zone (current/selection semantics)
 ## Conventions
 
 - **Resize utilities** (`ResizeHandle`, `Size`, `sizeStyle`, `resizeAttributes`)
-  come from `@dxos/react-ui-dnd`. (Per the AUDIT, the non-atlaskit `Size`/`Side`/
-  `sizeStyle` are slated to move down into `@dxos/react-ui`.)
+  come from `@dxos/react-ui-dnd`. (Per the AUDIT D3, the non-atlaskit `Size`/`Side`/
+  `sizeStyle` stay in `react-ui-dnd`; the two spurious consumers were cleaned instead.)
 - **Subpath exports**: `./testing` (`CardContainer`, `DefaultStackTile`,
   decorator) and `./playwright` (`board-manager`) for E2E.
 - **`dx-*` ↔ ARIA grammar**: same rules as the rest of the stack —

@@ -88,5 +88,6 @@ export const FormFieldSetContainer = ({
     );
   }
 
-  return <div className={mx(classNames)}>{content}</div>;
+  // Only materialize a wrapper when `classNames` is supplied; otherwise stay grid-transparent.
+  return classNames ? <div className={mx(classNames)}>{content}</div> : <>{content}</>;
 };
