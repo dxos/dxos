@@ -192,6 +192,12 @@ const TranscriptionDriver = () => {
       return;
     }
     let cancelled = false;
+    // Hard-abort the in-flight transcription request if the user cancels (✕) during the drain.
+    const abortTimer = setInterval(() => {
+      if (isCancelled()) {
+        transcriberRef.current?.abort();
+      }
+    }, 150);
     void (async () => {
       try {
         // Flush buffered audio (final transcription) then settle the streamer's post-process, unless
@@ -203,6 +209,7 @@ const TranscriptionDriver = () => {
       } catch (err) {
         log.catch(err);
       } finally {
+        clearInterval(abortTimer);
         if (!cancelled) {
           setPhase((current) => (current === 'draining' ? 'idle' : current));
         }
@@ -210,6 +217,7 @@ const TranscriptionDriver = () => {
     })();
     return () => {
       cancelled = true;
+      clearInterval(abortTimer);
     };
   }, [phase, isCancelled]);
 

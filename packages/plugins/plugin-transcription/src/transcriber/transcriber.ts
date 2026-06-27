@@ -106,6 +106,8 @@ export class Transcriber extends Resource {
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
+  /** Aborts the in-flight transcription request (e.g. when the user cancels the drain). */
+  private _transcribeAbort?: AbortController = undefined;
 
   constructor({ config, recorder, onSegments, transcribe }: TranscriberProps) {
     super();
@@ -127,7 +129,13 @@ export class Transcriber extends Resource {
     log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
+    this._transcribeAbort?.abort();
     await this._recorder.stop();
+  }
+
+  /** Abort the in-flight transcription request (e.g. user cancelled the drain). */
+  abort(): void {
+    this._transcribeAbort?.abort();
   }
 
   startChunksRecording(): void {
@@ -232,12 +240,14 @@ export class Transcriber extends Resource {
     } else {
       // TODO(burdon): Create separate endpoint?
       const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
+      this._transcribeAbort = new AbortController();
       const response = await fetch(`${endpoint}/transcribe`, {
         method: 'POST',
         body: JSON.stringify({ audio }),
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: this._transcribeAbort.signal,
       });
 
       if (!response.ok) {
