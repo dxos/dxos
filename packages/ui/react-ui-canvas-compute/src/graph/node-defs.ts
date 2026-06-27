@@ -68,7 +68,9 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   switch: () => createNode('switch'),
   template: (shape) => {
     const node = createNode('template', { valueType: (shape as TemplateShape).valueType, value: shape.text });
-    node.inputSchema = JsonSchema.toJsonSchema(getTemplateInputSchema(node));
+    // `toJsonSchema` reuses cached fragments (e.g. the `Schema.Any` JSON form) across calls; deep-copy so each
+    // ECHO node owns its own schema record rather than reassigning ownership of a shared one.
+    node.inputSchema = structuredClone(JsonSchema.toJsonSchema(getTemplateInputSchema(node)));
     return node;
   },
   text: () => createNode('text'),
