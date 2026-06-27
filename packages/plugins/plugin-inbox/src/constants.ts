@@ -7,10 +7,10 @@ import { DXN } from '@dxos/keys';
 import { meta } from '#meta';
 
 /** Google Calendar / Gmail foreign-key `Meta.keys[].source` used by inbox sync. */
-export const GOOGLE_INTEGRATION_SOURCE = 'google.com';
+export const GOOGLE_INTEGRATION_SOURCE = 'com.google';
 
 /** Foreign-key `Meta.keys[].source` stamped on synced Gmail messages (see gmail mapper). */
-export const GMAIL_SOURCE = 'gmail.com';
+export const GMAIL_SOURCE = 'com.google.gmail';
 
 /** `Connector.id` for Gmail OAuth / sync; stored as `Connection.connectorId`. */
 export const GMAIL_CONNECTOR_ID = 'gmail';
@@ -31,7 +31,7 @@ export const JMAP_MAIL_CONNECTOR_ID = 'jmap-mail';
 export const JMAP_DEFAULT_HOST = 'api.fastmail.com';
 
 /** Foreign-key `Meta.keys[].source` stamped on synced JMAP messages (dedup key; see jmap mapper). */
-export const JMAP_MESSAGE_SOURCE = 'jmap';
+export const JMAP_MESSAGE_SOURCE = 'org.ietf.jmap';
 
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
 

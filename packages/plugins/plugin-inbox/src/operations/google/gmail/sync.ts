@@ -26,6 +26,7 @@ import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
+import { GMAIL_SOURCE } from '../../../constants';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
 import { isAiServiceUnavailable } from '../../extractor';
@@ -100,7 +101,7 @@ const syncSingleMailbox = (input: {
     const existingGmailIds = new Set(
       recentMessages.flatMap((msg) => {
         const meta = Obj.getMeta(msg);
-        return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
+        return meta.keys.filter((key) => key.source === GMAIL_SOURCE).map((key) => key.id);
       }),
     );
 

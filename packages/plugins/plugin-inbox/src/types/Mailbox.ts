@@ -15,14 +15,14 @@ import { Message } from '@dxos/types';
  * a foreign key `{ source: GMAIL_TAG_SOURCE, id: <gmail-label-id> }`; "provider" tags are those with
  * such a key, "user" tags are those without.
  */
-export const GMAIL_TAG_SOURCE = 'google.com/gmail/label';
+export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
 
 /**
  * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
  * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
  * {@link GMAIL_TAG_SOURCE}.
  */
-export const JMAP_TAG_SOURCE = 'jmap/mailbox';
+export const JMAP_TAG_SOURCE = 'org.ietf.jmap.mailbox';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
