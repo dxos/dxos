@@ -41,11 +41,17 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     [ollamaState.models],
   );
 
+  // Show DXOS as the concrete default when no provider has been chosen yet (the unset value resolves
+  // to `edge` at the chat layer); avoids a blank/"Default" provider in the dropdown.
+  const values = useMemo(() => ({ ...settings, modelProvider: settings.modelProvider ?? 'edge' }), [settings]);
+
   // Form `fieldMap` is keyed by dotted JSON path, so nested struct leaves are addressed directly.
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
       // The bundled sidecar (manager present) is the "Built-in" provider; a user-run server is "Ollama".
+      // `defaultLabel: null` drops the sentinel "Default" option — a provider is always concrete.
       modelProvider: createSelectField({
+        defaultLabel: null,
         options: [
           { value: 'edge', label: t('settings.provider.edge.label') },
           {
@@ -67,7 +73,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
       variant='settings'
       schema={Assistant.Settings}
       readonly={!onSettingsChange}
-      values={settings}
+      values={values}
       onValuesChanged={(values) => onSettingsChange?.(() => values)}
     >
       <Form.Viewport scroll>

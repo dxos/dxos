@@ -155,13 +155,13 @@ export const translations: Resource[] = [
         'view-usage.label': 'View usage',
 
         // LLM provider labels.
-        'settings.provider.edge.label': 'DXOS',
+        'settings.provider.edge.label': 'Edge',
         'settings.provider.builtin.label': 'Built-in',
         'settings.provider.ollama.label': 'Ollama',
         'settings.provider.lmstudio.label': 'LM Studio',
 
         // Ollama local model management (desktop only).
-        'settings.ollama.title': 'Local models (Ollama)',
+        'settings.ollama.title': 'Local models',
         'settings.ollama.installed.label': 'Downloaded models',
         'settings.ollama.empty.message': 'No models downloaded. Pull one below to get started.',
         'settings.ollama.pull.label': 'Pull model',

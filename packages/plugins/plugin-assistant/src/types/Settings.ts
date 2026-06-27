@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { SchemaEx } from '@dxos/effect';
 
 export const ModelProvider = Schema.Union(
-  Schema.Literal('edge').annotations({ title: 'DXOS' }),
+  Schema.Literal('edge').annotations({ title: 'Edge' }),
   Schema.Literal('ollama').annotations({ title: 'Ollama' }),
   Schema.Literal('lmstudio').annotations({ title: 'LM Studio' }),
 );
