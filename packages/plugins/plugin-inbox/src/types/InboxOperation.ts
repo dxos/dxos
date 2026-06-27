@@ -18,7 +18,10 @@ import {
   MaterializeTargetOutput,
   SyncBinding,
 } from '@dxos/plugin-connector';
-import { Actor, Event, Message } from '@dxos/types';
+// Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
+// TypeScript to name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -178,6 +181,62 @@ export const MaterializeGmailTarget = Operation.make({
   input: MaterializeTargetInput,
   output: MaterializeTargetOutput,
 });
+
+export const JmapSync = Operation.make({
+  meta: {
+    key: makeKey('jmapSync'),
+    name: 'Sync JMAP',
+    description: 'Sync emails from a JMAP server (e.g. Fastmail) to the mailbox feed.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
+    }),
+  }),
+  output: Schema.Struct({
+    newMessages: Schema.Number,
+  }),
+  // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
+  // HTTP client and JMAP credentials are provided by the handler from the connection.
+  services: [Capability.Service, Database.Service, Trace.TraceService],
+}).pipe(Operation.visible);
+
+/**
+ * Eagerly materializes the local Mailbox bound to a JMAP connection so a {@link SyncBinding} can be
+ * created. JMAP is a single-target connector (the account inbox), so a fresh Mailbox is always
+ * created; the connection's `accessToken.account` seeds the default name. Mirrors
+ * {@link MaterializeGmailTarget}.
+ */
+export const MaterializeJmapTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeJmapTarget'),
+    name: 'Materialize JMAP Target',
+    description: 'Create the local Mailbox bound to a JMAP connection.',
+    icon: 'ph--envelope--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
+
+export const JmapSend = Operation.make({
+  meta: {
+    key: makeKey('jmapSend'),
+    name: 'Send JMAP',
+    description: 'Send an email via a JMAP server.',
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  input: Schema.Struct({
+    message: Type.getSchema(Message.Message),
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection to source JMAP credentials from.',
+    }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+    threadId: Schema.String,
+  }),
+}).pipe(Operation.visible);
 
 export const GoogleCalendarSync = Operation.make({
   meta: {

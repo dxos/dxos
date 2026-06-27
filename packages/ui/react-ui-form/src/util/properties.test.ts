@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
@@ -10,14 +11,18 @@ import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
+import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../annotations';
+import { omitId } from './omit';
 import { getFormProperties, getRootFormProperties } from './properties';
 
 describe('getFormProperties', () => {
   test('filters out keyword fields annotated FormInputAnnotation.set(false)', ({ expect }) => {
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      hidden: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.keywordHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.keywordHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        hidden: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -28,10 +33,12 @@ describe('getFormProperties', () => {
     // Regression: JsonSchema fields are a Schema.Struct; encodedBoundAST strips
     // annotations from non-keyword inner types, which previously bypassed the
     // form-input filter (e.g., Routine.input).
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      schema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.structHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.structHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        schema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -39,10 +46,12 @@ describe('getFormProperties', () => {
   });
 
   test('filters out array fields annotated FormInputAnnotation.set(false)', ({ expect }) => {
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.arrayHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.arrayHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -54,10 +63,12 @@ describe('getFormProperties', () => {
     // annotation lives on the inner `T`. Without unwrapping, the filter would
     // miss the annotation and the hidden field would render. Covers the
     // conventional pattern `Schema.X.pipe(FormInputAnnotation.set(false), Schema.optional)`.
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.optionalHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.optionalHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+      }),
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -75,12 +86,14 @@ describe('getFormProperties', () => {
       geometry: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false)),
     });
     const Route = Schema.Struct({ legs: Schema.Array(Leg) });
-    const TestSchema = Schema.Struct({
-      details: Schema.Union(
-        Schema.TaggedStruct('road', { routes: Schema.optional(Schema.Array(Route)) }),
-        Schema.TaggedStruct('other', { note: Schema.optional(Schema.String) }),
-      ),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.nestedHidden', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.nestedHidden', '0.1.0'))(
+      Schema.Struct({
+        details: Schema.Union(
+          Schema.TaggedStruct('road', { routes: Schema.optional(Schema.Array(Route)) }),
+          Schema.TaggedStruct('other', { note: Schema.optional(Schema.String) }),
+        ),
+      }),
+    );
 
     // Drill as the form does: getFormProperties at each level, descending via the property type
     // (array element / type literal) returned by the previous level.
@@ -110,12 +123,14 @@ describe('getFormProperties', () => {
   test('preserves annotation when chained with .annotations()', ({ expect }) => {
     // Regression: `.pipe(FormInputAnnotation.set(false)).annotations({...})` must
     // not lose the form-input annotation.
-    const TestSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
-        description: 'Hidden field',
+    const TestSchema = Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+          description: 'Hidden field',
+        }),
       }),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0')));
+    );
 
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -149,5 +164,72 @@ describe('getRootFormProperties', () => {
 
   test('falls back to the discriminator alone when no value selects a member', ({ expect }) => {
     expect(getRootFormProperties(Union.ast, {}).map((prop) => prop.name)).toEqual(['kind']);
+  });
+
+  describe('magazine-shaped union (base struct + spread + piped dynamic annotations + Format.URL)', () => {
+    const StandardSiteBase = Schema.Struct({
+      type: Schema.Literal('standard-site'),
+      handle: Schema.String,
+      publication: Schema.String,
+      name: Schema.optional(Schema.String),
+    });
+    type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteBase>;
+    const StandardSite = Schema.Struct({
+      ...StandardSiteBase.fields,
+      handle: StandardSiteBase.fields.handle.pipe(
+        OptionsLookupAnnotation.set(
+          optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]), { combobox: true }),
+        ),
+      ),
+      publication: StandardSiteBase.fields.publication.pipe(
+        OptionsLookupAnnotation.set(optionsLookup<StandardSiteValues>()(['handle'], () => Effect.succeed([]))),
+      ),
+    });
+
+    const RssBase = Schema.Struct({
+      type: Schema.Literal('rss'),
+      url: Format.URL,
+      name: Schema.optional(Schema.String),
+    });
+    type RssValues = Schema.Schema.Type<typeof RssBase>;
+    const Rss = Schema.Struct({
+      ...RssBase.fields,
+      name: Schema.optional(
+        Schema.String.pipe(AutofillAnnotation.set(autofill<RssValues>()(['url'], () => Effect.succeed(undefined)))),
+      ),
+    });
+
+    const CreateUnion = Schema.Union(StandardSite, Rss);
+
+    test('expands to the standard-site member fields', ({ expect }) => {
+      expect(getRootFormProperties(CreateUnion.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([
+        'type',
+        'handle',
+        'publication',
+        'name',
+      ]);
+    });
+
+    test('expands to the rss member fields', ({ expect }) => {
+      expect(getRootFormProperties(CreateUnion.ast, { type: 'rss' }).map((prop) => prop.name)).toEqual([
+        'type',
+        'url',
+        'name',
+      ]);
+    });
+
+    test('shows only the discriminator before a type is selected', ({ expect }) => {
+      expect(getRootFormProperties(CreateUnion.ast, {}).map((prop) => prop.name)).toEqual(['type']);
+    });
+
+    test('survives omitId (applied by CreateObjectPanel) — union discriminant must be preserved', ({ expect }) => {
+      const omitted = omitId(CreateUnion);
+      expect(getRootFormProperties(omitted.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([
+        'type',
+        'handle',
+        'publication',
+        'name',
+      ]);
+    });
   });
 });

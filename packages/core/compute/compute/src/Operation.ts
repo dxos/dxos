@@ -300,46 +300,48 @@ export type InvokeRemote = <I, O, E>(
  * The registry `key` and `version` live in the object meta — access via
  * `Obj.getMeta(record).key` and `Obj.getMeta(record).version`.
  */
-export const PersistentOperation = Schema$.Struct({
-  name: Schema$.NonEmptyString,
+// TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
+//  backward compatibility with existing data and avoid requiring data migration.
+export class PersistentOperation extends Type.makeObject<PersistentOperation>(
+  DXN.make('org.dxos.type.function', '0.2.0'),
+)(
+  Schema$.Struct({
+    name: Schema$.NonEmptyString,
 
-  description: Schema$.optional(Schema$.String),
+    description: Schema$.optional(Schema$.String),
 
-  /**
-   * ISO date string of the last deployment.
-   */
-  updated: Schema$.optional(Schema$.String),
+    /**
+     * ISO date string of the last deployment.
+     */
+    updated: Schema$.optional(Schema$.String),
 
-  // Reference to a source script if it exists within ECHO.
-  // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+    // Reference to a source script if it exists within ECHO.
+    // TODO(burdon): Don't ref ScriptType directly (core).
+    source: Schema$.optional(Ref.Ref(Obj.Unknown)),
 
-  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    outputSchema: Schema$.optional(JsonSchema.JsonSchema),
 
-  /**
-   * List of required services.
-   * Match the Context.Tag keys of the FunctionServices variants.
-   */
-  services: Schema$.optional(Schema$.Array(Schema$.String)),
+    /**
+     * List of required services.
+     * Match the Context.Tag keys of the FunctionServices variants.
+     */
+    services: Schema$.optional(Schema$.Array(Schema$.String)),
 
-  // Local binding to a function name.
-  // TODO(dmaretskyi): Add this field to Operation.Definition.
-  binding: Schema$.optional(Schema$.String),
+    // Local binding to a function name.
+    // TODO(dmaretskyi): Add this field to Operation.Definition.
+    binding: Schema$.optional(Schema$.String),
 
-  /**
-   * Phosphor icon identifier in `ph--<name>--<variant>` format (e.g. `ph--file-text--regular`).
-   */
-  icon: Schema$.optional(Schema$.String),
-}).pipe(
-  Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-  Annotation.HiddenAnnotation.set(true),
-  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
-  //  backward compatibility with existing data and avoid requiring data migration.
-  Type.makeObject(DXN.make('org.dxos.type.function', '0.2.0')),
-);
-export type PersistentOperation = Type.InstanceType<typeof PersistentOperation>;
+    /**
+     * Phosphor icon identifier in `ph--<name>--<variant>` format (e.g. `ph--file-text--regular`).
+     */
+    icon: Schema$.optional(Schema$.String),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
+    Annotation.HiddenAnnotation.set(true),
+  ),
+) {}
 
 const FUNCTION_META_KEY = 'org.dxos.service.function';
 
@@ -676,19 +678,22 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
  * Persistent operation schema v0.1.0 — `key` and `version` are stored as data properties.
  * @deprecated Use {@link PersistentOperation} (v0.2.0) instead; the `key` and `version` now live in the object meta.
  */
-export const PersistentOperation_v0_1_0 = Schema$.Struct({
-  key: Schema$.optional(Schema$.String),
-  name: Schema$.NonEmptyString,
-  version: Schema$.String,
-  description: Schema$.optional(Schema$.String),
-  updated: Schema$.optional(Schema$.String),
-  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
-  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  services: Schema$.optional(Schema$.Array(Schema$.String)),
-  binding: Schema$.optional(Schema$.String),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.function', '0.1.0')));
-export type PersistentOperation_v0_1_0 = Type.InstanceType<typeof PersistentOperation_v0_1_0>;
+export class PersistentOperation_v0_1_0 extends Type.makeObject<PersistentOperation_v0_1_0>(
+  DXN.make('org.dxos.type.function', '0.1.0'),
+)(
+  Schema$.Struct({
+    key: Schema$.optional(Schema$.String),
+    name: Schema$.NonEmptyString,
+    version: Schema$.String,
+    description: Schema$.optional(Schema$.String),
+    updated: Schema$.optional(Schema$.String),
+    source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+    inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    services: Schema$.optional(Schema$.Array(Schema$.String)),
+    binding: Schema$.optional(Schema$.String),
+  }),
+) {}
 
 /**
  * Migration from {@link PersistentOperation_v0_1_0} (v0.1.0) to {@link PersistentOperation} (v0.2.0).

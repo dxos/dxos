@@ -31,14 +31,14 @@ random.seed(1);
 
 type Source = 'local' | 'feed';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   /** Where transcript messages come from. */
   source?: Source;
   /** Number of synthetic messages to pre-populate (local source only). */
   seed?: number;
 };
 
-const DefaultStory = ({ source = 'local', seed = 0, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ source = 'local', seed = 0, ...props }: StoryArgs) => {
   const [resetKey, setResetKey] = useState(0);
   const handleReset = useCallback(() => setResetKey((value) => value + 1), []);
   return source === 'feed' ? (

@@ -162,6 +162,6 @@ describe('CurateMagazine (LLM)', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 240_000, tags: ['llm'] },
+    { timeout: 240_000 },
   );
 });

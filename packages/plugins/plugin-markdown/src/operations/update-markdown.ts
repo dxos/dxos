@@ -18,6 +18,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
         Effect.flatMap(Database.load),
       );
 
+      // `Text.apply` treats a missing/empty `oldString` as append-to-end, matching the Update schema.
       let newContent = '';
       Obj.update(content, () => {
         newContent = Text.apply(content, 'content', edits);

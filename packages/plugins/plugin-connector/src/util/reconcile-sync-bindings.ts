@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, type Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 
 import { type Connection, type ConnectorEntry, SyncBinding } from '../types';
 
@@ -78,6 +78,9 @@ export const reconcileSyncBindings = ({
       let target: Obj.Unknown;
       if (sel === firstNew && existingTarget) {
         target = yield* Database.load(existingTarget);
+        if (sel.name) {
+          Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
+        }
       } else if (connector.materializeTarget) {
         const { target: materialized } = yield* invoker.invoke(
           connector.materializeTarget,

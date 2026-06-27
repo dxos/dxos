@@ -21,9 +21,12 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 // The edit descriptions feed the markdown skill's LLM tool definition (and its memoized
 // fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Text.apply`.
 const Edit = Schema.Struct({
-  oldString: Schema.String.annotations({
-    description: 'The text to find in the document.',
-  }),
+  oldString: Schema.optional(
+    Schema.String.annotations({
+      description:
+        'The text to find in the document. Set to undefined to append the newString to the end of the document.',
+    }),
+  ),
   newString: Schema.String.annotations({
     description: 'The text to replace it with.',
   }),
@@ -125,7 +128,8 @@ export const Update = Operation.make({
       description: 'The ID of the markdown document.',
     }),
     edits: Schema.Array(Edit).annotations({
-      description: 'The edits to apply to the document. Each edit finds oldString and replaces it with newString.',
+      description:
+        'The edits to apply to the document. Each edit finds oldString and replaces it with newString; omit oldString to append newString to the end.',
     }),
   }),
   output: Schema.Struct({

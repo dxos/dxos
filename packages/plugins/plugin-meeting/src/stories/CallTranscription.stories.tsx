@@ -30,9 +30,9 @@ import { Transcript } from '@dxos/types';
 import { MeetingPlugin } from '../MeetingPlugin';
 import { Meeting } from '../types';
 
-type StoryProps = {};
+type StoryArgs = {};
 
-const DefaultStory = (_: StoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0]?.id);
   const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
@@ -104,7 +104,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryProps>(() => ({
+    withPluginManager<StoryArgs>(() => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),

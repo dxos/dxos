@@ -9,6 +9,4 @@ import * as Schema from 'effect/Schema';
 import { DXN, Type } from '@dxos/echo';
 
 // TODO(burdon): Placeholder.
-export const Stack = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.type.stack', '0.1.0')));
-
-export type Stack = Type.InstanceType<typeof Stack>;
+export class Stack extends Type.makeObject<Stack>(DXN.make('org.dxos.type.stack', '0.1.0'))(Schema.Struct({})) {}

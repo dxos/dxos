@@ -89,6 +89,7 @@ export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: bo
           .map((accessToken) => ({
             service: accessToken.source,
             apiKey: accessToken.token,
+            account: accessToken.account,
           }));
 
         if (caching) {

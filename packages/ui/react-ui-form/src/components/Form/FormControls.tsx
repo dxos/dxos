@@ -150,7 +150,7 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
     <div
       {...composableProps(props, {
         role: 'form',
-        classNames: mx(withColumn.center(), 'flex flex-col w-full', styles.content()),
+        classNames: mx(withColumn.center(), 'flex flex-col w-full dx-document', styles.content()),
       })}
       data-testid={testId}
       ref={mergedRef}

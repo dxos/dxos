@@ -30,7 +30,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Masonry.Content classNames='p-2' centered>
+          <Masonry.Content centered>
             <Masonry.Viewport items={items} />
           </Masonry.Content>
         </Panel.Content>

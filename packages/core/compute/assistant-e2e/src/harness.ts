@@ -17,7 +17,10 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { RunInstructions, SkillManagerSkill, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
+// Skill is imported so TypeScript can name Skill.Skill in the emitted .d.ts for getDefaultSkills
+// (SkillManagerSkill.make() returns Skill.Skill, which propagates into the inferred return type).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Operation, Instructions, ServiceResolver, Skill } from '@dxos/compute';
 import { configPreset, type ConfigPresetOptions } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

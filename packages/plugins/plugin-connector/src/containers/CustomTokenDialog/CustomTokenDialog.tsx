@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type Database, type Key } from '@dxos/echo';
+import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
@@ -22,6 +22,8 @@ export type CustomTokenDialogProps = {
   connectorId: string;
   /** Optional pre-filled label used as the new Connection's `name`. */
   connectorLabel?: string;
+  /** Existing local object to bind as the connection's sync target (e.g. an empty mailbox). */
+  existingTarget?: Ref.Ref<Obj.Unknown>;
 };
 
 /**
@@ -34,7 +36,13 @@ export type CustomTokenDialogProps = {
  * The component name is retained from the legacy custom-token dialog; the
  * surface id is `PROVIDER_FORM_DIALOG`.
  */
-export const CustomTokenDialog = ({ db, spaceId, connectorId, connectorLabel }: CustomTokenDialogProps) => {
+export const CustomTokenDialog = ({
+  db,
+  spaceId,
+  connectorId,
+  connectorLabel,
+  existingTarget,
+}: CustomTokenDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invoke } = useOperationInvoker();
   const coordinator = useCapability(ConnectorCoordinator);
@@ -64,7 +72,7 @@ export const CustomTokenDialog = ({ db, spaceId, connectorId, connectorLabel }: 
               // Close the dialog before re-entering the coordinator so OAuth
               // popups / new tabs aren't blocked by a stacked layout op.
               yield* invoke(LayoutOperation.UpdateDialog, { state: false });
-              yield* coordinator.submitCredentialForm({ db, spaceId, connectorId, values });
+              yield* coordinator.submitCredentialForm({ db, spaceId, connectorId, values, existingTarget });
             }),
           ),
           Effect.catchAll((failure) =>
@@ -77,7 +85,7 @@ export const CustomTokenDialog = ({ db, spaceId, connectorId, connectorLabel }: 
         ),
       );
     },
-    [coordinator, credentialForm, db, spaceId, connectorId, connector, invoke],
+    [coordinator, credentialForm, db, spaceId, connectorId, connector, invoke, existingTarget],
   );
 
   if (!credentialForm) {

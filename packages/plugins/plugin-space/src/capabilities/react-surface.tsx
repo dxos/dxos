@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
@@ -51,6 +51,7 @@ import { SpaceOperation } from '#operations';
 import {
   HueAnnotationId,
   IconAnnotationId,
+  Settings,
   SpaceCapabilities,
   SpaceHomeContent,
   SPACE_HOME_NODE_TYPE,
@@ -119,13 +120,16 @@ export default Capability.makeModule(
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: () => {
+        component: ({ data: { subject } }) => {
           const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return (
             <SpaceSettings
               spaces={spaces}
               onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
+              settings={settings}
+              onSettingsChange={updateSettings}
             />
           );
         },

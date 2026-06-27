@@ -186,3 +186,22 @@ export const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN =
 
   return DXN.make(typename);
 };
+
+export const makeRelationType = (options: {
+  dxn: DXN.DXN;
+  source: RelationEndpoint;
+  target: RelationEndpoint;
+  schema: Schema.Schema.Any;
+  id?: EntityId;
+}): Type.RelationClass<unknown, unknown, unknown, unknown, {}> => {
+  const type = EchoRelationSchema({
+    dxn: options.dxn,
+    source: options.source,
+    target: options.target,
+    id: options.id,
+  })(options.schema);
+  const constructor = function RelationType() {};
+  Object.setPrototypeOf(constructor, type);
+  // Boundary cast: constructor/prototype wiring cannot be expressed in TypeScript's type system.
+  return constructor as unknown as Type.RelationClass<unknown, unknown, unknown, unknown, {}>;
+};

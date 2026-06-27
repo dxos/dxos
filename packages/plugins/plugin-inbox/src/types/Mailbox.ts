@@ -15,7 +15,14 @@ import { Message } from '@dxos/types';
  * a foreign key `{ source: GMAIL_TAG_SOURCE, id: <gmail-label-id> }`; "provider" tags are those with
  * such a key, "user" tags are those without.
  */
-export const GMAIL_TAG_SOURCE = 'google.com/gmail/label';
+export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
+
+/**
+ * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
+ * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
+ * {@link GMAIL_TAG_SOURCE}.
+ */
+export const JMAP_TAG_SOURCE = 'org.ietf.jmap.mailbox';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
@@ -28,42 +35,41 @@ export enum MessageState {
 }
 
 /** Mailbox object schema. */
-export const Mailbox = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  // ISO timestamp of when the mailbox was last viewed. Messages with a later `created` time are counted as new.
-  viewedAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
-  // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
-  // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
-  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
-  extractors: Schema.Struct({
-    enabled: Schema.Array(Schema.String),
-    threshold: Schema.Number.pipe(Schema.between(0, 1)),
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
-  // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
-  // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
-  // the association lives here on the mutable Mailbox. The referenced objects are space-db
-  // objects resolved by id (`db.getObjectById`).
-  extracted: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }).pipe(
-    FormInputAnnotation.set(false),
-    Schema.optional,
+export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    // ISO timestamp of when the mailbox was last viewed. Messages with a later `created` time are counted as new.
+    viewedAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
+    // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
+    // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    extractors: Schema.Struct({
+      enabled: Schema.Array(Schema.String),
+      threshold: Schema.Number.pipe(Schema.between(0, 1)),
+    }).pipe(FormInputAnnotation.set(false), Schema.optional),
+    // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
+    // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
+    // the association lives here on the mutable Mailbox. The referenced objects are space-db
+    // objects resolved by id (`db.getObjectById`).
+    extracted: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }).pipe(
+      FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+    // TODO(wittjosiah): Factor out to relation?
+    filters: Schema.Array(
+      Schema.Struct({
+        name: Schema.String,
+        filter: Schema.String,
+      }),
+    ).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
+    FeedAnnotation.set(true),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   ),
-  // TODO(wittjosiah): Factor out to relation?
-  filters: Schema.Array(
-    Schema.Struct({
-      name: Schema.String,
-      filter: Schema.String,
-    }),
-  ).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
-  FeedAnnotation.set(true),
-  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),
-);
-
-export type Mailbox = Type.InstanceType<typeof Mailbox>;
+) {}
 
 /** Checks if a value is a Mailbox object. */
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
@@ -127,6 +133,16 @@ export const findOrCreateGmailTag = (
   db: Database.Database,
   { id, name }: { id: string; name: string },
 ): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: GMAIL_TAG_SOURCE, id }, label: name });
+
+/**
+ * Finds an existing JMAP provider {@link Tag} object by its JMAP mailbox-id foreign key, or creates
+ * one carrying that key. Keeps the folder label in sync with the server on re-sync. Mirrors
+ * {@link findOrCreateGmailTag}.
+ */
+export const findOrCreateJmapTag = (
+  db: Database.Database,
+  { id, name }: { id: string; name: string },
+): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: JMAP_TAG_SOURCE, id }, label: name });
 
 /** Returns the URI used to index a {@link Tag} object on a Mailbox. */
 export const tagUri = (tag: Tag.Tag): string => Obj.getURI(tag).toString();

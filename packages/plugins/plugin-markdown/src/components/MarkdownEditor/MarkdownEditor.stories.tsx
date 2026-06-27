@@ -12,6 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
+import { SketchBuilder } from '@dxos/plugin-sketch/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Client } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -28,45 +29,14 @@ import { Markdown } from '#types';
 
 import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
 
-// A minimal tldraw (schema `tldraw.com/2`) snapshot: a single labelled rectangle, used as a test sketch.
-const SKETCH_CONTENT = {
-  'document:document': { gridSize: 10, name: 'Test', meta: {}, id: 'document:document', typeName: 'document' },
-  'page:page': { meta: {}, id: 'page:page', name: 'Page 1', index: 'a1', typeName: 'page' },
-  'shape:rect': {
-    x: 0,
-    y: 0,
-    rotation: 0,
-    isLocked: false,
-    opacity: 1,
-    meta: {},
-    id: 'shape:rect',
-    type: 'geo',
-    props: {
-      w: 160,
-      h: 120,
-      geo: 'rectangle',
-      color: 'blue',
-      labelColor: 'black',
-      fill: 'solid',
-      dash: 'draw',
-      size: 'l',
-      font: 'draw',
-      text: 'DXOS',
-      align: 'middle',
-      verticalAlign: 'middle',
-      growY: 0,
-      url: '',
-      scale: 1,
-    },
-    parentId: 'page:page',
-    index: 'a1',
-    typeName: 'shape',
-  },
-};
+// A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
+const SKETCH_CONTENT = new SketchBuilder()
+  .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
+  .build();
 
-type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
+type StoryArgs = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const handleLinkQuery = useLinkQuery(space?.db, doc);
@@ -83,7 +53,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
             {/* Mirror MarkdownArticle: Panel.Toolbar/Content are NOT `asChild` (MarkdownEditor.Toolbar is not
                 composable, so asChild wraps it in a dx-slot-warning div that breaks the grid-area layout). */}
             <Panel.Root role='article'>
-              <Panel.Toolbar classNames='bg-toolbar-surface'>
+              <Panel.Toolbar>
                 <MarkdownEditor.Toolbar classNames='dx-document' />
               </Panel.Toolbar>
               <Panel.Content>

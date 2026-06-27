@@ -10,13 +10,17 @@ import { DXN, EID } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
-const TestType = Schema.Struct({
-  name: Schema.optional(Schema.String),
-}).pipe(Type.makeObject(DXN.make('com.example.type.addType', '0.1.0')));
+const TestType = Type.makeObject(DXN.make('com.example.type.addType', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+  }),
+);
 
-const SharedType = Schema.Struct({
-  label: Schema.optional(Schema.String),
-}).pipe(Type.makeObject(DXN.make('com.example.type.shared', '0.1.0')));
+const SharedType = Type.makeObject(DXN.make('com.example.type.shared', '0.1.0'))(
+  Schema.Struct({
+    label: Schema.optional(Schema.String),
+  }),
+);
 
 describe('Database.addType', () => {
   let builder: EchoTestBuilder;

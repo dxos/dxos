@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, type Node, useActionRunner, useNode } from '@dxos/plugin-graph';
+import { Graph, type Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
 import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
@@ -79,6 +79,10 @@ export const useDeckPlank = ({
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
+  // Subscribe reactively to the node's actions: they are loaded asynchronously by `Graph.expand`
+  // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
+  // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
+  const actions = useActions(graph, node?.id);
   const companions = useCompanions(id);
   const { hasAttention } = useAttention(id);
   const selectedVariant = useSelectedCompanionVariant();
@@ -144,12 +148,10 @@ export const useDeckPlank = ({
       return [];
     }
 
-    return [
-      Graph.getActions(graph, node.id).filter((action) =>
-        PLANK_ACTION_DISPOSITIONS.includes(action.properties.disposition),
-      ),
-    ].filter((group) => group.length > 0);
-  }, [graph, node, variant]);
+    return [actions.filter((action) => PLANK_ACTION_DISPOSITIONS.includes(action.properties.disposition))].filter(
+      (group) => group.length > 0,
+    );
+  }, [actions, node, variant]);
 
   const onAction = useCallback(
     (action: AttentionSigilAction) => {

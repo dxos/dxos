@@ -125,19 +125,24 @@ const ComboboxRoot = ({
 // Filtering is caller-driven: pass already-matching <Combobox.Item> children.
 //
 
-type ComboboxContentProps = PopoverContentProps;
+type ComboboxContentProps = PopoverContentProps & {
+  /** Snap the highlight to the first item whenever the list changes (type-to-filter lists). */
+  resetSelectionOnChange?: boolean;
+};
 
-const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(({ children, ...props }, forwardedRef) => {
-  const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
+const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
+  ({ children, resetSelectionOnChange, ...props }, forwardedRef) => {
+    const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
-  return (
-    <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
-      <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
-        <Picker.Root>{children}</Picker.Root>
-      </Popover.Viewport>
-    </Popover.Content>
-  );
-});
+    return (
+      <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
+        <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
+          <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
+        </Popover.Viewport>
+      </Popover.Content>
+    );
+  },
+);
 
 ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 

@@ -24,18 +24,15 @@ import { Message, Organization, Person, Pipeline } from '../types';
 
 // Local relation type (Person → Person) with only optional props, so the generated relation's
 // properties come entirely from annotations / endpoints.
-const Knows = Schema.Struct({
-  id: Obj.ID,
-  since: Schema.optional(Schema.Number),
-})
-  .annotations({ description: 'A person knows another person.' })
-  .pipe(
-    Type.makeRelation({
-      dxn: DXN.make('org.dxos.relation.knows', '0.1.0'),
-      source: Person.Person,
-      target: Person.Person,
-    }),
-  );
+const Knows = Type.makeRelation(DXN.make('org.dxos.relation.knows', '0.1.0'))({
+  source: Person.Person,
+  target: Person.Person,
+})(
+  Schema.Struct({
+    id: Obj.ID,
+    since: Schema.optional(Schema.Number),
+  }).annotations({ description: 'A person knows another person.' }),
+);
 
 random.seed(1);
 
