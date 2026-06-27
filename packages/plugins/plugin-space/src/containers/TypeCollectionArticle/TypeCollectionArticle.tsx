@@ -74,7 +74,7 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
           <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
         ) : (
           <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content classNames='dx-document'>
+            <Masonry.Content>
               <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
@@ -119,10 +119,10 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
-  // Render a content preview body only for types that opt in via `CardContentAnnotation`.
+  // Render a content preview body only for types that opt in via `CardAnnotation`.
   const type = Obj.getType(object);
   const showCardContent =
-    !!type && Option.getOrElse(AppAnnotation.CardContentAnnotation.get(Type.getSchema(type)), () => false);
+    !!type && Option.getOrElse(AppAnnotation.CardAnnotation.get(Type.getSchema(type)), () => false);
   const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
@@ -152,14 +152,10 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
           <Card.Block>
             <Icon icon={icon} classNames={iconStyles?.text} />
           </Card.Block>
-          <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
+          <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
-        {showCardContent && (
-          <Card.Body>
-            <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />
-          </Card.Body>
-        )}
+        {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>
   );

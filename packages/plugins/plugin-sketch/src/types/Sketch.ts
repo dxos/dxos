@@ -28,16 +28,16 @@ export class Sketch extends Type.makeObject<Sketch>(DXN.make('org.dxos.type.sket
     canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
-    AppAnnotation.CardContentAnnotation.set(true),
+    AppAnnotation.CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),
   ),
 ) {}
 
-export type SketchProps = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
+export type MakeProps = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
   canvas?: Partial<Obj.MakeProps<typeof Canvas>>;
 };
 
-export const make = ({ canvas: canvasProps, ...props }: SketchProps = {}) => {
+export const make = ({ canvas: canvasProps, ...props }: MakeProps = {}) => {
   const { schema = TLDRAW_SCHEMA, content = {} } = canvasProps ?? {};
   const canvas = Obj.make(Canvas, { schema, content });
   return Obj.make(Sketch, { ...props, canvas: Ref.make(canvas) });

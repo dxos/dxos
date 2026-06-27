@@ -6,8 +6,8 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ## 2026-06-27 — plugin-space TypeCollectionArticle (card-content annotation)
 
-- `AppAnnotation.CardContentAnnotation` (`@dxos/app-toolkit`, boolean, `org.dxos.annotation.card-content`) marks a schema type whose collection tile renders a preview body. Set it in the type's `.pipe(...)` (alongside Icon/Label). Applied to `Markdown.Document`, `Game.Game`, `Sketch.Sketch`.
-- Read a SCHEMA-LEVEL annotation off an object via `Option.getOrElse(CardContentAnnotation.get(Type.getSchema(Obj.getType(object))), () => false)` — NOT `Annotation.get(entity, ann)` (that reads the entity meta DICTIONARY, only for `.set`-on-instance annotations like `RootCollectionAnnotation`).
+- `AppAnnotation.CardAnnotation` (`@dxos/app-toolkit`, boolean, `org.dxos.annotation.card-content`) marks a schema type whose collection tile renders a preview body. Set it in the type's `.pipe(...)` (alongside Icon/Label). Applied to `Markdown.Document`, `Game.Game`, `Sketch.Sketch`.
+- Read a SCHEMA-LEVEL annotation off an object via `Option.getOrElse(CardAnnotation.get(Type.getSchema(Obj.getType(object))), () => false)` — NOT `Annotation.get(entity, ann)` (that reads the entity meta DICTIONARY, only for `.set`-on-instance annotations like `RootCollectionAnnotation`).
 - `TypeCollectionTile` (plugin-space) gates `<Card.Body><Surface.Surface type={AppSurface.CardContent} data={{subject:object}} limit={1}/></Card.Body>` on the annotation. Pass the LIVE `object` (not `useObject`'s return — that's `Obj.Snapshot`, fails `ObjectCardData.subject: Obj.Unknown`).
 - Story harness for the card body: cannot import `MarkdownPlugin` into plugin-space (plugin-markdown DEPS plugin-space → cycle). Use `PreviewPlugin` (already a devDep) — its `fallbackPopover` renders a `FormCard` for any object's `CardContent`. Define story-local annotated/non-annotated ECHO types instead. DXN final segment must be camelCase (`org.dxos.type.test.cardType`, NOT `card-type`).
 

@@ -29,7 +29,7 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
  * Marks a schema type whose collection tiles render a content preview body via the
  * `AppSurface.CardContent` surface (rather than a header-only card).
  */
-export const CardContentAnnotation = Annotation.make<boolean>({
+export const CardAnnotation = Annotation.make<boolean>({
   id: 'org.dxos.annotation.card-content',
   schema: Schema.Boolean,
 });

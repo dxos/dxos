@@ -23,7 +23,7 @@ import { translations } from '#translations';
 import { TypeCollectionArticle } from './TypeCollectionArticle';
 
 /**
- * Type that opts in to a content preview card via `CardContentAnnotation`.
+ * Type that opts in to a content preview card via `CardAnnotation`.
  */
 class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.cardType', '0.1.0'))(
   Schema.Struct({
@@ -32,7 +32,7 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cards--regular', hue: 'emerald' }),
-    AppAnnotation.CardContentAnnotation.set(true),
+    AppAnnotation.CardAnnotation.set(true),
   ),
 ) {}
 
@@ -48,7 +48,11 @@ class PlainType extends Type.makeObject<PlainType>(DXN.make('org.dxos.type.test.
 
 const OBJECT_COUNT = 6;
 
-const StoryArticle = ({ type }: { type: Type.AnyObj }) => {
+type StoryArgs = {
+  type: Type.AnyObj;
+};
+
+const DefaultStory = ({ type }: StoryArgs) => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   if (!space) {
@@ -60,6 +64,7 @@ const StoryArticle = ({ type }: { type: Type.AnyObj }) => {
 
 const meta = {
   title: 'plugins/plugin-space/containers/TypeCollectionArticle',
+  render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
@@ -90,18 +95,22 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Collection of objects whose type carries `CardContentAnnotation` — tiles render a preview body. */
-export const WithCardContent: Story = {
-  render: () => <StoryArticle type={CardType} />,
+/** Collection of objects without the annotation — header-only tiles. */
+export const Default: Story = {
+  args: {
+    type: PlainType,
+  },
 };
 
-/** Collection of objects without the annotation — header-only tiles. */
-export const WithoutCardContent: Story = {
-  render: () => <StoryArticle type={PlainType} />,
+/** Collection of objects whose type carries `CardAnnotation` — tiles render a preview body. */
+export const WithCardContent: Story = {
+  args: {
+    type: CardType,
+  },
 };
