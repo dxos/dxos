@@ -12,7 +12,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
 import { Chat, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { type Assistant, AssistantCapabilities } from '#types';
 
@@ -26,8 +26,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const db = chat && Obj.getDatabase(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const runtime = useChatServices({ id: db?.spaceId });
-  const [online, setOnline] = useOnline();
-  const { preset, ...chatProps } = usePresets(online);
+  const { preset, ...chatProps } = usePresets(settings);
+  const online = (settings.modelProvider ?? 'edge') === 'edge';
   const registry = useRegistry();
   const processor = useChatProcessor({ chat, preset, runtime, registry, settings });
   // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.
@@ -61,7 +61,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
           <Chat.Thread viewType={(chatViewType as Assistant.ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
-          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
+          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} expandable />
         </NaturalChatDialog.Footer>
       </NaturalChatDialog.Root>
     </Chat.Root>

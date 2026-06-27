@@ -8,16 +8,18 @@ import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
-import { useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
+import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { type ModuleProps } from './types';
 
+// Stories use default (edge) provider settings; provider selection lives in Assistant settings.
+const STORY_SETTINGS: Assistant.Settings = {};
+
 export const ChatModule = ({ space }: ModuleProps) => {
-  const [online, setOnline] = useOnline();
-  const { preset, ...chatProps } = usePresets(online);
+  const { preset, ...chatProps } = usePresets(STORY_SETTINGS);
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
@@ -58,14 +60,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
           <Chat.Content>
             <Chat.Thread viewType={view} />
             <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
-            <Chat.Prompt
-              {...chatProps}
-              classNames='border-none rounded-none'
-              outline
-              preset={preset?.id}
-              online={online}
-              onOnlineChange={setOnline}
-            />
+            <Chat.Prompt {...chatProps} classNames='border-none rounded-none' outline preset={preset?.id} />
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>

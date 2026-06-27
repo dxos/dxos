@@ -18,10 +18,13 @@ export type Model = {
 };
 
 /**
- * Progress emitted per NDJSON line while pulling a model via `POST /api/pull`.
+ * Progress emitted per NDJSON line while pulling a model via `POST /api/pull`. Download phases
+ * report `completed`/`total` for a single layer keyed by `digest`; consumers aggregate across
+ * digests for overall progress.
  */
 export type PullProgress = {
   status: string;
+  digest?: string;
   completed?: number;
   total?: number;
 };
@@ -174,7 +177,7 @@ const handlePullLine = (
   if (typeof json?.error === 'string') {
     return { ok: false, error: json.error };
   }
-  onProgress?.({ status: json?.status ?? '', completed: json?.completed, total: json?.total });
+  onProgress?.({ status: json?.status ?? '', digest: json?.digest, completed: json?.completed, total: json?.total });
   return undefined;
 };
 

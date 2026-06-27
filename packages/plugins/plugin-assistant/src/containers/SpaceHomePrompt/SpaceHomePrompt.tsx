@@ -5,14 +5,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
 import { ChatPrompt, type ChatEvent } from '#components';
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '#types';
 
@@ -37,8 +37,9 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const stateAtom = useCapability(AssistantCapabilities.State);
   const runtime = useChatServices({ id: space?.id });
-  const [online, setOnline] = useOnline();
-  const { preset, ...presetProps } = usePresets(online);
+  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const { preset, ...presetProps } = usePresets(settings);
+  const online = (settings.modelProvider ?? 'edge') === 'edge';
 
   // In-memory backing chat (not yet added to the space). `nonce` forces a fresh chat after submit.
   const [chat, setChat] = useState<ChatType.Chat>();
@@ -98,7 +99,6 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       event={event}
       preset={preset?.id}
       online={online}
-      onOnlineChange={setOnline}
       placeholder={t('space-home.prompt.placeholder')}
     />
   );

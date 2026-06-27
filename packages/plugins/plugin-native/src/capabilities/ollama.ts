@@ -45,6 +45,9 @@ export default Capability.makeModule(
     const ensureRunning = (): Promise<string> =>
       runtime.runPromise(Effect.map(OllamaSidecar, ({ endpoint }) => endpoint));
 
+    // In-flight pull controllers, so a pull can be cancelled.
+    const pullControllers = new Map<string, AbortController>();
+
     const fail = (error: string): void => {
       registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'failed', error });
     };
@@ -56,7 +59,9 @@ export default Capability.makeModule(
       } catch (error) {
         return fail(formatError(error));
       }
-      const result = await admin.list();
+      // The sidecar process spawns before its HTTP server is listening, so retry until the first
+      // `list` succeeds rather than reporting a spurious failure on startup.
+      const result = await listWhenReady(admin);
       if (result.ok) {
         registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'ready', models: result.models, error: undefined });
       } else {
@@ -82,13 +87,46 @@ export default Capability.makeModule(
       } catch (error) {
         return fail(formatError(error));
       }
+
+      const controller = new AbortController();
+      pullControllers.set(name, controller);
+      // Ollama reports `completed`/`total` per layer (digest); aggregate across layers so the
+      // overall percent is monotonic rather than resetting to 0 as each layer starts.
+      const downloaded = new Map<string, { completed: number; total: number }>();
       setProgress(name, { status: 'starting' });
-      const result = await admin.pull(name, (progress) => setProgress(name, progress));
+      const result = await admin.pull(
+        name,
+        (progress) => {
+          if (progress.digest && progress.total) {
+            downloaded.set(progress.digest, { completed: progress.completed ?? 0, total: progress.total });
+            let completed = 0;
+            let total = 0;
+            for (const layer of downloaded.values()) {
+              completed += layer.completed;
+              total += layer.total;
+            }
+            setProgress(name, { status: progress.status, completed, total });
+          } else {
+            // Non-download phase (manifest, verifying, writing): keep the status label, drop totals.
+            setProgress(name, { status: progress.status });
+          }
+        },
+        controller.signal,
+      );
+      pullControllers.delete(name);
       setProgress(name, undefined);
-      if (!result.ok) {
+
+      // A cancelled pull surfaces as an aborted fetch; treat it as a no-op, not a failure.
+      if (!result.ok && !controller.signal.aborted) {
         return fail(result.error);
       }
       await refresh();
+    };
+
+    const cancel = (name: string): void => {
+      pullControllers.get(name)?.abort();
+      pullControllers.delete(name);
+      setProgress(name, undefined);
     };
 
     const remove = async (name: string): Promise<void> => {
@@ -109,6 +147,7 @@ export default Capability.makeModule(
       state: stateAtom,
       refresh,
       pull,
+      cancel,
       remove,
     };
 
@@ -176,6 +215,21 @@ const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, n
 
 const formatError = (error: unknown): string =>
   typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
+
+/**
+ * List models, retrying while the freshly-spawned sidecar's HTTP server is not yet listening
+ * (connection refused). Returns the last result once it succeeds or the attempts are exhausted.
+ */
+const listWhenReady = async (admin: OllamaAdmin.Admin): Promise<Awaited<ReturnType<OllamaAdmin.Admin['list']>>> => {
+  const attempts = 30;
+  const delay = 300;
+  let result = await admin.list();
+  for (let attempt = 1; !result.ok && attempt < attempts; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    result = await admin.list();
+  }
+  return result;
+};
 
 /**
  * Route a chunk of Ollama process output to the console by its structured log level. Ollama emits

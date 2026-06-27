@@ -14,7 +14,7 @@ import { useObject, useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
@@ -31,8 +31,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const space = getSpace(chat) ?? getSpace(companionTo);
     const runtime = useChatServices({ id: space?.id });
 
-    const [online, setOnline] = useOnline();
-    const { preset, ...chatProps } = usePresets(online);
+    const { preset, ...chatProps } = usePresets(settings);
+    // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
+    const online = (settings.modelProvider ?? 'edge') === 'edge';
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -96,13 +97,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <div className='flex flex-col items-center py-2 overflow-hidden'>
                   <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
                 </div>
-                <ChatComponent.Prompt
-                  {...chatProps}
-                  outline
-                  preset={preset?.id}
-                  online={online}
-                  onOnlineChange={setOnline}
-                />
+                <ChatComponent.Prompt {...chatProps} outline preset={preset?.id} online={online} />
               </div>
             </ChatComponent.Content>
           </Panel.Content>

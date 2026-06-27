@@ -43,11 +43,11 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'ollama' as const,
-    model: 'ai.ollama.model.gpt-oss:20b' as const,
+    model: 'ai.ollama.model.llama3.2:3b' as const,
   },
   {
     provider: 'ollama' as const,
-    model: 'ai.ollama.model.gemma4:latest' as const,
+    model: 'ai.ollama.model.gpt-oss:20b' as const,
   },
   {
     provider: 'lm-studio' as const,
@@ -56,10 +56,6 @@ export const AiServicePresets: AiServicePreset[] = [
   {
     provider: 'lm-studio' as const,
     model: 'ai.meta.model.llama-3.2-3b-instruct' as const,
-  },
-  {
-    model: 'ai.ollama.model.deepseek-r1:latest' as const,
-    provider: 'dxos-local' as const,
   },
 ].map(
   ({ model, provider, label }, i) =>

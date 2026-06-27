@@ -102,15 +102,24 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
 
       {pullingNames
         .filter((pullName) => !installed.has(pullName))
-        .map((pullName) => (
-          <Form.Row
-            key={pullName}
-            label={pullName}
-            description={t('settings.ollama.pulling.message', { percent: percentOf(state.pulls[pullName]) })}
-          >
-            <Button disabled>{t('settings.ollama.pulling.label')}</Button>
-          </Form.Row>
-        ))}
+        .map((pullName) => {
+          const progress = state.pulls[pullName];
+          // Show a percent only during download phases (which report a total); other phases
+          // (manifest, verifying, writing) show their status label so the bar does not flash to 0%.
+          const description = progress?.total
+            ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
+            : (progress?.status ?? t('settings.ollama.pulling.label'));
+          return (
+            <Form.Row key={pullName} label={pullName} description={description}>
+              <IconButton
+                icon='ph--x--regular'
+                iconOnly
+                label={t('settings.ollama.cancel.label')}
+                onClick={() => manager.cancel(pullName)}
+              />
+            </Form.Row>
+          );
+        })}
 
       {state.kind === 'ready' && state.models.length === 0 && pullingNames.length === 0 && (
         <Form.Row label={t('settings.ollama.installed.label')} description={t('settings.ollama.empty.message')} />

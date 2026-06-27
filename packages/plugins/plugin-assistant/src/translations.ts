@@ -162,6 +162,7 @@ export const translations: Resource[] = [
         'settings.ollama.pull.placeholder': 'Model name (e.g. llama3.2:1b)',
         'settings.ollama.pulling.label': 'Pulling…',
         'settings.ollama.pulling.message': 'Downloading… {{percent}}%',
+        'settings.ollama.cancel.label': 'Cancel download',
         'settings.ollama.quick-pick.label': 'Suggested models',
         'settings.ollama.remove.label': 'Delete model',
         'settings.ollama.refresh.label': 'Refresh',

@@ -22,6 +22,7 @@ const makeFakeManager = (state: Ollama.ModelsState): Ollama.Manager => ({
   state: Atom.make(state),
   refresh: async () => {},
   pull: async () => {},
+  cancel: () => {},
   remove: async () => {},
 });
 

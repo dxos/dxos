@@ -28,5 +28,7 @@ export type Manager = {
   state: Atom.Writable<ModelsState>;
   refresh: () => Promise<void>;
   pull: (name: string) => Promise<void>;
+  /** Abort an in-flight pull, leaving any already-downloaded layers in place. */
+  cancel: (name: string) => void;
   remove: (name: string) => Promise<void>;
 };

@@ -36,9 +36,9 @@ export type ChatPromptProps = Merge<
     chat?: Chat.Chat;
     processor: AiChatProcessor;
     event: Event<ChatEvent>;
+    /** Read-only indicator of whether the configured provider is the remote (online) service. */
     online?: boolean;
     placeholder?: ChatEditorProps['placeholder'];
-    onOnlineChange?: (online: boolean) => void;
   }>,
   ChatPresetProps
 >;
@@ -52,7 +52,6 @@ export const ChatPrompt = ({
   event,
   online,
   placeholder,
-  onOnlineChange,
   onPresetChange,
   settings = true,
   presets,
@@ -165,7 +164,8 @@ export const ChatPrompt = ({
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                <Input.Switch classNames='mx-1' checked={online} onCheckedChange={onOnlineChange} />
+                {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
+                <Input.Switch classNames='mx-1' checked={online} disabled />
               </Input.Root>
             )}
           </ChatActions>

@@ -63,7 +63,7 @@ describe('OllamaAdmin', () => {
       const fetch = mockFetch(() =>
         streamResponse([
           '{"status":"pulling manifest"}\n',
-          '{"status":"downloading","completed":50,"total":100}\n',
+          '{"status":"downloading","digest":"sha256:abc","completed":50,"total":100}\n',
           '{"status":"success"}\n',
         ]),
       );
@@ -73,7 +73,7 @@ describe('OllamaAdmin', () => {
       expect(result).toEqual({ ok: true });
       expect(progress).toEqual([
         { status: 'pulling manifest', completed: undefined, total: undefined },
-        { status: 'downloading', completed: 50, total: 100 },
+        { status: 'downloading', digest: 'sha256:abc', completed: 50, total: 100 },
         { status: 'success', completed: undefined, total: undefined },
       ]);
     });

@@ -33,16 +33,24 @@ export const DEFAULT_LMSTUDIO_MODELS = [
 ] as const;
 
 /**
+ * Curated suggestions offered for one-click pull, paired small/large per family with explicit
+ * size tags (no ambiguous `:latest`). Any pulled model still resolves via the open template, so
+ * this list only seeds the UI.
+ *
  * https://ollama.com/library
  */
 export const DEFAULT_OLLAMA_MODELS = [
   // prettier-ignore
-  'ai.ollama.model.qwen2.5:14b',
   'ai.ollama.model.llama3.2:1b',
-  'ai.ollama.model.llama3:70b',
-  'ai.ollama.model.deepseek-r1:latest',
+  'ai.ollama.model.llama3.2:3b',
+  'ai.ollama.model.gemma3:4b',
+  'ai.ollama.model.gemma3:27b',
+  'ai.ollama.model.qwen2.5:7b',
+  'ai.ollama.model.qwen2.5:32b',
+  'ai.ollama.model.deepseek-r1:8b',
+  'ai.ollama.model.deepseek-r1:70b',
   'ai.ollama.model.gpt-oss:20b',
-  'ai.ollama.model.gemma4:latest',
+  'ai.ollama.model.gpt-oss:120b',
 ] as const;
 
 /**

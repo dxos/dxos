@@ -2,30 +2,53 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { DEFAULT_EDGE_MODELS, DEFAULT_LMSTUDIO_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
+import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Assistant } from '#types';
+import { Assistant, AssistantCapabilities, type Ollama } from '#types';
 
+import { AiServicePresets } from '../../processor';
 import { OllamaModels } from './OllamaModels';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
 
+// The per-provider model-default options must match the chat picker (usePresets), which lists the
+// curated presets for edge/LM Studio and the installed models for Ollama.
+const presetOptions = (provider: string) =>
+  AiServicePresets.filter((preset) => preset.provider === provider).map((preset) => ({
+    value: preset.model,
+    label: preset.label ?? preset.model,
+  }));
+
+// Stable fallback so `useAtomValue` is always called with a valid atom when the manager is absent.
+const emptyStateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], pulls: {} });
+
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+
+  // The Ollama default offers installed models (desktop) so the configured default is resolvable.
+  const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const ollamaState = useAtomValue(ollamaManager?.state ?? emptyStateAtom);
+  const ollamaOptions = useMemo(
+    () => ollamaState.models.map((model) => ({ value: `ai.ollama.model.${model.name}`, label: model.name })),
+    [ollamaState.models],
+  );
+
   // Form `fieldMap` is keyed by dotted JSON path, so nested struct leaves are addressed directly.
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      'modelDefaults.edge': createSelectField({ options: DEFAULT_EDGE_MODELS }),
-      'modelDefaults.ollama': createSelectField({ options: DEFAULT_OLLAMA_MODELS }),
-      'modelDefaults.lmstudio': createSelectField({ options: DEFAULT_LMSTUDIO_MODELS }),
+      'modelDefaults.edge': createSelectField({ options: presetOptions('dxos-remote') }),
+      'modelDefaults.ollama': createSelectField({ options: ollamaOptions }),
+      'modelDefaults.lmstudio': createSelectField({ options: presetOptions('lm-studio') }),
     }),
-    [],
+    [ollamaOptions],
   );
 
   return (
