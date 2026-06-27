@@ -98,18 +98,22 @@ function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean
 
 const flattenedContent = Array.from(visitor(content, () => true));
 
+// Two columns (name + child count) with row dividers so the grid structure is visible — a
+// single-column treegrid reads as a plain list.
 const DefaultStory = () => (
-  <Treegrid.Root gridTemplateColumns='1fr'>
+  <Treegrid.Root gridTemplateColumns='1fr min-content' classNames='gap-x-4 divide-y divide-separator'>
     {flattenedContent.map(({ node, parentOf, path }) => (
       <Treegrid.Row
         key={node.id}
         id={path.join(TREEGRID_PATH_SEPARATOR)}
+        classNames='grid grid-cols-subgrid col-span-full items-center py-1'
         {...(parentOf && { parentOf: parentOf.join(TREEGRID_PARENT_OF_SEPARATOR) })}
       >
-        <Treegrid.Cell indent classNames='flex items-center'>
-          {node.icon && <Icon icon={node.icon} classNames='w-[1em] h-[1em] my-1' />}
+        <Treegrid.Cell indent classNames='flex items-center gap-1'>
+          {node.icon && <Icon icon={node.icon} classNames='w-[1em] h-[1em]' />}
           {node.title}
         </Treegrid.Cell>
+        <Treegrid.Cell classNames='text-end text-description tabular-nums'>{node.nodes?.length ?? 0}</Treegrid.Cell>
       </Treegrid.Row>
     ))}
   </Treegrid.Root>

@@ -321,23 +321,21 @@ decided, expensive to redo if guessed wrong (they set repo-wide conventions).
   Both drop the `@dxos/react-ui-dnd` import. No rename, no `react-ui` collision.
   (Done.) Supersedes the §4.3 "move `Size` down" item.
 
-- **D4 — drop-indicator duplication. ✅ DECIDED: keep mosaic's atlaskit variant;
-  drop the Tailwind ports.** `react-ui`'s `ListDropIndicator` was a Tailwind port
-  written only to keep `@atlaskit` out of `react-ui`. Since the drop indicator is
-  needed solely by the drag aspect — which lives in `react-ui-list`/`react-ui-mosaic`
-  where `@atlaskit` is already a dependency — there's no reason to maintain a port.
-  Standardize on `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box`
-  (what `Mosaic.DropIndicator` already uses) and **delete** `react-ui`'s
-  `ListDropIndicator`. `react-ui-list`'s `OrderedListItem` switches to the atlaskit
-  box indicator (add the `react-drop-indicator` dep to `react-ui-list`).
-  - _Tree sub-case:_ `TreeDropIndicator` renders from a tree-item `Instruction`
-    (reorder-above/below / make-child / reparent) — atlaskit's `react-drop-indicator`
-    ships `box`/`list-item` but no matching `tree-item` renderer, so this port has
-    no drop-in atlaskit equivalent. It moves **with `Tree`** into `react-ui-list`
-    (where the `@atlaskit` dep is fine) and stays a small local port — re-evaluate
-    against atlaskit's `list-item` indicator during the Treegrid move (§4.1).
-  - `react-ui-dnd` therefore does **not** host drop indicators; it keeps
-    `ResizeHandle` + `Size`/`sizeStyle` only.
+- **D4 — drop-indicator duplication. ✅ DECIDED (revised): CSS-free ports in
+  `react-ui-list`; atlaskit in `react-ui-mosaic`.** Deleted `react-ui`'s
+  `ListDropIndicator`. The original plan was to standardize on atlaskit's
+  `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box` everywhere, but that
+  component's CJS build `require`s a `.compiled.css` file which **crashes the node
+  test loader** (`SyntaxError: Unexpected token '.'`) — and `react-ui-list` is
+  transitively imported by many node-tested plugins (e.g. `plugin-settings`'
+  ReactSurface), so it broke their activation tests. So `react-ui-list` keeps
+  **CSS-free Tailwind ports**: `ListDropIndicator` (box, used by `OrderedList` +
+  navtree `L0Menu`) and `TreeDropIndicator` (tree-item `Instruction` — atlaskit
+  ships no `tree-item` renderer anyway). `react-ui-mosaic` keeps the atlaskit
+  component (it's browser-oriented and not in those node-test graphs).
+  - `react-ui-dnd` hosts no drop indicators; it keeps `ResizeHandle` + `Size`/`sizeStyle`.
+  - Lesson logged: after adding a dep to a broadly-imported UI package, build the
+    full affected graph / run node tests, not just the edited package.
 
 ---
 

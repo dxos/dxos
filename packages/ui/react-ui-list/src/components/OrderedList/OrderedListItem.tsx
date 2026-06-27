@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
@@ -26,6 +25,7 @@ import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListGrid, useReorderItem } from '../../aspects';
 import { listTheme } from '../List.theme';
+import { ListDropIndicator } from '../ListDropIndicator';
 import { type ListItemRecord, useOrderedListContext } from './OrderedListRoot';
 
 const styles = listTheme.styles();
@@ -114,7 +114,7 @@ export const OrderedListItem = <T extends ListItemRecord>({
         })}
       >
         {children}
-        {closestEdge && <DropIndicator edge={closestEdge} />}
+        {closestEdge && <ListDropIndicator edge={closestEdge} />}
       </div>
     </OrderedListItemProvider>
   );

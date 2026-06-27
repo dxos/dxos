@@ -181,10 +181,12 @@ fuzzy/search filtering, pair with `@dxos/react-ui-search`.
 - **`dx-*` ↔ ARIA grammar.** `aria-selected` ↔ `dx-selected` (chosen row);
   `aria-current` ↔ `dx-current` (you-are-here); `dx-hover` is free. Definitions
   in `ui-theme/src/css/components/state.md`.
-- **Drop indicators.** Box-edge reorder (OrderedList) uses atlaskit's
-  `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box` directly (same as
-  `Mosaic`); the tree-instruction indicator is a small local `TreeDropIndicator`
-  port (atlaskit ships no `tree-item` renderer).
+- **Drop indicators.** Both the box-edge indicator (`ListDropIndicator`, used by
+  OrderedList + navtree) and the tree-instruction one (`TreeDropIndicator`) are
+  small **CSS-free Tailwind ports** here — atlaskit's React drop-indicator
+  `require`s a `.compiled.css` that crashes the node test loader, and react-ui-list
+  is imported by many node-tested plugins. `react-ui-mosaic` keeps atlaskit's
+  component (it isn't in those node-test graphs). See `AUDIT.md` D4.
 - **Refs.** Use `forwardRef` with the `forwardedRef` parameter name; import React
   symbols by name.
 

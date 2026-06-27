@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { useListDisclosure } from '../../aspects';
 import { Listbox } from './Listbox';
 
 random.seed(1);
@@ -197,6 +198,54 @@ const PlainStory = () => (
   </Listbox.Root>
 );
 
+//
+// Disclosure — selectable items showing icon + title + description (`Listbox.ItemContent`),
+// each with an expand caret that reveals a detail panel via the `useListDisclosure` aspect
+// (multi-expand). The row stays the selectable option; the caret toggles disclosure.
+//
+
+const DisclosureStory = () => {
+  const [selected, setSelected] = useState<string | undefined>(allItems[0]?.id);
+  const disclosure = useListDisclosure({ mode: 'multi' });
+  return (
+    <Listbox.Root value={selected} onValueChange={setSelected}>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Items'>
+          {allItems.slice(0, 8).map((item) => {
+            const { expanded, toggle, triggerProps, panelProps } = disclosure.bind(item.id);
+            return (
+              <Listbox.Item key={item.id} id={item.id} classNames='flex-col items-stretch gap-1'>
+                <div className='flex items-center gap-2'>
+                  <Listbox.ItemContent icon='ph--package--regular' title={item.name} description={item.description} />
+                  <IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--caret-right--regular'
+                    label={expanded ? 'Collapse' : 'Expand'}
+                    aria-expanded={triggerProps['aria-expanded']}
+                    aria-controls={triggerProps['aria-controls']}
+                    classNames={['transition-transform', expanded && 'rotate-90']}
+                    // Toggle disclosure without changing the row's selection.
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggle();
+                    }}
+                  />
+                </div>
+                {expanded && (
+                  <div {...panelProps} className='ps-[var(--dx-rail-item)] pb-1 text-sm text-description'>
+                    {item.description}
+                  </div>
+                )}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
+    </Listbox.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-list/Listbox',
   render: (args) => <DefaultStory {...args} />,
@@ -243,4 +292,9 @@ export const Popover: Story = {
 /** Non-selectable: opt-out of the selection model — plain styled rows (role=list/listitem). */
 export const Plain: Story = {
   render: () => <PlainStory />,
+};
+
+/** Items with icon + title + description and a per-row expand caret (disclosure aspect). */
+export const Disclosure: Story = {
+  render: () => <DisclosureStory />,
 };
