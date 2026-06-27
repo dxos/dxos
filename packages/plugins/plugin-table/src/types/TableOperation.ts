@@ -61,3 +61,30 @@ export const AddRow = Operation.make({
   }),
   output: Schema.Void,
 });
+
+export const ExportColumnSchema = Schema.Struct({
+  path: Schema.Any,
+  title: Schema.String,
+  type: Schema.optional(Schema.Number),
+  format: Schema.optional(Schema.String),
+  referencePath: Schema.optional(Schema.Any),
+});
+
+export const ExportRows = Operation.make({
+  meta: {
+    key: makeKey('exportRows'),
+    name: 'Export Rows',
+    description: 'Exports table rows as CSV, JSON (.dx.json), or XML.',
+    icon: 'ph--export--regular',
+  },
+  input: Schema.Struct({
+    format: Schema.Literal('csv', 'json', 'xml'),
+    rows: Schema.Array(Schema.Any),
+    columns: Schema.Array(ExportColumnSchema),
+  }),
+  output: Schema.Struct({
+    content: Schema.String,
+    mimeType: Schema.String,
+    filename: Schema.String,
+  }),
+});

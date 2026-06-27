@@ -18,6 +18,7 @@ import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
+  type TableExportFormat,
   type TableFeatures,
   type TableModelProps,
   TablePresentation,
@@ -31,6 +32,7 @@ import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { TableOperation } from '#types';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 
@@ -148,6 +150,47 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       model?.saveView();
     }, [model]);
 
+    const handleExport = useCallback(
+      (format: TableExportFormat) => {
+        if (!model || !db) {
+          return;
+        }
+
+        const selectedRows = model.selection.getSelectedRows();
+        const rows = selectedRows.length > 0 ? selectedRows : model.getRows();
+        const columns =
+          model.projection?.getFields().map((field) => {
+            const { props } = model.projection!.getFieldProjection(field.id);
+            return {
+              path: field.path,
+              title:
+                props.title ??
+                (Array.isArray(field.path) ? field.path.map(String).join('.') : String(field.path)),
+              type: props.type,
+              format: props.format,
+              referencePath: field.referencePath,
+            };
+          }) ?? [];
+
+        void invokePromise(TableOperation.ExportRows, { format, rows, columns }, { spaceId: db.spaceId }).then(
+          (result) => {
+            if (result.error || !result.data) {
+              return;
+            }
+
+            const blob = new Blob([result.data.content], { type: result.data.mimeType });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = result.data.filename;
+            anchor.click();
+            URL.revokeObjectURL(url);
+          },
+        );
+      },
+      [db, invokePromise, model],
+    );
+
     const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
     const handleRowClick = useCallback(
@@ -168,6 +211,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               customActions={customActions}
               viewDirty={model?.getViewDirty()}
               onAdd={handleInsertRow}
+              onExport={handleExport}
               onSave={handleSave}
             />
           </Panel.Toolbar>
