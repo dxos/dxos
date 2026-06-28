@@ -211,13 +211,16 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
       PreviewPlugin(),
       TranscriptionPlugin(),
     ],
-    fireEvents: [AppActivationEvents.SetupAppGraph],
+    // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted
+    // driver renders: SetupSettings registers the session/settings/status capabilities it reads,
+    // SetupAppGraph the graph + transcriber contributions.
+    setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph],
   }),
 ];
 
 // TODO(mykola): Make API easier to use.
 // TODO(mykola): Delete after enabling vector indexing by default.
-const enableQueryIndexes = (services: { QueryService?: any }) =>
+export const enableQueryIndexes = (services: { QueryService?: any }) =>
   Effect.gen(function* () {
     yield* Effect.promise(() =>
       services.QueryService!.setConfig({

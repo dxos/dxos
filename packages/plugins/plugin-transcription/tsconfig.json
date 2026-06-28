@@ -67,7 +67,16 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/nlp"
+    },
+    {
+      "path": "../../core/compute/transcription-pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../sdk/app-framework"

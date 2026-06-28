@@ -111,9 +111,23 @@ describe('PendingTextStreamer', () => {
     streamer.push('alpha beta gamma');
     expect(sink.snapshot().final).toBe('alpha');
 
-    streamer.flush();
+    void streamer.flush();
     expect(sink.snapshot().final).toBe('alpha beta gamma');
     await flushMicrotasks();
     expect(sink.snapshot().final).toBe('[alpha beta gamma]');
+  });
+
+  test('awaiting flush() resolves only after async post-process settles (drain contract)', async ({ expect }) => {
+    const sink = memoryPendingTextSink();
+    const streamer = new PendingTextStreamer(sink, {
+      mode: 'batch',
+      postProcess: async (text) => `[${text}]`,
+    });
+
+    streamer.start();
+    streamer.push('alpha beta');
+    // Drain: a single await must guarantee the post-process pass has applied.
+    await streamer.flush();
+    expect(sink.snapshot().final).toBe('[alpha beta]');
   });
 });

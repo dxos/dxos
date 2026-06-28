@@ -124,6 +124,8 @@ export class PendingTextStreamer {
   #bufferHandle: unknown = null;
   #wordHandle: unknown = null;
   #postHandle: unknown = null;
+  /** The in-flight post-process pass, tracked so `flush()` can await it (drain contract). */
+  #postPromise: Promise<void> | null = null;
 
   constructor(sink: PendingTextSink, options: PendingTextStreamerOptions = {}) {
     this.#sink = sink;
@@ -170,8 +172,11 @@ export class PendingTextStreamer {
     }
   }
 
-  /** Reveal everything immediately and run any pending post-process (e.g. on stop). */
-  flush(): void {
+  /**
+   * Reveal everything immediately and run any pending post-process (e.g. on stop). Resolves once the
+   * post-process pass (entity linking, …) has settled, so callers can drain before disposing.
+   */
+  async flush(): Promise<void> {
     this.#clear(this.#bufferHandle);
     this.#bufferHandle = null;
     this.#buffering = false;
@@ -181,10 +186,16 @@ export class PendingTextStreamer {
       this.#appendFinal(this.#queue.shift()!);
     }
     this.#sink.interim('');
-    if (this.#options.postProcess && this.#postHandle != null) {
-      this.#clear(this.#postHandle);
-      this.#postHandle = null;
-      void this.#runPostProcess();
+    this.#clear(this.#postHandle);
+    this.#postHandle = null;
+    if (this.#options.postProcess && this.#final.length > 0) {
+      // Await any post-process already in flight (its scheduled timer may have fired), then run a
+      // final pass over the settled buffer — so draining truly waits for post-processing to finish.
+      if (this.#postPromise) {
+        await this.#postPromise;
+      }
+      this.#postPromise = this.#runPostProcess();
+      await this.#postPromise;
     }
   }
 
@@ -232,17 +243,21 @@ export class PendingTextStreamer {
     this.#clear(this.#postHandle);
     this.#postHandle = this.#scheduler.setTimeout(() => {
       this.#postHandle = null;
-      void this.#runPostProcess();
+      this.#postPromise = this.#runPostProcess();
     }, this.#options.postProcessDebounceMs);
   }
 
   async #runPostProcess(): Promise<void> {
     const input = this.#final;
-    const result = await this.#options.postProcess!(input);
-    // Skip if the buffer grew while processing — a later pass will cover the newer text.
-    if (result !== input && this.#final === input) {
-      this.#final = result;
-      this.#sink.replaceFinal(result);
+    try {
+      const result = await this.#options.postProcess!(input);
+      // Skip if the buffer grew while processing — a later pass will cover the newer text.
+      if (result !== input && this.#final === input) {
+        this.#final = result;
+        this.#sink.replaceFinal(result);
+      }
+    } catch {
+      // Post-process is best-effort (e.g. entity linking); a failure leaves the un-rewritten text.
     }
   }
 

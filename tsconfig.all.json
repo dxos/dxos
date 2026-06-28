@@ -199,7 +199,13 @@
       "path": "packages/core/compute/mcp-client/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/nlp/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/operation/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/transcription-pipeline/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"

@@ -25,7 +25,7 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
-  '@automerge/automerge': 3.3.0-fragments.1
+  '@automerge/automerge': 3.3.0-fragments.2
   '@automerge/automerge-repo': 2.6.0-subduction.37
   '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.37
   '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.37
@@ -75,13 +75,13 @@ catalog:
   '@effect-rx/rx-react': ^0.42.4
   '@effect/ai': 0.36.0
   '@effect/ai-anthropic': 0.26.0
-  '@effect/ai-openai': 0.40.0
+  '@effect/ai-openai': 0.40.1
   '@effect/cli': 0.75.2
   '@effect/cluster': 0.59.0
   '@effect/experimental': 0.60.0
   '@effect/language-service': ^0.86.2
   '@effect/opentelemetry': ^0.63.0
-  '@effect/platform': 0.96.1
+  '@effect/platform': 0.96.2
   '@effect/platform-browser': 0.76.0
   '@effect/platform-bun': 0.90.0
   '@effect/platform-node': 0.107.0
@@ -211,7 +211,7 @@ catalog:
   '@storybook/react-vite': ^10.4.2
   '@storybook/web-components-vite': ^10.4.2
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.15.41
+  '@swc/core': 1.15.43
   '@swc/types': ^0.1.26
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
@@ -395,7 +395,7 @@ catalog:
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 3.21.3
+  effect: 3.21.4
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
@@ -779,7 +779,7 @@ peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
     '@effect-atom/atom>@effect/experimental': 0.60.0
-    '@effect-atom/atom>@effect/platform': 0.96.1
+    '@effect-atom/atom>@effect/platform': 0.96.2
     '@effect-atom/atom>@effect/rpc': 0.75.1
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
@@ -801,7 +801,7 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  - '@swc/core@1.15.33'
+  - '@swc/core@1.15.43'
   - semver
   - semver@6.3.1
   - semver@5.7.2

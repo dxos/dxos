@@ -47,6 +47,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/nlp"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

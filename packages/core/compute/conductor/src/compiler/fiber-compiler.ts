@@ -436,8 +436,14 @@ export class GraphExecutor {
           Effect.fn('validateOutput')(function* (valueEffect, key) {
             const value = yield* valueEffect;
 
+            // `node.outputs` is derived from edges, so an output port with no outgoing edge has no topology
+            // entry. Such a value is unconsumed (e.g. a node used as a sink), so there is nothing to validate.
+            const outputTopology = node.outputs.find((o) => o.name === key);
+            if (outputTopology == null) {
+              return value;
+            }
+
             // Assert that the value matches the schema.
-            const outputTopology = node.outputs.find((o) => o.name === key) ?? failedInvariant();
             yield* Schema.decode(outputTopology.schema)(value).pipe(
               Effect.mapError(
                 (error) =>
