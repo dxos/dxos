@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
@@ -108,6 +109,7 @@ const meta = {
         }),
         TranscriptionPlugin(),
       ],
+      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {
