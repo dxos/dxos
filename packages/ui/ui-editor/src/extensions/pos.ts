@@ -3,9 +3,10 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView } from '@codemirror/view';
+import { Decoration, EditorView, type ViewUpdate } from '@codemirror/view';
 
-import { type Document, type Upos } from '@dxos/nlp';
+import { debounce } from '@dxos/async';
+import { type Document, sourceHash, type Upos } from '@dxos/nlp';
 
 /** One analyzed region of the document. `document` offsets are relative to the span's own text. */
 export type PosSpan = {
@@ -119,3 +120,57 @@ export const posTheme = (): Extension =>
     ),
     '.cm-pos-stale': { opacity: '0.4' },
   });
+
+/** A span has diverged when the current text under its (mapped) range no longer matches its hash. */
+export const spanDiverged = (docText: string, span: { from: number; to: number; sourceHash: string }): boolean =>
+  sourceHash(docText.slice(span.from, span.to)) !== span.sourceHash;
+
+export type PosOptions = {
+  /** When set, the extension self-parses on idle and dispatches `setAnalysis`. */
+  parse?: (text: string) => Promise<Document>;
+  /** Idle debounce before reactive parsing (ms). */
+  debounceMs?: number;
+};
+
+/**
+ * Reactive driver: on doc change, mark edit-touched spans stale (immediate visual feedback), then
+ * after idle re-parse the whole document as a single span and dispatch fresh analysis. Re-hashing
+ * is bounded to touched spans via `spanDiverged`.
+ */
+const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: number): Extension => {
+  const run = debounce((view: EditorView) => {
+    const text = view.state.doc.toString();
+    void parse(text).then((document) => {
+      view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
+    });
+  }, debounceMs);
+
+  return EditorView.updateListener.of((update: ViewUpdate) => {
+    if (!update.docChanged) {
+      return;
+    }
+    // Immediate: mark any diverged span stale so its decorations dim until the re-parse lands.
+    const text = update.state.doc.toString();
+    const effects = update.state
+      .field(posAnalysisField)
+      .filter((span) => !span.stale && spanDiverged(text, span))
+      .map((span) => markStale.of({ from: span.from, to: span.to }));
+    if (effects.length > 0) {
+      update.view.dispatch({ effects });
+    }
+    run(update.view);
+  });
+};
+
+/**
+ * Part-of-speech decoration extension. Renders per-word UPOS marks from analysis state held in a
+ * span-oriented state field. State can be set externally via `setAnalysis`/`clearAnalysis`, or — when
+ * `options.parse` is supplied — self-driven on idle (reactive mode).
+ */
+export const pos = (options: PosOptions = {}): Extension => {
+  const extensions: Extension[] = [posAnalysisField, posDecorations, posTheme()];
+  if (options.parse) {
+    extensions.push(reactiveDriver(options.parse, options.debounceMs ?? 500));
+  }
+  return extensions;
+};

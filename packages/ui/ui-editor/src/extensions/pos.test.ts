@@ -6,9 +6,9 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { type Document } from '@dxos/nlp';
+import { type Document, sourceHash } from '@dxos/nlp';
 
-import { clearAnalysis, posAnalysisField, posDecorations, posSpans, setAnalysis } from './pos';
+import { clearAnalysis, posAnalysisField, posDecorations, posSpans, setAnalysis, spanDiverged } from './pos';
 
 const docFor = (text: string): Document => ({
   sourceHash: 'deadbeef',
@@ -60,5 +60,15 @@ describe('posDecorations', () => {
     state = state.update({ effects: setAnalysis.of({ from: 0, to: 11, document }) }).state;
     const sources = state.facet(EditorView.decorations);
     expect(sources.length).toBeGreaterThan(0);
+  });
+});
+
+describe('spanDiverged', () => {
+  const emptyDoc: Document = { sourceHash: sourceHash('hello'), sentences: [] };
+
+  test('detects when live span text no longer matches the stored hash', ({ expect }) => {
+    const span = { from: 0, to: 5, sourceHash: sourceHash('hello'), document: emptyDoc, stale: false };
+    expect(spanDiverged('hello world', span)).toBe(false);
+    expect(spanDiverged('hELLo world', span)).toBe(true);
   });
 });
