@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Database, Filter, Hypergraph, Obj, Query, Ref, Scope } from '@dxos/echo';
+import { Database, Feed, Filter, Hypergraph, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
@@ -26,7 +26,7 @@ describe('Hypergraph.scoped', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    const { peer, db } = await builder.createDatabase();
+    const { peer, db } = await builder.createDatabase({ types: [TestSchema.Expando, Feed.Feed] });
     dbA = db;
     // Second database on the SAME peer → shares the one in-process Hypergraph.
     dbB = await peer.createDatabase();
@@ -200,6 +200,26 @@ describe('Hypergraph.scoped', () => {
     // foreign URI is not a working handle).
     expect(await EffectEx.runPromise(loadId(refToA).pipe(Effect.provide(confinedToA())))).toBe(objA.id);
     expect(await EffectEx.runPromise(loadId(refToB).pipe(Effect.provide(confinedToA())))).toBeUndefined();
+  });
+
+  test('Feed.query confines feed/queue reads to the allowlist', async () => {
+    const feedB = dbB.add(Feed.make());
+    await dbB.appendToFeed(feedB, [Obj.make(TestSchema.Expando, { title: 'feed item in B' })]);
+    await dbB.flush();
+    const query = Feed.runQuery(feedB, Filter.everything());
+
+    // Unconfined: the home db resolves the foreign feed by URI (today's behavior).
+    const unconfined = await EffectEx.runPromise(query.pipe(Effect.provide(Database.layer(dbA))));
+    expect(unconfined).toHaveLength(1);
+
+    // Confined to [A]: feed B is in a foreign space → denied (yields nothing, not its contents).
+    const denied = await EffectEx.runPromise(query.pipe(Effect.provide(confinedToA())));
+    expect(denied).toHaveLength(0);
+
+    // Confined to [A, B]: feed B is allowed → readable across the multi-space allowlist.
+    const confinedToAB = Layer.merge(Database.layer(dbA), Hypergraph.scopedLayer([dbA.spaceId, dbB.spaceId]));
+    const allowed = await EffectEx.runPromise(query.pipe(Effect.provide(confinedToAB)));
+    expect(allowed).toHaveLength(1);
   });
 
   test('scoped() is narrow-only — it intersects and never widens', () => {

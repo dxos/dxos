@@ -7,7 +7,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as Option from 'effect/Option';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { DXN, EID } from '@dxos/keys';
@@ -15,7 +15,8 @@ import { DXN, EID } from '@dxos/keys';
 import * as Annotation from './Annotation';
 import * as Database from './Database';
 import type * as Entity from './Entity';
-import type * as Filter from './Filter';
+import * as Filter from './Filter';
+import * as Hypergraph from './Hypergraph';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Query from './Query';
@@ -241,9 +242,18 @@ export const query: {
     filter: F,
   ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Database.Service>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Database.Service.pipe(
-    Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter as any) as QueryResult.QueryResult<any>),
-  );
+  Effect.gen(function* () {
+    const { db } = yield* Database.Service;
+    const scope = yield* Effect.serviceOption(Hypergraph.Service);
+    // Confinement (agent firewall): a confined session may read only feeds whose owning space is on
+    // its allowlist. `db.queryFeed` resolves a feed by URI across spaces, so a foreign feed is
+    // queried with a never-matching filter — it yields nothing rather than the feed's contents.
+    // Unconfined callers (no Hypergraph.Service) are unaffected.
+    const eid = EID.tryParse(Obj.getURI(feed));
+    const feedSpace = eid != null ? EID.getSpaceId(eid) : undefined;
+    const denied = Option.isSome(scope) && feedSpace != null && !scope.value.allowlist.includes(feedSpace);
+    return db.queryFeed(feed, denied ? Filter.nothing() : (queryOrFilter as any)) as QueryResult.QueryResult<any>;
+  });
 
 /**
  * Executes a feed query once and returns the results.
