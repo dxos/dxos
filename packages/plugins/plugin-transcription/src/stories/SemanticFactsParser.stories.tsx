@@ -24,7 +24,7 @@ import { extractFacts } from '@dxos/semantic-index';
 import { translations } from '#translations';
 
 import { SemanticFactsParser, type SemanticFactsParserProps } from './SemanticFactsParser';
-import { SAMPLE_FACTS_TEXT_BLOCK } from './testing';
+import { SAMPLE_FACTS_TEXT } from './testing';
 
 // Live extraction: `extractFacts` requires only an `AiService`, satisfied here by the hosted DXOS
 // edge preset (a real LLM runs on Parse). The same component + `extractFacts` works against any
@@ -52,7 +52,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     onParse,
-    initialText: SAMPLE_FACTS_TEXT_BLOCK,
+    initialText: SAMPLE_FACTS_TEXT,
   },
 };
 

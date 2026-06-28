@@ -3,6 +3,7 @@
 //
 
 import { type Type } from '@dxos/semantic-index';
+import { trim } from '@dxos/util';
 
 const extractor = {
   id: 'default',
@@ -14,14 +15,11 @@ const extractor = {
  * Sample sentences shared by the SemanticFactsParser story (live extraction input) and the
  * {@link DEMO_FACTS} fixtures below (whose `quote` fields are drawn verbatim from these).
  */
-export const SAMPLE_FACTS_TEXT = [
-  "I think I'm probably going to Paris next week.",
-  "Alice told me she's definitely going to Rome, not Paris.",
-  'The Q3 board meeting is confirmed for July 15 in London.',
-] as const;
-
-/** Joined block form for components that take a single text string. */
-export const SAMPLE_FACTS_TEXT_BLOCK = SAMPLE_FACTS_TEXT.join('\n');
+export const SAMPLE_FACTS_TEXT = trim`
+  I think I'm probably going to Paris next week.
+  Alice told me she's definitely going to Rome, not Paris.
+  The Q3 board meeting is confirmed for July 15 in London.
+`;
 
 /**
  * Static demo facts that exercise the viewer: an entity→entity conflict (f1 vs f2,
