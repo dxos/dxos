@@ -32,9 +32,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { facts: DEMO_FACTS },
+  args: {
+    facts: DEMO_FACTS,
+  },
 };
 
 export const Empty: Story = {
-  args: { facts: [] },
+  args: {
+    facts: [],
+  },
 };
