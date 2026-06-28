@@ -15,11 +15,14 @@ import React, {
   useCallback,
 } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { composable, composableProps } from '../../util';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { treegridTheme } from './Treegrid.theme';
 
 // TODO(thure): https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
+
+const styles = treegridTheme.styles();
 
 const TREEGRID_ROW_NAME = 'Treegrid.Row';
 
@@ -46,7 +49,6 @@ type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.
 
 const TreegridRoot = composable<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, onKeyDown: onKeyDownProp, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
     const { className, role: _role, ...rest } = composableProps<HTMLDivElement>(props, { classNames });
     const Comp = asChild ? Slot : Primitive.div;
     const { findFirstFocusable } = useFocusFinders();
@@ -101,7 +103,7 @@ const TreegridRoot = composable<HTMLDivElement, TreegridRootProps>(
       <Comp
         role='treegrid'
         {...rest}
-        className={tx('treegrid.root', {}, className)}
+        className={styles.root({ class: mx(className) })}
         style={{ ...style, gridTemplateColumns }}
         onKeyDown={handleKeyDown}
         ref={forwardedRef}
@@ -137,7 +139,6 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
     },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
     const Comp = asChild ? Slot : Primitive.div;
     const pathParts = id.split(TREEGRID_PATH_SEPARATOR);
     const level = pathParts.length - 1;
@@ -152,7 +153,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
         <Comp
           role='row'
           aria-level={level}
-          className={tx('treegrid.row', { level }, classNames)}
+          className={styles.row({ class: mx(treegridTheme.rowLevel(level), classNames) })}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
           {...props}
           id={id}
@@ -169,9 +170,8 @@ type TreegridCellProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.
 
 const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
   ({ classNames, children, indent, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
     return (
-      <div role='gridcell' className={tx('treegrid.cell', { indent }, classNames)} {...props} ref={forwardedRef}>
+      <div role='gridcell' className={styles.cell({ indent, class: mx(classNames) })} {...props} ref={forwardedRef}>
         {children}
       </div>
     );

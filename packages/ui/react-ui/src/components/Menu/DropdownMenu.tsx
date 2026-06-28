@@ -29,8 +29,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
-import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
+import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 type Direction = 'ltr' | 'rtl';

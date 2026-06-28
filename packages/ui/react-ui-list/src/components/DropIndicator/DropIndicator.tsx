@@ -5,6 +5,12 @@
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
+// Tailwind port of `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box`. The atlaskit
+// React component `require`s a `.compiled.css` file, which crashes the node test loader (and
+// thus every node-tested plugin that transitively imports this list); this port is CSS-free
+// and theme-aware (`bg-accent-bg`). `react-ui-mosaic` keeps the atlaskit component. See
+// `react-ui-list/AUDIT.md` D4.
+
 type Orientation = 'horizontal' | 'vertical';
 
 const edgeToOrientationMap: Record<Edge, Orientation> = {
@@ -32,6 +38,7 @@ const strokeSize = 2;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 
+/** Props for {@link DropIndicator}. */
 export type DropIndicatorProps = {
   edge: Edge;
   gap?: number;
@@ -39,10 +46,8 @@ export type DropIndicatorProps = {
   lineInset?: number;
 };
 
-/**
- * This is a tailwind port of `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box`
- */
-export const ListDropIndicator = ({
+/** Themed box-edge drop indicator (line + circular terminal) for pragmatic-dnd reorder. */
+export const DropIndicator = ({
   edge,
   gap = 0,
   lineInset = 0,
@@ -63,7 +68,7 @@ export const ListDropIndicator = ({
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
         } as CSSProperties
       }
-      className={`absolute z-10 pointer-events-none bg-accent-bg before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
+      className={`absolute z-10 pointer-events-none bg-accent-bg before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
     />
   );
 };

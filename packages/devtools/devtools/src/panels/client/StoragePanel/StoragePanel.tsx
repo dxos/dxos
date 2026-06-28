@@ -17,7 +17,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Icon, ScrollArea, Toolbar, Tree, TreeItem } from '@dxos/react-ui';
+import { DropdownMenu, Icon, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
@@ -297,9 +297,9 @@ const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
 
 const DataTree: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ items = [], onSelect }) => {
   return (
-    <Tree.Root classNames='p-2'>
+    <div role='tree' className='p-2'>
       <DataItems items={items} onSelect={onSelect} />
-    </Tree.Root>
+    </div>
   );
 };
 
@@ -309,15 +309,17 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
       {items.map((item) => {
         const { id, iconName, Element, items } = item;
         return (
-          <TreeItem.Root key={id} collapsible={!!items?.length} open>
+          <div key={id} role='treeitem'>
             <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
               <Icon icon={iconName} />
               {Element}
             </div>
-            <TreeItem.Body className='ps-4'>
-              <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
-            </TreeItem.Body>
-          </TreeItem.Root>
+            {items && items.length > 0 && (
+              <div role='group' className='ps-4'>
+                <DataItems items={items} onSelect={onSelect} />
+              </div>
+            )}
+          </div>
         );
       })}
     </>

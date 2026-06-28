@@ -8,16 +8,16 @@ import React from 'react';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ItemContent } from './ItemContent';
+import { ListItemContent } from './ListItemContent';
 
 const meta = {
   title: 'ui/react-ui-list/ItemContent',
-  component: ItemContent,
+  component: ListItemContent,
   render: (args) => (
-    <div className='flex flex-col w-[24rem] divide-y divide-subdued-separator'>
-      <ItemContent {...args} classNames='p-2' />
-      <ItemContent icon='ph--clock--regular' title='Title only, no description' classNames='p-2' />
-      <ItemContent
+    <div className='flex flex-col divide-y divide-subdued-separator'>
+      <ListItemContent {...args} classNames='p-2' />
+      <ListItemContent icon='ph--clock--regular' title='Title only, no description' classNames='p-2' />
+      <ListItemContent
         icon={<Icon icon='ph--x-circle--regular' size={5} classNames='text-error-text' />}
         title='Failed run'
         description='Failed · 2.6s'
@@ -26,7 +26,7 @@ const meta = {
     </div>
   ),
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof ItemContent>;
+} satisfies Meta<typeof ListItemContent>;
 
 export default meta;
 
