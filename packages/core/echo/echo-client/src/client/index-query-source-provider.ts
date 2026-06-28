@@ -7,7 +7,7 @@ import * as Array from 'effect/Array';
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
+import { Entity, type Hypergraph, Obj, Query, type QueryResult, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -66,11 +66,14 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderProps) {}
 
   // TODO(burdon): Rename createQuerySource
-  create(): QuerySource {
+  create(allowed?: ReadonlySet<SpaceId>): QuerySource {
     return new IndexQuerySource({
       service: this._params.service,
       objectLoader: this._params.objectLoader,
-      graph: this._params.graph,
+      // Resolve hydrated objects' references against a scoped graph so a confined view cannot follow
+      // a ref into a foreign space; unconfined (no allowlist) keeps the full graph.
+      graph: allowed != null ? this._params.graph.scoped([...allowed]) : this._params.graph,
+      allowed,
     });
   }
 }
@@ -79,6 +82,15 @@ export type IndexQuerySourceProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+
+  /**
+   * When set, the source is confined to these spaces: a query carrying no explicit space scope is
+   * restricted to the allowlist before it reaches the host (which also satisfies the planner's
+   * from-clause requirement), and any hit outside the allowlist is dropped before hydration, so the
+   * (not space-scoped) {@link ObjectLoader} never loads a foreign object. Unset ⇒ unconfined.
+   * See `docs/design/agent-firewall.md`.
+   */
+  allowed?: ReadonlySet<SpaceId>;
 };
 
 /**
@@ -137,14 +149,14 @@ export class IndexQuerySource implements QuerySource {
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
-    this._query = query;
+    this._query = this.#confineToAllowed(query);
     return new Promise((resolve, reject) => {
-      this._runOneShot(query, resolve, reject);
+      this._runOneShot(this._query!, resolve, reject);
     });
   }
 
   update(query: QueryAST.Query): void {
-    this._query = query;
+    this._query = this.#confineToAllowed(query);
 
     this._closeStream();
     this._lastRemoteResults = undefined;
@@ -161,7 +173,21 @@ export class IndexQuerySource implements QuerySource {
       return;
     }
 
-    this._startReactive(query);
+    this._startReactive(this._query);
+  }
+
+  /**
+   * Confine a query to the allowlist before it reaches the host. A query with no explicit space scope
+   * is restricted to the allowed spaces — both confining the search and satisfying the host planner's
+   * from-clause requirement. A query that already carries space scopes is left as-is (its targets were
+   * validated against the allowlist upstream; {@link _mapRecords} drops any stray foreign hit).
+   */
+  #confineToAllowed(query: QueryAST.Query): QueryAST.Query {
+    if (this._params.allowed == null || getTargetSpacesForQuery(query).length > 0) {
+      return query;
+    }
+    const scopes = [...this._params.allowed].map((id) => Scope.space({ id }));
+    return Query.fromAst(query).from(...scopes).ast;
   }
 
   /** Single-use query: resolves with the first host response, then closes the stream. */
@@ -324,7 +350,13 @@ export class IndexQuerySource implements QuerySource {
       length: records.length,
     });
 
-    const processedResults = await Promise.all(records.map((result) => this._filterMapResult(ctx, start, result)));
+    // Confinement backstop (agent firewall): drop any hit outside the allowlist before hydration, so
+    // the (not space-scoped) object loader never fetches a foreign object. Unset ⇒ unconfined.
+    const allowed = this._params.allowed;
+    const inScope =
+      allowed == null ? records : records.filter((result) => allowed.has(SpaceId.make(result.spaceId)));
+
+    const processedResults = await Promise.all(inScope.map((result) => this._filterMapResult(ctx, start, result)));
     const results = processedResults.filter(isNonNullable);
 
     const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getType(_.result));

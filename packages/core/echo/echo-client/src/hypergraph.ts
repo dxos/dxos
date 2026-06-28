@@ -789,13 +789,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @internal Exposed for {@link ScopedHypergraph}.
    * @param allowed When set, fan-out is confined to these spaces: only their {@link SpaceQuerySource}s
    *   are added, the context is NOT tracked in `_queryContexts` (so a later `_registerDatabase` cannot
-   *   push a foreign source into it), and the not-yet-scope-aware custom providers (e.g. the remote
-   *   index) are omitted to prevent hydrating a foreign space. A confined view is used only for
-   *   resolution and foreign-scope denial (which the {@link SpaceQuerySource}s satisfy); a confined
-   *   agent's own reads run through `db.query`, which uses the full (home-bound) index.
+   *   push a foreign source into it), and each custom provider (e.g. the remote index) is created with
+   *   the allowlist so it confines its own search and results to those spaces.
    */
-  // TODO(wittjosiah): Make query source providers (remote index) scope-aware (filter hits to the
-  // allowlist) once a confined view becomes a multi-space read path (agent firewall T1).
   _createLiveObjectQueryContext(allowed?: ReadonlySet<SpaceId>): QueryContext {
     const scoped = allowed != null;
     const context = new GraphQueryContext(
@@ -819,9 +815,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
     // Registry holds code-shipped/keyed entities (types, operations, skills) — not space-scoped.
     context.addQuerySource(new RegistryQuerySource(this._registry));
-    if (!scoped) {
-      for (const provider of this._querySourceProviders) {
+    for (const provider of this._querySourceProviders) {
+      if (allowed == null) {
         context.addQuerySource(provider.create());
+      } else {
+        // One confined source per allowed space: the index host does single-space full-text only
+        // (see query-executor `spaces.length <= 1`), so a multi-space view fans out per space and the
+        // context merges the results. Each source confines its own search and results to its space.
+        for (const spaceId of allowed) {
+          context.addQuerySource(provider.create(new Set([spaceId])));
+        }
       }
     }
 
@@ -892,7 +895,11 @@ export class ScopedHypergraph implements Hypergraph.Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(): QuerySource;
+  /**
+   * @param allowed When set, the source must confine its results to these spaces (a scoped view).
+   *   Unset ⇒ unconfined (all spaces), the default non-agent behavior.
+   */
+  create(allowed?: ReadonlySet<SpaceId>): QuerySource;
 }
 
 type ObjectDiagnostic = {

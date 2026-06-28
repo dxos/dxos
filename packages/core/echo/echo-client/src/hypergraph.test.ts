@@ -142,6 +142,31 @@ describe('Hypergraph.scoped', () => {
     expect(ids(homeOnly)).not.toContain(objB.id);
   });
 
+  test('full-text (index) query fans out across the allowlist and stays confined', async () => {
+    // Full-text matches are served by the index source (not the working-set SpaceQuerySource), so
+    // this exercises the scope-aware index on the confined path.
+    const docA = dbA.add(Obj.make(TestSchema.Expando, { title: 'zorptext alpha' }));
+    const docB = dbB.add(Obj.make(TestSchema.Expando, { title: 'zorptext beta' }));
+    await dbA.flush();
+    await dbB.flush();
+    const search = Query.select(Filter.text('zorptext', { type: 'full-text' }));
+    const ids = (objects: readonly Obj.Any[]) => objects.map((object) => object.id);
+
+    // Allowlist [A, B]: index search covers both spaces.
+    const both = await EffectEx.runPromise(
+      Database.query(search).run.pipe(
+        Effect.provide(Layer.merge(Database.layer(dbA), Hypergraph.scopedLayer([dbA.spaceId, dbB.spaceId]))),
+      ),
+    );
+    expect(ids(both)).toContain(docA.id);
+    expect(ids(both)).toContain(docB.id);
+
+    // Allowlist [A]: the index search is confined to A — B's match is excluded.
+    const home = await EffectEx.runPromise(Database.query(search).run.pipe(Effect.provide(confinedToA())));
+    expect(ids(home)).toContain(docA.id);
+    expect(ids(home)).not.toContain(docB.id);
+  });
+
   test('Database.load denies a ref into a space outside the allowlist', async () => {
     // Home ref to the live object (target inlined, so load short-circuits without resolution).
     const refToA = Ref.make(objA);
