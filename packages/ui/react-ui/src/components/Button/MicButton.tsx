@@ -11,10 +11,10 @@ export type MicButtonMode = 'toggle' | 'hold';
 export type MicButtonProps = Omit<IconButtonProps, 'icon' | 'onClick'> & {
   /** Defaults to a microphone glyph. */
   icon?: IconButtonProps['icon'];
-  /** Whether recording is active; drives the active (recording) styling. */
-  recording?: boolean;
   /** `toggle`: click flips recording. `hold`: records only while held (push-to-talk). */
   mode?: MicButtonMode;
+  /** Whether recording is active; drives the active (recording) styling. */
+  recording?: boolean;
   /** Fired in `toggle` mode on click. */
   onToggle?: () => void;
   /** Fired in `hold` mode when the press begins. */
@@ -33,8 +33,8 @@ export const MicButton = forwardRef<HTMLButtonElement, MicButtonProps>(
     {
       classNames,
       icon = 'ph--microphone--regular',
-      recording,
       mode = 'toggle',
+      recording,
       onToggle,
       onPressStart,
       onPressEnd,
@@ -51,13 +51,13 @@ export const MicButton = forwardRef<HTMLButtonElement, MicButtonProps>(
         onPressStart?.();
       }
     }, [onPressStart]);
+
     const endPress = useCallback(() => {
       if (pressedRef.current) {
         pressedRef.current = false;
         onPressEnd?.();
       }
     }, [onPressEnd]);
-
     const handlePointerDown = useCallback(
       (event: PointerEvent<HTMLButtonElement>) => {
         // Capture so the matching release fires on this button even if the pointer leaves it.
@@ -108,9 +108,9 @@ export const MicButton = forwardRef<HTMLButtonElement, MicButtonProps>(
       <IconButton
         {...props}
         {...holdHandlers}
-        ref={forwardedRef}
-        icon={icon}
         classNames={[recordingClassNames, classNames]}
+        icon={icon}
+        ref={forwardedRef}
       />
     );
   },
