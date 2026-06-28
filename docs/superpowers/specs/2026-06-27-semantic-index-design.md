@@ -112,14 +112,55 @@ Residual gap: a real `wrangler dev` smoke test (V8-in-Node ≠ workerd exactly).
 scheduled as build-order step 0. Constraints accepted: Oxigraph's JS build is **in-memory**
 (we snapshot/persist ourselves, §6) and has **no FTS/vector** (sidecar, §8).
 
-### 2.5 Verdict
+### 2.5 Comunica evaluation (SPARQL over a *swappable* backend)
 
-**Adopt Oxigraph (RDF-star + SPARQL) as the semantic store + query engine, behind a typed
-Effect-Schema facade.** The facade keeps the team's ergonomics (typed `Fact` API, no
-hand-written SPARQL at call sites) and defines the canonical `Fact ↔ RDF-star` mapping;
-Oxigraph provides storage, query, and standards-based RDF interop for free. FactBank values
-and PROV-O terms become IRIs/literals in the graph. A SQLite-backed `SemanticStore` remains
-a fallback for scale (§6). This honors the reuse priority while preserving typing.
+The RocksDB question exposed Oxigraph's real limit: its WASM `Store` is in-memory with **no
+pluggable backend** (§6). **Comunica** — a modular JS SPARQL engine — is the inverse: it is
+*only* a query engine and runs SPARQL over **any RDF/JS `Source`** (a `match(s,p,o,g)`
+method), so the backend is whatever you implement. Verified (research + a local spike):
+
+- **Use the `@comunica/query-sparql-rdfjs` engine, not the full `query-sparql`.** The full
+  engine statically imports `undici`/`node:http` (Workers-hostile); the rdfjs variant does
+  not. Spike confirmed: `undici resolvable: false`; SPARQL ran in V8 without it.
+- **Custom backend works (the decisive capability).** Spike: implemented `match()` over a
+  plain array and ran `SELECT ?p ?v WHERE { <alice> ?p ?v }` → `factuality=PR+,
+  confidence=0.6`. Also ran SPARQL over an `N3.Store`. This is SPARQL over storage *we own*
+  — SQLite (OPFS / DO-SQLite / better-sqlite3), or even an ECHO-queue-backed source.
+- **Footprint:** `query-sparql-rdfjs` ≈ **347 KB min+gzip** (vs Oxigraph's 1.4 MB wasm);
+  pure JS; MIT; actively maintained (v5.2.x, 2026).
+- **Costs / risks:** (1) **Slower** than Oxigraph (compiled wasm) — a constant factor, and
+  our queries are simple pattern lookups (facts about an entity / by source / as-of time),
+  not heavy joins, so the gap is unlikely to bite. (2) **RDF-star is mid-migration**:
+  ≤ v4.x = RDF-star, ≥ v5.x = RDF 1.2 triple terms — pin the version deliberately. (3)
+  **Workers untested** (needs a `process.env` shim; no public precedent) — same class of
+  residual gap as Oxigraph; retire with the step-0 spike. (4) An efficient SQLite-backed
+  `Source` (indexed `match` + `countQuads` for planning) is real work we'd own.
+
+### 2.6 Verdict (revised)
+
+The two viable engines split exactly along the user's two signals — *"SPARQL is
+compelling"* and *"can storage be swapped out?"*:
+
+| | **Oxigraph (wasm)** | **Comunica `query-sparql-rdfjs`** |
+| --- | --- | --- |
+| SPARQL | yes (fast) | yes (slower, constant factor) |
+| RDF-star | native | yes (version-pinned; →RDF 1.2 in v5) |
+| Backend | **fixed, in-memory only** | **any `Source` you implement** ✅ |
+| Durable / unbounded | snapshot whole graph; RAM-bounded | yes, via SQLite-backed `Source` |
+| Browser + Workers | wasm 1.4 MB gz (load proven) | 347 KB gz pure-JS (no undici proven) |
+| Integration effort | low | higher (build the SQLite `Source`) |
+
+**Recommendation: adopt Comunica `query-sparql-rdfjs` as the single SPARQL engine, over a
+`SemanticStore` that exposes an RDF/JS `Source` backed by SQLite** (`@dxos/sql-sqlite` OPFS
+in the browser, Durable-Object SQLite on Cloudflare, better-sqlite3 in Node). This directly
+answers the storage-swap requirement, is durable and unbounded (no 128 MB RAM ceiling),
+pure-JS (smaller, no wasm-load risk), and keeps one SPARQL query path. Oxigraph stays in
+reserve as an optional **in-memory hot-tier accelerator** (drop-in fast `Source`/engine) if
+query latency ever bites at small scale. The typed Effect-Schema facade and `Fact ↔
+RDF-star` mapping (§5.1) are unchanged — only the engine/store underneath differs.
+
+This supersedes the earlier Oxigraph-primary lean (§2.4); the engine choice is the central
+open decision for review (§13 Q1).
 
 ## 3. `index-core` Evaluation (task: "build on it or start again?")
 
@@ -241,8 +282,17 @@ verbatim so the graph is valid PROV-O and exportable as-is.
 
 ## 6. Storage (`SemanticStore`)
 
-A typed Effect-service **facade** over Oxigraph; callers use the `Fact` API, the facade
-maps to/from RDF-star (§5.1) and SPARQL:
+> **Engine pending §13 Q1.** The recommendation is now **Comunica `query-sparql-rdfjs` over
+> a SQLite-backed RDF/JS `Source`** (§2.6) — durable, unbounded, swappable backend, one
+> SPARQL path. The Oxigraph description below is retained as the alternative (fast in-memory
+> hot-tier). The facade surface and `Fact ↔ RDF-star` mapping are identical either way; only
+> the engine + persistence model differ. Will rewrite this section to the chosen engine once
+> decided.
+
+A typed Effect-service **facade**; callers use the `Fact` API, the facade maps to/from
+RDF-star (§5.1) and SPARQL. Under Comunica it issues SPARQL over a `Source` whose `match()`
+reads SQLite (OPFS / DO-SQLite / better-sqlite3) — persistence is the DB itself, no snapshot
+needed. Under Oxigraph (alternative):
 
 ```ts
 SemanticStore {
@@ -395,8 +445,11 @@ separate N3.js export adapter; add `n3` later only if streaming parse is require
 
 ## 13. Open Questions for Review
 
-1. **Engine** — adopt **Oxigraph** (RDF-star + SPARQL behind a typed facade), per §2.5 and
-   the spike (§2.4)? This is the central decision the reweighting unlocked.
+1. **Engine** (central decision, §2.6) — **(a) Comunica `query-sparql-rdfjs` over a
+   SQLite-backed `Source`** *(recommended: swappable/durable backend, pure-JS, answers the
+   storage-swap requirement; slower, more integration work)*; **(b) Oxigraph wasm** *(fast,
+   native RDF-star, but in-memory only, no pluggable backend)*; or **(c) both** — Comunica
+   primary + Oxigraph as in-memory hot accelerator.
 2. **Package name** — `@dxos/semantic-index` (proposed) vs `@dxos/comprehension` vs other.
 3. **Predicate vocabulary** — fully open strings (v1, simplest) vs a small controlled set
    the extractor must map to (better querying, more constraint). Proposed: open in v1, with
