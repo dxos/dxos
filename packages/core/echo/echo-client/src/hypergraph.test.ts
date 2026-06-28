@@ -123,6 +123,25 @@ describe('Hypergraph.scoped', () => {
     expect(own.map((object) => object.id)).not.toContain(objB.id);
   });
 
+  test('Database.query fans out across a multi-space allowlist', async () => {
+    const ids = (objects: readonly Obj.Any[]) => objects.map((object) => object.id);
+
+    // Service confined to [A, B] (home A): an unscoped query reads across both allowed spaces.
+    const confinedToAB = Layer.merge(Database.layer(dbA), Hypergraph.scopedLayer([dbA.spaceId, dbB.spaceId]));
+    const both = await EffectEx.runPromise(
+      Database.query(Query.select(Filter.everything())).run.pipe(Effect.provide(confinedToAB)),
+    );
+    expect(ids(both)).toContain(objA.id);
+    expect(ids(both)).toContain(objB.id);
+
+    // Confined to [A] only (home A): the same query reads the home space alone — B is not included.
+    const homeOnly = await EffectEx.runPromise(
+      Database.query(Query.select(Filter.everything())).run.pipe(Effect.provide(confinedToA())),
+    );
+    expect(ids(homeOnly)).toContain(objA.id);
+    expect(ids(homeOnly)).not.toContain(objB.id);
+  });
+
   test('Database.load denies a ref into a space outside the allowlist', async () => {
     // Home ref to the live object (target inlined, so load short-circuits without resolution).
     const refToA = Ref.make(objA);

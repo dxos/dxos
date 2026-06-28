@@ -241,13 +241,14 @@ queries are confined differently, to preserve `db.query` semantics:
   narrow-only view of the in-process `HypergraphImpl` — `getDatabase` returns `undefined` outside the
   set, synchronous ref resolution misses a foreign `spaceId`, and `graph.scoped(a).scoped(b) = a ∩ b`
   (never widens). The confinement is **structural**: foreign spaces are simply absent from the view.
-- **Queries keep `db.query`.** `db.query` already binds an unscoped selection to the owning space and
+- **Queries route by allowlist shape.** `db.query` binds an unscoped selection to the owning space and
   special-cases feed/queue selections — semantics a raw hypergraph fan-out (`graph.query`) does not
-  reproduce. So a confined query that does **not** explicitly select a foreign space runs through
-  `db.query` unchanged (already home-confined for a single-space session). A query that explicitly
-  selects a space outside the allowlist is routed through the scoped graph, which has no source for
-  that space and so yields nothing. This denies the one real T0 leak — a model-supplied
-  `Scope.space({ id: foreign })` — without disturbing legitimate home/feed queries.
+  reproduce. So a **single-home** session keeps `db.query` unchanged (already home-confined). A query
+  that explicitly selects a space **outside** the allowlist, or any query from a session whose
+  allowlist **spans more than the home space**, is routed through `db.graph.scoped(allowlist).query`:
+  a foreign scope finds no source (denied → empty), and a multi-space allowlist fans the read out
+  across every allowed space (`db.query` alone would see only the home space). This both denies the T0
+  leak (a model-supplied foreign `Scope.space`) and provides the T1 multi-space read.
 - **Wiring.** The app layer
   ([useChatProcessor.ts](../../packages/plugins/plugin-assistant/src/hooks/useChatProcessor.ts)) and the
   headless agent process
@@ -267,10 +268,13 @@ table's *Ref resolution*, *Query fan-out* and *Ref-resolver context* rows for th
 the *Space→db resolution* (`DatabaseLayerSpec`), *Spawn chokepoint*, *Operation re-target*, *Hard guard*
 and *Principal* rows remain future work (Phases 3–4).
 
-> **T1 note.** For a session whose allowlist spans more than the home space, `db.query` (single-db)
-> cannot fan out across the allowed spaces, and the scoped-graph fan-out omits the not-yet-scope-aware
-> index provider (it serves only `SpaceQuerySource`s). A T1 read path needs a scoped multi-space
-> fan-out that both applies `db.query`'s feed handling and filters index hits to the allowlist.
+> **T1 status.** Multi-space *reads* now work: a session whose allowlist spans several spaces fans
+> out across all of them via the scoped graph (tested: `Database.query` over `scopedLayer([A, B])`
+> returns objects from both). Two pieces remain for full T1: (1) a *source* of multi-space allowlists
+> — the personal-space orchestrator deriving the allowlist from membership; today every agent is
+> stamped `[homeSpace]` (T0). (2) parity on the scoped fan-out path — it omits the not-yet-scope-aware
+> index provider and `db.query`'s feed/queue handling, so multi-space reads are working-set object
+> queries (index/full-text and feed/queue queries still need scope-aware support).
 
 > Testing: confinement is unit-tested in
 > [hypergraph.test.ts](../../packages/core/echo/echo-client/src/hypergraph.test.ts) (scoped `getDatabase`,

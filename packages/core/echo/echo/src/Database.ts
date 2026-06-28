@@ -403,15 +403,19 @@ export const query: {
   Effect.gen(function* () {
     const { db } = yield* Service;
     const scope = yield* Effect.serviceOption(Hypergraph.Service);
-    // A confined session (Hypergraph.Service present) may not read outside its allowlist. A query
-    // that explicitly selects a foreign space is routed through a scoped graph, which has no source
-    // for that space and so yields nothing. Every other query keeps `db.query`, preserving its
-    // owning-space binding and feed/queue handling — and already confined to the home space, since
-    // `db.query` binds unscoped selections to the owning space. See docs/design/agent-firewall.md.
-    // TODO(wittjosiah): A T1 session (allowlist beyond the home space) needs a scoped multi-space
-    // fan-out that still applies `db.query`'s feed handling; today only the home space is read.
-    if (Option.isSome(scope) && queryTargetsForeignSpace(queryOrFilter, scope.value.allowlist)) {
-      return db.graph.scoped([...scope.value.allowlist]).query(queryOrFilter as any) as QueryResult.QueryResult<any>;
+    if (Option.isSome(scope)) {
+      const { allowlist } = scope.value;
+      // Route through the allowlist-scoped graph when either (a) a session spans more than its home
+      // space — so the read fans out across every allowed space (`db.query` alone sees only the home
+      // space), or (b) the query explicitly selects a space outside the allowlist — which then finds
+      // no source and yields nothing (denial). A single-home session keeps `db.query`, preserving its
+      // owning-space binding and feed/queue handling. See docs/design/agent-firewall.md.
+      // TODO(wittjosiah): The scoped multi-space path does not yet apply `db.query`'s feed/queue
+      // handling or the (not scope-aware) index — multi-space reads are working-set object queries.
+      const homeOnly = allowlist.length === 1 && allowlist[0] === db.spaceId;
+      if (!homeOnly || queryTargetsForeignSpace(queryOrFilter, allowlist)) {
+        return db.graph.scoped([...allowlist]).query(queryOrFilter as any) as QueryResult.QueryResult<any>;
+      }
     }
     return db.query(queryOrFilter as any) as QueryResult.QueryResult<any>;
   }).pipe(Effect.withSpan('Database.query'), makeQueryResultEffect);
