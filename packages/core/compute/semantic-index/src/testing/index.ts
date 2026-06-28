@@ -30,3 +30,20 @@ export const failingAiService = (): Layer.Layer<AiService.AiService> =>
         streamText: () => Stream.fail(new Error('boom')),
       } as any),
   });
+
+/** Mock `AiService` that counts `generateObject` invocations (for incrementality tests). */
+export const countingAiService = (object: unknown): { layer: Layer.Layer<AiService.AiService>; calls: () => number } => {
+  let calls = 0;
+  const layer = Layer.succeed(AiService.AiService, {
+    model: () =>
+      Layer.succeed(LanguageModel.LanguageModel, {
+        generateText: () => Effect.succeed({ text: '', content: [] }),
+        generateObject: () => {
+          calls += 1;
+          return Effect.succeed({ value: object, content: [] });
+        },
+        streamText: () => Stream.empty,
+      } as any),
+  });
+  return { layer, calls: () => calls };
+};

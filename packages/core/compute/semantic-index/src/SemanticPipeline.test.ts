@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
@@ -10,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import { SemanticIndexError } from './errors';
 import { SemanticPipeline } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
-import { failingAiService, mockAiService } from './testing';
+import { countingAiService, failingAiService, mockAiService } from './testing';
 
 const LLM_OUTPUT = {
   facts: [
@@ -76,5 +77,43 @@ describe('SemanticPipeline', () => {
         }
       });
     }, Effect.provide(FailingLayer)),
+  );
+
+  it.effect(
+    'skips the LLM on unchanged re-ingest and re-runs on change',
+    Effect.fnUntraced(function* () {
+      const ai = countingAiService({
+        facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
+      });
+      const layer = SemanticStore.layer.pipe(
+        Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
+        Layer.provideMerge(ai.layer),
+      );
+      yield* Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const triplesCount = () => sql<{ n: number }>`SELECT COUNT(*) AS n FROM triples`.pipe(Effect.map((rows) => rows[0].n));
+
+        const doc = { text: 'going to Paris', source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
+        yield* SemanticPipeline.run([doc]);
+        const afterFirst = yield* triplesCount();
+        yield* SemanticPipeline.run([doc]); // unchanged → skipped.
+        const afterSecond = yield* triplesCount();
+        yield* Effect.sync(() => {
+          if (ai.calls() !== 1) {
+            throw new Error(`expected 1 LLM call, got ${ai.calls()}`);
+          }
+          if (afterSecond !== afterFirst) {
+            throw new Error(`unchanged re-ingest grew triples: ${afterFirst} -> ${afterSecond}`);
+          }
+        });
+
+        yield* SemanticPipeline.run([{ ...doc, text: 'going to Rome instead' }]); // changed → re-extract.
+        yield* Effect.sync(() => {
+          if (ai.calls() !== 2) {
+            throw new Error(`expected 2 LLM calls after change, got ${ai.calls()}`);
+          }
+        });
+      }).pipe(Effect.provide(layer));
+    }),
   );
 });

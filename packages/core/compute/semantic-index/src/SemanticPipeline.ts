@@ -11,6 +11,7 @@ import { type Fact } from './types';
 import { SemanticStore } from './SemanticStore';
 import { chunk } from './internal/stages/chunk';
 import { DEFAULT_MODEL, type ExtractDocument, extractChunk } from './internal/stages/extract';
+import { hashText } from './internal/stages/reconcile';
 
 export type { ExtractDocument } from './internal/stages/extract';
 
@@ -25,7 +26,12 @@ const factId = (source: string, index: number) => `${source}#${index}`;
 const EPOCH = new Date(0).toISOString();
 
 export const SemanticPipeline = {
-  /** Extract → link (slug) → persist for each document. */
+  /** Extract → link (slug) → persist for each document. Incremental: documents whose content hash
+   *  matches the stored cursor are skipped entirely (no LLM call, no duplicate facts).
+   *
+   *  A CHANGED source currently appends new competing facts (append-only model) and advances
+   *  the cursor. Deleting/superseding the prior facts from that source is deferred (v1).
+   */
   run: (
     docs: readonly ExtractDocument[],
   ): Effect.Effect<Fact[], SemanticIndexError, SemanticStore | AiService.AiService> =>
@@ -33,8 +39,15 @@ export const SemanticPipeline = {
       const store = yield* SemanticStore;
       const allFacts: Fact[] = [];
       for (const doc of docs) {
+        const hash = hashText(doc.text);
+        const prev = yield* store.cursor(doc.source);
+        if (prev === hash) {
+          // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
+          continue;
+        }
         const chunks = chunk(doc.text);
         let index = 0;
+        const docFacts: Fact[] = [];
         for (const _text of chunks) {
           const payload = yield* extractChunk(doc);
           for (const candidate of payload.facts) {
@@ -59,15 +72,17 @@ export const SemanticPipeline = {
                 source: doc.source,
                 generatedAtTime: doc.date ?? EPOCH,
               },
-              recordedAt: EPOCH,
+              recordedAt: doc.date ?? EPOCH,
               extractor: { id: 'default', model: DEFAULT_MODEL, version: '1' },
-              sourceHash: '',
+              sourceHash: hash,
             };
-            allFacts.push(fact);
+            docFacts.push(fact);
           }
         }
+        yield* store.putFacts(docFacts);
+        yield* store.setCursor(doc.source, hash);
+        allFacts.push(...docFacts);
       }
-      yield* store.putFacts(allFacts);
       return allFacts;
     }),
 };
