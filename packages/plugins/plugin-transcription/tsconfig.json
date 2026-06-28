@@ -130,6 +130,9 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-transcription"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {

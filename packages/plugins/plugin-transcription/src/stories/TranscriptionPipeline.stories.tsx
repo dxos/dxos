@@ -32,6 +32,7 @@ import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
+import { PipelineStatus } from '@dxos/react-ui-transcription';
 import {
   type CommitFn,
   PipelineRuntime,
@@ -48,7 +49,6 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { PipelineStatus } from '#components';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 

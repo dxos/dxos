@@ -19,14 +19,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type CommitFn, makeCorrectionStage } from '@dxos/transcription-pipeline';
+import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
+import { useAudioFile, useRecordingPipeline } from '@dxos/react-ui-transcription';
 
 import { Mic } from '#components';
-import { useAudioFile, useRecordingPipeline } from '#hooks';
 import { translations } from '#translations';
 
-import { type TranscriberProps } from '../transcriber';
 import { createStoryDecorators, useRecordingSession, useStoryMessageModel } from './testing';
 import { TranscriptionStory } from './TranscriptionStory';
 
@@ -36,7 +35,7 @@ const DOC_ID = 'transcription-story';
 type StoryArgs = {
   source: 'mic' | 'file';
   audioUrl?: string;
-  transcriberConfig?: TranscriberProps['config'];
+  transcriberConfig?: Partial<TranscribeConfig>;
   audioConstraints?: MediaTrackConstraints;
 };
 
