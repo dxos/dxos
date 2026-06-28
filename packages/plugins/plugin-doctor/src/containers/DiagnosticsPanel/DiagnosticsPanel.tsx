@@ -186,12 +186,12 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
       <header className='flex items-center justify-between gap-2 p-2'>
         <span className='text-sm font-medium truncate'>{label}</span>
         {status === 'pass' && (
-          <Tag palette='emerald'>
+          <Tag hue='emerald'>
             <Icon icon='ph--check--regular' size={3} />
           </Tag>
         )}
-        {status === 'issues' && <Tag palette='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag>}
-        {status === 'error' && <Tag palette='rose'>{t('result.error.label')}</Tag>}
+        {status === 'issues' && <Tag hue='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag>}
+        {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
       </header>
       {result.error && (
         <Message.Root valence='error' classNames='m-2'>

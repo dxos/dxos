@@ -284,7 +284,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
         {tags.map((tag) => (
           <Tag
             key={tag.id}
-            palette={toHue(tag.hue)}
+            hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
             onClick={
               onTagClick

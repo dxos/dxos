@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FC, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Icon, Input, Panel, ScrollArea, Tag, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
@@ -17,7 +17,7 @@ export type SemanticFactsViewerProps = ThemedClassName<{ facts: Type.Fact[] }>;
  * conflicts (same subject + predicate, different objects) are highlighted as the headline signal.
  * Pure/presentational: no data fetching, no engine.
  */
-export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, facts }) => {
+export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerProps) => {
   const [filter, setFilter] = useState('');
   const groups = useMemo(() => groupFacts(facts, filter), [facts, filter]);
 
@@ -49,12 +49,12 @@ export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, 
   );
 };
 
-const SubjectGroup: FC<{ group: Group }> = ({ group }) => (
+const SubjectGroup = ({ group }: { group: Group }) => (
   <div className='flex flex-col gap-2'>
     <div className='flex items-center gap-2'>
       <h3 className='p-2 text-sm font-medium'>{humanize(group.subject)}</h3>
       {group.conflicted && (
-        <Tag palette='warning'>
+        <Tag hue='warning'>
           <span className='flex items-center gap-1'>
             <Icon icon='ph--warning--regular' size={3} />
             conflict
@@ -72,7 +72,7 @@ const SubjectGroup: FC<{ group: Group }> = ({ group }) => (
   </div>
 );
 
-const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflicting }) => {
+const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
   const { assertion, valence, attribution } = fact;
   return (
     <Listbox.Item
@@ -89,7 +89,7 @@ const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflict
           {valence.confidence != null && (
             <span className='text-xs text-subdued'>{Math.round(valence.confidence * 100)}%</span>
           )}
-          <Tag palette={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
+          <Tag hue={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
         </div>
       </div>
 
@@ -132,13 +132,14 @@ const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
   }
 
   return [...bySubject.entries()].map(([subject, groupFactsList]) => {
-    const conflictedIds = new Set<string>();
     const byPredicate = new Map<string, Type.Fact[]>();
     for (const fact of groupFactsList) {
       const list = byPredicate.get(fact.assertion.predicate) ?? [];
       list.push(fact);
       byPredicate.set(fact.assertion.predicate, list);
     }
+
+    const conflictedIds = new Set<string>();
     for (const list of byPredicate.values()) {
       const objects = new Set(list.map((fact) => termLabel(fact.assertion.object)));
       if (objects.size > 1) {
@@ -147,7 +148,13 @@ const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
         }
       }
     }
-    return { subject, facts: groupFactsList, conflicted: conflictedIds.size > 0, conflictedIds };
+
+    return {
+      subject,
+      facts: groupFactsList,
+      conflicted: conflictedIds.size > 0,
+      conflictedIds,
+    };
   });
 };
 
