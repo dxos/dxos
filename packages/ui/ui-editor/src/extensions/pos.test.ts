@@ -3,11 +3,12 @@
 //
 
 import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { type Document } from '@dxos/nlp';
 
-import { clearAnalysis, posAnalysisField, posSpans, setAnalysis } from './pos';
+import { clearAnalysis, posAnalysisField, posDecorations, posSpans, setAnalysis } from './pos';
 
 const docFor = (text: string): Document => ({
   sourceHash: 'deadbeef',
@@ -35,5 +36,29 @@ describe('posAnalysisField', () => {
     const withSpan = make().update({ effects: setAnalysis.of({ from: 0, to: 5, document: docFor('hello') }) }).state;
     const cleared = withSpan.update({ effects: clearAnalysis.of(null) }).state;
     expect(posSpans(cleared)).toHaveLength(0);
+  });
+});
+
+describe('posDecorations', () => {
+  test('emits decorations for the analyzed tokens', ({ expect }) => {
+    const text = 'hello world';
+    let state = EditorState.create({ doc: text, extensions: [posAnalysisField, posDecorations] });
+    const document: Document = {
+      sourceHash: 'deadbeef',
+      sentences: [
+        {
+          index: 0,
+          start: 0,
+          end: 11,
+          tokens: [
+            { index: 0, text: 'hello', upos: 'INTJ', start: 0, end: 5 },
+            { index: 1, text: 'world', upos: 'NOUN', start: 6, end: 11 },
+          ],
+        },
+      ],
+    };
+    state = state.update({ effects: setAnalysis.of({ from: 0, to: 11, document }) }).state;
+    const sources = state.facet(EditorView.decorations);
+    expect(sources.length).toBeGreaterThan(0);
   });
 });
