@@ -35,8 +35,12 @@ describe('sqlite source', () => {
       const source = makeSqliteSource(sql);
       const results = yield* Effect.promise(() => collect(source.match(namedNode('s:a'), null, null, null)));
       yield* Effect.sync(() => {
-        if (results.length !== 1) {throw new Error(`expected 1 quad, got ${results.length}`);}
-        if (results[0].object.value !== 'o:x') {throw new Error('wrong object');}
+        if (results.length !== 1) {
+          throw new Error(`expected 1 quad, got ${results.length}`);
+        }
+        if (results[0].object.value !== 'o:x') {
+          throw new Error('wrong object');
+        }
       });
     }, Effect.provide(TestLayer)),
   );
@@ -53,9 +57,13 @@ describe('sqlite source', () => {
       const source = makeSqliteSource(sql);
       const results = yield* Effect.promise(() => collect(source.match(null, null, null, null)));
       yield* Effect.sync(() => {
-        if (results.length !== 2) {throw new Error(`expected 2 quads, got ${results.length}`);}
+        if (results.length !== 2) {
+          throw new Error(`expected 2 quads, got ${results.length}`);
+        }
         const lit = results.find((q) => q.object.termType === 'Literal');
-        if (!lit || lit.object.value !== 'hello') {throw new Error('literal object not reconstructed');}
+        if (!lit || lit.object.value !== 'hello') {
+          throw new Error('literal object not reconstructed');
+        }
       });
     }, Effect.provide(TestLayer)),
   );
@@ -72,9 +80,15 @@ describe('sqlite source', () => {
       const source = makeSqliteSource(sql);
       const results = yield* Effect.promise(() => collect(source.match(null, null, namedNode('o:x'), null)));
       yield* Effect.sync(() => {
-        if (results.length !== 1) {throw new Error(`expected 1 quad, got ${results.length}`);}
-        if (results[0].object.termType !== 'NamedNode') {throw new Error('expected IRI object');}
-        if (results[0].subject.value !== 's:a') {throw new Error('wrong subject');}
+        if (results.length !== 1) {
+          throw new Error(`expected 1 quad, got ${results.length}`);
+        }
+        if (results[0].object.termType !== 'NamedNode') {
+          throw new Error('expected IRI object');
+        }
+        if (results[0].subject.value !== 's:a') {
+          throw new Error('wrong subject');
+        }
       });
     }, Effect.provide(TestLayer)),
   );
@@ -90,8 +104,12 @@ describe('sqlite source', () => {
       const source = makeSqliteSource(sql);
       const results = yield* Effect.promise(() => collect(source.match(null, null, null, null)));
       yield* Effect.sync(() => {
-        if (results.length !== 1) {throw new Error(`expected 1 quad, got ${results.length}`);}
-        if (results[0].graph.value !== 'g:1') {throw new Error(`graph not preserved: ${results[0].graph.value}`);}
+        if (results.length !== 1) {
+          throw new Error(`expected 1 quad, got ${results.length}`);
+        }
+        if (results[0].graph.value !== 'g:1') {
+          throw new Error(`graph not preserved: ${results[0].graph.value}`);
+        }
       });
     }, Effect.provide(TestLayer)),
   );

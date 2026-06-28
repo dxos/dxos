@@ -12,7 +12,7 @@ Given text — user documents and synced feed messages (Gmail, Discord) — extr
 facts that capture **who said what, how certain they were, and when**, so an LLM can answer
 questions and complete tasks with attribution and uncertainty intact.
 
-Motivating example. Alice writes on June 6: *"I think I'm probably going to Paris next week."*
+Motivating example. Alice writes on June 6: _"I think I'm probably going to Paris next week."_
 We record one fact with three separable parts:
 
 - **Attribution** — Alice asserted it, on June 6, in this email (who / when / where).
@@ -23,12 +23,12 @@ We record one fact with three separable parts:
 
 A **Fact** is the unit of storage: one extracted proposition plus its metadata.
 
-| Part | Fields | Grounded in |
-| --- | --- | --- |
-| Assertion | subject, predicate, object (entity-ref or literal), validFrom/validTo, quote | RDF triple |
-| Valence | factuality (`CT+`/`PR+`/`PS+`/… 8 values), polarity, confidence (0–1), nature (epistemic/aleatory) | FactBank factuality |
-| Attribution | agent, source (DXN), generatedAtTime, wasDerivedFrom, span | PROV-O |
-| Provenance | id, recordedAt (transaction time), extractor {id, model, version}, sourceHash | — |
+| Part        | Fields                                                                                             | Grounded in         |
+| ----------- | -------------------------------------------------------------------------------------------------- | ------------------- |
+| Assertion   | subject, predicate, object (entity-ref or literal), validFrom/validTo, quote                       | RDF triple          |
+| Valence     | factuality (`CT+`/`PR+`/`PS+`/… 8 values), polarity, confidence (0–1), nature (epistemic/aleatory) | FactBank factuality |
+| Attribution | agent, source (DXN), generatedAtTime, wasDerivedFrom, span                                         | PROV-O              |
+| Provenance  | id, recordedAt (transaction time), extractor {id, model, version}, sourceHash                      | —                   |
 
 An **Entity** is a mention (person/org/place/event/concept/thing) with a label, aliases, and
 an optional `ref` (DXN of a canonical ECHO object once linked). Predicates are open strings

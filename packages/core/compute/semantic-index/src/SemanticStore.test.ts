@@ -7,8 +7,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type Fact } from './types';
 import { SemanticStore } from './SemanticStore';
+import { type Fact } from './types';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
@@ -30,8 +30,12 @@ describe('SemanticStore', () => {
       yield* store.putFacts([mk({ id: 'f1' })]);
       const facts = yield* store.query({ subjectEntity: 'alice' });
       yield* Effect.sync(() => {
-        if (facts.length !== 1 || facts[0].assertion.predicate !== 'travelsTo') {throw new Error('query failed');}
-        if (facts[0].valence.factuality !== 'PR+') {throw new Error('valence lost');}
+        if (facts.length !== 1 || facts[0].assertion.predicate !== 'travelsTo') {
+          throw new Error('query failed');
+        }
+        if (facts[0].valence.factuality !== 'PR+') {
+          throw new Error('valence lost');
+        }
       });
     }, Effect.provide(TestLayer)),
   );
@@ -42,11 +46,17 @@ describe('SemanticStore', () => {
       const store = yield* SemanticStore;
       yield* store.putFacts([
         mk({ id: 'f1' }),
-        mk({ id: 'f2', assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } }, attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' } }),
+        mk({
+          id: 'f2',
+          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } },
+          attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
+        }),
       ]);
       const facts = yield* store.query({ subjectEntity: 'alice', predicate: 'travelsTo' });
       yield* Effect.sync(() => {
-        if (facts.length !== 2) {throw new Error(`expected 2 conflicting facts, got ${facts.length}`);}
+        if (facts.length !== 2) {
+          throw new Error(`expected 2 conflicting facts, got ${facts.length}`);
+        }
       });
     }, Effect.provide(TestLayer)),
   );
@@ -58,7 +68,9 @@ describe('SemanticStore', () => {
       yield* store.putFacts([mk({ id: 'f1' })]);
       const facts = yield* store.query({});
       yield* Effect.sync(() => {
-        if (facts.length !== 1) {throw new Error(`expected 1 fact, got ${facts.length}`);}
+        if (facts.length !== 1) {
+          throw new Error(`expected 1 fact, got ${facts.length}`);
+        }
       });
     }, Effect.provide(TestLayer)),
   );
@@ -72,7 +84,9 @@ describe('SemanticStore', () => {
       yield* store.setCursor('dxn:q:m1', 'hashB');
       const b = yield* store.cursor('dxn:q:m1');
       yield* Effect.sync(() => {
-        if (a !== 'hashA' || b !== 'hashB') {throw new Error(`cursor wrong: ${a}/${b}`);}
+        if (a !== 'hashA' || b !== 'hashB') {
+          throw new Error(`cursor wrong: ${a}/${b}`);
+        }
       });
     }, Effect.provide(TestLayer)),
   );

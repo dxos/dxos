@@ -20,7 +20,9 @@ describe('sqlite schema', () => {
       yield* sql`INSERT INTO triples (s, p, o, oType, g) VALUES ('a', 'b', 'c', 'iri', '')`;
       const rows = yield* sql<{ s: string }>`SELECT s FROM triples WHERE p = 'b'`;
       yield* Effect.sync(() => {
-        if (rows[0]?.s !== 'a') {throw new Error('insert/select failed');}
+        if (rows[0]?.s !== 'a') {
+          throw new Error('insert/select failed');
+        }
       });
     }, Effect.provide(TestLayer)),
   );

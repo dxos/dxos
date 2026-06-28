@@ -10,10 +10,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { generateFacts } from './generate-facts';
-import { queuedAiService } from '../index';
-import { SemanticStore } from '../../SemanticStore';
 import { type ExtractDocument } from '../../internal/stages/extract';
+import { SemanticStore } from '../../SemanticStore';
+import { queuedAiService } from '../index';
+import { generateFacts } from './generate-facts';
 
 // Realistic source text — the input a real connector (Gmail/Discord) would feed in.
 const SOURCE_DOCS: readonly ExtractDocument[] = [
@@ -100,26 +100,23 @@ const OUTPUT_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../temp
 describe('generateFacts', () => {
   it.effect(
     'generates a typed facts module from source text via the real pipeline',
-    Effect.fnUntraced(
-      function* () {
-        const { facts, module } = yield* generateFacts(SOURCE_DOCS);
+    Effect.fnUntraced(function* () {
+      const { facts, module } = yield* generateFacts(SOURCE_DOCS);
 
-        // Persist the generated module (gitignored) so it can be inspected / copied into a fixture.
-        mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
-        writeFileSync(OUTPUT_PATH, module);
+      // Persist the generated module (gitignored) so it can be inspected / copied into a fixture.
+      mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
+      writeFileSync(OUTPUT_PATH, module);
 
-        yield* Effect.sync(() => {
-          if (facts.length !== 4) {
-            throw new Error(`expected 4 facts, got ${facts.length}`);
+      yield* Effect.sync(() => {
+        if (facts.length !== 4) {
+          throw new Error(`expected 4 facts, got ${facts.length}`);
+        }
+        for (const needle of ['travelsTo', 'Paris', 'Rome', 'PR+', 'CT+', 'satisfies Type.Fact[]']) {
+          if (!module.includes(needle)) {
+            throw new Error(`generated module missing ${JSON.stringify(needle)}`);
           }
-          for (const needle of ['travelsTo', 'Paris', 'Rome', 'PR+', 'CT+', 'satisfies Type.Fact[]']) {
-            if (!module.includes(needle)) {
-              throw new Error(`generated module missing ${JSON.stringify(needle)}`);
-            }
-          }
-        });
-      },
-      Effect.provide(TestLayer),
-    ),
+        }
+      });
+    }, Effect.provide(TestLayer)),
   );
 });

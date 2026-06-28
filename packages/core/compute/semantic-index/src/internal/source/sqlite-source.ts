@@ -28,10 +28,7 @@ const objectColumn = (object: RdfTerm) => ({
 
 /** Persist quads as rows in the `triples` table. The batch is wrapped in a single transaction
  *  so partial failure rolls back; duplicate quads are ignored via the `triples_unique` constraint. */
-export const insertQuads = (
-  sql: SqlClient.SqlClient,
-  quads: readonly Quad[],
-): Effect.Effect<void, SqlError.SqlError> =>
+export const insertQuads = (sql: SqlClient.SqlClient, quads: readonly Quad[]): Effect.Effect<void, SqlError.SqlError> =>
   sql.withTransaction(
     Effect.forEach(
       quads,
@@ -55,8 +52,12 @@ const bound = (term: RdfTerm | null | undefined): term is RdfTerm => !!term && t
 export const makeSqliteSource = (sql: SqlClient.SqlClient) => {
   const run = (s: RdfTerm | null, p: RdfTerm | null, o: RdfTerm | null, g: RdfTerm | null): Promise<Quad[]> => {
     const filters: Statement.Fragment[] = [];
-    if (bound(s)) {filters.push(sql`s = ${s.value}`);}
-    if (bound(p)) {filters.push(sql`p = ${p.value}`);}
+    if (bound(s)) {
+      filters.push(sql`s = ${s.value}`);
+    }
+    if (bound(p)) {
+      filters.push(sql`p = ${p.value}`);
+    }
     if (bound(o)) {
       filters.push(sql`o = ${o.value}`);
       // Disambiguate a bound object by term kind so an IRI does not match a literal of the same lexical value.

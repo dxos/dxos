@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import { type AiService } from '@dxos/ai';
 
 import { SemanticIndexError } from './errors';
-import { type Fact } from './types';
-import { SemanticStore } from './SemanticStore';
 import { chunk } from './internal/stages/chunk';
 import { DEFAULT_MODEL, type ExtractDocument, extractChunk } from './internal/stages/extract';
 import { hashText } from './internal/stages/reconcile';
+import { SemanticStore } from './SemanticStore';
+import { type Fact } from './types';
 
 export type { ExtractDocument } from './internal/stages/extract';
 

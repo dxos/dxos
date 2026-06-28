@@ -13,7 +13,8 @@ const { quad, defaultGraph } = DataFactory;
 const decodeFact = Schema.decodeUnknownSync(Fact);
 
 const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
-const termToObject = (term: Term): NamedNode | Literal => ('entity' in term ? entityIri(term.entity) : str(term.literal));
+const termToObject = (term: Term): NamedNode | Literal =>
+  'entity' in term ? entityIri(term.entity) : str(term.literal);
 const objectToTerm = (term: RdfTerm | undefined): Term | undefined =>
   term === undefined
     ? undefined

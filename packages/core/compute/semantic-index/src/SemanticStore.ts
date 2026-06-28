@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { SemanticIndexError } from './errors';
-import { type Fact } from './types';
+import { insertQuads, makeSqliteSource } from './internal/source/sqlite-source';
 import { makeEngine, selectTriples } from './internal/sparql/engine';
 import { factToTriples, triplesToFacts } from './internal/sparql/mapping';
 import { buildSparql, type SemanticQuery } from './internal/sparql/query-builder';
-import { insertQuads, makeSqliteSource } from './internal/source/sqlite-source';
 import { migrate } from './internal/sqlite/schema';
+import { type Fact } from './types';
 
 export { type SemanticQuery } from './internal/sparql/query-builder';
 
@@ -28,7 +28,10 @@ export interface SemanticStoreApi {
   readonly setCursor: (source: string, hash: string) => Effect.Effect<void, SemanticIndexError>;
 }
 
-export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<SemanticStore, SemanticStoreApi>() {
+export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<
+  SemanticStore,
+  SemanticStoreApi
+>() {
   static layer: Layer.Layer<SemanticStore, never, SqlClient.SqlClient> = Layer.scoped(
     SemanticStore,
     Effect.gen(function* () {

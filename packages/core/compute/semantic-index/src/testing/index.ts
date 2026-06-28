@@ -49,7 +49,9 @@ export const queuedAiService = (payloads: readonly unknown[]): Layer.Layer<AiSer
 };
 
 /** Mock `AiService` that counts `generateObject` invocations (for incrementality tests). */
-export const countingAiService = (object: unknown): { layer: Layer.Layer<AiService.AiService>; calls: () => number } => {
+export const countingAiService = (
+  object: unknown,
+): { layer: Layer.Layer<AiService.AiService>; calls: () => number } => {
   let calls = 0;
   const layer = Layer.succeed(AiService.AiService, {
     model: () =>

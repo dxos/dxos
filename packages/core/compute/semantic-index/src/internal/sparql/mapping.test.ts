@@ -9,7 +9,12 @@ import { factToTriples, triplesToFacts } from './mapping';
 
 const FACT: Fact = {
   id: 'fact-1',
-  assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' }, validFrom: '2026-06-12' },
+  assertion: {
+    subject: { entity: 'alice' },
+    predicate: 'travelsTo',
+    object: { entity: 'paris' },
+    validFrom: '2026-06-12',
+  },
   valence: { factuality: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: { agent: 'alice', source: 'dxn:queue:x:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',

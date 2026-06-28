@@ -5,10 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 /** Subject/object is either a reference to an Entity or a literal value. */
-export const Term = Schema.Union(
-  Schema.Struct({ entity: Schema.String }),
-  Schema.Struct({ literal: Schema.String }),
-);
+export const Term = Schema.Union(Schema.Struct({ entity: Schema.String }), Schema.Struct({ literal: Schema.String }));
 export type Term = Schema.Schema.Type<typeof Term>;
 
 export const Assertion = Schema.Struct({

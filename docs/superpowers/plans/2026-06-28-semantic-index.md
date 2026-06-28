@@ -60,6 +60,7 @@ packages/core/compute/semantic-index/
 ## Task 1: Package scaffold
 
 **Files:**
+
 - Create: `packages/core/compute/semantic-index/package.json`
 - Create: `packages/core/compute/semantic-index/moon.yml`
 - Create: `packages/core/compute/semantic-index/tsconfig.json`
@@ -73,9 +74,9 @@ packages/core/compute/semantic-index/
 In `pnpm-workspace.yaml`, under the `catalog:` map (keep alphabetical-ish, preserve comments), add:
 
 ```yaml
-  '@comunica/query-sparql-rdfjs': 5.2.3
-  asynciterator: 3.9.0
-  n3: 2.1.0
+'@comunica/query-sparql-rdfjs': 5.2.3
+asynciterator: 3.9.0
+n3: 2.1.0
 ```
 
 - [ ] **Step 2: Create `package.json`**
@@ -173,6 +174,7 @@ tasks:
 - [ ] **Step 5: Create placeholder barrels**
 
 `src/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -182,6 +184,7 @@ export * from './errors';
 ```
 
 `src/testing/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -191,6 +194,7 @@ export {};
 ```
 
 `src/errors.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -207,6 +211,7 @@ export class SemanticIndexError extends Data.TaggedError('SemanticIndexError')<{
 - [ ] **Step 6: Write a smoke test**
 
 `src/smoke.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -244,6 +249,7 @@ git commit -m "feat(semantic-index): package scaffold"
 ## Task 2: Effect-Schema data model
 
 **Files:**
+
 - Create: `src/Entity.ts`, `src/Assertion.ts`, `src/Valence.ts`, `src/Attribution.ts`, `src/Fact.ts`
 - Modify: `src/index.ts`
 - Test: `src/Fact.test.ts`
@@ -251,6 +257,7 @@ git commit -m "feat(semantic-index): package scaffold"
 - [ ] **Step 1: Write the failing round-trip test**
 
 `src/Fact.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -290,7 +297,9 @@ describe('Fact schema', () => {
   });
 
   test('rejects an invalid factuality value', ({ expect }) => {
-    expect(() => Schema.decodeUnknownSync(Fact)({ ...ALICE_FACT, valence: { ...ALICE_FACT.valence, factuality: 'NOPE' } })).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(Fact)({ ...ALICE_FACT, valence: { ...ALICE_FACT.valence, factuality: 'NOPE' } }),
+    ).toThrow();
   });
 });
 ```
@@ -333,10 +342,7 @@ export interface Entity extends Schema.Schema.Type<typeof Entity> {}
 import * as Schema from 'effect/Schema';
 
 /** Subject/object is either a reference to an Entity or a literal value. */
-export const Term = Schema.Union(
-  Schema.Struct({ entity: Schema.String }),
-  Schema.Struct({ literal: Schema.String }),
-);
+export const Term = Schema.Union(Schema.Struct({ entity: Schema.String }), Schema.Struct({ literal: Schema.String }));
 export type Term = Schema.Schema.Type<typeof Term>;
 
 export const Assertion = Schema.Struct({
@@ -425,6 +431,7 @@ export interface Fact extends Schema.Schema.Type<typeof Fact> {}
 - [ ] **Step 8: Export from barrel**
 
 `src/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -455,6 +462,7 @@ git commit -m "feat(semantic-index): Effect-Schema fact model"
 ## Task 3: Vocabulary + Fact ↔ reified-triples mapping
 
 **Files:**
+
 - Create: `src/internal/vocab.ts`
 - Create: `src/internal/sparql/mapping.ts`
 - Test: `src/internal/sparql/mapping.test.ts`
@@ -462,6 +470,7 @@ git commit -m "feat(semantic-index): Effect-Schema fact model"
 - [ ] **Step 1: Write the failing round-trip test**
 
 `src/internal/sparql/mapping.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -474,7 +483,12 @@ import { factToTriples, triplesToFacts } from './mapping';
 
 const FACT: Fact = {
   id: 'fact-1',
-  assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' }, validFrom: '2026-06-12' },
+  assertion: {
+    subject: { entity: 'alice' },
+    predicate: 'travelsTo',
+    object: { entity: 'paris' },
+    validFrom: '2026-06-12',
+  },
   valence: { factuality: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: { agent: 'alice', source: 'dxn:queue:x:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',
@@ -564,7 +578,8 @@ export const factToTriples = (fact: Fact): Quad[] => {
     quad(node, sx('extractorModel'), str(fact.extractor.model), g),
     quad(node, sx('extractorVersion'), str(fact.extractor.version), g),
   ];
-  if (fact.valence.confidence !== undefined) triples.push(quad(node, sx('confidence'), str(String(fact.valence.confidence)), g));
+  if (fact.valence.confidence !== undefined)
+    triples.push(quad(node, sx('confidence'), str(String(fact.valence.confidence)), g));
   if (fact.valence.nature) triples.push(quad(node, sx('nature'), str(fact.valence.nature), g));
   if (fact.assertion.validFrom) triples.push(quad(node, sx('validFrom'), str(fact.assertion.validFrom), g));
   if (fact.assertion.validTo) triples.push(quad(node, sx('validTo'), str(fact.assertion.validTo), g));
@@ -609,7 +624,11 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
         generatedAtTime: val(props, 'generatedAtTime')!,
       },
       recordedAt: val(props, 'recordedAt')!,
-      extractor: { id: val(props, 'extractorId')!, model: val(props, 'extractorModel')!, version: val(props, 'extractorVersion')! },
+      extractor: {
+        id: val(props, 'extractorId')!,
+        model: val(props, 'extractorModel')!,
+        version: val(props, 'extractorVersion')!,
+      },
       sourceHash: val(props, 'sourceHash')!,
     });
   }
@@ -645,12 +664,14 @@ git commit -m "feat(semantic-index): vocab + fact↔triples reification mapping"
 ## Task 4: SQLite schema + migrate
 
 **Files:**
+
 - Create: `src/internal/sqlite/schema.ts`
 - Test: `src/internal/sqlite/schema.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
 `src/internal/sqlite/schema.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -735,12 +756,14 @@ git commit -m "feat(semantic-index): sqlite schema + migrate"
 ## Task 5: SQLite-backed RDF/JS Source
 
 **Files:**
+
 - Create: `src/internal/source/sqlite-source.ts`
 - Test: `src/internal/source/sqlite-source.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
 `src/internal/source/sqlite-source.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -815,13 +838,12 @@ const rowToQuad = (row: Row): Quad => {
 };
 
 const objectColumn = (object: Quad['object'] | null) =>
-  object && object.termType !== 'Variable' ? { value: object.value, oType: object.termType === 'Literal' ? 'literal' : 'iri' } : undefined;
+  object && object.termType !== 'Variable'
+    ? { value: object.value, oType: object.termType === 'Literal' ? 'literal' : 'iri' }
+    : undefined;
 
 /** Persist quads as rows. Used by the store's putFacts. */
-export const insertQuads = (
-  sql: SqlClient.SqlClient,
-  quads: readonly Quad[],
-): Effect.Effect<void, SqlError.SqlError> =>
+export const insertQuads = (sql: SqlClient.SqlClient, quads: readonly Quad[]): Effect.Effect<void, SqlError.SqlError> =>
   Effect.forEach(
     quads,
     (q) => {
@@ -887,6 +909,7 @@ git commit -m "feat(semantic-index): sqlite-backed RDF/JS Source"
 ## Task 6: SemanticStore facade (Comunica + putFacts + query)
 
 **Files:**
+
 - Create: `src/internal/sparql/query-builder.ts`
 - Create: `src/internal/sparql/engine.ts`
 - Create: `src/SemanticStore.ts`
@@ -896,6 +919,7 @@ git commit -m "feat(semantic-index): sqlite-backed RDF/JS Source"
 - [ ] **Step 1: Write the failing test (the Alice example + a conflict)**
 
 `src/SemanticStore.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -909,15 +933,16 @@ import * as Layer from 'effect/Layer';
 import { type Fact } from './Fact';
 import { SemanticStore } from './SemanticStore';
 
-const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
-  assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
-  valence: { factuality: 'PR+', polarity: '+', confidence: 0.6 },
-  attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-  ...over,
-} as Fact);
+const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact =>
+  ({
+    assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
+    valence: { factuality: 'PR+', polarity: '+', confidence: 0.6 },
+    attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+    ...over,
+  }) as Fact;
 
 const TestLayer = SemanticStore.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
@@ -940,8 +965,15 @@ describe('SemanticStore', () => {
     Effect.fnUntraced(function* () {
       const store = yield* SemanticStore;
       yield* store.putFacts([
-        mk({ id: 'f1', assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } } }),
-        mk({ id: 'f2', assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } }, attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' } }),
+        mk({
+          id: 'f1',
+          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
+        }),
+        mk({
+          id: 'f2',
+          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } },
+          attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
+        }),
       ]);
       const facts = yield* store.query({ subjectEntity: 'alice', predicate: 'travelsTo' });
       yield* Effect.sync(() => {
@@ -1057,7 +1089,10 @@ export interface SemanticStoreApi {
   readonly setCursor: (source: string, hash: string) => Effect.Effect<void>;
 }
 
-export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<SemanticStore, SemanticStoreApi>() {
+export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<
+  SemanticStore,
+  SemanticStoreApi
+>() {
   static layer: Layer.Layer<SemanticStore, never, SqlClient.SqlClient> = Layer.scoped(
     SemanticStore,
     Effect.gen(function* () {
@@ -1109,6 +1144,7 @@ git commit -m "feat(semantic-index): SemanticStore facade over Comunica + sqlite
 ## Task 7: Extraction stage + pipeline
 
 **Files:**
+
 - Create: `src/internal/stages/chunk.ts`
 - Create: `src/internal/stages/extract.ts`
 - Create: `src/SemanticPipeline.ts`
@@ -1147,6 +1183,7 @@ Cross-check the shape against `packages/core/compute/extractor/src/testing/mock-
 - [ ] **Step 2: Write the failing pipeline test**
 
 `src/SemanticPipeline.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -1165,8 +1202,14 @@ import { mockAiService } from './testing';
 const LLM_OUTPUT = {
   facts: [
     {
-      subject: 'Alice', predicate: 'travelsTo', object: 'Paris',
-      validFrom: '2026-06-12', factuality: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic',
+      subject: 'Alice',
+      predicate: 'travelsTo',
+      object: 'Paris',
+      validFrom: '2026-06-12',
+      factuality: 'PR+',
+      polarity: '+',
+      confidence: 0.6,
+      nature: 'epistemic',
       quote: "I think I'm probably going to Paris next week",
     },
   ],
@@ -1182,7 +1225,12 @@ describe('SemanticPipeline', () => {
     'extracts the Alice fact and persists it',
     Effect.fnUntraced(function* () {
       yield* SemanticPipeline.run([
-        { text: "I think I'm probably going to Paris next week", source: 'dxn:q:m1', author: 'Alice', date: '2026-06-06T00:00:00.000Z' },
+        {
+          text: "I think I'm probably going to Paris next week",
+          source: 'dxn:q:m1',
+          author: 'Alice',
+          date: '2026-06-06T00:00:00.000Z',
+        },
       ]);
       const store = yield* SemanticStore;
       const facts = yield* store.query({ predicate: 'travelsTo' });
@@ -1231,7 +1279,12 @@ import { AiService } from '@dxos/ai';
 
 import { Factuality } from '../../Valence';
 
-export type ExtractDocument = { readonly text: string; readonly source: string; readonly author?: string; readonly date?: string };
+export type ExtractDocument = {
+  readonly text: string;
+  readonly source: string;
+  readonly author?: string;
+  readonly date?: string;
+};
 
 const DEFAULT_MODEL = 'ai.claude.model.claude-haiku-4-5' as const;
 
@@ -1264,10 +1317,7 @@ export const extractChunk = (doc: ExtractDocument): Effect.Effect<ExtractPayload
     const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
     const response = yield* LanguageModel.generateObject({ schema: ExtractPayload, prompt: `${PROMPT}\n\n${context}` });
     return response.value as ExtractPayload;
-  }).pipe(
-    Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
-    Effect.orDie,
-  );
+  }).pipe(Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)), Effect.orDie);
 ```
 
 - [ ] **Step 6: Implement `src/SemanticPipeline.ts`**
@@ -1288,7 +1338,11 @@ import { type ExtractDocument, extractChunk } from './internal/stages/extract';
 
 export type { ExtractDocument } from './internal/stages/extract';
 
-const slug = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+const slug = (label: string) =>
+  label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 
 /** Deterministic id from source + position so re-runs are stable. */
 const factId = (source: string, index: number) => `${source}#${index}`;
@@ -1297,9 +1351,7 @@ const DEFAULT_MODEL = 'ai.claude.model.claude-haiku-4-5';
 
 export const SemanticPipeline = {
   /** Extract → link (slug) → persist for each document. */
-  run: (
-    docs: readonly ExtractDocument[],
-  ): Effect.Effect<Fact[], never, SemanticStore | AiService.AiService> =>
+  run: (docs: readonly ExtractDocument[]): Effect.Effect<Fact[], never, SemanticStore | AiService.AiService> =>
     Effect.gen(function* () {
       const store = yield* SemanticStore;
       const allFacts: Fact[] = [];
@@ -1367,6 +1419,7 @@ git commit -m "feat(semantic-index): extraction stage + pipeline"
 ## Task 8: Incremental sourceHash + reconcile
 
 **Files:**
+
 - Create: `src/internal/stages/reconcile.ts`
 - Modify: `src/SemanticPipeline.ts`
 - Test: `src/SemanticPipeline.test.ts` (add cases)
@@ -1374,20 +1427,22 @@ git commit -m "feat(semantic-index): extraction stage + pipeline"
 - [ ] **Step 1: Add the failing incremental test**
 
 Append to `src/SemanticPipeline.test.ts`:
+
 ```typescript
-  it.effect(
-    'skips re-extraction when the source is unchanged',
-    Effect.fnUntraced(function* () {
-      const doc = { text: "going to Paris", source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
-      yield* SemanticPipeline.run([doc]);
-      const first = yield* (yield* SemanticStore).query({ predicate: 'travelsTo' });
-      yield* SemanticPipeline.run([doc]); // identical → no duplicate facts
-      const second = yield* (yield* SemanticStore).query({ predicate: 'travelsTo' });
-      yield* Effect.sync(() => {
-        if (second.length !== first.length) throw new Error(`re-run duplicated facts: ${first.length} -> ${second.length}`);
-      });
-    }).pipe(Effect.provide(TestLayer)),
-  );
+it.effect(
+  'skips re-extraction when the source is unchanged',
+  Effect.fnUntraced(function* () {
+    const doc = { text: 'going to Paris', source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
+    yield* SemanticPipeline.run([doc]);
+    const first = yield* (yield* SemanticStore).query({ predicate: 'travelsTo' });
+    yield* SemanticPipeline.run([doc]); // identical → no duplicate facts
+    const second = yield* (yield* SemanticStore).query({ predicate: 'travelsTo' });
+    yield* Effect.sync(() => {
+      if (second.length !== first.length)
+        throw new Error(`re-run duplicated facts: ${first.length} -> ${second.length}`);
+    });
+  }).pipe(Effect.provide(TestLayer)),
+);
 ```
 
 - [ ] **Step 2: Run — expect failure (duplicates appear)**
@@ -1416,15 +1471,19 @@ export const hashText = (text: string): string => {
 - [ ] **Step 4: Wire incremental skip into `SemanticPipeline.run`**
 
 In `src/SemanticPipeline.ts`, inside the per-doc loop, before chunking:
+
 ```typescript
-        const hash = hashText(doc.text);
-        const prev = yield* store.cursor(doc.source);
-        if (prev === hash) continue; // unchanged source → skip
+const hash = hashText(doc.text);
+const prev = yield * store.cursor(doc.source);
+if (prev === hash) continue; // unchanged source → skip
 ```
+
 And after persisting that doc's facts (move `putFacts` inside the loop, per doc):
+
 ```typescript
-        yield* store.setCursor(doc.source, hash);
+yield * store.setCursor(doc.source, hash);
 ```
+
 Set `fact.sourceHash = hash` and `recordedAt: doc.date ?? new Date(0).toISOString()`. Add the import: `import { hashText } from './internal/stages/reconcile';`. Restructure so facts are persisted per-document (so the cursor reflects exactly what was written).
 
 - [ ] **Step 5: Run tests — expect pass**
@@ -1444,6 +1503,7 @@ git commit -m "feat(semantic-index): incremental sourceHash cursors"
 ## Task 9: Connector harness + synthetic fixtures
 
 **Files:**
+
 - Create: `fixtures/synthetic-emails.json`
 - Create: `src/testing/harness/feed.ts`
 - Create: `src/testing/harness/save.ts`
@@ -1454,11 +1514,27 @@ git commit -m "feat(semantic-index): incremental sourceHash cursors"
 - [ ] **Step 1: Create `fixtures/synthetic-emails.json`**
 
 Shape mirrors the fields the pipeline needs (`text`, `source`, `author`, `date`) — a simplified projection of `@dxos/types` `Message`:
+
 ```json
 [
-  { "source": "dxn:fixture:msg-1", "author": "Alice", "date": "2026-06-06T09:00:00.000Z", "text": "I think I'm probably going to Paris next week." },
-  { "source": "dxn:fixture:msg-2", "author": "Bob", "date": "2026-06-07T10:00:00.000Z", "text": "Alice told me she's definitely going to Rome, not Paris." },
-  { "source": "dxn:fixture:msg-3", "author": "Carol", "date": "2026-06-08T11:00:00.000Z", "text": "The Q3 board meeting is confirmed for July 15 in London." }
+  {
+    "source": "dxn:fixture:msg-1",
+    "author": "Alice",
+    "date": "2026-06-06T09:00:00.000Z",
+    "text": "I think I'm probably going to Paris next week."
+  },
+  {
+    "source": "dxn:fixture:msg-2",
+    "author": "Bob",
+    "date": "2026-06-07T10:00:00.000Z",
+    "text": "Alice told me she's definitely going to Rome, not Paris."
+  },
+  {
+    "source": "dxn:fixture:msg-3",
+    "author": "Carol",
+    "date": "2026-06-08T11:00:00.000Z",
+    "text": "The Q3 board meeting is confirmed for July 15 in London."
+  }
 ]
 ```
 
@@ -1508,13 +1584,15 @@ import { type ExtractDocument, SemanticPipeline } from '../../SemanticPipeline';
 import { SemanticStore } from '../../SemanticStore';
 
 /** Run the pipeline over documents and return the persisted facts. */
-export const feed = (docs: readonly ExtractDocument[]): Effect.Effect<Fact[], never, SemanticStore | AiService.AiService> =>
-  SemanticPipeline.run(docs);
+export const feed = (
+  docs: readonly ExtractDocument[],
+): Effect.Effect<Fact[], never, SemanticStore | AiService.AiService> => SemanticPipeline.run(docs);
 ```
 
 - [ ] **Step 5: Export harness from `src/testing/index.ts`**
 
 Add:
+
 ```typescript
 export * from './harness/fetch';
 export * from './harness/save';
@@ -1524,6 +1602,7 @@ export * from './harness/feed';
 - [ ] **Step 6: Write the harness test**
 
 `src/testing/harness/feed.test.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -1544,7 +1623,9 @@ import { feed } from './feed';
 const fixturePath = fileURLToPath(new URL('../../../fixtures/synthetic-emails.json', import.meta.url));
 
 // One mocked extraction reused for every doc (sufficient to exercise the loop).
-const LLM_OUTPUT = { facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }] };
+const LLM_OUTPUT = {
+  facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
+};
 
 const TestLayer = SemanticStore.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
@@ -1583,6 +1664,7 @@ git commit -m "feat(semantic-index): connector harness + synthetic fixtures"
 ## Task 10: semanticQuery tool + comprehension eval
 
 **Files:**
+
 - Create: `src/tool.ts` (render facts for an LLM)
 - Test: `src/tool.test.ts`
 - Create: `src/comprehension.test.ts` (expected-facts + LLM-judge ablation)
@@ -1608,8 +1690,11 @@ export const renderFacts = (facts: readonly Fact[]): string =>
       const obj = 'entity' in f.assertion.object ? f.assertion.object.entity : f.assertion.object.literal;
       const when = f.attribution.generatedAtTime.slice(0, 10);
       const agent = f.attribution.agent ?? 'unknown';
-      const certainty =
-        f.valence.factuality.startsWith('CT') ? 'certain' : f.valence.factuality.startsWith('PR') ? 'probable' : 'possible';
+      const certainty = f.valence.factuality.startsWith('CT')
+        ? 'certain'
+        : f.valence.factuality.startsWith('PR')
+          ? 'probable'
+          : 'possible';
       return `- ${agent} (${f.attribution.source}, ${when}): ${subj} ${f.assertion.predicate} ${obj} [${certainty}, ${f.valence.factuality}]`;
     })
     .join('\n');
@@ -1646,8 +1731,24 @@ describe('semanticQuery tool', () => {
     Effect.fnUntraced(function* () {
       const store = yield* SemanticStore;
       yield* store.putFacts([
-        { id: 'f1', assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } }, valence: { factuality: 'PR+', polarity: '+' }, attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' }, recordedAt: '2026-06-06T00:00:00.000Z', extractor: { id: 'd', model: 'm', version: '1' }, sourceHash: 'h' },
-        { id: 'f2', assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } }, valence: { factuality: 'CT+', polarity: '+' }, attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' }, recordedAt: '2026-06-07T00:00:00.000Z', extractor: { id: 'd', model: 'm', version: '1' }, sourceHash: 'h' },
+        {
+          id: 'f1',
+          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
+          valence: { factuality: 'PR+', polarity: '+' },
+          attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
+          recordedAt: '2026-06-06T00:00:00.000Z',
+          extractor: { id: 'd', model: 'm', version: '1' },
+          sourceHash: 'h',
+        },
+        {
+          id: 'f2',
+          assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'rome' } },
+          valence: { factuality: 'CT+', polarity: '+' },
+          attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
+          recordedAt: '2026-06-07T00:00:00.000Z',
+          extractor: { id: 'd', model: 'm', version: '1' },
+          sourceHash: 'h',
+        },
       ]);
       const rendered = yield* semanticQuery({ subjectEntity: 'alice', predicate: 'travelsTo' });
       yield* Effect.sync(() => {
@@ -1670,7 +1771,9 @@ Expected: PASS.
 {
   "dxn:fixture:msg-1": [{ "subject": "alice", "predicate": "travelsTo", "object": "paris", "factuality": "PR+" }],
   "dxn:fixture:msg-2": [{ "subject": "alice", "predicate": "travelsTo", "object": "rome", "factuality": "CT+" }],
-  "dxn:fixture:msg-3": [{ "subject": "q3-board-meeting", "predicate": "scheduledFor", "object": "2026-07-15", "factuality": "CT+" }]
+  "dxn:fixture:msg-3": [
+    { "subject": "q3-board-meeting", "predicate": "scheduledFor", "object": "2026-07-15", "factuality": "CT+" }
+  ]
 }
 ```
 
@@ -1696,7 +1799,10 @@ import { mockAiService } from './testing';
 const fx = (name: string) => readFileSync(fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url)), 'utf8');
 
 // Per-doc mocked extraction keyed by source (so each fixture yields its expected fact).
-const EXPECTED = JSON.parse(fx('expected-facts.json')) as Record<string, Array<{ subject: string; predicate: string; object: string; factuality: string }>>;
+const EXPECTED = JSON.parse(fx('expected-facts.json')) as Record<
+  string,
+  Array<{ subject: string; predicate: string; object: string; factuality: string }>
+>;
 
 describe('comprehension: expected facts', () => {
   it.effect(
@@ -1723,7 +1829,7 @@ Note: `query({})` with no filters returns all facts; ensure `buildSparql({})` pr
 
 - [ ] **Step 6: Add the LLM-judge ablation arm (memoized/deferred-live)**
 
-Append a second `describe` to `src/comprehension.test.ts` that, given a real `AiService`, asks a question ("Where is Alice going?") twice — once with `semanticQuery` context, once without — and uses an LLM judge to score whether the tool-augmented answer correctly reflects the *conflict* and *uncertainty*. Gate it behind an env check so CI stays deterministic:
+Append a second `describe` to `src/comprehension.test.ts` that, given a real `AiService`, asks a question ("Where is Alice going?") twice — once with `semanticQuery` context, once without — and uses an LLM judge to score whether the tool-augmented answer correctly reflects the _conflict_ and _uncertainty_. Gate it behind an env check so CI stays deterministic:
 
 ```typescript
 import { semanticQuery } from './tool';
@@ -1749,6 +1855,7 @@ Expected: PASS (expected-facts arm passes; ablation skipped without `DX_RUN_LLM_
 - [ ] **Step 8: Update barrel + commit**
 
 Add to `src/index.ts`: `export * from './tool';`
+
 ```bash
 git add packages/core/compute/semantic-index
 git commit -m "feat(semantic-index): semanticQuery tool + comprehension eval"

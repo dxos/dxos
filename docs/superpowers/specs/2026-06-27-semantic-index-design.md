@@ -113,11 +113,11 @@ Residual gap: a real `wrangler dev` smoke test (V8-in-Node ≠ workerd exactly).
 scheduled as build-order step 0. Constraints accepted: Oxigraph's JS build is **in-memory**
 (we snapshot/persist ourselves, §6) and has **no FTS/vector** (sidecar, §8).
 
-### 2.5 Comunica evaluation (SPARQL over a *swappable* backend)
+### 2.5 Comunica evaluation (SPARQL over a _swappable_ backend)
 
 The RocksDB question exposed Oxigraph's real limit: its WASM `Store` is in-memory with **no
 pluggable backend** (§6). **Comunica** — a modular JS SPARQL engine — is the inverse: it is
-*only* a query engine and runs SPARQL over **any RDF/JS `Source`** (a `match(s,p,o,g)`
+_only_ a query engine and runs SPARQL over **any RDF/JS `Source`** (a `match(s,p,o,g)`
 method), so the backend is whatever you implement. Verified (research + a local spike):
 
 - **Use the `@comunica/query-sparql-rdfjs` engine, not the full `query-sparql`.** The full
@@ -125,7 +125,7 @@ method), so the backend is whatever you implement. Verified (research + a local 
   not. Spike confirmed: `undici resolvable: false`; SPARQL ran in V8 without it.
 - **Custom backend works (the decisive capability).** Spike: implemented `match()` over a
   plain array and ran `SELECT ?p ?v WHERE { <alice> ?p ?v }` → `factuality=PR+,
-  confidence=0.6`. Also ran SPARQL over an `N3.Store`. This is SPARQL over storage *we own*
+confidence=0.6`. Also ran SPARQL over an `N3.Store`. This is SPARQL over storage _we own_
   — SQLite (OPFS / DO-SQLite / better-sqlite3), or even an ECHO-queue-backed source.
 - **Footprint:** `query-sparql-rdfjs` ≈ **347 KB min+gzip** (vs Oxigraph's 1.4 MB wasm);
   pure JS; MIT; actively maintained (v5.2.x, 2026).
@@ -139,17 +139,17 @@ method), so the backend is whatever you implement. Verified (research + a local 
 
 ### 2.6 Verdict (revised)
 
-The two viable engines split exactly along the user's two signals — *"SPARQL is
-compelling"* and *"can storage be swapped out?"*:
+The two viable engines split exactly along the user's two signals — _"SPARQL is
+compelling"_ and _"can storage be swapped out?"_:
 
-| | **Oxigraph (wasm)** | **Comunica `query-sparql-rdfjs`** |
-| --- | --- | --- |
-| SPARQL | yes (fast) | yes (slower, constant factor) |
-| RDF-star | native | yes (version-pinned; →RDF 1.2 in v5) |
-| Backend | **fixed, in-memory only** | **any `Source` you implement** ✅ |
-| Durable / unbounded | snapshot whole graph; RAM-bounded | yes, via SQLite-backed `Source` |
-| Browser + Workers | wasm 1.4 MB gz (load proven) | 347 KB gz pure-JS (no undici proven) |
-| Integration effort | low | higher (build the SQLite `Source`) |
+|                     | **Oxigraph (wasm)**               | **Comunica `query-sparql-rdfjs`**    |
+| ------------------- | --------------------------------- | ------------------------------------ |
+| SPARQL              | yes (fast)                        | yes (slower, constant factor)        |
+| RDF-star            | native                            | yes (version-pinned; →RDF 1.2 in v5) |
+| Backend             | **fixed, in-memory only**         | **any `Source` you implement** ✅    |
+| Durable / unbounded | snapshot whole graph; RAM-bounded | yes, via SQLite-backed `Source`      |
+| Browser + Workers   | wasm 1.4 MB gz (load proven)      | 347 KB gz pure-JS (no undici proven) |
+| Integration effort  | low                               | higher (build the SQLite `Source`)   |
 
 **Recommendation: adopt Comunica `query-sparql-rdfjs` as the single SPARQL engine, over a
 `SemanticStore` that exposes an RDF/JS `Source` backed by SQLite** (`@dxos/sql-sqlite` OPFS
