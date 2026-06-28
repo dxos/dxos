@@ -38,4 +38,4 @@ export const Document = Schema.Struct({
 export type Document = Schema.Schema.Type<typeof Document>;
 
 /** Raw, offset-free output of a tagger before alignment. */
-export type RawSentence = { tokens: { text: string; upos: Upos }[] };
+export type RawSentence = { readonly tokens: readonly { readonly text: string; readonly upos: Upos }[] };

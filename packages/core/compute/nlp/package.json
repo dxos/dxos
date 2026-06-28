@@ -34,13 +34,13 @@
     "@dxos/ai": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@effect/ai": "catalog:"
   },
   "devDependencies": {
     "effect": "catalog:"
   },
   "peerDependencies": {
-    "@effect/ai": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

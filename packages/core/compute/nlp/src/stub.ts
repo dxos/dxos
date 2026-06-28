@@ -50,7 +50,7 @@ const tagWord = (raw: string, initial: boolean): Upos => {
 /** Deterministic UPOS tagger: splits on sentence-final punctuation, tags each token. */
 export const stubTag = (text: string): RawSentence[] => {
   const sentences: RawSentence[] = [];
-  let tokens: RawSentence['tokens'] = [];
+  let tokens: { text: string; upos: Upos }[] = [];
   let initial = true;
   for (const match of text.matchAll(WORD_RE)) {
     const raw = match[0];
