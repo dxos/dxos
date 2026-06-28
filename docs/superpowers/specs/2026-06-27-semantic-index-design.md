@@ -12,8 +12,8 @@ semantic facts within context, and use that structure to help an LLM answer ques
 and complete tasks** — and to annotate source content with links to ECHO objects
 (people, organizations, events).
 
-The motivating example. An email from Alice on June 6: *"I think I'm probably going
-to Paris next week."* We want to record, separately:
+The motivating example. An email from Alice on June 6: _"I think I'm probably going
+to Paris next week."_ We want to record, separately:
 
 - **Attribution** — Alice asserted this, on June 6, in this email (who / when / where).
 - **Assertion** — Alice travels to Paris, on/around June 12 (the proposition).
@@ -23,8 +23,8 @@ to Paris next week."* We want to record, separately:
 
 1. The semantic graph is **NOT stored in ECHO**. It is internal to the index. It
    references ECHO objects (by DXN) but lives in its own store.
-2. Typed access via **Effect Schema**. (Updated: typed-JSON serialization is *preferred,
-   not required* — a compact, performant third-party lib that runs browser + Workers is
+2. Typed access via **Effect Schema**. (Updated: typed-JSON serialization is _preferred,
+   not required_ — a compact, performant third-party lib that runs browser + Workers is
    weighted higher. See §2.3.)
 3. Must persist **in the browser** and the pipeline must run on **Cloudflare Workers**.
 4. **Incremental** updates via a pipeline; the structure **holds conflicting facts**
@@ -46,34 +46,34 @@ Full research log is summarized here; sources cited inline.
 
 ### 2.1 The triad maps onto established frameworks
 
-| Our term     | Established framework                                                        |
-| ------------ | --------------------------------------------------------------------------- |
-| Attribution  | **PROV-O** (W3C provenance): `agent`, `activity`, `generatedAtTime`, `wasDerivedFrom`. |
-| Assertion    | **RDF-star / RDF 1.2 triple terms** — a quoted triple `(s, p, o)` you can annotate. |
-| Valence      | **FactBank factuality** values + epistemic-modality literature; URW3 axis (epistemic/aleatory). |
-| Conflict/time| **Bitemporal** modeling (valid-time vs transaction-time) + **named-graphs-per-source**. |
+| Our term      | Established framework                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Attribution   | **PROV-O** (W3C provenance): `agent`, `activity`, `generatedAtTime`, `wasDerivedFrom`.          |
+| Assertion     | **RDF-star / RDF 1.2 triple terms** — a quoted triple `(s, p, o)` you can annotate.             |
+| Valence       | **FactBank factuality** values + epistemic-modality literature; URW3 axis (epistemic/aleatory). |
+| Conflict/time | **Bitemporal** modeling (valid-time vs transaction-time) + **named-graphs-per-source**.         |
 
 ### 2.2 Libraries considered, and why none is adopted as the runtime store
 
 - **RDF-star JS stacks** (N3.js, `@rdfjs/*`, quadstore, Oxigraph WASM, Comunica):
-  - Only `@rdfjs/data-model` + `@rdfjs/dataset` are *confirmably* Workers-safe (pure,
+  - Only `@rdfjs/data-model` + `@rdfjs/dataset` are _confirmably_ Workers-safe (pure,
     zero-dep) — but they are model+storage only (no query, no JSON-LD).
   - Every SPARQL option is unverified-to-blocked on Cloudflare Workers: quadstore has no
     persistent Workers backend; Oxigraph WASM init on Workers is unverified; Comunica's
     default HTTP actor statically imports `node:http`.
   - None serialize to **plain typed JSON** — they use RDF/JS term objects. This directly
     fails requirement (2). (quadstore additionally lacks RDF-star.)
-- **PROV-O** is a *vocabulary*, not a library; no maintained TS builder. Mirror the term
+- **PROV-O** is a _vocabulary_, not a library; no maintained TS builder. Mirror the term
   names in our types.
 - **Epistemic modality**: no ratified ontology, no JS lib. **FactBank**
   (Saurí & Pustejovsky) gives a directly reusable discrete value set.
 - **Claim extraction** (OpenIE, SRL/PropBank, AMR, FrameNet, DRT): all JVM/Python; no
   client-side JS engine. The realistic path is **LLM structured extraction** — model runs
   remotely, only JSON crosses the wire, the TS layer is schema + HTTP (Workers-clean). The
-  formalisms become our *schema vocabulary* (S-P-O ≈ ARG0/V/ARG1; allow nested claims for
+  formalisms become our _schema vocabulary_ (S-P-O ≈ ARG0/V/ARG1; allow nested claims for
   negation/modality, per DRT's lesson).
 - **Lightweight non-RDF stores** (TinyBase, graphology, DataScript): TinyBase is the only
-  one with *documented* Workers + Durable-Objects support, but it is tabular, not a graph,
+  one with _documented_ Workers + Durable-Objects support, but it is tabular, not a graph,
   and we already have a SQLite substrate (`@dxos/sql-sqlite`).
 
 ### 2.3 Library re-evaluation (typed-JSON demoted; reuse prioritized)
@@ -83,12 +83,12 @@ a hard requirement; a performant, compact third-party library that runs in the b
 **and** on Cloudflare Workers is strongly preferred. That reopens the embeddable-store
 question. Verified candidates (evidence + a local artifact spike):
 
-| Candidate | Browser | CF Workers | wasm (gzip) | Statement annotation | Vec/FTS | Maint. |
-| --------- | ------- | ---------- | ----------- | -------------------- | ------- | ------ |
-| **Oxigraph** | yes | **yes (proven mechanically, §2.4)** | **~1.4 MB** (fits free tier) | **RDF-star** (native) | no | active (monthly) |
-| Pure-JS RDF (N3.js) | yes | likely (pure JS) | n/a (tiny) | RDF-star (parse) | no | active |
-| CozoDB | yes | no (~12 MB, busts limit) | ~12 MB | Datalog columns | **yes** | dormant 2023 |
-| Kuzu | yes | no (~11 MB; archived) | ~11 MB | edge props | yes | **archived (Apple, 2025)** |
+| Candidate           | Browser | CF Workers                          | wasm (gzip)                  | Statement annotation  | Vec/FTS | Maint.                     |
+| ------------------- | ------- | ----------------------------------- | ---------------------------- | --------------------- | ------- | -------------------------- |
+| **Oxigraph**        | yes     | **yes (proven mechanically, §2.4)** | **~1.4 MB** (fits free tier) | **RDF-star** (native) | no      | active (monthly)           |
+| Pure-JS RDF (N3.js) | yes     | likely (pure JS)                    | n/a (tiny)                   | RDF-star (parse)      | no      | active                     |
+| CozoDB              | yes     | no (~12 MB, busts limit)            | ~12 MB                       | Datalog columns       | **yes** | dormant 2023               |
+| Kuzu                | yes     | no (~11 MB; archived)               | ~11 MB                       | edge props            | yes     | **archived (Apple, 2025)** |
 
 CozoDB/Kuzu are out for Workers (size + dead-project risk). Oxigraph is the standout: its
 RDF-star model **is** exactly "annotate an assertion with attribution + valence," queryable
@@ -102,11 +102,11 @@ load path:
 - `web_bg.wasm` **gzip = 1.4 MB** → under the **free** Workers limit (3 MB), well under paid.
 - `web.js` exports **`initSync(module)`**; loading via `new WebAssembly.Module(bytes)` +
   `initSync` (no `fetch`, no `WebAssembly.instantiate`) **works** — the exact path workerd
-  permits. Default async init *does* use `fetch` (avoid it; use `initSync`).
+  permits. Default async init _does_ use `fetch` (avoid it; use `initSync`).
 - Only host imports needed: `crypto.getRandomValues`, `Date.now` — both on Workers.
 - Stored and queried an RDF-star fact end-to-end: `<< ex:alice ex:travelsTo ex:paris >>
-  prov:wasAttributedTo ex:alice ; prov:generatedAtTime "2026-06-06" ; ex:factuality "PR+" ;
-  ex:confidence "0.6"` → SPARQL returned `alice, 2026-06-06, PR+, 0.6`.
+prov:wasAttributedTo ex:alice ; prov:generatedAtTime "2026-06-06" ; ex:factuality "PR+" ;
+ex:confidence "0.6"` → SPARQL returned `alice, 2026-06-06, PR+, 0.6`.
 
 Residual gap: a real `wrangler dev` smoke test (V8-in-Node ≠ workerd exactly). Cheap;
 scheduled as build-order step 0. Constraints accepted: Oxigraph's JS build is **in-memory**
@@ -246,13 +246,13 @@ maps to/from RDF-star (§5.1) and SPARQL:
 
 ```ts
 SemanticStore {
-  putFacts(facts: Fact[]): Effect<void>;          // → RDF-star quads inserted
-  resolveEntity(input): Effect<Entity>;           // get-or-create by label/alias (extractor's Resolver pattern)
-  query(q: SemanticQuery): Effect<Fact[]>;        // → SPARQL; by entity/predicate/time/source/valence
-  cursor(source: DXN): Effect<string | undefined>;// last sourceHash for incremental skip
+  putFacts(facts: Fact[]): Effect<void>;              // → RDF-star quads inserted
+  resolveEntity(input): Effect<Entity>;               // get-or-create by label/alias (extractor's Resolver pattern)
+  query(q: SemanticQuery): Effect<Fact[]>;            // → SPARQL; by entity/predicate/time/source/valence
+  cursor(source: DXN): Effect<string | undefined>;    // last sourceHash for incremental skip
   setCursor(source: DXN, hash: string): Effect<void>;
-  snapshot(): Effect<Uint8Array>;                 // dump store → N-Quads(-star) bytes
-  load(bytes: Uint8Array): Effect<void>;          // restore
+  snapshot(): Effect<Uint8Array>;                     // dump store → N-Quads(-star) bytes
+  load(bytes: Uint8Array): Effect<void>;              // restore
 }
 ```
 
@@ -266,9 +266,25 @@ so persistence is explicit snapshot/restore:
 - **Cloudflare** — bytes → R2 or a Durable-Object SQLite blob; load into the DO's in-memory
   Oxigraph on first request, snapshot on alarm/idle.
 
-**Fallback for scale** — `SqliteStore` (same interface, `@dxos/sql-sqlite` + FTS5,
-index-core patterns) for corpora too large to hold in a 128 MB isolate as a live graph.
-Selected per deployment; the pipeline and tool are unaware which backend is active.
+**On RocksDB / pluggable backends (reviewer question, verified against the artifact).**
+Oxigraph's RocksDB backend is **native (C++) and exists only in the Rust crate**; it cannot
+compile to WASM. The `oxigraph` npm package (both `web` and `node` builds) contains **no
+RocksDB and no native storage** (scan of the package: zero references) — the WASM `Store`
+is **in-memory by construction**. Its API is `constructor(quads?)`, `load`, `dump`, `query`,
+`update`; even `node.d.ts` exposes no `open(path)`. So for our target runtimes RocksDB is
+moot, and there is **no JS hook to substitute a custom backend** (OPFS/SQLite/DO) *inside*
+the engine — backend choice is a Rust compile-time decision. Persistence is therefore
+external: `dump()` → bytes → sink, `load()` on open (above). The consequence to design
+around is not RocksDB but that **the live graph is entirely in RAM**, bounded by the 128 MB
+Workers isolate and browser memory.
+
+**Scale strategy** (for corpora too large to hold as one live graph):
+1. **Shard** the in-memory store by space / time-window / source; load on demand.
+2. **`SqliteStore`** (same `SemanticStore` interface, `@dxos/sql-sqlite` + FTS5, index-core
+   patterns) for the large/cold tier — loses SPARQL, gains unbounded on-disk size (browser
+   OPFS / D1 / DO-SQLite). Selected per deployment; pipeline and tool are unaware which
+   backend is active.
+3. **Compaction** — archive superseded facts to a cold snapshot.
 
 Conflict handling: facts are **append-only** quads. A query for "what does X assert about
 Y" returns all competing facts, each with its attribution and time; the caller (or the LLM
@@ -295,7 +311,7 @@ structured-extraction approach proven in `@dxos/extractor`):
 Unchanged source → skip. Changed source → re-extract and supersede prior facts from that
 source (old facts retained with a `validTo`/superseded marker for audit).
 
-The pipeline borrows the *philosophy* of `@dxos/transcription-pipeline` (isolated stages,
+The pipeline borrows the _philosophy_ of `@dxos/transcription-pipeline` (isolated stages,
 Effect, model-per-stage) but is batch/document-oriented and writes to `SemanticStore`, not
 ECHO — so it is a new pipeline, not a reuse of that runtime.
 
@@ -329,7 +345,7 @@ Live connector path is wired but exercised when credentials are provided.
 
 - **Tool**: a `semanticQuery` Operation/skill tool —
   `semanticQuery({ entity?, subject?, predicate?, asOf?, source?, minConfidence?, text? }) → Fact[]`,
-  rendered as compact NL that preserves attribution + valence and *surfaces conflicts*
+  rendered as compact NL that preserves attribution + valence and _surfaces conflicts_
   ("Alice (email, Jun 6): probably travelling to Paris ~Jun 12 — unsure").
 - **Eval**: a fixed Q&A set over the synthetic corpus + fixtures, run as an **ablation**
   (answer with vs without the tool), scored against expected answers (LLM-judge). Metrics:
