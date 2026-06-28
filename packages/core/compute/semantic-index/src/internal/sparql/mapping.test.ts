@@ -36,6 +36,21 @@ describe('fact ↔ triples mapping', () => {
     expect(back).toEqual(fact);
   });
 
+  test('round-trips a fact with wasDerivedFrom and span', ({ expect }) => {
+    const fact: Fact = {
+      ...FACT,
+      id: 'fact-3',
+      attribution: {
+        source: 'dxn:queue:x:m4',
+        generatedAtTime: '2026-06-09T00:00:00.000Z',
+        wasDerivedFrom: ['dxn:a', 'dxn:b'],
+        span: { start: 0, end: 12 },
+      },
+    };
+    const [back] = triplesToFacts(factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
   test('throws when a required predicate triple is missing', ({ expect }) => {
     const quads = factToTriples(FACT).filter((quad) => !quad.predicate.value.endsWith('#predicate'));
     expect(() => triplesToFacts(quads)).toThrow();

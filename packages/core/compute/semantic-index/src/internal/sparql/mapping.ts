@@ -25,11 +25,10 @@ const objectToTerm = (term: RdfTerm | undefined): Term | undefined =>
  * Plain RDF reification of a Fact.
  *
  * `attribution.source` is serialized to `prov:wasDerivedFrom` (the Task 6 query-builder filters on it).
- * The optional `attribution.wasDerivedFrom` (array) and `attribution.span` are intentionally NOT mapped in v1
- * because the pipeline does not yet produce them.
  *
  * Invariant: every serialized predicate must have a UNIQUE local name (reassembly keys annotations by local name).
- * When `wasDerivedFrom` is added later it must NOT reuse the `prov:wasDerivedFrom` predicate already used for `source`.
+ * `attribution.wasDerivedFrom` (array) uses the `sx:derivedFrom` predicate — a distinct local name from the
+ * `prov:wasDerivedFrom` used for `source` — so the two never collide on reassembly.
  */
 
 /** Expand a Fact into plain reified triples (a Fact node + annotation triples). */
@@ -68,51 +67,75 @@ export const factToTriples = (fact: Fact): Quad[] => {
   if (fact.assertion.quote) {
     triples.push(quad(node, sx('quote'), str(fact.assertion.quote), g));
   }
+  if (fact.attribution.wasDerivedFrom) {
+    for (const derived of fact.attribution.wasDerivedFrom) {
+      triples.push(quad(node, sx('derivedFrom'), str(derived), g));
+    }
+  }
+  if (fact.attribution.span) {
+    triples.push(quad(node, sx('spanStart'), str(String(fact.attribution.span.start)), g));
+    triples.push(quad(node, sx('spanEnd'), str(String(fact.attribution.span.end)), g));
+  }
   return triples;
 };
 
 /** Reassemble (and validate) Facts from reified triples — inverse of factToTriples. */
 export const triplesToFacts = (quads: Quad[]): Fact[] => {
-  const byFact = new Map<string, Map<string, RdfTerm>>();
+  const byFact = new Map<string, Map<string, RdfTerm[]>>();
   for (const q of quads) {
     const id = factIdFromIri(q.subject.value);
     let props = byFact.get(id);
     if (!props) {
       byFact.set(id, (props = new Map()));
     }
-    props.set(localName(q.predicate.value), q.object);
+    const name = localName(q.predicate.value);
+    const terms = props.get(name);
+    if (terms) {
+      terms.push(q.object);
+    } else {
+      props.set(name, [q.object]);
+    }
   }
 
   const facts: Fact[] = [];
   for (const [id, props] of byFact) {
-    const value = (name: string) => props.get(name)?.value;
-    const agentTerm = props.get('wasAttributedTo');
+    const oneTerm = (name: string) => props.get(name)?.[0];
+    const one = (name: string) => oneTerm(name)?.value;
+    const many = (name: string) => props.get(name)?.map((term) => term.value) ?? [];
+    const agentTerm = oneTerm('wasAttributedTo');
+    const derivedFrom = many('derivedFrom');
+    const spanStart = one('spanStart');
+    const spanEnd = one('spanEnd');
     // Assemble an untyped candidate; Schema.decodeUnknownSync validates required fields and literal unions,
     // throwing on missing/invalid data rather than silently producing undefined.
     const candidate = {
       id,
       assertion: {
-        subject: objectToTerm(props.get('subject')),
-        predicate: value('predicate'),
-        object: objectToTerm(props.get('object')),
-        ...(value('validFrom') !== undefined ? { validFrom: value('validFrom') } : {}),
-        ...(value('validTo') !== undefined ? { validTo: value('validTo') } : {}),
-        ...(value('quote') !== undefined ? { quote: value('quote') } : {}),
+        subject: objectToTerm(oneTerm('subject')),
+        predicate: one('predicate'),
+        object: objectToTerm(oneTerm('object')),
+        ...(one('validFrom') !== undefined ? { validFrom: one('validFrom') } : {}),
+        ...(one('validTo') !== undefined ? { validTo: one('validTo') } : {}),
+        ...(one('quote') !== undefined ? { quote: one('quote') } : {}),
       },
       valence: {
-        factuality: value('factuality'),
-        polarity: value('polarity'),
-        ...(value('confidence') !== undefined ? { confidence: Number(value('confidence')) } : {}),
-        ...(value('nature') !== undefined ? { nature: value('nature') } : {}),
+        factuality: one('factuality'),
+        polarity: one('polarity'),
+        ...(one('confidence') !== undefined ? { confidence: Number(one('confidence')) } : {}),
+        ...(one('nature') !== undefined ? { nature: one('nature') } : {}),
       },
       attribution: {
         ...(agentTerm !== undefined ? { agent: entityIdFromIri(agentTerm.value) } : {}),
-        source: value('wasDerivedFrom'),
-        generatedAtTime: value('generatedAtTime'),
+        source: one('wasDerivedFrom'),
+        generatedAtTime: one('generatedAtTime'),
+        ...(derivedFrom.length > 0 ? { wasDerivedFrom: derivedFrom } : {}),
+        ...(spanStart !== undefined && spanEnd !== undefined
+          ? { span: { start: Number(spanStart), end: Number(spanEnd) } }
+          : {}),
       },
-      recordedAt: value('recordedAt'),
-      extractor: { id: value('extractorId'), model: value('extractorModel'), version: value('extractorVersion') },
-      sourceHash: value('sourceHash'),
+      recordedAt: one('recordedAt'),
+      extractor: { id: one('extractorId'), model: one('extractorModel'), version: one('extractorVersion') },
+      sourceHash: one('sourceHash'),
     };
     facts.push(decodeFact(candidate));
   }

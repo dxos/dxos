@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SemanticIndexError } from './errors';
+import { SemanticIndexError } from './index';
 
 describe('semantic-index scaffold', () => {
   test('package imports', ({ expect }) => {

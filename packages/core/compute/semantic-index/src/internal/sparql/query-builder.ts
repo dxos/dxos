@@ -35,6 +35,9 @@ export const buildSparql = (query: SemanticQuery): string => {
   }
   let confFilter = '';
   if (query.minConfidence !== undefined) {
+    if (!Number.isFinite(query.minConfidence)) {
+      throw new TypeError('minConfidence must be a finite number.');
+    }
     patterns.push(`?fact <${SX}confidence> ?conf .`);
     confFilter = `FILTER(xsd:decimal(?conf) >= ${query.minConfidence})`;
   }

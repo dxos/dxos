@@ -14,6 +14,7 @@ export const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlC
       s TEXT NOT NULL, p TEXT NOT NULL, o TEXT NOT NULL,
       oType TEXT NOT NULL, g TEXT NOT NULL DEFAULT ''
     )`;
+    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS triples_unique ON triples (s, p, o, oType, g)`;
     yield* sql`CREATE INDEX IF NOT EXISTS triples_spo ON triples (s, p, o)`;
     yield* sql`CREATE INDEX IF NOT EXISTS triples_pos ON triples (p, o)`;
     yield* sql`CREATE TABLE IF NOT EXISTS entities (

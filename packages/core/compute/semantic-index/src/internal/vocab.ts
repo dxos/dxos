@@ -17,5 +17,16 @@ export const entityIri = (id: string) => namedNode(ENTITY + encodeURIComponent(i
 export const factIri = (id: string) => namedNode(FACT + encodeURIComponent(id));
 
 export const str = (value: string) => literal(value);
-export const entityIdFromIri = (iri: string) => decodeURIComponent(iri.slice(ENTITY.length));
-export const factIdFromIri = (iri: string) => decodeURIComponent(iri.slice(FACT.length));
+export const entityIdFromIri = (iri: string) => {
+  if (!iri.startsWith(ENTITY)) {
+    throw new TypeError(`Expected entity IRI with prefix ${ENTITY}: ${iri}`);
+  }
+  return decodeURIComponent(iri.slice(ENTITY.length));
+};
+
+export const factIdFromIri = (iri: string) => {
+  if (!iri.startsWith(FACT)) {
+    throw new TypeError(`Expected fact IRI with prefix ${FACT}: ${iri}`);
+  }
+  return decodeURIComponent(iri.slice(FACT.length));
+};
