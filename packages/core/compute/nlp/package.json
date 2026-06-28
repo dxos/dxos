@@ -32,9 +32,6 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@effect/ai": "catalog:"
   },
   "devDependencies": {

@@ -44,7 +44,7 @@ const PosStory = () => {
 const meta = {
   title: 'plugins/plugin-transcription/PosDecoration',
   render: PosStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

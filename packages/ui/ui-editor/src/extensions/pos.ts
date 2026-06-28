@@ -134,8 +134,9 @@ export type PosOptions = {
 
 /**
  * Reactive driver: on doc change, mark edit-touched spans stale (immediate visual feedback), then
- * after idle re-parse the whole document as a single span and dispatch fresh analysis. Re-hashing
- * is bounded to touched spans via `spanDiverged`.
+ * after idle re-parse and dispatch fresh analysis. Re-hashing is bounded to spans overlapping the
+ * edit. This driver intentionally treats the whole document as a single span; per-span/sub-document
+ * analysis is left to external drivers dispatching `setAnalysis` (e.g. the transcription pipeline).
  */
 const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: number): Extension => {
   const run = debounce((view: EditorView) => {
@@ -161,11 +162,17 @@ const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: num
     if (!update.docChanged) {
       return;
     }
-    // Immediate: mark any diverged span stale so its decorations dim until the re-parse lands.
+    // Collect the post-edit ranges this transaction touched; re-hashing is bounded to spans that
+    // overlap them, so cost scales with the edit, not the total analyzed text.
+    const touched: Array<[number, number]> = [];
+    update.changes.iterChangedRanges((_fromA, _toA, fromB, toB) => touched.push([fromB, toB]));
+    const overlapsEdit = (span: PosSpan) => touched.some(([from, to]) => from <= span.to && to >= span.from);
+
+    // Immediate: mark any diverged touched span stale so its decorations dim until the re-parse lands.
     const text = update.state.doc.toString();
     const effects = update.state
       .field(posAnalysisField)
-      .filter((span) => !span.stale && spanDiverged(text, span))
+      .filter((span) => !span.stale && overlapsEdit(span) && spanDiverged(text, span))
       .map((span) => markStale.of({ from: span.from, to: span.to }));
     if (effects.length > 0) {
       update.view.dispatch({ effects });
