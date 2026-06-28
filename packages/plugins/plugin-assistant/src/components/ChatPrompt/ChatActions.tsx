@@ -229,7 +229,7 @@ type SettingsSelectableItemProps = {
 // single-select is modelled with a plain item and an explicit trailing check. `onSelect` (not
 // `onClick`) so keyboard activation works.
 const SettingsSelectableItem = ({ label, selected, onSelect }: SettingsSelectableItemProps) => (
-  <DropdownMenu.Item classNames='gap-2' onSelect={onSelect}>
+  <DropdownMenu.Item classNames='gap-2' role='menuitemradio' aria-checked={selected} onSelect={onSelect}>
     <span className='grow truncate'>{label}</span>
     {selected && <Icon icon='ph--check--regular' size={4} />}
   </DropdownMenu.Item>

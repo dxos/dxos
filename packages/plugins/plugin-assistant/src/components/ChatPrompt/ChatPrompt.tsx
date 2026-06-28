@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
@@ -76,7 +76,8 @@ export const ChatPrompt = ({
     });
   }, [event]);
 
-  const docId = chat?.id ?? 'chat-prompt';
+  const fallbackDocId = useId();
+  const docId = chat?.id ?? fallbackDocId;
   useChatVoiceInput(docId, editorRef);
 
   const keymapExtensions = useChatKeymapExtensions({ event });

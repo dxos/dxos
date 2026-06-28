@@ -7,9 +7,12 @@ import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { useAudioTrack, useTranscriber } from '@dxos/plugin-transcription/hooks';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
+
+import { meta } from '#meta';
 
 // Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
 const RECORDER_INTERVAL_MS = 200;
@@ -20,6 +23,7 @@ const RECORDER_INTERVAL_MS = 200;
  * matches the given docId and the session is recording.
  */
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
+  const { t } = useTranslation(meta.profile.key);
   const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
@@ -41,7 +45,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
       mode: settings?.streamMode ?? 'word',
       wordIntervalMs: settings?.wordIntervalMs ?? 80,
     });
-    streamer.start({ anchor: view.state.selection.main.head, placeholder: 'Recording…' });
+    streamer.start({ anchor: view.state.selection.main.head, placeholder: t('recording.placeholder') });
     streamerRef.current = streamer;
 
     return () => {
@@ -82,7 +86,12 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   // Stable identity: a fresh object would change useTranscriber's memo deps every render.
   const recorderConfig = useMemo(() => ({ interval: RECORDER_INTERVAL_MS }), []);
 
-  const track = useAudioTrack(active);
+  const audioConstraints = useMemo<MediaTrackConstraints | undefined>(
+    () => (settings?.audioDeviceId ? { deviceId: { exact: settings.audioDeviceId } } : undefined),
+    [settings?.audioDeviceId],
+  );
+
+  const track = useAudioTrack(active, audioConstraints);
 
   useTranscriber({
     audioStreamTrack: track,

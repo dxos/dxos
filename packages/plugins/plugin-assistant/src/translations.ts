@@ -129,6 +129,7 @@ export const translations: Resource[] = [
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
         'microphone.button': 'Click to speak',
+        'recording.placeholder': 'Recording…',
         'stop-recording.label': 'Stop recording',
         'hold-to-record.label': 'Hold to record',
         'start-recording.label': 'Start recording',
