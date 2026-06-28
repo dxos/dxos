@@ -5732,6 +5732,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5750,9 +5753,15 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
+      wavefile:
+        specifier: 'catalog:'
+        version: 11.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -16109,6 +16118,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
