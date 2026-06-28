@@ -40,6 +40,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@effect/ai": "catalog:",
+    "@effect/sql": "catalog:",
     "asynciterator": "catalog:",
     "n3": "catalog:"
   },

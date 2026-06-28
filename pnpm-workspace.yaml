@@ -336,8 +336,8 @@ catalog:
   aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  asynciterator: 3.9.0
   astro: ^6.4.6
+  asynciterator: 3.9.0
   autoprefixer: ^10.5.0
   babel-preset-solid: ^1.9.9
   babylonjs-gltf2interface: ^7.0.0
