@@ -12,32 +12,34 @@
 
 ## File Map
 
-| File | Action | What changes |
-|------|--------|-------------|
-| `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatActions.tsx` | Modify | Replace `IconButton` mic with `MicButton` + settings dropdown; add `docId` prop; add capability wiring |
-| `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.tsx` | Modify | Remove `useVoiceInput`, `recordingState`, `record-start`/`record-stop` events; add `useChatVoiceInput`; pass `docId` to `ChatActions`; add `pendingText()` to extensions |
-| `packages/plugins/plugin-assistant/src/components/ChatPrompt/useChatVoiceInput.ts` | Create | Hook: reads capabilities, manages `PendingTextStreamer` + `useTranscriber` lifecycle |
+| File                                                                               | Action | What changes                                                                                                                                                             |
+| ---------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatActions.tsx`      | Modify | Replace `IconButton` mic with `MicButton` + settings dropdown; add `docId` prop; add capability wiring                                                                   |
+| `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.tsx`       | Modify | Remove `useVoiceInput`, `recordingState`, `record-start`/`record-stop` events; add `useChatVoiceInput`; pass `docId` to `ChatActions`; add `pendingText()` to extensions |
+| `packages/plugins/plugin-assistant/src/components/ChatPrompt/useChatVoiceInput.ts` | Create | Hook: reads capabilities, manages `PendingTextStreamer` + `useTranscriber` lifecycle                                                                                     |
 
 ---
 
 ### Task 1: Replace mic `IconButton` in `ChatActions` with `MicButton` + settings
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatActions.tsx`
 
 Context: `ChatActions` currently uses a raw `IconButton` with `onMouseDown`/`onMouseUp`/`onTouchStart`/`onTouchEnd` events and dispatches `record-start`/`record-stop` `ChatEvent`s upward. We replace this entirely with `MicButton` (from `@dxos/react-ui`) wired to `TranscriptionCapabilities` and a settings dropdown.
 
 The `MicButton` API:
+
 ```tsx
 <MicButton
   iconOnly
   variant='ghost'
   label={recordLabel}
   recording={recording}
-  mode={recordMode}          // 'toggle' | 'hold'
-  onToggle={handleToggle}    // used when mode === 'toggle'
-  onPressStart={handlePressStart}  // used when mode === 'hold'
-  onPressEnd={handlePressEnd}      // used when mode === 'hold'
+  mode={recordMode} // 'toggle' | 'hold'
+  onToggle={handleToggle} // used when mode === 'toggle'
+  onPressStart={handlePressStart} // used when mode === 'hold'
+  onPressEnd={handlePressEnd} // used when mode === 'hold'
 />
 ```
 
@@ -193,11 +195,17 @@ export const ChatActions = ({
               <DropdownMenu.Content>
                 <DropdownMenu.Viewport>
                   <DropdownMenu.GroupLabel>{t('record-mode.label')}</DropdownMenu.GroupLabel>
-                  <DropdownMenu.Item classNames='gap-2' onSelect={() => setSettings((s) => ({ ...s, recordMode: 'toggle' }))}>
+                  <DropdownMenu.Item
+                    classNames='gap-2'
+                    onSelect={() => setSettings((s) => ({ ...s, recordMode: 'toggle' }))}
+                  >
                     <span className='grow truncate'>{t('record-mode.toggle.label')}</span>
                     {recordMode === 'toggle' && <Icon icon='ph--check--regular' size={4} />}
                   </DropdownMenu.Item>
-                  <DropdownMenu.Item classNames='gap-2' onSelect={() => setSettings((s) => ({ ...s, recordMode: 'hold' }))}>
+                  <DropdownMenu.Item
+                    classNames='gap-2'
+                    onSelect={() => setSettings((s) => ({ ...s, recordMode: 'hold' }))}
+                  >
                     <span className='grow truncate'>{t('record-mode.hold.label')}</span>
                     {recordMode === 'hold' && <Icon icon='ph--check--regular' size={4} />}
                   </DropdownMenu.Item>
@@ -205,7 +213,10 @@ export const ChatActions = ({
                   <DropdownMenu.Separator />
 
                   <DropdownMenu.GroupLabel>{t('audio-device.label')}</DropdownMenu.GroupLabel>
-                  <DropdownMenu.Item classNames='gap-2' onSelect={() => setSettings((s) => ({ ...s, audioDeviceId: undefined }))}>
+                  <DropdownMenu.Item
+                    classNames='gap-2'
+                    onSelect={() => setSettings((s) => ({ ...s, audioDeviceId: undefined }))}
+                  >
                     <span className='grow truncate'>{t('audio-device.default.label')}</span>
                     {selectedDeviceId === '' && <Icon icon='ph--check--regular' size={4} />}
                   </DropdownMenu.Item>
@@ -308,6 +319,7 @@ git commit -m "feat(plugin-assistant): replace IconButton mic with MicButton + s
 ### Task 2: Create `useChatVoiceInput` hook with `PendingTextStreamer`
 
 **Files:**
+
 - Create: `packages/plugins/plugin-assistant/src/components/ChatPrompt/useChatVoiceInput.ts`
 
 This hook mirrors the streaming setup in `plugin-transcription/src/capabilities/transcription-driver.tsx` but scoped to a single `ChatEditorController` ref instead of a map of editor views.
@@ -336,12 +348,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { useTranscriber, useAudioTrack, TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
-import {
-  PendingTextStreamer,
-  cancelPendingText,
-  editorPendingTextSink,
-  pendingTextState,
-} from '@dxos/ui-editor';
+import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
 const RECORDER_INTERVAL_MS = 200;
 
@@ -351,10 +358,7 @@ const RECORDER_INTERVAL_MS = 200;
  * When the session for `docId` becomes active, creates a PendingTextStreamer bound to the
  * ChatEditorController's live EditorView and drives word-by-word text insertion.
  */
-export const useChatVoiceInput = (
-  docId: string,
-  editorRef: React.RefObject<ChatEditorController | null>,
-) => {
+export const useChatVoiceInput = (docId: string, editorRef: React.RefObject<ChatEditorController | null>) => {
   const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
@@ -408,7 +412,10 @@ export const useChatVoiceInput = (
   const track = useAudioTrack(active);
 
   const handleSegments = useCallback(async (segments: { text: string }[]) => {
-    const text = segments.map((s) => s.text).join(' ').trim();
+    const text = segments
+      .map((s) => s.text)
+      .join(' ')
+      .trim();
     if (text.length > 0 && streamerRef.current) {
       streamerRef.current.push(text);
     }
@@ -432,7 +439,8 @@ moon run plugin-assistant:build 2>&1 | grep -v "DEPOT_TOKEN" | grep -E "error|Er
 ```
 
 Fix any type errors before proceeding. Common ones:
-- `onSegments` type mismatch: adjust `handleSegments` signature to match `TranscriberProps['onSegments']` 
+
+- `onSegments` type mismatch: adjust `handleSegments` signature to match `TranscriberProps['onSegments']`
 - `useAtomCapabilityState` may return `[T | undefined, Dispatch]` — guard against `undefined`
 
 - [ ] **Step 2.5: Commit**
@@ -447,9 +455,11 @@ git commit -m "feat(plugin-assistant): add useChatVoiceInput hook with PendingTe
 ### Task 3: Wire `useChatVoiceInput` + `pendingText` extension into `ChatPrompt`
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatPrompt.tsx`
 
 Changes:
+
 1. Remove `useVoiceInput` import and usage
 2. Remove `recordingState` state and `record-start`/`record-stop` event cases
 3. Add `useChatVoiceInput(docId, editorRef)` call
@@ -469,83 +479,91 @@ grep -rn "interface Chat\b\|type Chat\b" packages/sdk/assistant-toolkit/src/ --i
 Apply these targeted diffs:
 
 **Remove** from imports:
+
 ```tsx
 import { useVoiceInput } from '@dxos/plugin-transcription';
 ```
 
 **Add** to imports:
+
 ```tsx
 import { pendingText } from '@dxos/ui-editor';
 import { useChatVoiceInput } from './useChatVoiceInput';
 ```
 
 **Remove** state and event handling (lines ~69-97):
-```tsx
-  const [recordingState, setRecordingState] = useState(false);
-  useEffect(() => {
-    return event.on((ev) => {
-      switch (ev.type) {
-        // ...
-        case 'record-start':
-          setRecordingState(true);
-          break;
-        case 'record-stop':
-          setRecordingState(false);
-          break;
-      }
-    });
-  }, [event]);
 
-  // TODO(burdon): Configure capability in TranscriptionPlugin.
-  const { recording } = useVoiceInput({
-    active: recordingState,
-    onUpdate: (text) => {
-      editorRef.current?.setText(text);
-      editorRef.current?.focus();
-    },
+```tsx
+const [recordingState, setRecordingState] = useState(false);
+useEffect(() => {
+  return event.on((ev) => {
+    switch (ev.type) {
+      // ...
+      case 'record-start':
+        setRecordingState(true);
+        break;
+      case 'record-stop':
+        setRecordingState(false);
+        break;
+    }
   });
+}, [event]);
+
+// TODO(burdon): Configure capability in TranscriptionPlugin.
+const { recording } = useVoiceInput({
+  active: recordingState,
+  onUpdate: (text) => {
+    editorRef.current?.setText(text);
+    editorRef.current?.focus();
+  },
+});
 ```
 
 **Keep** the `update-prompt` case (it's still needed), simplify `useEffect` event handler to only handle `update-prompt`:
+
 ```tsx
-  useEffect(() => {
-    return event.on((ev) => {
-      if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
-        editorRef.current?.setText(ev.text);
-        editorRef.current?.focus();
-      }
-    });
-  }, [event]);
+useEffect(() => {
+  return event.on((ev) => {
+    if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
+      editorRef.current?.setText(ev.text);
+      editorRef.current?.focus();
+    }
+  });
+}, [event]);
 ```
 
 **Add** after `editorRef`:
+
 ```tsx
-  const docId = chat?.id ?? 'chat-prompt';
-  useChatVoiceInput(docId, editorRef);
+const docId = chat?.id ?? 'chat-prompt';
+useChatVoiceInput(docId, editorRef);
 ```
 
 **Update** extensions to include `pendingText()`:
+
 ```tsx
-  const extensions = useChatKeymapExtensions({ event });
-  const allExtensions = useMemo(() => [extensions, pendingText()], [extensions]);
+const extensions = useChatKeymapExtensions({ event });
+const allExtensions = useMemo(() => [extensions, pendingText()], [extensions]);
 ```
 
 Add `useMemo` import from React if not already present.
 
 **Update** `ChatEditor` to use `allExtensions`:
+
 ```tsx
-  <ChatEditor
-    ref={editorRef}
-    autoFocus
-    lineWrapping
-    classNames='col-span-2 pt-0.5'
-    placeholder={placeholder ?? t('prompt.placeholder')}
-    extensions={allExtensions}
-    onSubmit={handleSubmit}
-  />
+<ChatEditor
+  ref={editorRef}
+  autoFocus
+  lineWrapping
+  classNames='col-span-2 pt-0.5'
+  placeholder={placeholder ?? t('prompt.placeholder')}
+  extensions={allExtensions}
+  onSubmit={handleSubmit}
+/>
 ```
 
 **Update** `ChatActions` call — remove `recording` prop, add `docId`:
+
 ```tsx
   <ChatActions
     classNames='col-span-2'
@@ -573,6 +591,7 @@ moon run plugin-assistant:build 2>&1 | grep -v "DEPOT_TOKEN" | grep -E "TS[0-9]+
 ```
 
 Fix any type errors. Common ones:
+
 - `ChatActionsProps` still has `recording?: boolean` — the type was updated in Task 1, confirm it no longer has that prop
 - `useMemo` not imported — add it to the React import
 - `pendingText` import path — it's `@dxos/ui-editor`
@@ -595,6 +614,7 @@ git commit -m "feat(plugin-assistant): replace useVoiceInput with PendingTextStr
 ### Task 4: Add `record-start`/`record-stop` removal from `ChatEvent` type
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-assistant/src/components/Chat/events.ts`
 
 Now that `ChatActions` no longer emits `record-start`/`record-stop`, these event types are dead. Remove them from the `ChatEvent` union to keep the type surface clean.
