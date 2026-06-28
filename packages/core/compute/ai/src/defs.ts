@@ -45,11 +45,10 @@ export const DEFAULT_OLLAMA_MODELS = [
   'ai.ollama.model.llama3.2:1b',
   'ai.ollama.model.llama3.2:3b',
   'ai.ollama.model.gemma4:12b',
-  'ai.ollama.model.gemma4:31b',
+  'ai.ollama.model.gemma4:26b',
   'ai.ollama.model.qwen2.5:7b',
   'ai.ollama.model.qwen2.5:32b',
   'ai.ollama.model.gpt-oss:20b',
-  'ai.ollama.model.gpt-oss:120b',
 ] as const;
 
 /**
