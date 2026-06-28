@@ -16,6 +16,8 @@ export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
   transcribe?: TranscribeFn;
   /** Transcriber chunking configuration. */
   transcribeConfig: TranscribeConfig;
+  /** Optional raw-segment hook invoked before each block enters the pipeline (e.g. live display). */
+  onSegment?: (block: ContentBlock.Transcript) => void;
   /** Silence (ms) reported on `end` so on-silence stages fire over the final window. */
   drainSilenceMs?: number;
 };
@@ -44,6 +46,7 @@ export const runAsrPipeline = ({
   recorder,
   transcribe,
   transcribeConfig,
+  onSegment,
   drainSilenceMs = 5_000,
   ...runOptions
 }: AsrPipelineOptions): AsrPipeline => {
@@ -54,6 +57,7 @@ export const runAsrPipeline = ({
     transcribe,
     onSegments: async (blocks: ContentBlock.Transcript[]) => {
       for (const block of blocks) {
+        onSegment?.(block);
         live.block(block);
       }
     },

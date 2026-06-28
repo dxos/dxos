@@ -22131,6 +22131,94 @@ importers:
         specifier: '>=8.0.16'
         version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/ui/react-ui-transcription:
+    dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.6.0
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.0
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/av':
+        specifier: workspace:*
+        version: link:../../common/av
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
+      '@dxos/transcription-pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/transcription-pipeline
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
+      extendable-media-recorder:
+        specifier: 'catalog:'
+        version: 9.2.24
+      extendable-media-recorder-wav-encoder:
+        specifier: 'catalog:'
+        version: 7.0.127
+      wavefile:
+        specifier: 'catalog:'
+        version: 11.0.0
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/ui/solid-ui:
     dependencies:
       '@ark-ui/solid':
