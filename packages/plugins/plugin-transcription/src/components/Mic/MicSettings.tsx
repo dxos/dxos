@@ -113,9 +113,10 @@ type SelectableItemProps = {
 };
 
 // The design system's `DropdownMenu.RadioItem` renders a plain item (no radio semantics), so
-// single-select is modelled with a plain item and an explicit trailing check.
+// single-select is modelled with a plain item and an explicit trailing check. `onSelect` (not
+// `onClick`) so keyboard activation works.
 const SelectableItem = ({ label, selected, onSelect }: SelectableItemProps) => (
-  <DropdownMenu.Item classNames='gap-2' onClick={onSelect}>
+  <DropdownMenu.Item classNames='gap-2' onSelect={onSelect}>
     <span className='grow truncate'>{label}</span>
     {selected && <Icon icon='ph--check--regular' size={4} />}
   </DropdownMenu.Item>

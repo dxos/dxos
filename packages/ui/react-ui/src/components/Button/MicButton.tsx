@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PointerEvent, forwardRef, useCallback } from 'react';
+import React, { type KeyboardEvent, type PointerEvent, forwardRef, useCallback, useRef } from 'react';
 
 import { IconButton, type IconButtonProps } from './IconButton';
 
@@ -42,13 +42,48 @@ export const MicButton = forwardRef<HTMLButtonElement, MicButtonProps>(
     },
     forwardedRef,
   ) => {
+    // A press spans pointer down→up (or key down→up). The guard makes start/end fire exactly once
+    // even though release surfaces as both `pointerup` and `lostpointercapture`.
+    const pressedRef = useRef(false);
+    const beginPress = useCallback(() => {
+      if (!pressedRef.current) {
+        pressedRef.current = true;
+        onPressStart?.();
+      }
+    }, [onPressStart]);
+    const endPress = useCallback(() => {
+      if (pressedRef.current) {
+        pressedRef.current = false;
+        onPressEnd?.();
+      }
+    }, [onPressEnd]);
+
     const handlePointerDown = useCallback(
       (event: PointerEvent<HTMLButtonElement>) => {
         // Capture so the matching release fires on this button even if the pointer leaves it.
         event.currentTarget.setPointerCapture(event.pointerId);
-        onPressStart?.();
+        beginPress();
       },
-      [onPressStart],
+      [beginPress],
+    );
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLButtonElement>) => {
+        // Keyboard push-to-talk: hold Space/Enter to record. Ignore auto-repeat.
+        if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+          event.preventDefault();
+          beginPress();
+        }
+      },
+      [beginPress],
+    );
+    const handleKeyUp = useCallback(
+      (event: KeyboardEvent<HTMLButtonElement>) => {
+        if (event.key === ' ' || event.key === 'Enter') {
+          event.preventDefault();
+          endPress();
+        }
+      },
+      [endPress],
     );
 
     // Highlight with the error (rose) tone while recording.
@@ -57,9 +92,13 @@ export const MicButton = forwardRef<HTMLButtonElement, MicButtonProps>(
       mode === 'hold'
         ? {
             onPointerDown: handlePointerDown,
-            onPointerUp: onPressEnd,
-            onPointerCancel: onPressEnd,
-            onLostPointerCapture: onPressEnd,
+            onPointerUp: endPress,
+            onPointerCancel: endPress,
+            onLostPointerCapture: endPress,
+            onKeyDown: handleKeyDown,
+            onKeyUp: handleKeyUp,
+            // Releasing focus mid-hold (e.g. tabbing away) must still end the press.
+            onBlur: endPress,
           }
         : { onClick: onToggle };
 

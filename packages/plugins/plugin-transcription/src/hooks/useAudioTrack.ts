@@ -22,17 +22,23 @@ export const useAudioTrack = (active?: boolean, constraints?: MediaTrackConstrai
 
     let cancelled = false;
     let acquired: MediaStreamTrack | undefined;
+    // Drop any previous (now-stopped) track while reacquiring, so callers never hold a dead track.
+    setTrack(undefined);
     const initAudio = async () => {
-      const audio = new Audio();
-      audio.srcObject = await navigator.mediaDevices.getUserMedia({ audio: constraints ?? true });
-      const [next] = audio.srcObject.getAudioTracks();
-      if (cancelled) {
-        next?.stop();
-        return;
-      }
-      if (next) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: constraints ?? true });
+        const [next] = stream.getAudioTracks();
+        if (cancelled || !next) {
+          next?.stop();
+          return;
+        }
         acquired = next;
         setTrack(next);
+      } catch {
+        // Permission denied / device unavailable: leave the track cleared rather than rejecting.
+        if (!cancelled) {
+          setTrack(undefined);
+        }
       }
     };
 

@@ -10,7 +10,7 @@ import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
 import { MicButton, type MicButtonProps } from './MicButton';
 
-const DefaultStory = ({ mode = 'toggle' }: MicButtonProps) => {
+const DefaultStory = ({ mode = 'toggle', ...props }: MicButtonProps) => {
   const [recording, setRecording] = useState(false);
 
   return (
@@ -18,9 +18,11 @@ const DefaultStory = ({ mode = 'toggle' }: MicButtonProps) => {
       <MicButton
         iconOnly
         variant='ghost'
+        {...props}
+        mode={mode}
+        // `label`/`recording`/handlers are driven by story state so the demo reacts to interaction.
         label={recording ? 'Stop recording' : mode === 'hold' ? 'Hold to record' : 'Start recording'}
         recording={recording}
-        mode={mode}
         onToggle={() => setRecording((value) => !value)}
         onPressStart={() => setRecording(true)}
         onPressEnd={() => setRecording(false)}
