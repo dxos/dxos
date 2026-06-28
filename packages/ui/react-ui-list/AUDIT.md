@@ -5,7 +5,8 @@ component stack in `packages/ui/*`. It supersedes the earlier "List & Selection"
 audit (which described a pre-consolidation world with `RowList`,
 `react-ui-stack`, and search-coupled `Combobox`/`Picker` — all since resolved).
 
-Last full pass: 2026-06-26. Developer-facing primers (component hierarchies):
+Last full pass: 2026-06-27 (Phase 5b complete — legacy `react-ui` List/Tree deleted).
+Developer-facing primers (component hierarchies):
 [`react-ui-list/DESIGN.md`](./DESIGN.md) and
 [`react-ui-mosaic/DESIGN.md`](../react-ui-mosaic/DESIGN.md).
 
@@ -34,9 +35,9 @@ These were agreed with the maintainer and drive the plan below:
    semantics + the reusable **aspects** (navigation, focus, selection,
    drag-and-drop/ordering, disclosure, grid). `react-ui-mosaic` owns
    virtualization, cards, boards, and heavy DnD layouts.
-2. **`react-ui` `List` / `Tree` are legacy and get hard-deprecated.** No
-   backwards-compatibility shims — every call site is migrated in the same
-   change. (Nothing has shipped; there is no external compatibility to keep.)
+2. **`react-ui` `List` / `Tree` are legacy and now DELETED (Phase 5b).** No
+   backwards-compatibility shims — every call site was migrated in the same
+   change. (Nothing had shipped; there was no external compatibility to keep.)
 3. **`react-list` stays as the ARIA-only primitive layer.** Its purpose is now
    documented in-package (see §3.1). A follow-up tracks adopting it at the ~10
    ad-hoc `<ul>/<li>` call sites.
@@ -78,9 +79,9 @@ These were agreed with the maintainer and drive the plan below:
                           └──────────┤ depends on
                                      ▼
                             @dxos/react-ui
-                            List · ListItem · Tree · TreeItem · Treegrid  ← LEGACY
-                            ListDropIndicator · TreeDropIndicator
-                            (themed wrappers + tx() theme registry)
+                            (List · ListItem · Tree · TreeItem · drop indicators
+                             DELETED — Phase 5b; Treegrid moved up to react-ui-list)
+                            core primitives + tx() theme registry
                                      │
                                      │ depends on
                                      ▼
@@ -95,7 +96,7 @@ Adoption (plugin import counts, this pass):
 | -------------------- | :------------: | --------------------------------------------- |
 | `react-ui-mosaic`    |      ~53       | 18 plugins; kanban/inbox/trip/magazine heavy. |
 | `react-ui-list`      |      ~28       | 14 plugins; navtree heaviest.                 |
-| `react-ui` List/Tree |    see §4.2    | `ListItem` ~7 real call sites; `Treegrid` 3.  |
+| `react-ui` List/Tree |  0 (deleted)   | ✅ removed; 15 consumers migrated (§4.2).     |
 | `react-ui-dnd`       |       7        | mosaic + chat + deck + calls.                 |
 | `react-list`         |       0        | primitive; consumed by the layers above only. |
 
@@ -121,21 +122,20 @@ ad-hoc `<ul>/<li>` lists in plugins should adopt it instead of re-deriving ARIA.
 Purpose is documented in the package (README / module header) as part of this
 pass. See follow-up **F1**.
 
-### 3.2 `@dxos/react-ui` `components/List/*` (legacy themed) — DEPRECATE
+### 3.2 `@dxos/react-ui` `components/List/*` (legacy themed) — ✅ DELETED
 
-Path: `packages/ui/react-ui/src/components/List/`.
+Path: `packages/ui/react-ui/src/components/List/` — **removed** (Phase 5b). The
+`list` theme entry was dropped from `defaultTheme.ts` / `theme/index.ts`, and the
+directory (`List`, `Tree`, `ListDropIndicator`, `TreeDropIndicator`, stories) was
+deleted once every consumer migrated.
 
-| Export                 | Role                                                              | Fate                                                                         |
-| ---------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `List`, `ListItem.*`   | Themed wrapper over `react-list` (density, endcap, open-trigger). | **Deprecate.** Migrate ~7 call sites (§4.2) to `react-ui-list`.              |
-| `Tree.*`, `TreeItem.*` | Themed tree wrapper (`role=tree`/`treeitem`).                     | **Deprecate.** Only consumer is `react-ui-list` `TreeItem` (drop indicator). |
-| `Treegrid.*`           | `role=treegrid` grid layout + tabster row nav.                    | **Move up** into `react-ui-list` (§4.1). Used by it + navtree + devtools.    |
-| `ListDropIndicator`    | Tailwind port of atlaskit box drop-indicator.                     | **Move** into `react-ui-dnd` (§4.3) — atlaskit-bound, shared.                |
-| `TreeDropIndicator`    | Tailwind port of atlaskit tree-item instruction indicator.        | **Move** into `react-ui-dnd` (§4.3).                                         |
-
-`Treegrid` registers its theme centrally via `react-ui`'s `tx()` system
-(`defaultTheme.ts` → `treegrid: treegridTheme`) and consumes `useThemeContext`.
-That central registration is the crux of the move — see the design fork in §6.
+| Export (former)        | Role                                                              | Outcome                                                                                |
+| ---------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `List`, `ListItem.*`   | Themed wrapper over `react-list` (density, endcap, open-trigger). | **Deleted.** All 15 call sites migrated to `react-ui-list` `Listbox` (§4.2).           |
+| `Tree.*`, `TreeItem.*` | Themed tree wrapper (`role=tree`/`treeitem`).                     | **Deleted.** Sole app consumer (devtools `StoragePanel`) → local `role=tree` render.   |
+| `Treegrid.*`           | `role=treegrid` grid layout + tabster row nav.                    | **Moved up** into `react-ui-list` (§4.1). Used by it + navtree + devtools.             |
+| `ListDropIndicator`    | Tailwind port of atlaskit box drop-indicator.                     | **Deleted** (was consumer-free; `react-ui-list` has its own CSS-free `DropIndicator`). |
+| `TreeDropIndicator`    | Tailwind port of atlaskit tree-item instruction indicator.        | **Deleted** (ported into `react-ui-list` `Tree`).                                      |
 
 ### 3.3 `@dxos/react-ui-list` (high-level + aspects) — TARGET LAYER
 
@@ -212,12 +212,13 @@ to land it cleanly — see the design fork **D1** in §6. Recommended: convert
 `Treegrid.theme.ts` to a self-contained tailwind-variants theme (like the new
 `List.theme.ts`) so it carries its own styles and needs no central registration.
 
-### 4.2 `react-ui` `List` / `ListItem` deprecation
+### 4.2 `react-ui` `List` / `ListItem` deprecation — ✅ COMPLETE
 
-These use the simple "styled list with endcap/heading rows" shape — none need drag
-or virtualization. Per D2 they migrate to `Listbox` (selection opt-in). The audit
-originally listed 7 call sites; a full grep found the surface is **larger** — track
-both groups:
+These used the simple "styled list with endcap/heading rows" shape — none needed drag
+or virtualization. Per D2 they migrated to `Listbox` (non-selectable mode renders the
+old `role=list`/`listitem` semantics; selection stays opt-in). The audit originally
+listed 7 call sites; a full grep found **15**. All are migrated and the legacy
+component is **deleted**.
 
 **Migrated (✅, Phase 5a):**
 
@@ -226,23 +227,23 @@ both groups:
 - `plugin-client` `InvitationsContainer`, `RecoveryCredentialsContainer`
 - `plugin-sample` `RelatedItemsList`
 
-**Remaining (⛔, blocks the `react-ui` List/Tree deletion — Phase 5b):**
+**Migrated (✅, Phase 5b):**
 
-- `sdk/shell` `IdentityListItem` — uses `ListItem.Root`'s `labelId` prop (ties to
-  `Avatar.Root` `aria-labelledby`); a shared `forwardRef` template rendered by the
-  parents below, so migrating ripples.
-- `sdk/shell` `InvitationList`, `SpaceMemberList`, `DeviceList` — the identity/
-  member/device list cluster (sensitive shell UI).
-- `plugin-client` `DevicesContainer`
-- `plugin-registry` `PluginList`
+- `sdk/shell` `DeviceList` (+`DeviceListItem`), `IdentityListItem`, `SpaceMemberList`,
+  `InvitationList` (+`InvitationListItem`), `Invitations.stories` — the identity/
+  member/device/invitation cluster. The old `ListItem` `labelId` prop did not need a
+  `Listbox.Item` equivalent: rows compose `Avatar.Root labelId` directly (and a
+  dangling `IdentityListItem` labelId reference was dropped as behaviour-neutral).
+- `plugin-client` `DevicesContainer`, `plugin-registry` `PluginList` (+`PluginItem`),
+  `plugin-space` `SpacePresence`
 - `sdk/app-toolkit` playground generator `Main`
-- Stories: `plugin-deck` `DeckLayout.stories`, `sdk/shell` `Invitations.stories`,
-  `sdk/app-framework` `SurfaceComponent.stories`
+- Stories: `plugin-deck` `DeckLayout.stories`, `sdk/app-framework` `SurfaceComponent.stories`
+- `devtools` `StoragePanel` — old recursive `Tree`/`TreeItem` replaced with a local,
+  read-only `role=tree`/`treeitem`/`group` renderer (the new `react-ui-list` `Tree` is
+  atom/schema-driven — not a fit for a static, always-expanded storage-info display).
 
-Once the remaining group migrates, delete `react-ui` `List`/`Tree`/`TreeItem`
-(+ the dead `ListDropIndicator`/`TreeDropIndicator`, already consumer-free) in one
-change. `IdentityListItem` needs a `labelId`-equivalent on `Listbox.Item` (or the
-Avatar association reworked) — resolve that first.
+`react-ui` `components/List/` (List, Tree, drop indicators, stories) and the `list`
+theme entry are removed. Non-selectable `Listbox` is slated to be renamed `List`.
 
 ### 4.3 Drop indicators + `Size`
 
@@ -343,19 +344,20 @@ decided, expensive to redo if guessed wrong (they set repo-wide conventions).
 
 Ordered so each phase is independently shippable and later phases assume earlier.
 
-| Phase  | Work                                                                                                                                                                                                                                                                                                                                                                                                            | Risk    | Blocked on   |
-| :----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
-| **0**  | ✅ Theme extraction into `List.theme.ts` (§5).                                                                                                                                                                                                                                                                                                                                                                  | done    | —            |
-| **1**  | Document `react-list` purpose in-package (§3.1).                                                                                                                                                                                                                                                                                                                                                                | low     | —            |
-| **2**  | ✅ Drop indicators: `react-ui-list` `OrderedList` + navtree `L0Menu` use atlaskit's box `DropIndicator`; `TreeDropIndicator` ported into `react-ui-list`. `Size` resolved in D3. react-ui's port indicators now have no external consumers.                                                                                                                                                                     | done    | —            |
-| **3**  | ✅ `Treegrid` moved to `react-ui-list` with a self-contained `tv` theme (D1); navtree + devtools repointed; removed from `react-ui` (files, barrel, theme registry). All four packages build + lint.                                                                                                                                                                                                            | done    | —            |
-| **4**  | ✅ `Listbox` made selection opt-in (§4.2, D2) — plain `role=list`/`listitem` rows when no value model; single-select listbox when wired. Backward-compatible; builds + lints.                                                                                                                                                                                                                                   | done    | —            |
-| **5a** | 🟡 Migrated 6 sites to `Listbox`: `SyncTargetsDialog`, `ForeignKeys`, `SpaceSettings`, `InvitationsContainer`, `RecoveryCredentialsContainer`, `RelatedItemsList` (all build + lint).                                                                                                                                                                                                                           | partial | —            |
-| **5b** | ❌ Delete `react-ui` `List`/`Tree`/`TreeItem` — **blocked**: the real consumer surface is larger than the audit's 7 (see §4.2). The remaining cluster (shell `IdentityListItem`/`InvitationList`/`SpaceMemberList`/`DeviceList`, `DevicesContainer`, plugin-registry `PluginList`, app-toolkit playground, + stories) must migrate first; several involve sensitive shell UI and the `ListItem` `labelId` prop. | blocked | 5a + cluster |
-| **6**  | Aspect convergence (§9): `Accordion` → `useListDisclosure`; hoist shared DnD helpers → `react-ui-dnd`; `useListFocus` aspect (F4); `Picker` primitive docs.                                                                                                                                                                                                                                                     | low     | —            |
+| Phase  | Work                                                                                                                                                                                                                                                                                                                                                                                                               | Risk | Blocked on |
+| :----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | ---------- |
+| **0**  | ✅ Theme extraction into `List.theme.ts` (§5).                                                                                                                                                                                                                                                                                                                                                                     | done | —          |
+| **1**  | Document `react-list` purpose in-package (§3.1).                                                                                                                                                                                                                                                                                                                                                                   | low  | —          |
+| **2**  | ✅ Drop indicators: `react-ui-list` `OrderedList` + navtree `L0Menu` use atlaskit's box `DropIndicator`; `TreeDropIndicator` ported into `react-ui-list`. `Size` resolved in D3. react-ui's port indicators now have no external consumers.                                                                                                                                                                        | done | —          |
+| **3**  | ✅ `Treegrid` moved to `react-ui-list` with a self-contained `tv` theme (D1); navtree + devtools repointed; removed from `react-ui` (files, barrel, theme registry). All four packages build + lint.                                                                                                                                                                                                               | done | —          |
+| **4**  | ✅ `Listbox` made selection opt-in (§4.2, D2) — plain `role=list`/`listitem` rows when no value model; single-select listbox when wired. Backward-compatible; builds + lints.                                                                                                                                                                                                                                      | done | —          |
+| **5a** | ✅ Migrated 6 sites to `Listbox`: `SyncTargetsDialog`, `ForeignKeys`, `SpaceSettings`, `InvitationsContainer`, `RecoveryCredentialsContainer`, `RelatedItemsList` (all build + lint).                                                                                                                                                                                                                              | done | —          |
+| **5b** | ✅ Migrated the remaining 9 consumers (shell device/identity/member/invitation cluster, `DevicesContainer`, `PluginList`, `SpacePresence`, app-toolkit playground, deck/app-framework stories) + devtools `StoragePanel` (local `role=tree` render); **deleted** `react-ui` `List`/`Tree`/`TreeItem`, drop indicators, and the `list` theme entry. Full repo build (514 tasks) + lint + tests green; no new casts. | done | —          |
+| **6**  | Aspect convergence (§9): `Accordion` → `useListDisclosure`; hoist shared DnD helpers → `react-ui-dnd`; `useListFocus` aspect (F4); `Picker` primitive docs.                                                                                                                                                                                                                                                        | low  | —          |
 
-Phases 1 and 6 and the F-tasks are unblocked and low-risk; phases 2–5 wait on
-the D-forks above.
+Phases 0–5 are **complete** (all D-forks resolved). Remaining open work: Phase 1
+(document `react-list` purpose in-package), Phase 6 (aspect convergence), and the
+F-tasks — all unblocked and low-risk.
 
 ---
 
@@ -540,8 +542,20 @@ plain rows (`role=list`); verify hover + the per-row affordance still works.
 ### G. No render change — no inspection needed
 
 `ui/react-list/List` (docs only); `plugin-calls` `ResponsiveGrid` + `plugin-deck`
-`DeckViewport` (D3, type/import only). The yet-to-migrate react-ui List consumers
-(§4.2 remaining group) are unchanged and still render via `react-ui` `List`.
+`DeckViewport` (D3, type/import only).
+
+### H. Phase 5b migrations → `Listbox` / local tree (behaviour-preserving, inspect)
+
+The 9 Phase-5b consumers now render via non-selectable `Listbox` (plain `role=list`)
+or, for devtools, a local `role=tree`. Expect no visual/behaviour change; spot-check
+the sensitive shell auth surfaces in particular.
+
+| Storybook                                   | What to verify                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------- |
+| `sdk/shell` Invitations / Device / Identity | rows render, avatars + trailing actions intact, cancel/remove buttons work |
+| `plugins/plugin-registry/PluginList`        | plugin rows + toggles                                                      |
+| `plugins/plugin-space/SpacePresence`        | member popover list, click handler                                         |
+| `devtools` `StoragePanel`                   | nested storage info tree (indent, primary/secondary text, byte format)     |
 
 ## 12. References
 
