@@ -75,13 +75,13 @@ catalog:
   '@effect-rx/rx-react': ^0.42.4
   '@effect/ai': 0.36.0
   '@effect/ai-anthropic': 0.26.0
-  '@effect/ai-openai': 0.40.0
+  '@effect/ai-openai': 0.40.1
   '@effect/cli': 0.75.2
   '@effect/cluster': 0.59.0
   '@effect/experimental': 0.60.0
   '@effect/language-service': ^0.86.2
   '@effect/opentelemetry': ^0.63.0
-  '@effect/platform': 0.96.1
+  '@effect/platform': 0.96.2
   '@effect/platform-browser': 0.76.0
   '@effect/platform-bun': 0.90.0
   '@effect/platform-node': 0.107.0
@@ -395,7 +395,7 @@ catalog:
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 3.21.3
+  effect: 3.21.4
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
@@ -779,7 +779,7 @@ peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
     '@effect-atom/atom>@effect/experimental': 0.60.0
-    '@effect-atom/atom>@effect/platform': 0.96.1
+    '@effect-atom/atom>@effect/platform': 0.96.2
     '@effect-atom/atom>@effect/rpc': 0.75.1
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
