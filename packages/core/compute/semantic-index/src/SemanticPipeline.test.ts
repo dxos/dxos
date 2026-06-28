@@ -9,9 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { SemanticIndexError } from './errors';
-import { SemanticPipeline } from './SemanticPipeline';
+import { extractFacts, SemanticPipeline } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
-import { countingAiService, failingAiService, mockAiService } from './testing';
+import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 
 const LLM_OUTPUT = {
   facts: [
@@ -116,5 +116,41 @@ describe('SemanticPipeline', () => {
         });
       }).pipe(Effect.provide(layer));
     }),
+  );
+
+  it.effect(
+    'extractFacts derives facts with only an AiService (no store)',
+    Effect.fnUntraced(
+      function* () {
+        // Layer provides ONLY AiService — no SemanticStore / SqlClient — proving derivation is store-free.
+        const facts = yield* extractFacts([
+          {
+            text: "I think I'm probably going to Paris next week",
+            source: 'editor:input',
+            author: 'Alice',
+            date: '2026-06-06T00:00:00.000Z',
+          },
+        ]);
+        yield* Effect.sync(() => {
+          if (facts.length !== 1) {
+            throw new Error(`expected 1 fact, got ${facts.length}`);
+          }
+          const [fact] = facts;
+          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+            throw new Error('subject not linked');
+          }
+          if (fact.assertion.predicate !== 'travelsTo') {
+            throw new Error('predicate not extracted');
+          }
+          if (fact.valence.factuality !== 'PR+') {
+            throw new Error('valence not extracted');
+          }
+          if (fact.attribution.source !== 'editor:input') {
+            throw new Error('attribution source lost');
+          }
+        });
+      },
+      Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
   );
 });
