@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { MicButton, useTranslation } from '@dxos/react-ui';
@@ -96,7 +96,7 @@ export const Mic = ({ docId }: MicProps) => {
       : t('start-recording.label');
 
   return (
-    <Fragment>
+    <div className='flex items-center'>
       <MicButton
         iconOnly
         variant='ghost'
@@ -117,6 +117,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </Fragment>
+    </div>
   );
 };
