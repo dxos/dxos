@@ -74,7 +74,7 @@ export const TypeCollectionArticle = ({ role, space, typeUri, attendableId }: Ty
           <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
         ) : (
           <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content>
+            <Masonry.Content classNames='p-trim-md'>
               <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
