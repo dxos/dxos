@@ -355,6 +355,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/nlp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/operation/package.json",
           "jsonpath": "$.version"
         },

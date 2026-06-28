@@ -67,6 +67,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/nlp"
+    },
+    {
       "path": "../../core/compute/semantic-index"
     },
     {

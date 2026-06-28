@@ -162,6 +162,7 @@
     "wavefile": "catalog:"
   },
   "devDependencies": {
+    "@dxos/nlp": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
