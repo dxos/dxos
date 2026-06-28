@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { type Document, sourceHash } from '@dxos/nlp';
 
-import { clearAnalysis, posAnalysisField, posDecorations, posSpans, setAnalysis, spanDiverged } from './pos';
+import { clearAnalysis, pos, posAnalysisField, posDecorations, posSpans, setAnalysis, spanDiverged } from './pos';
 
 const docFor = (text: string): Document => ({
   sourceHash: 'deadbeef',
@@ -60,6 +60,32 @@ describe('posDecorations', () => {
     state = state.update({ effects: setAnalysis.of({ from: 0, to: 11, document }) }).state;
     const sources = state.facet(EditorView.decorations);
     expect(sources.length).toBeGreaterThan(0);
+  });
+});
+
+describe('pos reactive initial parse', () => {
+  test('parses existing content on mount (decorates without an edit)', async ({ expect }) => {
+    const text = 'hello world';
+    const fakeParse = async (input: string): Promise<Document> => ({
+      sourceHash: sourceHash(input),
+      sentences: [
+        {
+          index: 0,
+          start: 0,
+          end: input.length,
+          tokens: [{ index: 0, text: input, upos: 'NOUN', start: 0, end: input.length }],
+        },
+      ],
+    });
+    const view = new EditorView({ doc: text, extensions: [pos({ parse: fakeParse })] });
+    try {
+      // Let the mount-time parse promise resolve and its dispatch apply.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(posSpans(view.state).length).toBe(1);
+      expect(posSpans(view.state)[0]).toMatchObject({ from: 0, to: text.length });
+    } finally {
+      view.destroy();
+    }
   });
 });
 

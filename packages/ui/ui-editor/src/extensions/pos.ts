@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView, type ViewUpdate } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
 import { type Document, sourceHash, type Upos } from '@dxos/nlp';
@@ -145,7 +145,19 @@ const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: num
     });
   }, debounceMs);
 
-  return EditorView.updateListener.of((update: ViewUpdate) => {
+  // Parse existing content on mount so reactive mode decorates immediately, not just after an edit.
+  // Dispatch is deferred via the parse promise's microtask; CodeMirror forbids dispatching during construction.
+  const initial = ViewPlugin.define((view) => {
+    const text = view.state.doc.toString();
+    if (text.length > 0) {
+      void parse(text).then((document) => {
+        view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
+      });
+    }
+    return {};
+  });
+
+  const onEdit = EditorView.updateListener.of((update: ViewUpdate) => {
     if (!update.docChanged) {
       return;
     }
@@ -160,6 +172,8 @@ const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: num
     }
     run(update.view);
   });
+
+  return [initial, onEdit];
 };
 
 /**
