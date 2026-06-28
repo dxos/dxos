@@ -5,7 +5,9 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
-// Tree item hitbox
+// Tree-item instruction indicator. Atlaskit's `react-drop-indicator` ships `box`/`list-item`
+// renderers but no `tree-item` one, so this stays a small Tailwind port (theme-aware via
+// `bg-accent-bg`). See `react-ui-list/AUDIT.md` D4.
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
 
 type InstructionType = Exclude<Instruction, { type: 'instruction-blocked' }>['type'];
@@ -19,7 +21,6 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
 };
 
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
-  // TODO(wittjosiah): Stop using left/right here.
   sibling:
     'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-bg before:left-(--negative-terminal-size)',
   child: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
@@ -29,7 +30,6 @@ const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['cl
   'reorder-above': 'top-(--line-offset) before:top-(--offset-terminal)',
   'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-bg',
-  // TODO(wittjosiah): This is not occurring in the current implementation.
   reparent: '',
 };
 
@@ -37,12 +37,14 @@ const strokeSize = 2;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 
-export type DropIndicatorProps = {
+/** Props for {@link TreeDropIndicator}. */
+export type TreeDropIndicatorProps = {
   instruction: Instruction;
   gap?: number;
 };
 
-export const TreeDropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) => {
+/** Themed drop indicator for a tree-item pragmatic-dnd `Instruction` (sibling reorder / make-child). */
+export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;

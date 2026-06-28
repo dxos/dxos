@@ -122,7 +122,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
       className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
       ref={forwardedRef}
     >
-      <Column.Root classNames='dx-expander' gutter='sm'>
+      <Column.Root classNames='dx-expander' gutter='md'>
         {children}
       </Column.Root>
     </AlertDialogPrimitive.Content>
