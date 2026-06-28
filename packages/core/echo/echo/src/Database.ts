@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { SpaceId, type URI } from '@dxos/keys';
+import { EID, SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
@@ -317,6 +317,14 @@ export const resolve: {
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
+    // Confinement (agent firewall): deny loading a ref whose absolute URI names a space outside the
+    // allowlist, so a foreign `echo://<otherSpace>/<id>` handle carried into a confined session (e.g.
+    // via untrusted data / prompt injection) cannot be dereferenced. A relative ref (no embedded
+    // space) targets the home space and is allowed. Absent Hypergraph.Service ⇒ unconfined.
+    const scope = yield* Effect.serviceOption(Hypergraph.Service);
+    if (Option.isSome(scope) && uriTargetsForeignSpace(ref.uri, scope.value.allowlist)) {
+      return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
+    }
     const object = yield* EffectEx.promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
@@ -324,6 +332,16 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
     return object;
   },
 );
+
+/** True when `uri` is an absolute echo URI naming a space outside `allowlist` (relative ⇒ home ⇒ allowed). */
+const uriTargetsForeignSpace = (uri: URI.URI, allowlist: readonly SpaceId[]): boolean => {
+  const eid = EID.tryParse(uri);
+  if (eid === undefined) {
+    return false;
+  }
+  const spaceId = EID.getSpaceId(eid);
+  return spaceId !== undefined && !allowlist.includes(spaceId);
+};
 
 /**
  * Adds an object or relation to the database.

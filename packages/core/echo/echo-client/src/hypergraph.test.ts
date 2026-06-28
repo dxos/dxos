@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Database, Filter, Hypergraph, Obj, Query, Scope } from '@dxos/echo';
+import { Database, Filter, Hypergraph, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
@@ -121,6 +121,23 @@ describe('Hypergraph.scoped', () => {
     );
     expect(own.map((object) => object.id)).toContain(objA.id);
     expect(own.map((object) => object.id)).not.toContain(objB.id);
+  });
+
+  test('Database.load denies a ref into a space outside the allowlist', async () => {
+    // Home ref to the live object (target inlined, so load short-circuits without resolution).
+    const refToA = Ref.make(objA);
+    // Bare foreign URI handle (as untrusted data would carry): the gate must reject it pre-resolution.
+    const refToB = Ref.fromURI(EID.make({ spaceId: dbB.spaceId, entityId: objB.id }));
+    const loadId = (ref: typeof refToA) =>
+      Database.load(ref).pipe(
+        Effect.map((object) => object.id),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)),
+      );
+
+    // Confined to A: the home ref loads; the foreign ref is denied (gated before resolution, so a
+    // foreign URI is not a working handle).
+    expect(await EffectEx.runPromise(loadId(refToA).pipe(Effect.provide(confinedToA())))).toBe(objA.id);
+    expect(await EffectEx.runPromise(loadId(refToB).pipe(Effect.provide(confinedToA())))).toBeUndefined();
   });
 
   test('scoped() is narrow-only — it intersects and never widens', () => {
