@@ -4,7 +4,7 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useAtomCapability, useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { useAudioTrack, useTranscriber } from '@dxos/plugin-transcription/hooks';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
@@ -21,7 +21,7 @@ const RECORDER_INTERVAL_MS = 200;
  */
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
   const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
-  const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const [settings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const active = !!session?.recording && session.id === docId;
 
