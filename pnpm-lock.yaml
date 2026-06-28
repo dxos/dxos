@@ -16009,6 +16009,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.0
     devDependencies:
+      '@dxos/nlp':
+        specifier: workspace:*
+        version: link:../../core/compute/nlp
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
