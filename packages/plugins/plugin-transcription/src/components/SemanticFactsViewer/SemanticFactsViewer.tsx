@@ -32,9 +32,7 @@ export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, 
         />
       </Input.Root>
 
-      {groups.length === 0 && (
-        <Empty icon='ph--list--regular' label='No facts to display.' />
-      )}
+      {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts to display.' />}
       {groups.map((group) => (
         <SubjectGroup key={group.subject} group={group} />
       ))}
@@ -70,7 +68,7 @@ const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflict
   return (
     <Listbox.Item
       id={fact.id}
-      classNames={mx('flex-col gap-1 p-3', conflicting && 'border-is-2 border-warning-border')}
+      classNames={mx('flex-col items-stretch gap-1 p-3', conflicting && 'border-is-2 border-warning-border')}
     >
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-1 flex-wrap'>
