@@ -72,6 +72,11 @@ export type Options = {
   endpoint?: string;
 };
 
+// The HttpClient with trace propagation disabled: the headers it adds by default (`b3`,
+// `traceparent`) are rejected by Ollama's CORS allow-list, blocking every request at preflight.
+// Matches OllamaResolver, which disables it on the chat endpoint for the same reason.
+const ollamaHttpClient = HttpClient.HttpClient.pipe(Effect.map(HttpClient.withTracerPropagation(false)));
+
 /**
  * Client for the Ollama administrative REST API (model management). Distinct from
  * {@link OllamaResolver}, which adapts Ollama's chat endpoint to the language-model interface.
@@ -82,7 +87,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
   const list: Admin['list'] = mapErrors(
     Effect.scoped(
       Effect.gen(function* () {
-        const client = yield* HttpClient.HttpClient;
+        const client = yield* ollamaHttpClient;
         const response = yield* client.get(`${endpoint}/api/tags`);
         if (!isOk(response.status)) {
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
@@ -105,7 +110,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
   const ps: Admin['ps'] = mapErrors(
     Effect.scoped(
       Effect.gen(function* () {
-        const client = yield* HttpClient.HttpClient;
+        const client = yield* ollamaHttpClient;
         const response = yield* client.get(`${endpoint}/api/ps`);
         if (!isOk(response.status)) {
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
@@ -129,7 +134,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
     mapErrors(
       Effect.scoped(
         Effect.gen(function* () {
-          const client = yield* HttpClient.HttpClient;
+          const client = yield* ollamaHttpClient;
           const request = yield* HttpClientRequest.post(`${endpoint}/api/generate`).pipe(
             HttpClientRequest.bodyJson({ model: name, keep_alive: keepAlive, stream: false }),
           );
@@ -147,7 +152,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
   const pull: Admin['pull'] = (name) =>
     Stream.unwrapScoped(
       Effect.gen(function* () {
-        const client = yield* HttpClient.HttpClient;
+        const client = yield* ollamaHttpClient;
         const request = yield* HttpClientRequest.post(`${endpoint}/api/pull`).pipe(
           HttpClientRequest.bodyJson({ model: name, stream: true }),
         );
@@ -165,7 +170,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
     mapErrors(
       Effect.scoped(
         Effect.gen(function* () {
-          const client = yield* HttpClient.HttpClient;
+          const client = yield* ollamaHttpClient;
           const request = yield* HttpClientRequest.del(`${endpoint}/api/delete`).pipe(
             HttpClientRequest.bodyJson({ model: name }),
           );
