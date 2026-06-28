@@ -9,19 +9,15 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SemanticFactsViewer, type SemanticFactsViewerProps } from './SemanticFactsViewer';
 import { DEMO_FACTS } from './facts';
+import { SemanticFactsViewer, type SemanticFactsViewerProps } from './SemanticFactsViewer';
 
-const DefaultStory = (props: SemanticFactsViewerProps) => (
-  <div className='is-[40rem] max-is-full'>
-    <SemanticFactsViewer {...props} />
-  </div>
-);
+const DefaultStory = (props: SemanticFactsViewerProps) => <SemanticFactsViewer {...props} />;
 
 const meta = {
   title: 'plugins/plugin-transcription/components/SemanticFactsViewer',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { translations },
 } satisfies Meta<typeof DefaultStory>;
 

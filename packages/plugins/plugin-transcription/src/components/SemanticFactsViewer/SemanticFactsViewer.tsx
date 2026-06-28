@@ -5,9 +5,10 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { Icon, Input, Tag, type ThemedClassName } from '@dxos/react-ui';
-import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
-import { mx } from '@dxos/ui-theme';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
+import { mx } from '@dxos/ui-theme';
+import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 export type SemanticFactsViewerProps = ThemedClassName<{ facts: Type.Fact[] }>;
 
@@ -18,7 +19,6 @@ export type SemanticFactsViewerProps = ThemedClassName<{ facts: Type.Fact[] }>;
  */
 export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, facts }) => {
   const [filter, setFilter] = useState('');
-
   const groups = useMemo(() => groupFacts(facts, filter), [facts, filter]);
 
   return (
@@ -32,8 +32,9 @@ export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, 
         />
       </Input.Root>
 
-      {groups.length === 0 && <div className='p-4 text-center text-description'>No facts to display.</div>}
-
+      {groups.length === 0 && (
+        <Empty icon='ph--list--regular' label='No facts to display.' />
+      )}
       {groups.map((group) => (
         <SubjectGroup key={group.subject} group={group} />
       ))}
@@ -46,7 +47,7 @@ const SubjectGroup: FC<{ group: Group }> = ({ group }) => (
     <div className='flex items-center gap-2'>
       <h3 className='text-sm font-medium'>{humanize(group.subject)}</h3>
       {group.conflicted && (
-        <Tag palette='warning'>
+        <Tag hue='warning'>
           <span className='flex items-center gap-1'>
             <Icon icon='ph--warning--regular' size={3} />
             conflict
@@ -54,22 +55,22 @@ const SubjectGroup: FC<{ group: Group }> = ({ group }) => (
         </Tag>
       )}
     </div>
-    <div className='flex flex-col gap-2'>
-      {group.facts.map((fact) => (
-        <FactRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
-      ))}
-    </div>
+    <Listbox.Root>
+      <Listbox.Content aria-label={humanize(group.subject)}>
+        {group.facts.map((fact) => (
+          <FactRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   </div>
 );
 
 const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflicting }) => {
   const { assertion, valence, attribution } = fact;
   return (
-    <div
-      className={mx(
-        'flex flex-col gap-1 p-3 rounded border border-separator bg-base-surface',
-        conflicting && 'border-s-4 border-warning-border',
-      )}
+    <Listbox.Item
+      id={fact.id}
+      classNames={mx('flex-col gap-1 p-3', conflicting && 'border-is-2 border-warning-border')}
     >
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-1 flex-wrap'>
@@ -81,7 +82,7 @@ const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflict
           {valence.confidence != null && (
             <span className='text-xs text-subdued'>{Math.round(valence.confidence * 100)}%</span>
           )}
-          <Tag palette={factualityPalette(valence.factuality)}>{valence.factuality}</Tag>
+          <Tag hue={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
         </div>
       </div>
 
@@ -89,8 +90,8 @@ const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflict
         {[attribution.agent, attribution.source, formatDate(attribution.generatedAtTime)].filter(Boolean).join(' · ')}
       </div>
 
-      {assertion.quote && <div className='text-sm text-description italic'>“{assertion.quote}”</div>}
-    </div>
+      {assertion.quote && <div className='text-sm text-description italic'>"{assertion.quote}"</div>}
+    </Listbox.Item>
   );
 };
 
@@ -111,9 +112,7 @@ const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
   const filtered = needle
     ? facts.filter((fact) => {
         const { subject, predicate, object } = fact.assertion;
-        return [termLabel(subject), predicate, termLabel(object)].some((value) =>
-          value.toLowerCase().includes(needle),
-        );
+        return [termLabel(subject), predicate, termLabel(object)].some((value) => value.toLowerCase().includes(needle));
       })
     : facts;
 
@@ -148,15 +147,12 @@ const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
 const termLabel = (term: Type.Term): string => ('entity' in term ? term.entity : term.literal);
 
 /** Render ids like `q3-board-meeting` as `Q3 Board Meeting`. */
-const humanize = (value: string): string =>
-  value
-    .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+const humanize = (value: string): string => value.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 
 const formatDate = (iso: string): string => iso.slice(0, 10);
 
 /** Map FactBank factuality to a real react-ui palette member. */
-const factualityPalette = (factuality: Type.Factuality): NeutralPalette | ChromaticPalette | MessageValence => {
+const factualityColor = (factuality: Type.Factuality): NeutralPalette | ChromaticPalette | MessageValence => {
   switch (factuality) {
     case 'CT+':
       return 'emerald';

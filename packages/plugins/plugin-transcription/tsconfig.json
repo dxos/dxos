@@ -124,6 +124,9 @@
       "path": "../../ui/react-ui-graph"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
