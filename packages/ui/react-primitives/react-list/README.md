@@ -12,7 +12,7 @@ This package applies **no** styling, **no** keyboard navigation, and **no**
    │ @dxos/react-ui-mosaic   virtualization, DnD, cards/board   │
    ├────────────────────────────────────────────────────────────┤
    │ @dxos/react-ui-list     dx-* styling, keyboard nav,        │
-   │                         RowList / CardList containers      │
+   │                         Listbox / OrderedList / Tree …     │
    ├────────────────────────────────────────────────────────────┤
    │ @dxos/react-list        ARIA + structure only ← this pkg   │
    └────────────────────────────────────────────────────────────┘
@@ -71,7 +71,7 @@ const Picker = ({ items }: { items: { id: string; label: string }[] }) => {
           // Pair `aria-selected` (set by the primitive when `selectable`)
           // with `dx-selected` from `@dxos/ui-theme` to get the canonical
           // selected-row visual treatment. See
-          // ui-theme/src/css/components/selected.md.
+          // ui-theme/src/css/components/state.md.
           className='dx-hover dx-selected'
         >
           <ListItemHeading>{item.label}</ListItemHeading>
@@ -120,10 +120,10 @@ import {
 ## What this primitive does NOT provide
 
 - **Keyboard navigation** — wire your own (or use `@dxos/react-ui-list`'s
-  `RowList`, which integrates `@fluentui/react-tabster`).
+  `useListNavigation` aspect, which integrates `@fluentui/react-tabster`).
 - **Styling** — pair with `dx-hover` / `dx-selected` / `dx-current` from
   `@dxos/ui-theme` per the grammar in
-  `ui-theme/src/css/components/selected.md`.
+  `ui-theme/src/css/components/state.md`.
 - **Virtualization or drag-and-drop** — see `@dxos/react-ui-mosaic`.
 
 ## Related

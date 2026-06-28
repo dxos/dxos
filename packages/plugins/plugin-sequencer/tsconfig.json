@@ -64,6 +64,9 @@
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {

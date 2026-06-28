@@ -12,7 +12,6 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useMergeRefs } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -115,6 +114,9 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
           isGridMode: settings?.showGrid !== false && !hideUi,
           isReadonly: readonly || hideUi,
         });
+        if (readonly || hideUi) {
+          editor.setCurrentTool('hand');
+        }
       }
     }, [editor, settings, hideUi, readonly]);
 
@@ -127,24 +129,43 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         return;
       }
 
+      const isLocked = readonly || hideUi;
+
+      // Unlock to allow programmatic camera positioning.
+      editor.setCameraOptions({ isLocked: false });
+
       // Set frame so that top left of grid is inset with our border (if no content).
       editor.setCamera({ x: -1, y: -1, z: 1 }, { animation: { duration: 0 } });
       editor.resetZoom();
 
       setReady(true);
       if (!autoZoom) {
+        editor.setCameraOptions({ isLocked: isLocked });
         return;
       }
 
-      const zoom = (animate = true) => {
-        zoomToFit(editor, width, height, maxZoom, animate);
+      const zoom = () => {
+        zoomToFit(editor, width, height, maxZoom, false);
       };
 
-      zoom(false);
-      const onUpdate = debounce(zoom, 200);
-      const subscription = readonly ? adapter.store?.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
-      return () => subscription?.();
-    }, [editor, adapter, width, height, autoZoom]);
+      zoom();
+      editor.setCameraOptions({ isLocked: isLocked });
+
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const onUpdate = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          editor.setCameraOptions({ isLocked: false });
+          zoom();
+          editor.setCameraOptions({ isLocked: isLocked });
+        }, 200);
+      };
+      const subscription = isLocked ? adapter.store?.listen(() => onUpdate(), { scope: 'document' }) : undefined;
+      return () => {
+        clearTimeout(timer);
+        subscription?.();
+      };
+    }, [editor, adapter, width, height, autoZoom, maxZoom, readonly, hideUi]);
 
     // NOTE: Currently copying assets to composer-app public/assets/tldraw.
     // https://tldraw.dev/installation#Self-hosting-static-assets

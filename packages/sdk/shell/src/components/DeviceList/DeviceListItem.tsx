@@ -7,17 +7,8 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { generateName } from '@dxos/display-name';
 import { Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import {
-  Avatar,
-  Button,
-  DropdownMenu,
-  Icon,
-  ListItem,
-  Tag,
-  type ThemedClassName,
-  useId,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Avatar, Button, DropdownMenu, Icon, Tag, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -52,11 +43,11 @@ export const DeviceListItem = forwardRef<
       : generateName(device.deviceKey.toHex());
     const isCurrent = device.kind === DeviceKind.CURRENT;
     return (
-      <ListItem.Root
+      <Listbox.Item
         {...props}
+        id={device.deviceKey.toHex()}
         classNames={['flex gap-2 items-center my-2', classNames]}
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
-        labelId={labelId}
         ref={forwardedRef}
       >
         <Avatar.Root labelId={labelId}>
@@ -155,7 +146,7 @@ export const DeviceListItem = forwardRef<
             </DropdownMenu.Root>
           )}
         </Avatar.Root>
-      </ListItem.Root>
+      </Listbox.Item>
     );
   },
 );

@@ -29,12 +29,15 @@ import React, {
 import { type Density, type Elevation, Input, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { listTheme } from '../List.theme';
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,
   usePickerInputContext,
   usePickerItemContext,
 } from './context';
+
+const styles = listTheme.styles();
 
 type ItemData = {
   element: HTMLElement;
@@ -334,8 +337,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
     const Comp: ElementType = asChild ? Slot : 'div';
 
-    // Padding follows `--gutter` to align with sibling `Column.Center`
-    // content; falls back to `0.75rem` when not nested under `Column.Root`.
     return (
       <Comp
         {...props}
@@ -355,11 +356,7 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         data-value={value}
         // Browser focus stays on the input; highlight is via `aria-selected`.
         tabIndex={-1}
-        className={mx(
-          'dx-hover dx-selected px-[var(--gutter,0.75rem)] py-1 cursor-pointer select-none',
-          disabled && 'opacity-50 cursor-not-allowed',
-          classNames,
-        )}
+        className={styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed', classNames) })}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
       >

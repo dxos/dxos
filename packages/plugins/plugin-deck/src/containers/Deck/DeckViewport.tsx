@@ -10,8 +10,7 @@ import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { IconButton, Main, type MainContentProps, ScrollArea, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
-import { type Size } from '@dxos/react-ui-dnd';
-import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
+import { type MosaicStackTileComponent, type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useDeckState } from '#hooks';
@@ -164,8 +163,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { deck, settings, layoutMode } = useDeckContext('DeckPlankTile');
   const { invokePromise } = useOperationInvoker();
 
-  const handleSizeChange = useCallback(
-    (size: Size) => {
+  const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
+    (size) => {
       if (typeof size === 'number') {
         void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(size) });
       }
