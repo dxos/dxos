@@ -10,7 +10,7 @@ import * as NodeFs from 'node:fs';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { type DatabaseImpl } from '@dxos/echo-client';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,13 +34,22 @@ export type TestDatabaseOptions = {
   spaceKey?: PublicKey | 'fixed';
   storagePath?: string;
   onInit?: () => Effect.Effect<void, never, Database.Service>;
+
+  /**
+   * Runs after the home database is created, with the same peer, so a test can create sibling spaces
+   * on the shared in-process Hypergraph (cross-space / agent-firewall tests). Use fixed space keys so
+   * memoized conversations stay deterministic; capture the created database handles via closure.
+   */
+  onPeerReady?: (peer: EchoTestPeer) => Effect.Effect<void, never, never>;
 };
 
-export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}): Layer.Layer<
-  Database.Service,
-  never,
-  never
-> =>
+export const TestDatabaseLayer = ({
+  types,
+  spaceKey,
+  storagePath,
+  onInit,
+  onPeerReady,
+}: TestDatabaseOptions = {}): Layer.Layer<Database.Service, never, never> =>
   Layer.scopedContext(
     Effect.gen(function* () {
       types ??= [];
@@ -84,6 +93,10 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
         if (onInit) {
           yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
         }
+      }
+
+      if (onPeerReady) {
+        yield* onPeerReady(peer);
       }
 
       return Context.make(Database.Service, Database.makeService(db));

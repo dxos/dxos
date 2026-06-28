@@ -28,7 +28,7 @@ import {
   Trigger,
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import { TestDatabaseLayer, type TestDatabaseOptions } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
@@ -80,6 +80,12 @@ interface TestLayerOptions {
    * Operations can depend on those services.
    */
   extraServices?: Layer.Layer<never, never, never>;
+
+  /**
+   * Runs after the home database is created, with the same peer, to set up sibling spaces on the
+   * shared in-process Hypergraph (cross-space / agent-firewall tests). See {@link TestDatabaseOptions}.
+   */
+  onPeerReady?: TestDatabaseOptions['onPeerReady'];
 }
 
 export type AssistantTestServices =
@@ -210,7 +216,11 @@ export const AssistantTestBaseLayer = ({
   types = [],
   credentials = [],
   skills = [],
-}: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'skills' | 'tracing' | 'credentials'>) => {
+  onPeerReady,
+}: Pick<
+  TestLayerOptions,
+  'operationHandlers' | 'toolkits' | 'types' | 'skills' | 'tracing' | 'credentials' | 'onPeerReady'
+>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
@@ -230,6 +240,7 @@ export const AssistantTestBaseLayer = ({
       TestDatabaseLayer({
         spaceKey: 'fixed',
         types,
+        onPeerReady,
       }),
     ),
     Layer.provideMerge(configuredCredentialsLayer(credentials)),
