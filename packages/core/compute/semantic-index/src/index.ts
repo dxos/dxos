@@ -6,5 +6,6 @@ export * from './Assertion';
 export * from './Attribution';
 export * from './Entity';
 export * from './Fact';
+export * from './SemanticStore';
 export * from './Valence';
 export * from './errors';
