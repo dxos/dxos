@@ -6,26 +6,16 @@ import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { LMStudioResolver } from '@dxos/ai/resolvers';
+import { OLLAMA_MODEL_PREFIX, type OllamaModelId, PROVIDERS, getModel } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 
 import { type Assistant, AssistantCapabilities, type ChatPresetProps, type Ollama } from '#types';
 
-import { type AiServicePreset, AiServicePresets } from '../processor';
+import { type AiServicePreset, presetsForProvider, resolveProvider } from '../processor';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
 } & Pick<ChatPresetProps, 'presets' | 'onPresetChange'>;
-
-/** Prefix shared by all Ollama model ids; the suffix is the installed model name. */
-const OLLAMA_MODEL_PREFIX = 'ai.ollama.model.';
-
-/** Maps the user-facing LLM provider setting onto the preset `provider` tag. */
-const PRESET_PROVIDER: Record<Assistant.ModelProvider, AiServicePreset['provider']> = {
-  edge: 'dxos-remote',
-  ollama: 'ollama',
-  lmstudio: 'lm-studio',
-};
 
 // Stable fallback so `useAtomValue` is always called with a valid atom when the (desktop-only)
 // Ollama manager capability is absent.
@@ -34,50 +24,41 @@ const emptyStateAtom = Atom.make(EMPTY_OLLAMA_STATE);
 
 /**
  * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}),
- * defaulting the selection to the configured per-provider model. The legacy online toggle no longer
- * drives selection.
+ * defaulting the selection to the configured per-provider model.
  */
 export const usePresets = (settings: Assistant.Settings): UsePresets => {
   const [preset, setPreset] = useState<AiServicePreset>();
-  const provider = settings.modelProvider ?? 'edge';
-  const defaultModel = settings.modelDefaults?.[provider];
 
-  // The Ollama manager is only present in the desktop runtime; it both lists installed models and
-  // signals that the bundled sidecar (rather than a user-run server) backs the `ollama` provider.
+  // The Ollama manager is the bundled sidecar (desktop only); it lists installed models and signals
+  // that the `built-in` provider (rather than an external Ollama server) is available.
   const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
   const ollamaState = useAtomValue(ollamaManager?.state ?? emptyStateAtom);
 
-  // List installed models when the Ollama provider is active so freshly-pulled models appear.
+  const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
+  const defaultModel = settings.modelDefaults?.[provider];
+
+  // Refresh the sidecar's installed models when the built-in provider is active so fresh pulls appear.
   useEffect(() => {
-    if (provider === 'ollama') {
+    if (provider === 'built-in') {
       void ollamaManager?.refresh();
     }
   }, [provider, ollamaManager]);
 
   // Probe the external LM Studio server only when that provider is selected on desktop.
   const lmStudioProbeUrl =
-    provider === 'lmstudio' && ollamaManager ? `${LMStudioResolver.DEFAULT_LMSTUDIO_ENDPOINT}/v1/models` : undefined;
+    provider === 'lmstudio' && ollamaManager ? `${PROVIDERS.lmstudio.endpoint}/v1/models` : undefined;
   const lmStudioReachable = useEndpointReachable(lmStudioProbeUrl);
 
   const presets = useMemo(() => {
-    const base = AiServicePresets.filter((preset) => preset.provider === PRESET_PROVIDER[provider]);
+    const base = presetsForProvider(provider);
 
-    // Desktop Ollama: list installed models (deduped against curated), not the static suggestions.
-    if (provider === 'ollama' && ollamaManager) {
-      const installed = new Set(ollamaState.models.map((model) => model.name));
-      const curated = base.filter((preset) => installed.has(preset.model.slice(OLLAMA_MODEL_PREFIX.length)));
-      const existing = new Set(curated.map((preset) => preset.model));
-      const extra = ollamaState.models
-        .map(
-          (model): AiServicePreset => ({
-            id: `ollama-${model.name}`,
-            provider: 'ollama',
-            model: `ai.ollama.model.${model.name}`,
-            label: model.name,
-          }),
-        )
-        .filter((preset) => !existing.has(preset.model));
-      return [...curated, ...extra];
+    // Built-in sidecar: list the installed models (catalog labels where known) rather than the
+    // curated suggestions.
+    if (provider === 'built-in') {
+      return ollamaState.models.map((model): AiServicePreset => {
+        const id: OllamaModelId = `${OLLAMA_MODEL_PREFIX}${model.name}`;
+        return { id, provider, model: id, label: getModel(id)?.label ?? model.name };
+      });
     }
 
     // Desktop LM Studio: only offer the curated presets when the external server responds.
@@ -88,10 +69,7 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
     return base;
   }, [provider, ollamaManager, ollamaState, lmStudioReachable]);
 
-  const presetOptions = useMemo(
-    () => presets.map(({ id, model, label }) => ({ id, label: label ?? model })),
-    [presets],
-  );
+  const presetOptions = useMemo(() => presets.map(({ id, model, label }) => ({ id, label: label ?? model })), [presets]);
 
   // Default to the provider's configured model, else the first available preset.
   useEffect(() => {
@@ -110,7 +88,7 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
   );
 
   return {
-    preset: preset,
+    preset,
     presets: presetOptions,
     onPresetChange: handlePresetChange,
   };

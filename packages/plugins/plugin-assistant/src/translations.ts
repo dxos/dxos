@@ -156,7 +156,7 @@ export const translations: Resource[] = [
 
         // LLM provider labels.
         'settings.provider.edge.label': 'Edge',
-        'settings.provider.builtin.label': 'Built-in',
+        'settings.provider.built-in.label': 'Built-in',
         'settings.provider.ollama.label': 'Ollama',
         'settings.provider.lmstudio.label': 'LM Studio',
 

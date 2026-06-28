@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
+import { DEFAULT_OLLAMA_MODELS, OLLAMA_MODEL_PREFIX } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -13,9 +13,6 @@ import { Combobox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { AssistantCapabilities, type Ollama } from '#types';
-
-/** Prefix shared by all Ollama model ids; stripped to recover the raw `ollama pull` name. */
-const OLLAMA_MODEL_PREFIX = 'ai.ollama.model.';
 
 /** Quick-pick model names sourced from the curated defaults. */
 const QUICK_PICKS = DEFAULT_OLLAMA_MODELS.map((id) => id.slice(OLLAMA_MODEL_PREFIX.length));

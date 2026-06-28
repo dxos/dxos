@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as AiModelResolver from '../../AiModelResolver';
-import { type ModelName } from '../../defs';
+import { type ModelName, modelsBySource } from '../../defs';
 import { type AiModelNotAvailableError } from '../../errors';
 import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
 
@@ -39,16 +39,12 @@ export const make = ({
   // Create model layers with client dependency provided.
   const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
-  return AiModelResolver.AiModelResolver.fromModelMap(
-    {
-      name: 'LM Studio',
-    },
-    Effect.succeed({
-      'ai.google.model.gemma-3-27b': createModelLayer('google/gemma-3-27b'),
-      'ai.meta.model.llama-3.1-8b-instruct': createModelLayer('meta-llama-3.1-8b-instruct'),
-      'ai.meta.model.llama-3.2-3b-instruct': createModelLayer('llama-3.2-3b-instruct'),
-      'ai.mistral.model.ministral-3-14b-reasoning': createModelLayer('ministral-3-14b-reasoning'),
-      'ai.openai.model.gpt-oss-20b': createModelLayer('openai/gpt-oss-20b'),
-    } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>),
-  );
+  // Derive the id → model-layer map from the catalog's `lmstudio` models (id → back-end name).
+  const modelMap: Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>> =
+    {};
+  for (const model of modelsBySource('lmstudio')) {
+    modelMap[model.id] = createModelLayer(model.backend);
+  }
+
+  return AiModelResolver.AiModelResolver.fromModelMap({ name: 'LM Studio' }, Effect.succeed(modelMap));
 };

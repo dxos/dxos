@@ -2,67 +2,45 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import { MODELS, type ModelName, PROVIDERS, type Provider } from '@dxos/ai';
 
-import { type ModelName } from '@dxos/ai';
-
-const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio', 'ollama'] as const;
-
-const ModelProvider = Schema.Literal(...ModelProviders);
-type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
-
+/**
+ * A chat preset: a curated model offered for a provider, with a display label. Derived from the
+ * {@link MODELS} catalog — see {@link presetsForProvider}.
+ */
 export type AiServicePreset = {
   id: string;
-  provider: ModelProvider;
+  provider: Provider;
   model: ModelName;
-  label?: string;
+  label: string;
 };
 
-const createModelLabel = (model: ModelName) => {
-  const parts = model.split('.');
-  return parts[parts.length - 1];
-};
+/**
+ * Curated, recommended presets for a provider, derived from the model catalog: the models whose
+ * source matches the provider's, flagged `recommended`. `built-in` and `ollama` share the `ollama`
+ * source, so both surface the same curated Ollama models.
+ */
+export const presetsForProvider = (provider: Provider): AiServicePreset[] =>
+  MODELS.filter((model) => model.source === PROVIDERS[provider].source && model.recommended).map((model) => ({
+    id: model.id,
+    provider,
+    model: model.id,
+    label: model.label,
+  }));
 
-// TODO(burdon): Users should be able to create and edit presets.
-export const AiServicePresets: AiServicePreset[] = [
-  // Sonnet is first so it is the default selection.
-  {
-    provider: 'dxos-remote' as const,
-    model: 'ai.claude.model.claude-sonnet-4-6' as const,
-    label: 'Claude Sonnet',
-  },
-  {
-    provider: 'dxos-remote' as const,
-    model: 'ai.claude.model.claude-opus-4-8' as const,
-    label: 'Claude Opus',
-  },
-  {
-    provider: 'dxos-remote' as const,
-    model: 'ai.claude.model.claude-haiku-4-5' as const,
-    label: 'Claude Haiku',
-  },
-  {
-    provider: 'ollama' as const,
-    model: 'ai.ollama.model.llama3.2:3b' as const,
-  },
-  {
-    provider: 'ollama' as const,
-    model: 'ai.ollama.model.gpt-oss:20b' as const,
-  },
-  {
-    provider: 'lm-studio' as const,
-    model: 'ai.openai.model.gpt-oss-20b' as const,
-  },
-  {
-    provider: 'lm-studio' as const,
-    model: 'ai.meta.model.llama-3.2-3b-instruct' as const,
-  },
-].map(
-  ({ model, provider, label }, i) =>
-    ({
-      id: `preset-${i}`,
-      provider,
-      model,
-      label: label ?? createModelLabel(model),
-    }) satisfies AiServicePreset,
-);
+/**
+ * Reconcile a stored provider with the runtime: the bundled sidecar (`built-in`) and an external
+ * server (`ollama`) share the `ollama` source but are environment-exclusive — the sidecar exists
+ * only on desktop. Map a stored value onto whichever is actually available so a legacy `ollama`
+ * setting resolves to the sidecar on desktop (and vice-versa on the web).
+ */
+export const resolveProvider = (provider: Provider | undefined, hasBuiltIn: boolean): Provider => {
+  const resolved = provider ?? 'edge';
+  if (resolved === 'ollama' && hasBuiltIn) {
+    return 'built-in';
+  }
+  if (resolved === 'built-in' && !hasBuiltIn) {
+    return 'ollama';
+  }
+  return resolved;
+};

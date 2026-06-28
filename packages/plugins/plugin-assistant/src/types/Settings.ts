@@ -6,14 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { PROVIDER_IDS, type Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
 
-export const ModelProvider = Schema.Union(
-  Schema.Literal('edge').annotations({ title: 'Edge' }),
-  Schema.Literal('ollama').annotations({ title: 'Ollama' }),
-  Schema.Literal('lmstudio').annotations({ title: 'LM Studio' }),
-);
-export type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
+// The provider set is the canonical @dxos/ai `Provider`; labels live in translations.
+export const ModelProvider = Schema.Literal(...PROVIDER_IDS);
+export type ModelProvider = Provider;
 export const ModelProviders = SchemaEx.getLiteralValues(ModelProvider);
 
 export const ChatView = Schema.Union(
@@ -31,6 +29,12 @@ export const ModelDefaults = Schema.mutable(
       Schema.String.annotations({
         title: 'Remote language model',
         description: 'Choose the remote language model used for AI requests.',
+      }),
+    ),
+    'built-in': Schema.optional(
+      Schema.String.annotations({
+        title: 'Built-in language model',
+        description: 'Choose the bundled local model used for AI requests.',
       }),
     ),
     ollama: Schema.optional(
