@@ -8,7 +8,7 @@
  * - `Default` seeds sample text (Paris/Rome/Q3 board meeting); `Empty` starts blank.
  * - `onParse` calls `extractFacts` provided with the hosted `AiServiceTestingPreset('edge-remote')` — a real LLM runs on Parse.
  * - Renders the `SemanticFactsParser` component (editor + Parse button + `SemanticFactsViewer`).
- * - Minimal decorators (`withTheme` + `withLayout`) with i18n `translations`; no plugin manager.
+ * - Minimal decorators (`withTheme` + `withLayout`); no plugin manager.
  * - The same component works against any `AiService` layer (direct provider, local edge, ollama, or a stub).
  */
 
@@ -20,8 +20,6 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { extractFacts } from '@dxos/semantic-index';
-
-import { translations } from '#translations';
 
 import { SemanticFactsParser, type SemanticFactsParserProps } from './SemanticFactsParser';
 import { SAMPLE_FACTS_TEXT } from './testing';
@@ -39,10 +37,9 @@ const onParse: SemanticFactsParserProps['onParse'] = (text) =>
 const DefaultStory = (props: SemanticFactsParserProps) => <SemanticFactsParser {...props} />;
 
 const meta = {
-  title: 'plugins/plugin-transcription/stories/SemanticFactsParser',
+  title: 'stories/stories-brain/SemanticFactsParser',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: { translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

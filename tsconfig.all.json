@@ -640,6 +640,9 @@
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-brain/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
