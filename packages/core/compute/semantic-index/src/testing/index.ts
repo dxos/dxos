@@ -9,6 +9,9 @@ import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
 
+export * from './harness/serialize';
+export * from './harness/generate-facts';
+
 /** Minimal `AiService` whose `generateObject` returns a fixed object (no network). */
 export const mockAiService = (object: unknown): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, {
@@ -30,6 +33,20 @@ export const failingAiService = (): Layer.Layer<AiService.AiService> =>
         streamText: () => Stream.fail(new Error('boom')),
       } as any),
   });
+
+/** Stub `AiService` that returns a different `generateObject` payload per call (FIFO),
+ *  simulating per-message LLM extraction over a sequence of documents. */
+export const queuedAiService = (payloads: readonly unknown[]): Layer.Layer<AiService.AiService> => {
+  let index = 0;
+  return Layer.succeed(AiService.AiService, {
+    model: () =>
+      Layer.succeed(LanguageModel.LanguageModel, {
+        generateText: () => Effect.succeed({ text: '', content: [] }),
+        generateObject: () => Effect.succeed({ value: payloads[index++], content: [] }),
+        streamText: () => Stream.empty,
+      } as any),
+  });
+};
 
 /** Mock `AiService` that counts `generateObject` invocations (for incrementality tests). */
 export const countingAiService = (object: unknown): { layer: Layer.Layer<AiService.AiService>; calls: () => number } => {
