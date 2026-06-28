@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type IBlobEvent, type IMediaRecorder, MediaRecorder, register } from 'extendable-media-recorder';
+import { type IBlobEvent, type IMediaRecorder } from 'extendable-media-recorder';
 import { WaveFile } from 'wavefile';
 
 import { synchronized } from '@dxos/async';
@@ -11,11 +11,17 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type AudioChunk, type AudioRecorder, type WavConfig } from '@dxos/transcription-pipeline';
 
+// `extendable-media-recorder` references browser-only globals (Worker/AudioWorklet) at module load,
+// so it is imported lazily — keeping this package importable in non-browser contexts (node tests,
+// Cloudflare Workers) where the recorder is never started.
+let MediaRecorderClass: typeof import('extendable-media-recorder').MediaRecorder | undefined;
 let initializingPromise: Promise<void> | undefined;
 
 const initializeExtendableMediaRecorder = async () => {
+  const { MediaRecorder, register } = await import('extendable-media-recorder');
   const { connect } = await import('extendable-media-recorder-wav-encoder');
   await register(await connect());
+  MediaRecorderClass = MediaRecorder;
 };
 
 export type MediaStreamRecorderProps = {
@@ -76,9 +82,10 @@ export class MediaStreamRecorder implements AudioRecorder {
       return;
     }
     invariant(this._onChunk, 'MediaStreamRecorder: onChunk is not set');
+    invariant(MediaRecorderClass, 'MediaStreamRecorder: extendable-media-recorder not initialized');
     // Fresh recorder per session so a previously-stopped (encoder-flushed) instance is never reused.
     const stream = new MediaStream([this._mediaStreamTrack]);
-    const recorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
+    const recorder = new MediaRecorderClass(stream, { mimeType: 'audio/wav' });
     recorder.ondataavailable = (event) => this._ondataavailable(event);
     this._mediaRecorder = recorder;
     recorder.start(this._config.interval);

@@ -19,9 +19,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useAudioFile, useRecordingPipeline } from '@dxos/react-ui-transcription';
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
-import { useAudioFile, useRecordingPipeline } from '@dxos/react-ui-transcription';
 
 import { Mic } from '#components';
 import { translations } from '#translations';
@@ -113,7 +113,7 @@ const DefaultStory = ({ source, audioUrl = '', transcriberConfig, audioConstrain
     audioConstraints,
     stages,
     commit,
-    transcriberConfig,
+    transcribeConfig: transcriberConfig,
   });
 
   return source === 'mic' ? (

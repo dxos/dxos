@@ -7,17 +7,16 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type EntityLookup as EntityLookupFn } from '@dxos/transcription-pipeline';
+import { type MediaStreamRecorderProps } from '@dxos/react-ui-transcription';
+import {
+  type EntityLookup as EntityLookupFn,
+  type Transcriber as TranscriberType,
+  type TranscriberProps,
+} from '@dxos/transcription-pipeline';
 
 import { meta } from '#meta';
 
-import {
-  type MediaStreamRecorderProps,
-  type Transcriber as TranscriberType,
-  type TranscriberProps,
-  type TranscriptMessageEnricher,
-  type TranscriptionManager as TranscriptionManagerType,
-} from '../transcriber';
+import { type TranscriptMessageEnricher, type TranscriptionManager as TranscriptionManagerType } from '../transcriber';
 import * as Settings$ from './Settings'; // eslint-disable-line
 
 export type TranscriberProviderProps = {

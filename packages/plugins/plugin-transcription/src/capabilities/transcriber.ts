@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
+import { Transcriber } from '@dxos/transcription-pipeline';
 
 import { TranscriptionCapabilities } from '#types';
 
-import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
+import { TranscriptionManager } from '../transcriber';
 
 // TODO(burdon): Move to config?
 

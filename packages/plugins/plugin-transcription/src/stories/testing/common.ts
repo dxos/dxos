@@ -7,28 +7,24 @@
 
 import { type Decorator } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { scheduleTask } from '@dxos/async';
-import { SpeakingMonitor } from '@dxos/av';
-import { Context } from '@dxos/context';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind } from '@dxos/react-client/echo';
+import { renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useFeedModelAdapter } from '#hooks';
 import { TestItem } from '#testing';
 import { TranscriptionCapabilities } from '#types';
 
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderByline } from '../../util';
 
 // Recorder chunk interval (ms) shared by the live/file/mic stories. Per-story transcriber chunk
 // counts (transcribeAfterChunksAmount / prefixBufferChunksAmount) are intentionally distinct and
@@ -36,36 +32,6 @@ import { renderByline } from '../../util';
 export const RECORDER_INTERVAL_MS = 200;
 
 export const RECORDER_CONFIG = { interval: RECORDER_INTERVAL_MS } as const;
-
-export const useIsSpeaking = (track?: MediaStreamTrack) => {
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const speakingMonitor = useMemo(() => {
-    if (!track) {
-      return;
-    }
-
-    return new SpeakingMonitor(track);
-  }, [track]);
-
-  useEffect(() => {
-    if (!speakingMonitor) {
-      return;
-    }
-
-    const ctx = new Context();
-    scheduleTask(ctx, async () => {
-      speakingMonitor.speakingChanged.on(ctx, () => setIsSpeaking(speakingMonitor.isSpeaking));
-      await speakingMonitor.open();
-      ctx.onDispose(() => speakingMonitor.close());
-    });
-
-    return () => {
-      void ctx.dispose();
-    };
-  }, [speakingMonitor]);
-
-  return isSpeaking;
-};
 
 //
 // Message model.

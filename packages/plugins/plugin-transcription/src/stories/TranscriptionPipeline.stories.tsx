@@ -31,8 +31,8 @@ import { Graph, Node, qualifyId } from '@dxos/plugin-graph';
 import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Loading } from '@dxos/react-ui/testing';
 import { PipelineStatus } from '@dxos/react-ui-transcription';
+import { Loading } from '@dxos/react-ui/testing';
 import {
   type CommitFn,
   PipelineRuntime,

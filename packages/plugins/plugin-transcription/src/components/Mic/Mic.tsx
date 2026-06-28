@@ -6,11 +6,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { MicButton, useTranslation } from '@dxos/react-ui';
+import { type AudioInputDevice, MicSettings } from '@dxos/react-ui-transcription';
 
 import { meta } from '#meta';
 import { TranscriptionCapabilities, type Settings } from '#types';
-
-import { type AudioInputDevice, MicSettings } from './MicSettings';
 
 export type MicProps = {
   /** Attendable id of the target editor; keys the recording session. */
@@ -109,6 +108,7 @@ export const Mic = ({ docId }: MicProps) => {
         data-testid='transcription.record'
       />
       <MicSettings
+        translationNs={meta.profile.key}
         recordMode={recordMode}
         entityExtraction={entityExtraction}
         devices={devices}

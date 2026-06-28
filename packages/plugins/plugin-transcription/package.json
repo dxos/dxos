@@ -117,13 +117,11 @@
   ],
   "dependencies": {
     "@codemirror/state": "catalog:",
-    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/av": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -155,11 +153,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "date-fns": "catalog:",
-    "effect": "catalog:",
-    "extendable-media-recorder": "catalog:",
-    "extendable-media-recorder-wav-encoder": "catalog:",
-    "wavefile": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",

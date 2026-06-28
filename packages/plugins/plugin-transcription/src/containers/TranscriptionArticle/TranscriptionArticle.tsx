@@ -9,13 +9,11 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { useMembers, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Transcription, renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
-import { Transcription } from '#components';
-import { useFeedModelAdapter, useTranscriptionRecording } from '#hooks';
+import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
-
-import { renderByline } from '../../util';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 

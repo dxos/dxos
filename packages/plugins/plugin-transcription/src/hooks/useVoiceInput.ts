@@ -8,9 +8,9 @@ import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { useSoundEffect } from '@dxos/react-ui-audio';
+import { useAudioTrack } from '@dxos/react-ui-transcription';
+import { type TranscriberProps } from '@dxos/transcription-pipeline';
 
-import { type TranscriberProps } from '../transcriber';
-import { useAudioTrack } from './useAudioTrack';
 import { useTranscriber } from './useTranscriber';
 
 export type UseVoiceInputProps = {

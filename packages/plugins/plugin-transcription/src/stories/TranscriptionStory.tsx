@@ -13,10 +13,8 @@ import React, {
 } from 'react';
 
 import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
+import { Transcription, type SerializationModel } from '@dxos/react-ui-transcription';
 import { type Message } from '@dxos/types';
-
-import { Transcription } from '../components';
-import { type SerializationModel } from '../model';
 
 export type TranscriptionStoryProps = {
   audioRef?: RefObject<HTMLAudioElement | null>;
