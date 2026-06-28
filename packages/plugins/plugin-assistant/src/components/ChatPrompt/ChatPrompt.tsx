@@ -158,7 +158,6 @@ export const ChatPrompt = ({
           <ChatActions
             classNames='col-span-2'
             microphone={true}
-            recording={recording}
             processing={streaming}
             onEvent={handleEvent}
           >
