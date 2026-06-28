@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
-import { Icon, Input, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Input, Panel, ScrollArea, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
@@ -22,21 +22,28 @@ export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, 
   const groups = useMemo(() => groupFacts(facts, filter), [facts, filter]);
 
   return (
-    <div className={mx('flex flex-col gap-4 p-4 bg-base-surface', classNames)}>
-      <Input.Root>
-        <Input.Label srOnly>Filter facts</Input.Label>
-        <Input.TextInput
-          placeholder='Filter by entity or predicate…'
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-        />
-      </Input.Root>
-
-      {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts to display.' />}
-      {groups.map((group) => (
-        <SubjectGroup key={group.subject} group={group} />
-      ))}
-    </div>
+    <Panel.Root classNames={classNames}>
+      <Panel.Toolbar>
+        <Input.Root>
+          <Input.Label srOnly>Filter facts</Input.Label>
+          <Input.TextInput
+            placeholder='Filter by entity or predicate…'
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
+        </Input.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
+            {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts to display.' />}
+            {groups.map((group) => (
+              <SubjectGroup key={group.subject} group={group} />
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
