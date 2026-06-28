@@ -41,11 +41,9 @@ type ColumnRootProps = { gutter?: GutterSize };
  * - **Column.Row** — 3-col subgrid row (icons in gutters, content in center).
  *
  * Use `withColumn.center()` / `withColumn.bleed()` helpers to apply placement on slotted elements.
- *
- * Gutter sizes: `'sm'` for compact layouts (Dialog); `'md'` (default); `'lg'` for wider spacing.
  */
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
-  ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
+  ({ children, asChild, role, gutter = 'lg', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();

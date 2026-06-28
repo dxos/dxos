@@ -127,7 +127,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         )}
         ref={forwardedRef}
       >
-        <Column.Root classNames='dx-expander' gutter='md'>
+        <Column.Root classNames='dx-expander' gutter='lg'>
           {children}
         </Column.Root>
       </DialogPrimitive.Content>
