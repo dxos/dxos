@@ -2,6 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+/**
+ * Inline transcription into a real plugin-markdown editor: TranscriptionPlugin contributes the record
+ * toolbar action + the pending-text CodeMirror decoration, streaming transcription into the document.
+ *
+ * - `Default` renders the seeded Markdown doc with the live record button (requires a microphone).
+ * - `Recording` seeds finalized + interim pending text (no mic) to show the inline confirm/cancel preview.
+ * - `RecordingIndicator` seeds an empty pending block to show the "Recording…" placeholder.
+ * - Wires a full plugin manager (`withPluginManager`): core + Client + Space + Markdown + Transcription + StoryGraph.
+ * - Uses the shared `DefaultStory`/`SAMPLE_CONTENT`/`StoryGraphPlugin` harness from `testing`.
+ */
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
@@ -18,7 +29,7 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './markdown-transcription-harness';
+import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './testing';
 
 const meta = {
   title: 'plugins/plugin-transcription/stories/MarkdownTranscription',

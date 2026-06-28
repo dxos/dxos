@@ -2,6 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+/**
+ * Keyword-spotting demo built directly on the browser's Web Speech API (no DXOS transcriber).
+ *
+ * - `SpeechRecognitionAPI` renders a grid of keyword tiles and highlights each as it is heard.
+ * - Uses `window.SpeechRecognition`/`webkitSpeechRecognition` with continuous + interim results.
+ * - A single play/pause toolbar button starts/stops live recognition.
+ * - Matching normalizes punctuation/whitespace; matched tiles get a red border.
+ * - Minimal decorators (`withTheme` + `withLayout`); no plugin manager or transcription pipeline.
+ */
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -97,7 +107,7 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
       </Panel.Toolbar>
 
       <Panel.Content>
-        <div className='p-2 grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2'>
+        <div className='grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2 p-2'>
           {matchingWords.map((word, index) => (
             <span
               key={index}
@@ -127,6 +137,6 @@ type Story = StoryObj<typeof meta>;
 
 export const SpeechRecognitionAPI: Story = {
   args: {
-    keywords: ['kai', 'computer', 'hello', 'dxos'],
+    keywords: ['hello', 'hey kai', 'kai', 'computer', 'dxos', 'composer'],
   },
 };

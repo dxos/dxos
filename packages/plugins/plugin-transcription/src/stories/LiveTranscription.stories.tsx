@@ -2,6 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+/**
+ * Live microphone transcription into a message list, the mic-source counterpart to FileTranscription.
+ *
+ * - `Default` captures the mic with raw audio constraints (no echo/noise/gain processing), speaking detection off.
+ * - `SpeechDetection` enables `detectSpeaking` (voice-activity gating) with processed audio constraints on.
+ * - `useAudioTrack` supplies the live track; `useStoryTranscriber` drives the transcriber lifecycle.
+ * - Each transcribed batch becomes a `Message` ("You") appended to an in-memory model (`useStoryMessageModel`).
+ * - Uses `createStoryDecorators({ enableVectorIndex: true })` and the shared `TranscriptionStory` wrapper.
+ */
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
@@ -10,7 +20,7 @@ import { Message } from '@dxos/types';
 import { useAudioTrack } from '#hooks';
 
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
-import { useIsSpeaking, createStoryDecorators, useStoryMessageModel, useStoryTranscriber } from './common';
+import { useIsSpeaking, createStoryDecorators, useStoryMessageModel, useStoryTranscriber } from './testing';
 import { TranscriptionStory } from './TranscriptionStory';
 
 const DEFAULT_TRANSCRIBER_CONFIG = {

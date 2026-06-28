@@ -2,12 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-// Pipeline testbench: drives the @dxos/transcription-pipeline runtime over a scripted transcript and
-// writes the result into a real Markdown document (rendered via plugin-markdown). Variants exercise
-// the pipeline from simplest (correction only) to full (correction + entity extraction + summary).
-// The space is seeded with Person/Organization objects, so the extraction stage links recognized
-// entities as `[Name](echo:/<id>)` markdown links — decorated as dx-anchors by the editor's preview
-// extension. Per-stage telemetry is shown in a column beside the document.
+/**
+ * Pipeline testbench: drives the `@dxos/transcription-pipeline` runtime over a scripted transcript and
+ * writes the result into a real Markdown document (rendered via plugin-markdown).
+ *
+ * - `CorrectionOnly` runs the simplest stage list (punctuation/capitalization only).
+ * - `WithExtraction` adds entity extraction; recognized seeded entities become `echo:` dx-anchor links.
+ * - `Full` adds summarization, shown in the side column alongside per-stage telemetry.
+ * - The space is seeded with Person/Organization objects (DXOS, Cyberdyne, Amco, Sarah Johnson, Michael Chen).
+ * - Wires a full plugin manager + `StoryGraphPlugin`; each stage's output is re-rendered into the doc in place.
+ */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
@@ -53,7 +57,7 @@ import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { enableQueryIndexes } from './common';
+import { enableQueryIndexes } from './testing';
 
 // Properly-cased transcript that names seeded entities
 // (DXOS, Cyberdyne, Amco, Sarah Johnson, Michael Chen)

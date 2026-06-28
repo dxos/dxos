@@ -2,6 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+/**
+ * Transcribes a remote (or user-uploaded) audio file through the real transcriber into a live message list.
+ *
+ * - `Default` plays a hosted m4a, decodes it into a MediaStreamTrack via `useAudioFile`, and transcribes it.
+ * - Reuses the shared `TranscriptionStory` wrapper (play/pause + upload toolbar) and `createStoryDecorators` stack.
+ * - Drives the transcriber lifecycle via `useStoryTranscriber`; segments append to an in-memory model (`useStoryMessageModel`).
+ * - Optional `detectSpeaking` gates transcription on voice activity (`useIsSpeaking`).
+ * - Upload affordance swaps in a local file (object URL) and pipes the decoded stream to an `<audio>` element for playback.
+ * - Sentence normalization is currently stubbed out (needs a real space-backed Feed runtime).
+ */
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -14,7 +25,7 @@ import {
   useStoryAppendSegments,
   useStoryMessageModel,
   useStoryTranscriber,
-} from './common';
+} from './testing';
 import { TranscriptionStory } from './TranscriptionStory';
 
 const DEFAULT_TRANSCRIBER_CONFIG = {

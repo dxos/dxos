@@ -2,10 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-// Minimal mic → transcriber → pipeline tester with NO CodeMirror / editor / markdown. Isolates the
-// capture + transcription path: a record button drives the real transcriber directly, raw segments
-// are listed as they arrive, and a "Run pipeline" pass enriches the captured blocks (correction +
-// entity extraction + summary) so the mic and the pipeline can be diagnosed independently of the UI.
+/**
+ * Minimal mic → transcriber → pipeline tester with NO CodeMirror / editor / markdown, isolating the
+ * capture + transcription path so the mic and the pipeline can be diagnosed independently of the UI.
+ *
+ * - `Default` exposes a Record button that drives the real transcriber directly and lists raw segments as they arrive.
+ * - A "Run pipeline" pass feeds captured blocks through `PipelineRuntime` (correction + extraction + summarization stages).
+ * - Shows live status (mic/transcriber/phase/segment count), enriched output, summary, and per-stage telemetry.
+ * - Manages an idle/recording/draining phase so the track stays alive while the transcriber flushes on stop.
+ * - Uses `createStoryDecorators({ enableVectorIndex: true })`; `makeDatabaseLookup` links against the seeded space db.
+ */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
@@ -29,7 +35,7 @@ import { type ContentBlock } from '@dxos/types';
 
 import { useAudioTrack, useTranscriber } from '#hooks';
 
-import { createStoryDecorators } from './common';
+import { createStoryDecorators } from './testing';
 
 const RECORDER_INTERVAL_MS = 200;
 

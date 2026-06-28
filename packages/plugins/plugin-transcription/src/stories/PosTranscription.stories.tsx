@@ -2,6 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+/**
+ * MarkdownTranscription plus a part-of-speech decoration extension: each word is coloured by its UPOS tag.
+ *
+ * - `Default` renders the seeded doc with the live record button and reactive POS colouring of committed text.
+ * - `Recording` seeds finalized + interim pending text (no mic); confirming the block colours the inserted words.
+ * - `PosExtensionPlugin` contributes `pos({ parse: stubParse })` via `MarkdownCapabilities.ExtensionProvider`.
+ * - Uses the offline `stubParse` tagger, so the story needs no AI key.
+ * - Wires the same full plugin manager + shared `DefaultStory`/`SAMPLE_CONTENT`/`StoryGraphPlugin` harness as MarkdownTranscription.
+ */
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
@@ -22,7 +32,7 @@ import { pos } from '@dxos/ui-editor';
 import { translations } from '#translations';
 
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './markdown-transcription-harness';
+import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './testing';
 
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,
