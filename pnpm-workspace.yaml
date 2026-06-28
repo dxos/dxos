@@ -211,7 +211,7 @@ catalog:
   '@storybook/react-vite': ^10.4.2
   '@storybook/web-components-vite': ^10.4.2
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.15.41
+  '@swc/core': 1.15.43
   '@swc/types': ^0.1.26
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
@@ -801,7 +801,7 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  - '@swc/core@1.15.33'
+  - '@swc/core@1.15.43'
   - semver
   - semver@6.3.1
   - semver@5.7.2
