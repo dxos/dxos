@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { DEFAULT_OLLAMA_MODELS, OLLAMA_MODEL_PREFIX } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { List, ListItem } from '@dxos/react-list';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox } from '@dxos/react-ui-list';
@@ -98,22 +99,26 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
         ) : empty ? (
           <p className='text-sm text-description'>{t('settings.ollama.empty.message')}</p>
         ) : (
-          <div role='list' className='flex flex-col gap-1'>
+          // Plain `List`/`ListItem` (non-select), with the trigger editor's "fatter" two-line row
+          // treatment: a name line plus a secondary meta line, on a surface-styled row. Rows are
+          // actioned via their trailing buttons (no selection semantics).
+          <List variant='unordered' className='flex flex-col gap-1 grow is-full text-left'>
             {state.models.map((model) => {
               const running = loaded.get(model.name);
               const error = state.errors[model.name];
+              const size = model.size != null ? formatBytes(model.size) : undefined;
+              const loadedLabel = running
+                ? running.sizeVram
+                  ? t('settings.ollama.loaded.vram', { size: formatBytes(running.sizeVram) })
+                  : t('settings.ollama.loaded.label')
+                : undefined;
               return (
-                <div role='listitem' key={model.name} className='flex flex-col gap-0.5'>
+                <ListItem
+                  key={model.name}
+                  className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 is-full'
+                >
                   <div className='flex items-center gap-2'>
-                    <span className='flex-1 truncate'>{model.name}</span>
-                    {running && (
-                      <span className='text-xs text-success-text'>
-                        {running.sizeVram
-                          ? t('settings.ollama.loaded.vram', { size: formatBytes(running.sizeVram) })
-                          : t('settings.ollama.loaded.label')}
-                      </span>
-                    )}
-                    {model.size != null && <span className='text-xs text-description'>{formatBytes(model.size)}</span>}
+                    <span className='grow truncate font-medium'>{model.name}</span>
                     <IconButton
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
                       iconOnly
@@ -133,8 +138,14 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
                     />
                   </div>
-                  {error && <span className='text-xs text-error-text'>{shortError(error)}</span>}
-                </div>
+                  {(size || loadedLabel || error) && (
+                    <div className='flex items-center gap-2 text-sm'>
+                      {size && <span className='text-description'>{size}</span>}
+                      {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
+                      {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
+                    </div>
+                  )}
+                </ListItem>
               );
             })}
             {pulling.map((name) => {
@@ -143,19 +154,21 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
                 : (progress?.status ?? t('settings.ollama.pulling.label'));
               return (
-                <div role='listitem' key={name} className='flex items-center gap-2'>
-                  <span className='flex-1 truncate text-description'>{name}</span>
-                  <span className='text-xs text-description'>{status}</span>
-                  <IconButton
-                    icon='ph--x--regular'
-                    iconOnly
-                    label={t('settings.ollama.cancel.label')}
-                    onClick={() => manager.cancel(name)}
-                  />
-                </div>
+                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 is-full'>
+                  <div className='flex items-center gap-2'>
+                    <span className='grow truncate font-medium text-description'>{name}</span>
+                    <IconButton
+                      icon='ph--x--regular'
+                      iconOnly
+                      label={t('settings.ollama.cancel.label')}
+                      onClick={() => manager.cancel(name)}
+                    />
+                  </div>
+                  <span className='text-sm text-description'>{status}</span>
+                </ListItem>
               );
             })}
-          </div>
+          </List>
         )}
       </Form.Row>
 

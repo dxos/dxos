@@ -170,6 +170,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
