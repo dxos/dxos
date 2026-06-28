@@ -54,7 +54,7 @@ const SubjectGroup: FC<{ group: Group }> = ({ group }) => (
     <div className='flex items-center gap-2'>
       <h3 className='p-2 text-sm font-medium'>{humanize(group.subject)}</h3>
       {group.conflicted && (
-        <Tag hue='warning'>
+        <Tag palette='warning'>
           <span className='flex items-center gap-1'>
             <Icon icon='ph--warning--regular' size={3} />
             conflict
@@ -81,15 +81,15 @@ const FactRow: FC<{ fact: Type.Fact; conflicting: boolean }> = ({ fact, conflict
     >
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-1 flex-wrap'>
-          <span className='font-medium'>{humanize(termLabel(assertion.subject))}</span>
+          <span className='font-medium'>{formatTerm(assertion.subject)}</span>
           <span className='text-subdued'>{assertion.predicate}</span>
-          <span className='font-medium'>{humanize(termLabel(assertion.object))}</span>
+          <span className='font-medium'>{formatTerm(assertion.object)}</span>
         </div>
         <div className='flex items-center gap-2 shrink-0'>
           {valence.confidence != null && (
             <span className='text-xs text-subdued'>{Math.round(valence.confidence * 100)}%</span>
           )}
-          <Tag hue={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
+          <Tag palette={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
         </div>
       </div>
 
@@ -152,6 +152,9 @@ const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
 };
 
 const termLabel = (term: Type.Term): string => ('entity' in term ? term.entity : term.literal);
+
+/** Prettify entity ids for display; render literal values verbatim. */
+const formatTerm = (term: Type.Term): string => ('entity' in term ? humanize(term.entity) : term.literal);
 
 /** Render ids like `q3-board-meeting` as `Q3 Board Meeting`. */
 const humanize = (value: string): string => value.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
