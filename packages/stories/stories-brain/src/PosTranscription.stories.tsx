@@ -19,9 +19,8 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { stubParse } from '@dxos/nlp';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { translations } from '@dxos/plugin-transcription/translations';
 import { pos } from '@dxos/ui-editor';
-
-import { translations } from '#translations';
 
 import { DefaultStory, SAMPLE_CONTENT, createMarkdownStoryDecorators } from './testing';
 
@@ -48,7 +47,7 @@ const PosExtensionPlugin = Plugin.define(
 );
 
 const meta = {
-  title: 'plugins/plugin-transcription/stories/PosTranscription',
+  title: 'stories/stories-brain/PosTranscription',
   render: DefaultStory,
   decorators: createMarkdownStoryDecorators({
     extraPlugins: [PosExtensionPlugin()],
