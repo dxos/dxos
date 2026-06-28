@@ -31,16 +31,12 @@ export const ModelDefaults = Schema.mutable(
         description: 'Choose the remote language model used for AI requests.',
       }),
     ),
-    'built-in': Schema.optional(
-      Schema.String.annotations({
-        title: 'Built-in language model',
-        description: 'Choose the bundled local model used for AI requests.',
-      }),
-    ),
+    // `built-in` (bundled sidecar) and `ollama` (external) share the `ollama` model source, so they
+    // share this single default key.
     ollama: Schema.optional(
       Schema.String.annotations({
-        title: 'Ollama language model',
-        description: 'Choose the locally hosted Ollama model for AI requests.',
+        title: 'Local language model',
+        description: 'Choose the locally hosted model used for AI requests.',
       }),
     ),
     lmstudio: Schema.optional(

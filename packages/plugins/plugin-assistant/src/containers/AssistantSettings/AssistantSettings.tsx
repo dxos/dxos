@@ -67,8 +67,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
         ],
       }),
       'modelDefaults.edge': createSelectField({ options: presetOptions('edge') }),
-      // Built-in offers installed models; external Ollama offers the curated suggestions.
-      [`modelDefaults.${localProvider}`]: createSelectField({
+      // `built-in` and `ollama` share the `ollama` default key: built-in offers installed models,
+      // external Ollama the curated suggestions.
+      'modelDefaults.ollama': createSelectField({
         options: localProvider === 'built-in' ? ollamaOptions : presetOptions('ollama'),
       }),
       'modelDefaults.lmstudio': createSelectField({ options: presetOptions('lmstudio') }),

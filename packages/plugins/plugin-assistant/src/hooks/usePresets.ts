@@ -35,7 +35,8 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
   const ollamaState = useAtomValue(ollamaManager?.state ?? emptyStateAtom);
 
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
-  const defaultModel = settings.modelDefaults?.[provider];
+  // `built-in` and `ollama` share the `ollama` default key (same model source).
+  const defaultModel = settings.modelDefaults?.[provider === 'built-in' ? 'ollama' : provider];
 
   // Refresh the sidecar's installed models when the built-in provider is active so fresh pulls appear.
   useEffect(() => {
