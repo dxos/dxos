@@ -18,9 +18,9 @@ import React, { useState } from 'react';
 
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { useSpeechRecognition } from '@dxos/react-ui-transcription';
 
 import { Mic } from '#components';
-import { useSpeechRecognition } from '#hooks';
 import { translations } from '#translations';
 
 import { createStoryDecorators, useRecordingSession } from './testing';
