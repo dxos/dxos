@@ -24,6 +24,9 @@ import {
   useReorderAutoScroll,
   useReorderList,
 } from '../../aspects';
+import { listTheme } from '../List.theme';
+
+const styles = listTheme.styles();
 
 export type ListItemRecord = any;
 
@@ -132,7 +135,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
 export const OrderedListContent = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
   const { navigation } = useOrderedListContext('OrderedList.Content');
   return (
-    <div {...navigation.containerProps} className={mx('flex flex-col', classNames)}>
+    <div {...navigation.containerProps} className={styles.orderedListContent({ class: mx(classNames) })}>
       {children}
     </div>
   );
@@ -158,7 +161,7 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
   const autoScrollRef = useReorderAutoScroll();
   return (
     <ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' })}
+      {...composableProps<HTMLDivElement>(rest, { classNames: styles.orderedListViewport() })}
       {...{ thin, padding, centered }}
       orientation='vertical'
       ref={forwardedRef}

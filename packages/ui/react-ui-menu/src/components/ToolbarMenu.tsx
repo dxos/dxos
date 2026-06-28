@@ -311,5 +311,10 @@ const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem
     return <SwitchToolbarItem __menuScope={__menuScope} action={action} />;
   }
 
+  // The contributor owns the rendered element (interactions the action model cannot express).
+  if (action.properties?.variant === 'custom' && action.properties.render) {
+    return <>{action.properties.render()}</>;
+  }
+
   return <ActionToolbarItem __menuScope={__menuScope} action={action} />;
 };

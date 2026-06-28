@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ReactNode } from 'react';
+
 import { type Label } from '#translations';
 
 import { type ClassNameValue } from './theme';
@@ -23,9 +25,15 @@ export type MenuItemChrome = {
 
 // TODO(burdon): Narrow MenuActionProperties to a discriminated union.
 export type MenuActionProperties = MenuItemChrome & {
-  variant?: 'action' | 'toggle' | 'switch';
+  variant?: 'action' | 'toggle' | 'switch' | 'custom';
   value?: string;
   checked?: boolean;
+  /**
+   * Renders an arbitrary control in place of the standard button. Required when `variant` is
+   * `'custom'`; the contributor owns the element (and its interactions) so the toolbar can host
+   * affordances the action model cannot express (e.g. press-and-hold, an embedded dropdown).
+   */
+  render?: () => ReactNode;
 };
 
 /** Root toolbar group or plain container with no render variant. */

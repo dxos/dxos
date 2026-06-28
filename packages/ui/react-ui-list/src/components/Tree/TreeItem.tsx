@@ -25,14 +25,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import {
-  TreeItem as NaturalTreeItem,
-  Treegrid,
-  TREEGRID_PARENT_OF_SEPARATOR,
-  type Label,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   ghostFocusWithin,
   ghostHover,
@@ -42,8 +35,10 @@ import {
   mx,
 } from '@dxos/ui-theme';
 
+import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '../Treegrid';
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
+import { TreeDropIndicator } from './TreeDropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
 
@@ -392,7 +387,7 @@ const RawTreeItem = <T extends { id: string } = any>({
             />
           </Treegrid.Cell>
           {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-          {instruction && <NaturalTreeItem.DropIndicator instruction={instruction} gap={2} />}
+          {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
         </div>
       </Treegrid.Row>
       {open &&

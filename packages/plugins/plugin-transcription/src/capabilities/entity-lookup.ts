@@ -19,13 +19,13 @@ import { TranscriptionCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const lookup: EntityLookup = async (noun) => {
+    const lookup: EntityLookup = async (noun, context) => {
       const client = capabilities.get(ClientCapabilities.Client);
       const space = AppSpace.getPersonalSpace(client);
       if (!space) {
-        return undefined;
+        return [];
       }
-      return makeDatabaseLookup(space.db)(noun);
+      return makeDatabaseLookup(space.db)(noun, context);
     };
     return Capability.contributes(TranscriptionCapabilities.EntityLookup, lookup);
   }),

@@ -13,7 +13,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
+import { ButtonGroup, Clipboard, IconButton } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { IdentityListItem } from '../components';
@@ -98,11 +99,13 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
         <div>
           <h1>{header}</h1>
           {spaces.length > 0 ? (
-            <List>
-              {spaces.map((space) => (
-                <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
-              ))}
-            </List>
+            <Listbox.Root>
+              <Listbox.Content aria-label='Spaces'>
+                {spaces.map((space) => (
+                  <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
           ) : (
             <div className='text-center'>No spaces</div>
           )}
@@ -196,9 +199,11 @@ const Invitations = () => {
       <div className='bg-base-surface rounded-sm p-2 mb-2'>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
-          <List>
-            <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
-          </List>
+          <Listbox.Root>
+            <Listbox.Content aria-label='Identity'>
+              <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+            </Listbox.Content>
+          </Listbox.Root>
         ) : (
           <div className='text-center'>No identity</div>
         )}
