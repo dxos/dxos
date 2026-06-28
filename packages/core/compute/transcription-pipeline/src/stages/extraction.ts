@@ -75,7 +75,8 @@ export const resolveEntities = async (text: string, lookup?: EntityLookup): Prom
       // at the top is genuine ambiguity, left for the context-aware resolver / the user — so we never
       // link the wrong object on a guess. (Text search returns weak spurious matches too, so counting
       // candidates is not a reliable ambiguity signal; the rank gap is.)
-      const unambiguous = candidates.length === 1 || (candidates.length > 1 && candidates[0].score > candidates[1].score);
+      const unambiguous =
+        candidates.length === 1 || (candidates.length > 1 && candidates[0].score > candidates[1].score);
       if (candidates.length > 0 && unambiguous) {
         references.push(candidates[0].ref);
         quotes.push({ quote: noun, id: candidates[0].id });
