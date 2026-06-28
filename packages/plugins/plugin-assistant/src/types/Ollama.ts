@@ -18,6 +18,9 @@ export type ModelsState = {
   loaded: OllamaAdmin.RunningModel[];
   /** In-flight pulls keyed by model name. */
   pulls: Record<string, OllamaAdmin.PullProgress>;
+  /** Per-model action errors (load/unload/remove/pull), keyed by model name, shown inline. */
+  errors: Record<string, string>;
+  /** Connection-level error reaching the service (no specific model). */
   error?: string;
 };
 

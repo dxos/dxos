@@ -27,9 +27,6 @@
     "active": true,
     "createUpdaterArtifacts": true,
     "externalBin": ["sidecar/ollama"],
-    "resources": {
-      "sidecar/ollama-runtime": "ollama-runtime"
-    },
     "iOS": {
       "developmentTeam": "9428WC5MR8",
       "minimumSystemVersion": "16.0"
@@ -40,7 +37,8 @@
       "hardenedRuntime": true,
       "minimumSystemVersion": "15.0",
       "files": {
-        "embedded.provisionprofile": "./embedded.provisionprofile"
+        "embedded.provisionprofile": "./embedded.provisionprofile",
+        "MacOS/lib/ollama": "sidecar/ollama-runtime"
       }
     },
     "targets": "all"

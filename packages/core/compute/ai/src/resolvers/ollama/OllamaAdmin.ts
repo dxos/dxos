@@ -131,7 +131,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fe
         body: JSON.stringify({ model: name, keep_alive: keepAlive, stream: false }),
       });
       if (!response.ok) {
-        return { ok: false, error: `HTTP ${response.status}` };
+        return { ok: false, error: await httpError(response) };
       }
       return { ok: true };
     } catch (error) {
@@ -193,7 +193,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fe
         body: JSON.stringify({ model: name }),
       });
       if (!response.ok) {
-        return { ok: false, error: `HTTP ${response.status}` };
+        return { ok: false, error: await httpError(response) };
       }
       return { ok: true };
     } catch (error) {
@@ -251,3 +251,15 @@ const handlePullLine = (
 
 const formatError = (error: unknown): string =>
   typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
+
+/** Extract the most useful error message from a non-OK response (Ollama returns `{ error }`). */
+const httpError = async (response: Response): Promise<string> => {
+  const body = await response.text().catch(() => '');
+  try {
+    const json = JSON.parse(body);
+    if (typeof json?.error === 'string' && json.error.length > 0) {
+      return json.error;
+    }
+  } catch {}
+  return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
+};

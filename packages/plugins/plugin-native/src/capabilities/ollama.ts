@@ -5,7 +5,6 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
-import { resolveResource } from '@tauri-apps/api/path';
 import { Command } from '@tauri-apps/plugin-shell';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -38,9 +37,13 @@ export default Capability.makeModule(
     );
 
     const admin = OllamaAdmin.make({ endpoint: OLLAMA_HOST });
-    const stateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], loaded: [], pulls: {} }).pipe(
-      Atom.keepAlive,
-    );
+    const stateAtom = Atom.make<Ollama.ModelsState>({
+      kind: 'idle',
+      models: [],
+      loaded: [],
+      pulls: {},
+      errors: {},
+    }).pipe(Atom.keepAlive);
 
     // Forcing the scoped sidecar layer spawns the process idempotently — the runtime is lazy and
     // only spawns on first force, so opening settings starts Ollama rather than hitting a refused
@@ -51,8 +54,22 @@ export default Capability.makeModule(
     // In-flight pull controllers, so a pull can be cancelled.
     const pullControllers = new Map<string, AbortController>();
 
+    // Connection-level failure (reaching the service); shown at the section, not tied to a model.
     const fail = (error: string): void => {
       registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'failed', error });
+    };
+
+    // Per-model action error (load/unload/remove/pull); shown inline on that model's row. Pass
+    // `undefined` to clear.
+    const setError = (name: string, error: string | undefined): void => {
+      const current = registry.get(stateAtom);
+      const errors = { ...current.errors };
+      if (error) {
+        errors[name] = error;
+      } else {
+        delete errors[name];
+      }
+      registry.set(stateAtom, { ...current, errors });
     };
 
     // Refresh only the loaded-into-memory set (cheap; no spawn). Logs load/unload transitions so the
@@ -109,6 +126,7 @@ export default Capability.makeModule(
       }
 
       log.info('ollama pull started', { name });
+      setError(name, undefined);
       const controller = new AbortController();
       pullControllers.set(name, controller);
       // Ollama reports `completed`/`total` per layer (digest); aggregate across layers so the
@@ -140,7 +158,7 @@ export default Capability.makeModule(
       // A cancelled pull surfaces as an aborted fetch; treat it as a no-op, not a failure.
       if (!result.ok && !controller.signal.aborted) {
         log.warn('ollama pull failed', { name, error: result.error });
-        return fail(result.error);
+        return setError(name, result.error);
       }
       log.info('ollama pull finished', { name, cancelled: controller.signal.aborted });
       await refresh();
@@ -154,42 +172,46 @@ export default Capability.makeModule(
     };
 
     const load = async (name: string): Promise<void> => {
+      setError(name, undefined);
       try {
         await ensureRunning();
       } catch (error) {
-        return fail(formatError(error));
+        return setError(name, formatError(error));
       }
       log.info('ollama load', { name });
       const result = await admin.load(name);
       if (!result.ok) {
-        return fail(result.error);
+        log.warn('ollama load failed', { name, error: result.error });
+        return setError(name, result.error);
       }
       await refreshLoaded();
     };
 
     const unload = async (name: string): Promise<void> => {
+      setError(name, undefined);
       try {
         await ensureRunning();
       } catch (error) {
-        return fail(formatError(error));
+        return setError(name, formatError(error));
       }
       log.info('ollama unload', { name });
       const result = await admin.unload(name);
       if (!result.ok) {
-        return fail(result.error);
+        return setError(name, result.error);
       }
       await refreshLoaded();
     };
 
     const remove = async (name: string): Promise<void> => {
+      setError(name, undefined);
       try {
         await ensureRunning();
       } catch (error) {
-        return fail(formatError(error));
+        return setError(name, formatError(error));
       }
       const result = await admin.remove(name);
       if (!result.ok) {
-        return fail(result.error);
+        return setError(name, result.error);
       }
       await refresh();
     };
@@ -228,15 +250,13 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
   static layerLive = Layer.scoped(
     OllamaSidecar,
     Effect.gen(function* () {
-      // The `ollama` launcher ships as a Tauri sidecar (signed, in the app's MacOS dir) while its
-      // runtime libraries (`llama-server`, `libggml*`, `mlx_metal_*`) ship as bundle resources;
-      // point the launcher at them so model inference can load. See scripts/fetch-ollama.mjs.
-      const libraryPath = yield* Effect.promise(() => resolveResource('ollama-runtime'));
+      // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
+      // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
+      // `Contents/MacOS/lib/ollama` next to the signed sidecar (see tauri.conf bundle.macOS.files).
       const command = Command.sidecar('sidecar/ollama', ['serve'], {
         env: {
           OLLAMA_HOST,
           OLLAMA_ORIGINS: '*', // CORS
-          OLLAMA_LIBRARY_PATH: libraryPath,
         },
       });
 

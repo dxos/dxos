@@ -175,7 +175,6 @@ export const translations: Resource[] = [
         'settings.ollama.load.label': 'Load into memory',
         'settings.ollama.unload.label': 'Unload from memory',
         'settings.ollama.remove.label': 'Delete model',
-        'settings.ollama.failed.label': 'Local models unavailable',
         'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
 
         'debug.button': 'Debug',

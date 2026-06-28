@@ -94,49 +94,49 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
 
   return (
     <Form.Section title={t('settings.ollama.title')}>
-      {state.kind === 'failed' && state.error && (
-        <Form.Row
-          label={t('settings.ollama.failed.label')}
-          description={t('settings.ollama.failed.message', { error: state.error })}
-        />
-      )}
-
       <Form.Row label={t('settings.ollama.installed.label')}>
-        {empty ? (
+        {state.kind === 'failed' && state.error ? (
+          // Connection-level failure has no associated model, so it shows inline as the row content.
+          <p className='text-sm text-error-text'>{t('settings.ollama.failed.message', { error: state.error })}</p>
+        ) : empty ? (
           <p className='text-sm text-description'>{t('settings.ollama.empty.message')}</p>
         ) : (
           <div role='list' className='flex flex-col gap-1'>
             {state.models.map((model) => {
               const running = loaded.get(model.name);
+              const error = state.errors[model.name];
               return (
-                <div role='listitem' key={model.name} className='flex items-center gap-2'>
-                  <span className='flex-1 truncate'>{model.name}</span>
-                  {running && (
-                    <span className='text-xs text-success-text'>
-                      {running.sizeVram
-                        ? t('settings.ollama.loaded.vram', { size: formatBytes(running.sizeVram) })
-                        : t('settings.ollama.loaded.label')}
-                    </span>
-                  )}
-                  {model.size != null && <span className='text-xs text-description'>{formatBytes(model.size)}</span>}
-                  <IconButton
-                    icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
-                    iconOnly
-                    label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
-                    disabled={pending[model.name]}
-                    onClick={() =>
-                      void withPending(model.name, () =>
-                        running ? manager.unload(model.name) : manager.load(model.name),
-                      )()
-                    }
-                  />
-                  <IconButton
-                    icon='ph--trash--regular'
-                    iconOnly
-                    label={t('settings.ollama.remove.label')}
-                    disabled={pending[model.name]}
-                    onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
-                  />
+                <div role='listitem' key={model.name} className='flex flex-col gap-0.5'>
+                  <div className='flex items-center gap-2'>
+                    <span className='flex-1 truncate'>{model.name}</span>
+                    {running && (
+                      <span className='text-xs text-success-text'>
+                        {running.sizeVram
+                          ? t('settings.ollama.loaded.vram', { size: formatBytes(running.sizeVram) })
+                          : t('settings.ollama.loaded.label')}
+                      </span>
+                    )}
+                    {model.size != null && <span className='text-xs text-description'>{formatBytes(model.size)}</span>}
+                    <IconButton
+                      icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
+                      iconOnly
+                      label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
+                      disabled={pending[model.name]}
+                      onClick={() =>
+                        void withPending(model.name, () =>
+                          running ? manager.unload(model.name) : manager.load(model.name),
+                        )()
+                      }
+                    />
+                    <IconButton
+                      icon='ph--trash--regular'
+                      iconOnly
+                      label={t('settings.ollama.remove.label')}
+                      disabled={pending[model.name]}
+                      onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
+                    />
+                  </div>
+                  {error && <span className='text-xs text-error-text'>{error}</span>}
                 </div>
               );
             })}
@@ -163,6 +163,14 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
       </Form.Row>
 
       <Form.Row label={t('settings.ollama.pull.label')}>
+        {/* Pull failures for not-yet-installed models surface here (no model row to attach to). */}
+        {Object.entries(state.errors)
+          .filter(([name]) => !installed.has(name))
+          .map(([name, error]) => (
+            <p key={name} className='text-xs text-error-text'>
+              {name}: {error}
+            </p>
+          ))}
         {/* Root value is held empty so the trigger always shows the placeholder; the live text is
             the separate `query` driving the input and suggestion filter. */}
         <Combobox.Root

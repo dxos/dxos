@@ -58,7 +58,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Empty: Story = {
   args: {
-    state: { kind: 'ready', models: [], loaded: [], pulls: {} },
+    state: { kind: 'ready', models: [], loaded: [], pulls: {}, errors: {} },
   },
 };
 
@@ -73,6 +73,8 @@ export const Populated: Story = {
       // llama3.2:1b is currently loaded into memory.
       loaded: [{ name: 'llama3.2:1b', sizeVram: 1_400_000_000 }],
       pulls: {},
+      // A per-model action error shows inline on its row.
+      errors: { 'qwen2.5:14b': 'error starting llama-server: not enough memory' },
     },
   },
 };
@@ -86,6 +88,7 @@ export const Pulling: Story = {
       pulls: {
         'gpt-oss:20b': { status: 'downloading', completed: 4_200_000_000, total: 13_000_000_000 },
       },
+      errors: {},
     },
   },
 };
@@ -97,6 +100,7 @@ export const Failed: Story = {
       models: [],
       loaded: [],
       pulls: {},
+      errors: {},
       error: 'Connection refused',
     },
   },

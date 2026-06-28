@@ -28,7 +28,13 @@ const presetOptions = (provider: string) =>
   }));
 
 // Stable fallback so `useAtomValue` is always called with a valid atom when the manager is absent.
-const emptyStateAtom = Atom.make<Ollama.ModelsState>({ kind: 'idle', models: [], loaded: [], pulls: {} });
+const emptyStateAtom = Atom.make<Ollama.ModelsState>({
+  kind: 'idle',
+  models: [],
+  loaded: [],
+  pulls: {},
+  errors: {},
+});
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
