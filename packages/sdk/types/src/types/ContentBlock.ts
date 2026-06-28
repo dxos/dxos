@@ -314,11 +314,36 @@ export const Reference = Schema.TaggedStruct('reference', {
 
 export type Reference = Schema.Schema.Type<typeof Reference>;
 /**
+ * A noun / proper noun surfaced by the extraction stage that is not (yet) linked to an object.
+ */
+export const Candidate = Schema.Struct({
+  text: Schema.String,
+  kind: Schema.Literal('noun', 'proper-noun'),
+  start: Schema.Number,
+  end: Schema.Number,
+  suggested: Schema.optional(Schema.Struct({ typename: Schema.String })),
+});
+
+export type Candidate = Schema.Schema.Type<typeof Candidate>;
+
+/**
  * Transcript block.
  */
 export const Transcript = Schema.TaggedStruct('transcript', {
   started: Schema.String,
   text: Schema.String,
+
+  /** Corrected text (punctuation / capitalization / cross-batch word repair); renderers prefer this when present. */
+  corrected: Schema.optional(Schema.String),
+
+  /** Resolved entity links surfaced by the extraction stage. */
+  references: Schema.optional(Schema.mutable(Schema.Array(Ref.Ref(Obj.Unknown)))),
+
+  /** Nouns / proper nouns mentioned in the block that are not (yet) linked to an object. */
+  candidates: Schema.optional(Schema.mutable(Schema.Array(Candidate))),
+
+  /** Target-language rendering produced by the translation stage. */
+  translation: Schema.optional(Schema.String),
 
   ...Base.fields,
 });

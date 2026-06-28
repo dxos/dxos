@@ -4,7 +4,7 @@
 
 import { WaveFile } from 'wavefile';
 
-import { DeferredTask, Trigger } from '@dxos/async';
+import { DeferredTask, Trigger, synchronized } from '@dxos/async';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -106,6 +106,8 @@ export class Transcriber extends Resource {
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
+  /** Aborts the in-flight transcription request (e.g. when the user cancels the drain). */
+  private _transcribeAbort?: AbortController = undefined;
 
   constructor({ config, recorder, onSegments, transcribe }: TranscriberProps) {
     super();
@@ -127,7 +129,13 @@ export class Transcriber extends Resource {
     log.info('closing');
     this._recording = false;
     this._transcribeTask = undefined;
+    this._transcribeAbort?.abort();
     await this._recorder.stop();
+  }
+
+  /** Abort the in-flight transcription request (e.g. user cancelled the drain). */
+  abort(): void {
+    this._transcribeAbort?.abort();
   }
 
   startChunksRecording(): void {
@@ -149,6 +157,20 @@ export class Transcriber extends Resource {
     log.info('stopped');
   }
 
+  /**
+   * Stop recording and transcribe any buffered audio, resolving once the final segments have been
+   * delivered via `onSegments`. Used to drain the pipeline when recording stops so the tail of speech
+   * (and its downstream enrichment) is not lost.
+   */
+  async flush(): Promise<void> {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
+      return;
+    }
+
+    this._recording = false;
+    await this._transcribe();
+  }
+
   private _saveAudioChunk(chunk: AudioChunk): void {
     log('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
@@ -165,6 +187,9 @@ export class Transcriber extends Resource {
     }
   }
 
+  // Serialized so a threshold-scheduled run and a flush()/deferred run cannot read the same buffer
+  // concurrently and duplicate or drop tail segments.
+  @synchronized
   private async _transcribe(): Promise<void> {
     log('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
@@ -218,13 +243,26 @@ export class Transcriber extends Resource {
     } else {
       // TODO(burdon): Create separate endpoint?
       const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
-      const response = await fetch(`${endpoint}/transcribe`, {
-        method: 'POST',
-        body: JSON.stringify({ audio }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      this._transcribeAbort = new AbortController();
+      let response: Response;
+      try {
+        response = await fetch(`${endpoint}/transcribe`, {
+          method: 'POST',
+          body: JSON.stringify({ audio }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: this._transcribeAbort.signal,
+        });
+      } catch (err) {
+        // Aborting (user cancelled the drain) is a clean stop, not a failed transcription cycle.
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return [];
+        }
+        throw err;
+      } finally {
+        this._transcribeAbort = undefined;
+      }
 
       if (!response.ok) {
         throw new Error(`Transcription failed: ${response.statusText}`);

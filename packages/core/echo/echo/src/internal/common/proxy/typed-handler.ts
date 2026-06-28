@@ -9,6 +9,7 @@ import { type InspectOptionsStylized } from 'node:util';
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
+import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaURI } from '../../Annotation/annotations';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
@@ -27,7 +28,7 @@ import {
   wouldCreateCycle,
 } from './ownership';
 import { type ReactiveHandler, objectData } from './proxy-types';
-import { createProxy, isProxy, isValidProxyTarget, symbolIsProxy } from './proxy-utils';
+import { createProxy, isProxy, isValidProxyTarget, normalizeSpliceRange, symbolIsProxy } from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
 import { SchemaValidator } from './schema-validator';
 import { ChangeId, EventId } from './symbols';
@@ -332,6 +333,65 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       queueNotification(echoRoot);
     }
     return result;
+  }
+
+  textUpdate(target: ProxyTarget, path: readonly (string | number)[], newText: string): void {
+    this._applyTextMutation(target, path, () => newText);
+  }
+
+  textSplice(
+    target: ProxyTarget,
+    path: readonly (string | number)[],
+    start: number,
+    deleteCount: number,
+    insert: string,
+  ): string {
+    let removed = '';
+    this._applyTextMutation(target, path, (current) => {
+      const range = normalizeSpliceRange(current.length, start, deleteCount);
+      removed = current.slice(range.start, range.start + range.deleteCount);
+      return current.slice(0, range.start) + insert + current.slice(range.start + range.deleteCount);
+    });
+    return removed;
+  }
+
+  /**
+   * Shared read-modify-write for the in-memory string CRDT path. Mirrors the `set` trap: enforce the
+   * change context, then mutate and notify through the same batched notification path so reactivity fires.
+   *
+   * Writes via `setDeep` on the raw target, intentionally bypassing `_prepareValueForAssignment` /
+   * `_validateValue`: a string CRDT delta produces a string, and per-delta schema checks (pattern,
+   * maxLength) would reject valid intermediate states during incremental edits. Such constraints are
+   * enforced at the initial assignment or as application-level invariants, mirroring the Automerge path.
+   */
+  private _applyTextMutation(
+    target: ProxyTarget,
+    path: readonly (string | number)[],
+    compute: (current: string) => string,
+  ): void {
+    const echoRoot = getEchoRoot(target);
+    if (!isInChangeContext(echoRoot)) {
+      throw new Error(
+        `Cannot modify text at "${path.join('.')}" outside of Obj.update(). ` +
+          'Use Obj.update(obj, () => { Text.splice(obj, path, ...); }) instead.',
+      );
+    }
+
+    const keyPath = [...path];
+    invariant(keyPath.length > 0, 'Text path must be non-empty');
+    const current = getDeep(target, keyPath);
+    if (typeof current !== 'string') {
+      throw new TypeError(`Text mutation target at "${keyPath.join('.')}" is not a string.`);
+    }
+
+    const next = compute(current);
+    batchEvents(() => {
+      // Write directly on the raw target (not the proxy) and notify through the same batched path
+      // the `set` trap uses, so subscribers fire once per `Obj.update`.
+      setDeep(target, keyPath, next);
+      queueNotification(echoRoot);
+      notifyOwnerChain(target);
+    });
   }
 
   /**

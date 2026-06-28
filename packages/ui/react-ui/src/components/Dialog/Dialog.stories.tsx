@@ -45,7 +45,6 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
           <Dialog.Body>
             <Dialog.Description>{description}</Dialog.Description>
             <Input.Root>
-              <Input.Label>Value</Input.Label>
               <Input.TextInput placeholder='Enter value' />
             </Input.Root>
           </Dialog.Body>

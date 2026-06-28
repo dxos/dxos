@@ -12,11 +12,11 @@ import {
   IconButton,
   Input,
   Link,
-  ListItem,
   type NeutralPalette,
   Tag,
   useTranslation,
 } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -99,7 +99,6 @@ export const PluginItem = ({
   const showInstallButton = !!onInstall && !isInstalled;
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
   const inputId = `${id}-input`;
-  const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
 
@@ -134,9 +133,8 @@ export const PluginItem = ({
   const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
 
   return (
-    <ListItem.Root
-      key={id}
-      labelId={labelId}
+    <Listbox.Item
+      id={id}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
       classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
@@ -209,7 +207,7 @@ export const PluginItem = ({
           </div>
         </div>
       </div>
-    </ListItem.Root>
+    </Listbox.Item>
   );
 };
 
