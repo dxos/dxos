@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 
-import { type Document, Upos } from './Document';
 import { assembleDocument } from './align';
+import { type Document, Upos } from './Document';
 import { stubParse } from './stub';
 
 const PARSE_MODEL = 'ai.claude.model.claude-haiku-4-5';

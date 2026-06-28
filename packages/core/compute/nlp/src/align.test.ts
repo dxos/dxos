@@ -11,12 +11,14 @@ describe('assembleDocument', () => {
   test('assigns exact offsets to each token', ({ expect }) => {
     const source = 'The dog barks.';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'The', upos: 'DET' },
-        { text: 'dog', upos: 'NOUN' },
-        { text: 'barks', upos: 'VERB' },
-        { text: '.', upos: 'PUNCT' },
-      ] },
+      {
+        tokens: [
+          { text: 'The', upos: 'DET' },
+          { text: 'dog', upos: 'NOUN' },
+          { text: 'barks', upos: 'VERB' },
+          { text: '.', upos: 'PUNCT' },
+        ],
+      },
     ]);
 
     const [sentence] = doc.sentences;
@@ -30,10 +32,12 @@ describe('assembleDocument', () => {
   test('handles repeated words by scanning forward (no re-match of earlier occurrence)', ({ expect }) => {
     const source = 'dog dog';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'dog', upos: 'NOUN' },
-        { text: 'dog', upos: 'NOUN' },
-      ] },
+      {
+        tokens: [
+          { text: 'dog', upos: 'NOUN' },
+          { text: 'dog', upos: 'NOUN' },
+        ],
+      },
     ]);
     expect(doc.sentences[0].tokens.map((t) => t.start)).toEqual([0, 4]);
   });
@@ -41,11 +45,13 @@ describe('assembleDocument', () => {
   test('skips tokens not found in source rather than throwing', ({ expect }) => {
     const source = 'hello world';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'hello', upos: 'INTJ' },
-        { text: 'GHOST', upos: 'X' },
-        { text: 'world', upos: 'NOUN' },
-      ] },
+      {
+        tokens: [
+          { text: 'hello', upos: 'INTJ' },
+          { text: 'GHOST', upos: 'X' },
+          { text: 'world', upos: 'NOUN' },
+        ],
+      },
     ]);
     expect(doc.sentences[0].tokens.map((t) => t.text)).toEqual(['hello', 'world']);
   });

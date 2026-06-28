@@ -15,6 +15,7 @@
 ## File Structure
 
 **New package `@dxos/nlp`** (`packages/core/compute/nlp/`):
+
 - `package.json`, `moon.yml`, `tsconfig.json` — scaffold (copy `transcription-pipeline`).
 - `src/index.ts` — barrel.
 - `src/Document.ts` — `Upos`, `Token`, `Sentence`, `Document` Effect schemas + types.
@@ -26,11 +27,13 @@
 - `src/testing/index.ts` — re-exports `stubParse` for consumers/stories.
 
 **Extension** (`packages/ui/ui-editor/src/extensions/`):
+
 - `pos.ts` — `posAnalysis` state field, `setAnalysis`/`clearAnalysis` effects, decorations, theme, reactive option, exported `pos()` extension factory.
 - `pos.test.ts` — state-field + divergence tests.
 - `index.ts` — add `export * from './pos';`.
 
 **Story** (`packages/plugins/plugin-transcription/src/stories/`):
+
 - `PosDecoration.stories.tsx` — markdown editor + `pos()` extension, reactive on, stub default, live-AI toggle.
 
 ---
@@ -38,6 +41,7 @@
 ## Task 1: Scaffold `@dxos/nlp` package
 
 **Files:**
+
 - Create: `packages/core/compute/nlp/package.json`
 - Create: `packages/core/compute/nlp/moon.yml`
 - Create: `packages/core/compute/nlp/tsconfig.json`
@@ -130,6 +134,7 @@ git commit -m "feat(nlp): scaffold @dxos/nlp package"
 ## Task 2: Document schema + source hash
 
 **Files:**
+
 - Create: `packages/core/compute/nlp/src/Document.ts`
 - Create: `packages/core/compute/nlp/src/hash.ts`
 - Test: `packages/core/compute/nlp/src/hash.test.ts`
@@ -202,8 +207,23 @@ import * as Schema from 'effect/Schema';
 
 /** Universal POS tagset (17 tags). https://universaldependencies.org/u/pos/ */
 export const Upos = Schema.Literal(
-  'ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM',
-  'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X',
+  'ADJ',
+  'ADP',
+  'ADV',
+  'AUX',
+  'CCONJ',
+  'DET',
+  'INTJ',
+  'NOUN',
+  'NUM',
+  'PART',
+  'PRON',
+  'PROPN',
+  'PUNCT',
+  'SCONJ',
+  'SYM',
+  'VERB',
+  'X',
 );
 export type Upos = Schema.Schema.Type<typeof Upos>;
 
@@ -251,6 +271,7 @@ git commit -m "feat(nlp): Document schema and source hash"
 Aligns offset-free `RawSentence[]` against the source string to produce a `Document` with exact offsets. The LLM never emits offsets; this is the "code does arithmetic" half.
 
 **Files:**
+
 - Create: `packages/core/compute/nlp/src/align.ts`
 - Test: `packages/core/compute/nlp/src/align.test.ts`
 
@@ -271,12 +292,14 @@ describe('assembleDocument', () => {
   test('assigns exact offsets to each token', ({ expect }) => {
     const source = 'The dog barks.';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'The', upos: 'DET' },
-        { text: 'dog', upos: 'NOUN' },
-        { text: 'barks', upos: 'VERB' },
-        { text: '.', upos: 'PUNCT' },
-      ] },
+      {
+        tokens: [
+          { text: 'The', upos: 'DET' },
+          { text: 'dog', upos: 'NOUN' },
+          { text: 'barks', upos: 'VERB' },
+          { text: '.', upos: 'PUNCT' },
+        ],
+      },
     ]);
 
     const [sentence] = doc.sentences;
@@ -290,10 +313,12 @@ describe('assembleDocument', () => {
   test('handles repeated words by scanning forward (no re-match of earlier occurrence)', ({ expect }) => {
     const source = 'dog dog';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'dog', upos: 'NOUN' },
-        { text: 'dog', upos: 'NOUN' },
-      ] },
+      {
+        tokens: [
+          { text: 'dog', upos: 'NOUN' },
+          { text: 'dog', upos: 'NOUN' },
+        ],
+      },
     ]);
     expect(doc.sentences[0].tokens.map((t) => t.start)).toEqual([0, 4]);
   });
@@ -301,11 +326,13 @@ describe('assembleDocument', () => {
   test('skips tokens not found in source rather than throwing', ({ expect }) => {
     const source = 'hello world';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'hello', upos: 'INTJ' },
-        { text: 'GHOST', upos: 'X' },
-        { text: 'world', upos: 'NOUN' },
-      ] },
+      {
+        tokens: [
+          { text: 'hello', upos: 'INTJ' },
+          { text: 'GHOST', upos: 'X' },
+          { text: 'world', upos: 'NOUN' },
+        ],
+      },
     ]);
     expect(doc.sentences[0].tokens.map((t) => t.text)).toEqual(['hello', 'world']);
   });
@@ -377,6 +404,7 @@ git commit -m "feat(nlp): deterministic token-to-offset alignment"
 Offline UPOS tagger (lexicon + suffix heuristics) so stories and tests need no API key — matching the pipeline-stub convention.
 
 **Files:**
+
 - Create: `packages/core/compute/nlp/src/stub.ts`
 - Test: `packages/core/compute/nlp/src/stub.test.ts`
 
@@ -436,14 +464,52 @@ import { assembleDocument } from './align';
 // Closed-class lexicon: small, deterministic, language-is-English assumption (the stub is a demo
 // fallback, not the production tagger). Lowercased keys.
 const LEXICON: Record<string, Upos> = {
-  the: 'DET', a: 'DET', an: 'DET', this: 'DET', that: 'DET', these: 'DET', those: 'DET',
-  i: 'PRON', you: 'PRON', he: 'PRON', she: 'PRON', it: 'PRON', we: 'PRON', they: 'PRON',
-  is: 'AUX', am: 'AUX', are: 'AUX', was: 'AUX', were: 'AUX', be: 'AUX', been: 'AUX', do: 'AUX', did: 'AUX',
-  in: 'ADP', on: 'ADP', at: 'ADP', of: 'ADP', to: 'ADP', over: 'ADP', under: 'ADP', with: 'ADP', for: 'ADP',
-  and: 'CCONJ', or: 'CCONJ', but: 'CCONJ',
-  because: 'SCONJ', if: 'SCONJ', while: 'SCONJ', although: 'SCONJ',
-  not: 'PART', very: 'ADV', quickly: 'ADV', well: 'ADV',
-  oh: 'INTJ', yes: 'INTJ', no: 'INTJ',
+  the: 'DET',
+  a: 'DET',
+  an: 'DET',
+  this: 'DET',
+  that: 'DET',
+  these: 'DET',
+  those: 'DET',
+  i: 'PRON',
+  you: 'PRON',
+  he: 'PRON',
+  she: 'PRON',
+  it: 'PRON',
+  we: 'PRON',
+  they: 'PRON',
+  is: 'AUX',
+  am: 'AUX',
+  are: 'AUX',
+  was: 'AUX',
+  were: 'AUX',
+  be: 'AUX',
+  been: 'AUX',
+  do: 'AUX',
+  did: 'AUX',
+  in: 'ADP',
+  on: 'ADP',
+  at: 'ADP',
+  of: 'ADP',
+  to: 'ADP',
+  over: 'ADP',
+  under: 'ADP',
+  with: 'ADP',
+  for: 'ADP',
+  and: 'CCONJ',
+  or: 'CCONJ',
+  but: 'CCONJ',
+  because: 'SCONJ',
+  if: 'SCONJ',
+  while: 'SCONJ',
+  although: 'SCONJ',
+  not: 'PART',
+  very: 'ADV',
+  quickly: 'ADV',
+  well: 'ADV',
+  oh: 'INTJ',
+  yes: 'INTJ',
+  no: 'INTJ',
 };
 
 const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?|[0-9]+|[.!?,;:]/g;
@@ -519,6 +585,7 @@ git commit -m "feat(nlp): deterministic offline UPOS stub tagger"
 LLM produces offset-free `RawSentence[]`; alignment (Task 3) computes offsets. Mirrors `proper-noun-extraction.ts` (`LanguageModel.generateObject` + `AiService.model`).
 
 **Files:**
+
 - Create: `packages/core/compute/nlp/src/parse.ts`
 - Modify: `packages/core/compute/nlp/src/index.ts` (export parser surface)
 - Modify: `packages/core/compute/nlp/src/testing/index.ts` (already exports `stubParse`)
@@ -628,12 +695,14 @@ describe('parser seam', () => {
   test('alignment over model-shaped output yields exact offsets', ({ expect }) => {
     const source = 'Alice runs fast.';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'Alice', upos: 'PROPN' },
-        { text: 'runs', upos: 'VERB' },
-        { text: 'fast', upos: 'ADV' },
-        { text: '.', upos: 'PUNCT' },
-      ] },
+      {
+        tokens: [
+          { text: 'Alice', upos: 'PROPN' },
+          { text: 'runs', upos: 'VERB' },
+          { text: 'fast', upos: 'ADV' },
+          { text: '.', upos: 'PUNCT' },
+        ],
+      },
     ]);
     expect(doc.sentences[0].tokens.map((t) => source.slice(t.start, t.end))).toEqual(['Alice', 'runs', 'fast', '.']);
   });
@@ -666,6 +735,7 @@ git commit -m "feat(nlp): LLM UPOS parser over deterministic alignment"
 The editor-side state: a `StateField` of analyzed spans, mapped through edits, settable/clearable via effects. Models `comments.ts` (`StateField` + `StateEffect` + `decorations.compute`) but tracks plain offsets mapped through `tr.changes`.
 
 **Files:**
+
 - Create: `packages/ui/ui-editor/src/extensions/pos.ts`
 - Test: `packages/ui/ui-editor/src/extensions/pos.test.ts`
 
@@ -686,9 +756,9 @@ import { clearAnalysis, posAnalysisField, posSpans, setAnalysis } from './pos';
 
 const docFor = (text: string): Document => ({
   sourceHash: 'deadbeef',
-  sentences: [{ index: 0, start: 0, end: text.length, tokens: [
-    { index: 0, text, upos: 'NOUN', start: 0, end: text.length },
-  ] }],
+  sentences: [
+    { index: 0, start: 0, end: text.length, tokens: [{ index: 0, text, upos: 'NOUN', start: 0, end: text.length }] },
+  ],
 });
 
 describe('posAnalysisField', () => {
@@ -808,6 +878,7 @@ git commit -m "feat(ui-editor): pos analysis state field with span mapping"
 ## Task 7: Per-UPOS decorations + theme + stale dimming
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/pos.ts`
 - Test: `packages/ui/ui-editor/src/extensions/pos.test.ts` (add a decorations case)
 
@@ -824,10 +895,17 @@ describe('posDecorations', () => {
     let state = EditorState.create({ doc: text, extensions: [posAnalysisField, posDecorations] });
     const document: Document = {
       sourceHash: 'deadbeef',
-      sentences: [{ index: 0, start: 0, end: 11, tokens: [
-        { index: 0, text: 'hello', upos: 'INTJ', start: 0, end: 5 },
-        { index: 1, text: 'world', upos: 'NOUN', start: 6, end: 11 },
-      ] }],
+      sentences: [
+        {
+          index: 0,
+          start: 0,
+          end: 11,
+          tokens: [
+            { index: 0, text: 'hello', upos: 'INTJ', start: 0, end: 5 },
+            { index: 1, text: 'world', upos: 'NOUN', start: 6, end: 11 },
+          ],
+        },
+      ],
     };
     state = state.update({ effects: setAnalysis.of({ from: 0, to: 11, document }) }).state;
     const decos = state.facet(EditorView.decorations);
@@ -836,7 +914,7 @@ describe('posDecorations', () => {
 });
 ```
 
-> `EditorView.decorations` is a facet of decoration *sources*; asserting non-empty is the hermetic check (full range inspection requires a mounted view). If you prefer, mount a view with a DOM container and assert `document.querySelectorAll('.cm-pos-NOUN')` — only do this if `ui-editor` tests already use jsdom; otherwise keep the facet assertion.
+> `EditorView.decorations` is a facet of decoration _sources_; asserting non-empty is the hermetic check (full range inspection requires a mounted view). If you prefer, mount a view with a DOM container and assert `document.querySelectorAll('.cm-pos-NOUN')` — only do this if `ui-editor` tests already use jsdom; otherwise keep the facet assertion.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -882,9 +960,20 @@ export const posDecorations = EditorView.decorations.compute([posAnalysisField],
 // UPOS → ui-theme hue. Content classes (NOUN/VERB/ADJ/ADV/PROPN/NUM) get distinct hues; function
 // words share muted hues; PUNCT/SYM/X are unstyled.
 const POS_HUE: Partial<Record<Upos, string>> = {
-  NOUN: 'blue', PROPN: 'indigo', VERB: 'red', ADJ: 'green', ADV: 'amber', NUM: 'cyan',
-  PRON: 'neutral', DET: 'neutral', ADP: 'neutral', AUX: 'neutral',
-  CCONJ: 'neutral', SCONJ: 'neutral', PART: 'neutral', INTJ: 'pink',
+  NOUN: 'blue',
+  PROPN: 'indigo',
+  VERB: 'red',
+  ADJ: 'green',
+  ADV: 'amber',
+  NUM: 'cyan',
+  PRON: 'neutral',
+  DET: 'neutral',
+  ADP: 'neutral',
+  AUX: 'neutral',
+  CCONJ: 'neutral',
+  SCONJ: 'neutral',
+  PART: 'neutral',
+  INTJ: 'pink',
 };
 
 export const posTheme = (): Extension =>
@@ -921,6 +1010,7 @@ git commit -m "feat(ui-editor): per-UPOS decorations, theme, stale dimming"
 Adds the optional reactive mode (debounced self-parse) and per-span divergence detection (re-hash only edit-touched spans), plus the public `pos()` extension factory bundling field + decorations + theme + (optional) reactive driver.
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/pos.ts`
 - Test: `packages/ui/ui-editor/src/extensions/pos.test.ts` (add divergence case)
 
@@ -972,30 +1062,32 @@ export type PosOptions = {
  * is bounded to touched spans via `spanDiverged`.
  */
 const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: number) =>
-  EditorView.updateListener.of((() => {
-    const run = debounce((view: EditorView) => {
-      const text = view.state.doc.toString();
-      void parse(text).then((document) => {
-        view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
-      });
-    }, debounceMs);
+  EditorView.updateListener.of(
+    (() => {
+      const run = debounce((view: EditorView) => {
+        const text = view.state.doc.toString();
+        void parse(text).then((document) => {
+          view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
+        });
+      }, debounceMs);
 
-    return (update: ViewUpdate) => {
-      if (!update.docChanged) {
-        return;
-      }
-      // Immediate: mark any diverged span stale so its decorations dim until the re-parse lands.
-      const text = update.state.doc.toString();
-      const effects = update.state
-        .field(posAnalysisField)
-        .filter((span) => !span.stale && spanDiverged(text, span))
-        .map((span) => markStale.of({ from: span.from, to: span.to }));
-      if (effects.length > 0) {
-        update.view.dispatch({ effects });
-      }
-      run(update.view);
-    };
-  })());
+      return (update: ViewUpdate) => {
+        if (!update.docChanged) {
+          return;
+        }
+        // Immediate: mark any diverged span stale so its decorations dim until the re-parse lands.
+        const text = update.state.doc.toString();
+        const effects = update.state
+          .field(posAnalysisField)
+          .filter((span) => !span.stale && spanDiverged(text, span))
+          .map((span) => markStale.of({ from: span.from, to: span.to }));
+        if (effects.length > 0) {
+          update.view.dispatch({ effects });
+        }
+        run(update.view);
+      };
+    })(),
+  );
 
 /**
  * Part-of-speech decoration extension. Renders per-word UPOS marks from analysis state held in a
@@ -1045,6 +1137,7 @@ git commit -m "feat(ui-editor): reactive pos driver, divergence detection, pos()
 A markdown editor with the `pos()` extension in reactive mode, defaulting to the offline stub with a toggle to the live AI parser. Demonstrates per-word decorations recomputing on edit and dimming on divergence.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-transcription/src/stories/PosDecoration.stories.tsx`
 - Modify: `packages/plugins/plugin-transcription/package.json` (add `@dxos/nlp` as `workspace:*` dep; add to `tsconfig.json` references)
 

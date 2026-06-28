@@ -17,12 +17,14 @@ describe('parser seam', () => {
   test('alignment over model-shaped output yields exact offsets', ({ expect }) => {
     const source = 'Alice runs fast.';
     const doc = assembleDocument(source, [
-      { tokens: [
-        { text: 'Alice', upos: 'PROPN' },
-        { text: 'runs', upos: 'VERB' },
-        { text: 'fast', upos: 'ADV' },
-        { text: '.', upos: 'PUNCT' },
-      ] },
+      {
+        tokens: [
+          { text: 'Alice', upos: 'PROPN' },
+          { text: 'runs', upos: 'VERB' },
+          { text: 'fast', upos: 'ADV' },
+          { text: '.', upos: 'PUNCT' },
+        ],
+      },
     ]);
     expect(doc.sentences[0].tokens.map((t) => source.slice(t.start, t.end))).toEqual(['Alice', 'runs', 'fast', '.']);
   });

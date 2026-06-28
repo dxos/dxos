@@ -90,11 +90,11 @@ no shared transaction stream required.
 
 ## Scenarios
 
-| Scenario              | Reactive | Driver                                              |
-| --------------------- | -------- | --------------------------------------------------- |
-| User typing           | on       | Extension self-drives the parser, debounced.        |
-| Analyze existing text | off      | One span over selection/whole doc; parse once, set. |
-| Transcription pipeline| off      | New pipeline stage calls `@dxos/nlp`; one span/block.|
+| Scenario               | Reactive | Driver                                                |
+| ---------------------- | -------- | ----------------------------------------------------- |
+| User typing            | on       | Extension self-drives the parser, debounced.          |
+| Analyze existing text  | off      | One span over selection/whole doc; parse once, set.   |
+| Transcription pipeline | off      | New pipeline stage calls `@dxos/nlp`; one span/block. |
 
 ## Deliverables
 

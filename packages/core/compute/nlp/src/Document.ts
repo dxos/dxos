@@ -6,8 +6,23 @@ import * as Schema from 'effect/Schema';
 
 /** Universal POS tagset (17 tags). https://universaldependencies.org/u/pos/ */
 export const Upos = Schema.Literal(
-  'ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM',
-  'PART', 'PRON', 'PROPN', 'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X',
+  'ADJ',
+  'ADP',
+  'ADV',
+  'AUX',
+  'CCONJ',
+  'DET',
+  'INTJ',
+  'NOUN',
+  'NUM',
+  'PART',
+  'PRON',
+  'PROPN',
+  'PUNCT',
+  'SCONJ',
+  'SYM',
+  'VERB',
+  'X',
 );
 export type Upos = Schema.Schema.Type<typeof Upos>;
 

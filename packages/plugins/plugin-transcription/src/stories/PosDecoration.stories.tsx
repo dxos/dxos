@@ -7,8 +7,8 @@ import React from 'react';
 
 import { stubParse } from '@dxos/nlp';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createMarkdownExtensions, createThemeExtensions, pos } from '@dxos/ui-editor';
 
 const SAMPLE = [

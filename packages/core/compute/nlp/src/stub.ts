@@ -2,20 +2,58 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Document, type RawSentence, type Upos } from './Document';
 import { assembleDocument } from './align';
+import { type Document, type RawSentence, type Upos } from './Document';
 
 // Closed-class lexicon: small, deterministic, language-is-English assumption (the stub is a demo
 // fallback, not the production tagger). Lowercased keys.
 const LEXICON: Record<string, Upos> = {
-  the: 'DET', a: 'DET', an: 'DET', this: 'DET', that: 'DET', these: 'DET', those: 'DET',
-  i: 'PRON', you: 'PRON', he: 'PRON', she: 'PRON', it: 'PRON', we: 'PRON', they: 'PRON',
-  is: 'AUX', am: 'AUX', are: 'AUX', was: 'AUX', were: 'AUX', be: 'AUX', been: 'AUX', do: 'AUX', did: 'AUX',
-  in: 'ADP', on: 'ADP', at: 'ADP', of: 'ADP', to: 'ADP', over: 'ADP', under: 'ADP', with: 'ADP', for: 'ADP',
-  and: 'CCONJ', or: 'CCONJ', but: 'CCONJ',
-  because: 'SCONJ', if: 'SCONJ', while: 'SCONJ', although: 'SCONJ',
-  not: 'PART', very: 'ADV', quickly: 'ADV', well: 'ADV',
-  oh: 'INTJ', yes: 'INTJ', no: 'INTJ',
+  the: 'DET',
+  a: 'DET',
+  an: 'DET',
+  this: 'DET',
+  that: 'DET',
+  these: 'DET',
+  those: 'DET',
+  i: 'PRON',
+  you: 'PRON',
+  he: 'PRON',
+  she: 'PRON',
+  it: 'PRON',
+  we: 'PRON',
+  they: 'PRON',
+  is: 'AUX',
+  am: 'AUX',
+  are: 'AUX',
+  was: 'AUX',
+  were: 'AUX',
+  be: 'AUX',
+  been: 'AUX',
+  do: 'AUX',
+  did: 'AUX',
+  in: 'ADP',
+  on: 'ADP',
+  at: 'ADP',
+  of: 'ADP',
+  to: 'ADP',
+  over: 'ADP',
+  under: 'ADP',
+  with: 'ADP',
+  for: 'ADP',
+  and: 'CCONJ',
+  or: 'CCONJ',
+  but: 'CCONJ',
+  because: 'SCONJ',
+  if: 'SCONJ',
+  while: 'SCONJ',
+  although: 'SCONJ',
+  not: 'PART',
+  very: 'ADV',
+  quickly: 'ADV',
+  well: 'ADV',
+  oh: 'INTJ',
+  yes: 'INTJ',
+  no: 'INTJ',
 };
 
 const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?|[0-9]+|[.!?,;:]/g;
