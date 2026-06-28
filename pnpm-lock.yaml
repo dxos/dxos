@@ -5604,6 +5604,25 @@ importers:
         specifier: 3.21.3
         version: 3.21.3
 
+  packages/core/compute/nlp:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+    devDependencies:
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+
   packages/core/compute/operation:
     dependencies:
       '@dxos/compute':
