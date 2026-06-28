@@ -86,6 +86,14 @@ export interface Hypergraph extends Database.Queryable {
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 
   /**
+   * Spaces reachable through this graph — the in-process membership ("brane"). On a scoped view this
+   * returns only the allowed spaces (a confined session cannot enumerate beyond its allowlist), so a
+   * tier-1 read allowlist is derived as `scopedLayer(graph.spaceIds())`. See
+   * `docs/design/agent-firewall.md`.
+   */
+  spaceIds(): readonly Key.SpaceId[];
+
+  /**
    * Returns a view of this hypergraph confined to the given set of spaces: queries fan out only to
    * those spaces, `getDatabase` returns undefined for any space outside the set, and reference
    * resolution cannot reach a space outside the set. The confinement is structural — spaces outside

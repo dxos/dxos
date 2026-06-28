@@ -268,13 +268,15 @@ table's *Ref resolution*, *Query fan-out* and *Ref-resolver context* rows for th
 the *Space→db resolution* (`DatabaseLayerSpec`), *Spawn chokepoint*, *Operation re-target*, *Hard guard*
 and *Principal* rows remain future work (Phases 3–4).
 
-> **T1 status.** Multi-space *reads* now work: a session whose allowlist spans several spaces fans
-> out across all of them via the scoped graph (tested: `Database.query` over `scopedLayer([A, B])`
-> returns objects from both). Two pieces remain for full T1: (1) a *source* of multi-space allowlists
-> — the personal-space orchestrator deriving the allowlist from membership; today every agent is
-> stamped `[homeSpace]` (T0). (2) parity on the scoped fan-out path — it omits the not-yet-scope-aware
-> index provider and `db.query`'s feed/queue handling, so multi-space reads are working-set object
-> queries (index/full-text and feed/queue queries still need scope-aware support).
+> **T1 status.** Multi-space *reads* work: a session whose allowlist spans several spaces fans out
+> across all of them via the scoped graph — for **objects** (working-set) and **full-text/index**
+> (one scope-aware index source per allowed space, since the host does single-space full-text only).
+> Tested: `Database.query` over `scopedLayer([A, B])` returns both objects and full-text matches from
+> both spaces; `scopedLayer([A])` stays confined to A. Two pieces remain for full T1: (1) a *source*
+> of multi-space allowlists — the personal-space orchestrator (app-level) deriving the allowlist from
+> membership; today every agent is stamped `[homeSpace]` (T0), per invariant #1. (2) feed/queue
+> handling on the scoped fan-out — `db.query`'s `_queryFeed` path is not yet reproduced there, so a
+> feed/queue-scoped query against a non-home allowed space is not served.
 
 > Testing: confinement is unit-tested in
 > [hypergraph.test.ts](../../packages/core/echo/echo-client/src/hypergraph.test.ts) (scoped `getDatabase`,

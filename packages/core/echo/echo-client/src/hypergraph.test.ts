@@ -167,6 +167,24 @@ describe('Hypergraph.scoped', () => {
     expect(ids(home)).not.toContain(docB.id);
   });
 
+  test('spaceIds() exposes membership; a scoped view enumerates only its allowlist', async () => {
+    const graph = dbA.graph;
+    const ids = (objects: readonly Obj.Any[]) => objects.map((object) => object.id);
+
+    // The root graph's membership includes both spaces; a scoped view sees only its allowed spaces
+    // (a confined session cannot discover spaces beyond its allowlist).
+    expect([...graph.spaceIds()]).toEqual(expect.arrayContaining([dbA.spaceId, dbB.spaceId]));
+    expect([...graph.scoped([dbA.spaceId]).spaceIds()]).toEqual([dbA.spaceId]);
+
+    // A tier-1 read allowlist derived from membership reads across every member space.
+    const t1 = Layer.merge(Database.layer(dbA), Hypergraph.scopedLayer([...graph.spaceIds()]));
+    const all = await EffectEx.runPromise(
+      Database.query(Query.select(Filter.everything())).run.pipe(Effect.provide(t1)),
+    );
+    expect(ids(all)).toContain(objA.id);
+    expect(ids(all)).toContain(objB.id);
+  });
+
   test('Database.load denies a ref into a space outside the allowlist', async () => {
     // Home ref to the live object (target inlined, so load short-circuits without resolution).
     const refToA = Ref.make(objA);

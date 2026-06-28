@@ -158,6 +158,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return this._databases.get(spaceId);
   }
 
+  spaceIds(): readonly SpaceId[] {
+    return [...this._databases.keys()];
+  }
+
   /**
    * Database lookup honoring an optional scope allowlist. When `allowed` is set, a space outside it
    * is treated as absent (returns undefined), so resolution against a scoped view cannot reach it.
@@ -879,6 +883,12 @@ export class ScopedHypergraph implements Hypergraph.Hypergraph {
 
   getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
     return this.#allowed.has(spaceId) ? this.#root.getDatabase(spaceId) : undefined;
+  }
+
+  spaceIds(): readonly SpaceId[] {
+    // Only the spaces the root actually holds AND this view is allowed to reach — never the full
+    // allowlist (which may name spaces not present) and never beyond it.
+    return this.#root.spaceIds().filter((spaceId) => this.#allowed.has(spaceId));
   }
 
   scoped(allowlist: readonly SpaceId[]): Hypergraph.Hypergraph {
