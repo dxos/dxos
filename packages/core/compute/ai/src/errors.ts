@@ -24,3 +24,10 @@ export class AiToolNotFoundError extends BaseError.extend('AiToolNotFoundError')
 }
 
 export class AiServiceOverloadedError extends BaseError.extend('AiServiceOverloadedError', 'AI Service overloaded') {}
+
+/** Failure of an Ollama administrative request (transport, non-OK status, or a pull error frame). */
+export class OllamaError extends BaseError.extend('OllamaError', 'Ollama admin request failed') {
+  constructor(message: string, options?: Omit<BaseErrorOptions, 'context'>) {
+    super({ message, ...options });
+  }
+}

@@ -7,14 +7,19 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Schedule from 'effect/Schedule';
+import * as Stream from 'effect/Stream';
 
 import { type AiModelResolver } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';
 
@@ -75,17 +80,17 @@ export default Capability.makeModule(
     // Refresh only the loaded-into-memory set (cheap; no spawn). Logs load/unload transitions so the
     // console reflects which model is resident when a chat request triggers a load.
     const refreshLoaded = async (): Promise<void> => {
-      const result = await admin.ps();
-      if (!result.ok) {
+      const result = await runAdmin(admin.ps);
+      if (Either.isLeft(result)) {
         return;
       }
       const current = registry.get(stateAtom);
       const before = current.loaded.map((model) => model.name);
-      const after = result.models.map((model) => model.name);
+      const after = result.right.map((model) => model.name);
       if (before.join() !== after.join()) {
         log.info('ollama loaded models changed', { loaded: after });
       }
-      registry.set(stateAtom, { ...current, loaded: result.models });
+      registry.set(stateAtom, { ...current, loaded: result.right });
     };
 
     const refresh = async (): Promise<void> => {
@@ -97,12 +102,14 @@ export default Capability.makeModule(
       }
       // The sidecar process spawns before its HTTP server is listening, so retry until the first
       // `list` succeeds rather than reporting a spurious failure on startup.
-      const result = await listWhenReady(admin);
-      if (!result.ok) {
-        return fail(result.error);
+      const result = await runAdmin(
+        admin.list.pipe(Effect.retry({ schedule: Schedule.spaced(Duration.millis(300)), times: 29 })),
+      );
+      if (Either.isLeft(result)) {
+        return fail(result.left);
       }
-      registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'ready', models: result.models, error: undefined });
-      log.info('ollama models', { installed: result.models.map((model) => model.name) });
+      registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'ready', models: result.right, error: undefined });
+      log.info('ollama models', { installed: result.right.map((model) => model.name) });
       await refreshLoaded();
     };
 
@@ -133,32 +140,39 @@ export default Capability.makeModule(
       // overall percent is monotonic rather than resetting to 0 as each layer starts.
       const downloaded = new Map<string, { completed: number; total: number }>();
       setProgress(name, { status: 'starting' });
-      const result = await admin.pull(
-        name,
-        (progress) => {
-          if (progress.digest && progress.total) {
-            downloaded.set(progress.digest, { completed: progress.completed ?? 0, total: progress.total });
-            let completed = 0;
-            let total = 0;
-            for (const layer of downloaded.values()) {
-              completed += layer.completed;
-              total += layer.total;
-            }
-            setProgress(name, { status: progress.status, completed, total });
-          } else {
-            // Non-download phase (manifest, verifying, writing): keep the status label, drop totals.
-            setProgress(name, { status: progress.status });
-          }
-        },
-        controller.signal,
-      );
+      const error = await EffectEx.runPromise(
+        admin.pull(name).pipe(
+          Stream.runForEach((progress) =>
+            Effect.sync(() => {
+              if (progress.digest && progress.total) {
+                downloaded.set(progress.digest, { completed: progress.completed ?? 0, total: progress.total });
+                let completed = 0;
+                let total = 0;
+                for (const layer of downloaded.values()) {
+                  completed += layer.completed;
+                  total += layer.total;
+                }
+                setProgress(name, { status: progress.status, completed, total });
+              } else {
+                // Non-download phase (manifest, verifying, writing): keep the status label, drop totals.
+                setProgress(name, { status: progress.status });
+              }
+            }),
+          ),
+          Effect.provide(clientLayer),
+          Effect.either,
+        ),
+        { signal: controller.signal },
+      )
+        .then((result): string | undefined => (Either.isLeft(result) ? result.left.message : undefined))
+        // A cancelled pull interrupts the fiber (runPromise rejects); treat it as a no-op below.
+        .catch((): string | undefined => undefined);
       pullControllers.delete(name);
       setProgress(name, undefined);
 
-      // A cancelled pull surfaces as an aborted fetch; treat it as a no-op, not a failure.
-      if (!result.ok && !controller.signal.aborted) {
-        log.warn('ollama pull failed', { name, error: result.error });
-        return setError(name, result.error);
+      if (error !== undefined && !controller.signal.aborted) {
+        log.warn('ollama pull failed', { name, error });
+        return setError(name, error);
       }
       log.info('ollama pull finished', { name, cancelled: controller.signal.aborted });
       await refresh();
@@ -179,10 +193,10 @@ export default Capability.makeModule(
         return setError(name, formatError(error));
       }
       log.info('ollama load', { name });
-      const result = await admin.load(name);
-      if (!result.ok) {
-        log.warn('ollama load failed', { name, error: result.error });
-        return setError(name, result.error);
+      const result = await runAdmin(admin.load(name));
+      if (Either.isLeft(result)) {
+        log.warn('ollama load failed', { name, error: result.left });
+        return setError(name, result.left);
       }
       await refreshLoaded();
     };
@@ -195,9 +209,9 @@ export default Capability.makeModule(
         return setError(name, formatError(error));
       }
       log.info('ollama unload', { name });
-      const result = await admin.unload(name);
-      if (!result.ok) {
-        return setError(name, result.error);
+      const result = await runAdmin(admin.unload(name));
+      if (Either.isLeft(result)) {
+        return setError(name, result.left);
       }
       await refreshLoaded();
     };
@@ -209,9 +223,9 @@ export default Capability.makeModule(
       } catch (error) {
         return setError(name, formatError(error));
       }
-      const result = await admin.remove(name);
-      if (!result.ok) {
-        return setError(name, result.error);
+      const result = await runAdmin(admin.remove(name));
+      if (Either.isLeft(result)) {
+        return setError(name, result.left);
       }
       await refresh();
     };
@@ -296,20 +310,19 @@ const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, n
 const formatError = (error: unknown): string =>
   typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
 
+/** Effect HttpClient layer shared by every admin call. */
+const clientLayer = FetchHttpClient.layer;
+
 /**
- * List models, retrying while the freshly-spawned sidecar's HTTP server is not yet listening
- * (connection refused). Returns the last result once it succeeds or the attempts are exhausted.
+ * Run an admin effect (HttpClient provided) and fold its typed failure into a message, so the
+ * Promise-based manager methods can branch on `Either.isLeft` without a typed error channel.
  */
-const listWhenReady = async (admin: OllamaAdmin.Admin): Promise<Awaited<ReturnType<OllamaAdmin.Admin['list']>>> => {
-  const attempts = 30;
-  const delay = 300;
-  let result = await admin.list();
-  for (let attempt = 1; !result.ok && attempt < attempts; attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, delay));
-    result = await admin.list();
-  }
-  return result;
-};
+const runAdmin = <A, E extends { readonly message: string }>(
+  effect: Effect.Effect<A, E, HttpClient.HttpClient>,
+): Promise<Either.Either<A, string>> =>
+  EffectEx.runPromise(effect.pipe(Effect.provide(clientLayer), Effect.either)).then(
+    Either.mapLeft((error) => error.message),
+  );
 
 /**
  * Route a chunk of Ollama process output to the console by its structured log level. Ollama emits

@@ -4,6 +4,13 @@
 
 // @import-as-namespace
 
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+
+import { OllamaError } from '../../errors';
 import { DEFAULT_OLLAMA_ENDPOINT } from './OllamaResolver';
 
 /**
@@ -41,31 +48,28 @@ export type RunningModel = {
 };
 
 /**
- * Result of an admin operation. Network/transport failures (e.g. the sidecar is not running)
- * are surfaced as `{ ok: false }` rather than thrown, so callers never have to wrap calls.
+ * Effect-based client for the Ollama administrative REST API (model management). Every operation
+ * requires an {@link HttpClient.HttpClient} (provide `FetchHttpClient.layer`) and fails with the
+ * typed {@link OllamaError}; cancellation is via fiber interruption (no `AbortSignal`).
  */
-export type Result<T = {}> = ({ ok: true } & T) | { ok: false; error: string };
-
 export type Admin = {
   readonly endpoint: string;
-  /** List installed models. */
-  list: (signal?: AbortSignal) => Promise<Result<{ models: Model[] }>>;
-  /** List models currently loaded into memory. */
-  ps: (signal?: AbortSignal) => Promise<Result<{ models: RunningModel[] }>>;
+  /** Installed models. */
+  readonly list: Effect.Effect<Model[], OllamaError, HttpClient.HttpClient>;
+  /** Models currently loaded into memory. */
+  readonly ps: Effect.Effect<RunningModel[], OllamaError, HttpClient.HttpClient>;
   /** Load a model into memory and keep it resident until explicitly unloaded. */
-  load: (name: string) => Promise<Result>;
+  load: (name: string) => Effect.Effect<void, OllamaError, HttpClient.HttpClient>;
   /** Unload a model from memory. */
-  unload: (name: string) => Promise<Result>;
-  /** Pull (download) a model, streaming progress. Resolves once the download terminates. */
-  pull: (name: string, onProgress?: (progress: PullProgress) => void, signal?: AbortSignal) => Promise<Result>;
+  unload: (name: string) => Effect.Effect<void, OllamaError, HttpClient.HttpClient>;
+  /** Pull (download) a model, emitting one {@link PullProgress} per NDJSON frame until complete. */
+  pull: (name: string) => Stream.Stream<PullProgress, OllamaError, HttpClient.HttpClient>;
   /** Delete an installed model. */
-  remove: (name: string) => Promise<Result>;
+  remove: (name: string) => Effect.Effect<void, OllamaError, HttpClient.HttpClient>;
 };
 
 export type Options = {
   endpoint?: string;
-  /** Injectable for tests; defaults to the platform `fetch`. */
-  fetch?: typeof globalThis.fetch;
 };
 
 /**
@@ -74,132 +78,104 @@ export type Options = {
  *
  * @see https://github.com/ollama/ollama/blob/main/docs/api.md
  */
-export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fetch }: Options = {}): Admin => {
-  const list: Admin['list'] = async (signal) => {
-    try {
-      const response = await fetch(`${endpoint}/api/tags`, { signal });
-      if (!response.ok) {
-        return { ok: false, error: `HTTP ${response.status}` };
-      }
-      // `/api/tags` returns untyped JSON; map the snake_case wire shape to our camelCase type.
-      const data = await response.json();
-      const raw: RawModel[] = data?.models ?? [];
-      const models = raw.map(
-        (model): Model => ({
-          name: model.name ?? '',
-          size: model.size,
-          modifiedAt: model.modified_at,
-          digest: model.digest,
-          details: model.details,
-        }),
-      );
-      return { ok: true, models };
-    } catch (error) {
-      return { ok: false, error: formatError(error) };
-    }
-  };
+export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admin => {
+  const list: Admin['list'] = mapErrors(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const client = yield* HttpClient.HttpClient;
+        const response = yield* client.get(`${endpoint}/api/tags`);
+        if (!isOk(response.status)) {
+          return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
+        }
+        // `/api/tags` returns untyped JSON; treat it as the documented wire shape (boundary).
+        const data = (yield* response.json) as { models?: RawModel[] };
+        return (data?.models ?? []).map(
+          (model): Model => ({
+            name: model.name ?? '',
+            size: model.size,
+            modifiedAt: model.modified_at,
+            digest: model.digest,
+            details: model.details,
+          }),
+        );
+      }),
+    ),
+  );
 
-  const ps: Admin['ps'] = async (signal) => {
-    try {
-      const response = await fetch(`${endpoint}/api/ps`, { signal });
-      if (!response.ok) {
-        return { ok: false, error: `HTTP ${response.status}` };
-      }
-      const data = await response.json();
-      const raw: RawRunningModel[] = data?.models ?? [];
-      const models = raw.map(
-        (model): RunningModel => ({
-          name: model.name ?? '',
-          size: model.size,
-          sizeVram: model.size_vram,
-          expiresAt: model.expires_at,
-        }),
-      );
-      return { ok: true, models };
-    } catch (error) {
-      return { ok: false, error: formatError(error) };
-    }
-  };
+  const ps: Admin['ps'] = mapErrors(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const client = yield* HttpClient.HttpClient;
+        const response = yield* client.get(`${endpoint}/api/ps`);
+        if (!isOk(response.status)) {
+          return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
+        }
+        const data = (yield* response.json) as { models?: RawRunningModel[] };
+        return (data?.models ?? []).map(
+          (model): RunningModel => ({
+            name: model.name ?? '',
+            size: model.size,
+            sizeVram: model.size_vram,
+            expiresAt: model.expires_at,
+          }),
+        );
+      }),
+    ),
+  );
 
   // Ollama loads/unloads a model via an empty `/api/generate` request: `keep_alive: -1` pins it in
   // memory; `keep_alive: 0` evicts it.
-  const setKeepAlive = async (name: string, keepAlive: number): Promise<Result> => {
-    try {
-      const response = await fetch(`${endpoint}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: name, keep_alive: keepAlive, stream: false }),
-      });
-      if (!response.ok) {
-        return { ok: false, error: await httpError(response) };
-      }
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, error: formatError(error) };
-    }
-  };
+  const setKeepAlive = (name: string, keepAlive: number): Effect.Effect<void, OllamaError, HttpClient.HttpClient> =>
+    mapErrors(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const client = yield* HttpClient.HttpClient;
+          const request = yield* HttpClientRequest.post(`${endpoint}/api/generate`).pipe(
+            HttpClientRequest.bodyJson({ model: name, keep_alive: keepAlive, stream: false }),
+          );
+          const response = yield* client.execute(request);
+          if (!isOk(response.status)) {
+            return yield* Effect.fail(new OllamaError(yield* readErrorBody(response)));
+          }
+        }),
+      ),
+    );
 
   const load: Admin['load'] = (name) => setKeepAlive(name, -1);
   const unload: Admin['unload'] = (name) => setKeepAlive(name, 0);
 
-  const pull: Admin['pull'] = async (name, onProgress, signal) => {
-    try {
-      const response = await fetch(`${endpoint}/api/pull`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: name, stream: true }),
-        signal,
-      });
-      if (!response.ok || !response.body) {
-        return { ok: false, error: `HTTP ${response.status}` };
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      // Newline-delimited frames (and UTF-8 characters) can be split across network chunks, so
-      // buffer the partial trailing line until the next chunk completes it.
-      let pendingLine = '';
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
+  const pull: Admin['pull'] = (name) =>
+    Stream.unwrapScoped(
+      Effect.gen(function* () {
+        const client = yield* HttpClient.HttpClient;
+        const request = yield* HttpClientRequest.post(`${endpoint}/api/pull`).pipe(
+          HttpClientRequest.bodyJson({ model: name, stream: true }),
+        );
+        const response = yield* client.execute(request);
+        if (!isOk(response.status)) {
+          return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
-        const text = pendingLine + decoder.decode(value, { stream: true });
-        const frames = text.split('\n');
-        pendingLine = frames.pop() ?? '';
-        for (const frame of frames) {
-          const result = handlePullLine(frame, onProgress);
-          if (result) {
-            return result;
+        // NDJSON: decode bytes to text and split into frames (handles UTF-8 and newlines split
+        // across network chunks). A frame carrying `{ error }` fails the stream.
+        return response.stream.pipe(Stream.decodeText(), Stream.splitLines, Stream.flatMap(pullFrame));
+      }),
+    ).pipe(Stream.mapError(toOllamaError));
+
+  const remove: Admin['remove'] = (name) =>
+    mapErrors(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const client = yield* HttpClient.HttpClient;
+          const request = yield* HttpClientRequest.del(`${endpoint}/api/delete`).pipe(
+            HttpClientRequest.bodyJson({ model: name }),
+          );
+          const response = yield* client.execute(request);
+          if (!isOk(response.status)) {
+            return yield* Effect.fail(new OllamaError(yield* readErrorBody(response)));
           }
-        }
-      }
-
-      const result = handlePullLine(pendingLine, onProgress);
-      if (result) {
-        return result;
-      }
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, error: formatError(error) };
-    }
-  };
-
-  const remove: Admin['remove'] = async (name) => {
-    try {
-      const response = await fetch(`${endpoint}/api/delete`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: name }),
-      });
-      if (!response.ok) {
-        return { ok: false, error: await httpError(response) };
-      }
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, error: formatError(error) };
-    }
-  };
+        }),
+      ),
+    );
 
   return { endpoint, list, ps, load, unload, pull, remove };
 };
@@ -224,42 +200,68 @@ type RawRunningModel = {
   expires_at?: string;
 };
 
+const isOk = (status: number): boolean => status >= 200 && status < 300;
+
+/** Normalize any failure (HttpClient transport/response/body, or a status check) to {@link OllamaError}. */
+const toOllamaError = (error: unknown): OllamaError =>
+  error instanceof OllamaError ? error : new OllamaError(formatError(error), { cause: error });
+
+const mapErrors = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, OllamaError, R> =>
+  Effect.mapError(effect, toOllamaError);
+
 /**
- * Parse a single NDJSON pull line and dispatch progress. Returns a terminal failure result when
- * the line carries an `{ error }`, otherwise `undefined` to continue streaming.
+ * Parse a single NDJSON pull frame into a {@link Stream}: a progress event, nothing (blank or
+ * unparseable), or a terminal failure when the frame carries an `{ error }`.
  */
-const handlePullLine = (
-  frame: string,
-  onProgress?: (progress: PullProgress) => void,
-): { ok: false; error: string } | undefined => {
+const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
   const line = frame.trim();
   if (line.length === 0) {
-    return undefined;
+    return Stream.empty;
   }
   let json: any;
   try {
     json = JSON.parse(line);
   } catch {
-    return undefined;
+    return Stream.empty;
   }
   if (typeof json?.error === 'string') {
-    return { ok: false, error: json.error };
+    return Stream.fail(new OllamaError(json.error));
   }
-  onProgress?.({ status: json?.status ?? '', digest: json?.digest, completed: json?.completed, total: json?.total });
-  return undefined;
+  return Stream.succeed({
+    status: json?.status ?? '',
+    digest: json?.digest,
+    completed: json?.completed,
+    total: json?.total,
+  });
 };
 
-const formatError = (error: unknown): string =>
-  typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
-
 /** Extract the most useful error message from a non-OK response (Ollama returns `{ error }`). */
-const httpError = async (response: Response): Promise<string> => {
-  const body = await response.text().catch(() => '');
-  try {
-    const json = JSON.parse(body);
-    if (typeof json?.error === 'string' && json.error.length > 0) {
-      return json.error;
-    }
-  } catch {}
-  return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
+const readErrorBody = (response: HttpClientResponse.HttpClientResponse): Effect.Effect<string> =>
+  response.text.pipe(
+    Effect.orElse(() => Effect.succeed('')),
+    Effect.map((body) => {
+      try {
+        const json = JSON.parse(body);
+        if (typeof json?.error === 'string' && json.error.length > 0) {
+          return json.error;
+        }
+      } catch {}
+      return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
+    }),
+  );
+
+/**
+ * Reduce any failure to a message. HttpClient transport errors wrap the underlying cause (e.g. a
+ * `fetch` `TypeError`), so surface the cause when the top-level message omits it.
+ */
+const formatError = (error: unknown): string => {
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error instanceof Error) {
+    const cause = (error as { cause?: unknown }).cause;
+    const causeMessage = cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : undefined;
+    return causeMessage && !error.message.includes(causeMessage) ? `${error.message}: ${causeMessage}` : error.message;
+  }
+  return String(error);
 };
