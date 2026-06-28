@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { SemanticIndexError } from './errors';
-import { type Fact } from './Fact';
+import { type Fact } from './types';
 import { makeEngine, selectTriples } from './internal/sparql/engine';
 import { factToTriples, triplesToFacts } from './internal/sparql/mapping';
 import { buildSparql, type SemanticQuery } from './internal/sparql/query-builder';

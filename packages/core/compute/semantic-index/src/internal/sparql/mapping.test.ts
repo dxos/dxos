@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Fact } from '../../Fact';
+import { type Fact } from '../../types';
 import { factToTriples, triplesToFacts } from './mapping';
 
 const FACT: Fact = {

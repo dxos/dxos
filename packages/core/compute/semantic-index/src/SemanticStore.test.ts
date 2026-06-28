@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type Fact } from './Fact';
+import { type Fact } from './types';
 import { SemanticStore } from './SemanticStore';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
