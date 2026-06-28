@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Ref, Tag, Type } from '@dxos/echo';
 
 /**
  * Shared test schemas for form stories. Intentionally small, hand-written types

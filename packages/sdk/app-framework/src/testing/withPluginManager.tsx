@@ -13,7 +13,7 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../common';
-import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
+import { type ActivationEvent, type CapabilityManager, Capability, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
 
 /**

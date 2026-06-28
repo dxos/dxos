@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Piece, type PieceProps } from './Piece';
-import { Square, type SquareProps } from './Square';
+import { type PieceProps, Piece } from './Piece';
+import { type SquareProps, Square } from './Square';
 import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types';
 
 export type GameboardContextValue<M extends GameboardModel<any>> = {
@@ -131,8 +131,8 @@ export const Gameboard = {
 export { useGameboardContext };
 
 export type {
-  GameboardRootProps,
   GameboardContentProps,
   PieceProps as GameboardPieceProps,
+  GameboardRootProps,
   SquareProps as GameboardSquareProps,
 };

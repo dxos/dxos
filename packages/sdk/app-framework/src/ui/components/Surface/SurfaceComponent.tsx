@@ -5,10 +5,10 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
-  Fragment,
   type NamedExoticComponent,
-  Profiler,
   type RefAttributes,
+  Fragment,
+  Profiler,
   Suspense,
   forwardRef,
   memo,

@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { type Point } from '../../util';
 import { type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type GraphProjectorOptions, GraphProjector } from './graph-projector';
 
 export type GraphRadialProjectorOptions = GraphProjectorOptions & {
   radius?: number;

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type SwitchProps } from '@dxos/react-ui';
+import { type SwitchProps, Input } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 

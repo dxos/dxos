@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export { ActiveSpacePanel, type ActiveSpacePanelProps } from './ActiveSpacePanel';
-export { SampleItemView, type SampleItemViewProps } from './SampleItemView';
+export { type ActiveSpacePanelProps, ActiveSpacePanel } from './ActiveSpacePanel';
+export { type SampleItemViewProps, SampleItemView } from './SampleItemView';
 export { SampleStatusIndicator } from './SampleStatusIndicator';
-export { RelatedItemsList, type RelatedItemsListProps } from './RelatedItemsList';
+export { type RelatedItemsListProps, RelatedItemsList } from './RelatedItemsList';

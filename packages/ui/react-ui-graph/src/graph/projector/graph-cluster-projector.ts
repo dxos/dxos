@@ -8,7 +8,7 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphRadialProjectorOptions, GraphRadialProjector, updateNode } from './graph-radial-projector';
 
 export type GraphClusterProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the cluster (screen pixels). */

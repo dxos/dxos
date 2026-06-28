@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry as AtomRegistry } from '@effect-atom/atom-react';
+import { type Registry as AtomRegistry, Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { EffectEx } from '@dxos/effect';

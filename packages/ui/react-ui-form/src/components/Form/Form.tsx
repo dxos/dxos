@@ -3,26 +3,26 @@
 //
 
 import {
-  FormActions,
   type FormActionsProps,
-  FormContent,
   type FormContentProps,
+  type FormGroupProps,
+  type FormLayoutProps,
+  type FormRootProps,
+  type FormSectionProps,
+  type FormSubmitProps,
+  type FormViewportProps,
+  FormActions,
+  FormContent,
   FormError,
   FormFieldSetController,
   FormGroup,
-  type FormGroupProps,
   FormLayoutController,
-  type FormLayoutProps,
   FormRoot,
-  type FormRootProps,
   FormSection,
-  type FormSectionProps,
   FormSubmit,
-  type FormSubmitProps,
   FormViewport,
-  type FormViewportProps,
 } from './FormControls';
-import { FormFieldLabel, FormRow, type FormRowProps } from './FormField';
+import { type FormRowProps, FormFieldLabel, FormRow } from './FormField';
 
 export const Form = {
   Root: FormRoot,
@@ -40,13 +40,13 @@ export const Form = {
 };
 
 export type {
-  FormRootProps,
-  FormViewportProps,
+  FormActionsProps,
   FormContentProps,
-  FormSectionProps,
   FormGroupProps,
   FormLayoutProps,
-  FormActionsProps,
-  FormSubmitProps,
+  FormRootProps,
   FormRowProps,
+  FormSectionProps,
+  FormSubmitProps,
+  FormViewportProps,
 };

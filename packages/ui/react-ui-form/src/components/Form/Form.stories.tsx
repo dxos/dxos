@@ -18,10 +18,10 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../../annotations';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
 import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
-import { Form, type FormRootProps } from './Form';
+import { type FormRootProps, Form } from './Form';
 
 type StoryArgs<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
 

@@ -17,7 +17,7 @@ import { Person } from '@dxos/types';
 import { translations } from '#translations';
 
 import { EMAIL_REGEX } from './ref-editor-extension';
-import { RefEditor, type RefEditorProps } from './RefEditor';
+import { type RefEditorProps, RefEditor } from './RefEditor';
 
 const generator: ValueGenerator = random as any;
 

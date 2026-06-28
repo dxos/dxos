@@ -12,11 +12,11 @@ import { isNonNullable } from '@dxos/util';
 
 import {
   type DOMRectBounds,
-  Gameboard,
   type Location,
   type PieceMap,
   type PieceRecord,
   type Player,
+  Gameboard,
   getRelativeBounds,
   locationToString,
   useGameboardContext,

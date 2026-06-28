@@ -8,13 +8,13 @@ import { it as test } from 'mocha';
 import { MyKey } from './my-key';
 import { schema } from './proto';
 import {
-  ComplexFields,
   type OptionalScalars,
   type Outer,
   type Scalars,
   type TaskList,
-  TaskType,
   type WithTimestamp,
+  ComplexFields,
+  TaskType,
 } from './proto/gen/example/testing/types';
 import { type Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
 

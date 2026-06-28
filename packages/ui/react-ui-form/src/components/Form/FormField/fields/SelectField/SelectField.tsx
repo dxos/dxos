@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, Select, type SelectRootProps } from '@dxos/react-ui';
+import { type SelectRootProps, Icon, Select } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';

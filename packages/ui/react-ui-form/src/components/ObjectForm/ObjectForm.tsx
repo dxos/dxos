@@ -12,7 +12,7 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { translationKey } from '#translations';
 import { type FormFieldMap } from '#types';
 
-import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
+import { META_TAGS_KEY, Form, withMetaTags } from '../Form';
 
 export type ObjectFormProps = {
   type: Type.AnyEntity;
