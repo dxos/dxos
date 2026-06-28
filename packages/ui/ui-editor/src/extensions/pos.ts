@@ -139,21 +139,30 @@ export type PosOptions = {
  * analysis is left to external drivers dispatching `setAnalysis` (e.g. the transcription pipeline).
  */
 const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: number): Extension => {
-  const run = debounce((view: EditorView) => {
+  // Monotonic id so a slow parse that resolves after a newer one (or after the doc moved on) is
+  // discarded rather than overwriting current analysis with stale spans. Parser rejections are
+  // swallowed so they don't surface as unhandled rejections and the prior analysis is preserved.
+  let latest = 0;
+  const applyParse = (view: EditorView) => {
     const text = view.state.doc.toString();
-    void parse(text).then((document) => {
-      view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
-    });
-  }, debounceMs);
+    const id = ++latest;
+    void parse(text)
+      .then((document) => {
+        if (id !== latest || view.state.doc.toString() !== text) {
+          return;
+        }
+        view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
+      })
+      .catch(() => {});
+  };
+
+  const run = debounce((view: EditorView) => applyParse(view), debounceMs);
 
   // Parse existing content on mount so reactive mode decorates immediately, not just after an edit.
   // Dispatch is deferred via the parse promise's microtask; CodeMirror forbids dispatching during construction.
   const initial = ViewPlugin.define((view) => {
-    const text = view.state.doc.toString();
-    if (text.length > 0) {
-      void parse(text).then((document) => {
-        view.dispatch({ effects: setAnalysis.of({ from: 0, to: text.length, document }) });
-      });
+    if (view.state.doc.length > 0) {
+      applyParse(view);
     }
     return {};
   });
