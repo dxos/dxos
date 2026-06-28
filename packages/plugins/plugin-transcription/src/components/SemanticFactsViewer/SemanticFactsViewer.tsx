@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo, useState } from 'react';
 
-import { Icon, Input, Panel, ScrollArea, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Input, Panel, ScrollArea, Tag, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
@@ -23,20 +23,22 @@ export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, 
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar>
-        <Input.Root>
-          <Input.Label srOnly>Filter facts</Input.Label>
-          <Input.TextInput
-            placeholder='Filter by entity or predicate…'
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          />
-        </Input.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Input.Root>
+            <Input.Label srOnly>Filter facts</Input.Label>
+            <Input.TextInput
+              placeholder='Filter by entity or predicate…'
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+          </Input.Root>
+        </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
-            {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts to display.' />}
+          <ScrollArea.Viewport classNames='flex flex-col gap-4'>
+            {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts.' />}
             {groups.map((group) => (
               <SubjectGroup key={group.subject} group={group} />
             ))}
@@ -50,7 +52,7 @@ export const SemanticFactsViewer: FC<SemanticFactsViewerProps> = ({ classNames, 
 const SubjectGroup: FC<{ group: Group }> = ({ group }) => (
   <div className='flex flex-col gap-2'>
     <div className='flex items-center gap-2'>
-      <h3 className='text-sm font-medium'>{humanize(group.subject)}</h3>
+      <h3 className='p-2 text-sm font-medium'>{humanize(group.subject)}</h3>
       {group.conflicted && (
         <Tag hue='warning'>
           <span className='flex items-center gap-1'>
