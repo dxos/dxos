@@ -47,6 +47,7 @@
     "@dxos/echo-client": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
+    "@types/n3": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

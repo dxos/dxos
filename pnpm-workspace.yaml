@@ -272,6 +272,7 @@ catalog:
   '@types/lodash.sortby': ^4.7.7
   '@types/minimatch': ^5.1.2
   '@types/mocha': ^10.0.7
+  '@types/n3': ^1.26.1
   '@types/node': 22.10.2
   '@types/node-fetch': ^2.5.10
   '@types/parsimmon': ^1.10.9
