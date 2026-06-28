@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
+import { resolveResource } from '@tauri-apps/api/path';
 import { Command } from '@tauri-apps/plugin-shell';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -227,10 +228,15 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
   static layerLive = Layer.scoped(
     OllamaSidecar,
     Effect.gen(function* () {
+      // The `ollama` launcher ships as a Tauri sidecar (signed, in the app's MacOS dir) while its
+      // runtime libraries (`llama-server`, `libggml*`, `mlx_metal_*`) ship as bundle resources;
+      // point the launcher at them so model inference can load. See scripts/fetch-ollama.mjs.
+      const libraryPath = yield* Effect.promise(() => resolveResource('ollama-runtime'));
       const command = Command.sidecar('sidecar/ollama', ['serve'], {
         env: {
           OLLAMA_HOST,
           OLLAMA_ORIGINS: '*', // CORS
+          OLLAMA_LIBRARY_PATH: libraryPath,
         },
       });
 

@@ -18,8 +18,8 @@
     "withGlobalTauri": true
   },
   "build": {
-    "beforeBuildCommand": "moon run composer-app:bundle",
-    "beforeDevCommand": "vite dev",
+    "beforeBuildCommand": "node scripts/fetch-ollama.mjs && moon run composer-app:bundle",
+    "beforeDevCommand": "node scripts/fetch-ollama.mjs && vite dev",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../out/composer"
   },
@@ -27,6 +27,9 @@
     "active": true,
     "createUpdaterArtifacts": true,
     "externalBin": ["sidecar/ollama"],
+    "resources": {
+      "sidecar/ollama-runtime": "ollama-runtime"
+    },
     "iOS": {
       "developmentTeam": "9428WC5MR8",
       "minimumSystemVersion": "16.0"
