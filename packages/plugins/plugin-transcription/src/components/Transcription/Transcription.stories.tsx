@@ -166,7 +166,7 @@ const meta = {
   title: 'plugins/plugin-transcription/components/Transcription',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

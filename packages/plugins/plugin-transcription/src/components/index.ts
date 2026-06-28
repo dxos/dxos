@@ -3,5 +3,4 @@
 //
 
 export * from './Mic';
-export * from './Oracle';
 export * from './Transcription';
