@@ -4,7 +4,7 @@
 
 // Parser for the human-authored conversation fixture (see `conversation.txt`).
 // Captures both the seed entities (Persons, Organizations, …) and the speaker-tagged
-// dialogue used by `stream-simulator.ts` to feed the enrichment pipeline.
+// dialogue used by `stream-simulator.ts` to feed the pipeline in tests.
 
 export type ConversationEntity = {
   /** Type name as written in the fixture, e.g. `Person`, `Organization`. */

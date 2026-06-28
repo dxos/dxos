@@ -1,4 +1,4 @@
-# Conversation fixture for transcription enrichment tests.
+# Conversation fixture for transcription pipeline tests.
 # Format:
 #   `Entities:` block — declares ECHO objects to seed into the test space.
 #     Each entry is `<Type>:` followed by indented `<field>: <value>` lines.
