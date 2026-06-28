@@ -17,7 +17,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { access, chmod, copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, chmod, copyFile, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -32,7 +32,8 @@ const URL = `https://github.com/ollama/ollama/releases/download/${VERSION}/${ASS
 const SIDECAR_TARGETS = ['aarch64-apple-darwin', 'x86_64-apple-darwin'];
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const sidecarDir = join(scriptDir, '..', 'src-tauri', 'sidecar');
+const srcTauriDir = join(scriptDir, '..', 'src-tauri');
+const sidecarDir = join(srcTauriDir, 'sidecar');
 const runtimeDir = join(sidecarDir, 'ollama-runtime');
 const marker = join(runtimeDir, '.ollama-version');
 const launcher = join(runtimeDir, 'ollama');
@@ -43,8 +44,8 @@ const exists = async (path) =>
     () => false,
   );
 
-const main = async () => {
-  // Idempotent: skip when the pinned runtime is already present.
+// Download + verify + extract the pinned runtime (skipped when already present).
+const ensureRuntime = async () => {
   if ((await exists(launcher)) && (await readFile(marker, 'utf8').catch(() => '')).trim() === VERSION) {
     console.log(`[ollama] runtime ${VERSION} already present`);
     return;
@@ -74,14 +75,32 @@ const main = async () => {
   execFileSync('tar', ['xzf', tmp, '-C', runtimeDir]);
   await rm(tmp, { force: true });
   await writeFile(marker, `${VERSION}\n`);
+  console.log(`[ollama] runtime ${VERSION} ready at ${runtimeDir}`);
+};
 
-  // Place the launcher as a triple-named sidecar so Tauri bundles + signs it.
+// Place the launcher as triple-named sidecars so Tauri bundles + signs it.
+const ensureSidecars = async () => {
   for (const target of SIDECAR_TARGETS) {
     const sidecar = join(sidecarDir, `ollama-${target}`);
     await copyFile(launcher, sidecar);
     await chmod(sidecar, 0o755);
   }
-  console.log(`[ollama] runtime ${VERSION} ready at ${runtimeDir}`);
 };
 
-await main();
+// Dev only: Tauri runs the sidecar from `target/<profile>/` and `bundle.macOS.files` is not applied,
+// so Ollama (which finds llama-server relative to its own exe) can't see the runtime. Symlink it
+// into `target/<profile>/lib/ollama` — the location the launcher searches. Packaged builds use
+// `bundle.macOS.files` instead (Contents/MacOS/lib/ollama).
+const ensureDevRuntimeLink = async () => {
+  for (const profile of ['debug', 'release']) {
+    const libDir = join(srcTauriDir, 'target', profile, 'lib');
+    await mkdir(libDir, { recursive: true });
+    const link = join(libDir, 'ollama');
+    await rm(link, { recursive: true, force: true });
+    await symlink(runtimeDir, link, 'dir');
+  }
+};
+
+await ensureRuntime();
+await ensureSidecars();
+await ensureDevRuntimeLink();

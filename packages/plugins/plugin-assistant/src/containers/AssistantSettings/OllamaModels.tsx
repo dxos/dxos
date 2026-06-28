@@ -136,7 +136,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
                     />
                   </div>
-                  {error && <span className='text-xs text-error-text'>{error}</span>}
+                  {error && <span className='text-xs text-error-text'>{shortError(error)}</span>}
                 </div>
               );
             })}
@@ -168,7 +168,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           .filter(([name]) => !installed.has(name))
           .map(([name, error]) => (
             <p key={name} className='text-xs text-error-text'>
-              {name}: {error}
+              {name}: {shortError(error)}
             </p>
           ))}
         {/* Root value is held empty so the trigger always shows the placeholder; the live text is
@@ -213,6 +213,15 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
       </Form.Row>
     </Form.Section>
   );
+};
+
+/**
+ * Condense a verbose service error for inline display: drop Ollama's "(checked: <paths>)" path dump
+ * and cap the length. The full message is still logged to the console.
+ */
+const shortError = (error: string): string => {
+  const head = error.split(/\s*\(checked:/)[0].trim();
+  return head.length > 160 ? `${head.slice(0, 160)}…` : head;
 };
 
 /** Percent complete for an in-flight pull, or 0 when totals are not yet known. */
