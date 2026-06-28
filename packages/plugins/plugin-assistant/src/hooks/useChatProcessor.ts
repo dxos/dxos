@@ -9,6 +9,7 @@ import { useContext, useMemo, useState } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
+import { AppSpace } from '@dxos/app-toolkit';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
@@ -110,9 +111,15 @@ export const useChatProcessor = ({
 };
 
 /**
- * Layer confining an agent session to a single space (agent firewall): the home `Database.Service`
- * (where writes go) plus a `Hypergraph.Service` scoped to that space, so `resolve`/`query` cannot
- * reach the user's other spaces. See `docs/design/agent-firewall.md`.
+ * Read scope for a chat session (agent firewall). Writes always target the chat's home
+ * `Database.Service`; the `Hypergraph.Service` allowlist sets what it may read:
+ * - A chat in the **personal space** acts as the user's orchestrator (tier-1) and reads across the
+ *   user's spaces (the in-process membership).
+ * - Every other chat is confined to its own space (tier-0).
+ *
+ * See `docs/design/agent-firewall.md`.
  */
-const confinedSpaceLayer = (space: Space): Layer.Layer<Database.Service | Hypergraph.Service> =>
-  Layer.merge(Database.layer(space.db), Hypergraph.scopedLayer([space.id]));
+const confinedSpaceLayer = (space: Space): Layer.Layer<Database.Service | Hypergraph.Service> => {
+  const allowlist = AppSpace.isPersonalSpace(space) ? [...space.db.graph.spaceIds()] : [space.id];
+  return Layer.merge(Database.layer(space.db), Hypergraph.scopedLayer(allowlist));
+};
