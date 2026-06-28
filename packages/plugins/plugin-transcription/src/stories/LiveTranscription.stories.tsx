@@ -20,16 +20,18 @@ import { Message } from '@dxos/types';
 import { useAudioTrack } from '#hooks';
 
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
-import { useIsSpeaking, createStoryDecorators, useStoryMessageModel, useStoryTranscriber } from './testing';
+import {
+  RECORDER_CONFIG,
+  useIsSpeaking,
+  createStoryDecorators,
+  useStoryMessageModel,
+  useStoryTranscriber,
+} from './testing';
 import { TranscriptionStory } from './TranscriptionStory';
 
 const DEFAULT_TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 50,
   prefixBufferChunksAmount: 10,
-};
-
-const DEFAULT_RECORDER_CONFIG = {
-  interval: 200,
 };
 
 type StoryArgs = {
@@ -42,7 +44,7 @@ type StoryArgs = {
 const DefaultStory = ({
   detectSpeaking,
   transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
-  recorderConfig = DEFAULT_RECORDER_CONFIG,
+  recorderConfig = RECORDER_CONFIG,
   audioConstraints,
 }: StoryArgs) => {
   const [running, setRunning] = useState(false);

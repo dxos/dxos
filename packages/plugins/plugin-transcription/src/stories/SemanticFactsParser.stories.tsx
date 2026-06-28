@@ -20,17 +20,11 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { extractFacts } from '@dxos/semantic-index';
-import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
 import { SemanticFactsParser, type SemanticFactsParserProps } from './SemanticFactsParser';
-
-const SAMPLE_TEXT = trim`
-  I think I'm probably going to Paris next week.
-  Alice told me she's definitely going to Rome, not Paris.
-  The Q3 board meeting is confirmed for July 15 in London.
-`;
+import { SAMPLE_FACTS_TEXT_BLOCK } from './testing';
 
 // Live extraction: `extractFacts` requires only an `AiService`, satisfied here by the hosted DXOS
 // edge preset (a real LLM runs on Parse). The same component + `extractFacts` works against any
@@ -58,7 +52,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     onParse,
-    initialText: SAMPLE_TEXT,
+    initialText: SAMPLE_FACTS_TEXT_BLOCK,
   },
 };
 

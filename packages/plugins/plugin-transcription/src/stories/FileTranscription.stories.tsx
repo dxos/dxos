@@ -20,6 +20,7 @@ import { useAudioFile } from '#hooks';
 
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
 import {
+  RECORDER_CONFIG,
   useIsSpeaking,
   createStoryDecorators,
   useStoryAppendSegments,
@@ -32,10 +33,6 @@ const DEFAULT_TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 100,
   prefixBufferChunksAmount: 50,
   normalizeSentences: true,
-};
-
-const DEFAULT_RECORDER_CONFIG = {
-  interval: 200,
 };
 
 type StoryArgs = {
@@ -52,7 +49,7 @@ const DefaultStory = ({
   audioUrl,
   normalizeSentences,
   transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
-  recorderConfig = DEFAULT_RECORDER_CONFIG,
+  recorderConfig = RECORDER_CONFIG,
   audioConstraints,
 }: StoryArgs) => {
   const [running, setRunning] = useState(false);

@@ -29,9 +29,16 @@ import { useFeedModelAdapter, useTranscriber } from '#hooks';
 import { TestItem } from '#testing';
 import { type TranscriptionCapabilities } from '#types';
 
-import { type Transcriber, type TranscriberProps } from '../transcriber';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { renderByline } from '../util';
+import { type Transcriber, type TranscriberProps } from '../../transcriber';
+import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import { renderByline } from '../../util';
+
+// Recorder chunk interval (ms) shared by the live/file/mic stories. Per-story transcriber chunk
+// counts (transcribeAfterChunksAmount / prefixBufferChunksAmount) are intentionally distinct and
+// stay inline.
+export const RECORDER_INTERVAL_MS = 200;
+
+export const RECORDER_CONFIG = { interval: RECORDER_INTERVAL_MS } as const;
 
 export const useIsSpeaking = (track?: MediaStreamTrack) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -173,6 +180,24 @@ export const useStoryTranscriber = ({
   return transcriber;
 };
 
+// TODO(mykola): Make API easier to use.
+// TODO(mykola): Delete after enabling vector indexing by default.
+export const enableQueryIndexes = (services: { QueryService?: any }) =>
+  Effect.gen(function* () {
+    yield* Effect.promise(() =>
+      services.QueryService!.setConfig({
+        enabled: true,
+        indexes: [
+          { kind: IndexKind.Kind.SCHEMA_MATCH },
+          { kind: IndexKind.Kind.GRAPH },
+          { kind: IndexKind.Kind.VECTOR },
+          { kind: IndexKind.Kind.FULL_TEXT },
+        ],
+      }),
+    );
+    yield* Effect.promise(() => services.QueryService!.reindex());
+  });
+
 //
 // Plugin manager decorator.
 //
@@ -217,21 +242,3 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
     setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph],
   }),
 ];
-
-// TODO(mykola): Make API easier to use.
-// TODO(mykola): Delete after enabling vector indexing by default.
-export const enableQueryIndexes = (services: { QueryService?: any }) =>
-  Effect.gen(function* () {
-    yield* Effect.promise(() =>
-      services.QueryService!.setConfig({
-        enabled: true,
-        indexes: [
-          { kind: IndexKind.Kind.SCHEMA_MATCH },
-          { kind: IndexKind.Kind.GRAPH },
-          { kind: IndexKind.Kind.VECTOR },
-          { kind: IndexKind.Kind.FULL_TEXT },
-        ],
-      }),
-    );
-    yield* Effect.promise(() => services.QueryService!.reindex());
-  });

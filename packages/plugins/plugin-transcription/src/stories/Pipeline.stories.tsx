@@ -18,26 +18,16 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Filter, Query } from '@dxos/echo';
+import { Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { EffectEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import { Graph, Node, qualifyId } from '@dxos/plugin-graph';
+import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { Text } from '@dxos/schema';
+import { Loading } from '@dxos/react-ui/testing';
 import {
   type CommitFn,
   PipelineRuntime,
@@ -51,13 +41,12 @@ import {
 } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
-import { isNonNullable, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { enableQueryIndexes } from './testing';
+import { createMarkdownStoryDecorators, enableQueryIndexes } from './testing';
 
 // Properly-cased transcript that names seeded entities
 // (DXOS, Cyberdyne, Amco, Sarah Johnson, Michael Chen)
@@ -76,39 +65,6 @@ const STAGE_FACTORY: Record<StageId, () => Stage<any, any>> = {
   extract: makeExtractionStage,
   summarize: makeSummarizationStage,
 };
-
-/**
- * Story-only plugin exposing Markdown documents in the personal space as direct children of the
- * graph root, so the document renders as an article surface (mirrors MarkdownTranscription).
- */
-const StoryGraphPlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.transcription.story.pipelineGraph'), name: 'Pipeline Story Graph' }),
-).pipe(
-  AppPlugin.addAppGraphModule({
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'pipelineStoryDocs',
-        match: NodeMatcher.whenRoot,
-        connector: (_, get) =>
-          Effect.gen(function* () {
-            const client = capabilities.get(ClientCapabilities.Client);
-            const space = AppSpace.getPersonalSpace(client);
-            if (!space) {
-              return [];
-            }
-
-            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-            return docs
-              .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-              .filter(isNonNullable);
-          }),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-    }),
-  }),
-  Plugin.make,
-);
 
 type StoryArgs = {
   stages: readonly StageId[];
@@ -246,30 +202,18 @@ const DefaultStory = ({ stages }: StoryArgs) => {
 const meta = {
   title: 'plugins/plugin-transcription/stories/Pipeline',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* enableQueryIndexes(client.services.services);
-              yield* Effect.promise(() => seedTestData(personalSpace));
-              personalSpace.db.add(Markdown.make({ name: 'Transcript', content: '# Transcript\n\n' }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-            }),
-        }),
-        SpacePlugin({}),
-        MarkdownPlugin(),
-        StoryGraphPlugin(),
-        TranscriptionPlugin(),
-      ],
-    }),
-  ],
+  decorators: createMarkdownStoryDecorators({
+    layout: 'fullscreen',
+    types: [Person.Person, Organization.Organization],
+    graphPlugin: { key: 'org.dxos.plugin.transcription.story.pipelineGraph', name: 'Pipeline Story Graph' },
+    seed: ({ client, personalSpace }) =>
+      Effect.gen(function* () {
+        yield* enableQueryIndexes(client.services.services);
+        yield* Effect.promise(() => seedTestData(personalSpace));
+        personalSpace.db.add(Markdown.make({ name: 'Transcript', content: '# Transcript\n\n' }));
+        yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+      }),
+  }),
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

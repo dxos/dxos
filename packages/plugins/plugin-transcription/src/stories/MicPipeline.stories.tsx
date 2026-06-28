@@ -35,9 +35,7 @@ import { type ContentBlock } from '@dxos/types';
 
 import { useAudioTrack, useTranscriber } from '#hooks';
 
-import { createStoryDecorators } from './testing';
-
-const RECORDER_INTERVAL_MS = 200;
+import { RECORDER_INTERVAL_MS, createStoryDecorators } from './testing';
 
 type Phase = 'idle' | 'recording' | 'draining';
 

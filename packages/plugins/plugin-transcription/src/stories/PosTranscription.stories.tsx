@@ -16,23 +16,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { DXN } from '@dxos/keys';
 import { stubParse } from '@dxos/nlp';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout } from '@dxos/react-ui/testing';
-import { Text } from '@dxos/schema';
 import { pos } from '@dxos/ui-editor';
 
 import { translations } from '#translations';
 
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './testing';
+import { DefaultStory, SAMPLE_CONTENT, createMarkdownStoryDecorators } from './testing';
 
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,
@@ -59,29 +50,14 @@ const PosExtensionPlugin = Plugin.define(
 const meta = {
   title: 'plugins/plugin-transcription/stories/PosTranscription',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Markdown.Document, Text.Text],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Markdown.make({ name: 'Transcription', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-            }),
-        }),
-        SpacePlugin({}),
-        MarkdownPlugin(),
-        StoryGraphPlugin(),
-        TranscriptionPlugin(),
-        PosExtensionPlugin(),
-      ],
-    }),
-  ],
+  decorators: createMarkdownStoryDecorators({
+    extraPlugins: [PosExtensionPlugin()],
+    seed: ({ personalSpace }) =>
+      Effect.gen(function* () {
+        personalSpace.db.add(Markdown.make({ name: 'Transcription', content: SAMPLE_CONTENT }));
+        yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+      }),
+  }),
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
