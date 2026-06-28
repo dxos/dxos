@@ -1,15 +1,28 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   lint:
-    command: pnpm exec oxlint -f unix --config .oxlintrc.json $projectSource
+    command: pnpm exec oxlint --config .oxlintrc.json $projectSource
     inputs:
       - /.oxlintrc.json
+      - /package.json
       - /packages/common/eslint-plugin-rules/**/*.js
       - /packages/common/eslint-plugin-rules/package.json
       - '@group(sources)'
     options:
       # ignorePatterns breaks when not run from workspace root.
       runFromWorkspaceRoot: true
+
+  lint-fix:
+    script: 'pnpm exec oxlint --config .oxlintrc.json --fix $projectSource && pnpm exec oxlint --config .oxlintrc.json --fix $projectSource'
+    inputs:
+      - /.oxlintrc.json
+      - /package.json
+      - /packages/common/eslint-plugin-rules/**/*.js
+      - /packages/common/eslint-plugin-rules/package.json
+      - '@group(sources)'
+    options:
+      runFromWorkspaceRoot: true
+      runInCI: false
 
 inheritedBy:
   toolchains: typescript
