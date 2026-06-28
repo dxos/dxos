@@ -91,6 +91,12 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Read confinement (agent firewall): `'home'` (default, tier-0) reads only the hosting space;
+   * `'membership'` (tier-1) reads across the user's in-process spaces. See {@link AgentProcess}.
+   */
+  readScope?: 'home' | 'membership';
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
@@ -110,6 +116,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
+          readScope: opts?.readScope,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {

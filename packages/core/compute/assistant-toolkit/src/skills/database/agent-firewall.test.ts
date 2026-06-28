@@ -35,7 +35,7 @@ const FOREIGN_ORG_NAME = 'Cyberdyne Systems';
 let foreignOrgUri: string;
 let countInForeignSpace: (name: string) => Promise<number>;
 
-const TestLayer = AssistantTestLayer({
+const baseOptions = {
   operationHandlers: DatabaseHandlers,
   types: [Organization.Organization, Skill.Skill, Feed.Feed],
   skills: [DatabaseSkill.make()],
@@ -50,7 +50,13 @@ const TestLayer = AssistantTestLayer({
       countInForeignSpace = async (name) =>
         (await foreignDb.query(Query.type(Organization.Organization, { name })).run()).length;
     }),
-});
+} satisfies Parameters<typeof AssistantTestLayer>[0];
+
+// Tier-0 (default): the agent reads only its home space.
+const TestLayer = AssistantTestLayer(baseOptions);
+
+// Tier-1: the agent reads across its in-process membership (home + the foreign space).
+const MultiSpaceTestLayer = AssistantTestLayer({ ...baseOptions, agent: { readScope: 'membership' } });
 
 const conversationText = Effect.fn(function* (feed: Feed.Feed) {
   const messages = yield* Feed.runQuery(feed, Filter.type(Message.Message));
@@ -121,6 +127,27 @@ describe('Agent firewall (cross-space)', () => {
         expect(foreignCount).toBe(0);
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  // Positive (tier-1): an agent granted cross-space read access (allowlist = its membership) reads
+  // across every allowed space — here both its home space and the foreign space.
+  it.effect(
+    'agent with cross-space read access queries across multiple spaces',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* AgentService.createSession({ skills: [DatabaseSkill.make()] });
+        yield* Database.add(Obj.make(Organization.Organization, { name: 'Acme Corp' }));
+        yield* agent.submitPrompt('Search for all organizations and list every name you find.');
+        yield* agent.waitForCompletion();
+
+        const text = yield* conversationText(agent.feed);
+        expect(text).toContain('Acme'); // home space
+        expect(text).toContain('Cyberdyne'); // foreign space — now within the allowlist
+      },
+      Effect.provide(MultiSpaceTestLayer),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },

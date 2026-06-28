@@ -62,6 +62,15 @@ interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Read confinement (agent firewall):
+   * - `'home'` (default, tier-0): the agent reads only its hosting space.
+   * - `'membership'` (tier-1): the agent reads across every space in its in-process Hypergraph (the
+   *   user's brane). This is the personal-space orchestrator scope; writes still target the home
+   *   space. See docs/design/agent-firewall.md.
+   */
+  readScope?: 'home' | 'membership';
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -106,7 +115,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // the per-process context — not the shared, space-affinity Database.Service slice — so it is
         // independent per agent. See docs/design/agent-firewall.md.
         const { db } = yield* Database.Service;
-        const hypergraphScope = Hypergraph.scopedLayer([db.spaceId]);
+        // Tier-0 (default) reads only the home space; tier-1 reads across the in-process membership
+        // (the user's brane). Writes still target the home Database.Service either way.
+        const allowlist = options.readScope === 'membership' ? db.graph.spaceIds() : [db.spaceId];
+        const hypergraphScope = Hypergraph.scopedLayer([...allowlist]);
 
         const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(hypergraphScope));
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
