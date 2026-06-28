@@ -2,9 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Listbox` — single-select selectable list. Single canonical compound for the picker /
-// option-list pattern: full-pane (with `Listbox.Viewport` ScrollArea wrapper) and compact
-// popover (no Viewport) usage share the same shape and selection model.
+// `Listbox` — the package's general styled list, with **opt-in selection**. One compound for
+// both the picker / option-list pattern (full-pane with `Listbox.Viewport`, or compact popover
+// without) and plain styled content rows.
+//
+// Selection is inferred from props: pass `value`/`defaultValue`/`onValueChange` on `Root` and
+// it's a single-select `role=listbox` (options carry `aria-selected` + `dx-selected`, selection
+// follows focus); omit them and it's a plain `role=list` of `role=listitem` rows (hover only, no
+// selection semantics) — the shape the deprecated `@dxos/react-ui` `List`/`ListItem` filled.
+// (`Listbox` is slated to be renamed `List` once that legacy component is deleted.)
 //
 // Compound shape (matches Radix Select / Toolbar / Tabs):
 //
@@ -27,7 +33,7 @@
 // - `Content` — the `<ul role='listbox'>` holding the items. Applies the navigation aspect's
 //    container props (Tabster arrow nav, focus-on-entry redirect, role + aria-orientation).
 // - `Item` — `<li role='option'>` with `aria-selected` on the selected row, paired with
-//    `dx-selected` styling. See `ui-theme/src/css/components/selected.md`.
+//    `dx-selected` styling. See `ui-theme/src/css/components/state.md`.
 // - `ItemLabel` — text helper that truncates and takes most of the row width.
 // - `Indicator` — optional checkmark icon next to the selected item (confirmatory, since
 //    `dx-selected` already styles the row).
@@ -70,7 +76,10 @@ import {
   useListNavigation,
   useListSelection,
 } from '../../aspects';
-import { ItemContent, type ItemContentProps } from '../ItemContent';
+import { listTheme } from '../List.theme';
+import { ListItemContent, type ListItemContentProps } from './ListItemContent';
+
+const styles = listTheme.styles();
 
 const LISTBOX_NAME = 'Listbox';
 const LISTBOX_ROOT_NAME = 'Listbox.Root';
@@ -87,6 +96,12 @@ const LISTBOX_INDICATOR_NAME = 'Listbox.Indicator';
 //
 
 type ListboxContextValue = {
+  /**
+   * Whether the list participates in selection. Inferred on `Root` from the presence of
+   * `value`/`defaultValue`/`onValueChange`. Drives `role` (listbox/option vs list/listitem),
+   * `aria-selected`, and whether row clicks update the selection model.
+   */
+  selectable: boolean;
   /** Selection aspect binding factory; items consume their own bindings from this. */
   selection: UseListSelectionReturn;
 };
@@ -104,7 +119,10 @@ const [ListboxItemProvider, useListboxItemContext] = createContext<ListboxItemCo
 //
 
 type RootProps = PropsWithChildren<{
-  /** Currently-selected option id (controlled). */
+  /**
+   * Currently-selected option id (controlled). Supplying any of `value`/`defaultValue`/
+   * `onValueChange` makes the list selectable; omitting all three renders plain rows.
+   */
   value?: string;
   /** Initial selected option for uncontrolled mode. */
   defaultValue?: string;
@@ -120,9 +138,15 @@ type RootProps = PropsWithChildren<{
 }>;
 
 const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, children }: RootProps) => {
-  // The selection aspect emits `string | undefined` because `useListSelection` is mode-
-  // generic; in single-select the value only clears when the consumer drives it, never from
-  // a row click. Filter to keep the public callback narrow.
+  // Selection is opt-in: a list is selectable only when the consumer wires the value model.
+  // Plain content lists (the migrated `@dxos/react-ui` `List` call sites) pass none of these
+  // and render as `role=list`/`listitem` rows.
+  const selectable = value !== undefined || defaultValue !== undefined || onValueChange !== undefined;
+
+  // `useListSelection` is a hook, so it is always called (stable hook order); `selectable`
+  // gates whether items actually consume the binding. The aspect emits `string | undefined`
+  // because it is mode-generic; in single-select the value only clears when the consumer
+  // drives it, never from a row click — filter to keep the public callback narrow.
   const selection = useListSelection({
     mode: 'single',
     value,
@@ -134,7 +158,7 @@ const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, child
     },
   });
 
-  const context = useMemo(() => ({ selection }), [selection]);
+  const context = useMemo(() => ({ selectable, selection }), [selectable, selection]);
 
   return <ListboxProvider {...context}>{children}</ListboxProvider>;
 };
@@ -155,7 +179,7 @@ const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef)
   >;
   return (
     <ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' })}
+      {...composableProps<HTMLDivElement>(rest, { classNames: styles.listboxViewport() })}
       {...{ thin, padding, centered }}
       orientation='vertical'
       ref={forwardedRef}
@@ -180,12 +204,12 @@ type ContentProps = {
 };
 
 const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
-  // Touch the context so Content fails loudly if used outside Root.
-  useListboxContext(LISTBOX_CONTENT_NAME);
+  const { selectable } = useListboxContext(LISTBOX_CONTENT_NAME);
 
-  // `useListNavigation` bundles role=listbox, aria-orientation, Tabster arrow nav, and the
-  // focus-on-entry redirect (to selected, then first non-disabled option).
-  const navigation = useListNavigation({ mode: 'listbox' });
+  // `useListNavigation` bundles role + aria-orientation + Tabster arrow nav. In `listbox` mode
+  // it also adds the focus-on-entry redirect (to selected, then first non-disabled option);
+  // `list` mode is for the non-selectable rows (arrow nav across interactive descendants only).
+  const navigation = useListNavigation({ mode: selectable ? 'listbox' : 'list' });
 
   const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
@@ -193,7 +217,7 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
   // context-scope check. The container's role/aria/Tabster wiring comes from the navigation
   // aspect rather than the primitive's `selectable` plumbing — that keeps the ARIA grammar
   // (`aria-selected`) owned by `Item` below.
-  const composed = composableProps<HTMLUListElement>(rest, { classNames: 'flex flex-col' });
+  const composed = composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });
   return (
     <List
       variant='unordered'
@@ -223,50 +247,57 @@ type ItemProps = PropsWithChildren<{
   onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
 }>;
 
-// `dx-selected` pairs with `aria-selected="true"` (set per-option below); see
-// `ui-theme/src/css/components/selected.md`.
-const ITEM_BASE = 'flex items-center dx-hover dx-selected px-3 py-2 cursor-pointer outline-none';
-
 const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   const { id, disabled, onClick, onFocus, children, ...rest } = props as ItemProps & Record<string, unknown>;
-  const { selection } = useListboxContext(LISTBOX_ITEM_NAME);
+  const { selectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
   const binding: SelectionItemBinding = selection.bind(id, { disabled });
+  const selected = selectable && binding.selected;
+  // A non-selectable row is interactive only if the caller wired a click; otherwise it's a
+  // plain display row (no pointer affordance).
+  const interactive = selectable || onClick != null;
 
-  // Compose the selection aspect's click/focus handlers with the row's optional ones so
-  // both wire-ups stay synchronized: selection happens before user code so a click that
-  // also runs imperative side effects sees the selected value first.
+  // Compose the selection aspect's click/focus handlers with the row's optional ones so both
+  // wire-ups stay synchronized: selection happens before user code so a click that also runs
+  // imperative side effects sees the selected value first. Skipped entirely when not selectable
+  // so a plain row click doesn't mutate hidden selection state.
   const handleClick = useCallback(
     (event: MouseEvent<HTMLLIElement>) => {
-      binding.rowProps.onClick(event);
+      if (selectable) {
+        binding.rowProps.onClick(event);
+      }
       if (!disabled) {
         onClick?.(event);
       }
     },
-    [binding, disabled, onClick],
+    [selectable, binding, disabled, onClick],
   );
 
   const handleFocus = useCallback(
     (event: FocusEvent<HTMLLIElement>) => {
-      binding.rowProps.onFocus?.(event);
+      if (selectable) {
+        binding.rowProps.onFocus?.(event);
+      }
       onFocus?.(event);
     },
-    [binding, onFocus],
+    [selectable, binding, onFocus],
   );
 
   const composed = composableProps<HTMLLIElement>(rest, {
-    classNames: [ITEM_BASE, disabled && 'opacity-50 cursor-not-allowed'],
+    classNames: styles.listboxItem({
+      class: [!interactive && 'cursor-default', disabled && 'opacity-50 cursor-not-allowed'],
+    }),
   });
 
   // Per WAI-ARIA APG listbox guidance, disabled options remain keyboard-navigable for SR
-  // announcement; the selection model is not updated for disabled rows (the aspect's
-  // binding enforces that internally).
+  // announcement; the selection model is not updated for disabled rows (the aspect's binding
+  // enforces that internally). Non-selectable rows are `role=listitem` with no `aria-selected`.
   return (
-    <ListItemProviderHost id={id} selected={binding.selected}>
+    <ListItemProviderHost id={id} selected={selected}>
       <ListItem
         {...composed}
-        role='option'
-        tabIndex={0}
-        aria-selected={binding.selected}
+        role={selectable ? 'option' : 'listitem'}
+        tabIndex={selectable ? 0 : -1}
+        aria-selected={selectable ? selected : undefined}
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onFocus={handleFocus}
@@ -298,7 +329,7 @@ const ListItemProviderHost = ({ id, selected, children }: PropsWithChildren<List
 type ItemLabelProps = ThemedClassName<ComponentPropsWithRef<'span'>>;
 
 const ItemLabel = forwardRef<HTMLSpanElement, ItemLabelProps>(({ classNames, children, ...rest }, forwardedRef) => (
-  <span {...rest} className={mx('grow truncate', classNames)} ref={forwardedRef}>
+  <span {...rest} className={styles.listboxItemLabel({ class: mx(classNames) })} ref={forwardedRef}>
     {children}
   </span>
 ));
@@ -345,13 +376,14 @@ const Listbox = {
   Content,
   Item,
   ItemLabel,
-  ItemContent,
+  ItemContent: ListItemContent,
   Indicator,
 };
 
 export { Listbox, useListboxSelection };
+
 export type {
-  ItemContentProps,
+  ListItemContentProps as ItemContentProps,
   RootProps as ListboxRootProps,
   ViewportProps as ListboxViewportProps,
   ContentProps as ListboxContentProps,

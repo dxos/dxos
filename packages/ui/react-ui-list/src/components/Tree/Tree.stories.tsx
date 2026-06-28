@@ -70,8 +70,10 @@ const DefaultStory = ({ draggable, groups }: { draggable?: boolean; groups?: boo
     return map;
   }, [rootTree]);
 
+  // Writable so drops can push new child orderings (a derived `Atom.make(() => …)` would snapshot
+  // the initial map and never reflect the reorder).
   const childIdsFamily = useMemo(
-    () => Atom.family((id: string) => Atom.make(() => childIdsMap.get(id) ?? []).pipe(Atom.keepAlive)),
+    () => Atom.family((id: string) => Atom.make<string[]>(childIdsMap.get(id) ?? []).pipe(Atom.keepAlive)),
     [childIdsMap],
   );
 
@@ -172,10 +174,25 @@ const DefaultStory = ({ draggable, groups }: { draggable?: boolean; groups?: boo
             source: source.data as TreeData,
             target: target.data as TreeData,
           });
+
+          // `updateState` mutates the tree in place; push the new child orderings into the
+          // (writable) childIds atoms so the affected branches re-render.
+          const refresh = (item: TestItem) => {
+            registry.set(
+              childIdsFamily(item.id),
+              (item.items ?? []).map((child) => child.id),
+            );
+            item.items?.forEach(refresh);
+          };
+          registry.set(
+            childIdsFamily(rootTree.id),
+            (rootTree.items ?? []).map((child) => child.id),
+          );
+          rootTree.items?.forEach(refresh);
         }
       },
     });
-  }, []);
+  }, [rootTree, childIdsFamily, registry]);
 
   return (
     <Tree

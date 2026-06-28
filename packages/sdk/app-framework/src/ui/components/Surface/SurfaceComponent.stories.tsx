@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Input, List, ListItem, Panel, Toolbar } from '@dxos/react-ui';
+import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -132,13 +133,15 @@ const DefaultStory = () => {
           limit={1}
         />
         <div className='overflow-y-auto h-full'>
-          <List>
-            {surfaces.map((surface) => (
-              <ListItem.Root key={surface.id} id={surface.id}>
-                <ListItem.Heading classNames='flex items-center'>{surface.id}</ListItem.Heading>
-              </ListItem.Root>
-            ))}
-          </List>
+          <Listbox.Root>
+            <Listbox.Content aria-label='Surfaces'>
+              {surfaces.map((surface) => (
+                <Listbox.Item key={surface.id} id={surface.id}>
+                  <Listbox.ItemLabel classNames='flex items-center'>{surface.id}</Listbox.ItemLabel>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Root>
         </div>
       </Panel.Content>
     </Panel.Root>
