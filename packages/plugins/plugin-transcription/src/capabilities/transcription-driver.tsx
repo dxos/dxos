@@ -39,6 +39,11 @@ const TranscriptionDriver = () => {
   const recording = session?.recording ?? false;
   const liveSessionId = session?.id;
 
+  // Only this driver's editor-backed sessions are captured here: if no editor view is registered for
+  // the session there is nowhere to stream transcription, so the driver stays idle and leaves the
+  // mic to whoever owns that session (e.g. a non-editor consumer running its own transcriber).
+  const hasEditorForSession = !!(liveSessionId && editorViews?.get(liveSessionId));
+
   // Lifecycle phase. Driven from `recording` via an effect (not derived synchronously) so that when
   // the mic switches off the phase is still 'recording' for that commit — nothing tears down until
   // the drain finishes and sets 'idle'. This lets the final transcription + enrichment complete.
@@ -50,14 +55,16 @@ const TranscriptionDriver = () => {
   // editor stays open). Cleared once the phase returns to idle.
   const [sessionId, setSessionId] = useState<string>();
   useEffect(() => {
-    if (recording && liveSessionId) {
+    if (recording && liveSessionId && hasEditorForSession) {
       setSessionId(liveSessionId);
     }
-  }, [recording, liveSessionId]);
+  }, [recording, liveSessionId, hasEditorForSession]);
 
   useEffect(() => {
-    setPhase((current) => (recording ? 'recording' : current === 'recording' ? 'draining' : current));
-  }, [recording]);
+    setPhase((current) =>
+      recording && hasEditorForSession ? 'recording' : current === 'recording' ? 'draining' : current,
+    );
+  }, [recording, hasEditorForSession]);
 
   useEffect(() => {
     if (phase === 'idle') {

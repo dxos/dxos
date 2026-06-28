@@ -1300,6 +1300,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-transcription/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/solid-ui/package.json",
           "jsonpath": "$.version"
         },

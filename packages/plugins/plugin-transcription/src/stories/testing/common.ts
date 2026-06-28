@@ -2,21 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-// Helpers shared between LiveTranscription / FileTranscription stories.
-// Each "live" story differs only in its *audio source* (mic vs file); everything else —
-// the local in-memory message buffer, the transcriber lifecycle, and the plugin-manager
-// decorator stack — is identical and lives here.
+// Helpers shared across the transcription stories: the in-memory message buffer + model adapter,
+// voice-activity detection, the recording-session reader, and the plugin-manager decorator stack.
 
 import { type Decorator } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { scheduleTask } from '@dxos/async';
 import { SpeakingMonitor } from '@dxos/av';
 import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -25,11 +23,10 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useFeedModelAdapter, useTranscriber } from '#hooks';
+import { useFeedModelAdapter } from '#hooks';
 import { TestItem } from '#testing';
-import { type TranscriptionCapabilities } from '#types';
+import { TranscriptionCapabilities } from '#types';
 
-import { type Transcriber, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
 
@@ -86,98 +83,13 @@ export const useStoryMessageModel = () => {
 };
 
 /**
- * Wraps blocks in a `Message.Message` with the given sender and appends it to the local buffer.
- * Provided as a convenience for stories that don't need entity-extraction or custom enrichment.
+ * Reads the shared {@link TranscriptionCapabilities.RecordingSession} for the given id — the real
+ * recording flag toggled by the {@link Mic} button. Non-editor stories observe this to drive their
+ * own capture (the editor driver stays idle when no editor view is registered for the session).
  */
-export const useStoryAppendSegments = (
-  appendMessage: (message: Message.Message) => void,
-  sender: Message.Message['sender'] = {},
-): TranscriberProps['onSegments'] =>
-  useCallback<TranscriberProps['onSegments']>(
-    async (blocks) => {
-      appendMessage(
-        Obj.make(Message.Message, {
-          created: new Date().toISOString(),
-          sender,
-          blocks,
-        }),
-      );
-    },
-    [appendMessage, sender],
-  );
-
-//
-// Transcriber lifecycle.
-//
-
-export type UseStoryTranscriberOptions = Pick<
-  TranscriptionCapabilities.TranscriberProviderProps,
-  'transcriberConfig' | 'recorderConfig' | 'onSegments'
-> & {
-  audioStreamTrack?: MediaStreamTrack;
-  /** Whether the user has the toolbar toggle on. */
-  running: boolean;
-  /** Voice-activity flag — chunks recording only fires while `true`. */
-  isSpeaking: boolean;
-};
-
-/**
- * Drives the transcriber's open/close + chunk-recording lifecycle off `running`,
- * the open flag, and an `isSpeaking` voice-activity gate. Returns the transcriber instance
- * (`undefined` until the capability resolves and an audio track is available).
- */
-export const useStoryTranscriber = ({
-  audioStreamTrack,
-  running,
-  isSpeaking,
-  transcriberConfig,
-  recorderConfig,
-  onSegments,
-}: UseStoryTranscriberOptions): Transcriber | undefined => {
-  const transcriber = useTranscriber({
-    audioStreamTrack,
-    onSegments,
-    transcriberConfig,
-    recorderConfig,
-  });
-
-  // Open the transcriber when it becomes available; close on teardown.
-  // `tokenRef` is a per-effect identity so a late `close()` completion from a stale
-  // transcriber instance can't clobber `isOpen` after a newer instance has opened.
-  const [isOpen, setIsOpen] = useState(false);
-  const tokenRef = useRef<symbol | null>(null);
-  useEffect(() => {
-    if (!transcriber) {
-      return;
-    }
-    const token = Symbol();
-    tokenRef.current = token;
-    void transcriber.open().then(
-      () => tokenRef.current === token && setIsOpen(true),
-      () => tokenRef.current === token && setIsOpen(false),
-    );
-    return () => {
-      void transcriber.close().then(() => {
-        if (tokenRef.current === token) {
-          setIsOpen(false);
-        }
-      });
-    };
-  }, [transcriber]);
-
-  // Start/stop chunk recording based on running + open + isSpeaking.
-  useEffect(() => {
-    if (!transcriber || !isOpen) {
-      return;
-    }
-    if (running && isSpeaking) {
-      transcriber.startChunksRecording();
-    } else {
-      transcriber.stopChunksRecording();
-    }
-  }, [transcriber, isOpen, running, isSpeaking]);
-
-  return transcriber;
+export const useRecordingSession = (docId: string): boolean => {
+  const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  return !!session?.recording && session.id === docId;
 };
 
 // TODO(mykola): Make API easier to use.

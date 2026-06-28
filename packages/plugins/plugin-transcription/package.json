@@ -169,6 +169,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",

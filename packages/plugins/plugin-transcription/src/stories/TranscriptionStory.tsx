@@ -5,6 +5,7 @@
 import React, {
   type ChangeEvent,
   type Dispatch,
+  type ReactNode,
   type RefObject,
   type SetStateAction,
   useCallback,
@@ -20,16 +21,18 @@ import { type SerializationModel } from '../model';
 export type TranscriptionStoryProps = {
   audioRef?: RefObject<HTMLAudioElement | null>;
   model: SerializationModel<Message.Message>;
-  running: boolean;
+  running?: boolean;
   disabled?: boolean;
   uploadAccept?: string;
-  onRunningChange: Dispatch<SetStateAction<boolean>>;
+  /** Custom toolbar control (e.g. the `Mic` button); replaces the default play/pause + upload controls. */
+  toolbar?: ReactNode;
+  onRunningChange?: Dispatch<SetStateAction<boolean>>;
   onUpload?: (file: File) => void;
 };
 
 /**
- * Story wrapper that renders a transcript with playback controls, an optional audio file
- * upload affordance, and a toolbar slot for additional controls.
+ * Story wrapper that renders a transcript message list with a toolbar. Defaults to playback controls
+ * + an optional audio-file upload affordance; pass `toolbar` to substitute a custom control.
  *
  * @param onUpload - Callback fired when the user picks a local audio file via the upload button.
  * @param uploadAccept - HTML `accept` filter for the hidden file input. Defaults to `audio/*`.
@@ -40,6 +43,7 @@ export const TranscriptionStory = ({
   running,
   disabled,
   uploadAccept = 'audio/*',
+  toolbar,
   onRunningChange,
   onUpload,
 }: TranscriptionStoryProps) => {
@@ -62,30 +66,34 @@ export const TranscriptionStory = ({
     <>
       {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
-        <IconButton
-          iconOnly
-          disabled={disabled}
-          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-          label={running ? 'Pause' : 'Play'}
-          onClick={() => onRunningChange((running) => !running)}
-        />
-        {onUpload && (
+        {toolbar ?? (
           <>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept={uploadAccept}
-              disabled={disabled}
-              className='hidden'
-              onChange={handleFileChange}
-            />
             <IconButton
               iconOnly
               disabled={disabled}
-              icon='ph--upload--regular'
-              label='Upload audio'
-              onClick={() => fileInputRef.current?.click()}
+              icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+              label={running ? 'Pause' : 'Play'}
+              onClick={() => onRunningChange?.((running) => !running)}
             />
+            {onUpload && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type='file'
+                  accept={uploadAccept}
+                  disabled={disabled}
+                  className='hidden'
+                  onChange={handleFileChange}
+                />
+                <IconButton
+                  iconOnly
+                  disabled={disabled}
+                  icon='ph--upload--regular'
+                  label='Upload audio'
+                  onClick={() => fileInputRef.current?.click()}
+                />
+              </>
+            )}
           </>
         )}
       </Toolbar.Root>

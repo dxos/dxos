@@ -24,8 +24,8 @@ export type TranscriberProviderProps = {
   audioStreamTrack: MediaStreamTrack;
   recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
   transcriberConfig?: Partial<TranscriberProps['config']>;
-  onSegments: TranscriberProps['onSegments'];
   transcribe?: TranscriberProps['transcribe'];
+  onSegments: TranscriberProps['onSegments'];
 };
 
 export type TranscriberProvider = (props: TranscriberProviderProps) => TranscriberType;

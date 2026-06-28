@@ -28,8 +28,9 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const model = useFeedModelAdapter(renderByline(members), messages);
-  const { recording, toggleRecording } = useTranscriptionRecording(transcript);
 
+  // TODO(burdon): Remove if not mutable. E.g., finalized transcript.
+  const { recording, toggleRecording } = useTranscriptionRecording(transcript);
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()

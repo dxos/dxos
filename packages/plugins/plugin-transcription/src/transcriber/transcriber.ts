@@ -78,14 +78,14 @@ export type TranscriberProps = {
   config: TranscribeConfig;
   recorder: AudioRecorder;
   /**
+   * Optional override of the transcription transport. When provided, supersedes `config.endpoint`.
+   */
+  transcribe?: TranscribeFn;
+  /**
    * Callback to handle the transcribed segments, after all segment transformers are applied.
    * @param segments - The transcribed segments.
    */
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
-  /**
-   * Optional override of the transcription transport. When provided, supersedes `config.endpoint`.
-   */
-  transcribe?: TranscribeFn;
 };
 
 /**

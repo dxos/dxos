@@ -763,6 +763,9 @@
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-transcription/tsconfig.json"
+    },
+    {
       "path": "packages/ui/solid-ui/tsconfig.json"
     },
     {
