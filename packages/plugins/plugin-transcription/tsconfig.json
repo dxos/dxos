@@ -67,6 +67,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/semantic-index"
+    },
+    {
       "path": "../../core/compute/transcription-pipeline"
     },
     {
