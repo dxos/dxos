@@ -13,7 +13,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
+import { PLANK_COMPANION_TYPE, DeckCapabilities, DeckOperation } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 

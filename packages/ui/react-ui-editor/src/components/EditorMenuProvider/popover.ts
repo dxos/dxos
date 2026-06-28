@@ -4,12 +4,12 @@
 
 import { type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
-  Decoration,
   type DecorationSet,
-  EditorView,
   type KeyBinding,
-  ViewPlugin,
   type ViewUpdate,
+  Decoration,
+  EditorView,
+  ViewPlugin,
   keymap,
 } from '@codemirror/view';
 

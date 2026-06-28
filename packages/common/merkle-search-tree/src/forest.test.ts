@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { numericalValues, range } from '@dxos/util';
 
-import { type DigestHex, Forest, type TreeMut } from './forest';
+import { type DigestHex, type TreeMut, Forest } from './forest';
 import { createValue, randomKey, randomSample } from './testing';
 
 test('empty', async ({ expect }) => {

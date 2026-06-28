@@ -9,9 +9,9 @@
 
 import React, { useMemo } from 'react';
 
-import { getPicker, type PickerKind } from '@dxos/introspect-tools';
+import { type PickerKind, getPicker } from '@dxos/introspect-tools';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, Form } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';

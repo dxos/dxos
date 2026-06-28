@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type Registry, Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
@@ -12,7 +12,7 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';
+import { type TogglePanelRootProps, TogglePanel } from './TogglePanel';
 
 class Generator {
   private readonly _current: Atom.Writable<string>;

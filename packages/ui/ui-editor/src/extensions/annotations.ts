@@ -3,7 +3,7 @@
 //
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type DecorationSet, type ViewUpdate, Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 
 const annotationMark = Decoration.mark({ class: 'cm-annotation' });
 

@@ -6,14 +6,14 @@ import * as Schema from 'effect/Schema';
 import React, { Fragment } from 'react';
 
 import { DEFAULT_OUTPUT, QueueInput, QueueOutput } from '@dxos/conductor';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ScrollArea } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks';
 import { createFunctionAnchors } from './common';
-import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
+import { type BoxActionHandler, Box } from './common';
+import { type CreateShapeProps, ComputeShape, createShape } from './defs';
 
 export const FeedShape = Schema.extend(
   ComputeShape,

@@ -10,8 +10,8 @@ import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { type ThemedClassName, Input, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { type ChatEditorController, type ChatEditorProps, ChatEditor } from '@dxos/react-ui-chat';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
@@ -21,7 +21,7 @@ import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat/events';
-import { ChatActions, type ChatActionsProps } from './ChatActions';
+import { type ChatActionsProps, ChatActions } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
 import { ChatReferences } from './ChatReferences';

@@ -9,13 +9,13 @@ import React, { useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { type Entity, DXN, Obj, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectViewer, ObjectsTree } from '../../../components';
+import { ObjectsTree, ObjectViewer } from '../../../components';
 import { DevtoolsContextProvider } from '../../../hooks';
 import { ObjectsPanel } from './ObjectsPanel';
 

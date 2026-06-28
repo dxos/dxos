@@ -4,7 +4,7 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
-import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type DecorationSet, type EditorView, type ViewUpdate, Decoration, ViewPlugin } from '@codemirror/view';
 
 export type XmlOptions = {};
 

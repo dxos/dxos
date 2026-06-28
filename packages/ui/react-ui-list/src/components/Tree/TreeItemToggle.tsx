@@ -4,7 +4,7 @@
 
 import React, { forwardRef, memo } from 'react';
 
-import { IconButton, type IconButtonProps } from '@dxos/react-ui';
+import { type IconButtonProps, IconButton } from '@dxos/react-ui';
 
 export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;

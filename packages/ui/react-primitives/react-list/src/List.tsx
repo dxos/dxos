@@ -109,6 +109,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
 
 List.displayName = LIST_NAME;
 
-export { List, createListScope, useListContext, LIST_NAME };
+export { LIST_NAME, List, createListScope, useListContext };
 
-export type { ListProps, ListVariant, ListScopedProps };
+export type { ListProps, ListScopedProps, ListVariant };

@@ -5,7 +5,7 @@
 //
 
 import { writeFileSync } from 'node:fs';
-import { $, chalk } from 'zx';
+import { chalk, $ } from 'zx';
 
 const ITEM = 'plugin-script.r2.vendor';
 

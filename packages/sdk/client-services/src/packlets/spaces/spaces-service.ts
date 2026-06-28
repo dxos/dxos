@@ -34,6 +34,7 @@ import {
   type ContactAdmission,
   type CreateEpochRequest,
   type CreateEpochResponse,
+  type CreateSpaceRequest,
   type ExportSpaceRequest,
   type ExportSpaceResponse,
   type ImportSpaceRequest,
@@ -44,15 +45,14 @@ import {
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
-  SpaceArchive,
-  SpaceMember,
-  SpaceState,
   type SpacesService,
   type SubscribeMessagesRequest,
   type UpdateMemberRoleRequest,
-  type CreateSpaceRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
+  SpaceArchive,
+  SpaceMember,
+  SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -64,9 +64,9 @@ import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
   extractSpaceArchive,
+  objJsonToObjectStructure,
   readSerializedSpaceArchive,
   writeSerializedSpaceArchive,
-  objJsonToObjectStructure,
 } from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';

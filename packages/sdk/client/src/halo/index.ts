@@ -6,8 +6,8 @@ export { type Halo } from '@dxos/client-protocol';
 export {
   type Contact,
   type Identity,
+  CreateEpochRequest,
   Device,
   DeviceKind,
-  CreateEpochRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-export { type Credential, DeviceType, type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { type Credential, type Presentation, DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';

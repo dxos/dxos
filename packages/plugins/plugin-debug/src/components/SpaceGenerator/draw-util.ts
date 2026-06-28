@@ -3,15 +3,15 @@
 //
 
 // TODO(burdon): workerize-loader dep.
-import { type Edge, Graph, type PlainObject } from '@antv/graphlib';
+import { type Edge, type PlainObject, Graph } from '@antv/graphlib';
 import {
-  D3ForceLayout,
   type D3ForceLayoutOptions,
-  GridLayout,
   type GridLayoutOptions,
   type Layout,
-  RadialLayout,
   type RadialLayoutOptions,
+  D3ForceLayout,
+  GridLayout,
+  RadialLayout,
 } from '@antv/layout';
 import { type Editor, type SerializedStore, type TLRecord, createBindingId, createShapeId } from '@tldraw/tldraw';
 

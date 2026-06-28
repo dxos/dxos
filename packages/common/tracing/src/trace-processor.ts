@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { LogLevel, type LogProcessor, log } from '@dxos/log';
+import { type LogProcessor, LogLevel, log } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';

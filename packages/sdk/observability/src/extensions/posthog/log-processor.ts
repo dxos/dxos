@@ -5,7 +5,7 @@
 import posthog from 'posthog-js';
 
 import { InvariantViolation } from '@dxos/invariant';
-import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, getContextFromEntry, shouldLog } from '@dxos/log';
+import { type LogConfig, type LogEntry, type LogProcessor, LogLevel, getContextFromEntry, shouldLog } from '@dxos/log';
 
 export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
   // Don't forward logs from remote sessions.

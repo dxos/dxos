@@ -6,10 +6,10 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Skill } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { type Database, Filter, type Ref } from '@dxos/echo';
+import { type Database, type Ref, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

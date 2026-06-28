@@ -16,11 +16,11 @@ import {
   Paths,
   TypeSection,
 } from '@dxos/app-toolkit';
-import { RunInstructions, Chat } from '@dxos/assistant-toolkit';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Operation, Instructions } from '@dxos/compute';
+import { Instructions, Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
+import { type Ref, DXN, Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';

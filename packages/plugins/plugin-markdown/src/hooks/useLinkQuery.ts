@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { type Database, Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';

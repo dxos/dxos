@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { Obj, type Relation } from '@dxos/echo';
+import { type Relation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { ExtractorRegistry } from './ExtractorRegistry';

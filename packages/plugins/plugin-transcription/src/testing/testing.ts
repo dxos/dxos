@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { useEffect, useMemo } from 'react';
 
 import { type Space } from '@dxos/client/echo';
-import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';

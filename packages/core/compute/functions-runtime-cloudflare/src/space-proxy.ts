@@ -6,7 +6,7 @@ import { Resource } from '@dxos/context';
 import { type Database } from '@dxos/echo';
 import { type DatabaseImpl, type EchoClient } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId, PublicKey } from '@dxos/keys';
 
 import type { ServiceContainer } from './internal';
 import { type QueuesAPI, QueuesAPIImpl } from './queues-api';

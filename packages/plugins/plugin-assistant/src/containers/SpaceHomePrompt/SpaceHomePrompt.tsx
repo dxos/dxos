@@ -11,10 +11,10 @@ import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
-import { ChatPrompt, type ChatEvent } from '#components';
+import { type ChatEvent, ChatPrompt } from '#components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { meta } from '#meta';
-import { AssistantCapabilities, AssistantOperation, type ChatType } from '#types';
+import { type ChatType, AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatPath } from '../../paths';
 

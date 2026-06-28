@@ -9,7 +9,7 @@ import type { Callback, FileStat, RandomAccessStorage } from 'random-access-stor
 
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Directory, type File, StorageType, type Storage, wrapFile } from '@dxos/random-access-storage';
+import { type File, type Storage, Directory, StorageType, wrapFile } from '@dxos/random-access-storage';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.

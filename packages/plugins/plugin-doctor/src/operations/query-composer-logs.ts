@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { DoctorOperation } from '../types';
-import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query';
+import { type LogRecord, type QueryInput, HARD_LIMIT_ENTRIES, runQuery } from './internal/log-query';
 import { readLogRows } from './internal/log-reader';
 
 // TODO(plugin-doctor): add an AssistantTestLayer end-to-end test that exercises

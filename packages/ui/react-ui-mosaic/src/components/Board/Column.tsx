@@ -15,7 +15,7 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, IconButton, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -24,7 +24,7 @@ import { translationKey } from '#translations';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
+import { type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps, Mosaic } from '../Mosaic';
 import { useBoard } from './Board';
 import { BoardItem } from './Item';
 

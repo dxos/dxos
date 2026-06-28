@@ -8,7 +8,7 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { MicButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { TranscriptionCapabilities, type Settings } from '#types';
+import { type Settings, TranscriptionCapabilities } from '#types';
 
 import { type AudioInputDevice, MicSettings } from './MicSettings';
 

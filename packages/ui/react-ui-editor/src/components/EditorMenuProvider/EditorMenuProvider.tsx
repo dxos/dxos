@@ -4,13 +4,13 @@
 
 import { type EditorView } from '@codemirror/view';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import {
-  DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
+  DX_ANCHOR_ACTIVATE,
   Icon,
   Popover,
   ScrollArea,

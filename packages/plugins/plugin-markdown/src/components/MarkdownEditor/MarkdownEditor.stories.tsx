@@ -27,7 +27,7 @@ import { useLinkQuery } from '#hooks';
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
-import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
+import { type MarkdownEditorProviderProps, MarkdownEditor, MarkdownEditorProvider } from './MarkdownEditor';
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test sketch.
 const SKETCH_CONTENT = new SketchBuilder()

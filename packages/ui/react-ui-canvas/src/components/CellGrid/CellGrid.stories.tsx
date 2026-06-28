@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext, Registry } from '@effect-atom/atom-react';
+import { Registry, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { CellGrid, type CellGridProps } from './CellGrid';
+import { type CellGridProps, CellGrid } from './CellGrid';
 import { toggleCell } from './input';
 import { type RenderCell } from './render';
 import { createCellGridAtoms } from './state/atoms';

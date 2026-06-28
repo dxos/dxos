@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import { Query, type QueryAST } from '@dxos/echo';
+import { type QueryAST, Query } from '@dxos/echo';
 import { trim } from '@dxos/util';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
 

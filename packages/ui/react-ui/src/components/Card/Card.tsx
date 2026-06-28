@@ -5,7 +5,7 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
+import React, { type ReactNode, CSSProperties, MouseEventHandler, forwardRef, useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { iconSize } from '@dxos/ui-theme';
@@ -19,7 +19,7 @@ import { type ThemedClassName } from '../../util';
 import { Button, IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
-import { Image, type ImageProps } from '../Image';
+import { type ImageProps, Image } from '../Image';
 import { DropdownMenu } from '../Menu';
 import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
 
@@ -552,11 +552,11 @@ export const Card = {
 };
 
 export type {
-  CardRootProps,
-  CardHeaderProps,
+  CardActionIconButtonProps,
   CardBlockProps,
   CardDragHandleProps,
-  CardActionIconButtonProps,
+  CardHeaderProps,
   CardMenuProps,
+  CardRootProps,
   CardSectionProps,
 };

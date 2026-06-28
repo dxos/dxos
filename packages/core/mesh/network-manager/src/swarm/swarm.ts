@@ -8,7 +8,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
+import { type ListeningHandle, type Messenger, type PeerInfo, type SwarmEvent, PeerInfoHash } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 

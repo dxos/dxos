@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Chain, type ChainRootProps } from './Chain';
+import { type ChainRootProps, Chain } from './Chain';
 
 const DefaultStory = (props: ChainRootProps) => {
   return (

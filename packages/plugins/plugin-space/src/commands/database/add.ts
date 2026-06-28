@@ -12,11 +12,11 @@ import * as Option from 'effect/Option';
 
 import { type Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppAnnotation } from '@dxos/app-toolkit';
-import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
+import { type SpaceNotFoundError, CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import type { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { type Err, Annotation, Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type SpaceId } from '@dxos/keys';

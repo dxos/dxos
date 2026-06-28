@@ -3,9 +3,9 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { SkillDefinition, GameVariant, OperationHandler } from '#capabilities';
+import { GameVariant, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Chess } from '#types';

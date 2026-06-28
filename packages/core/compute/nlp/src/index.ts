@@ -5,4 +5,4 @@
 export * from './Document';
 export * from './align';
 export * from './hash';
-export { parseText, stubParse, type Parser } from './parse';
+export { type Parser, parseText, stubParse } from './parse';

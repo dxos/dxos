@@ -12,15 +12,15 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
-import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
+import { type HyperFormula, ExportedCellChange } from '@dxos/vendor-hyperformula';
 
 import type { SpaceComputeRuntime } from './compute-graph-registry';
 import { ComputeNode } from './compute-node';
 import {
-  EDGE_FUNCTION_NAME,
-  FunctionContext,
   type FunctionContextOptions,
   type FunctionDefinition,
+  EDGE_FUNCTION_NAME,
+  FunctionContext,
   defaultFunctions,
 } from './functions';
 

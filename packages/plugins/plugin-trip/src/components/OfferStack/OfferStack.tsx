@@ -6,15 +6,15 @@ import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import {
+  type ThemedClassName,
   Card,
   Icon,
   ScrollArea,
-  type ThemedClassName,
   composable,
   composableProps,
   useTranslation,
 } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { type MosaicTileProps, Focus, Mosaic, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 import { type BookingSearch as BookingSearchType } from '#types';

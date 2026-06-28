@@ -5,5 +5,5 @@
 export * from './components';
 export * from './hooks';
 export * from './types';
-export { createMenuAction, createMenuItemGroup, createLineSeparator, createGapSeparator } from './util';
+export { createGapSeparator, createLineSeparator, createMenuAction, createMenuItemGroup } from './util';
 export { type ActionGroupBuilder, type ActionGroupBuilderFn, MenuBuilder } from './builder';

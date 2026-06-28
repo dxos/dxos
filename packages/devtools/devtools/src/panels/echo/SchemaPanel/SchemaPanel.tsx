@@ -10,7 +10,7 @@ import { DXN, Entity, Format, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
+import { type TableFeatures, DynamicTable } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';

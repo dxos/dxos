@@ -22,7 +22,7 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Markdown } from '#types';
 
-import { EditableMarkdownCard, type EditableMarkdownCardProps } from './EditableMarkdownCard';
+import { type EditableMarkdownCardProps, EditableMarkdownCard } from './EditableMarkdownCard';
 
 random.seed(1234);
 

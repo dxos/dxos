@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MemoryStorage, type Storage, type StorageConstructor, StorageType } from '../common';
+import { type Storage, type StorageConstructor, MemoryStorage, StorageType } from '../common';
 import { IDbStorage } from './idb-storage';
 import { WebFS } from './web-fs';
 

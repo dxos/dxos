@@ -11,10 +11,10 @@ import { ComplexMap } from '@dxos/util';
 import { getCredentialAssertion } from '../credentials';
 import {
   type ChainVertex,
-  CredentialGraph,
   type CredentialGraphStateHandler,
   type PathState,
   type StateScope,
+  CredentialGraph,
 } from '../graph/credential-graph';
 
 export interface MemberInfo {

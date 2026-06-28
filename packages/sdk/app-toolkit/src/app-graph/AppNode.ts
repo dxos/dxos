@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
-import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, Annotation, Collection, Obj, Ref, Type } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';

@@ -3,10 +3,10 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type ViewUpdate, Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
-import { type Document, sourceHash, type Upos } from '@dxos/nlp';
+import { type Document, type Upos, sourceHash } from '@dxos/nlp';
 
 /** One analyzed region of the document. `document` offsets are relative to the span's own text. */
 export type PosSpan = {

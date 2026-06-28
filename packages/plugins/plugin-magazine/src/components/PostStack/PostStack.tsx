@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { type MosaicTileProps, Focus, Mosaic, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Subscription } from '#types';
 

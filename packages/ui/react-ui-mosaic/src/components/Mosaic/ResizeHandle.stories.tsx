@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { ScrollArea, type Axis } from '@dxos/react-ui';
+import { type Axis, ScrollArea } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Mosaic, type MosaicTileProps } from './Mosaic';
+import { type MosaicTileProps, Mosaic } from './Mosaic';
 
 type Item = { id: string; label: string };
 

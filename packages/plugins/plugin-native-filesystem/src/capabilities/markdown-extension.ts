@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { listener } from '@dxos/ui-editor';
 
-import { NativeFilesystemCapabilities, type FilesystemWorkspace, type NativeFilesystemState } from '#types';
+import { type FilesystemWorkspace, type NativeFilesystemState, NativeFilesystemCapabilities } from '#types';
 
 import { findFileById, updateFileInWorkspace, writeFileContent } from '../util';
 

@@ -9,9 +9,9 @@ import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import {
   type DataSpace,
+  type ServiceContext,
   InvitationsManager,
   InvitationsServiceImpl,
-  type ServiceContext,
   createAdmissionKeypair,
 } from '@dxos/client-services';
 import {

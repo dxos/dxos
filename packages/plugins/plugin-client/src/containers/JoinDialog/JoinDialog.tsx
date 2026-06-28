@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
+import { type JoinPanelProps, JoinPanel } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

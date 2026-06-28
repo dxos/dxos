@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { Trigger } from '@dxos/compute';
 import { type Database, Filter, Query } from '@dxos/echo';
-import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-runtime';
+import { type TriggerDispatcherState, TriggerDispatcher } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
 
 interface TriggerRuntimeControls {

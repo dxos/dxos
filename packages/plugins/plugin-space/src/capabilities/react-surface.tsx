@@ -20,6 +20,7 @@ import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import {
+  type RenameSubject,
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
@@ -44,18 +45,17 @@ import {
   SyncStatus,
   TypeCollectionArticle,
   ViewEditor,
-  type RenameSubject,
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import {
+  type TypeInputOptions,
+  SPACE_HOME_NODE_TYPE,
   HueAnnotationId,
   IconAnnotationId,
   Settings,
   SpaceCapabilities,
   SpaceHomeContent,
-  SPACE_HOME_NODE_TYPE,
-  type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
 

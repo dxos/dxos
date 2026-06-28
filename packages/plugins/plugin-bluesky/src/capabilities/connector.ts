@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Connector, type CredentialForm } from '@dxos/plugin-connector';
+import { type CredentialForm, Connector } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';

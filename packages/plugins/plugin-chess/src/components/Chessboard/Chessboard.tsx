@@ -18,16 +18,16 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type ChessModel,
-  Gameboard,
   type GameboardRootProps,
-  Chessboard as NaturalChessboard,
   type ChessboardProps as NaturalChessboardProps,
+  Gameboard,
+  Chessboard as NaturalChessboard,
   getRawPgn,
 } from '@dxos/react-ui-gameboard';
 
 import { type Chess } from '#types';
 
-import { Info, type InfoProps } from './Info';
+import { type InfoProps, Info } from './Info';
 import { ExtendedChessModel } from './types';
 
 export interface ChessboardController {
@@ -175,8 +175,8 @@ export const Chessboard = {
 };
 
 export type {
-  RootProps as ChessboardRootProps,
-  ContentProps as ChessboardContentProps,
   BoardProps as ChessboardBoardProps,
+  ContentProps as ChessboardContentProps,
   InfoProps as ChessboardInfoProps,
+  RootProps as ChessboardRootProps,
 };

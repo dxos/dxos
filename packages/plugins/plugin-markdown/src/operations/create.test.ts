@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill, Operation } from '@dxos/compute';
-import { Collection, Database, EID, Feed, Obj, Query } from '@dxos/echo';
+import { Operation, Skill } from '@dxos/compute';
+import { EID, Collection, Database, Feed, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';

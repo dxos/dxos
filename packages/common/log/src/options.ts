@@ -4,7 +4,7 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type LogConfig, type LogFilter, LogLevel, type LogOptions, LogProcessorType, levels } from './config';
+import { type LogConfig, type LogFilter, type LogOptions, LogLevel, LogProcessorType, levels } from './config';
 import { type LogProcessor } from './context';
 import { loadOptions } from './platform';
 import { BROWSER_PROCESSOR, CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';

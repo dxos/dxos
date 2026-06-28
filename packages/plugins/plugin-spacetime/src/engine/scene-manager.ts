@@ -3,6 +3,7 @@
 //
 
 import {
+  type Mesh,
   ArcRotateCamera,
   AxesViewer,
   Color3,
@@ -10,7 +11,6 @@ import {
   CreateLineSystem,
   Engine,
   HemisphericLight,
-  type Mesh,
   Scene,
   Vector3,
 } from '@babylonjs/core';

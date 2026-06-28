@@ -7,7 +7,7 @@ import React from 'react';
 import { type Node } from '@dxos/app-graph';
 
 import { l0ItemType } from '../../util';
-import { L1Panel, type L1PanelProps } from './L1Panel';
+import { type L1PanelProps, L1Panel } from './L1Panel';
 
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
   currentItemId: string;

@@ -6,9 +6,9 @@ import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
-import { Icon, type IconProps } from '../Icon';
-import { Tooltip, type TooltipSide } from '../Tooltip';
-import { Button, type ButtonProps } from './Button';
+import { type IconProps, Icon } from '../Icon';
+import { type TooltipSide, Tooltip } from '../Tooltip';
+import { type ButtonProps, Button } from './Button';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Partial<Pick<IconProps, 'icon' | 'size'>> & {

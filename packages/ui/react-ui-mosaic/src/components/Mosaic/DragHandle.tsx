@@ -5,7 +5,7 @@
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { type ReactNode, forwardRef } from 'react';
 
-import { Button, IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type IconButtonProps, type ThemedClassName, Button, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { useMosaicTileContext } from './Tile';
 

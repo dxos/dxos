@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
+import { type Doc, type Heads, type State, next as A } from '@automerge/automerge';
 
 import type { Obj } from '@dxos/echo';
 import { EntityStructure } from '@dxos/echo-protocol';

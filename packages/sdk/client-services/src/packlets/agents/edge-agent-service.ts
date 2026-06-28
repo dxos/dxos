@@ -9,9 +9,9 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
   type EdgeAgentService,
+  type QueryEdgeStatusResponse,
   EdgeStatus,
   QueryAgentStatusResponse,
-  type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type EdgeAgentManager } from './edge-agent-manager';

@@ -16,7 +16,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { Booking, type BookingSearch as BookingSearchType, Segment, Trip, TripCapabilities } from '#types';
+import { type BookingSearch as BookingSearchType, Booking, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
 import { BookingSearch } from './BookingSearch';

@@ -6,7 +6,7 @@ import { RolldownMagicString } from 'rolldown';
 import { parseAst } from 'rolldown/parseAst';
 import { describe, test } from 'vitest';
 
-import { DEFAULT_LOG_META_TRANSFORM_SPEC, type LogMetaTransformSpec } from './definitions.ts';
+import { type LogMetaTransformSpec, DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions.ts';
 import { transform } from './transform.ts';
 
 /**

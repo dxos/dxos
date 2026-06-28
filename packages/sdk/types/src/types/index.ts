@@ -35,38 +35,36 @@ import * as Transcript from './Transcript';
 
 export {
   //
-  // Common structs
-  //
-  Actor,
-  ContentBlock,
-  Geo,
-  Provider,
-
-  //
   // Common object types
   //
   AccessToken,
   Account,
+  //
+  // Common structs
+  //
+  Actor,
+  //
+  // Common relation types
+  //
+  AnchoredTo,
   Channel,
+  ContentBlock,
+  Employer,
   Event,
   File,
+  Geo,
+  HasConnection,
+  HasRelationship,
+  HasSubject,
   Message,
   Organization,
   Person,
   Pipeline,
   Project,
+  Provider,
   Task,
   Thread,
   Transcript,
-
-  //
-  // Common relation types
-  //
-  AnchoredTo,
-  Employer,
-  HasConnection,
-  HasRelationship,
-  HasSubject,
 };
 
 //

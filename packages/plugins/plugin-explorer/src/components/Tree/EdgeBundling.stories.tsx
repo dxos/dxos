@@ -17,7 +17,7 @@ import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasConnection, Organization, Person } from '@dxos/types';
 
 import { buildOrgHierarchy, connectionsToEdges, generateConnectedOrgs } from '../../testing';
-import { Tree, type TreeComponentProps } from './Tree';
+import { type TreeComponentProps, Tree } from './Tree';
 import { type TreeNode } from './types';
 
 const generator = random as any as ValueGenerator;

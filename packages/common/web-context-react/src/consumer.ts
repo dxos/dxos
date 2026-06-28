@@ -4,7 +4,7 @@
 
 import { useContext, useEffect, useState } from 'react';
 
-import { ContextRequestEvent, type ContextType, type UnknownContext } from '@dxos/web-context';
+import { type ContextType, type UnknownContext, ContextRequestEvent } from '@dxos/web-context';
 
 import { HostElementContext } from './internal';
 import { useContextRequestHandler } from './provider';

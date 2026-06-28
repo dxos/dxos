@@ -5,11 +5,11 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
-  Decoration,
   type DecorationSet,
+  type ViewUpdate,
+  Decoration,
   EditorView,
   ViewPlugin,
-  type ViewUpdate,
   WidgetType,
   keymap,
 } from '@codemirror/view';

@@ -6,9 +6,9 @@ import { createEffect, createMemo, createResource, createSignal } from 'solid-js
 
 import {
   type ControlProps,
-  Globe,
   type GlobeController,
   type StyleSet,
+  Globe,
   loadTopology,
   useDrag,
   useGlobeZoomHandler,

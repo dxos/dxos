@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Trigger, Operation } from '@dxos/compute';
+import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
+import { type QueryAST, Feed, Filter, JsonSchema, Key, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
 import { InboxOperation } from '@dxos/plugin-inbox';

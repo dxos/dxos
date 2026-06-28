@@ -19,7 +19,7 @@ import { type ValueGenerator, createObjectFactory, createRelationFactory } from 
 import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { Graph } from '../../types';
-import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle';
+import { type ExplorerArticleVariant, ExplorerArticle } from './ExplorerArticle';
 
 const generator = random as any as ValueGenerator;
 

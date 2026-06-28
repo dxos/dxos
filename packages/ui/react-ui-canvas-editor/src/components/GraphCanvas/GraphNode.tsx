@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Handle, type HandleProps, type Node, type NodeProps, Position } from '@xyflow/react';
+import { type HandleProps, type Node, type NodeProps, Handle, Position } from '@xyflow/react';
 import React, { memo, useCallback } from 'react';
 
 import { raise } from '@dxos/debug';

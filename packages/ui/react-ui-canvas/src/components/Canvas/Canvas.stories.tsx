@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useCanvasContext, useDrag, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
-import { Grid, type GridProps } from '../Grid';
+import { type GridProps, Grid } from '../Grid';
 import { Canvas } from './Canvas';
 
 const size = 128;

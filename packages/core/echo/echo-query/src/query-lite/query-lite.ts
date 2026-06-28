@@ -4,12 +4,12 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
+import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
 // `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
-import type { DXN, EID, EntityId, URI } from '@dxos/keys';
+import type { DXN, EID, URI, EntityId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.

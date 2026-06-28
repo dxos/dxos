@@ -10,33 +10,33 @@ import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import {
-  DATA_NAMESPACE,
-  EncodedReference,
   type EntityStructure,
+  DATA_NAMESPACE,
   PROPERTY_ID,
+  EncodedReference,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import {
+  type AnyProperties,
+  type EntityMeta,
+  type EntityMetaJSON,
+  type JsonSchemaType,
+  type ObjectJSON,
+  type ReactiveHandler,
   ATTR_DELETED,
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type AnyProperties,
   ChangeId,
   EntityKind,
+  EntityMetaSchema,
   EventId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
-  type ObjectJSON,
-  type EntityMeta,
-  type EntityMetaJSON,
-  EntityMetaSchema,
   ObjectVersionId,
   ParentId,
-  TypeSchema,
-  type ReactiveHandler,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -45,18 +45,18 @@ import {
   RelationTargetId,
   SchemaId,
   SchemaKindId,
-  StaticTypeSchemaSlot,
-  TypeEntityId,
   SchemaMetaSymbol,
   SchemaValidator,
   SelfURIId,
+  StaticTypeSchemaSlot,
+  TypeEntityId,
   TypeId,
   TypeIdentifierAnnotationId,
+  TypeSchema,
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
   executeChange,
-  type JsonSchemaType,
   getEntityKind,
   getProxyHandler,
   getProxySlot,
@@ -74,7 +74,7 @@ import {
   toEffectSchema,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { type URI, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 

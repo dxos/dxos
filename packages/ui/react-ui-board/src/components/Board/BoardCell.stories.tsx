@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Board, type BoardCellProps } from './Board';
+import { type BoardCellProps, Board } from './Board';
 import { defaultGrid } from './defs';
 
 const DefaultStory = (props: BoardCellProps) => {

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { type CapabilityManager, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';

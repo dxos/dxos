@@ -11,9 +11,9 @@ import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  EdgeAuthChallengeError,
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  EdgeAuthChallengeError,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import {

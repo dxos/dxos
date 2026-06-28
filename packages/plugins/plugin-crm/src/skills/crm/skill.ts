@@ -4,7 +4,7 @@
 
 import { Skill, Template } from '@dxos/compute';
 
-import { defaultResearchSources, type ResearchSource } from '#sources';
+import { type ResearchSource, defaultResearchSources } from '#sources';
 import { CrmOperation } from '#types';
 
 import { makeInstructions } from './instructions';

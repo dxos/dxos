@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Entity, Obj, QueryAST, Type, View, DXN } from '@dxos/echo';
+import { DXN, Collection, Database, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';

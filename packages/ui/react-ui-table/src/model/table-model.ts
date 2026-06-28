@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry, Atom } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
-import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
+import { type Database, type QueryAST, type View, Format, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
-import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
+import { type Mutable, getSnapshot } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';

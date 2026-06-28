@@ -6,7 +6,7 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -18,15 +18,15 @@ import {
   AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
-  SkillDefinition,
   CreateObject,
   EdgeModelResolver,
   LocalModelResolver,
   OperationHandler,
+  SkillDefinition,
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
-import { AssistantEvents, type AssistantPluginOptions } from '#types';
+import { type AssistantPluginOptions, AssistantEvents } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(

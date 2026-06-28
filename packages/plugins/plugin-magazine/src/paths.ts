@@ -11,4 +11,4 @@ const { getSectionPath: getMagazinesPath, getObjectPath: getMagazinePath } = Pat
   { groupId: Paths.GroupSegments.content },
 );
 
-export { getMagazinesPath, getMagazinePath };
+export { getMagazinePath, getMagazinesPath };

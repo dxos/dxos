@@ -7,7 +7,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
+import { type PluginManager, Capabilities, Capability } from '@dxos/app-framework';
 import { type LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Process } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';

@@ -3,15 +3,15 @@
 //
 
 import {
+  type Extension,
+  type Transaction,
   Annotation,
   ChangeSet,
   EditorState,
-  type Extension,
   StateEffect,
   StateField,
-  type Transaction,
 } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+import { type DecorationSet, type ViewUpdate, Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 

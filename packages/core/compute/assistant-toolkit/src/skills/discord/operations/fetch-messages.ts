@@ -17,7 +17,7 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Credential, Trace, Operation } from '@dxos/compute';
+import { Credential, Operation, Trace } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';

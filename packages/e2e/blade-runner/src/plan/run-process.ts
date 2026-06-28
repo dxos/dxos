@@ -10,7 +10,7 @@ import type { BrowserContext, BrowserType } from 'playwright';
 
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { CONSOLE_PROCESSOR, LogLevel, type LogProcessor, log } from '@dxos/log';
+import { type LogProcessor, CONSOLE_PROCESSOR, LogLevel, log } from '@dxos/log';
 import { createFileProcessor } from '@dxos/log/file-processor';
 import { trim } from '@dxos/util';
 

@@ -5,7 +5,7 @@
 import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
+import { type FeedWrapper, type FeedWriter, FeedSetIterator } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

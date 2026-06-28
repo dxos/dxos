@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { TRIP_SKILL_KEY } from '../skills/keys';

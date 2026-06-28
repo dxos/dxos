@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
-import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
+import { type ThemedClassName, Icon, useControlledState } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -169,9 +169,9 @@ export const TogglePanel = {
 };
 
 export type {
-  RootProps as TogglePanelRootProps,
+  BodyProps as TogglePanelBodyProps,
   ContentProps as TogglePanelContentProps,
   HeaderProps as TogglePanelHeaderProps,
-  BodyProps as TogglePanelBodyProps,
+  RootProps as TogglePanelRootProps,
   ViewportProps as TogglePanelViewportProps,
 };

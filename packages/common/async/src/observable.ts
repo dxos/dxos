@@ -9,7 +9,7 @@ import PushStream from 'zen-push';
 import { type Event } from './events';
 import { Trigger } from './trigger';
 
-export { Observable, PushStream, type Subscriber };
+export { type Subscriber, Observable, PushStream };
 
 // Inspired by:
 // https://github.com/zenparsing/zen-push/blob/39949f1/index.js#L93

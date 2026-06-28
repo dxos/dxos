@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
-import { Toggle, type ToggleProps } from './Toggle';
+import { type ToggleProps, Toggle } from './Toggle';
 
 const DefaultStory = (props: ToggleProps) => {
   return (

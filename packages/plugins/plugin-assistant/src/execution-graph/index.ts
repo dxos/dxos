@@ -3,23 +3,26 @@
 //
 
 export {
-  CommitSelector,
-  buildExecutionGraph,
-  collectProcessActivityLines,
-  deriveInFlightActivityLine,
   type BuildExecutionGraphParams,
   type CollectProcessActivityOptions,
   type ExecutionGraph,
   type ExecutionGraphDetailsMap,
+  CommitSelector,
+  buildExecutionGraph,
+  collectProcessActivityLines,
+  deriveInFlightActivityLine,
 } from './execution-graph';
 export {
+  type EphemeralStatusUpdate,
   estimateTokenCount,
   formatPendingBlockStatus,
   pendingStatusFromEphemeralMessage,
   resolveEphemeralStatusUpdate,
-  type EphemeralStatusUpdate,
 } from './pending-block-status';
 export {
+  type BuildSpanTreeOptions,
+  type Span,
+  type SpanMeta,
   BEGIN_EVENT_TYPES,
   END_EVENT_TYPES,
   ROOT_SPAN_ID,
@@ -28,7 +31,4 @@ export {
   isSpanBeginEvent,
   isSpanEndEvent,
   walkSpanTree,
-  type BuildSpanTreeOptions,
-  type Span,
-  type SpanMeta,
 } from './span-tree';

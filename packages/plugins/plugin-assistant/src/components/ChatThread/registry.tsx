@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { ContentBlock, type Message } from '@dxos/types';
+import { type Message, ContentBlock } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { type Assistant } from '../../types';
@@ -16,11 +16,11 @@ import {
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
-  SuggestionWidget,
   StatsWidget,
+  StatusWidget,
+  SuggestionWidget,
   SummaryWidget,
   ToolWidget,
-  StatusWidget,
 } from './widgets';
 
 /**

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry, Atom } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 

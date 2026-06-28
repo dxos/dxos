@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
+import { type PagerProps, PageNumber, Pager, StartButton } from './Pager';
 
 const DefaultStory = ({ count = 20 }: PagerProps) => {
   const [index, setIndex] = useState(0);

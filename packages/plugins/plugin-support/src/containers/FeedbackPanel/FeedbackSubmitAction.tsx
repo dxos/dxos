@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
+import { type FeedbackSubmitHandler, FeedbackForm } from '#components';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 

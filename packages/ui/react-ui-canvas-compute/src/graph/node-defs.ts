@@ -5,9 +5,9 @@
 import {
   type ComputeNode,
   type Executable,
+  type NodeType,
   NODE_INPUT,
   NODE_OUTPUT,
-  type NodeType,
   getTemplateInputSchema,
   registry,
 } from '@dxos/conductor';

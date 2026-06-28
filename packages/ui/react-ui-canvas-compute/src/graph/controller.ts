@@ -12,12 +12,6 @@ import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import { type Credential, type Operation, Trace } from '@dxos/compute';
 import {
-  ComputeBeginEvent,
-  ComputeCustomEvent,
-  ComputeEndEvent,
-  ComputeInputEvent,
-  ComputeNodeContext,
-  ComputeOutputEvent,
   type ComputeEdge,
   type ComputeGraphModel,
   type ComputeNode,
@@ -25,6 +19,12 @@ import {
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
+  ComputeBeginEvent,
+  ComputeCustomEvent,
+  ComputeEndEvent,
+  ComputeInputEvent,
+  ComputeNodeContext,
+  ComputeOutputEvent,
   GraphExecutor,
   ValueBag,
   isNotExecuted,

@@ -7,9 +7,9 @@ import {
   type EditorState,
   type Extension,
   type RangeSet,
+  type Transaction,
   RangeSetBuilder,
   StateField,
-  type Transaction,
 } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 

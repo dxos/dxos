@@ -6,9 +6,9 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import {
-  ScrollArea,
   type ScrollAreaRootProps,
   type ThemedClassName,
+  ScrollArea,
   composable,
   composableProps,
 } from '@dxos/react-ui';
@@ -17,8 +17,8 @@ import { mx } from '@dxos/ui-theme';
 import {
   type ReorderActive,
   type ReorderListController,
-  type UseListNavigationReturn,
   type UseListDisclosureReturn,
+  type UseListNavigationReturn,
   useListDisclosure,
   useListNavigation,
   useReorderAutoScroll,

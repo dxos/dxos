@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { type Database, type QueryAST, DXN, Annotation, Format, Obj, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';

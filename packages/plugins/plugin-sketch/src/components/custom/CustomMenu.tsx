@@ -3,9 +3,9 @@
 //
 
 import {
+  type TLUiStylePanelProps,
   DefaultQuickActions,
   DefaultQuickActionsContent,
-  type TLUiStylePanelProps,
   TldrawUiMenuItem,
   useActions,
   useReadonly,

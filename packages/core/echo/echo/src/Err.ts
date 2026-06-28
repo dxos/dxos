@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { BaseError, type BaseErrorOptions } from '@dxos/errors';
+import { type BaseErrorOptions, BaseError } from '@dxos/errors';
 import { type URI } from '@dxos/keys';
 
 export class SchemaNotFoundError extends BaseError.extend('SchemaNotFoundError', 'Schema not found') {

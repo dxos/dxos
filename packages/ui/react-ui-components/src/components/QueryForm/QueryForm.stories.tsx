@@ -15,7 +15,7 @@ import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { QueryForm, type QueryFormProps } from './QueryForm';
+import { type QueryFormProps, QueryForm } from './QueryForm';
 
 const types = [
   // TODO(burdon): Get label from annotation.

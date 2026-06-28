@@ -20,14 +20,14 @@ import {
   rawDataToBabylon,
 } from '../../engine';
 import {
-  createToolManager,
-  ToolManager,
-  type Selection,
   type EditorState,
+  type Selection,
   DEFAULT_EDITOR_STATE,
+  ToolManager,
+  createToolManager,
   getSelectedObjectIds,
 } from '../../tools';
-import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
+import { type DebugInfo, DebugPanel, extractSolidDebugInfo } from './DebugPanel';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;

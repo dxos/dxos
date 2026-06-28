@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ElevationProvider } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, type MenuRootProps, Menu, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { type CodeCapabilities } from '#types';

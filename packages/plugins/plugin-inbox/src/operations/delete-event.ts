@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { GoogleCalendar } from '../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { GoogleCredentials } from '../services/google-credentials';
-import { Calendar, InboxOperation, DraftEvent } from '../types';
+import { Calendar, DraftEvent, InboxOperation } from '../types';
 import { findBindingForTarget } from '../util';
 
 export default InboxOperation.DeleteEvent.pipe(

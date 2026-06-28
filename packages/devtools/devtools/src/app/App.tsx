@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
-import { ErrorBoundary, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { type ClientProviderProps, ClientProvider } from '@dxos/react-client';
+import { type ThemeMode, ErrorBoundary, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
 import { Devtools } from './Devtools';

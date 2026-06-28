@@ -15,7 +15,7 @@ import {
 } from 'xstate';
 
 import { log } from '@dxos/log';
-import { AlreadyJoinedError, type Client } from '@dxos/react-client';
+import { type Client, AlreadyJoinedError } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
@@ -548,5 +548,5 @@ const useJoinMachine = (
   });
 };
 
-export type { JoinMachine, JoinState, JoinSend, JoinEvent, JoinMachineContext };
+export type { JoinEvent, JoinMachine, JoinMachineContext, JoinSend, JoinState };
 export { joinMachine, useJoinMachine };

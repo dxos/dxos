@@ -7,9 +7,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Type } from '@dxos/echo';
 import {
+  type TypeAnnotation,
   EntityKind,
   Ref,
-  type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   getTypeIdentifierAnnotation,
