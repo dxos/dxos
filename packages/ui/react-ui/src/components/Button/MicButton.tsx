@@ -100,7 +100,9 @@ export const MicButton = forwardRef<HTMLButtonElement, MicButtonProps>(
             // Releasing focus mid-hold (e.g. tabbing away) must still end the press.
             onBlur: endPress,
           }
-        : { onClick: onToggle };
+        : {
+            onClick: onToggle,
+          };
 
     return (
       <IconButton
