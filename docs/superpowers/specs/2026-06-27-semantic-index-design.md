@@ -23,7 +23,9 @@ to Paris next week."* We want to record, separately:
 
 1. The semantic graph is **NOT stored in ECHO**. It is internal to the index. It
    references ECHO objects (by DXN) but lives in its own store.
-2. Modeled with **Effect Schema**, serializable to **typed JSON files**.
+2. Typed access via **Effect Schema**. (Updated: typed-JSON serialization is *preferred,
+   not required* — a compact, performant third-party lib that runs browser + Workers is
+   weighted higher. See §2.3.)
 3. Must persist **in the browser** and the pipeline must run on **Cloudflare Workers**.
 4. **Incremental** updates via a pipeline; the structure **holds conflicting facts**
    (by time or by attribution) without forcing resolution.
@@ -74,12 +76,50 @@ Full research log is summarized here; sources cited inline.
   one with *documented* Workers + Durable-Objects support, but it is tabular, not a graph,
   and we already have a SQLite substrate (`@dxos/sql-sqlite`).
 
-### 2.3 Verdict
+### 2.3 Library re-evaluation (typed-JSON demoted; reuse prioritized)
 
-**Build a homegrown Effect-Schema model, conceptually aligned to RDF-star + PROV-O +
-FactBank.** Shape each fact as a quoted-triple-with-metadata so a thin **N3.js adapter**
-(pure-JS, MIT — the safest RDF dep) can export Turtle-star / N-Quads on demand, without
-RDF at runtime. This satisfies all five hard requirements; no library does.
+After the first round, the constraint was reweighted: typed-JSON serialization is **not**
+a hard requirement; a performant, compact third-party library that runs in the browser
+**and** on Cloudflare Workers is strongly preferred. That reopens the embeddable-store
+question. Verified candidates (evidence + a local artifact spike):
+
+| Candidate | Browser | CF Workers | wasm (gzip) | Statement annotation | Vec/FTS | Maint. |
+| --------- | ------- | ---------- | ----------- | -------------------- | ------- | ------ |
+| **Oxigraph** | yes | **yes (proven mechanically, §2.4)** | **~1.4 MB** (fits free tier) | **RDF-star** (native) | no | active (monthly) |
+| Pure-JS RDF (N3.js) | yes | likely (pure JS) | n/a (tiny) | RDF-star (parse) | no | active |
+| CozoDB | yes | no (~12 MB, busts limit) | ~12 MB | Datalog columns | **yes** | dormant 2023 |
+| Kuzu | yes | no (~11 MB; archived) | ~11 MB | edge props | yes | **archived (Apple, 2025)** |
+
+CozoDB/Kuzu are out for Workers (size + dead-project risk). Oxigraph is the standout: its
+RDF-star model **is** exactly "annotate an assertion with attribution + valence," queryable
+via SPARQL, and it is compact and maintained.
+
+### 2.4 Oxigraph CF-Workers de-risk spike (evidence)
+
+Ran against the published `oxigraph@0.5.x` artifact under V8 (Node), simulating the Workers
+load path:
+
+- `web_bg.wasm` **gzip = 1.4 MB** → under the **free** Workers limit (3 MB), well under paid.
+- `web.js` exports **`initSync(module)`**; loading via `new WebAssembly.Module(bytes)` +
+  `initSync` (no `fetch`, no `WebAssembly.instantiate`) **works** — the exact path workerd
+  permits. Default async init *does* use `fetch` (avoid it; use `initSync`).
+- Only host imports needed: `crypto.getRandomValues`, `Date.now` — both on Workers.
+- Stored and queried an RDF-star fact end-to-end: `<< ex:alice ex:travelsTo ex:paris >>
+  prov:wasAttributedTo ex:alice ; prov:generatedAtTime "2026-06-06" ; ex:factuality "PR+" ;
+  ex:confidence "0.6"` → SPARQL returned `alice, 2026-06-06, PR+, 0.6`.
+
+Residual gap: a real `wrangler dev` smoke test (V8-in-Node ≠ workerd exactly). Cheap;
+scheduled as build-order step 0. Constraints accepted: Oxigraph's JS build is **in-memory**
+(we snapshot/persist ourselves, §6) and has **no FTS/vector** (sidecar, §8).
+
+### 2.5 Verdict
+
+**Adopt Oxigraph (RDF-star + SPARQL) as the semantic store + query engine, behind a typed
+Effect-Schema facade.** The facade keeps the team's ergonomics (typed `Fact` API, no
+hand-written SPARQL at call sites) and defines the canonical `Fact ↔ RDF-star` mapping;
+Oxigraph provides storage, query, and standards-based RDF interop for free. FactBank values
+and PROV-O terms become IRIs/literals in the graph. A SQLite-backed `SemanticStore` remains
+a fallback for scale (§6). This honors the reuse priority while preserving typing.
 
 ## 3. `index-core` Evaluation (task: "build on it or start again?")
 
@@ -93,10 +133,11 @@ FTS5 (trigram + BM25), `EntityMetaIndex` (type/space/time/parent), `ReverseRefIn
 - `index-core` is coupled to ECHO data sources (automerge/queue cursors, `IndexerObject`,
   `spaceId`) and writes ECHO-shaped metadata — but requirement (1) forbids ECHO storage,
   and our records (facts with valence/attribution) are not ECHO objects.
-- We **reuse the substrate and patterns**: the `@dxos/sql-sqlite` Effect SQL layer (browser
-  OPFS + Node, mirror-able to Durable-Object SQLite on Cloudflare), FTS5 trigram+BM25 for
-  full-text over quotes/labels, an entity-metadata table, a reverse-index table, and the
-  `IndexTracker` cursor pattern for incremental re-indexing.
+- The **primary** store is now Oxigraph (§2.5, §6). `index-core` patterns still apply to the
+  **fallback** SQLite-backed `SemanticStore` (for corpora too large for an in-memory graph):
+  the `@dxos/sql-sqlite` Effect SQL layer (browser OPFS + Node, mirror-able to Durable-Object
+  SQLite on Cloudflare), FTS5 trigram+BM25, and the `IndexTracker` cursor pattern for
+  incremental re-indexing.
 
 ## 4. Architecture Overview
 
@@ -105,15 +146,17 @@ New private package **`@dxos/semantic-index`** under `packages/core/compute/` (a
 
 ```
 text/messages ──▶ SemanticPipeline ──▶ Fact[] ──▶ SemanticStore ──▶ semanticQuery tool ──▶ LLM
-   (fixtures /        (Chunk →            (typed     (Memory |          (Operation /
-    connectors)        Extract →           JSON)      JsonFile |         skill tool)
-                       Link →                         Sqlite |
-                       Reconcile →                    DurableObject)
-                       Persist)
+   (fixtures /        (Chunk →            (typed     facade over:        (Operation /
+    connectors)        Extract →           facade)   • Oxigraph (RDF-     skill tool)
+                       Link →                          star+SPARQL) ◀ primary
+                       Reconcile →                    • Sqlite (scale fallback)
+                       Persist)                       persist: snapshot bytes →
+                                                       OPFS / file / R2 / DO-SQLite
 ```
 
-Everything in the core path is pure Effect + `@dxos/ai` (HTTP) + a SQL/JSON driver — no
-Node-only deps — so it runs unchanged in browser and on Cloudflare Workers.
+The `SemanticStore` is a typed facade; callers use the `Fact` API, never raw SPARQL. The
+core path is pure Effect + `@dxos/ai` (HTTP) + Oxigraph (wasm via `initSync`) — no Node-only
+deps — so it runs unchanged in browser and on Cloudflare Workers.
 
 ## 5. Data Model (Effect Schema)
 
@@ -173,36 +216,63 @@ The Alice example yields one `Fact`: assertion `(Alice, travelsTo, Paris)` with
 `validFrom ≈ Jun 12`; valence `PR+`, `nature: epistemic`, `confidence ≈ 0.6`; attribution
 `agent: Alice, source: <email DXN>, generatedAtTime: Jun 6`.
 
+### 5.1 `Fact ↔ RDF-star` mapping (the facade's canonical translation)
+
+Each `Fact` is one quoted triple plus annotation triples on it (verified working in §2.4):
+
+```turtle
+<< :alice :travelsTo :paris >>
+    prov:wasAttributedTo   :alice ;            # Attribution.agent
+    prov:wasDerivedFrom    <dxn:…email> ;      # Attribution.source
+    prov:generatedAtTime   "2026-06-06"^^xsd:date ;   # Attribution.generatedAtTime
+    sx:factuality          "PR+" ;            # Valence.factuality (FactBank)
+    sx:confidence          0.6 ;              # Valence.confidence
+    sx:nature              "epistemic" ;      # Valence.nature
+    sx:validFrom           "2026-06-12"^^xsd:date ;   # Assertion.validFrom
+    sx:recordedAt          "…"^^xsd:dateTime ;        # transaction time
+    sx:factId              "…" .              # Fact.id
+```
+
+Entities are IRIs minted per index-local id; `Entity.ref` (DXN of an ECHO object) is a
+`sx:echoRef` literal. Conflicting facts are simply multiple quoted triples (same s/p,
+different o/valence/time); resolution is a SPARQL filter (`as-of` time × `according-to`
+source), never a write-time merge. `sx:` is our small namespace; PROV terms are reused
+verbatim so the graph is valid PROV-O and exportable as-is.
+
 ## 6. Storage (`SemanticStore`)
 
-An Effect service with a small surface and pluggable backends:
+A typed Effect-service **facade** over Oxigraph; callers use the `Fact` API, the facade
+maps to/from RDF-star (§5.1) and SPARQL:
 
 ```ts
 SemanticStore {
-  putFacts(facts: Fact[]): Effect<void>;
-  resolveEntity(input): Effect<Entity>;          // get-or-create by label/alias (extractor's Resolver pattern)
-  query(q: SemanticQuery): Effect<Fact[]>;        // by entity/predicate/time/source/valence; FTS over quote
+  putFacts(facts: Fact[]): Effect<void>;          // → RDF-star quads inserted
+  resolveEntity(input): Effect<Entity>;           // get-or-create by label/alias (extractor's Resolver pattern)
+  query(q: SemanticQuery): Effect<Fact[]>;        // → SPARQL; by entity/predicate/time/source/valence
   cursor(source: DXN): Effect<string | undefined>;// last sourceHash for incremental skip
   setCursor(source: DXN, hash: string): Effect<void>;
-  export(): Effect<SemanticGraphJson>;            // typed-JSON snapshot
-  import(json: SemanticGraphJson): Effect<void>;
+  snapshot(): Effect<Uint8Array>;                 // dump store → N-Quads(-star) bytes
+  load(bytes: Uint8Array): Effect<void>;          // restore
 }
 ```
 
-Backends (all behind the same interface):
+**Engine**: Oxigraph `Store`, loaded via `initSync` (browser + Workers; §2.4). In-memory,
+so persistence is explicit snapshot/restore:
 
-- **`MemoryStore`** — tests.
-- **`JsonFileStore`** — typed-JSON files; satisfies "serialize to typed JSON files",
-  used for fixtures, snapshots, and round-trip export/import.
-- **`SqliteStore`** — Effect SQL over `@dxos/sql-sqlite`; browser OPFS + Node; FTS5
-  trigram+BM25 over `quote`/`label`; metadata + reverse-index tables (index-core patterns).
-- **`DurableObjectStore`** — Cloudflare DO SQLite (`ctx.storage.sql`, GA, 10 GB/object).
-  Same SQL as `SqliteStore`, different driver. Interface designed for it; implemented when
-  we deploy on CF.
+- **Browser** — `snapshot()` bytes → OPFS (via `@dxos/sql-sqlite` OPFS pool or raw OPFS);
+  debounced on write, loaded on open.
+- **Node / fixtures** — bytes → file (this is the "serialize to a file" path; format is
+  N-Quads-star, still plain text, diffable).
+- **Cloudflare** — bytes → R2 or a Durable-Object SQLite blob; load into the DO's in-memory
+  Oxigraph on first request, snapshot on alarm/idle.
 
-Conflict handling: facts are **append-only**. A query for "what does X assert about Y"
-returns all competing facts, each carrying its attribution and time; the
-caller (or the LLM tool) resolves with `as-of <time>` × `according-to <source>`. No
+**Fallback for scale** — `SqliteStore` (same interface, `@dxos/sql-sqlite` + FTS5,
+index-core patterns) for corpora too large to hold in a 128 MB isolate as a live graph.
+Selected per deployment; the pipeline and tool are unaware which backend is active.
+
+Conflict handling: facts are **append-only** quads. A query for "what does X assert about
+Y" returns all competing facts, each with its attribution and time; the caller (or the LLM
+tool) resolves with `as-of <time>` × `according-to <source>` as a SPARQL filter. No
 write-time merge — which is what local-first sync wants.
 
 ## 7. Pipeline (`SemanticPipeline`)
@@ -231,7 +301,8 @@ ECHO — so it is a new pipeline, not a reuse of that runtime.
 
 ## 8. Vector / Semantic Search (deferred, designed-for)
 
-v1 retrieval = structured query + FTS5. The store keeps an embedding seam:
+v1 retrieval = structured SPARQL query (text matching via SPARQL `CONTAINS`/`REGEX` for
+now; a dedicated FTS index is part of the deferred work). The store keeps an embedding seam:
 
 - **Browser**: transformers.js (EmbeddingGemma-300m / bge-small) or skip.
 - **Cloudflare**: Workers AI embeddings (`@cf/baai/bge-base-en-v1.5` 768-d, or
@@ -276,37 +347,45 @@ packages/core/compute/semantic-index/
     SemanticPipeline.ts      // stage composition
     errors.ts
     internal/
-      stores/ memory.ts json-file.ts sqlite.ts durable-object.ts
+      oxigraph/ engine.ts mapping.ts   // initSync load; Fact↔RDF-star + SPARQL
+      stores/ oxigraph-store.ts sqlite-store.ts   // both implement SemanticStore
+      persist/ opfs.ts file.ts r2.ts durable-object.ts   // snapshot sinks
       stages/ chunk.ts extract.ts link.ts reconcile.ts
-      rdf/ export.ts          // N3.js Turtle-star/N-Quads adapter
     testing/
       index.ts                // TestLayer, fixtures
       harness/ fetch.ts save.ts feed.ts
-  fixtures/ *.json            // synthetic corpus + expected facts
+  fixtures/ *.nq *.json       // synthetic corpus (N-Quads-star) + expected facts
   moon.yml package.json
 ```
 
-`"private": true`. Dependencies: `@dxos/ai`, `@dxos/sql-sqlite`, `@dxos/echo` (DXN/Ref
-types only), `effect`; external `n3` (catalog). No ECHO storage dependency.
+`"private": true`. Dependencies: `@dxos/ai`, `@dxos/echo` (DXN/Ref types only), `effect`,
+external **`oxigraph`** (catalog); `@dxos/sql-sqlite` only for the scale-fallback store.
+No ECHO storage dependency. (Oxigraph's own N-Quads-star dump replaces the need for a
+separate N3.js export adapter; add `n3` later only if streaming parse is required.)
 
 ## 12. Build Order (for the implementation plan)
 
-1. Package scaffold + Effect-Schema model + JSON round-trip (`MemoryStore` + `JsonFileStore`).
+0. **`wrangler dev` smoke test** of Oxigraph `initSync` + one SPARQL query — close the one
+   residual gap (§2.4) before committing to the engine. Cheap; do it first.
+1. Package scaffold + Effect-Schema model + `Fact↔RDF-star` mapping + `OxigraphStore`
+   (`initSync` load, put/query, snapshot/restore round-trip).
 2. `SemanticPipeline` Extract stage against synthetic fixtures (memoized LLM) — the core loop.
 3. Link + Reconcile + incremental `sourceHash` cursors.
-4. `SqliteStore` (browser OPFS + Node) with FTS5; parity tests vs `MemoryStore`.
+4. Persist sinks: OPFS (browser) + file (node). Parity tests.
 5. Connector harness (fixtures-first; live fetch wired).
 6. `semanticQuery` tool + ablation comprehension eval.
-7. N3.js RDF-star export adapter.
-8. (Deferred) vector seam; `DurableObjectStore`; Cloudflare worker entrypoint.
+7. (Deferred) `SqliteStore` scale fallback; vector seam (Workers AI + Vectorize / browser
+   transformers.js); `DurableObjectStore` + R2 persist; Cloudflare worker entrypoint.
 
 ## 13. Open Questions for Review
 
-1. **Package name** — `@dxos/semantic-index` (proposed) vs `@dxos/comprehension` vs other.
-2. **Predicate vocabulary** — fully open strings (v1, simplest) vs a small controlled set
+1. **Engine** — adopt **Oxigraph** (RDF-star + SPARQL behind a typed facade), per §2.5 and
+   the spike (§2.4)? This is the central decision the reweighting unlocked.
+2. **Package name** — `@dxos/semantic-index` (proposed) vs `@dxos/comprehension` vs other.
+3. **Predicate vocabulary** — fully open strings (v1, simplest) vs a small controlled set
    the extractor must map to (better querying, more constraint). Proposed: open in v1, with
    a normalization pass later.
-3. **Eval scoring** — LLM-judge (proposed) vs hand-authored exact expected-fact assertions
+4. **Eval scoring** — LLM-judge (proposed) vs hand-authored exact expected-fact assertions
    vs both.
-4. Anything in §5 (the model) you want changed before I build — this is the highest-leverage
-   thing to get right.
+5. Anything in §5 (the model / RDF-star mapping) you want changed before I build — the
+   highest-leverage thing to get right.
