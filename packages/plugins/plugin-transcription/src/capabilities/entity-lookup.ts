@@ -23,7 +23,7 @@ export default Capability.makeModule(
       const client = capabilities.get(ClientCapabilities.Client);
       const space = AppSpace.getPersonalSpace(client);
       if (!space) {
-        return undefined;
+        return [];
       }
       return makeDatabaseLookup(space.db)(noun);
     };

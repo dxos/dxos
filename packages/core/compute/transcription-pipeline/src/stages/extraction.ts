@@ -67,11 +67,18 @@ export const resolveEntities = async (text: string, lookup?: EntityLookup): Prom
   const matched = new Set<string>();
   if (lookup) {
     for (const noun of nouns) {
-      // TODO(LLM seam): replace heuristic nouns with model NER (the lookup backend stays injected).
-      const match = await lookup(noun);
-      if (match) {
-        references.push(match.ref);
-        quotes.push({ quote: noun, id: match.id });
+      // TODO(LLM seam): replace heuristic nouns with model NER, and disambiguate tied candidates
+      // against the conversation window (the stage's `window` + `resolvedReferents`) instead of
+      // leaving them as candidates. The lookup backend stays injected.
+      const candidates = await lookup(noun); // ranked best-first.
+      // Auto-link only a clear winner: the top candidate must strictly out-rank the runner-up. A tie
+      // at the top is genuine ambiguity, left for the context-aware resolver / the user — so we never
+      // link the wrong object on a guess. (Text search returns weak spurious matches too, so counting
+      // candidates is not a reliable ambiguity signal; the rank gap is.)
+      const unambiguous = candidates.length === 1 || (candidates.length > 1 && candidates[0].score > candidates[1].score);
+      if (candidates.length > 0 && unambiguous) {
+        references.push(candidates[0].ref);
+        quotes.push({ quote: noun, id: candidates[0].id });
         matched.add(noun.toLowerCase());
       }
     }
