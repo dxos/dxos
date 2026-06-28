@@ -127,6 +127,32 @@ describe('OllamaAdmin', () => {
     });
   });
 
+  describe('load / unload', () => {
+    test('load posts keep_alive -1 and resolves ok', async ({ expect }) => {
+      let body: any;
+      const fetch: typeof globalThis.fetch = async (_url, init) => {
+        body = JSON.parse(String(init?.body));
+        return new Response('{"done":true}', { status: 200 });
+      };
+      const admin = OllamaAdmin.make({ endpoint: ENDPOINT, fetch });
+      const result = await admin.load('llama3.2:1b');
+      expect(result).toEqual({ ok: true });
+      expect(body).toMatchObject({ model: 'llama3.2:1b', keep_alive: -1 });
+    });
+
+    test('unload posts keep_alive 0', async ({ expect }) => {
+      let body: any;
+      const fetch: typeof globalThis.fetch = async (_url, init) => {
+        body = JSON.parse(String(init?.body));
+        return new Response('{"done":true}', { status: 200 });
+      };
+      const admin = OllamaAdmin.make({ endpoint: ENDPOINT, fetch });
+      const result = await admin.unload('llama3.2:1b');
+      expect(result).toEqual({ ok: true });
+      expect(body).toMatchObject({ model: 'llama3.2:1b', keep_alive: 0 });
+    });
+  });
+
   describe('remove', () => {
     test('resolves ok on 200', async ({ expect }) => {
       const fetch = mockFetch(() => new Response('', { status: 200 }));

@@ -120,6 +120,17 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   )}
                   {model.size != null && <span className='text-xs text-description'>{formatBytes(model.size)}</span>}
                   <IconButton
+                    icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
+                    iconOnly
+                    label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
+                    disabled={pending[model.name]}
+                    onClick={() =>
+                      void withPending(model.name, () =>
+                        running ? manager.unload(model.name) : manager.load(model.name),
+                      )()
+                    }
+                  />
+                  <IconButton
                     icon='ph--trash--regular'
                     iconOnly
                     label={t('settings.ollama.remove.label')}

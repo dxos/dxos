@@ -52,6 +52,10 @@ export type Admin = {
   list: (signal?: AbortSignal) => Promise<Result<{ models: Model[] }>>;
   /** List models currently loaded into memory. */
   ps: (signal?: AbortSignal) => Promise<Result<{ models: RunningModel[] }>>;
+  /** Load a model into memory and keep it resident until explicitly unloaded. */
+  load: (name: string) => Promise<Result>;
+  /** Unload a model from memory. */
+  unload: (name: string) => Promise<Result>;
   /** Pull (download) a model, streaming progress. Resolves once the download terminates. */
   pull: (name: string, onProgress?: (progress: PullProgress) => void, signal?: AbortSignal) => Promise<Result>;
   /** Delete an installed model. */
@@ -117,6 +121,27 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fe
     }
   };
 
+  // Ollama loads/unloads a model via an empty `/api/generate` request: `keep_alive: -1` pins it in
+  // memory; `keep_alive: 0` evicts it.
+  const setKeepAlive = async (name: string, keepAlive: number): Promise<Result> => {
+    try {
+      const response = await fetch(`${endpoint}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: name, keep_alive: keepAlive, stream: false }),
+      });
+      if (!response.ok) {
+        return { ok: false, error: `HTTP ${response.status}` };
+      }
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: formatError(error) };
+    }
+  };
+
+  const load: Admin['load'] = (name) => setKeepAlive(name, -1);
+  const unload: Admin['unload'] = (name) => setKeepAlive(name, 0);
+
   const pull: Admin['pull'] = async (name, onProgress, signal) => {
     try {
       const response = await fetch(`${endpoint}/api/pull`, {
@@ -176,7 +201,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT, fetch = globalThis.fe
     }
   };
 
-  return { endpoint, list, ps, pull, remove };
+  return { endpoint, list, ps, load, unload, pull, remove };
 };
 
 /**

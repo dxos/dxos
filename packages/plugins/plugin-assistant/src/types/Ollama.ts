@@ -35,5 +35,9 @@ export type Manager = {
   pull: (name: string) => Promise<void>;
   /** Abort an in-flight pull, leaving any already-downloaded layers in place. */
   cancel: (name: string) => void;
+  /** Load a model into memory (kept resident until unloaded). */
+  load: (name: string) => Promise<void>;
+  /** Unload a model from memory. */
+  unload: (name: string) => Promise<void>;
   remove: (name: string) => Promise<void>;
 };

@@ -152,6 +152,34 @@ export default Capability.makeModule(
       setProgress(name, undefined);
     };
 
+    const load = async (name: string): Promise<void> => {
+      try {
+        await ensureRunning();
+      } catch (error) {
+        return fail(formatError(error));
+      }
+      log.info('ollama load', { name });
+      const result = await admin.load(name);
+      if (!result.ok) {
+        return fail(result.error);
+      }
+      await refreshLoaded();
+    };
+
+    const unload = async (name: string): Promise<void> => {
+      try {
+        await ensureRunning();
+      } catch (error) {
+        return fail(formatError(error));
+      }
+      log.info('ollama unload', { name });
+      const result = await admin.unload(name);
+      if (!result.ok) {
+        return fail(result.error);
+      }
+      await refreshLoaded();
+    };
+
     const remove = async (name: string): Promise<void> => {
       try {
         await ensureRunning();
@@ -172,6 +200,8 @@ export default Capability.makeModule(
       refreshLoaded,
       pull,
       cancel,
+      load,
+      unload,
       remove,
     };
 

@@ -24,6 +24,8 @@ const makeFakeManager = (state: Ollama.ModelsState): Ollama.Manager => ({
   refreshLoaded: async () => {},
   pull: async () => {},
   cancel: () => {},
+  load: async () => {},
+  unload: async () => {},
   remove: async () => {},
 });
 
