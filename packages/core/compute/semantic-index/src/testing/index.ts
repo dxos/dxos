@@ -42,7 +42,10 @@ export const queuedAiService = (payloads: readonly unknown[]): Layer.Layer<AiSer
     model: () =>
       Layer.succeed(LanguageModel.LanguageModel, {
         generateText: () => Effect.succeed({ text: '', content: [] }),
-        generateObject: () => Effect.succeed({ value: payloads[index++], content: [] }),
+        generateObject: () =>
+          index < payloads.length
+            ? Effect.succeed({ value: payloads[index++], content: [] })
+            : Effect.die(new Error(`queuedAiService exhausted after ${index} generateObject calls`)),
         streamText: () => Stream.empty,
       } as any),
   });

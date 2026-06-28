@@ -100,12 +100,17 @@ describe('sqlite source', () => {
       const sql = yield* SqlClient.SqlClient;
       yield* insertQuads(sql, [
         DataFactory.quad(namedNode('s:a'), namedNode('p:1'), namedNode('o:x'), namedNode('g:1')),
+        DataFactory.quad(namedNode('s:b'), namedNode('p:1'), namedNode('o:y')),
       ]);
       const source = makeSqliteSource(sql);
-      const results = yield* Effect.promise(() => collect(source.match(null, null, null, null)));
+      // Bind the graph so the match() g-filter branch is exercised (not just read reconstruction).
+      const results = yield* Effect.promise(() => collect(source.match(null, null, null, namedNode('g:1'))));
       yield* Effect.sync(() => {
         if (results.length !== 1) {
-          throw new Error(`expected 1 quad, got ${results.length}`);
+          throw new Error(`expected 1 quad in g:1, got ${results.length}`);
+        }
+        if (results[0].subject.value !== 's:a') {
+          throw new Error('graph filter returned the wrong quad');
         }
         if (results[0].graph.value !== 'g:1') {
           throw new Error(`graph not preserved: ${results[0].graph.value}`);

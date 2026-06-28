@@ -9,7 +9,7 @@ import { type AiService } from '@dxos/ai';
 import { type SemanticIndexError } from '../../errors';
 import { type ExtractDocument } from '../../internal/stages/extract';
 import { SemanticPipeline } from '../../SemanticPipeline';
-import { SemanticStore } from '../../SemanticStore';
+import { type SemanticStore } from '../../SemanticStore';
 import { type Fact } from '../../types';
 import { factsToModule } from './serialize';
 
@@ -18,8 +18,7 @@ export const generateFacts = (
   docs: readonly ExtractDocument[],
 ): Effect.Effect<{ facts: Fact[]; module: string }, SemanticIndexError, SemanticStore | AiService.AiService> =>
   Effect.gen(function* () {
-    yield* SemanticPipeline.run(docs);
-    const store = yield* SemanticStore;
-    const facts = yield* store.query({});
+    // Serialize only the facts produced for these docs (not the entire store).
+    const facts = yield* SemanticPipeline.run(docs);
     return { facts, module: factsToModule(facts) };
   });
