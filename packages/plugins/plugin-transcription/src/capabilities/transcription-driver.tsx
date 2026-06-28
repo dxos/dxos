@@ -70,10 +70,16 @@ const TranscriptionDriver = () => {
     setStatus(() => ({ phase }));
   }, [phase, setStatus]);
 
+  // `ideal` (not `exact`) so an unavailable device falls back to the default rather than failing.
+  const audioConstraints = useMemo<MediaTrackConstraints | undefined>(
+    () => (settings?.audioDeviceId ? { deviceId: { ideal: settings.audioDeviceId } } : undefined),
+    [settings?.audioDeviceId],
+  );
+
   // Keep the track (and thus the transcriber) alive across the whole active session — including the
   // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
   // mic indicator therefore lingers for the brief drain after stop.
-  const track = useAudioTrack(active);
+  const track = useAudioTrack(active, audioConstraints);
 
   // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
   const sessionIdRef = useRef(sessionId);
