@@ -4,7 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 
-import { Button, Panel, ScrollArea, Tag, Toolbar, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Panel, Tag, Toolbar, type ThemedClassName } from '@dxos/react-ui';
 import { type EditorController, Editor } from '@dxos/react-ui-editor';
 import { type Type } from '@dxos/semantic-index';
 
@@ -51,15 +51,11 @@ export const SemanticFactsParser = ({ classNames, onParse, initialText = '' }: S
           {error && <Tag hue='red'>{error}</Tag>}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-4'>
-            <Editor.Root ref={editorRef}>
-              <Editor.View value={initialText} classNames='border border-separator rounded-sm p-2 min-bs-24' />
-            </Editor.Root>
-            <SemanticFactsViewer facts={facts} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+      <Panel.Content>
+        <Editor.Root ref={editorRef}>
+          <Editor.View value={initialText} />
+        </Editor.Root>
+        <SemanticFactsViewer facts={facts} />
       </Panel.Content>
     </Panel.Root>
   );
