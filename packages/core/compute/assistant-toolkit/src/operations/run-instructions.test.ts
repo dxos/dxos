@@ -30,12 +30,6 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
 });
 
-const countFeedMessages = (feed: Feed.Feed) =>
-  Effect.gen(function* () {
-    const items = yield* Feed.query(feed, Filter.everything()).run;
-    return items.filter(Obj.instanceOf(Message.Message)).length;
-  });
-
 describe('Agent prompt', () => {
   it.effect(
     'chat mode appends assistant messages to the chat queue',
@@ -116,3 +110,9 @@ describe('Agent prompt', () => {
     { timeout: 60_000 },
   );
 });
+
+const countFeedMessages = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const items = yield* Feed.query(feed, Filter.everything()).run;
+    return items.filter(Obj.instanceOf(Message.Message)).length;
+  });
