@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { MicButton, useTranslation } from '@dxos/react-ui';
+import { useSoundEffect } from '@dxos/react-ui-audio';
 import { type AudioInputDevice, MicSettings } from '@dxos/react-ui-transcription';
 
 import { meta } from '#meta';
@@ -27,6 +28,19 @@ export const Mic = ({ docId }: MicProps) => {
   const [settings, setSettings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const recording = !!session?.recording && session.id === docId;
+
+  // Play start/stop cues as this session's recording flag flips (skip the initial mount).
+  const soundStart = useSoundEffect('StartRecording');
+  const soundStop = useSoundEffect('StopRecording');
+  const wasRecording = useRef(recording);
+  useEffect(() => {
+    if (wasRecording.current === recording) {
+      return;
+    }
+    wasRecording.current = recording;
+    void (recording ? soundStart : soundStop).play();
+  }, [recording, soundStart, soundStop]);
+
   const recordMode: Settings.RecordMode = settings?.recordMode ?? 'toggle';
   const entityExtraction = settings?.entityExtraction !== false;
   const selectedDeviceId = settings?.audioDeviceId ?? '';

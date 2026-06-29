@@ -3,4 +3,3 @@
 //
 
 export * from './useTranscriptionRecording';
-export * from './useVoiceInput';
