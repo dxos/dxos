@@ -764,7 +764,6 @@ const isEchoObjectField = (value: any) => {
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
-
 /**
  * Walk the prototype chain looking for an accessor with a setter for `prop`.
  * Used by the `set` trap to route writes to system setters (e.g. `[ParentId]`).
