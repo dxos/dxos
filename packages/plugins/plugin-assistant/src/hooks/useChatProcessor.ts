@@ -3,6 +3,7 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
@@ -15,6 +16,7 @@ import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useObject, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -31,6 +33,16 @@ export type UseChatProcessorProps = {
   registry?: Registry.Registry;
   settings?: Assistant.Settings;
 };
+
+/**
+ * Wraps an {@link AiService.Service} so model resolution defaults to the chat's selected provider —
+ * the catalog's shared model ids (e.g. `gptOss20b`) are served by several providers, so the provider
+ * must accompany the request. A call that supplies its own provider is left untouched.
+ */
+const withProvider = (service: AiService.Service, provider: DXN.DXN): AiService.Service => ({
+  metadata: service.metadata,
+  model: (id, options) => service.model(id, { ...options, provider: options?.provider ?? provider }),
+});
 
 /**
  * Configure and create AiChatProcessor.
@@ -88,12 +100,26 @@ export const useChatProcessor = ({
       OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 
+    // Scope the chat's AiService to the selected provider so shared model ids resolve unambiguously.
+    const providerScopedLayer = preset
+      ? spaceLayer.pipe(
+          Layer.map((context) =>
+            Context.add(
+              context,
+              AiService.AiService,
+              withProvider(Context.get(context, AiService.AiService), preset.provider),
+            ),
+          ),
+        )
+      : spaceLayer;
+
     log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(session, runtime, feed, spaceLayer, {
+    return new AiChatProcessor(session, runtime, feed, providerScopedLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       registry,
       model: preset?.model,
+      provider: preset?.provider,
     });
   }, [runtime, session, registry, preset, chat, feed, space?.id]);
 

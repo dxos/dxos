@@ -7,8 +7,11 @@ import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiModelResolver from '../../AiModelResolver';
-import { type ModelName, modelsBySource } from '../../defs';
+import * as Model from '../../Model';
+import * as Provider from '../../Provider';
 import { type AiModelNotAvailableError } from '../../errors';
 
 export const make = () =>
@@ -16,12 +19,13 @@ export const make = () =>
     {
       name: 'OpenAI',
     },
+    Provider.openai.id,
     Effect.gen(function* () {
-      // Derive the id → model-layer map from the catalog's `openai` models (id → back-end name).
+      // Derive the id → model-layer map from the OpenAI provider's catalog models (id → back-end name).
       const modelMap: Partial<
-        Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>
+        Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>
       > = {};
-      for (const model of modelsBySource('openai')) {
+      for (const model of Model.forProvider(Provider.openai.id)) {
         modelMap[model.id] = yield* OpenAiLanguageModel.model(model.backend);
       }
       return modelMap;

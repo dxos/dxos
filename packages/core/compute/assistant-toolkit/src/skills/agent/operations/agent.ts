@@ -11,6 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { ContentBlock } from '@dxos/types';
 
 import { Agent } from '../../../types';
@@ -57,7 +58,7 @@ export default AgentWorker.pipe(
         })
         .pipe(
           Effect.provide(
-            Layer.mergeAll(AiService.model('ai.claude.model.claude-opus-4-6'), ToolExecutionServices).pipe(
+            Layer.mergeAll(AiService.model(DXN.make('com.anthropic.model.claudeOpus48')), ToolExecutionServices).pipe(
               Layer.provideMerge(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })),
             ),
           ),

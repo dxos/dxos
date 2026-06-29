@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ModelName } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { type Operation } from '@dxos/compute';
 import { type Database, type Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import {
   ExtractError,
@@ -68,13 +69,13 @@ export const ExtractionTemplate = Schema.Struct({
   sourceTypes: Schema.Array(Schema.String),
   prompt: Schema.String,
   /** Cheap/fast model used for extraction. Defaults to {@link DEFAULT_MODEL}. */
-  model: Schema.optional(ModelName),
+  model: Schema.optional(DXN.Schema),
   targets: Schema.Array(TargetSpec),
   tags: Schema.optional(Schema.Array(TagSpec)),
 });
 export interface ExtractionTemplate extends Schema.Schema.Type<typeof ExtractionTemplate> {}
 
-export const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-haiku-4-5';
+export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claudeHaiku45');
 
 /**
  * Code-side wiring for a template extractor. The LLM produces a payload validated against

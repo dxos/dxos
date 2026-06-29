@@ -15,7 +15,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 
-import { type AiModelResolver } from '@dxos/ai';
+import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -302,6 +302,7 @@ const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, n
       const { endpoint } = yield* OllamaSidecar;
       return OllamaResolver.make({
         endpoint,
+        provider: Provider.builtIn.id,
         transformClient: HttpClient.withTracerPropagation(false),
       });
     }),

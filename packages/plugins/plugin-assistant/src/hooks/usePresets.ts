@@ -2,25 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { OLLAMA_MODEL_PREFIX, type OllamaModelId, PROVIDERS, getModel } from '@dxos/ai';
+import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 
-import { type Assistant, AssistantCapabilities, type ChatPresetProps, type Ollama } from '#types';
+import { type Assistant, AssistantCapabilities, type ChatPresetProps, Ollama } from '#types';
 
-import { type AiServicePreset, presetsForProvider, resolveProvider } from '../processor';
+import { type AiServicePreset, defaultsKeyForProvider, presetsForProvider, resolveProvider } from '../processor';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
 } & Pick<ChatPresetProps, 'presets' | 'onPresetChange'>;
-
-// Stable fallback so `useAtomValue` is always called with a valid atom when the (desktop-only)
-// Ollama manager capability is absent.
-const EMPTY_OLLAMA_STATE: Ollama.ModelsState = { kind: 'idle', models: [], loaded: [], pulls: {}, errors: {} };
-const emptyStateAtom = Atom.make(EMPTY_OLLAMA_STATE);
 
 /**
  * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}),
@@ -29,46 +23,34 @@ const emptyStateAtom = Atom.make(EMPTY_OLLAMA_STATE);
 export const usePresets = (settings: Assistant.Settings): UsePresets => {
   const [preset, setPreset] = useState<AiServicePreset>();
 
-  // The Ollama manager is the bundled sidecar (desktop only); it lists installed models and signals
-  // that the `built-in` provider (rather than an external Ollama server) is available.
+  // The Ollama manager is the bundled sidecar (desktop only); its presence signals that the
+  // `built-in` provider (rather than an external Ollama server) is available.
   const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
-  const ollamaState = useAtomValue(ollamaManager?.state ?? emptyStateAtom);
 
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
-  // `built-in` and `ollama` share the `ollama` default key (same model source).
-  const defaultModel = settings.modelDefaults?.[provider === 'built-in' ? 'ollama' : provider];
+  const defaultModel = settings.modelDefaults?.[defaultsKeyForProvider(provider)];
 
-  // Refresh the sidecar's installed models when the built-in provider is active so fresh pulls appear.
-  useEffect(() => {
-    if (provider === 'built-in') {
-      void ollamaManager?.refresh();
-    }
-  }, [provider, ollamaManager]);
+  // Installed models reported by the bundled sidecar; used to offer only models actually present.
+  const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
 
   // Probe the external LM Studio server only when that provider is selected on desktop.
   const lmStudioProbeUrl =
-    provider === 'lmstudio' && ollamaManager ? `${PROVIDERS.lmstudio.endpoint}/v1/models` : undefined;
+    provider === Provider.lmStudio.id && ollamaManager ? `${Provider.lmStudio.endpoint}/v1/models` : undefined;
   const lmStudioReachable = useEndpointReachable(lmStudioProbeUrl);
 
   const presets = useMemo(() => {
     const base = presetsForProvider(provider);
-
-    // Built-in sidecar: list the installed models (catalog labels where known) rather than the
-    // curated suggestions.
-    if (provider === 'built-in') {
-      return ollamaState.models.map((model): AiServicePreset => {
-        const id: OllamaModelId = `${OLLAMA_MODEL_PREFIX}${model.name}`;
-        return { id, provider, model: id, label: getModel(id)?.label ?? model.name };
-      });
-    }
-
-    // Desktop LM Studio: only offer the curated presets when the external server responds.
-    if (provider === 'lmstudio' && ollamaManager) {
+    // Desktop LM Studio: only offer presets when the external server responds.
+    if (provider === Provider.lmStudio.id && ollamaManager) {
       return lmStudioReachable ? base : [];
     }
-
+    // Bundled sidecar: only offer models that are actually installed (matched by back-end pull tag).
+    if (provider === Provider.builtIn.id && ollamaManager) {
+      const installed = new Set(localModels.models.map((model) => model.name));
+      return base.filter((preset) => installed.has(preset.backend));
+    }
     return base;
-  }, [provider, ollamaManager, ollamaState, lmStudioReachable]);
+  }, [provider, ollamaManager, lmStudioReachable, localModels]);
 
   const presetOptions = useMemo(() => presets.map(({ id, model, label }) => ({ id, label: label ?? model })), [presets]);
 

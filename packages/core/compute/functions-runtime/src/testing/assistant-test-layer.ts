@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Harness } from '@dxos/assistant';
 import {
@@ -31,6 +31,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
+import { DXN } from '@dxos/keys';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
@@ -47,7 +48,9 @@ interface TestLayerOptions {
    * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
    */
   aiService?: Layer.Layer<AiService.AiService>;
-  model?: ModelName;
+  model?: DXN.DXN;
+  /** Provider the model resolves through; defaults to `ollama` for the ollama preset, else `edge`. */
+  provider?: DXN.DXN;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
   types?: Type.AnyEntity[];
@@ -104,12 +107,20 @@ export type AssistantTestServices =
 export const AssistantTestLayer = (
   options: TestLayerOptions = {},
 ): Layer.Layer<AssistantTestServices, never, TestContextService> => {
-  const resolvedModel: ModelName =
+  const resolvedModel: DXN.DXN =
     options.model ??
-    (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+    (options.aiServicePreset === 'ollama'
+      ? DXN.make('com.openai.model.gptOss20b')
+      : DXN.make('com.anthropic.model.claudeOpus48'));
+
+  // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
+  // provider its preset registers a resolver for.
+  const resolvedProvider: DXN.DXN =
+    options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
   const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
   agentOptions.model ??= resolvedModel;
+  agentOptions.provider ??= resolvedProvider;
 
   // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
   // `ProcessManager.layer` requires the `ServiceResolver` — a construction cycle. Resolve it by
@@ -128,7 +139,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder)),
-    Layer.provideMerge(AiService.model(resolvedModel)),
+    Layer.provideMerge(AiService.model(resolvedModel, { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??

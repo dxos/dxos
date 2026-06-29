@@ -11,6 +11,7 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
@@ -90,7 +91,7 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
           }
         }
       },
-      Effect.provide(AiService.model('ai.claude.model.claude-sonnet-4-5')),
+      Effect.provide(AiService.model(DXN.make('com.anthropic.model.claudeSonnet46'))),
     ),
   ),
 );

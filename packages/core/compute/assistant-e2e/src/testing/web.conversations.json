@@ -2,7 +2,7 @@
   "conversations": [
     {
       "parameters": {
-        "model": "ai.claude.model.claude-opus-4-6",
+        "model": "dxn:com.anthropic.model.claudeOpus48",
         "stream": true,
         "tools": [
           {
@@ -551,7 +551,7 @@
     },
     {
       "parameters": {
-        "model": "ai.claude.model.claude-opus-4-6",
+        "model": "dxn:com.anthropic.model.claudeOpus48",
         "stream": true,
         "tools": [
           {

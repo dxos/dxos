@@ -13,6 +13,7 @@ import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { TranscriptOperation } from '../types';
@@ -49,7 +50,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-sonnet-4-6'),
+          AiService.model(DXN.make('com.anthropic.model.claudeSonnet46')),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

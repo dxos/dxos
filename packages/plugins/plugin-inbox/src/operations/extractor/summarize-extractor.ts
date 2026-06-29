@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { type Obj, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import {
   ExtractError,
   type ExtractInput,
@@ -35,7 +36,7 @@ import { InboxOperation } from '../../types';
  */
 export const SUMMARIZE_ID = 'org.dxos.plugin.inbox.extractor.summarize';
 
-const SUMMARIZE_MODEL = 'ai.claude.model.claude-haiku-4-5';
+const SUMMARIZE_MODEL = DXN.make('com.anthropic.model.claudeHaiku45');
 
 const MIN_BODY_LENGTH = 200;
 

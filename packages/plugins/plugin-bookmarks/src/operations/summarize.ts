@@ -14,6 +14,7 @@ import { Operation, Trace } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -63,7 +64,7 @@ const handler: Operation.WithHandler<typeof BookmarkOperation.Summarize> = Bookm
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-sonnet-4-6'),
+          AiService.model(DXN.make('com.anthropic.model.claudeSonnet46')),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

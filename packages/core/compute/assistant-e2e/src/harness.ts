@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
@@ -26,7 +26,7 @@ import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
-import { type SpaceId } from '@dxos/keys';
+import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -64,7 +64,7 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
 
   expect?: 'success' | 'failure';
 
-  model?: ModelName;
+  model?: DXN.DXN;
 
   /**
    * @default 'direct'
@@ -179,7 +179,7 @@ const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spa
 const runInstructions = (
   harness: TestHarness,
   instructions: Instructions.Instructions,
-  model: ModelName,
+  model: DXN.DXN,
   spaceId: SpaceId,
   sessionChat?: boolean,
 ) =>
@@ -226,7 +226,9 @@ const logTraceEvents = <A>(harness: TestHarness, spaceId: SpaceId) =>
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
     options.model ??
-    (options.inferenceProvider === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+    (options.inferenceProvider === 'ollama'
+      ? DXN.make('com.openai.model.gptOss20b')
+      : DXN.make('com.anthropic.model.claudeOpus48'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({

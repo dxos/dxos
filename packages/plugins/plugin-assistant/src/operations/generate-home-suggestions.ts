@@ -14,11 +14,12 @@ import { Operation } from '@dxos/compute';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-const MODEL = 'ai.claude.model.claude-haiku-4-5';
+const MODEL = DXN.make('com.anthropic.model.claudeHaiku45');
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const RECENT_LIMIT = 20;
 const MAX_PROMPTS = 3;

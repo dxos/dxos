@@ -14,11 +14,12 @@ import { AiService, type OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as McpToolkit from './McpToolkit';
 
-const AiServiceLayer = AiService.model('ai.claude.model.claude-opus-4-6', { thinking: false }).pipe(
+const AiServiceLayer = AiService.model(DXN.make('com.anthropic.model.claudeOpus48'), { thinking: false }).pipe(
   Layer.provide(
     TestAiService({
       disableMemoization: true,

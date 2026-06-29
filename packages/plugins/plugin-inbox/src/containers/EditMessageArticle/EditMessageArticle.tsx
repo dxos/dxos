@@ -13,6 +13,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
@@ -44,7 +45,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
+            AiService.model(DXN.make('com.anthropic.model.claudeHaiku45')).pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

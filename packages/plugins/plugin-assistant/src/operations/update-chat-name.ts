@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -57,7 +58,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
         });
         log.info('chat name updated', { chat, newName: chat.name });
       },
-      Effect.provide(AiService.model('ai.claude.model.claude-haiku-4-5')),
+      Effect.provide(AiService.model(DXN.make('com.anthropic.model.claudeHaiku45'))),
     ),
   ),
 );

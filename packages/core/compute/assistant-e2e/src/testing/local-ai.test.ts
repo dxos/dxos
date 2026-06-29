@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 
 import { DatabaseSkill } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { agentTest, agentTestTimeout } from '../harness';
@@ -17,7 +18,7 @@ describe('Local AI', () => {
   it.effect(
     'create and query database objects',
     agentTest({
-      model: 'ai.ollama.model.gpt-oss:20b',
+      model: DXN.make('com.openai.model.gptOss20b'),
       inferenceProvider: 'ollama',
       disableLlmMemoization: true,
       instructions: trim`

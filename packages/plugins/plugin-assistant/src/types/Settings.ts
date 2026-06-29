@@ -6,13 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { PROVIDER_IDS, type Provider } from '@dxos/ai';
+import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 
-// The provider set is the canonical @dxos/ai `Provider`; labels live in translations.
-export const ModelProvider = Schema.Literal(...PROVIDER_IDS);
-export type ModelProvider = Provider;
-export const ModelProviders = SchemaEx.getLiteralValues(ModelProvider);
+// A provider id is an open DXN string (third-party providers define their own), so it is stored as a
+// string rather than a closed literal union. The known providers come from the @dxos/ai registry.
+export const ModelProvider = Schema.String;
+export type ModelProvider = DXN.DXN;
+export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
 
 export const ChatView = Schema.Union(
   Schema.Literal('normal').annotations({ title: 'Normal' }),

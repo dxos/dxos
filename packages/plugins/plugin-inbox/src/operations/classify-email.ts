@@ -13,7 +13,7 @@ import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -119,7 +119,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-haiku-4-5'),
+          AiService.model(DXN.make('com.anthropic.model.claudeHaiku45')),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

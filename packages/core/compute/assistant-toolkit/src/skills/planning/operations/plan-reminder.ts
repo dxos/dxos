@@ -10,6 +10,7 @@ import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -55,7 +56,7 @@ export default PlanReminder.pipe(
           content: [ContentBlock.Text.make({ text: planContinueReminderPrompt(plan), disposition: 'synthetic' })],
         });
       },
-      Effect.provide(AiService.model('ai.claude.model.claude-sonnet-4-5')),
+      Effect.provide(AiService.model(DXN.make('com.anthropic.model.claudeSonnet46'))),
     ),
   ),
 );

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 
 import { type OllamaAdmin } from '@dxos/ai/resolvers';
 
@@ -23,6 +23,18 @@ export type ModelsState = {
   /** Connection-level error reaching the service (no specific model). */
   error?: string;
 };
+
+/**
+ * Stable, empty model state. Subscribed to when no sidecar manager is present (web/mobile) so a
+ * reactive read keeps an unconditional hook order.
+ */
+export const emptyState: Atom.Atom<ModelsState> = Atom.make<ModelsState>({
+  kind: 'idle',
+  models: [],
+  loaded: [],
+  pulls: {},
+  errors: {},
+});
 
 /**
  * Capability for managing locally-installed Ollama models. Implemented by the native (desktop)

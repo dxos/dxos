@@ -2,52 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { OLLAMA_MODEL_PREFIX, type Provider } from '@dxos/ai';
+import { Provider } from '@dxos/ai';
+import { type DXN } from '@dxos/keys';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Assistant, AssistantCapabilities, type Ollama } from '#types';
+import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
 import { presetsForProvider, resolveProvider } from '../../processor';
 import { OllamaModels } from './OllamaModels';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
 
-// The per-provider model-default options must match the chat picker (usePresets), which lists the
-// curated presets per provider (and installed models for the built-in sidecar).
-const presetOptions = (provider: Provider) =>
-  presetsForProvider(provider).map((preset) => ({ value: preset.model, label: preset.label }));
-
-// Stable fallback so `useAtomValue` is always called with a valid atom when the manager is absent.
-const emptyStateAtom = Atom.make<Ollama.ModelsState>({
-  kind: 'idle',
-  models: [],
-  loaded: [],
-  pulls: {},
-  errors: {},
-});
+// The per-provider model-default options must match the chat picker (usePresets): the catalog models
+// served by the provider, restricted to installed models when `installed` is supplied (local sidecar).
+const presetOptions = (provider: DXN.DXN, installed?: ReadonlySet<string>) =>
+  presetsForProvider(provider)
+    .filter((preset) => !installed || installed.has(preset.backend))
+    .map((preset) => ({ value: preset.model, label: preset.label }));
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   // The Ollama manager is the bundled sidecar (desktop only). Its presence selects the local
-  // provider: the managed `built-in` (offering installed models) vs. an external `ollama` server.
+  // provider: the managed `built-in` vs. an external `ollama` server.
   const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
-  const ollamaState = useAtomValue(ollamaManager?.state ?? emptyStateAtom);
-  const localProvider: Provider = ollamaManager ? 'built-in' : 'ollama';
-  const ollamaOptions = useMemo(
-    () => ollamaState.models.map((model) => ({ value: `${OLLAMA_MODEL_PREFIX}${model.name}`, label: model.name })),
-    [ollamaState.models],
-  );
+  const localProvider = ollamaManager ? Provider.builtIn : Provider.ollama;
+  const localProviderKey = ollamaManager ? 'built-in' : 'ollama';
 
-  // Reconcile a stored provider with the runtime (legacy `ollama` → `built-in` on desktop) so the
+  // Installed models reported by the bundled sidecar; restricts the local default to present models.
+  const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
+  const installed = useMemo(() => new Set(localModels.models.map((model) => model.name)), [localModels]);
+
+  // Reconcile a stored provider with the runtime (`ollama` → `built-in` on desktop) so the
   // dropdown shows a concrete, available selection rather than blank.
   const values = useMemo(
     () => ({ ...settings, modelProvider: resolveProvider(settings.modelProvider, !!ollamaManager) }),
@@ -61,20 +54,19 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
       modelProvider: createSelectField({
         defaultLabel: null,
         options: [
-          { value: 'edge', label: t('settings.provider.edge.label') },
-          { value: localProvider, label: t(`settings.provider.${localProvider}.label`) },
-          { value: 'lmstudio', label: t('settings.provider.lmstudio.label') },
+          { value: Provider.edge.id, label: t('settings.provider.edge.label') },
+          { value: localProvider.id, label: t(`settings.provider.${localProviderKey}.label`) },
+          { value: Provider.lmStudio.id, label: t('settings.provider.lmstudio.label') },
         ],
       }),
-      'modelDefaults.edge': createSelectField({ options: presetOptions('edge') }),
-      // `built-in` and `ollama` share the `ollama` default key: built-in offers installed models,
-      // external Ollama the curated suggestions.
+      'modelDefaults.edge': createSelectField({ options: presetOptions(Provider.edge.id) }),
+      // `built-in` and `ollama` share the `ollama` default key; the managed sidecar restricts to installed.
       'modelDefaults.ollama': createSelectField({
-        options: localProvider === 'built-in' ? ollamaOptions : presetOptions('ollama'),
+        options: presetOptions(localProvider.id, ollamaManager ? installed : undefined),
       }),
-      'modelDefaults.lmstudio': createSelectField({ options: presetOptions('lmstudio') }),
+      'modelDefaults.lmstudio': createSelectField({ options: presetOptions(Provider.lmStudio.id) }),
     }),
-    [t, localProvider, ollamaOptions],
+    [t, localProvider, localProviderKey, ollamaManager, installed],
   );
 
   return (

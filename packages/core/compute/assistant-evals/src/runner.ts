@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
@@ -15,7 +15,7 @@ import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Operation, Instructions, ServiceResolver, type Skill } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { type SpaceId } from '@dxos/keys';
+import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -27,7 +27,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-6';
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claudeOpus48');
 
 const SYSTEM_INSTRUCTIONS = trim`
   You are running within an evaluation environment.
@@ -71,7 +71,7 @@ const seedInstructions = (instructions: Instructions.Instructions) =>
 const runInstructions = <I>(
   harness: TestHarness,
   instructions: Instructions.Instructions,
-  model: ModelName,
+  model: DXN.DXN,
   spaceId: SpaceId,
   input: I,
 ) =>
@@ -96,14 +96,14 @@ export interface CreateEvalRunnerOptions<I, O> {
   input: Schema.Schema<I>;
   output: Schema.Schema<O>;
   skills?: Ref.Ref<Skill.Skill>[];
-  model?: ModelName;
+  model?: DXN.DXN;
   plugins?: Plugin.Plugin[];
 }
 
 export type VariantConfig =
   | undefined
   | {
-      model?: ModelName;
+      model?: DXN.DXN;
     };
 
 /**

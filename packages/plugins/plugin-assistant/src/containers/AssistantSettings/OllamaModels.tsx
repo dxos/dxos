@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { DEFAULT_OLLAMA_MODELS, OLLAMA_MODEL_PREFIX } from '@dxos/ai';
+import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { List, ListItem } from '@dxos/react-list';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -15,8 +15,8 @@ import { Combobox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { AssistantCapabilities, type Ollama } from '#types';
 
-/** Quick-pick model names sourced from the curated defaults. */
-const QUICK_PICKS = DEFAULT_OLLAMA_MODELS.map((id) => id.slice(OLLAMA_MODEL_PREFIX.length));
+/** Quick-pick model names (Ollama pull tags) sourced from the curated catalog. */
+const QUICK_PICKS = Model.forProvider(Provider.ollama.id).map((model) => model.backend);
 
 /** Poll interval for the loaded-into-memory set while the settings panel is open. */
 const LOADED_POLL_INTERVAL = 3_000;
