@@ -14,13 +14,13 @@ import { Generation } from '#types';
 
 import { GenerationArticle } from './GenerationArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   prompt?: string;
   urls?: string[];
   type?: Generation.Kind;
 };
 
-const DefaultStory = ({ prompt, urls, type }: DefaultStoryProps) => {
+const DefaultStory = ({ prompt, urls, type }: StoryArgs) => {
   const subject = useMemo(() => {
     const generation = Generation.make({ name: 'Story generation', type, prompt });
     if (urls?.length) {

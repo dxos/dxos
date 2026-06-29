@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
@@ -204,6 +204,6 @@ export const Message = {
 
 export const Callout = Message;
 
-export type { MessageRootProps, MessageTitleProps, MessageContentProps };
+export type { MessageContentProps, MessageRootProps, MessageTitleProps };
 
 export { messageIcons };

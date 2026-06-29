@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Instructions, Trace, Operation } from '@dxos/compute';
+import { AiService, ModelName, OpaqueToolkit } from '@dxos/ai';
+import { Instructions, Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';

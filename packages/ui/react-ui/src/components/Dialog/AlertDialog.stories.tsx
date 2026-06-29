@@ -11,7 +11,7 @@ import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { AlertDialog } from './AlertDialog';
 
-type DefaultStoryProps = Partial<{
+type StoryArgs = Partial<{
   title: string;
   description: string;
   openTrigger: string;
@@ -19,7 +19,7 @@ type DefaultStoryProps = Partial<{
   actionTrigger: string;
 }>;
 
-const DefaultStory = ({ title, description, openTrigger, cancelTrigger, actionTrigger }: DefaultStoryProps) => {
+const DefaultStory = ({ title, description, openTrigger, cancelTrigger, actionTrigger }: StoryArgs) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Trigger asChild>

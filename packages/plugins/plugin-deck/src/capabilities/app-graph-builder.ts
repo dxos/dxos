@@ -119,7 +119,7 @@ export default Capability.makeModule(
             };
 
             return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
-          }),
+          }).pipe(Effect.orDie),
       }),
     ]);
 

@@ -82,6 +82,8 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
         const data = getSourceData(source);
         return (data && eventHandler.canDrop?.({ source: data })) || false;
       },
+      // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+      getDropEffect: () => 'move',
       onDragEnter: () => {
         setActiveLocation(data.location);
       },
@@ -134,6 +136,6 @@ MosaicDropIndicator.displayName = DROP_INDICATOR_NAME;
 // Exports
 //
 
-export { MosaicPlaceholder, MosaicDropIndicator };
+export { MosaicDropIndicator, MosaicPlaceholder };
 
-export type { MosaicPlaceholderProps, MosaicDropIndicatorProps };
+export type { MosaicDropIndicatorProps, MosaicPlaceholderProps };

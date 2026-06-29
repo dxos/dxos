@@ -11,8 +11,8 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
-import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
@@ -39,7 +39,6 @@ import { type ChatEvent } from './events';
 
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'chat' | 'processor'> & {
-    feed?: Feed.Feed;
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -51,7 +50,7 @@ type ChatRootProps = PropsWithChildren<
   }
 >;
 
-const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
@@ -60,6 +59,10 @@ const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, on
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
+
+  // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
+  const [feedSnapshot] = useObject(chat?.feed);
+  const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   // Event sink.
   const event = useMemo(() => new Event<ChatEvent>(), []);
@@ -387,4 +390,4 @@ export const Chat = {
   TaskList: ChatTaskList,
 };
 
-export type { ChatRootProps, ChatToolbarProps, ChatContentProps, ChatPromptProps, ChatThreadProps, ChatEvent };
+export type { ChatContentProps, ChatEvent, ChatPromptProps, ChatRootProps, ChatThreadProps, ChatToolbarProps };

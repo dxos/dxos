@@ -37,6 +37,22 @@ export default FeedOperation.LoadPostContent.pipe(
         }
       }
 
+      // Standard.site documents carry the full article body inline (`Post.content`), so the reader
+      // renders offline without a second network round-trip. Gated on the feed type: RSS keeps the
+      // HTTP fetch path because its `content:encoded` is frequently a truncated summary, not the full
+      // body.
+      const inlineContent = post.content;
+      if (subscription.type === 'standard-site' && inlineContent) {
+        yield* Effect.tryPromise(() =>
+          Subscription.appendPostContent(space, subscription, {
+            post,
+            text: inlineContent,
+            snippet: makeSnippet(stripHtml(inlineContent)),
+          }),
+        );
+        return;
+      }
+
       yield* Effect.tryPromise({
         try: async () => {
           // In the browser, route through the dev-server CORS proxy. Server-side callers

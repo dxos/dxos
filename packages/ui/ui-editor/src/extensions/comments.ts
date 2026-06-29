@@ -22,6 +22,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { type Comment, type Range, type RenderCallback } from '../types';
 import { Cursor, singleValueFacet, wrapWithCatch } from '../util';
+import { markerMark, markerTheme } from './marker';
 import { documentId } from './selection';
 
 //
@@ -99,22 +100,16 @@ export const commentsState = StateField.define<CommentsState>({
 /**
  * NOTE: Matches search.
  */
+// Surface/box-shadow come from the shared `markerTheme`, tinted by the mark's `data-hue`; the comment
+// just adds the pointer affordance.
 const styles = EditorView.theme({
   '.cm-comment > span': {
-    boxDecorationBreak: 'clone',
-    boxShadow: '0 0 0 3px var(--color-cm-comment-surface)',
-    backgroundColor: 'var(--color-cm-comment-surface)',
-    color: 'var(--color-cm-comment-text) !important',
     cursor: 'pointer',
-  },
-  '.cm-comment[data-current="1"] > span': {
-    boxShadow: '0 0 0 3px var(--color-cm-comment-current-surface)',
-    backgroundColor: 'var(--color-cm-comment-current-surface)',
   },
 });
 
 const createCommentMark = (id: string, isCurrent: boolean) =>
-  Decoration.mark({
+  markerMark(isCurrent ? 'orange' : 'teal', {
     class: 'cm-comment',
     attributes: {
       'data-testid': 'cm-comment',
@@ -386,6 +381,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     commentsState,
     commentsDecorations,
     handleCommentClick,
+    markerTheme(),
     styles,
 
     //

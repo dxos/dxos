@@ -80,7 +80,12 @@ const resolveConnector = (
 
 const openConnectorFormDialog = (
   invoker: Operation.OperationService,
-  input: { db: Database.Database; spaceId: Key.SpaceId; connector: ConnectorEntry },
+  input: {
+    db: Database.Database;
+    spaceId: Key.SpaceId;
+    connector: ConnectorEntry;
+    existingTarget?: Ref.Ref<Obj.Any>;
+  },
 ) =>
   invoker.invoke(LayoutOperation.UpdateDialog, {
     subject: PROVIDER_FORM_DIALOG,
@@ -91,6 +96,9 @@ const openConnectorFormDialog = (
       spaceId: input.spaceId,
       connectorId: input.connector.id,
       connectorLabel: input.connector.label ?? input.connector.id,
+      // Forwarded so the credential-form submit binds this existing object (e.g. an empty Mailbox the
+      // user is viewing) instead of materializing a fresh target. Mirrors the OAuth `existingTarget`.
+      existingTarget: input.existingTarget,
     },
   });
 
@@ -167,6 +175,11 @@ const createSingleBinding = (
     let target: Obj.Unknown | undefined;
     if (existingTarget) {
       target = yield* Database.load(existingTarget);
+      const accessToken = yield* Database.load(connection.accessToken);
+      const name = accessToken.account;
+      if (name) {
+        Obj.update(target, (target) => Obj.setLabel(target, name));
+      }
     } else if (connector.materializeTarget) {
       const { target: materialized } = yield* invoker.invoke(
         connector.materializeTarget,
@@ -376,7 +389,7 @@ export default Capability.makeModule(
         // `submitCredentialForm`. OAuth connectors re-enter here with
         // `loginHint`; non-OAuth connectors complete directly in the form.
         if (connector.credentialForm && loginHint === undefined) {
-          yield* openConnectorFormDialog(invoker, { db, spaceId, connector });
+          yield* openConnectorFormDialog(invoker, { db, spaceId, connector, existingTarget });
           return { kind: 'dialog-opened' } as const;
         }
 
@@ -384,7 +397,7 @@ export default Capability.makeModule(
         // generic connector-form dialog (renders the default custom-token
         // schema for backwards compatibility).
         if (!connector.oauth) {
-          yield* openConnectorFormDialog(invoker, { db, spaceId, connector });
+          yield* openConnectorFormDialog(invoker, { db, spaceId, connector, existingTarget });
           return { kind: 'dialog-opened' } as const;
         }
 
@@ -534,7 +547,13 @@ export default Capability.makeModule(
         return { kind: 'connection-created', connectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const submitCredentialForm: ConnectorCoordinator['submitCredentialForm'] = ({ db, spaceId, connectorId, values }) =>
+    const submitCredentialForm: ConnectorCoordinator['submitCredentialForm'] = ({
+      db,
+      spaceId,
+      connectorId,
+      values,
+      existingTarget,
+    }) =>
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
         if (!connector.credentialForm) {
@@ -549,6 +568,7 @@ export default Capability.makeModule(
             connection: result.connection,
             db,
             connector,
+            existingTarget,
           });
           return { kind: 'connection-created', connectionId: result.connection.id } as const;
         }
@@ -560,7 +580,7 @@ export default Capability.makeModule(
         if (!loginHint) {
           return yield* Effect.fail(new Error(`Connector ${connectorId} credentialForm produced an empty loginHint.`));
         }
-        return yield* createConnection({ db, spaceId, connectorId, loginHint });
+        return yield* createConnection({ db, spaceId, connectorId, loginHint, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     const setSyncBindings: ConnectorCoordinator['setSyncBindings'] = ({

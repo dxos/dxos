@@ -18,7 +18,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
-import { WorkingSetQueryExecutor, type WorkingSetDataProvider, type WorkingSetItem } from './working-set-executor';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.

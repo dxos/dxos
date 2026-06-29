@@ -5,7 +5,7 @@
 // Stories for the elemental `@dxos/react-list` primitive — ARIA + structure
 // only. These show the default-styling-free behavior of `List` / `ListItem`
 // in isolation. For the styled, ARIA-correct, keyboard-navigable layer most
-// app code reaches for, see `@dxos/react-ui-list`'s `RowList` story.
+// app code reaches for, see `@dxos/react-ui-list`'s `Listbox` story.
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';

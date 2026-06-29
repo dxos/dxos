@@ -6,8 +6,8 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
-  CREATE_SPACE_TIMEOUT,
   type ClientServicesProvider,
+  CREATE_SPACE_TIMEOUT,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
   type Space,

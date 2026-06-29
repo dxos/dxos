@@ -13,9 +13,9 @@ import { translations } from '#translations';
 
 import { PromptEditor } from './PromptEditor';
 
-type DefaultStoryProps = { content?: string };
+type StoryArgs = { content?: string };
 
-const DefaultStory = ({ content }: DefaultStoryProps) => {
+const DefaultStory = ({ content }: StoryArgs) => {
   const text = useMemo(() => Text.make({ content: content ?? '' }), [content]);
   return <PromptEditor id='story' text={text} />;
 };

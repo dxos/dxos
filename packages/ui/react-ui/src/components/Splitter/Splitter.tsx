@@ -392,4 +392,4 @@ const Splitter = {
 
 export { Splitter };
 
-export type { SplitterOrientation, SplitterMode, SplitterRootProps, SplitterPanelProps, SplitterHandleProps };
+export type { SplitterHandleProps, SplitterMode, SplitterOrientation, SplitterPanelProps, SplitterRootProps };

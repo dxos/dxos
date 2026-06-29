@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill, OperationHandlerSet } from '@dxos/compute';
+import { OperationHandlerSet, Skill } from '@dxos/compute';
 import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
@@ -20,7 +20,7 @@ import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Person } from '@dxos/types';
 
-import { DatabaseSkill, DatabaseHandlers } from '../database';
+import { DatabaseHandlers, DatabaseSkill } from '../database';
 import BrowserSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();

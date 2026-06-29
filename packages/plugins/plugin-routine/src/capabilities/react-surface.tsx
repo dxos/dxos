@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Skill } from '@dxos/compute';
 
-import { RoutineArticle, RoutineCompanion, RoutineRuns, RoutineSettings, SkillArticle } from '#containers';
+import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
@@ -52,7 +52,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'runs'),
           AppSurface.companion(AppSurface.Article, Routine.Routine),
         ),
-        component: ({ data, role }) => <RoutineRuns role={role} subject={data.companionTo} />,
+        component: ({ data, role }) => <RoutineTraceCompanion role={role} subject={data.companionTo} />,
       }),
       Surface.create({
         id: 'skill',

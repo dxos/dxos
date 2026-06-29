@@ -13,10 +13,10 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
-import { Database, Ref, Registry } from '@dxos/echo';
+import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Assistant } from '#types';
@@ -45,21 +45,21 @@ export const useChatProcessor = ({
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
+  // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
+  const [feedSnapshot] = useObject(chat?.feed);
+  const feed = Obj.getReactiveOrUndefined(feedSnapshot);
+
   const [session, setSession] = useState<AiSession.Session>();
   useAsyncEffect(async () => {
-    if (!space || !chat) {
+    if (!space || !chat || !feed) {
       return;
     }
 
-    const feedTarget = chat.feed.target;
-    if (!feedTarget) {
-      return;
-    }
     const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({
-      feed: feedTarget,
+      feed,
       runtime,
       registry: observableRegistry,
     });
@@ -69,9 +69,8 @@ export const useChatProcessor = ({
       void session.close();
       setSession(undefined);
     };
-  }, [space, chat?.feed.target]);
+  }, [space, chat, feed]);
 
-  const feed = chat?.feed.target;
   const serviceResolver = useCapability(Capabilities.ServiceResolver);
 
   const processor = useMemo(() => {

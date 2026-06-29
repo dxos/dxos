@@ -7,8 +7,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import {
-  DIAGNOSTICS_TIMEOUT,
   type DiagnosticMetadata,
+  DIAGNOSTICS_TIMEOUT,
   type DiagnosticsData,
   type DiagnosticsManager,
   type DiagnosticsRequest,

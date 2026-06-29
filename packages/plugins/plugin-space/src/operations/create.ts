@@ -6,14 +6,14 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { hues } from '@dxos/ui-theme';
 
-import { SpaceEvents, SpaceCapabilities } from '../types';
+import { SpaceCapabilities, SpaceEvents } from '../types';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 

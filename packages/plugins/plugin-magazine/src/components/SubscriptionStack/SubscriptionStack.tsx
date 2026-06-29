@@ -87,13 +87,17 @@ SubscriptionStack.displayName = 'SubscriptionStack';
 //
 
 const icons: Record<Subscription.FeedType, { icon: string; className?: string }> = {
-  atproto: {
-    icon: 'ph--butterfly--regular',
+  'standard-site': {
+    icon: 'ph--article--regular',
     className: 'text-sky-500',
   },
   rss: {
     icon: 'ph--rss--regular',
     className: 'text-green-500',
+  },
+  bluesky: {
+    icon: 'ph--butterfly--regular',
+    className: 'text-blue-500',
   },
 };
 

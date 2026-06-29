@@ -7,13 +7,13 @@ import React, { PropsWithChildren } from 'react';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Panel, Flex } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
 import { SketchComponent } from '#components';
-import { type Sketch, type Settings } from '#types';
+import { type Settings, type Sketch } from '#types';
 
 export type SketchArticleProps = AppSurface.ObjectArticleProps<
   Sketch.Sketch,
@@ -65,13 +65,8 @@ const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef
   </Panel.Root>
 ));
 
-// Section embeds (e.g. transcluded in a document) are framed with a border; `overflow-hidden` clips
-// the canvas to the rounded corners.
 const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
-  <Flex
-    {...composableProps(props, { classNames: 'aspect-square border border-separator rounded-md overflow-hidden' })}
-    ref={forwardRef}
-  >
+  <Flex {...composableProps(props, { classNames: 'aspect-square overflow-hidden' })} ref={forwardRef}>
     {props.children}
   </Flex>
 ));

@@ -12,7 +12,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation, Instructions, ServiceResolver, type Skill } from '@dxos/compute';
+import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';

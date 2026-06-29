@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
+import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -298,6 +299,22 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
  */
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));
+
+/**
+ * Synchronous version of `Obj.getReactive` that returns `undefined` instead of throwing.
+ * Accepts `undefined` input so callers can pass the result of `useObject` directly.
+ *
+ * @param snapshot - A snapshot of the object (from `Obj.getSnapshot` or `useObject`), or `undefined`.
+ * @returns The reactive object, or `undefined` if the snapshot is `undefined` or unresolvable.
+ */
+export const getReactiveOrUndefined = <T extends Unknown>(snapshot: Snapshot<T> | undefined): T | undefined => {
+  if (snapshot === undefined) {
+    return undefined;
+  }
+  return Effect.runSyncExit(getReactive(snapshot)).pipe(
+    Exit.match({ onSuccess: (value) => value, onFailure: () => undefined }),
+  );
+};
 
 export type CloneOptions = {
   /**
@@ -926,6 +943,17 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
+/**
+ * Create a reactive snapshot atom for an ECHO object or ref.
+ * Use inside atom computations (e.g. `Atom.make((get) => get(Obj.atom(ref)))`) to subscribe
+ * to a ref's target — the atom re-fires when the target loads or changes.
+ *
+ * @idiom org.dxos.echo.objAtomReactive
+ *   applies: Subscribing to a ref's target inside an atom computation or a non-React reactive context
+ *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never notifies when it becomes available
+ *   uses: {@link atom}
+ *   related: org.dxos.echo-react.useObjectReactive
+ */
 export const atom = objInternal.makeAtom;
 export const atomReactive = objInternal.makeWithReactive;
 export const atomProperty = objInternal.makeProperty;

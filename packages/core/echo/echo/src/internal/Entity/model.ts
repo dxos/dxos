@@ -11,13 +11,13 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import {
-  type ATTR_PARENT,
-  type ATTR_TYPE,
   ATTR_DELETED,
+  type ATTR_PARENT,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  type ATTR_TYPE,
   EntityKind,
   KindId,
   ObjectDatabaseId,

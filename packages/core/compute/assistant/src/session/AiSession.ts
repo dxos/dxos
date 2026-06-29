@@ -14,13 +14,13 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Skill, McpServer, Operation, Trace } from '@dxos/compute';
+import { McpServer, Operation, type Skill, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { Message, type ContentBlock } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
 import { ToolExecutionServices } from '../tool-runtime';
@@ -28,6 +28,7 @@ import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
 import * as Harness from './Harness';
 import { SessionLoader } from './SessionLoader';
+import * as SkillHooks from './SkillHooks';
 import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {
@@ -162,6 +163,14 @@ export class Session extends Resource {
         objects,
         prompt: params.prompt,
         system: params.system,
+      });
+
+      // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
+      // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
+      yield* SkillHooks.runHooks({
+        skills,
+        phase: 'begin-request',
+        invoke: (operation, input) => Operation.invoke(operation, input).pipe(Effect.asVoid, Effect.orDie),
       });
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
