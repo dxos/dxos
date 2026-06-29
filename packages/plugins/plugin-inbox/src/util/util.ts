@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
+import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
 
 import { Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
@@ -140,7 +140,13 @@ export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOp
         : formatDistance(date, now, { addSuffix: true });
 
 export const formatShortDate = (date: Date) =>
-  isToday(date) ? format(date, 'hh:mm aaa') : isThisWeek(date) ? format(date, 'EEEE') : format(date, 'MMM d');
+  isToday(date)
+    ? format(date, 'hh:mm aaa')
+    : isThisWeek(date)
+      ? format(date, 'EEEE')
+      : isThisYear(date)
+        ? format(date, 'MMM d')
+        : format(date, 'MMM d, yyyy');
 
 type MessageProps = {
   id: string;
