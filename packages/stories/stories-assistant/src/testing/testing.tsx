@@ -23,7 +23,6 @@ import {
   Agent,
   AgentHandlers,
   AgentSkill,
-  Chat,
   DelegationHandlers,
   DelegationSkill,
   Plan,
@@ -33,7 +32,7 @@ import {
 import { type Space } from '@dxos/client/echo';
 import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -347,53 +346,32 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           yield* Effect.tryPromise(() => binder.close());
         }
       } else {
-        // Create initial chat.
-        yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        // Create the initial chat via the canonical CreateChat operation (which binds the default
+        // skills and the chat), then apply any story-specific context bindings. The story-side
+        // `onChatCreated` must run here: the operation handler that creates the chat is owned by
+        // the assistant plugin and has no hook for it.
+        const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+        if (onChatCreated) {
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
+          const feed = yield* Effect.promise(() => chat.feed.load());
+          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+          const binder = new AiContext.Binder({ feed, runtime, registry });
+          yield* Effect.tryPromise(() => binder.open());
+          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+          yield* Effect.tryPromise(() => binder.close());
+        }
       }
     }),
   })),
-  Plugin.addModule(({ onChatCreated }) => ({
+  Plugin.addModule(() => ({
     id: 'com.example.plugin.testing.module.operationHandler',
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: Effect.fnUntraced(function* () {
+      // NOTE: Chat creation is owned by the assistant plugin's `CreateChat` handler; this module
+      // only stubs the no-op operations the deck companion surfaces expect.
       return Capability.contributes(
         Capabilities.OperationHandler,
-        OperationHandlerSet.make(
-          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-          Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
-            Effect.gen(function* () {
-              // Resolve the client lazily at invocation time: the `Client` capability is
-              // contributed on `Startup` (concurrently with `SetupProcessManager`), so it is
-              // not guaranteed to exist when this module activates.
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const registry = yield* Capability.get(Capabilities.AtomRegistry);
-              const space = client.spaces.get(db.spaceId);
-              invariant(space, 'Space not found');
-
-              const feed = space.db.add(Feed.make());
-              const chat = Chat.make({ name, feed: Ref.make(feed) });
-              Obj.setParent(feed, chat);
-              const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
-              const binder = new AiContext.Binder({ feed, runtime, registry });
-
-              space.db.add(chat);
-              yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
-
-              yield* Effect.tryPromise(() => binder.open());
-              yield* Effect.tryPromise(() => binder.bind({ objects: [Ref.make(chat)] }));
-
-              if (onChatCreated) {
-                yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-              }
-
-              yield* Effect.tryPromise(() => binder.close());
-
-              return {
-                object: chat,
-              };
-            }),
-          ),
-        ),
+        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
       );
     }),
   })),
