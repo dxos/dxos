@@ -17,6 +17,8 @@ import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
 
+const PLANK_LOADING = <PlankLoading />;
+
 export type DeckPlankProps = ThemedClassName<{
   id: string;
   part: ResolvedPart;
@@ -86,8 +88,10 @@ export const DeckPlank = memo(
     // Stable reference so Plank's useMemo on articleData doesn't bust every render.
     const articleData = useMemo(() => ({ path }), [path]);
 
+    const companionControls = useMemo(() => <PlankCompanionControls primary={id} />, [id]);
+
     if (!node) {
-      return <PlankLoading />;
+      return PLANK_LOADING;
     }
 
     const controls = (
@@ -144,7 +148,7 @@ export const DeckPlank = memo(
             navbarEnd={navbarEnd}
             sigilFooter={sigilFooter}
             fallback={PlankErrorFallback}
-            placeholder={<PlankLoading />}
+            placeholder={PLANK_LOADING}
             headless={headless}
             onKeyDown={handleKeyDown}
           />
@@ -159,7 +163,7 @@ export const DeckPlank = memo(
                 onValueChange={onUpdateCompanion}
                 attendableId={id}
                 companionTo={node.data}
-                controls={<PlankCompanionControls primary={id} />}
+                controls={companionControls}
               />
             </Splitter.Panel>
           </>
