@@ -59,9 +59,7 @@ describe('schema validation', () => {
 
     test('db.add rejects Organization created with invalid props', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Organization.Organization] });
-      expect(() =>
-        db.add(Obj.make(Organization.Organization, { status: 'invalid-status' } as any)),
-      ).toThrow();
+      expect(() => db.add(Obj.make(Organization.Organization, { status: 'invalid-status' } as any))).toThrow();
     });
   });
 

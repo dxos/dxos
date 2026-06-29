@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
+
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
@@ -209,9 +210,9 @@ describe('schema-validator', () => {
       const schema = Schema.Struct({
         nested: Schema.Struct({ field: Schema.Number }),
       });
-      expect(() =>
-        SchemaValidator.assertExactProperties(schema, { nested: { field: 1, extra: true } }),
-      ).to.throw(/Unknown property: nested.extra/);
+      expect(() => SchemaValidator.assertExactProperties(schema, { nested: { field: 1, extra: true } })).to.throw(
+        /Unknown property: nested.extra/,
+      );
     });
 
     test('resolves nested discriminated union using target property values', () => {
@@ -221,9 +222,9 @@ describe('schema-validator', () => {
       );
       const schema = Schema.Struct({ spec });
       const target = { spec: { kind: 'feed' as const, feed: 'echo:/feed', extra: true } };
-      expect(() =>
-        SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path)),
-      ).to.throw(/Unknown property: spec.extra/);
+      expect(() => SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path))).to.throw(
+        /Unknown property: spec.extra/,
+      );
       expect(() =>
         SchemaValidator.assertExactProperties(schema, { spec: { kind: 'feed' as const } }, (path) =>
           getDeep({ spec: { kind: 'feed' as const } }, path),

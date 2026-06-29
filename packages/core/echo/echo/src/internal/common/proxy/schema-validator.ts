@@ -205,11 +205,7 @@ const getArrayElementSchema = (
   property: string | symbol | number,
 ): Schema.Schema.AnyNoContext => {
   const elementIndex =
-    typeof property === 'number'
-      ? property
-      : typeof property === 'string'
-        ? parseInt(property, 10)
-        : Number.NaN;
+    typeof property === 'number' ? property : typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);
     return Schema.Number;
@@ -363,7 +359,10 @@ const resolveTypeLiteral = (
   }
 
   const typeOrDiscriminatedUnion = unwrapAst(ast, (type) => {
-    return SchemaAST.isTypeLiteral(type) || (SchemaAST.isUnion(type) && type.types.some((member) => SchemaAST.isTypeLiteral(member)));
+    return (
+      SchemaAST.isTypeLiteral(type) ||
+      (SchemaAST.isUnion(type) && type.types.some((member) => SchemaAST.isTypeLiteral(member)))
+    );
   });
   if (typeOrDiscriminatedUnion == null) {
     return null;
@@ -373,14 +372,18 @@ const resolveTypeLiteral = (
     return typeOrDiscriminatedUnion;
   }
 
-  const typeAstList = typeOrDiscriminatedUnion.types.filter((type) => SchemaAST.isTypeLiteral(type)) as SchemaAST.TypeLiteral[];
+  const typeAstList = typeOrDiscriminatedUnion.types.filter((type) =>
+    SchemaAST.isTypeLiteral(type),
+  ) as SchemaAST.TypeLiteral[];
   if (typeAstList.length === 1) {
     return typeAstList[0];
   }
 
   const typeDiscriminators = getTypeDiscriminators(typeAstList);
   const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
-  const typeIndex = typeDiscriminators.findIndex((property) => targetPropertyValue === (property.type as SchemaAST.Literal).literal);
+  const typeIndex = typeDiscriminators.findIndex(
+    (property) => targetPropertyValue === (property.type as SchemaAST.Literal).literal,
+  );
   invariant(typeIndex !== -1, 'discriminator field not set on target');
   return typeAstList[typeIndex];
 };
