@@ -197,6 +197,14 @@ describe('Type', () => {
       expect(Type.getURI(TestSchema.Person).toString()).toBe('dxn:com.example.type.person:0.1.0');
       expect(Type.getURI(TestSchema.HasManager).toString()).toBe('dxn:com.example.type.hasManager:0.1.0');
     });
+
+    test('Type.getLabel returns undefined for a static type, not the JS class name', ({ expect }) => {
+      // A static type entity is a JS class constructor, so a `name` label accessor must resolve
+      // the (absent) data field rather than the intrinsic `Function.name` — the class name, which
+      // production minifiers mangle to a single character (the cause of garbled type selectors).
+      expect(TestSchema.Person.name).toBe('Person');
+      expect(Type.getLabel(TestSchema.Person)).toBeUndefined();
+    });
   });
 
   describe('deterministic id default', () => {
