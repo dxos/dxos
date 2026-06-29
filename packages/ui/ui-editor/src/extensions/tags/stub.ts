@@ -16,7 +16,8 @@ export interface XmlWidgetNotifier {
 }
 
 /**
- * Mounts <div> placeholder in DOM that React portals render into.
+ * Mounts a DOM placeholder that React portals render into.
+ * Uses a block <div> for block widgets and an inline <span> for inline widgets.
  */
 export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
   #root: HTMLElement | null = null;
@@ -28,6 +29,7 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     readonly props: TProps,
     readonly notifier: XmlWidgetNotifier,
     readonly streaming?: boolean,
+    readonly block?: boolean,
   ) {
     super();
     invariant(id);
@@ -50,7 +52,7 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
 
   override toDOM(view: EditorView) {
     this.#view = view;
-    this.#root = Domino.of('div').classNames('min-h-[24px]').root;
+    this.#root = this.block ? Domino.of('div').classNames('min-h-[24px]').root : Domino.of('span').root;
     const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
     return this.#root;

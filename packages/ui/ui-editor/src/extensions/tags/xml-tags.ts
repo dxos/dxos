@@ -512,7 +512,7 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(widgetId, Component, props, notifier)
+                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block)
                     : undefined;
 
                 // Add decoration.
@@ -581,7 +581,7 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(widgetId, def.Component, props, notifier)
+              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock)
               : undefined;
           if (widget) {
             builder.add(
