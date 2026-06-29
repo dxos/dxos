@@ -98,6 +98,13 @@ export type XmlWidgetDef = {
    * Streaming tags use `cm-xml-<from>` so the same portal id is kept when the closing tag arrives.
    */
   Component?: FunctionComponent<XmlWidgetProps>;
+
+  /**
+   * URL scheme prefixes that trigger this widget on Link/Image markdown nodes.
+   * Example: `[‘dxn:’, ‘echo:’]` matches `[label](dxn:…)` and `![label](echo:…)`.
+   * Block widgets are created for Image nodes; inline widgets for Link nodes.
+   */
+  urlSchemes?: string[];
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -378,17 +385,24 @@ const createWidgetUpdatePlugin = (
  * Builds and maintains decorations for XML widgets.
  * Must be a StateField because block decorations cannot be provided via ViewPlugin.
  */
-const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) =>
-  StateField.define<WidgetDecorationSet>({
+const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) => {
+  const urlSchemeMap: Map<string, [string, XmlWidgetDef]> = new Map();
+  for (const [tag, def] of Object.entries(registry)) {
+    for (const scheme of def.urlSchemes ?? []) {
+      urlSchemeMap.set(scheme, [tag, def]);
+    }
+  }
+
+  return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
       for (const effect of tr.effects) {
         if (effect.is(xmlTagResetEffect)) {
           if (tr.docChanged) {
-            return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier);
+            return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier, urlSchemeMap);
           }
           return { from: 0, decorations: Decoration.none };
         }
@@ -401,11 +415,17 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
         if (reset) {
           log('document reset', { from, to: state.doc.length });
           // Full rebuild from start.
-          return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
+          return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
         } else {
           // Rebuild from the streaming tag start (if active) so the tree walk can detect completion.
           const rebuildFrom = streamingFrom ?? from;
-          const result = buildDecorations(state, { from: rebuildFrom, to: state.doc.length }, registry, notifier);
+          const result = buildDecorations(
+            state,
+            { from: rebuildFrom, to: state.doc.length },
+            registry,
+            notifier,
+            urlSchemeMap,
+          );
           return {
             from: result.from,
             streamingFrom: result.streamingFrom,
@@ -425,6 +445,7 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
       EditorView.atomicRanges.of((view) => view.state.field(field).decorations || Decoration.none),
     ],
   });
+};
 
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
@@ -435,6 +456,7 @@ const buildDecorations = (
   range: Range,
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
+  urlSchemeMap: Map<string, [string, XmlWidgetDef]>,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
@@ -512,6 +534,54 @@ const buildDecorations = (
           }
 
           // Don't descend into children.
+          return false;
+        }
+
+        case 'Image':
+        case 'Link': {
+          if (urlSchemeMap.size === 0) {
+            return false;
+          }
+          const urlNode = node.node.getChild('URL');
+          const markNodes = node.node.getChildren('LinkMark');
+          if (!urlNode || markNodes.length < 2) {
+            return false;
+          }
+          const dxn = state.sliceDoc(urlNode.from, urlNode.to);
+          const match = [...urlSchemeMap.entries()].find(([scheme]) => dxn.startsWith(scheme));
+          if (!match) {
+            return false;
+          }
+          const [, [tag, def]] = match;
+          const isBlock = node.type.name === 'Image';
+          if (!isBlock && def.block) {
+            return false;
+          }
+          const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
+          const nodeRange = { from: node.node.from, to: node.node.to };
+          const widgetId = `cm-url-${dxn}`;
+          const props: XmlWidgetProps = {
+            _tag: node.type.name.toLowerCase() as 'link' | 'image',
+            range: nodeRange,
+            context,
+            label,
+            dxn,
+            block: isBlock,
+            suggest: isBlock,
+          };
+          const widget: WidgetType | undefined = def.factory
+            ? (def.factory(props) ?? undefined)
+            : def.Component
+              ? new PlaceholderWidget(widgetId, def.Component, props, notifier)
+              : undefined;
+          if (widget) {
+            builder.add(
+              nodeRange.from,
+              nodeRange.to,
+              Decoration.replace({ widget, block: isBlock, atomic: true, inclusive: true, tag }),
+            );
+            last = nodeRange.to - 1;
+          }
           return false;
         }
       }
