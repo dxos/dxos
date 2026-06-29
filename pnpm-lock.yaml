@@ -8270,6 +8270,9 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
+      '@dxos/react-ui-transcription':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-transcription
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

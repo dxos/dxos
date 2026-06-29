@@ -10,13 +10,16 @@ import { Capability } from '@dxos/app-framework';
 import { type MediaStreamRecorderProps } from '@dxos/react-ui-transcription';
 import {
   type EntityLookup as EntityLookupFn,
-  type Transcriber as TranscriberType,
   type TranscriberProps,
+  type Transcriber as TranscriberType,
 } from '@dxos/transcription-pipeline';
 
 import { meta } from '#meta';
 
-import { type TranscriptMessageEnricher, type TranscriptionManager as TranscriptionManagerType, } from '../transcriber';
+import {
+  type TranscriptionManager as TranscriptionManagerType,
+  type TranscriptMessageEnricher,
+} from '../capabilities/transcription-manager';
 import * as Settings$ from './Settings'; // eslint-disable-line
 
 export type TranscriberProviderProps = {

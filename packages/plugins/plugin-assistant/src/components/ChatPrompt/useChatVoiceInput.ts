@@ -5,10 +5,11 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { useAudioTrack, useTranscriber } from '@dxos/plugin-transcription/hooks';
+import { useTranscriber } from '@dxos/plugin-transcription/hooks';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
+import { useAudioTrack } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
@@ -95,8 +96,8 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
 
   useTranscriber({
     audioStreamTrack: track,
-    onSegments: handleSegments,
     transcriberConfig,
     recorderConfig,
+    onSegments: handleSegments,
   });
 };

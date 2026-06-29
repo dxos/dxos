@@ -10,7 +10,7 @@ import { createTranscriber } from '@dxos/react-ui-transcription';
 
 import { TranscriptionCapabilities } from '#types';
 
-import { TranscriptionManager } from '../transcriber';
+import { TranscriptionManager } from './transcription-manager';
 
 /**
  * Provides the audio transcriber (and the higher-level transcription manager) to the app-framework

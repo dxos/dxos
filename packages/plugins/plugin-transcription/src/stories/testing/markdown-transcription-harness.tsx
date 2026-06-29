@@ -60,6 +60,7 @@ export const StoryGraphPlugin = ({
               if (!space) {
                 return [];
               }
+
               const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
               return docs
                 .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))

@@ -2,9 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-// Helpers shared across the transcription stories: the in-memory message buffer + model adapter,
-// voice-activity detection, the recording-session reader, and the plugin-manager decorator stack.
-
 import { type Decorator } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';

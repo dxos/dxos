@@ -7,5 +7,4 @@
 export * from './skills';
 export * from './hooks';
 export * from './meta';
-export * from './transcriber';
 export * from './types';

@@ -18,10 +18,11 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { StoryGraphPlugin, type StoryGraphPluginOptions } from './markdown-transcription-harness';
+import { type StoryGraphPluginOptions, StoryGraphPlugin } from './markdown-transcription-harness';
 
 // Inferred from the public APIs so the helper tracks their signatures without importing non-exported types.
 type ClientTypes = NonNullable<Parameters<typeof ClientPlugin>[0]['types']>;
+
 type PersonalSpace = Effect.Effect.Success<ReturnType<typeof initializeIdentity>>['personalSpace'];
 
 export type MarkdownStoryDecoratorsOptions = {
