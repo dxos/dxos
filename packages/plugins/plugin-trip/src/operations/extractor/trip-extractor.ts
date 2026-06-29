@@ -9,8 +9,8 @@ import { Operation } from '@dxos/compute';
 import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import {
   type ExtractInput,
-  type ExtractResult,
   type ExtractionTemplate,
+  type ExtractResult,
   type MatchResult,
   type ObjectExtractor,
   fromResolvers,

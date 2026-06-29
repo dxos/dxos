@@ -39,12 +39,12 @@ config.proto  ──build-protobuf──▶  @dxos/protocols (ConfigProto type)
 
 Three independent sources currently encode the same URLs:
 
-| Source                                                          | What it sets                                                        |
-| --------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [`config-service.ts`](src/config-service.ts) `defaultConfig`    | `edge.url`, `iceProviders`, `ai.server`, `ipfs.*`                   |
-| [`preset.ts`](src/preset.ts) `configPreset`                     | `edge.url` per `local/dev/main/production`                          |
-| [`composer-app/dx.yml`](../../apps/composer-app/dx.yml)         | production `edge`, `iceProviders`, `ai`, `ipfs`                     |
-| [`composer-app/dx-env.yml`](../../apps/composer-app/dx-env.yml) | `DX_EDGE_BASE_URL`→`edge.url`, `DX_EDGE_AI_SERVICE_URL`→`ai.server` |
+| Source                                                          | What it sets                                                                                                |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [`config-service.ts`](src/config-service.ts) `defaultConfig`    | `edge.url`, `iceProviders`, `ai.server`, `ipfs.*`                                                           |
+| [`preset.ts`](src/preset.ts) `configPreset`                     | `edge.url`, `sandbox.url` per `local/dev/main/production`                                                   |
+| [`composer-app/dx.yml`](../../apps/composer-app/dx.yml)         | production `edge`, `iceProviders`, `ai`, `sandbox`, `ipfs`                                                  |
+| [`composer-app/dx-env.yml`](../../apps/composer-app/dx-env.yml) | `DX_EDGE_BASE_URL`→`edge.url`, `DX_EDGE_AI_SERVICE_URL`→`ai.server`, `DX_SANDBOX_SERVICE_URL`→`sandbox.url` |
 
 The production EDGE host (`edge-production.dxos.workers.dev`) and AI host
 (`ai-service.dxos.workers.dev`) are duplicated across all four. Any other service

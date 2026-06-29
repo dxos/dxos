@@ -404,14 +404,14 @@ export const Board = {
 };
 
 export type {
-  BoardRootProps,
-  BoardContainerProps,
-  BoardViewportProps,
-  BoardContentProps,
   BoardBackdropProps,
   BoardCellProps,
-  BoardToolbarProps,
+  BoardContainerProps,
+  BoardContentProps,
   BoardController,
+  BoardRootProps,
+  BoardToolbarProps,
+  BoardViewportProps,
 };
 
 export { useBoardContext };

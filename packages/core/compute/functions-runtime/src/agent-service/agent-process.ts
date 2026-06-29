@@ -14,11 +14,11 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiSession,
   AgentRequestBegin,
   AgentRequestEnd,
+  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,

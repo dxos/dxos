@@ -16,11 +16,11 @@ import {
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
-  SuggestionWidget,
   StatsWidget,
+  StatusWidget,
+  SuggestionWidget,
   SummaryWidget,
   ToolWidget,
-  StatusWidget,
 } from './widgets';
 
 /**

@@ -339,9 +339,9 @@ export const ScrollContainer = {
 };
 
 export type {
-  ScrollContainerRootProps,
   ScrollContainerContentProps,
-  ScrollContainerViewportProps,
   ScrollContainerFadeProps,
+  ScrollContainerRootProps,
   ScrollContainerScrollDownButtonProps,
+  ScrollContainerViewportProps,
 };

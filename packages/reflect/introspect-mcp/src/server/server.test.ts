@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { createIntrospector, type Introspector } from '@dxos/introspect';
+import { type Introspector, createIntrospector } from '@dxos/introspect';
 
 import { createServer } from './server';
 

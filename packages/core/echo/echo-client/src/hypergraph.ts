@@ -7,11 +7,11 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import {
-  batchEvents,
   type AnyProperties,
-  getStrongDependencies,
   type RefResolverRequest,
   type RefSource,
+  batchEvents,
+  getStrongDependencies,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
@@ -20,7 +20,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, type LoadResult, LoadOpTable } from './core-db/load-op';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
 import { RequestImpl } from './core-db/ref-resolver-request';
 import { type DatabaseImpl } from './proxy-db';
 import {

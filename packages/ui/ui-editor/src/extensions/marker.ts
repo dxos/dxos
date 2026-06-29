@@ -24,7 +24,7 @@ const hueVars = Object.fromEntries(
     ['.cm-marker', '.cm-marker-text'].map((selector) => [
       `${selector}[data-hue="${hue}"]`,
       {
-        '--cm-marker-surface': `var(--color-${hue}-surface)`,
+        '--cm-marker-surface': `var(--color-${hue}-bg)`,
         '--cm-marker-text': `var(--color-${hue}-fg)`,
       },
     ]),

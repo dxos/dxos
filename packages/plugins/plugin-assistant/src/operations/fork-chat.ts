@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Paths, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext, SessionLink } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';

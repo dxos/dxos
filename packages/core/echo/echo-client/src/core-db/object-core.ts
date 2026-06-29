@@ -4,9 +4,9 @@
 
 import {
   next as A,
+  type Doc as AutomergeDoc,
   type ChangeFn,
   type ChangeOptions,
-  type Doc as AutomergeDoc,
   type Heads,
 } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';

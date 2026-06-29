@@ -17,7 +17,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#types';
-import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '#types';
+import { type FilesystemWorkspace, NativeFilesystemCapabilities } from '#types';
 
 import { writeComposerConfig } from '../util';
 

@@ -8,7 +8,6 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
-  SkillDefinition,
   CreateObject,
   FileUploader,
   InlineBackend,
@@ -16,6 +15,7 @@ import {
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

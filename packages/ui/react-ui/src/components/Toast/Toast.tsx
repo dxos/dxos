@@ -162,12 +162,12 @@ export const Toast = {
 };
 
 export type {
+  ToastActionProps,
+  ToastActionsProps,
+  ToastCloseProps,
+  ToastDescriptionProps,
   ToastProviderProps,
-  ToastViewportProps,
   ToastRootProps,
   ToastTitleProps,
-  ToastDescriptionProps,
-  ToastActionsProps,
-  ToastActionProps,
-  ToastCloseProps,
+  ToastViewportProps,
 };

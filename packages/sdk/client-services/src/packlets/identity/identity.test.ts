@@ -8,9 +8,9 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
 import {
+  MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
-  MetadataStore,
   Space,
   SpaceProtocol,
   createIdFromSpaceKey,
