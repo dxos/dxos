@@ -386,10 +386,16 @@ const createWidgetUpdatePlugin = (
  * Must be a StateField because block decorations cannot be provided via ViewPlugin.
  */
 const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) => {
-  const urlSchemeMap: Map<string, [string, XmlWidgetDef]> = new Map();
+  // Multiple registry entries may claim the same URL scheme (e.g. one block, one inline).
+  const urlSchemeMap: Map<string, [string, XmlWidgetDef][]> = new Map();
   for (const [tag, def] of Object.entries(registry)) {
     for (const scheme of def.urlSchemes ?? []) {
-      urlSchemeMap.set(scheme, [tag, def]);
+      const existing = urlSchemeMap.get(scheme);
+      if (existing) {
+        existing.push([tag, def]);
+      } else {
+        urlSchemeMap.set(scheme, [[tag, def]]);
+      }
     }
   }
 
@@ -456,7 +462,7 @@ const buildDecorations = (
   range: Range,
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
-  urlSchemeMap: Map<string, [string, XmlWidgetDef]>,
+  urlSchemeMap: Map<string, [string, XmlWidgetDef][]>,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
@@ -548,18 +554,16 @@ const buildDecorations = (
             return false;
           }
           const dxn = state.sliceDoc(urlNode.from, urlNode.to);
-          const match = [...urlSchemeMap.entries()].find(([scheme]) => dxn.startsWith(scheme));
-          if (!match) {
-            return false;
-          }
-          const [, [tag, def]] = match;
           const isBlock = node.type.name === 'Image';
-          if (!isBlock && def.block) {
+          const defs = [...urlSchemeMap.entries()].find(([scheme]) => dxn.startsWith(scheme))?.[1];
+          if (!defs) {
             return false;
           }
-          if (isBlock && !def.block) {
+          const matched = defs.find(([, d]: [string, XmlWidgetDef]) => !!d.block === isBlock);
+          if (!matched) {
             return false;
           }
+          const [tag, def] = matched;
           const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
           const nodeRange = { from: node.node.from, to: node.node.to };
           const widgetId = `cm-url-${node.from}-${dxn}`;

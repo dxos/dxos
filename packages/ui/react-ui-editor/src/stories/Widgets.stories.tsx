@@ -14,10 +14,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
-import { Card, useThemeContext } from '@dxos/react-ui';
+import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   AnchorInlineWidget,
+  type PreviewLinkRef,
+  type PreviewLinkTarget,
   type XmlWidgetProps,
   type XmlWidgetRegistry,
   type XmlWidgetState,
@@ -30,6 +32,7 @@ import {
 } from '@dxos/ui-editor';
 import { safeParseInt, trim } from '@dxos/util';
 
+import { EditorPreviewProvider, useEditorPreview } from '../components';
 import { useTextEditor } from '../hooks';
 import { EditorStory } from './components';
 
@@ -87,6 +90,42 @@ const XmlTagsStory = ({ text }: { text?: string }) => {
 // Preview helpers
 // ----------------------------------------------------------------------------
 
+const handlePreviewLookup = async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+  random.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  const text = Array.from({ length: 2 }, () => random.lorem.paragraphs()).join('\n\n');
+  return { label, text };
+};
+
+const PreviewCard = () => {
+  const { target } = useEditorPreview('PreviewCard');
+  if (!target) {
+    return null;
+  }
+  return (
+    <Popover.Portal>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport classNames='dx-card-popover-width'>
+          <Card.Root border={false}>
+            <Card.Header>
+              <Card.Block>
+                <Icon icon='ph--file-text--regular' />
+              </Card.Block>
+              <Card.Title>{target.label}</Card.Title>
+              <Popover.Close asChild>
+                <Card.ActionIconButton action='close' />
+              </Popover.Close>
+            </Card.Header>
+            <Card.Row>
+              <Card.Text variant='description'>{target.text}</Card.Text>
+            </Card.Row>
+          </Card.Root>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  );
+};
+
 const PreviewBlockCard = ({ dxn, label }: XmlWidgetProps<{ dxn: string; label: string }>) => {
   const [text, setText] = useState<string | undefined>();
   useEffect(() => {
@@ -96,6 +135,9 @@ const PreviewBlockCard = ({ dxn, label }: XmlWidgetProps<{ dxn: string; label: s
   return (
     <Card.Root>
       <Card.Header>
+        <Card.Block>
+          <Icon icon='ph--circle--regular' />
+        </Card.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
       {text && (
@@ -189,12 +231,13 @@ export const Preview: Story = {
     );
 
     return (
-      <>
+      <EditorPreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory text={previewText} extensions={extensions} />
+        <PreviewCard />
         {widgets.map(({ id, root, Component, props }) => (
           <div key={id}>{createPortal(<Component {...props} />, root)}</div>
         ))}
-      </>
+      </EditorPreviewProvider>
     );
   },
 };
