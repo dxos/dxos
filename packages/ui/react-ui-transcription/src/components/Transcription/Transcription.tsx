@@ -8,14 +8,28 @@ import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Message, type Transcript } from '@dxos/types';
 import {
+  AnchorInlineWidget,
+  type XmlWidgetProps,
+  type XmlWidgetRegistry,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   documentSlots,
-  preview,
   scroller,
+  xmlTags,
 } from '@dxos/ui-editor';
+
+const inlinePreviewRegistry: XmlWidgetRegistry = {
+  'link-preview': {
+    block: false,
+    urlSchemes: ['dxn:', 'echo:'],
+    factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+      typeof label === 'string' && typeof dxn === 'string'
+        ? new AnchorInlineWidget({}, { label, dxn })
+        : null,
+  },
+};
 
 import { type TranscriptModel } from '../../model';
 import { transcription } from './transcription-extension';
@@ -36,7 +50,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),
           decorateMarkdown(),
-          preview(),
+          xmlTags({ registry: inlinePreviewRegistry }),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
           scroller(),
         ],
