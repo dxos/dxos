@@ -167,13 +167,23 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   private async _loadFromDb(): Promise<void> {
     const filePath = this.filePath;
-    const rows = await RuntimeProvider.runPromise(this.runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        return yield* sql<{ data: Uint8Array }>`SELECT data FROM hypercore_files WHERE path = ${filePath}`;
-      }),
-    );
-    this.#buffer = rows.length > 0 ? Buffer.from(rows[0].data) : Buffer.alloc(0);
+    try {
+      const rows = await RuntimeProvider.runPromise(this.runtime)(
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          return yield* sql<{ data: Uint8Array }>`SELECT data FROM hypercore_files WHERE path = ${filePath}`;
+        }),
+      );
+      this.#buffer = rows.length > 0 ? Buffer.from(rows[0].data) : Buffer.alloc(0);
+    } catch (err) {
+      // The SQL connection may close mid-read during teardown (the `#closed` guard in `_ensureLoaded`
+      // only catches reads that have not yet started). A read racing teardown rejects with
+      // "database connection is not open"; swallow it once closed and fall back to the empty buffer,
+      // otherwise surface the genuine error.
+      if (!this.#closed) {
+        throw err;
+      }
+    }
     this.#loaded = true;
   }
 
