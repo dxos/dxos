@@ -14,14 +14,14 @@ import { Message } from './Message';
 
 random.seed(123);
 
-type DefaultStoryProps = {
+type StoryArgs = {
   valence: MessageValence;
   title: string;
   body: string;
   button?: boolean;
 };
 
-const DefaultStory = ({ valence, title, body, button }: DefaultStoryProps) => (
+const DefaultStory = ({ valence, title, body, button }: StoryArgs) => (
   <div className='w-[30rem]'>
     <Message.Root valence={valence}>
       {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}

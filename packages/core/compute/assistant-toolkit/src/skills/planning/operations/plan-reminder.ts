@@ -14,7 +14,7 @@ import { DXN } from '@dxos/keys';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Plan, Chat } from '../../../types';
+import { Chat, Plan } from '../../../types';
 import { PlanReminder } from './definitions';
 
 /**

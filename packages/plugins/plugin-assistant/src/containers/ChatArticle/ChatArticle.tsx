@@ -4,6 +4,7 @@
 
 import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 
+import { Provider } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -33,7 +34,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
 
     const { preset, ...chatProps } = usePresets(settings);
     // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
-    const online = (settings.modelProvider ?? 'edge') === 'edge';
+    const online = preset?.provider === Provider.edge.id;
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -78,7 +79,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     return (
       <ChatComponent.Root chat={chat} db={space?.db} processor={processor} onEvent={onEvent} onSubmit={onSubmit}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar classNames='bg-toolbar-surface'>
+          <Panel.Toolbar>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
           </Panel.Toolbar>
           <Panel.Content>

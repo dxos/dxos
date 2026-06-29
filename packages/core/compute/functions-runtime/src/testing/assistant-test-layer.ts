@@ -16,14 +16,14 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Harness } from '@dxos/assistant';
 import {
   AgentService,
-  Skill,
   Credential,
+  Instructions,
   Operation,
   OperationHandlerSet,
   Process,
-  Instructions,
   ServiceNotAvailableError,
   ServiceResolver,
+  Skill,
   Trace,
   Trigger,
 } from '@dxos/compute';

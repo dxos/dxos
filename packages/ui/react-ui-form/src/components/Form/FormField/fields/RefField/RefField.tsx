@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
+import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, EID, URI } from '@dxos/keys';

@@ -17,7 +17,7 @@ import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -111,9 +111,9 @@ const TestExtension = Capability.contributes(
   }),
 );
 
-type DefaultStoryProps = Pick<MatrixRootProps, 'Tile'>;
+type StoryArgs = Pick<MatrixRootProps, 'Tile'>;
 
-const DefaultStory = ({ Tile }: DefaultStoryProps) => {
+const DefaultStory = ({ Tile }: StoryArgs) => {
   const items = useMemo(
     () => [
       Organization.make({ name: random.company.name() }),

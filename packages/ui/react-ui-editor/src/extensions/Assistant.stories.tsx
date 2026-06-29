@@ -20,7 +20,7 @@ import { trim } from '@dxos/util';
 import { translations } from '#translations';
 
 import { Editor, type EditorViewProps } from '../components';
-import { assistant, type AssistantOptions } from './assistant-extension';
+import { type AssistantOptions, assistant } from './assistant-extension';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {
@@ -57,9 +57,9 @@ const useTestGenerate = () => {
   return generate;
 };
 
-type DefaultStoryProps = Pick<EditorViewProps, 'value'>;
+type StoryArgs = Pick<EditorViewProps, 'value'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const generate = useTestGenerate();
   const extensions = useMemo(

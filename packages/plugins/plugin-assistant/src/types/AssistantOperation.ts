@@ -11,7 +11,7 @@ import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 
 import { meta } from '#meta';
 
@@ -71,13 +71,14 @@ export const ResolveNavigationTargets = Operation.make({
     key: makeKey('resolveNavigationTargets'),
     name: 'Resolve navigation targets',
     description:
-      'Resolve navigation targets within the application. The returned paths can be used with the Open operation. Without a query, returns pages that can be navigated to.',
+      "Resolve a navigation path for the Open operation. Pass an object's URI (its DXN, e.g. a context object's <dxn>) as the query uri to resolve that object to its navigation target, or omit the query to list pages that can be navigated to. Pass the returned target path to Open.",
     icon: 'ph--compass--regular',
   },
   input: Schema.Struct({
     query: Schema.optional(
       Schema.Struct({
-        dxn: Schema.optional(DXN.Schema),
+        // An object URI (e.g. a context object's `<dxn>`); accepts both `echo:` EIDs and `dxn:` DXNs.
+        uri: Schema.optional(URI.Schema),
       }),
     ),
   }),

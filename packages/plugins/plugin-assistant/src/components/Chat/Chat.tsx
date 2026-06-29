@@ -390,4 +390,4 @@ export const Chat = {
   TaskList: ChatTaskList,
 };
 
-export type { ChatRootProps, ChatToolbarProps, ChatContentProps, ChatPromptProps, ChatThreadProps, ChatEvent };
+export type { ChatContentProps, ChatEvent, ChatPromptProps, ChatRootProps, ChatThreadProps, ChatToolbarProps };

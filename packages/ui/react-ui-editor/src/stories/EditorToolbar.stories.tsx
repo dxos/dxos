@@ -23,9 +23,9 @@ import { translations } from '#translations';
 import { Editor } from '../components';
 import { type UseTextEditorProps } from '../hooks';
 
-type DefaultStoryProps = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
+type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
 
-const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source' }: DefaultStoryProps) => {
+const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source' }: StoryArgs) => {
   const { themeMode } = useThemeContext();
 
   const extensions = useMemo(

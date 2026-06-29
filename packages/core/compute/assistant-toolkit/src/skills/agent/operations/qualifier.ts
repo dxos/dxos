@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { Plan, Agent } from '../../../types';
+import { Agent, Plan } from '../../../types';
 import { Qualifier } from './definitions';
 
 const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(

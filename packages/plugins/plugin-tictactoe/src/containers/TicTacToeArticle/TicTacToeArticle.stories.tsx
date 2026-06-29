@@ -13,9 +13,9 @@ import { type TicTacToe, TicTacToe as TicTacToeTypes } from '#types';
 
 import { TicTacToeArticle } from './TicTacToeArticle';
 
-type DefaultStoryProps = { size?: number; winCondition?: number; level?: TicTacToe.Level };
+type StoryArgs = { size?: number; winCondition?: number; level?: TicTacToe.Level };
 
-const DefaultStory = ({ size = 3, winCondition, level }: DefaultStoryProps) => {
+const DefaultStory = ({ size = 3, winCondition, level }: StoryArgs) => {
   const { game, state } = useMemo(() => {
     const state = TicTacToeTypes.make({ size, winCondition, level });
     const game = makeGame({ name: 'Test Game', variant: state });

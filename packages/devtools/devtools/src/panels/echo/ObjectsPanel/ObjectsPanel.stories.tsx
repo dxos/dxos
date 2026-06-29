@@ -15,7 +15,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectViewer, ObjectsTree } from '../../../components';
+import { ObjectsTree, ObjectViewer } from '../../../components';
 import { DevtoolsContextProvider } from '../../../hooks';
 import { ObjectsPanel } from './ObjectsPanel';
 

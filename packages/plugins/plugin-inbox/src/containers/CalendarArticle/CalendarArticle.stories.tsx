@@ -22,11 +22,11 @@ import { Calendar } from '#types';
 import { InboxPlugin } from '../../InboxPlugin';
 import { CalendarArticle } from './CalendarArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   count?: number;
 };
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0].id);
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
@@ -43,7 +43,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),

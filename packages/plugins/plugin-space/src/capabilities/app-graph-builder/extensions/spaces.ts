@@ -177,7 +177,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       id: 'spaces',
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
-        const client = capabilities.get(ClientCapabilities.Client);
+        // This reactive connector can recompute once during the teardown window (e.g. when stories
+        // swap plugin managers) after the Client capability has been removed; tolerate its absence
+        // via the safe `getAll` lookup rather than the throwing `get`.
+        const [client] = capabilities.getAll(ClientCapabilities.Client);
+        if (!client) {
+          return Effect.succeed([]);
+        }
         const stateAtom = capabilities.get(SpaceCapabilities.State);
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const spacesAtom = CreateAtom.fromObservable(client.spaces);

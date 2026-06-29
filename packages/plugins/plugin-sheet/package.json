@@ -49,6 +49,11 @@
       "node": "./dist/lib/neutral/SheetPlugin.node.mjs",
       "default": "./dist/lib/neutral/SheetPlugin.mjs"
     },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": {
       "source": "./src/translations.ts",

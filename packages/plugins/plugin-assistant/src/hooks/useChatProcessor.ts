@@ -18,7 +18,7 @@ import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useObject, type Space } from '@dxos/react-client/echo';
+import { type Space, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Assistant } from '#types';

@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { Provider } from '@dxos/ai';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
@@ -27,7 +28,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const runtime = useChatServices({ id: db?.spaceId });
   const { preset, ...chatProps } = usePresets(settings);
-  const online = (settings.modelProvider ?? 'edge') === 'edge';
+  const online = preset?.provider === Provider.edge.id;
   const registry = useRegistry();
   const processor = useChatProcessor({ chat, preset, runtime, registry, settings });
   // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, EID, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 import { Event, Transcript } from '@dxos/types';

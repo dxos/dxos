@@ -60,7 +60,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
     return (
       <Column.Root
         asChild
-        gutter={density === 'lg' ? 'lg' : density === 'sm' || density === 'xs' ? 'sm' : 'md'}
+        gutter='lg'
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
       >
@@ -552,11 +552,11 @@ export const Card = {
 };
 
 export type {
-  CardRootProps,
-  CardHeaderProps,
+  CardActionIconButtonProps,
   CardBlockProps,
   CardDragHandleProps,
-  CardActionIconButtonProps,
+  CardHeaderProps,
   CardMenuProps,
+  CardRootProps,
   CardSectionProps,
 };

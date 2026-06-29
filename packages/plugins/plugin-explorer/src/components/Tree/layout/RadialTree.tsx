@@ -3,7 +3,7 @@
 // Copyright 2024 Observable, Inc.
 //
 
-import { cluster as d3Cluster, linkRadial, select, tree as d3Tree } from 'd3';
+import { cluster as d3Cluster, tree as d3Tree, linkRadial, select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';

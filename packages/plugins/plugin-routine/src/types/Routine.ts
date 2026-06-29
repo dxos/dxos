@@ -11,7 +11,7 @@ import { Instructions, Runnable, Trigger } from '@dxos/compute';
 // (Runnable is an alias for Operation.PersistentOperation, so Routine's class type references it).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Operation } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { runInstructionsRef } from '../util/run-instructions';

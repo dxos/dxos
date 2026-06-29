@@ -9,14 +9,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiContext } from '@dxos/assistant';
-import { Skill, McpServer, Process } from '@dxos/compute';
+import { McpServer, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
   type GetSessionOptions,
-  getSession,
   type Service,
   type Session,
+  getSession,
 } from '@dxos/compute/AgentService';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

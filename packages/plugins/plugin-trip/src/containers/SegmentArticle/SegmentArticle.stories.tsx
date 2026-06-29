@@ -21,7 +21,7 @@ import { Booking, Segment, Trip } from '#types';
 import { TripPlugin } from '../../testing';
 import { SegmentArticle } from './SegmentArticle';
 
-type StoryProps = {
+type StoryArgs = {
   /** Index of the segment to view (0-based; -1 for none). */
   selectedIndex?: number;
 };
@@ -40,7 +40,7 @@ const seed = (space: Space) => {
   space.db.add(trip);
 };
 
-const DefaultStory = ({ selectedIndex = 0 }: StoryProps) => {
+const DefaultStory = ({ selectedIndex = 0 }: StoryArgs) => {
   const spaces = useSpaces();
   const spaceId = spaces[0]?.id;
   const db = useDatabase(spaceId ?? '');

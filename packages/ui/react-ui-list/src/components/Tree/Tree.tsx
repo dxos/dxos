@@ -1,11 +1,11 @@
 //
 // Copyright 2024 DXOS.org
+//
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
-
+import { Treegrid, type TreegridRootProps } from '../Treegrid';
 import { type TreeModel, TreeProvider } from './TreeContext';
 import { TreeItemById, type TreeItemByIdProps, type TreeItemProps } from './TreeItem';
 

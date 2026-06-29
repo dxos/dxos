@@ -21,17 +21,17 @@ import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@d
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
-  AgentSkill,
   AgentHandlers,
+  AgentSkill,
   Chat,
-  DelegationSkill,
   DelegationHandlers,
+  DelegationSkill,
   Plan,
-  PlanningSkill,
   PlanningHandlers,
+  PlanningSkill,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Skill, Instructions, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -42,7 +42,7 @@ import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { MarkdownSkill, Markdown } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';

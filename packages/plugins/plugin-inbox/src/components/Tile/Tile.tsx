@@ -83,4 +83,4 @@ export const Tile = {
   Header: TileHeader,
 };
 
-export type { TileRootProps, TileHeaderProps };
+export type { TileHeaderProps, TileRootProps };

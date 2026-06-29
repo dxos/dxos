@@ -16,9 +16,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiSession,
   AgentRequestBegin,
   AgentRequestEnd,
+  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,

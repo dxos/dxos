@@ -45,7 +45,8 @@ const MockAuthSurfacePlugin = Plugin.define(
             filter: Surface.makeFilter(ConnectorAuth),
             component: ({ data }) => (
               <div className='text-description'>
-                Mock auth surface for <code>{(data as { connectorId?: string }).connectorId}</code>
+                Mock auth surface for{' '}
+                <code>{(data as { connectorIds?: readonly string[] }).connectorIds?.join(', ')}</code>
               </div>
             ),
           }),
@@ -55,12 +56,12 @@ const MockAuthSurfacePlugin = Plugin.define(
   Plugin.make,
 );
 
-type DefaultStoryProps = {
+type StoryArgs = {
   withToken?: boolean;
   withAuthSurface?: boolean;
 };
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0]?.id);
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
@@ -76,7 +77,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<DefaultStoryProps>(({ args: { withToken = false, withAuthSurface = false } }) => ({
+    withPluginManager<StoryArgs>(({ args: { withToken = false, withAuthSurface = false } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),

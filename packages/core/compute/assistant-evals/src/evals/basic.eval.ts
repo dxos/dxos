@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { createEvalRunner, type VariantConfig } from '../runner';
+import { type VariantConfig, createEvalRunner } from '../runner';
 
 // TODO(dmaretskyi): Still some ways to go. I want this to be able to perform complex tasks inside composer, and then evaluate the output and effects (i.e. Database changes).
 // To that end:

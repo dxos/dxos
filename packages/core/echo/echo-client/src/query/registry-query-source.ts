@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Registry, type QueryResult } from '@dxos/echo';
+import { type QueryResult, type Registry } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 

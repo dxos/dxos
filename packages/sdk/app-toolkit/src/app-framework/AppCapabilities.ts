@@ -15,10 +15,10 @@ import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Skill, Credential, Operation } from '@dxos/compute';
+import type { Credential, Operation, Skill } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { EID } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -248,7 +248,7 @@ export type NavigationTarget = {
 };
 
 export type NavigationQuery = {
-  dxn?: string;
+  uri?: URI.URI;
 };
 
 /**

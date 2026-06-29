@@ -5,14 +5,14 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import { SandboxHandlers, CreateSandbox, Exec, UploadFile, DownloadFile } from '../skills/functions';
+import { CreateSandbox, DownloadFile, Exec, SandboxHandlers, UploadFile } from '../skills/functions';
 import SandboxSkill from '../skills/sandbox-skill';
 import * as Sandbox from '../types/Sandbox';
 

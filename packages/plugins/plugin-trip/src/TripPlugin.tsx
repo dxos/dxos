@@ -11,12 +11,12 @@ import { InboxCapabilities } from '@dxos/plugin-inbox';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
   CreateObject,
   MarkerProvider,
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';

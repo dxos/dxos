@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';

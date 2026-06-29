@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import {
-  extractDxnsFromObject,
   extractDxnFromString,
+  extractDxnsFromObject,
   extractFirstDxnFromToolInput,
   extractFirstDxnFromToolResult,
 } from './dxn-extractor';

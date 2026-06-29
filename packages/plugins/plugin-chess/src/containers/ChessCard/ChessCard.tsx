@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
+import { Card } from '@dxos/react-ui';
 
 import { Chessboard } from '#components';
 import { Chess } from '#types';
@@ -18,10 +19,16 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
   }
 
   return (
-    <Chessboard.Root state={variant}>
-      <Chessboard.Content>
-        <Chessboard.Board />
-      </Chessboard.Content>
-    </Chessboard.Root>
+    <Card.Body>
+      <Card.Section classNames='aspect-square'>
+        <Card.Row fullWidth>
+          <Chessboard.Root state={variant}>
+            <Chessboard.Content>
+              <Chessboard.Board />
+            </Chessboard.Content>
+          </Chessboard.Root>
+        </Card.Row>
+      </Card.Section>
+    </Card.Body>
   );
 };

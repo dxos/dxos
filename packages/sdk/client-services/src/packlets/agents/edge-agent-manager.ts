@@ -57,7 +57,7 @@ export class EdgeAgentManager extends Resource {
     invariant(this._edgeFeatures?.agents);
 
     const response = await this._edgeHttpClient.createAgent(ctx, {
-      identityKey: this._identity.identityKey.toHex(),
+      identityDid: this._identity.did,
       haloSpaceId: this._identity.haloSpaceId,
       haloSpaceKey: this._identity.haloSpaceKey.toHex(),
     });
@@ -123,7 +123,7 @@ export class EdgeAgentManager extends Resource {
     try {
       log('fetching agent status');
       const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
-        ownerIdentityKey: this._identity.identityKey,
+        ownerIdentityDid: this._identity.did,
       });
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {

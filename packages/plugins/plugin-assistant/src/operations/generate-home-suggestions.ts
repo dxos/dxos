@@ -24,6 +24,10 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 const RECENT_LIMIT = 20;
 const MAX_PROMPTS = 3;
 
+// Onboarding documents added by the system at identity creation — exclude them so a
+// brand-new personal space (containing only the welcome doc) still uses fallback prompts.
+const ONBOARDING_DOCUMENT_LABELS = new Set(['Welcome to Composer']);
+
 const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSuggestions> =
   AssistantOperation.GenerateHomeSuggestions.pipe(
     Operation.withHandler(
@@ -63,6 +67,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
           const items = objects
             .filter(Obj.isObject)
             .filter((obj) => !Obj.isDeleted(obj))
+            .filter((obj) => !ONBOARDING_DOCUMENT_LABELS.has(Obj.getLabel(obj) ?? ''))
             .flatMap((obj): { label: string; typename: string }[] => {
               const label = Obj.getLabel(obj);
               const typename = Obj.getTypename(obj);

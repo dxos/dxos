@@ -7,7 +7,8 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Avatar, ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
+import { Avatar, type ThemedClassName, useId } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
 type IdentityListItemProps = {
@@ -24,12 +25,12 @@ export const IdentityListItem = forwardRef<
   const labelId = useId('identityListItem__label');
   const displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   return (
-    <ListItem.Root
+    <Listbox.Item
       {...props}
+      id={identity.identityKey.toHex()}
       classNames={['flex gap-2 ps-3 pe-1 items-center', onClick && 'cursor-pointer', classNames]}
-      onClick={() => onClick?.()}
+      onClick={onClick && (() => onClick())}
       data-testid='identity-list-item'
-      labelId={labelId}
       ref={forwardedRef}
     >
       <Avatar.Root labelId={labelId}>
@@ -41,6 +42,6 @@ export const IdentityListItem = forwardRef<
         />
         <Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Avatar.Label>
       </Avatar.Root>
-    </ListItem.Root>
+    </Listbox.Item>
   );
 });

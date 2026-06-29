@@ -8,6 +8,8 @@ import type { AiService } from '@dxos/ai';
 // Re-export Chat type from assistant-toolkit for public API type declarations.
 export type { Chat as ChatType } from '@dxos/assistant-toolkit';
 
+export * from './ChatSurface';
+
 export * as Assistant from './Assistant';
 export * as AssistantOperation from './AssistantOperation';
 export * as AssistantCapabilities from './AssistantCapabilities';
