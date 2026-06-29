@@ -62,8 +62,8 @@ import { isNonNullable, trim } from '@dxos/util';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
+import { enableQueryIndexes } from '../testing';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { enableQueryIndexes } from './testing';
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -119,7 +119,6 @@ const StoryGraphPlugin = () =>
   )();
 
 type StageId = 'correct' | 'extract' | 'summarize';
-
 const STAGE_FACTORY: Record<StageId, () => Stage<any, any>> = {
   correct: makeCorrectionStage,
   extract: makeExtractionStage,

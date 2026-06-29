@@ -26,7 +26,7 @@ import {
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { createStoryDecorators } from './testing';
+import { createStoryDecorators } from '../testing';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.

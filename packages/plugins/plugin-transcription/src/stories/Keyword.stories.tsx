@@ -25,7 +25,7 @@ import { Mic } from '#components';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
-import { createStoryDecorators } from './testing';
+import { createStoryDecorators } from '../testing';
 
 // Stable session key for the Mic button; any non-editor id works (the editor driver ignores it).
 const DOC_ID = 'keyword-detection';

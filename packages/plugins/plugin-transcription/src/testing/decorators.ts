@@ -15,9 +15,8 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { TestItem } from '#testing';
-
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import { TestItem } from './testing';
 
 // TODO(mykola): Make API easier to use.
 // TODO(mykola): Delete after enabling vector indexing by default.
