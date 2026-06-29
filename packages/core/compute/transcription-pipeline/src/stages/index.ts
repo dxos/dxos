@@ -12,6 +12,7 @@ import { makeSummarizationStage } from './summarization';
 import { makeTranslationStage } from './translation';
 
 export * from './correction';
+export * from './correction-llm';
 export * from './extraction';
 export * from './summarization';
 export * from './translation';

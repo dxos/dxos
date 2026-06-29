@@ -118,7 +118,7 @@ export const CommentThread = ({
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
+      {thread.status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
       {onResolve && !(thread.status === 'staged') && (
         <IconButton
           data-testid='thread.resolve'

@@ -23,7 +23,7 @@ export const ActiveSpacePanel = ({ spaceName }: ActiveSpacePanelProps) => {
       {spaceName && (
         <div className='flex items-center gap-2 text-sm'>
           <span className='text-description'>Active space:</span>
-          <Tag palette='neutral'>{spaceName}</Tag>
+          <Tag hue='neutral'>{spaceName}</Tag>
         </div>
       )}
     </div>

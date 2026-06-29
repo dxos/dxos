@@ -2,21 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-// Pipeline testbench: drives the @dxos/transcription-pipeline runtime over a scripted transcript and
-// writes the result into a real Markdown document (rendered via plugin-markdown). Variants exercise
-// the pipeline from simplest (correction only) to full (correction + entity extraction + summary).
-// The space is seeded with Person/Organization objects, so the extraction stage links recognized
-// entities as `[Name](echo:/<id>)` markdown links — decorated as dx-anchors by the editor's preview
-// extension. Per-stage telemetry is shown in a column beside the document.
+/**
+ * End-to-end transcription into a real plugin-markdown editor: the single editor-output integration
+ * test, unifying the former MarkdownTranscription, Pipeline and MicPipeline stories.
+ *
+ * - `Live` — live microphone via the real `TranscriptionDriver` (toolbar `Mic` button), streaming
+ *   pending text into the document with inline confirm/cancel + entity linking (requires a mic).
+ * - `Recording` / `RecordingIndicator` — seed the pending-text decoration (no mic) to show the
+ *   recording preview / placeholder deterministically.
+ * - `CorrectionOnly` / `WithExtraction` / `Full` — drive `PipelineRuntime` over a scripted transcript
+ *   (correction → extraction → summarization), writing each stage into the doc; status + per-stage
+ *   telemetry + summary render in the side panel via the shared `PipelineStatus` component.
+ * - Space is seeded with Person/Organization entities so extraction links recognized names.
+ */
 
+import { type StateEffect } from '@codemirror/state';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
@@ -26,12 +34,13 @@ import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { PipelineStatus } from '@dxos/react-ui-transcription';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
@@ -47,80 +56,102 @@ import {
 } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
+import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
+import { enableQueryIndexes } from '../testing';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { enableQueryIndexes } from './common';
 
-// Properly-cased transcript that names seeded entities
-// (DXOS, Cyberdyne, Amco, Sarah Johnson, Michael Chen)
-// so the deterministic extraction heuristic + full-text lookup link them.
-const SCRIPT = trim`
+const SAMPLE_CONTENT = trim`
+  # Test
+
+  Place the cursor here, then click the microphone in the toolbar to start recording.
+  Live transcription appears inline as greyed text — confirm (✓) to insert it into the document, or cancel (✕) to discard.
+
+`;
+
+const TRANSCRIPT = trim`
   So I caught up with Sarah Johnson this morning
   We talked about the DXOS and Cyberdyne partnership
   Amco might join the project later this year
   I should follow up with Michael Chen next week
 `.split('\n');
 
-type StageId = 'correct' | 'extract' | 'summarize';
+// Story-only plugin exposing Markdown documents in the personal space as direct children of the graph
+// root, so TranscriptionPlugin's toolbar extension can attach the record action to the doc's node.
+const StoryGraphPlugin = () =>
+  Plugin.define(
+    Plugin.makeMeta({
+      key: DXN.make('org.dxos.plugin.transcription.story.pipelineGraph'),
+      name: 'Transcription Pipeline Story Graph',
+    }),
+  ).pipe(
+    AppPlugin.addAppGraphModule({
+      activate: Effect.fnUntraced(function* () {
+        const capabilities = yield* Capability.Service;
+        const extensions = yield* GraphBuilder.createExtension({
+          id: 'storyDocs',
+          match: NodeMatcher.whenRoot,
+          connector: (_, get) =>
+            Effect.gen(function* () {
+              // Tolerate the teardown window when stories swap: the Client capability may already be
+              // removed while this reactive connector recomputes once more (use `getAll`, not the
+              // throwing `get`).
+              const [client] = capabilities.getAll(ClientCapabilities.Client);
+              const space = client && AppSpace.getPersonalSpace(client);
+              if (!space) {
+                return [];
+              }
 
+              const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+              return docs
+                .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+                .filter(isNonNullable);
+            }),
+        });
+        return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+      }),
+    }),
+    Plugin.make,
+  )();
+
+type StageId = 'correct' | 'extract' | 'summarize';
 const STAGE_FACTORY: Record<StageId, () => Stage<any, any>> = {
   correct: makeCorrectionStage,
   extract: makeExtractionStage,
   summarize: makeSummarizationStage,
 };
 
-/**
- * Story-only plugin exposing Markdown documents in the personal space as direct children of the
- * graph root, so the document renders as an article surface (mirrors MarkdownTranscription).
- */
-const StoryGraphPlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.transcription.story.pipelineGraph'), name: 'Pipeline Story Graph' }),
-).pipe(
-  AppPlugin.addAppGraphModule({
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'pipelineStoryDocs',
-        match: NodeMatcher.whenRoot,
-        connector: (_, get) =>
-          Effect.gen(function* () {
-            const client = capabilities.get(ClientCapabilities.Client);
-            const space = AppSpace.getPersonalSpace(client);
-            if (!space) {
-              return [];
-            }
-
-            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-            return docs
-              .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-              .filter(isNonNullable);
-          }),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-    }),
-  }),
-  Plugin.make,
-);
-
 type StoryArgs = {
-  stages: readonly StageId[];
+  /**
+   * When set, drives `PipelineRuntime` over the scripted transcript through these stages.
+   */
+  stages?: readonly StageId[];
+  /**
+   * Seeds the pending-text decoration directly (final/interim), bypassing audio capture, to
+   * showcase the recording-state preview deterministically (no microphone).
+   */
+  seed?: { final?: string; interim?: string };
 };
 
-const DefaultStory = ({ stages }: StoryArgs) => {
+const DefaultStory = ({ stages, seed }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && qualifyId(Node.RootId, doc.id);
+  // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
+  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
+  const status = useAtomCapability(TranscriptionCapabilities.PipelineStatus);
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([]);
   const [summary, setSummary] = useState<string>();
-  // Live driver state (mic + pipeline lifecycle), published by the transcription driver.
-  const status = useAtomCapability(TranscriptionCapabilities.PipelineStatus);
-  const phase = status?.phase ?? 'idle';
+
+  // The status panel is relevant for the live (driver phase) and scripted (telemetry) variants; the
+  // seeded recording-preview variants are about the inline editor affordance only.
+  const showStatus = !seed;
 
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
@@ -129,17 +160,60 @@ const DefaultStory = ({ stages }: StoryArgs) => {
     }
   }, [graph, attendableId]);
 
+  // Seed the pending-text decoration once the editor view has registered (no mic required).
+  useEffect(() => {
+    if (!attendableId || !editorViews) {
+      return;
+    }
+    // Clear any previously-seeded decoration when seeding stops.
+    if (!seed) {
+      editorViews.get(attendableId)?.view.dispatch({ effects: cancelPendingText.of() });
+      return;
+    }
+    let cancelled = false;
+    const trySeed = () => {
+      const entry = editorViews.get(attendableId);
+      if (!entry) {
+        return false;
+      }
+      // Anchor the pending block at the end of the document.
+      const anchor = entry.view.state.doc.length;
+      const effects: StateEffect<unknown>[] = [setPendingAnchor.of({ anchor, placeholder: 'Recording…' })];
+      if (seed.final) {
+        effects.push(appendPendingText.of(seed.final));
+      }
+      if (seed.interim) {
+        effects.push(setPendingInterim.of(seed.interim));
+      }
+      entry.view.dispatch({ effects });
+      return true;
+    };
+    if (trySeed()) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (cancelled || trySeed()) {
+        clearInterval(interval);
+      }
+    }, 50);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [seed, attendableId, editorViews]);
+
   // Run the pipeline over the scripted transcript, writing each stage's output into the document.
   useEffect(() => {
     const target = doc?.content?.target;
-    if (!space || !target) {
+    if (!stages || !space || !target) {
       return;
     }
     let cancelled = false;
     setTelemetry([]);
     setSummary(undefined);
 
-    const blocks: ContentBlock.Transcript[] = SCRIPT.map((text, index) => ({
+    const blocks: ContentBlock.Transcript[] = TRANSCRIPT.map((text, index) => ({
       _tag: 'transcript',
       started: new Date(index * 1000).toISOString(),
       text,
@@ -200,41 +274,25 @@ const DefaultStory = ({ stages }: StoryArgs) => {
     return <Loading data={{ doc: !!doc }} />;
   }
 
+  if (!showStatus) {
+    return (
+      <div className='contents' {...attentionAttrs}>
+        <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+      </div>
+    );
+  }
+
   return (
-    <div role='none' className='dx-container grid grid-cols-2 gap-2' {...attentionAttrs}>
+    <div role='none' className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
       <div role='none' className='dx-expander'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
-      <div role='none' className='dx-expander shrink-0 overflow-y-auto p-2 text-sm'>
-        <h3 className='mb-1 font-medium'>Status</h3>
-        <div className='mb-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-description'>
-          <span>Mic</span>
-          <span>{phase === 'recording' ? '● on' : '○ off'}</span>
-          <span>Pipeline</span>
-          <span>{phase}</span>
-        </div>
-
-        <h3 className='mb-1 font-medium'>Stages</h3>
-        <div className='mb-3 text-description'>{stages.join(' → ') || '(none)'}</div>
-
-        <h3 className='mb-1 font-medium'>Telemetry</h3>
-        <div className='w-fit grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1'>
-          {telemetry.map((event, index) => (
-            <Fragment key={index}>
-              <span>{event.stageId}</span>
-              <span className='text-description'>{event.outcome}</span>
-              <span className='text-right tabular-nums text-description'>{event.durationMs}ms</span>
-            </Fragment>
-          ))}
-        </div>
-
-        {summary && (
-          <Fragment>
-            <h3 className='mt-3 mb-1 font-medium'>Summary</h3>
-            <p className='text-description'>{summary}</p>
-          </Fragment>
-        )}
-      </div>
+      <PipelineStatus
+        phase={stages ? 'idle' : (status?.phase ?? 'idle')}
+        stages={stages}
+        telemetry={telemetry}
+        summary={summary}
+      />
     </div>
   );
 };
@@ -253,9 +311,10 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
+              // Vector indexes so extraction can link recognized Person/Organization names.
               yield* enableQueryIndexes(client.services.services);
               yield* Effect.promise(() => seedTestData(personalSpace));
-              personalSpace.db.add(Markdown.make({ name: 'Transcript', content: '# Transcript\n\n' }));
+              personalSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -277,21 +336,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Simplest: correction only (punctuation / capitalization). */
-export const CorrectionOnly: Story = {
+/** Live microphone via the real driver: streams transcription into the doc (requires a mic). */
+export const Live: Story = {};
+
+/** Scripted: correction only (punctuation / capitalization). */
+export const WithCorrection: Story = {
   args: {
     stages: ['correct'],
   },
 };
 
-/** Correction + entity extraction: recognized entities become dx-anchor links in the document. */
+/** Scripted: correction + entity extraction (recognized entities become dx-anchor links). */
 export const WithExtraction: Story = {
   args: {
     stages: ['correct', 'extract'],
   },
 };
 
-/** Full pipeline: correction + extraction + a cumulative summary (shown in the side column). */
+/** Scripted: correction + extraction + a cumulative summary (shown in the side panel). */
 export const Full: Story = {
   args: {
     stages: ['correct', 'extract', 'summarize'],
