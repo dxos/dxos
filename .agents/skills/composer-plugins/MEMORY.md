@@ -4,6 +4,12 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-29 — plugin-ibkr (Instrument research)
+
+- External I/O (IBKR Flex, SEC EDGAR): containers invoke ops via `OperationInvoker`; operation handlers call `service:*` / SEC client — never import HTTP clients from `src/containers/` or `src/components/`.
+- TradingView chart embeds are presentation-only third-party widgets; plugin UI derives `tradingViewSymbol` locally from Instrument static fields / `Obj.Meta.keys`.
+- SEC EDGAR fundamentals: sole UI entry is `op:GetInstrumentFundamentals`; no API key; User-Agent set in `SEC_EDGAR_USER_AGENT`.
+
 ## 2026-06-27 — plugin-space TypeCollectionArticle (card-content annotation)
 
 - `AppAnnotation.CardAnnotation` (`@dxos/app-toolkit`, boolean, `org.dxos.annotation.card-content`) marks a schema type whose collection tile renders a preview body. Set it in the type's `.pipe(...)` (alongside Icon/Label). Applied to `Markdown.Document`, `Game.Game`, `Sketch.Sketch`.

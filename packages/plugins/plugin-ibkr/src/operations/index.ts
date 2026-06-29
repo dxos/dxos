@@ -9,4 +9,6 @@ export const IbkrOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./sync-portfolio'),
   () => import('./get-portfolio'),
   () => import('./get-trades'),
+  () => import('./materialize-instrument'),
+  () => import('./get-instrument-fundamentals'),
 );
