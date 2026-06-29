@@ -15,9 +15,9 @@ import {
 } from '@codemirror/view';
 import { type FunctionComponent } from 'react';
 
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Domino } from '@dxos/ui';
+
+import { PlaceholderWidget, type XmlWidgetNotifier } from './placeholder-widget';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
@@ -145,10 +145,7 @@ export type XmlWidgetState = {
   Component: FunctionComponent<XmlWidgetProps>;
 };
 
-export interface XmlWidgetNotifier {
-  mounted(widget: XmlWidgetState): void;
-  unmounted(id: string): void;
-}
+export type { XmlWidgetNotifier };
 
 /**
  * Context state.
@@ -599,60 +596,3 @@ const buildDecorations = (
   return { from: last, streamingFrom, decorations: builder.finish() };
 };
 
-/**
- * Placeholder for widgets.
- */
-class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
-  #root: HTMLElement | null = null;
-  #view: EditorView | undefined;
-
-  constructor(
-    readonly id: string,
-    readonly Component: FunctionComponent<TProps>,
-    readonly props: TProps,
-    readonly notifier: XmlWidgetNotifier,
-    readonly streaming?: boolean,
-  ) {
-    super();
-    invariant(id);
-  }
-
-  get root(): HTMLElement | null {
-    return this.#root;
-  }
-
-  override eq(other: this) {
-    // Streaming widgets always need updating (content changes on each tick).
-    if (this.streaming) {
-      return false;
-    }
-
-    return this.id === other.id;
-  }
-
-  override ignoreEvent() {
-    return true;
-  }
-
-  override toDOM(view: EditorView) {
-    this.#view = view;
-    // NOTE: Set min-height to avoid jumps while scrolling.
-    this.#root = Domino.of('div').classNames('min-h-[24px]').root;
-    const props = Object.assign({}, this.props, { view }) as TProps;
-    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
-    return this.#root;
-  }
-
-  override updateDOM(dom: HTMLElement) {
-    this.#root = dom;
-    const props = Object.assign({}, this.props, { view: this.#view }) as TProps;
-    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
-    return true;
-  }
-
-  override destroy(_dom: HTMLElement) {
-    this.notifier.unmounted(this.id);
-    this.#root = null;
-    this.#view = undefined;
-  }
-}
