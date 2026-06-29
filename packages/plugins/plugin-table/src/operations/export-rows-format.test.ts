@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { DXN, Format, Obj, Type } from '@dxos/echo';
-import { TypeEnum } from '@dxos/echo/Format';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
 import { exportRows, exportRowsAsCsv, exportRowsAsJson, exportRowsAsXml } from './export-rows-format';
@@ -24,7 +24,10 @@ describe('export-rows-format', () => {
     { path: SchemaEx.createJsonPath(['count']), title: 'Count', type: TypeEnum.Number },
   ];
 
-  const rows = [{ name: 'Alpha', count: 1 }, { name: 'Beta, "quoted"', count: 2 }];
+  const rows = [
+    { name: 'Alpha', count: 1 },
+    { name: 'Beta, "quoted"', count: 2 },
+  ];
 
   test('csv exports visible columns with escaping', ({ expect }) => {
     const csv = exportRowsAsCsv(rows, columns);

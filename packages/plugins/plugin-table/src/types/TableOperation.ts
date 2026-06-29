@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Type, View } from '@dxos/echo';
+import { Database, DXN, Format, Type, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 
@@ -65,8 +65,10 @@ export const AddRow = Operation.make({
 export const ExportColumnSchema = Schema.Struct({
   path: Schema.Any,
   title: Schema.String,
-  type: Schema.optional(Schema.Number),
-  format: Schema.optional(Schema.String),
+  // `Format.TypeEnum`/`Format.TypeFormat` are string enums; encoding them as plain Number/String
+  // would diverge from the `ExportColumn` consumer type and reject the values the table projection emits.
+  type: Schema.optional(Schema.Enums(Format.TypeEnum)),
+  format: Schema.optional(Schema.Enums(Format.TypeFormat)),
   referencePath: Schema.optional(Schema.Any),
 });
 

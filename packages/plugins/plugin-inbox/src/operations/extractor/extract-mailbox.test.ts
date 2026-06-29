@@ -13,7 +13,12 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { type ExtractError, ExtractError as ExtractErrorClass, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
+import {
+  type ExtractError,
+  ExtractError as ExtractErrorClass,
+  type ExtractResult,
+  type ObjectExtractor,
+} from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
@@ -66,26 +71,22 @@ const runExtractMailbox = (
   extractMailboxHandler.handler(input).pipe(
     Effect.provideService(Database.Service, Database.makeService(layers.db)),
     Effect.provideService(Capability.Service, layers.capabilityService),
-    Effect.provideService(
-      Operation.Service,
-      {
-        invoke: (
-          operation: typeof InboxOperation.ExtractMessage,
-          input: { source: Obj.Any; extractorId?: string },
-        ) => {
-          if (operation === InboxOperation.ExtractMessage) {
-            return extractMessageHandler.handler(input).pipe(
+    Effect.provideService(Operation.Service, {
+      invoke: (operation: typeof InboxOperation.ExtractMessage, input: { source: Obj.Any; extractorId?: string }) => {
+        if (operation === InboxOperation.ExtractMessage) {
+          return extractMessageHandler
+            .handler(input)
+            .pipe(
               Effect.provideService(Database.Service, Database.makeService(layers.db)),
               Effect.provideService(Capability.Service, layers.capabilityService),
               Effect.provide(AiService.notAvailable),
             );
-          }
-          return Effect.die('Unexpected operation');
-        },
-        schedule: () => Effect.void,
-        invokePromise: async () => ({ error: new Error('Not available') }),
-      } as Context.Tag.Service<typeof Operation.Service>,
-    ),
+        }
+        return Effect.die('Unexpected operation');
+      },
+      schedule: () => Effect.void,
+      invokePromise: async () => ({ error: new Error('Not available') }),
+    } as Context.Tag.Service<typeof Operation.Service>),
     Effect.provide(AiService.notAvailable),
   );
 
@@ -152,9 +153,10 @@ describe('ExtractMailbox operation handler', () => {
 
     const capabilityService = makeCapabilityService([stubExtractor({})]);
 
-    const result = await runExtractMailbox({ mailbox: Ref.make(mailbox), extractorId: EXTRACTOR_ID }, { db, capabilityService }).pipe(
-      EffectEx.runAndForwardErrors,
-    );
+    const result = await runExtractMailbox(
+      { mailbox: Ref.make(mailbox), extractorId: EXTRACTOR_ID },
+      { db, capabilityService },
+    ).pipe(EffectEx.runAndForwardErrors);
 
     expect(result.processed).toBe(3);
     expect(result.succeeded).toBe(3);
@@ -193,9 +195,10 @@ describe('ExtractMailbox operation handler', () => {
       }),
     ]);
 
-    const result = await runExtractMailbox({ mailbox: Ref.make(mailbox), extractorId: EXTRACTOR_ID }, { db, capabilityService }).pipe(
-      EffectEx.runAndForwardErrors,
-    );
+    const result = await runExtractMailbox(
+      { mailbox: Ref.make(mailbox), extractorId: EXTRACTOR_ID },
+      { db, capabilityService },
+    ).pipe(EffectEx.runAndForwardErrors);
 
     expect(result).toEqual({
       extractorId: EXTRACTOR_ID,
@@ -231,9 +234,10 @@ describe('ExtractMailbox operation handler', () => {
       }),
     ]);
 
-    const result = await runExtractMailbox({ mailbox: Ref.make(mailbox), extractorId: EXTRACTOR_ID }, { db, capabilityService }).pipe(
-      EffectEx.runAndForwardErrors,
-    );
+    const result = await runExtractMailbox(
+      { mailbox: Ref.make(mailbox), extractorId: EXTRACTOR_ID },
+      { db, capabilityService },
+    ).pipe(EffectEx.runAndForwardErrors);
 
     expect(result).toEqual({
       extractorId: EXTRACTOR_ID,

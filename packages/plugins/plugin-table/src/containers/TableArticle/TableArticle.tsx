@@ -163,9 +163,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             const { props } = model.projection!.getFieldProjection(field.id);
             return {
               path: field.path,
-              title:
-                props.title ??
-                (Array.isArray(field.path) ? field.path.map(String).join('.') : String(field.path)),
+              title: props.title ?? (Array.isArray(field.path) ? field.path.map(String).join('.') : String(field.path)),
               type: props.type,
               format: props.format,
               referencePath: field.referencePath,

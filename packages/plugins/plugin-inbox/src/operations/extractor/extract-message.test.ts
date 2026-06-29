@@ -93,9 +93,9 @@ describe('ExtractMessage operation handler', () => {
     const noMatchExtractor = stubExtractor({ id: 'no-match', matched: false });
     const capabilityService = makeCapabilityService([noMatchExtractor]);
 
-    const result = await runExtractMessage({ source: message }, { db, capabilityService }).pipe(Effect.either).pipe(
-      Effect.runPromise,
-    );
+    const result = await runExtractMessage({ source: message }, { db, capabilityService })
+      .pipe(Effect.either)
+      .pipe(Effect.runPromise);
 
     expect(result._tag).toBe('Left');
   });

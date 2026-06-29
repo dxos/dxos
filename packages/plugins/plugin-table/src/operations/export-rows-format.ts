@@ -33,7 +33,8 @@ const xmlElementName = (title: string, index: number): string => {
 };
 
 /** Resolves a visible column value using the same display rules as the table grid. */
-export const getExportCellValue = (row: unknown, column: ExportColumn): string => {
+// Tabular exporters only read values by JSON path, so they accept any record rather than a full ECHO object.
+export const getExportCellValue = (row: object, column: ExportColumn): string => {
   let value = SchemaEx.getValue(row, column.path);
   if (value == null) {
     return '';
@@ -53,11 +54,9 @@ export const getExportCellValue = (row: unknown, column: ExportColumn): string =
   });
 };
 
-export const exportRowsAsCsv = (rows: readonly unknown[], columns: readonly ExportColumn[]): string => {
+export const exportRowsAsCsv = (rows: readonly object[], columns: readonly ExportColumn[]): string => {
   const header = columns.map((column) => escapeCsvCell(column.title)).join(',');
-  const lines = rows.map((row) =>
-    columns.map((column) => escapeCsvCell(getExportCellValue(row, column))).join(','),
-  );
+  const lines = rows.map((row) => columns.map((column) => escapeCsvCell(getExportCellValue(row, column))).join(','));
   return [header, ...lines].join('\n');
 };
 
@@ -72,7 +71,7 @@ export const exportRowsAsJson = (rows: readonly Obj.Unknown[]): string =>
     2,
   );
 
-export const exportRowsAsXml = (rows: readonly unknown[], columns: readonly ExportColumn[]): string => {
+export const exportRowsAsXml = (rows: readonly object[], columns: readonly ExportColumn[]): string => {
   const rowMarkup = rows
     .map((row) => {
       const fields = columns
