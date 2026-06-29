@@ -17,11 +17,10 @@ import { type FunctionComponent } from 'react';
 
 import { log } from '@dxos/log';
 
-import { PlaceholderWidget, type XmlWidgetNotifier } from './placeholder-widget';
-
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
 import { crawlerLineEffect } from '../scrolling';
+import { PlaceholderWidget, type XmlWidgetNotifier } from './placeholder-widget';
 import { nodeToJson } from './xml-util';
 
 /**
@@ -672,4 +671,3 @@ const buildDecorations = (
 
   return { from: last, streamingFrom, decorations: builder.finish() };
 };
-

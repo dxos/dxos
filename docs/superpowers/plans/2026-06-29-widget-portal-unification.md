@@ -24,23 +24,25 @@
 ## File Map
 
 ### Created
-| File | Purpose |
-|------|---------|
-| `packages/ui/ui-editor/src/extensions/tags/placeholder-widget.ts` | Extracted `PlaceholderWidget` class and `XmlWidgetNotifier` interface, importable without pulling in the full `xmlTags` machinery. |
-| `packages/ui/ui-editor/src/extensions/preview/PreviewWidget.tsx` | React component (`PreviewWidget`) used as the `Component` entry for URL-scheme block slots once `preview` is registry-backed. Lives in `react-ui-editor` because it imports React. Wait — actually this component belongs in `react-ui-editor` not `ui-editor`. See Task 5. |
+
+| File                                                              | Purpose                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/ui/ui-editor/src/extensions/tags/placeholder-widget.ts` | Extracted `PlaceholderWidget` class and `XmlWidgetNotifier` interface, importable without pulling in the full `xmlTags` machinery.                                                                                                                                          |
+| `packages/ui/ui-editor/src/extensions/preview/PreviewWidget.tsx`  | React component (`PreviewWidget`) used as the `Component` entry for URL-scheme block slots once `preview` is registry-backed. Lives in `react-ui-editor` because it imports React. Wait — actually this component belongs in `react-ui-editor` not `ui-editor`. See Task 5. |
 
 ### Modified
-| File | Change |
-|------|--------|
-| `packages/ui/ui-editor/src/extensions/tags/xml-tags.ts` | Import `PlaceholderWidget` / `XmlWidgetNotifier` from new file; add `urlSchemes?: string[]` to `XmlWidgetDef`; extend `buildDecorations` to walk `Link`/`Image` syntax nodes and match URL schemes. |
-| `packages/ui/ui-editor/src/extensions/tags/index.ts` | Re-export `PlaceholderWidget` and `XmlWidgetNotifier`. |
-| `packages/ui/ui-editor/src/extensions/preview/preview.ts` | Phase 1: replace `PreviewBlockWidget` with `PlaceholderWidget`. Phase 2: rewrite as thin factory. Phase 3: remove. |
-| `packages/ui/react-ui-editor/src/stories/Widgets.stories.tsx` | Add a third story `UnifiedRegistry` that exercises both XML tag and URL-scheme widgets through `xmlTags` in one editor. |
-| `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx` | Phase 2: switch from `preview(previewOptions)` to `xmlTags({ registry: previewRegistry(opts) })`. |
-| `packages/plugins/plugin-markdown/src/components/MarkdownEditor/MarkdownEditor.tsx` | Phase 3: remove `previewBlocks` state, `addBlockContainer`/`removeBlockContainer` callbacks, `MarkdownEditorBlocks` sub-component; drive portals via `setWidgets` passed to `xmlTags`. |
-| `packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx` | Phase 2: merge standalone `preview()` call into the existing `xmlTags` call by adding URL-scheme entries to `componentRegistry`. |
-| `packages/plugins/plugin-inbox/src/components/MarkdownViewer/MarkdownViewer.tsx` | Phase 2: replace `preview()` (no-op callbacks) with `xmlTags({ registry: inlinePreviewRegistry })`. |
-| `packages/ui/react-ui-transcription/src/components/Transcription/Transcription.tsx` | Phase 2: same as MarkdownViewer. |
+
+| File                                                                                | Change                                                                                                                                                                                              |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/ui/ui-editor/src/extensions/tags/xml-tags.ts`                             | Import `PlaceholderWidget` / `XmlWidgetNotifier` from new file; add `urlSchemes?: string[]` to `XmlWidgetDef`; extend `buildDecorations` to walk `Link`/`Image` syntax nodes and match URL schemes. |
+| `packages/ui/ui-editor/src/extensions/tags/index.ts`                                | Re-export `PlaceholderWidget` and `XmlWidgetNotifier`.                                                                                                                                              |
+| `packages/ui/ui-editor/src/extensions/preview/preview.ts`                           | Phase 1: replace `PreviewBlockWidget` with `PlaceholderWidget`. Phase 2: rewrite as thin factory. Phase 3: remove.                                                                                  |
+| `packages/ui/react-ui-editor/src/stories/Widgets.stories.tsx`                       | Add a third story `UnifiedRegistry` that exercises both XML tag and URL-scheme widgets through `xmlTags` in one editor.                                                                             |
+| `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`                      | Phase 2: switch from `preview(previewOptions)` to `xmlTags({ registry: previewRegistry(opts) })`.                                                                                                   |
+| `packages/plugins/plugin-markdown/src/components/MarkdownEditor/MarkdownEditor.tsx` | Phase 3: remove `previewBlocks` state, `addBlockContainer`/`removeBlockContainer` callbacks, `MarkdownEditorBlocks` sub-component; drive portals via `setWidgets` passed to `xmlTags`.              |
+| `packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx`               | Phase 2: merge standalone `preview()` call into the existing `xmlTags` call by adding URL-scheme entries to `componentRegistry`.                                                                    |
+| `packages/plugins/plugin-inbox/src/components/MarkdownViewer/MarkdownViewer.tsx`    | Phase 2: replace `preview()` (no-op callbacks) with `xmlTags({ registry: inlinePreviewRegistry })`.                                                                                                 |
+| `packages/ui/react-ui-transcription/src/components/Transcription/Transcription.tsx` | Phase 2: same as MarkdownViewer.                                                                                                                                                                    |
 
 ---
 
@@ -49,12 +51,15 @@
 ### Task 1: Extract `PlaceholderWidget` into its own file
 
 **Files:**
+
 - Create: `packages/ui/ui-editor/src/extensions/tags/placeholder-widget.ts`
 - Modify: `packages/ui/ui-editor/src/extensions/tags/xml-tags.ts`
 - Modify: `packages/ui/ui-editor/src/extensions/tags/index.ts`
 
 **Interfaces:**
+
 - Produces:
+
   ```ts
   export interface XmlWidgetNotifier {
     mounted(widget: XmlWidgetState): void;
@@ -190,9 +195,11 @@
 ### Task 2: Rewrite `PreviewBlockWidget` to delegate to `PlaceholderWidget`
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/preview/preview.ts`
 
 **Interfaces:**
+
 - Consumes: `PlaceholderWidget`, `XmlWidgetNotifier` from `../tags/placeholder-widget`
 - Produces: same public API (`preview`, `PreviewBlock`, `PreviewLinkRef`, `PreviewOptions`, `getLinkRef`) — no call-site changes.
 
@@ -258,7 +265,12 @@ The `addBlockContainer` / `removeBlockContainer` callbacks are adapted into an `
   const notifier = makePreviewNotifier(options, link);
   // Use a stable widget id based on the DXN so eq() works across rebuilds.
   const widgetId = `cm-preview-${link.dxn}`;
-  new PlaceholderWidget(widgetId, _PreviewPlaceholder as any, { _tag: 'preview', range: { from: node.from, to: node.to } }, notifier)
+  new PlaceholderWidget(
+    widgetId,
+    _PreviewPlaceholder as any,
+    { _tag: 'preview', range: { from: node.from, to: node.to } },
+    notifier,
+  );
   ```
 
   > The `as any` on `_PreviewPlaceholder` is justified here: `PlaceholderWidget` requires a `FunctionComponent<XmlWidgetProps>` but `_PreviewPlaceholder` is a stand-in that is never rendered. This is a genuine type-boundary cast at the seam between two systems; the component slot will be replaced by a real typed component in Phase 2.
@@ -277,9 +289,11 @@ The `addBlockContainer` / `removeBlockContainer` callbacks are adapted into an `
 - [ ] **Step 5: Smoke-test the Widgets.stories `Preview` story**
 
   Start storybook if not already running:
+
   ```bash
   export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH" && moon run storybook-react:serve --quiet &
   ```
+
   Open `http://localhost:9009` and navigate to `ui/react-ui-editor/Widgets > Preview`. Confirm block cards render below `![DXOS](echo:/123)` nodes.
 
 - [ ] **Step 6: Commit**
@@ -296,10 +310,13 @@ The `addBlockContainer` / `removeBlockContainer` callbacks are adapted into an `
 ### Task 3: Add `urlSchemes` to `XmlWidgetDef` and extend `buildDecorations`
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/tags/xml-tags.ts`
 
 **Interfaces:**
+
 - Produces:
+
   ```ts
   export type XmlWidgetDef = {
     block?: boolean;
@@ -313,6 +330,7 @@ The `addBlockContainer` / `removeBlockContainer` callbacks are adapted into an `
   ```
 
   The props passed to the widget for URL-scheme matches:
+
   ```ts
   {
     _tag: 'link' | 'image',   // 'image' for block (![...](url)), 'link' for inline ([...](url))
@@ -431,6 +449,7 @@ The `addBlockContainer` / `removeBlockContainer` callbacks are adapted into an `
 ### Task 4: Convert `preview()` to a registry factory wrapping `xmlTags`
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/preview/preview.ts`
 
 The `addBlockContainer`/`removeBlockContainer` API is kept at this stage for backwards compatibility. The new code path is opt-in: if neither callback is provided, the `urlSchemes` registry entry requires a `Component` (supplied by call sites that pass `setWidgets` to `xmlTags` directly — handled in later tasks). For call sites that still pass callbacks, the shim notifier from Task 2 continues to work.
@@ -578,7 +597,11 @@ The `addBlockContainer`/`removeBlockContainer` API is kept at this stage for bac
       }),
       ViewPlugin.define((view) => {
         viewRef.current = view;
-        return { destroy() { viewRef.current = undefined; } };
+        return {
+          destroy() {
+            viewRef.current = undefined;
+          },
+        };
       }),
 
       // Block widgets: routed through xmlTags URL-scheme slots.
@@ -615,16 +638,24 @@ The `addBlockContainer`/`removeBlockContainer` API is kept at this stage for bac
 This creates the React component that replaces the `addBlockContainer` callback pattern for new call sites. Existing call sites (plugin-markdown, MarkdownEditor) continue to work unchanged until Phase 3.
 
 **Files:**
+
 - Create: `packages/ui/react-ui-editor/src/extensions/PreviewComponent.tsx`
 - Modify: `packages/ui/react-ui-editor/src/index.ts` (re-export)
 
 **Interfaces:**
+
 - Produces:
+
   ```ts
   // PreviewComponent: FunctionComponent<XmlWidgetProps<{ label: string; dxn: string; block?: boolean; suggest?: boolean }>>
   // Renders <Surface.Surface type={AppSurface.Section} data={{ subject, attendableId }} limit={1} /> portaled into the placeholder root.
   export const PreviewComponent: FunctionComponent<PreviewComponentProps>;
-  export type PreviewComponentProps = XmlWidgetProps<{ label: string; dxn: string; block?: boolean; suggest?: boolean }>;
+  export type PreviewComponentProps = XmlWidgetProps<{
+    label: string;
+    dxn: string;
+    block?: boolean;
+    suggest?: boolean;
+  }>;
   ```
 
 - [ ] **Step 1: Create `PreviewComponent.tsx`**
@@ -725,15 +756,15 @@ This creates the React component that replaces the `addBlockContainer` callback 
 
   const unifiedText = trim`
     # Unified Registry
-
+  
     XML tag widget:
-
+  
     <test id="u-1" />
-
+  
     URL-scheme block widget:
-
+  
     ![DXOS](echo:/123)
-
+  
     Inline link (chip only): [DXOS](echo:/123)
   `;
 
@@ -757,6 +788,7 @@ This creates the React component that replaces the `addBlockContainer` callback 
 `MarkdownStream` currently has two separate extension calls: `xmlTags({ registry, setWidgets })` and `preview()` (no callbacks — inline chips only). After this task, the inline chip is handled by a `factory` entry in the existing registry, and `preview()` is removed.
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx`
 
 - [ ] **Step 1: Add a `link-preview` inline chip entry to `componentRegistry` in `registry.tsx`**
@@ -787,8 +819,15 @@ This creates the React component that replaces the `addBlockContainer` callback 
 
   ```ts
   class AnchorInlineWidget extends WidgetType {
-    constructor(readonly label: string, readonly dxn: string) { super(); }
-    override eq(other: this) { return this.dxn === other.dxn && this.label === other.label; }
+    constructor(
+      readonly label: string,
+      readonly dxn: string,
+    ) {
+      super();
+    }
+    override eq(other: this) {
+      return this.dxn === other.dxn && this.label === other.label;
+    }
     override toDOM() {
       const root = document.createElement('dx-anchor');
       root.classList.add('dx-tag--anchor');
@@ -837,6 +876,7 @@ This creates the React component that replaces the `addBlockContainer` callback 
 Both use `preview()` with no callbacks — only the inline `<dx-anchor>` chip matters.
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/components/MarkdownViewer/MarkdownViewer.tsx`
 - Modify: `packages/ui/react-ui-transcription/src/components/Transcription/Transcription.tsx`
 
@@ -899,22 +939,26 @@ Both use `preview()` with no callbacks — only the inline `<dx-anchor>` chip ma
 This is the last call site using `addBlockContainer` / `removeBlockContainer`. After this task those callbacks are dead code.
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`
 - Modify: `packages/plugins/plugin-markdown/src/components/MarkdownEditor/MarkdownEditor.tsx`
 
 - [ ] **Step 1: Update `useExtensions.tsx` to use `xmlTags` + `PreviewComponent`**
 
   Current signature:
+
   ```ts
   export const useExtensions = ({ ..., previewOptions }: { previewOptions?: PreviewOptions; ... })
   ```
 
   New signature — remove `previewOptions`, add `setWidgets`:
+
   ```ts
   export const useExtensions = ({ ..., setWidgets }: { setWidgets?: (widgets: XmlWidgetState[]) => void; ... })
   ```
 
   Replace `preview(previewOptions)` in the extensions array with:
+
   ```ts
   xmlTags({
     registry: {
@@ -935,16 +979,17 @@ This is the last call site using `addBlockContainer` / `removeBlockContainer`. A
   ```
 
 - [ ] **Step 2: Update `MarkdownEditor.tsx`**
-
   - Remove `previewBlocks` state (`useState<PreviewBlock[]>`).
   - Remove `addBlockContainer` and `removeBlockContainer` from the options object.
   - Add `setWidgets` state: `const [widgets, setWidgets] = useState<XmlWidgetState[]>([])`.
   - Pass `setWidgets` to `useExtensions`.
   - Replace `MarkdownEditorBlocks` sub-component render with the standard portal loop:
     ```tsx
-    {widgets.map(({ id, root, Component, props }) => (
-      <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-    ))}
+    {
+      widgets.map(({ id, root, Component, props }) => (
+        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+      ));
+    }
     ```
   - Delete the `MarkdownEditorBlocks` sub-component entirely.
   - Remove `PreviewBlock` import.
@@ -972,6 +1017,7 @@ This is the last call site using `addBlockContainer` / `removeBlockContainer`. A
 `preview()`, `PreviewOptions.addBlockContainer`, `PreviewOptions.removeBlockContainer`, and the notifier shim are now dead code.
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/preview/preview.ts`
 
 - [ ] **Step 1: Verify no remaining call sites use `addBlockContainer` or `removeBlockContainer`**
@@ -1100,6 +1146,7 @@ This is the last call site using `addBlockContainer` / `removeBlockContainer`. A
 ## Self-Review
 
 **Spec coverage:**
+
 - ✓ `PlaceholderWidget` extracted (Task 1)
 - ✓ `PreviewBlockWidget` replaced (Task 2)
 - ✓ `urlSchemes` registry slot (Task 3)
@@ -1113,6 +1160,7 @@ This is the last call site using `addBlockContainer` / `removeBlockContainer`. A
 - ✓ `suggest`/`block` flags: passed as props through `XmlWidgetProps` url-scheme walk (Task 3 Step 3).
 
 **Type consistency check:**
+
 - `AnchorInlineWidget` defined in `preview.ts`, used in Tasks 6, 7, 8, 9 — consistent.
 - `PreviewComponent` defined in Task 5, used in Tasks 5, 8, 9 — consistent.
 - `XmlWidgetProps<{ label: string; dxn: string }>` used in factory entries Tasks 6, 7, 8, 9 — consistent.

@@ -27,9 +27,7 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
     block: false,
     urlSchemes: ['dxn:', 'echo:'],
     factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-      typeof label === 'string' && typeof dxn === 'string'
-        ? new AnchorInlineWidget(label, dxn)
-        : null,
+      typeof label === 'string' && typeof dxn === 'string' ? new AnchorInlineWidget(label, dxn) : null,
   },
 };
 
@@ -69,7 +67,12 @@ export const MarkdownViewer = ({
       [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createThemeExtensions({ themeMode, slots }),
-        markdown && [createMarkdownExtensions(), xmlTags({ registry: inlinePreviewRegistry }), inboxMarkdown({ loadRemoteImages })].filter(isTruthy),
+        markdown &&
+          [
+            createMarkdownExtensions(),
+            xmlTags({ registry: inlinePreviewRegistry }),
+            inboxMarkdown({ loadRemoteImages }),
+          ].filter(isTruthy),
         extensionsProp,
       ].filter(isTruthy),
     [themeMode, markdown, slots, loadRemoteImages, extensionsProp],

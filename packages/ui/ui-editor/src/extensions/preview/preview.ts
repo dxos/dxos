@@ -6,12 +6,6 @@ import { type EditorState } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-/** @deprecated Use xmlTags with urlSchemes instead. */
-export type PreviewBlock = {
-  link: PreviewLinkRef;
-  el: HTMLElement;
-};
-
 export type PreviewLinkRef = {
   suggest?: boolean;
   block?: boolean;

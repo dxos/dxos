@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type FunctionComponent } from 'react';
 import { EditorView, WidgetType } from '@codemirror/view';
+import { type FunctionComponent } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { Domino } from '@dxos/ui';

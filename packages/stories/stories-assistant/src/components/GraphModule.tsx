@@ -81,35 +81,33 @@ export const GraphModule = ({ space }: ModuleProps) => {
 
 type SearchBarProps = ModuleProps & Pick<ChatEditorProps, 'onSubmit'>;
 
-export const SearchBar = composable<HTMLDivElement, SearchBarProps>(
-  ({ space, onSubmit, ...props }, forwardedRef) => {
-    const { state: flushState, handleFlush } = useFlush(space);
-    const editorRef = useRef<EditorController>(null);
+export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, onSubmit, ...props }, forwardedRef) => {
+  const { state: flushState, handleFlush } = useFlush(space);
+  const editorRef = useRef<EditorController>(null);
 
-    return (
-      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-        <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
-        <Toolbar.IconButton
-          icon='ph--magnifying-glass--regular'
-          iconOnly
-          label='Search'
-          onClick={() => onSubmit?.(editorRef.current?.view?.state.doc.toString() ?? '')}
-        />
-        <Toolbar.IconButton
-          disabled={flushState === 'flushing'}
-          icon={Match.value(flushState).pipe(
-            Match.when('idle', () => 'ph--floppy-disk--regular'),
-            Match.when('flushing', () => 'ph--spinner--regular'),
-            Match.when('flushed', () => 'ph--check--regular'),
-            Match.exhaustive,
-          )}
-          iconOnly
-          label='flush'
-          onClick={handleFlush}
-        />
-      </Toolbar.Root>
-    );
-  },
-);
+  return (
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
+      <Toolbar.IconButton
+        icon='ph--magnifying-glass--regular'
+        iconOnly
+        label='Search'
+        onClick={() => onSubmit?.(editorRef.current?.view?.state.doc.toString() ?? '')}
+      />
+      <Toolbar.IconButton
+        disabled={flushState === 'flushing'}
+        icon={Match.value(flushState).pipe(
+          Match.when('idle', () => 'ph--floppy-disk--regular'),
+          Match.when('flushing', () => 'ph--spinner--regular'),
+          Match.when('flushed', () => 'ph--check--regular'),
+          Match.exhaustive,
+        )}
+        iconOnly
+        label='flush'
+        onClick={handleFlush}
+      />
+    </Toolbar.Root>
+  );
+});
 
 SearchBar.displayName = 'SearchBar';

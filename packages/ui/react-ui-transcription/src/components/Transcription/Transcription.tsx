@@ -28,9 +28,7 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
     block: false,
     urlSchemes: ['dxn:', 'echo:'],
     factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-      typeof label === 'string' && typeof dxn === 'string'
-        ? new AnchorInlineWidget(label, dxn)
-        : null,
+      typeof label === 'string' && typeof dxn === 'string' ? new AnchorInlineWidget(label, dxn) : null,
   },
 };
 
