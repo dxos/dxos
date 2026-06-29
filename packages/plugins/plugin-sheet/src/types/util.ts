@@ -125,9 +125,10 @@ export const mapFormulaRefsToIndices = (sheet: Sheet.Sheet, formula: string): st
   assertArgument(isFormula(formula), 'formula');
   return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
     const cell = addressFromA1Notation(match);
-    // Skip tokens whose parsed address falls outside the sheet bounds — they are function names
-    // (e.g. LOG10, ATAN2) rather than cell references.
-    if (cell.col >= sheet.columns.length || cell.row >= sheet.rows.length) {
+    // Skip tokens whose parsed address falls outside the sheet bounds or is negative — they are
+    // function names (e.g. LOG10, ATAN2) or malformed refs (e.g. A0 → row -1) rather than valid
+    // cell references.
+    if (cell.col < 0 || cell.row < 0 || cell.col >= sheet.columns.length || cell.row >= sheet.rows.length) {
       return match;
     }
     return addressToIndex(sheet, cell);
