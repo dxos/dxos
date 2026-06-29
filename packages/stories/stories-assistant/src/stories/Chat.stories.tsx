@@ -7,14 +7,14 @@ import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { RunInstructions, DelegationSkill, LinearSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Operation, Script, Template, Trigger } from '@dxos/compute';
+import { DelegationSkill, LinearSkill, PlanningSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import { Instructions, Operation, Script, Skill, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { ChessSkill, ChessOperation } from '@dxos/plugin-chess';
+import { ChessOperation, ChessSkill } from '@dxos/plugin-chess';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
@@ -40,24 +40,24 @@ import {
 import { trim } from '@dxos/util';
 
 import {
-  SkillModule,
   ChatModule,
   ChessModule,
   CommentsModule,
+  ContextModule,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
   InvocationsModule,
   ProjectModule,
-  RoutineModule,
   ResearchInputModule,
   ResearchOutputModule,
+  RoutineModule,
   ScriptModule,
+  SkillModule,
   TasksModule,
   TokenManagerModule,
   TraceModule,
   TriggersModule,
-  ContextModule,
 } from '../components';
 import {
   ModuleContainer,

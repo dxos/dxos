@@ -16,7 +16,7 @@ import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { JsonCard } from '../cards';
 
-export type DefaultStoryProps<T extends Obj.Any, P extends {} = {}> = {
+export type StoryArgs<T extends Obj.Any, P extends {} = {}> = {
   Component: FC<AppSurface.ObjectCardProps<T> & P>;
   createObject: () => T;
   image?: boolean;
@@ -30,7 +30,7 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
   image,
   json,
   componentProps,
-}: DefaultStoryProps<T, P>) => {
+}: StoryArgs<T, P>) => {
   const object = useMemo(() => createObject(), [createObject]);
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 

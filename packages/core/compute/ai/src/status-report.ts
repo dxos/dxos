@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Type } from '@dxos/echo';
+import { Annotation, DXN, Type } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 
 /**

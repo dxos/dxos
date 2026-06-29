@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
@@ -54,6 +54,81 @@ describe('update', () => {
         expect(updatedDoc.name).toBe(doc.name);
         const text = yield* Database.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'append to empty document when oldString is omitted',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({
+          name: 'Empty Doc',
+          content: '',
+        });
+        yield* Database.add(doc);
+
+        yield* Operation.invoke(MarkdownOperation.Update, {
+          doc: Ref.make(doc),
+          edits: [{ newString: '# Hello' }],
+        });
+
+        const updatedDoc = yield* Database.resolve(Obj.getURI(doc), Markdown.Document);
+        const text = yield* Database.load(updatedDoc.content);
+        expect(text.content).toBe('# Hello');
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'append to empty document when oldString is empty',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({
+          name: 'Empty Doc',
+          content: '',
+        });
+        yield* Database.add(doc);
+
+        yield* Operation.invoke(MarkdownOperation.Update, {
+          doc: Ref.make(doc),
+          edits: [{ oldString: '', newString: '# Hello' }],
+        });
+
+        const updatedDoc = yield* Database.resolve(Obj.getURI(doc), Markdown.Document);
+        const text = yield* Database.load(updatedDoc.content);
+        expect(text.content).toBe('# Hello');
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'append to non-empty document when oldString is omitted',
+    Effect.fnUntraced(
+      function* (_) {
+        const doc = Markdown.make({
+          name: 'Shopping list',
+          content: '# Shopping list',
+        });
+        yield* Database.add(doc);
+
+        yield* Operation.invoke(MarkdownOperation.Update, {
+          doc: Ref.make(doc),
+          edits: [{ newString: '\n- milk' }],
+        });
+
+        const updatedDoc = yield* Database.resolve(Obj.getURI(doc), Markdown.Document);
+        const text = yield* Database.load(updatedDoc.content);
+        expect(text.content).toBe('# Shopping list\n- milk');
       },
       WithProperties,
       Effect.provide(TestLayer),

@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
-import { resolve, type Resolver } from '@dxos/extractor';
+import { type Resolver, resolve } from '@dxos/extractor';
 import { normalizeText } from '@dxos/markdown';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
+import { GMAIL_SOURCE } from '../../../constants';
 import { parseFromHeader } from '../../util';
 
 const getPart = (message: GoogleMail.Message, part: string) =>
@@ -69,7 +70,7 @@ export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMe
 
     const echoMessage = Obj.make(Message.Message, {
       [Obj.Meta]: {
-        keys: [{ id: message.id, source: 'gmail.com' }],
+        keys: [{ id: message.id, source: GMAIL_SOURCE }],
       },
 
       created,

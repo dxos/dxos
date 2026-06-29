@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect, type Locator, type Page } from '@playwright/test';
+import { type Locator, type Page, expect } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {

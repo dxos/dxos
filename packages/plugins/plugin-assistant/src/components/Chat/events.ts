@@ -61,10 +61,4 @@ export type ChatEvent =
     }
   | {
       type: 'thread-close';
-    }
-  | {
-      type: 'record-start';
-    }
-  | {
-      type: 'record-stop';
     };

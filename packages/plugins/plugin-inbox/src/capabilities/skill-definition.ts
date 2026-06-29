@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { CalendarSkill, InboxSkill, InboxSendSkill } from '#skills';
+import { CalendarSkill, InboxSendSkill, InboxSkill } from '#skills';
 
 const skillDefinition = () =>
   Effect.succeed([

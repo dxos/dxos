@@ -1,0 +1,23 @@
+# Conversation fixture for transcription pipeline tests.
+# Format:
+#   `Entities:` block — declares ECHO objects to seed into the test space.
+#     Each entry is `<Type>:` followed by indented `<field>: <value>` lines.
+#   `Conversation:` block — one utterance per line, `<speaker>: <text>`.
+#   Speakers map to distinct virtual Whisper streams in the simulator.
+#   Lines starting with `#` are comments and are ignored by the parser.
+
+Entities:
+  Person:
+    fullName: Chad
+    employer: Blue Yard
+  Organization:
+    name: Blue Yard
+
+Conversation:
+  A: I think I'm going to go.
+  B: Are you meeting with them?
+  A: Yes I think so.
+  B: But I thought they were in Munich?
+  A: They are, but the offsite is in Los Angeles.
+  B: Is Chad going to be there?
+  A: Yes, the whole team. It's their annual offsite.

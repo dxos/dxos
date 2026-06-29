@@ -13,11 +13,11 @@ import { createMessages, getStoryMetadata } from '../testing';
 import { Thread } from '../Thread';
 import { Message } from './Message';
 
-type StoryProps = { editable: boolean };
+type StoryArgs = { editable: boolean };
 
 // Sample messages are authored by 'did:key:alice'; the local identity matches,
 // so `editable` toggles whether the author's own message shows the edit affordance.
-const DefaultStory = ({ editable }: StoryProps) => {
+const DefaultStory = ({ editable }: StoryArgs) => {
   const [message] = useMemo(() => createMessages(1), []);
   return (
     <Thread.Root

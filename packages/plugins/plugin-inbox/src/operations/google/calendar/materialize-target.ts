@@ -15,7 +15,7 @@ import { Calendar, InboxOperation } from '../../../types';
  * Eagerly materializes a local Calendar for a selected remote Google calendar so a
  * {@link SyncBinding} can be created (relations require both endpoints to exist).
  * Find-or-create keyed on the calendar's foreign key, so re-running for the same
- * remote calendar returns the existing Calendar without duplicating it.
+ * remote calendar returns the existing Calendar (with its name refreshed).
  */
 const handler: Operation.WithHandler<typeof InboxOperation.MaterializeCalendarTarget> =
   InboxOperation.MaterializeCalendarTarget.pipe(
@@ -59,6 +59,11 @@ const findOrCreateCalendar = (remoteId: string, name: string) =>
       // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.
       if (!Calendar.instanceOf(candidate)) {
         return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
+      }
+      if (candidate.name !== name) {
+        Obj.update(candidate, (candidate) => {
+          candidate.name = name;
+        });
       }
       return candidate;
     }

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Surface, usePluginManager, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
@@ -13,6 +13,9 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { IBKR_CONNECTOR_ID } from '../../constants';
 import { meta } from '../../meta';
 import { Ibkr, IbkrOperation } from '../../types';
+
+// Stable reference for the ConnectorAuth Surface's `connectorIds` (avoids a new object each render).
+const CONNECTOR_AUTH_DATA = { connectorIds: [IBKR_CONNECTOR_ID] };
 
 export type PortfolioSyncActionProps = {
   /** The Portfolio whose space owns the IBKR connection and report feed. */
@@ -60,8 +63,7 @@ export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
   }
 
   // No connection yet: render the connector's auth button through its Surface (like "Connect Gmail").
-  const data = { connectorId: IBKR_CONNECTOR_ID };
-  return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data }) ? (
-    <Surface.Surface type={ConnectorAuth} data={data} limit={1} />
+  return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data: CONNECTOR_AUTH_DATA }) ? (
+    <Surface.Surface type={ConnectorAuth} data={CONNECTOR_AUTH_DATA} limit={1} />
   ) : null;
 };

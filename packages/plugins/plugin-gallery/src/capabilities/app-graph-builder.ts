@@ -23,7 +23,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
       id: meta.profile.key,
-      match: (node) => NodeMatcher.whenEchoType(Gallery.Gallery)(node),
+      match: (node, get) => NodeMatcher.whenEchoType(Gallery.Gallery)(node, get),
       connector: (object) =>
         Effect.succeed([
           AppNode.makeCompanion({

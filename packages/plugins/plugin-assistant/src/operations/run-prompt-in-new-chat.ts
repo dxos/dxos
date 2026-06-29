@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Operation, Instructions, Template } from '@dxos/compute';
+import { Instructions, Operation, Skill, Template } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -29,8 +29,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
           if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
-            const feedTarget = chat.feed.target;
-            invariant(feedTarget, 'Chat feed not found.');
+            const feedTarget = yield* Database.load(chat.feed);
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');

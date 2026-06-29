@@ -3,7 +3,7 @@
 //
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { createTestApp, type TestAppOptions, type TestHarness } from '@dxos/app-framework/testing';
+import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';

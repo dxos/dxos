@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { Annotation, type Database, DXN, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
@@ -150,7 +150,7 @@ const DefaultStory = () => {
   );
 };
 
-type DefaultStoryProps = { rows?: number };
+type StoryArgs = { rows?: number };
 
 //
 // Story definitions.
@@ -338,7 +338,7 @@ export const RequiredSchema: StoryObj = {
   },
 };
 
-export const Tags: Meta<DefaultStoryProps> = {
+export const Tags: Meta<StoryArgs> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [

@@ -150,7 +150,7 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
     <div
       {...composableProps(props, {
         role: 'form',
-        classNames: mx(withColumn.center(), 'flex flex-col w-full', styles.content()),
+        classNames: mx(withColumn.center(), 'flex flex-col w-full dx-document', styles.content()),
       })}
       data-testid={testId}
       ref={mergedRef}
@@ -231,9 +231,7 @@ export const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div
-      className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}
-    >
+    <div className={mx(withColumn.center(), formTheme.styles().actions(), classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -338,7 +336,7 @@ export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProp
   }
 
   return (
-    <div className={mx('flex w-full pt-form-padding', classNames)}>
+    <div className={mx(formTheme.styles().submit(), classNames)}>
       <IconButton
         classNames='w-full'
         type='submit'

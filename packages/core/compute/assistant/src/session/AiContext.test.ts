@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { DXN, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
 import * as AiContext from './AiContext';

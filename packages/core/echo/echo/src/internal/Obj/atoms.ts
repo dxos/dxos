@@ -17,7 +17,7 @@ import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
 import { snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
-import { isEntity, getDatabase } from '../Entity';
+import { getDatabase, isEntity } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
 import { loadRefTarget } from '../Ref/utils';
 import { isDeleted } from './deleted';

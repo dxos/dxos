@@ -3,7 +3,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';

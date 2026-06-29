@@ -4,7 +4,7 @@
 
 import { decodeChange, getAllChanges, init, load, loadIncremental, stats, toJS } from '@automerge/automerge';
 
-import { loadDocumentChunks, mergeArrays } from './automerge-chunks.js';
+import { loadDocumentChunks } from './automerge-chunks.js';
 import { formatBytes, formatMs } from './format.js';
 
 /**

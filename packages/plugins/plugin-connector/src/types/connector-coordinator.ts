@@ -61,6 +61,8 @@ export type ConnectorCoordinator = {
     spaceId: Key.SpaceId;
     connectorId: string;
     values: unknown;
+    /** Existing local object to bind as the connection's sync target (e.g. an empty mailbox); forwarded from the connect dropdown so the form binds it instead of materializing a fresh target. */
+    existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<CreateConnectionResult, Error>;
   /**
    * Finalize a redirect-flow OAuth callback received via `/redirect/oauth`.

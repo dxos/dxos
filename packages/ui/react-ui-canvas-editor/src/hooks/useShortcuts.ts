@@ -57,7 +57,7 @@ export const useShortcuts = () => {
   );
 
   useHotkeys(
-    'Backspace',
+    ['Backspace', 'Delete'],
     (ev) => {
       ev.preventDefault();
       void actionHandler?.({ type: 'delete', ids: selection.getSelectedIds() });

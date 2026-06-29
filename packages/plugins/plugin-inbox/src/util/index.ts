@@ -3,5 +3,6 @@
 //
 
 export * from './find-binding';
+export * from './mailbox-sync';
 export * from './match-filter';
 export * from './util';

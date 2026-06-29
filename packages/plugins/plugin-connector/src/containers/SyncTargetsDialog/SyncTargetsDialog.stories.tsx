@@ -24,11 +24,11 @@ const availableTargets: RemoteTarget[] = [
   { id: 'board-4', name: 'Personal' },
 ];
 
-type StoryProps = {
+type StoryArgs = {
   availableTargets: ReadonlyArray<RemoteTarget>;
 };
 
-const DefaultStory = ({ availableTargets }: StoryProps) => {
+const DefaultStory = ({ availableTargets }: StoryArgs) => {
   const connection = useMemo<Connection.Connection>(
     () =>
       Connection.make({

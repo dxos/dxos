@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Place, Routing, RoutingOperation, Segment, TripCapabilities, Trip } from '#types';
+import { type Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 

@@ -61,21 +61,6 @@ export default FeedOperation.CurateMagazine.pipe(
   Operation.opaqueHandler,
 );
 
-// -- Schemas --
-
-/** Output schema of the curation routine: the selected Posts with agent-generated display values. */
-const CurationOutput = Schema.Struct({
-  posts: Schema.Array(
-    Schema.Struct({
-      id: Obj.ID,
-      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
-      snippet: Schema.optional(Schema.String),
-      /** Best image URL found for this article (from the post or fetched content). */
-      imageUrl: Schema.optional(Schema.String),
-    }),
-  ),
-});
-
 // -- Helpers --
 
 /** Bound on concurrent feed syncs. */
@@ -125,7 +110,7 @@ const selectPostIds = (
 ) =>
   Effect.gen(function* () {
     if (!magazine.instructions) {
-      return [] as readonly (typeof CurationOutput.Type.posts)[number][];
+      return [] as readonly (typeof Magazine.CurationOutput.Type.posts)[number][];
     }
     const input = {
       candidates: candidates.map(({ post, feed }) => ({
@@ -140,12 +125,12 @@ const selectPostIds = (
     };
 
     return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
-      Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
+      Effect.flatMap(Schema.decodeUnknown(Magazine.CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catchAll((error) =>
         Effect.sync(() => {
           log.warn('curation selection failed', { error });
-          return [] as readonly (typeof CurationOutput.Type.posts)[number][];
+          return [] as readonly (typeof Magazine.CurationOutput.Type.posts)[number][];
         }),
       ),
     );

@@ -8,9 +8,9 @@ import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import {
-  ActivationEvent as ActivationEvent$,
   ActivationEvents,
   Capabilities,
+  ActivationEvent as ActivationEvent$,
   Capability as Capability$,
   Plugin as Plugin$,
 } from '@dxos/app-framework';
