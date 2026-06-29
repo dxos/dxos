@@ -6,7 +6,7 @@ import type * as Tool from '@effect/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Icon, useTranslation } from '@dxos/react-ui';
-import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { type TogglePanelRootProps, NumericTabs, TextCrawl, TogglePanel } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';

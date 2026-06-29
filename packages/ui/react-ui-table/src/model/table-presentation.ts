@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry, Atom } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
-import { Obj, type View } from '@dxos/echo';
+import { type View, Obj } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';

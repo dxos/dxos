@@ -5,13 +5,13 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { Filter, type Database, type Obj, type Ref, Relation } from '@dxos/echo';
+import { type Database, type Obj, type Ref, Filter, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Connection, Connector, type ConnectorEntry, ConnectorCoordinator, SyncBinding } from '#types';
+import { type ConnectorEntry, Connection, Connector, ConnectorCoordinator, SyncBinding } from '#types';
 
 export type ConnectorAuthButtonProps = {
   /**

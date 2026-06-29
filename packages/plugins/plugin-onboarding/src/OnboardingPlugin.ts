@@ -8,6 +8,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import {
+  type OnboardingOptions,
   AppGraphBuilder,
   DefaultContent,
   OAuthRecoveryRedirect,
@@ -15,7 +16,6 @@ import {
   OperationHandler,
   ReactSurface,
   Settings,
-  type OnboardingOptions,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';

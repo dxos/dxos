@@ -7,7 +7,7 @@ import { SheetRoot } from '../SheetRoot';
 import { SheetStatusbar } from '../SheetStatusbar';
 import { SheetToolbar } from '../SheetToolbar';
 
-export { useSheetContext, type SheetContextValue, type SheetRootProps } from '../SheetRoot';
+export { type SheetContextValue, type SheetRootProps, useSheetContext } from '../SheetRoot';
 export { type SheetContentProps } from '../SheetContent';
 export { type SheetToolbarProps } from '../SheetToolbar';
 export { type SheetStatusbarProps } from '../SheetStatusbar';

@@ -4,7 +4,7 @@
 
 /* eslint-disable no-console */
 
-import { LogLevel, type LogProcessor, log, shouldLog } from '@dxos/log';
+import { type LogProcessor, LogLevel, log, shouldLog } from '@dxos/log';
 
 export const setupFunctionsLogger = () => {
   log.runtimeConfig.processors.length = 0;

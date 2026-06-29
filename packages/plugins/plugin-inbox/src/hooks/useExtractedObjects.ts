@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Filter, type Obj, Query } from '@dxos/echo';
+import { type Database, type Obj, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 

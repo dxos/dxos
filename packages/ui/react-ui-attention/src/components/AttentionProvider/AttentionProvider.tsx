@@ -171,6 +171,6 @@ export {
   RootAttentionProvider,
   useAttended,
   useAttention,
-  useAttentionContext,
   useAttentionAttributes,
+  useAttentionContext,
 };

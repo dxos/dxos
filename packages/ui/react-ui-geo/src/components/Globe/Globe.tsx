@@ -30,8 +30,8 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import {
-  type ThemeMode,
   type ThemedClassName,
+  type ThemeMode,
   useComposedRefs,
   useControlledState,
   useDynamicRef,
@@ -41,12 +41,12 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
-  GlobeContext,
   type GlobeContextType,
   type GlobeController,
   type Point,
   type Size,
   type Vector,
+  GlobeContext,
   useGlobeContext,
 } from '../../hooks';
 import {
@@ -60,7 +60,7 @@ import {
   renderLayers,
   timer,
 } from '../../util';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -460,4 +460,4 @@ export const Globe = {
   Panel: GlobePanel,
 };
 
-export type { GlobeRootProps, GlobeViewportProps, GlobeCanvasProps };
+export type { GlobeCanvasProps, GlobeRootProps, GlobeViewportProps };

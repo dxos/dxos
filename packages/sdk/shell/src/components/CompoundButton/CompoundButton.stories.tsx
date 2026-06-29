@@ -8,7 +8,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
+import { type CompoundButtonProps, CompoundButton } from './CompoundButton';
 
 const DefaultStory = (props: CompoundButtonProps) => {
   return (

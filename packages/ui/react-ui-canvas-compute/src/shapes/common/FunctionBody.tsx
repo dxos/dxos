@@ -11,7 +11,7 @@ import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { type CanvasBoard, type Polygon } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
-import { Box, type BoxProps, footerHeight, headerHeight } from '../common';
+import { type BoxProps, Box, footerHeight, headerHeight } from '../common';
 import { createAnchorId, getProperties } from '../defs';
 
 const bodyPadding = 8;

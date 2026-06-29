@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
+import { type EntityId, type URI, DXN, EID } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';

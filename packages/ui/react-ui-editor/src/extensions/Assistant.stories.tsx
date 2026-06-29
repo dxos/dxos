@@ -18,8 +18,8 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { Editor, type EditorViewProps } from '../components';
-import { assistant, type AssistantOptions } from './assistant-extension';
+import { type EditorViewProps, Editor } from '../components';
+import { type AssistantOptions, assistant } from './assistant-extension';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {

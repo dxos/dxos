@@ -11,7 +11,7 @@ import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '
 import { type LatLngLiteral } from '../../types';
 import { type StyleSet, closestPoint } from '../../util';
 import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
+import { type GlobeCanvasProps, type GlobeController, type GlobeRootProps, Globe } from './Globe';
 
 // TODO(burdon): Load from JSON at runtime?
 const loadTopology = async () => (await import('../../../data/countries-110m')).default;

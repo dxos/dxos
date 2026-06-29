@@ -7,14 +7,14 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { Journal as JournalType, getDateString, parseDateString } from '#types';
 
-import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
+import { type OutlineController, type OutlineRootProps, Outline } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 

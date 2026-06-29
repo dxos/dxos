@@ -13,18 +13,18 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space';
 import { Expando, Text } from '@dxos/schema';
-import { isNonNullable, Position } from '@dxos/util';
+import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#types';
 import {
-  NativeFilesystemCapabilities,
-  isFilesystemDirectory,
-  isFilesystemWorkspace,
   type FilesystemEntry,
   type FilesystemFile,
   type FilesystemWorkspace,
   type NativeFilesystemState,
+  NativeFilesystemCapabilities,
+  isFilesystemDirectory,
+  isFilesystemWorkspace,
 } from '#types';
 
 import { findDirectoryById } from '../util';

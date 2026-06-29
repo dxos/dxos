@@ -9,12 +9,12 @@ import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
-  MMSTTopology,
   type SwarmConnection,
   type SwarmNetworkManager,
   type WireProtocol,
   type WireProtocolProps,
   type WireProtocolProvider,
+  MMSTTopology,
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type MuxerStats, Teleport } from '@dxos/teleport';
@@ -23,7 +23,7 @@ import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
-import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
+import { type AuthProvider, type AuthVerifier, AuthExtension } from './auth';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;

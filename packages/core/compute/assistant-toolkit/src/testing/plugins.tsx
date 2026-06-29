@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN, Format, type Obj, Type } from '@dxos/echo';
+import { type Obj, DXN, Format, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Position } from '@dxos/util';

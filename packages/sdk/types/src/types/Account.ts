@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as AccessToken from './AccessToken';

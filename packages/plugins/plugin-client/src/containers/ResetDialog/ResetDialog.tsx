@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { type CapabilityManager, Capability } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
+import { type ConfirmResetProps, ConfirmReset, translationKey } from '@dxos/shell/react';
 
 import { type ClientPluginOptions } from '#types';
 

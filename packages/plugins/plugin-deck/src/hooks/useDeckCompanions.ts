@@ -3,7 +3,7 @@
 //
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node, type Node as NodeType } from '@dxos/plugin-graph';
+import { type Node as NodeType, Node } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/ui-types/translations';
 import { Position } from '@dxos/util';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Message, NetworkAdapter, type PeerId } from '@automerge/automerge-repo';
+import { type Message, type PeerId, NetworkAdapter } from '@automerge/automerge-repo';
 
 import { Trigger, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';

@@ -10,11 +10,11 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 
 import {
-  DeckCapabilities,
-  type EphemeralDeckState,
   type DeckPluginState,
   type DeckState,
+  type EphemeralDeckState,
   type StoredDeckState,
+  DeckCapabilities,
 } from '#types';
 
 export type DeckStateHook = {

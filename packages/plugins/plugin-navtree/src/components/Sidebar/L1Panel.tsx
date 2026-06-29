@@ -11,7 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, useActionRunner, useEdges } from '@dxos/plugin-graph';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
+import { type MenuItem, Menu } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 

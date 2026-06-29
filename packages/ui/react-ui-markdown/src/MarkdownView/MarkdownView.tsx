@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { MediaPlayer, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, MediaPlayer } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 

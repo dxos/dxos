@@ -17,7 +17,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { CanvasContext, ProjectionMapper, type ProjectionState, defaultOrigin } from '../../hooks';
+import { type ProjectionState, CanvasContext, ProjectionMapper, defaultOrigin } from '../../hooks';
 
 export interface CanvasController {
   setProjection(projection: ProjectionState): Promise<void>;

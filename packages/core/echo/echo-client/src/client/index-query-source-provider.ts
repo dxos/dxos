@@ -4,10 +4,10 @@
 
 import * as Array from 'effect/Array';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
+import { type CleanupFn, type ReadOnlyEvent, Event, TimeoutError, asyncTimeout } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
+import { type Hypergraph, type QueryResult, Entity, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -15,14 +15,14 @@ import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
-  QueryReactivity,
   type QueryResponse,
   type QueryService,
   type QueryResult as RemoteQueryResult,
+  QueryReactivity,
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
+import { type QuerySourceProvider, OBJECT_DIAGNOSTICS } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
 
 export type LoadObjectProps = {

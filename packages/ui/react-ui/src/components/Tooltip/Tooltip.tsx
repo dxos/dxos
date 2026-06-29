@@ -765,4 +765,4 @@ export const Tooltip = {
 
 export { createTooltipScope, useTooltipContext };
 
-export type { TooltipProviderProps, TooltipTriggerProps, TooltipScopedProps, TooltipSide };
+export type { TooltipProviderProps, TooltipScopedProps, TooltipSide, TooltipTriggerProps };

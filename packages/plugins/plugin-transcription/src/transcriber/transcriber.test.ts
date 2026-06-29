@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type AudioChunk } from './audio-recorder';
-import { alignWhisperSegments, type WhisperSegment } from './transcriber';
+import { type WhisperSegment, alignWhisperSegments } from './transcriber';
 
 const T0 = Date.parse('2026-01-01T00:00:00.000Z');
 

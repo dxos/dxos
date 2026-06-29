@@ -7,8 +7,8 @@ import React from 'react';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useTranslation } from '../../primitives';
-import { Button, type ButtonProps, IconButton } from '../Button';
-import { Icon, type IconProps } from '../Icon';
+import { type ButtonProps, Button, IconButton } from '../Button';
+import { type IconProps, Icon } from '../Icon';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
 import { useClipboard } from './ClipboardProvider';
 

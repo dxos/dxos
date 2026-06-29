@@ -13,9 +13,9 @@ import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
+  OperationHandlerSet,
   LayerSpec as LayerSpec$,
   Operation as Operation$,
-  OperationHandlerSet,
   Process as Process$,
   ServiceResolver as ServiceResolver$,
   Trace as Trace$,
@@ -23,7 +23,7 @@ import type {
 import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
-import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
+import { type PluginManager as PluginManager$, Capability as Capability$, Plugin as Plugin$ } from '../core';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,

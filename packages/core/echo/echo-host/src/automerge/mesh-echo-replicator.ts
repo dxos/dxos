@@ -5,7 +5,7 @@
 import { type Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexSet, defaultMap } from '@dxos/util';

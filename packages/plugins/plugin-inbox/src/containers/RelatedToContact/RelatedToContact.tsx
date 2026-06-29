@@ -11,7 +11,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Event, Message, type Person } from '@dxos/types';
+import { type Person, Event, Message } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
 import { Calendar, Mailbox } from '#types';

@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import {
+  type Registry,
   DXN,
   EID,
   Entity,
@@ -19,30 +20,29 @@ import {
   Query,
   QueryAST,
   Ref,
-  type Registry,
   Type,
   View,
 } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Input, Message, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
-import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
+import { type ThemedClassName, Input, Message, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { type QueryFormProps, QueryForm } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
+  VIEW_FIELD_LIMIT,
   ParentLabelAnnotation,
   ProjectionModel,
-  VIEW_FIELD_LIMIT,
   createEchoChangeCallback,
   getTypeURIFromQuery,
 } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
-import { type FormFieldRenderer, type FormFieldRendererProps, type FormFieldMap } from '#types';
+import { type FormFieldMap, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
-import { CompactIconButton, FormFieldHeader, Form, FormFieldLabel, type FormRootProps } from '../Form';
+import { type FormRootProps, CompactIconButton, Form, FormFieldHeader, FormFieldLabel } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
   {

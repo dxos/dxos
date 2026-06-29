@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import {
   AgentHandlers,
-  RunInstructions,
-  DatabaseSkill,
   DatabaseHandlers,
-  WebSearchSkill,
+  DatabaseSkill,
+  RunInstructions,
   WebSearchHandlers,
+  WebSearchSkill,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Trace, Trigger, Operation } from '@dxos/compute';
+import { Instructions, Operation, Skill, Trace, Trigger } from '@dxos/compute';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

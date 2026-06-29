@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import { DeckCapabilities, type DeckState, type LayoutMode, getMode, isLayoutMode } from '../types';
+import { type DeckState, type LayoutMode, DeckCapabilities, getMode, isLayoutMode } from '../types';
 import { updateActiveDeck } from './helpers';
 
 /**

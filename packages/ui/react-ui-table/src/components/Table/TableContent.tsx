@@ -15,8 +15,8 @@ import {
   type DxGridElement,
   type DxGridPlane,
   type DxGridPlaneRange,
-  Grid,
   type GridContentProps,
+  Grid,
   closestCell,
   gridSeparatorBlockEnd,
   gridSeparatorInlineEnd,
@@ -24,7 +24,7 @@ import {
 import { DxEditRequest } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/ui-theme';
 
-import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
+import { type InsertRowResult, type TableModel, type TablePresentation, ModalController } from '../../model';
 import { tableButtons, tableControls } from '../../util';
 import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 import { ColumnActionsMenu } from './ColumnActionsMenu';

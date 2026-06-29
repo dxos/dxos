@@ -3,12 +3,12 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
+import { type DiscordREST, DiscordConfig, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
-import { Database, Err, type Ref } from '@dxos/echo';
+import { type Ref, Database, Err } from '@dxos/echo';
 import { Connection } from '@dxos/plugin-connector';
 
 import { DISCORD_API_BASE } from '../constants';

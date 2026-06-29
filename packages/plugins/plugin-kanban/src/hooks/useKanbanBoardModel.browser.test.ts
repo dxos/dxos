@@ -7,7 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { type View, DXN, Filter, JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/keys';

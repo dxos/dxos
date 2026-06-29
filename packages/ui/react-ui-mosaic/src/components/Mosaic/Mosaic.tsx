@@ -3,23 +3,23 @@
 //
 
 import {
-  MosaicContainer,
   type MosaicContainerProps,
   type MosaicContainerState,
   type MosaicScrollController,
+  MosaicContainer,
   useMosaicContainerContext,
 } from './Container';
-import { MosaicDragHandle, type MosaicDragHandleProps } from './DragHandle';
+import { type MosaicDragHandleProps, MosaicDragHandle } from './DragHandle';
 import {
-  MosaicDropIndicator,
   type MosaicDropIndicatorProps,
-  MosaicPlaceholder,
   type MosaicPlaceholderProps,
+  MosaicDropIndicator,
+  MosaicPlaceholder,
 } from './Placeholder';
-import { MosaicResizeHandle, type MosaicResizeHandleProps } from './ResizeHandle';
-import { MosaicRoot, type MosaicRootProps, useMosaicRootContext } from './Root';
-import { MosaicStack, type MosaicStackProps, type MosaicStackTileComponent, MosaicVirtualStack } from './Stack';
-import { MosaicTile, type MosaicTileProps, type MosaicTileState, useMosaicTileContext } from './Tile';
+import { type MosaicResizeHandleProps, MosaicResizeHandle } from './ResizeHandle';
+import { type MosaicRootProps, MosaicRoot, useMosaicRootContext } from './Root';
+import { type MosaicStackProps, type MosaicStackTileComponent, MosaicStack, MosaicVirtualStack } from './Stack';
+import { type MosaicTileProps, type MosaicTileState, MosaicTile, useMosaicTileContext } from './Tile';
 
 //
 // Mosaic
@@ -38,18 +38,18 @@ export const Mosaic = {
 };
 
 export type {
-  MosaicRootProps,
   MosaicContainerProps,
-  MosaicDragHandleProps,
   MosaicContainerState,
-  MosaicScrollController,
-  MosaicTileProps,
-  MosaicTileState,
-  MosaicResizeHandleProps,
-  MosaicPlaceholderProps,
+  MosaicDragHandleProps,
   MosaicDropIndicatorProps,
+  MosaicPlaceholderProps,
+  MosaicResizeHandleProps,
+  MosaicRootProps,
+  MosaicScrollController,
   MosaicStackProps,
   MosaicStackTileComponent,
+  MosaicTileProps,
+  MosaicTileState,
 };
 
 export {

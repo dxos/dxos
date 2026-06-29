@@ -4,7 +4,7 @@
 
 import { createMemo, createSignal } from 'solid-js';
 
-import { type ControlProps, type LatLngLiteral, Map, type MapController, useMapZoomHandler } from '@dxos/solid-ui-geo';
+import { type ControlProps, type LatLngLiteral, type MapController, Map, useMapZoomHandler } from '@dxos/solid-ui-geo';
 
 import { type GeoControlProps } from '../types';
 

@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type HierarchyPointNode, hierarchy, linkHorizontal, tree as d3Tree } from 'd3';
+import { type HierarchyPointNode, tree as d3Tree, hierarchy, linkHorizontal } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphRadialProjectorOptions, GraphRadialProjector, updateNode } from './graph-radial-projector';
 
 export type GraphTreeProjectorOptions = GraphRadialProjectorOptions & {
   /** Id of the root node, placed at the centre. When unset, falls back to a ring. */

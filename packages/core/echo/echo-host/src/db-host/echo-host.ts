@@ -11,7 +11,7 @@ import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { type IndexingResult, IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,14 +25,14 @@ import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
 import {
-  AutomergeHost,
   type AutomergeReplicator,
   type CreateDocOptions,
-  EchoDataMonitor,
   type EchoDataStats,
   type LoadDocOptions,
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
+  AutomergeHost,
+  EchoDataMonitor,
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
 import { AutomergeDataSource } from './automerge-data-source';

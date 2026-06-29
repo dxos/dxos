@@ -4,12 +4,12 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
-import { Link, type LinkProps } from '../Link';
+import { type LinkProps, Link } from '../Link';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   'aria-label': string;
@@ -101,10 +101,10 @@ export const Breadcrumb = {
 };
 
 export type {
-  BreadcrumbRootProps,
-  BreadcrumbListProps,
-  BreadcrumbListItemProps,
-  BreadcrumbLinkProps,
   BreadcrumbCurrentProps,
+  BreadcrumbLinkProps,
+  BreadcrumbListItemProps,
+  BreadcrumbListProps,
+  BreadcrumbRootProps,
   BreadcrumbSeparatorProps,
 };

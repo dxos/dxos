@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { TranscriptionCapabilities, type Settings } from '@dxos/plugin-transcription';
-import { DropdownMenu, Icon, IconButton, MicButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type Settings, TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { type ThemedClassName, DropdownMenu, Icon, IconButton, MicButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

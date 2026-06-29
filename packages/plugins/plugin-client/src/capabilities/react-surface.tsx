@@ -20,7 +20,7 @@ import {
   ResetDialog,
   UsageContainer,
 } from '#containers';
-import { Account, type ClientPluginOptions } from '#types';
+import { type ClientPluginOptions, Account } from '#types';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
 

@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type LogConfig, LogLevel, type LogOptions } from './config';
-import { type LogContext, LogEntry, type LogProcessor } from './context';
+import { type LogConfig, type LogOptions, LogLevel } from './config';
+import { type LogContext, type LogProcessor, LogEntry } from './context';
 import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
 import { createConfig } from './options';

@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -24,7 +24,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
+import { type NotebookStackProps, type TypescriptEditorProps, NotebookMenu, NotebookStack } from '#components';
 import { meta } from '#meta';
 import { type Notebook } from '#types';
 

@@ -22,7 +22,7 @@ import {
 
 import { CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
-import { SpaceEvents, type SpacePluginOptions } from '#types';
+import { type SpacePluginOptions, SpaceEvents } from '#types';
 
 import { database, queue, space } from './commands';
 

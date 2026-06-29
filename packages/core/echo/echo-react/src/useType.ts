@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { DXN, EID, URI, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
+import { type Database, DXN, EID, URI, Filter, Query, Scope, Type } from '@dxos/echo';
 
 /**
  * Subscribe to and retrieve a type by its URI from a space: a static schema's typename DXN, or a

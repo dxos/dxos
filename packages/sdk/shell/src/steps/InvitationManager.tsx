@@ -10,7 +10,7 @@ import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
+import { type ViewportViewProps, Action, ActionBar, AuthCode, Centered, Emoji, Label, Viewport } from '../components';
 import { translationKey } from '../translations';
 import { invitationStatusValue } from '../util';
 import { type StepProps } from './StepProps';

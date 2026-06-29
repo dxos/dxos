@@ -21,14 +21,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as url from 'node:url';
 
-import { Skill, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
-import { EnrichTranscript, EnrichmentHandlers, SummarizeConversation } from './operations';
+import { EnrichmentHandlers, EnrichTranscript, SummarizeConversation } from './operations';
 import { parseConversation } from './parser';
 import { simulateStream } from './stream-simulator';
 

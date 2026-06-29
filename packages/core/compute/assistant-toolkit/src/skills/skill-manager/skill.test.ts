@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiContext, Harness } from '@dxos/assistant';
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { EntityId, type URI } from '@dxos/keys';
+import { type URI, EntityId } from '@dxos/keys';
 
 import { DatabaseSkill, DiscordSkill, MemorySkill } from '../index';
 import { SkillManagerHandlers } from './operations';

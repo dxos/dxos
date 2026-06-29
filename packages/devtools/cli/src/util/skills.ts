@@ -6,9 +6,9 @@ import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { DatabaseSkill, DatabaseHandlers } from '@dxos/assistant-toolkit';
-import { Skill, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Tag, type Type } from '@dxos/echo';
+import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { OperationHandlerSet, Skill } from '@dxos/compute';
+import { type Type, Feed, Tag } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/skills` and `/types`) so the CLI's
 // `bun run --conditions=source` only walks plugin source files that are free of
@@ -24,7 +24,7 @@ import { CommentOperationHandlerSet } from '@dxos/plugin-comments/plugin';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { Game } from '@dxos/plugin-game/types';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
-import { CalendarSkill, InboxSkill, InboxSendSkill } from '@dxos/plugin-inbox/skills';
+import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/plugin';
 import { KanbanSkill } from '@dxos/plugin-kanban/skills';

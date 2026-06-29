@@ -5,8 +5,8 @@
 import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group';
 import React, { forwardRef } from 'react';
 
-import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button';
-import { IconButton, type IconButtonProps } from './IconButton';
+import { type ButtonGroupProps, type ButtonProps, Button, ButtonGroup } from './Button';
+import { type IconButtonProps, IconButton } from './IconButton';
 
 type ToggleGroupProps =
   | Omit<ToggleGroupPrimitive.ToggleGroupSingleProps, 'className'>
@@ -46,5 +46,5 @@ const ToggleGroupIconItem = forwardRef<HTMLButtonElement, ToggleGroupIconItemPro
   },
 );
 
-export { ToggleGroup, ToggleGroupItem, ToggleGroupIconItem };
-export type { ToggleGroupProps, ToggleGroupItemProps };
+export { ToggleGroup, ToggleGroupIconItem, ToggleGroupItem };
+export type { ToggleGroupItemProps, ToggleGroupProps };

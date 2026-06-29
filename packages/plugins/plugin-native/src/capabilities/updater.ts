@@ -17,7 +17,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Update } from '#types';
+import { type Update, NativeCapabilities } from '#types';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
 

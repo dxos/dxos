@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, Obj, type Query, Type } from '@dxos/echo';
-import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
+import { type Query, Filter, Obj, Type } from '@dxos/echo';
+import { type EncodedReference, EncodedReference as EncodedRef } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, type URI } from '@dxos/keys';
+import { type URI, DXN, EID } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';

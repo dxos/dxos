@@ -13,9 +13,9 @@ import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { RoutineForm, MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '#components';
+import { type MasterDetailAdornment, type MasterDetailIcon, MasterDetail, RoutineForm } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 

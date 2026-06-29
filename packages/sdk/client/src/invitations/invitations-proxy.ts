@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, MulticastObservable, type Observable, PushStream, Trigger } from '@dxos/async';
+import { type Observable, Event, MulticastObservable, PushStream, Trigger } from '@dxos/async';
 import {
+  type Invitations,
   AuthenticatingInvitation,
   CancellableInvitation,
   InvitationEncoder,
-  type Invitations,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
@@ -16,8 +16,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type IdentityService,
-  Invitation,
   type InvitationsService,
+  Invitation,
   QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';

@@ -3,16 +3,16 @@
 //
 
 import {
+  type CSSProperties,
+  type ForwardedRef,
+  type ForwardRefExoticComponent,
+  type HTMLAttributes,
+  type ReactNode,
+  type RefAttributes,
   Children,
   createElement,
   forwardRef,
-  type ForwardRefExoticComponent,
-  type ForwardedRef,
-  type HTMLAttributes,
   isValidElement,
-  type ReactNode,
-  type RefAttributes,
-  type CSSProperties,
 } from 'react';
 
 import { log } from '@dxos/log';

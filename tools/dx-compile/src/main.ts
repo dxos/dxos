@@ -8,7 +8,7 @@ import { type Format, type Platform, type Plugin, build, formatMessages } from '
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import esbuildPluginYaml from 'esbuild-plugin-yaml';
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 

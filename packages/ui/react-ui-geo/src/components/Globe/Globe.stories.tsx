@@ -27,7 +27,7 @@ import {
 import { type LatLngLiteral } from '../../types';
 import { type StyleSet, closestPoint } from '../../util';
 import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe';
+import { type GlobeCanvasProps, type GlobeRootProps, Globe } from './Globe';
 
 const defaultStyles: StyleSet = {
   water: {

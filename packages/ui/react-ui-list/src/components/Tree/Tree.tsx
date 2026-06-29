@@ -5,9 +5,9 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { Treegrid, type TreegridRootProps } from '../Treegrid';
+import { type TreegridRootProps, Treegrid } from '../Treegrid';
 import { type TreeModel, TreeProvider } from './TreeContext';
-import { TreeItemById, type TreeItemByIdProps, type TreeItemProps } from './TreeItem';
+import { type TreeItemByIdProps, type TreeItemProps, TreeItemById } from './TreeItem';
 
 export type TreeProps<T extends { id: string } = any> = {
   model: TreeModel<T>;

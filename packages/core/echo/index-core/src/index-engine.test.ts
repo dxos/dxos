@@ -14,9 +14,9 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
+import { type DataSourceCursor, type IndexDataSource, type IndexingResult, IndexEngine } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import { FtsIndex, type IndexerObject, EntityMetaIndex, ReverseRefIndex } from './indexes';
+import { type IndexerObject, EntityMetaIndex, FtsIndex, ReverseRefIndex } from './indexes';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');

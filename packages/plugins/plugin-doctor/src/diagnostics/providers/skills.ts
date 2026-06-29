@@ -4,7 +4,7 @@
 
 import { Capabilities } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';

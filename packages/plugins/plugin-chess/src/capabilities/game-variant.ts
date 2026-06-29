@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
+import { type GameVariant, GameCapabilities } from '@dxos/plugin-game/types';
 
 import { ChessArticle, ChessCard } from '#containers';
 import { Chess } from '#types';

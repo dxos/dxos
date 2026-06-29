@@ -11,11 +11,11 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { useDeckState } from '#hooks';
 import { DeckCapabilities, getMode } from '#types';
 
-import { Deck, type DeckLayoutChangeRequest } from '../Deck';
+import { type DeckLayoutChangeRequest, Deck } from '../Deck';
 import { ActiveNode } from './ActiveNode';
 import { Dialog } from './Dialog';
 import { PopoverContent, PopoverRoot } from './Popover';
-import { Toaster, type ToasterProps } from './Toast';
+import { type ToasterProps, Toaster } from './Toast';
 
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 

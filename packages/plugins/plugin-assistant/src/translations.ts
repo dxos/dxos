@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
+import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { type TableFeatures, type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 

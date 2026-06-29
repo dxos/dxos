@@ -10,7 +10,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Pane, type PaneTab } from './Pane';
+import { type PaneTab, Pane } from './Pane';
 
 const TABS: PaneTab[] = [
   { id: 'notes', icon: 'ph--note--regular', label: 'Notes' },

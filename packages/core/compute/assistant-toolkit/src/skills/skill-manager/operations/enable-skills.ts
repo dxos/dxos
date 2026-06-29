@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
 import { Harness } from '@dxos/assistant';
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 
 import { EnableSkills } from './definitions';

@@ -16,7 +16,7 @@ import { SqliteMetadataStore } from '@dxos/echo-host';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
-import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
+import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType } from '@dxos/random-access-storage';
@@ -25,9 +25,9 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeProps } from '../services';
+import { type ServiceContextRuntimeProps, ClientServicesHost, ServiceContext } from '../services';
 import { SqliteStorage } from '../services/sqlite-storage';
-import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
+import { type DataSpaceManagerRuntimeProps, type SigningContext, DataSpaceManager } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.

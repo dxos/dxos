@@ -18,24 +18,24 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import {
-  DescriptionAndValidation as DescriptionAndValidationPrimitive,
   type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
-  Description as DescriptionPrimitive,
   type DescriptionProps as DescriptionPrimitiveProps,
-  INPUT_NAME,
-  InputRoot,
   type InputRootProps,
   type InputScopedProps,
-  Label as LabelPrimitive,
   type LabelProps as LabelPrimitiveProps,
-  PinInput as PinInputPrimitive,
   type PinInputProps as PinInputPrimitiveProps,
-  TextArea as TextAreaPrimitive,
   type TextAreaProps as TextAreaPrimitiveProps,
-  TextInput as TextInputPrimitive,
   type TextInputProps as TextInputPrimitiveProps,
-  Validation as ValidationPrimitive,
   type ValidationProps as ValidationPrimitiveProps,
+  INPUT_NAME,
+  DescriptionAndValidation as DescriptionAndValidationPrimitive,
+  Description as DescriptionPrimitive,
+  InputRoot,
+  Label as LabelPrimitive,
+  PinInput as PinInputPrimitive,
+  TextArea as TextAreaPrimitive,
+  TextInput as TextInputPrimitive,
+  Validation as ValidationPrimitive,
   useInputContext,
 } from '@dxos/react-input';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
@@ -47,12 +47,12 @@ import { type ThemedClassName } from '../../util';
 import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import {
-  SegmentedDate,
   type SegmentedDateProps,
-  SegmentedDateTime,
   type SegmentedDateTimeProps,
-  SegmentedTime,
   type SegmentedTimeProps,
+  SegmentedDate,
+  SegmentedDateTime,
+  SegmentedTime,
 } from './SegmentedInput';
 
 type InputVariant = 'default' | 'subdued';
@@ -525,19 +525,19 @@ export const Input = {
 export { useInputTrigger };
 
 export type {
-  InputVariant,
-  InputRootProps,
-  InputSharedProps,
-  PinInputProps,
-  TextInputProps,
-  TextAreaProps,
-  TimeProps,
+  CheckboxProps,
   DateInputProps,
   DateTimeInputProps,
-  CheckboxProps,
-  SwitchProps,
-  LabelProps,
-  DescriptionProps,
-  ValidationProps,
   DescriptionAndValidationProps,
+  DescriptionProps,
+  InputRootProps,
+  InputSharedProps,
+  InputVariant,
+  LabelProps,
+  PinInputProps,
+  SwitchProps,
+  TextAreaProps,
+  TextInputProps,
+  TimeProps,
+  ValidationProps,
 };

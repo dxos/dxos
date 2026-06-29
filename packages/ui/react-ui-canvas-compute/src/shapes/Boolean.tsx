@@ -8,7 +8,7 @@ import React, { type FC } from 'react';
 import { type ShapeDef, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
 import { createAnchors } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
 
 //
 // Gate utils.

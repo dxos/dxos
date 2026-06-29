@@ -6,13 +6,16 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { type URI, EID, EntityId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import {
   type ATTR_PARENT,
   type ATTR_TYPE,
+  type ParentId,
+  type SchemaId,
+  type Version,
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -23,15 +26,12 @@ import {
   ObjectDatabaseId,
   ObjectDeletedId,
   ObjectVersionId,
-  type ParentId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  type SchemaId,
   SelfURIId,
   TypeId,
-  type Version,
 } from '../common/types';
 import { type ATTR_META, type EntityMeta } from '../common/types/meta';
 import { type MetaId } from '../common/types/model-symbols';

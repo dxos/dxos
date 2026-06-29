@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { ToolList, type ToolListProps } from './ToolList';
+export { type ToolListProps, ToolList } from './ToolList';

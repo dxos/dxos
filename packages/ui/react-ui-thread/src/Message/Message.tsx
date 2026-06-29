@@ -5,8 +5,8 @@
 import { EditorView } from '@codemirror/view';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, {
-  type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -18,9 +18,9 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import {
+  type ThemedClassName,
   Avatar,
   IconButton,
-  type ThemedClassName,
   useOnTransition,
   useThemeContext,
   useTranslation,

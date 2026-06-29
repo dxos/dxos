@@ -15,8 +15,8 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
-import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
+import { type EventHeaderProps, Event, ObjectArticle, useTargetConnection } from '#components';
+import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
 

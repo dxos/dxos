@@ -3,13 +3,13 @@
 //
 
 import {
+  type LogConfig,
+  type LogEntry,
+  type LogProcessor,
   log,
   parseFilter,
   serializeToJsonl,
   shouldLog,
-  type LogConfig,
-  type LogEntry,
-  type LogProcessor,
 } from '@dxos/log';
 
 import { type JsonlFileLogStore } from './jsonl-file-log-store';

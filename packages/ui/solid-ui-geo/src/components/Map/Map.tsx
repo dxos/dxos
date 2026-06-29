@@ -19,7 +19,7 @@ import {
 } from 'solid-js';
 
 import { type GeoMarker } from '../../types';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
 
 // TODO(burdon): Guess initial location.
 
@@ -341,4 +341,4 @@ export const Map = {
   Action: MapAction,
 };
 
-export { type MapRootProps, type MapMarkersProps, type MapControlProps };
+export { type MapControlProps, type MapMarkersProps, type MapRootProps };

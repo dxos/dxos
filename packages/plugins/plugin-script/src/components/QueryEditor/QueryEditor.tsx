@@ -9,7 +9,7 @@ import queryApi from '@dxos/echo-query/api.d.ts?raw';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Compiler } from '../../compiler';
-import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
+import { type TypescriptEditorProps, TypescriptEditor } from '../TypescriptEditor';
 
 const GLOBALS = `
   namespace QueryAPI {

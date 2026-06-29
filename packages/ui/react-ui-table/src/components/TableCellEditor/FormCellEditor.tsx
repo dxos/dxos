@@ -9,7 +9,7 @@ import { Entity, Ref, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Label, Popover } from '@dxos/react-ui';
-import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
+import { type FormRootProps, type RefFieldProps, Form } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';

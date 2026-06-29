@@ -3,7 +3,7 @@
 //
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
-import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
+import { DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT, ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { EID, Filter, Key, Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown';

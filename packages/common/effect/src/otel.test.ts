@@ -19,7 +19,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import { beforeEach } from 'vitest';
 
-import { LogLevel, type LogProcessor, log } from '@dxos/log';
+import { type LogProcessor, LogLevel, log } from '@dxos/log';
 
 import { layerOtel } from './otel';
 

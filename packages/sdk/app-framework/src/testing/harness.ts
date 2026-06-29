@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { ActivationEvents, Capabilities } from '../common';
-import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
+import { type Capability, type CapabilityManager, type Plugin, ActivationEvent, PluginManager } from '../core';
 
 export type TestAppOptions = {
   /**

@@ -9,7 +9,7 @@ import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
 import { TestBuilder, TestSchema } from '@dxos/client/testing';
-import { type Entity, Filter, Obj, Ref, type QueryResult } from '@dxos/echo';
+import { type Entity, type QueryResult, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

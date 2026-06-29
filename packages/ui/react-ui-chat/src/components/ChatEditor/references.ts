@@ -5,11 +5,11 @@
 import { type CompletionResult, autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { type Extension, RangeSet } from '@codemirror/state';
 import {
-  Decoration,
   type DecorationSet,
+  type ViewUpdate,
+  Decoration,
   EditorView,
   ViewPlugin,
-  type ViewUpdate,
   WidgetType,
   keymap,
 } from '@codemirror/view';

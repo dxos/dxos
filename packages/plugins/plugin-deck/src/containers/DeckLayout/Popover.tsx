@@ -9,11 +9,11 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
+  type PopoverContentInteractOutsideEvent,
   Card,
   Icon,
   IconButton,
   Popover,
-  type PopoverContentInteractOutsideEvent,
   toLocalizedString,
   useMediaQuery,
   useTranslation,

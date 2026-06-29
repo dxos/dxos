@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { generatePosts } from '#testing';
 
-import { PostStack, type PostStackProps } from './PostStack';
+import { type PostStackProps, PostStack } from './PostStack';
 
 const DefaultStory = (props: Omit<PostStackProps, 'id' | 'posts'>) => {
   const posts = useMemo(() => generatePosts(100), []);

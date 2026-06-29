@@ -6,10 +6,10 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type FC,
-  forwardRef,
-  Fragment,
   type ReactElement,
   type Ref,
+  Fragment,
+  forwardRef,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -23,7 +23,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 import { useMosaicContainerContext } from './Container';
-import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
+import { type MosaicPlaceholderProps, MosaicPlaceholder } from './Placeholder';
 import { styles } from './styles';
 import { type MosaicTileProps } from './Tile';
 import { type GetId } from './types';
@@ -374,4 +374,4 @@ InternalPlaceholder.displayName = 'InternalPlaceholder';
 
 export { MosaicStack, MosaicVirtualStack };
 
-export type { MosaicStackTileComponent, MosaicStackProps, MosaicVirtualStackProps };
+export type { MosaicStackProps, MosaicStackTileComponent, MosaicVirtualStackProps };

@@ -25,23 +25,23 @@ import React, {
 } from 'react';
 
 import {
-  Button,
   type ButtonProps,
-  Icon,
   type IconProps,
-  Popover,
   type PopoverArrowProps,
   type PopoverContentProps,
   type PopoverVirtualTriggerProps,
-  ScrollArea,
   type ThemedClassName,
+  Button,
+  Icon,
+  Popover,
+  ScrollArea,
   useId,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
-import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
+import { type PickerInputProps, type PickerItemProps, Picker } from '../Picker';
 
 const styles = listTheme.styles();
 
@@ -383,14 +383,14 @@ export const Combobox = {
 };
 
 export type {
-  ComboboxRootProps,
-  ComboboxPortalProps,
+  ComboboxArrowProps,
   ComboboxContentProps,
+  ComboboxEmptyProps,
+  ComboboxInputProps,
+  ComboboxItemProps,
+  ComboboxListProps,
+  ComboboxPortalProps,
+  ComboboxRootProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,
-  ComboboxInputProps,
-  ComboboxListProps,
-  ComboboxItemProps,
-  ComboboxArrowProps,
-  ComboboxEmptyProps,
 };

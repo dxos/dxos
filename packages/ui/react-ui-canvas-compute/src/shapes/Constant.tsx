@@ -10,16 +10,16 @@ import { Input } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
   type ShapeDef,
-  TextBox,
   type TextBoxControl,
   type TextBoxProps,
+  TextBox,
 } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 import { safeParseJson } from '@dxos/util';
 
 import { useComputeNodeState } from '../hooks';
 import { Box, TypeSelect } from './common';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
 
 //
 // Data

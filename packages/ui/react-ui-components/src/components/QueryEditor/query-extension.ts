@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
+import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { type DecorationSet, Decoration, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';

@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
+import { type Ref, type View, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';

@@ -10,7 +10,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
-import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
+import { type ModelName, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';

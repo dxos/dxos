@@ -5,7 +5,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
-import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
+import { type Space, type SpaceSyncState, SpaceState } from '@dxos/client/echo';
 
 import * as FormBuilder from './form-builder';
 

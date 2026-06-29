@@ -17,13 +17,13 @@ import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { type IMetadataStore } from '../metadata';
-import { Pipeline, type PipelineAccessor } from '../pipeline';
+import { type PipelineAccessor, Pipeline } from '../pipeline';
 
 export type ControlPipelineProps = {
   spaceKey: PublicKey;

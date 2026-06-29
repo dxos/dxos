@@ -7,13 +7,13 @@ import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type RefObject,
-  useEffect,
+  forwardRef,
   useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
-  useContext,
-  forwardRef,
-  useImperativeHandle,
 } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -23,9 +23,9 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { type Scene } from '#types';
 
 import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
-import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
-import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
-import { handleImport as doImport, handleExport as doExport } from './import-export';
+import { type SpacetimeCanvasProps, SpacetimeCanvas } from '../SpacetimeCanvas';
+import { type EditorActions, type SpacetimeToolbarProps, SpacetimeToolbar } from '../SpacetimeToolbar';
+import { handleExport as doExport, handleImport as doImport } from './import-export';
 
 //
 // Context
@@ -278,4 +278,4 @@ export const SpacetimeEditor = {
   Canvas: SpacetimeEditorCanvas,
 };
 
-export type { SpacetimeController, SpacetimeEditorRootProps, SpacetimeEditorToolbarProps, SpacetimeEditorCanvasProsp };
+export type { SpacetimeController, SpacetimeEditorCanvasProsp, SpacetimeEditorRootProps, SpacetimeEditorToolbarProps };

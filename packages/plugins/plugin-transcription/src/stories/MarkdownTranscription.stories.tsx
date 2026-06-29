@@ -18,7 +18,7 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './markdown-transcription-harness';
+import { SAMPLE_CONTENT, DefaultStory, StoryGraphPlugin } from './markdown-transcription-harness';
 
 const meta = {
   title: 'plugins/plugin-transcription/stories/MarkdownTranscription',

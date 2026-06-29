@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry, Atom } from '@effect-atom/atom-react';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';

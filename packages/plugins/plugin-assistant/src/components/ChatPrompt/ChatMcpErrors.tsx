@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback } from 'react';
 
-import { Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, Message, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

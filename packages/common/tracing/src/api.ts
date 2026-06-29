@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, LifecycleState, Resource, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
+import { TRACE_SPAN_ATTRIBUTE, Context, LifecycleState, Resource } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';

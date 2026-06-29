@@ -11,7 +11,7 @@ import { Format } from '@dxos/echo/Format';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
-import { Connection, Connector, type ConnectorEntry, type CredentialForm } from '#types';
+import { type ConnectorEntry, type CredentialForm, Connection, Connector } from '#types';
 
 import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
 

@@ -13,10 +13,10 @@ import { meta } from '#meta';
 
 import {
   type MediaStreamRecorderProps,
-  type Transcriber as TranscriberType,
   type TranscriberProps,
-  type TranscriptMessageEnricher,
+  type Transcriber as TranscriberType,
   type TranscriptionManager as TranscriptionManagerType,
+  type TranscriptMessageEnricher,
 } from '../transcriber';
 import * as Settings$ from './Settings'; // eslint-disable-line
 

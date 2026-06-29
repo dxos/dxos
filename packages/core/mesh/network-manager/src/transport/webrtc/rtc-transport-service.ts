@@ -13,13 +13,13 @@ import {
   type BridgeService,
   type CloseRequest,
   type ConnectionRequest,
-  ConnectionState,
   type DataRequest,
   type DetailsRequest,
   type DetailsResponse,
   type SignalRequest,
   type StatsRequest,
   type StatsResponse,
+  ConnectionState,
 } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
 

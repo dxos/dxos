@@ -7,7 +7,7 @@ import '@babylonjs/loaders/glTF';
 
 import { SceneLoader } from '@babylonjs/core';
 import { type Mesh as BabylonMesh, VertexBuffer } from '@babylonjs/core';
-import type { ManifoldToplevel, Manifold } from 'manifold-3d';
+import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 
 import { log } from '@dxos/log';
 

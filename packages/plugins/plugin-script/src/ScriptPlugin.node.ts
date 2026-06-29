@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Script } from '@dxos/compute';
 
-import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Type, View, DXN } from '@dxos/echo';
+import { DXN, Type, View } from '@dxos/echo';
 
 import { meta } from '#meta';
 

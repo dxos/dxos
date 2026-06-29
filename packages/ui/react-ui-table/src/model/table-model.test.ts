@@ -12,8 +12,8 @@ import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/sc
 
 import { Table } from '../types';
 import {
-  TableModel,
   type TableModelProps,
+  TableModel,
   createDirectChangeCallback as createTableDirectChangeCallback,
 } from './table-model';
 

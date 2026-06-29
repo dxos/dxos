@@ -28,17 +28,17 @@ import { type Node } from '@dxos/app-graph';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import {
+  type ThemedClassName,
   Icon,
   IconButton,
   ScrollArea,
-  type ThemedClassName,
   Tooltip,
   toLocalizedString,
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
 import { DropIndicator } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
+import { type MenuItem, Menu } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';

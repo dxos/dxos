@@ -4,10 +4,10 @@
 
 // NOTE: Export * fails here.
 export {
-  type Credential,
   type Contact,
-  type Identity,
+  type Credential,
   type Halo,
+  type Identity,
   Device,
   DeviceKind,
   DeviceType,

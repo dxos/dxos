@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Relation, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';

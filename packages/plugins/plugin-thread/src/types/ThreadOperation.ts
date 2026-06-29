@@ -8,11 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Key, Type, DXN } from '@dxos/echo';
+import { DXN, Key, Type } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name
 // it in the emitted .d.ts for AppendChannelMessage.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Actor, Channel, type Person } from '@dxos/types';
+import { type Person, Actor, Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 

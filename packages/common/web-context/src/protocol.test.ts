@@ -5,11 +5,11 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import {
-  CONTEXT_REQUEST_EVENT,
   type ContextCallback,
-  ContextRequestEvent,
   type ContextType,
   type UnknownContext,
+  CONTEXT_REQUEST_EVENT,
+  ContextRequestEvent,
   createContext,
 } from './protocol';
 

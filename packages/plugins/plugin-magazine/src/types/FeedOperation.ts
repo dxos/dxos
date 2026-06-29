@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Ref, Registry } from '@dxos/echo';
+import { DXN, Database, Ref, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 

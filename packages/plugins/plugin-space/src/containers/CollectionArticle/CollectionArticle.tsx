@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Icon } from '@dxos/react-ui';
-import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
 

@@ -5,7 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, test } from 'vitest';
 
-import { Client, type Config } from '@dxos/client';
+import { type Config, Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';

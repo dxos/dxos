@@ -13,16 +13,16 @@ import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext } from '@dxos/react-ui';
-import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
-  Cursor,
   type EditorStateStore,
-  EditorView,
   type Extension,
-  InputModeExtensions,
   type PreviewOptions,
+  Cursor,
+  EditorView,
+  InputModeExtensions,
   createDataExtensions,
   decorateMarkdown,
   documentId,

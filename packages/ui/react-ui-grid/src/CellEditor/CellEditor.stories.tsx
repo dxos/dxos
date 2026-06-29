@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { CellEditor, type CellEditorProps, type EditorKeyEvent, editorKeys } from './CellEditor';
+import { type CellEditorProps, type EditorKeyEvent, CellEditor, editorKeys } from './CellEditor';
 
 const DefaultStory = (props: CellEditorProps) => {
   const [value, setValue] = useState(props.value || 'Edit me');

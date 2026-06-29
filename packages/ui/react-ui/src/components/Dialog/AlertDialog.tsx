@@ -12,11 +12,11 @@ import { type DialogSize } from '../../theme';
 import { type ThemedClassName } from '../../util';
 import { Column } from '../Column';
 import {
-  Dialog,
-  type DialogHeaderProps,
-  type DialogBodyProps,
   type DialogActionBarProps,
   type DialogActionIconButtonProps,
+  type DialogBodyProps,
+  type DialogHeaderProps,
+  Dialog,
 } from './Dialog';
 
 //
@@ -192,18 +192,18 @@ export const AlertDialog = {
 };
 
 export type {
-  AlertDialogRootProps,
-  AlertDialogTriggerProps,
-  AlertDialogPortalProps,
-  AlertDialogOverlayProps,
-  AlertDialogContentProps,
-  AlertDialogTitleProps,
-  AlertDialogDescriptionProps,
-  AlertDialogCancelProps,
-  AlertDialogActionProps,
-  // Re-export shared types.
-  DialogHeaderProps as AlertDialogHeaderProps,
-  DialogBodyProps as AlertDialogBodyProps,
   DialogActionBarProps as AlertDialogActionBarProps,
   DialogActionIconButtonProps as AlertDialogActionIconButtonProps,
+  AlertDialogActionProps,
+  DialogBodyProps as AlertDialogBodyProps,
+  AlertDialogCancelProps,
+  AlertDialogContentProps,
+  AlertDialogDescriptionProps,
+  // Re-export shared types.
+  DialogHeaderProps as AlertDialogHeaderProps,
+  AlertDialogOverlayProps,
+  AlertDialogPortalProps,
+  AlertDialogRootProps,
+  AlertDialogTitleProps,
+  AlertDialogTriggerProps,
 };

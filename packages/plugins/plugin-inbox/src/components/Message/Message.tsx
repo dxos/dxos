@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, Card, Icon } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
@@ -322,4 +322,4 @@ export const Message = {
   Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };
+export type { MessageBodyProps, MessageHeaderProps, MessageRootProps, MessageViewportProps };

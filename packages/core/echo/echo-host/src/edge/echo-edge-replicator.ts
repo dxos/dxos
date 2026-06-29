@@ -15,12 +15,12 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type AutomergeProtocolMessage,
-  DocumentCodec,
-  EdgeService,
   type ErrorProtocolMessage,
   type ExportBundleRequest,
   type ImportBundleRequest,
   type PeerId,
+  DocumentCodec,
+  EdgeService,
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {

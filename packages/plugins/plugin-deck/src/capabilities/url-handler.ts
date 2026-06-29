@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
+import { type StoredDeckState, DeckCapabilities, defaultDeck } from '#types';
 
 import { updateActiveDeck } from '../operations/helpers';
 import { deserializePlanks, serializePlanks, stripPlanks } from '../util';

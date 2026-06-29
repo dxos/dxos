@@ -5,10 +5,10 @@
 import React, { useCallback } from 'react';
 
 import {
+  type ToolbarRootProps,
   Input,
   Toolbar as NaturalToolbar,
   Tooltip,
-  type ToolbarRootProps,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';

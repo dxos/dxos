@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { FileCapabilities, FileOperation, File, MAX_FILE_SIZE, Settings, isAcceptedMimeType } from '../types';
+import { MAX_FILE_SIZE, File, FileCapabilities, FileOperation, Settings, isAcceptedMimeType } from '../types';
 
 export class UnsupportedFileTypeError extends Error {
   constructor(public readonly type: string) {

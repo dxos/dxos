@@ -11,7 +11,7 @@ import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { ScrollArea } from '../ScrollArea';
-import { Dialog, type DialogContentProps } from './Dialog';
+import { type DialogContentProps, Dialog } from './Dialog';
 
 type StoryArgs = Pick<DialogContentProps, 'size'> &
   Partial<{

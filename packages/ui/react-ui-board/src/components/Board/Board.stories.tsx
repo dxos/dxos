@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
+import { type BoardContentProps, type BoardController, type BoardRootProps, Board } from './Board';
 import { defaultGrid } from './defs';
 import { type BoardLayout } from './types';
 

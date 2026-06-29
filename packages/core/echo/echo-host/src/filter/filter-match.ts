@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EntityStructure, type QueryAST } from '@dxos/echo-protocol';
+import { type QueryAST, EntityStructure } from '@dxos/echo-protocol';
 import {
+  type ObjectJSON,
   ATTR_META,
   compareTypenameStrings,
   filterMatchEntity,
   filterMatchValue,
-  matchMetaKey,
   matchesTag,
-  type ObjectJSON,
+  matchMetaKey,
 } from '@dxos/echo/internal';
 import { EntityId, SpaceId } from '@dxos/keys';
 

@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
-import { Toolbar, type ToolbarProps } from '../Call';
+import { type ToolbarProps, Toolbar } from '../Call';
 import { VideoObject } from '../Media';
 import { ResponsivePanel } from '../ResponsiveGrid';
 

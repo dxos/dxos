@@ -16,7 +16,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { translations } from '#translations';
