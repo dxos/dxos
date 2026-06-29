@@ -26,13 +26,6 @@ import { TranscriptionCapabilities } from '#types';
 
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 
-// Recorder chunk interval (ms) shared by the live/file/mic stories. Per-story transcriber chunk
-// counts (transcribeAfterChunksAmount / prefixBufferChunksAmount) are intentionally distinct and
-// stay inline.
-export const RECORDER_INTERVAL_MS = 200;
-
-export const RECORDER_CONFIG = { interval: RECORDER_INTERVAL_MS } as const;
-
 //
 // Message model.
 //
