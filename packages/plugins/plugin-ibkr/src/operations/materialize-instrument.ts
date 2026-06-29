@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Query, Ref } from '@dxos/echo';
 
 import { TRADINGVIEW_SOURCE } from '../constants';
 import { mergeForeignKeys } from '../services';

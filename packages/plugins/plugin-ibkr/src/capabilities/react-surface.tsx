@@ -10,11 +10,11 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import {
+  InstrumentArticle,
+  InstrumentCard,
   PortfolioArticle,
   PortfolioProperties,
   PortfolioReportDetail,
-  InstrumentArticle,
-  InstrumentCard,
 } from '#containers';
 
 import { Ibkr } from '../types';

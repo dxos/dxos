@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { tickerSource, TRADINGVIEW_SOURCE } from '../constants';
+import { TRADINGVIEW_SOURCE, tickerSource } from '../constants';
 import { Ibkr } from '../types';
 
 export default Capability.makeModule(

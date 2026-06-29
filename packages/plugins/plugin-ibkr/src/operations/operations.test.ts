@@ -12,7 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { IBKR_SOURCE, tickerSource, TRADINGVIEW_SOURCE } from '../constants';
+import { IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
 import { Ibkr } from '../types';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
