@@ -493,9 +493,10 @@ const convertAssistantMessagePart: (
         // `role` and `data` are model-supplied; escape them so special characters cannot produce
         // malformed XML in the prompt history.
         return Prompt.makePart('text', {
-          text: block.data
-            ? `<surface role="${escapeXmlAttribute(block.role)}">${escapeXmlText(JSON.stringify(block.data))}</surface>`
-            : `<surface role="${escapeXmlAttribute(block.role)}" />`,
+          text:
+            block.data !== undefined
+              ? `<surface role="${escapeXmlAttribute(block.role)}">${escapeXmlText(JSON.stringify(block.data))}</surface>`
+              : `<surface role="${escapeXmlAttribute(block.role)}" />`,
         });
       case 'json':
         return Prompt.makePart('text', {
