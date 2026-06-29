@@ -78,7 +78,11 @@ describe('DiscordSource live crawl', () => {
   test.skipIf(!(token && channelId))(
     'crawls a real channel into the fact graph and surfaces topics',
     async () => {
-      const config: Type.Config = { channels: [channelId!], descendThreads: true };
+      // Real LLM extraction makes one call PER message, so bound the lookback (DISCORD_MAX_DAYS,
+      // default 1) to keep the run tractable; widen it for a deeper crawl. DISCORD_THREADS=0 skips threads.
+      const maxDays = Number(process.env.DISCORD_MAX_DAYS ?? 1);
+      const descendThreads = process.env.DISCORD_THREADS !== '0';
+      const config: Type.Config = { channels: [channelId!], descendThreads, seed: { maxDays } };
       const stages: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
       // Real LLM extraction (attributed S-P-O + valence) when an Anthropic key is set; otherwise the
@@ -91,7 +95,10 @@ describe('DiscordSource live crawl', () => {
 
       // Set DISCORD_LIST_FACTS=1 to dump every extracted fact after processing.
       const dumpFacts = Boolean(process.env.DISCORD_LIST_FACTS);
-      console.log(`\nExtractor: ${useRealLlm ? 'LLM (claude-haiku-4-5)' : 'deterministic (no LLM)'}`);
+      console.log(
+        `\nExtractor: ${useRealLlm ? 'LLM (claude-haiku-4-5)' : 'deterministic (no LLM)'}` +
+          `  ·  lookback ${maxDays}d  ·  threads ${descendThreads ? 'on' : 'off'}`,
+      );
 
       const { summary, agents, report, facts } = await EffectEx.runPromise(
         Effect.gen(function* () {
@@ -125,7 +132,8 @@ describe('DiscordSource live crawl', () => {
         expect(report.factCount).toBeGreaterThan(0);
       }
     },
-    60_000,
+    // Real LLM extraction is one call per message; allow headroom (tune lookback to fit).
+    300_000,
   );
 });
 
