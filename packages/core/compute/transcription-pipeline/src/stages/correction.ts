@@ -21,7 +21,12 @@ export const correctText = (text: string): string => {
     return trimmed;
   }
   const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-  return /[.!?]$/.test(capitalized) ? capitalized : `${capitalized}.`;
+  if (/[.!?]$/.test(capitalized)) {
+    return capitalized;
+  }
+  // Replace a trailing non-terminal mark (comma/semicolon/colon) with the period rather than
+  // appending — a Whisper fragment like "Years," would otherwise become "Years,.".
+  return `${capitalized.replace(/[,;:]+$/, '')}.`;
 };
 
 /**

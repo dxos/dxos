@@ -26,4 +26,38 @@ describe('runLivePipeline', () => {
     await live.end();
     expect(writes).toHaveLength(0);
   });
+
+  // Headless equivalent of the file-transcription story: Whisper-style fragments (cut mid-sentence
+  // across chunk windows) streamed through correction. Guards the deterministic correction output —
+  // notably that a fragment ending in a comma does not become "Years,.".
+  test('corrects a fragmented transcript without punctuation artifacts', async ({ expect }) => {
+    const { commit, writes } = captureCommit();
+    const live = runLivePipeline({ stages: [makeCorrectionStage()], commit });
+    const fragments = [
+      "I've been living in London for about",
+      'Years,',
+      'maybe a bit longer',
+      "I've lived kind of mostly in",
+      'and east London, so I moved to Camden originally',
+      'and now I live in Hackney, which is probably',
+      'the kind of trendiest area of London',
+    ];
+    for (const text of fragments) {
+      live.block({ _tag: 'transcript', started: 's', text });
+    }
+    await live.end();
+
+    const corrected = writes
+      .flatMap((write) => write.blockUpdates ?? [])
+      .map((update) => update.corrected)
+      .filter((text): text is string => typeof text === 'string');
+
+    expect(corrected.length).toBeGreaterThan(0);
+    for (const text of corrected) {
+      // Every corrected block ends with terminal punctuation and never a "comma + period" artifact.
+      expect(text).toMatch(/[.!?]$/);
+      expect(text).not.toMatch(/[,;:]\.$/);
+    }
+    expect(corrected).toContain('Years.');
+  });
 });
