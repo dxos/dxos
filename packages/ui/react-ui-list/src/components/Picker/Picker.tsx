@@ -15,8 +15,8 @@ import React, {
   type ComponentPropsWithRef,
   type ElementType,
   type KeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
   type PropsWithChildren,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -29,12 +29,15 @@ import React, {
 import { type Density, type Elevation, Input, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { listTheme } from '../List.theme';
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,
   usePickerInputContext,
   usePickerItemContext,
 } from './context';
+
+const styles = listTheme.styles();
 
 type ItemData = {
   element: HTMLElement;
@@ -46,20 +49,33 @@ type ItemData = {
 // Root
 //
 
-type PickerRootProps = PropsWithChildren<{}>;
+type PickerRootProps = PropsWithChildren<{
+  /**
+   * When the item set changes, snap the highlight back to the first item (command-palette behavior),
+   * instead of only re-selecting when the current selection disappears. Use for type-to-filter lists so
+   * the top result stays highlighted as results update. Does not fire on keyboard navigation (which
+   * changes the selection, not the item set). Defaults to false.
+   */
+  resetSelectionOnChange?: boolean;
+}>;
 
-const PickerRoot = ({ children }: PickerRootProps) => {
+const PickerRoot = ({ children, resetSelectionOnChange = false }: PickerRootProps) => {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
   const itemsRef = useRef<Map<string, ItemData>>(new Map());
   // Bumped on every (un)register to retrigger auto-select.
   const [itemVersion, setItemVersion] = useState(0);
+  // Tracks the last-seen item set so a reset fires only when items change, not on selection change.
+  const prevItemVersionRef = useRef(itemVersion);
 
-  // Auto-select first non-disabled item when the current selection is
-  // gone or disabled.
+  // Auto-select the first non-disabled item when the current selection is gone or disabled — or, when
+  // `resetSelectionOnChange`, whenever the item set itself changes.
   useEffect(() => {
+    const itemsChanged = prevItemVersionRef.current !== itemVersion;
+    prevItemVersionRef.current = itemVersion;
+
     const current = selectedValue !== undefined ? itemsRef.current.get(selectedValue) : undefined;
     const isValid = current !== undefined && !current.disabled;
-    if (!isValid && itemsRef.current.size > 0) {
+    if ((!isValid || (resetSelectionOnChange && itemsChanged)) && itemsRef.current.size > 0) {
       const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
       if (entries.length > 0) {
         entries.sort(([, a], [, b]) => {
@@ -80,7 +96,7 @@ const PickerRoot = ({ children }: PickerRootProps) => {
         setSelectedValue(undefined);
       }
     }
-  }, [itemVersion, selectedValue]);
+  }, [itemVersion, selectedValue, resetSelectionOnChange]);
 
   const registerItem = useCallback(
     (value: string, element: HTMLElement | null, onSelect: (() => void) | undefined, disabled?: boolean) => {
@@ -321,8 +337,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
     const Comp: ElementType = asChild ? Slot : 'div';
 
-    // Padding follows `--gutter` to align with sibling `Column.Center`
-    // content; falls back to `0.75rem` when not nested under `Column.Root`.
     return (
       <Comp
         {...props}
@@ -342,11 +356,7 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         data-value={value}
         // Browser focus stays on the input; highlight is via `aria-selected`.
         tabIndex={-1}
-        className={mx(
-          'dx-hover dx-selected px-[var(--gutter,0.75rem)] py-1 cursor-pointer select-none',
-          disabled && 'opacity-50 cursor-not-allowed',
-          classNames,
-        )}
+        className={styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed', classNames) })}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
       >
@@ -364,6 +374,6 @@ export const Picker = {
   Item: PickerItem,
 };
 
-export type { PickerRootProps, PickerInputProps, PickerItemProps };
+export type { PickerInputProps, PickerItemProps, PickerRootProps };
 
 export { usePickerInputContext, usePickerItemContext } from './context';

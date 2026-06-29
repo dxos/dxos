@@ -15,12 +15,12 @@ import { TaskList } from './TaskList';
 const SUB_AGENT_PID = Process.ID.make('cf8f7243-5b1d-4902-b158-70d9107d5f43');
 const traceMessages = (subAgentFixture as unknown as Trace.Message[]).slice();
 
-type DefaultStoryProps = {
+type StoryArgs = {
   tasks?: Omit<Plan.Task, 'id'>[];
   traceMessages?: readonly Trace.Message[];
 };
 
-const DefaultStory = ({ tasks = [], traceMessages: traceMessagesProp }: DefaultStoryProps) => {
+const DefaultStory = ({ tasks = [], traceMessages: traceMessagesProp }: StoryArgs) => {
   const plan = React.useMemo(() => Plan.makePlan({ tasks }), [tasks]);
   return <TaskList plan={plan} traceMessages={traceMessagesProp} />;
 };

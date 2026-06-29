@@ -13,9 +13,9 @@ import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, type ActionGraphProps, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { RoutineForm, MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '#components';
+import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon, RoutineForm } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 
@@ -188,7 +188,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
-        <Panel.Toolbar className='bg-toolbar-surface'>
+        <Panel.Toolbar>
           <Menu.Toolbar className='dx-document' />
         </Panel.Toolbar>
         <Panel.Content asChild className='pt-trim-md'>

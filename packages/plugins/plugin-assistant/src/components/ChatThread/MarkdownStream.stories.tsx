@@ -70,7 +70,7 @@ const sampleCallAndResultBlocks = (toolCallId: string, index: number): ContentBl
   ];
 };
 
-type DefaultStoryProps = MarkdownStreamProps & {
+type StoryArgs = MarkdownStreamProps & {
   initialContent?: string;
   streamOptions?: TextStreamOptions;
   /**
@@ -87,7 +87,7 @@ const DefaultStory = ({
   debug: debugProp,
   seedToolWidgetsFromMarkdown = false,
   ...props
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [debug, setDebug] = useState(debugProp);

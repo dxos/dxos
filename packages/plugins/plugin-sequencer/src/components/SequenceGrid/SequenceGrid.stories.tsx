@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext, Registry } from '@effect-atom/atom-react';
+import { Registry, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -36,11 +36,11 @@ const sampleNotes = (): Note.Note[] => {
   return notes;
 };
 
-type StoryProps = {
+type StoryArgs = {
   playback: boolean;
 };
 
-const DefaultStory = ({ playback }: StoryProps) => {
+const DefaultStory = ({ playback }: StoryArgs) => {
   const [sequence, setSequence] = useState<Sequence.Sequence>(() => ({
     id: 'seq-1',
     trackId: sampleTrack.id,

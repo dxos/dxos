@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ReadEmail> = InboxOpe
     Effect.fn(function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
-      const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+      const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const content = Function.pipe(
         objects,
         Array.reverse,

@@ -9,7 +9,7 @@ import * as Tone from 'tone';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { createDrum, Sound } from './sounds';
+import { Sound, createDrum } from './sounds';
 
 const createPattern = (): Sound => {
   const kick = createDrum('kick');

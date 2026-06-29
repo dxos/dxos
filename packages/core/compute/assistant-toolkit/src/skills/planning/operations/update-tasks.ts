@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Plan, Chat } from '../../../types';
+import { Chat, Plan } from '../../../types';
 import { UpdateTasks } from './definitions';
 
 /**

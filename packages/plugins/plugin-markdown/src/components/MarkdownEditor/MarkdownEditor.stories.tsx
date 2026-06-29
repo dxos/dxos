@@ -34,9 +34,9 @@ const SKETCH_CONTENT = new SketchBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .build();
 
-type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
+type StoryArgs = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const handleLinkQuery = useLinkQuery(space?.db, doc);
@@ -53,7 +53,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
             {/* Mirror MarkdownArticle: Panel.Toolbar/Content are NOT `asChild` (MarkdownEditor.Toolbar is not
                 composable, so asChild wraps it in a dx-slot-warning div that breaks the grid-area layout). */}
             <Panel.Root role='article'>
-              <Panel.Toolbar classNames='bg-toolbar-surface'>
+              <Panel.Toolbar>
                 <MarkdownEditor.Toolbar classNames='dx-document' />
               </Panel.Toolbar>
               <Panel.Content>

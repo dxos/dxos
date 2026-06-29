@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 
 import { IBKR_FEED_KIND } from '../constants';
 

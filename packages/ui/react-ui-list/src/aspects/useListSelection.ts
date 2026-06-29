@@ -46,7 +46,7 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  * controllable value semantics; emits `aria-selected` + click/focus handlers per row.
  *
  * `single` mode: at most one selected id, selection follows focus by default. Matches the
- * existing `RowList` behaviour and the WAI-ARIA listbox single-select pattern.
+ * `Listbox` behaviour and the WAI-ARIA listbox single-select pattern.
  *
  * `multi` mode: tracks a `Set<string>`. Selection does NOT follow focus by default — multi
  * select usually pairs with an explicit toggle affordance (checkbox or keyboard Space) rather

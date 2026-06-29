@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
-import { AlarmSkill, Chat, DatabaseSkill, AgentWizardSkill } from '@dxos/assistant-toolkit';
-import { Skill, Operation } from '@dxos/compute';
+import { AgentWizardSkill, AlarmSkill, Chat, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';

@@ -17,10 +17,32 @@ import { type OnboardingOptions } from './capabilities';
 const PERSONAL_SPACE_ICON = 'house-line';
 const PERSONAL_SPACE_ICON_HUE = 'violet';
 
+const WELCOME_DOCUMENT_NAME = 'Welcome to Composer';
+
+const WELCOME_CONTENT = `# Welcome to Composer
+
+Composer is a **local-first workspace** — documents, tables, sketches, inboxes, and more, all in one place and all yours. Your data lives on your device and syncs directly to collaborators without going through a server.
+
+## Getting started
+
+- **Create something** — use the **+** button in the sidebar to add a document, table, sketch, or any other content type.
+- **Invite someone** — click **Share** in the top bar to invite a collaborator to this space. You'll edit together in real time.
+- **Install plugins** — open **Settings** to add more content types (kanban boards, spreadsheets, calendars, and more).
+
+## This is your Personal space
+
+Everything in this space is private to you until you choose to share it. Create spaces for teams, projects, or topics — each with its own members and content.
+
+---
+
+Questions or feedback? Join the community on [Discord](https://dxos.org/discord) or browse the [documentation](https://docs.dxos.org).
+`;
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ generateExemplarSpace }: OnboardingOptions) {
-    const { Annotation, Obj } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const {
       AppAnnotation: { RootCollectionAnnotation },
       AppSpace: { getPersonalSpace },
@@ -55,6 +77,13 @@ export default Capability.makeModule(
           ),
         ),
       );
+
+      // Add a welcome document to the personal space root collection.
+      const welcomeDoc = Markdown.make({ name: WELCOME_DOCUMENT_NAME, content: WELCOME_CONTENT });
+      personalSpace.db.add(welcomeDoc);
+      Obj.update(personalRootCollection, (personalRootCollection) => {
+        personalRootCollection.objects.push(Ref.make(welcomeDoc));
+      });
     }
 
     if (generateExemplarSpace) {

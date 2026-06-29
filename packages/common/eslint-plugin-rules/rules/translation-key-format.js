@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 /**
  * Valid type suffixes for translation keys.

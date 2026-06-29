@@ -33,7 +33,7 @@ type VariantMap = {
 
 type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
 
-type DefaultStoryProps = Partial<{
+type StoryArgs = Partial<{
   kind: keyof VariantMap;
   label: string;
   labelVisuallyHidden: boolean;
@@ -52,7 +52,7 @@ const DefaultStory = ({
   validationValence,
   validationMessage,
   ...props
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
@@ -91,7 +91,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<DefaultStoryProps & Variant>;
+type Story = StoryObj<StoryArgs & Variant>;
 
 export const Density: Story = {
   render: () => (

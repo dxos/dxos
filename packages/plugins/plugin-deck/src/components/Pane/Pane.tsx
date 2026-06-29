@@ -175,4 +175,4 @@ export const Pane = {
   Content: PaneContent,
 };
 
-export type { PaneRootProps, PaneTitleProps, PaneTabsProps };
+export type { PaneRootProps, PaneTabsProps, PaneTitleProps };

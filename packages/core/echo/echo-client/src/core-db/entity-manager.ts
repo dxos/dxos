@@ -16,7 +16,7 @@ import {
   runInContextAsync,
 } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
 import {
@@ -26,7 +26,7 @@ import {
   SpaceDocVersion,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { batchEvents, type RefResolver, type RefResolverRequest } from '@dxos/echo/internal';
+import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,7 +34,7 @@ import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, ComplexSet, deepMapValues } from '@dxos/util';
+import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';

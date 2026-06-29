@@ -14,9 +14,9 @@ import { Map } from '#types';
 import { viewMarkerProvider } from '../../capabilities/marker-provider';
 import { MapArticle } from './MapArticle';
 
-type DefaultStoryProps = {};
+type StoryArgs = {};
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const map = useMemo(() => Map.make({ name: 'Story map' }), []);
   return <MapArticle role='article' attendableId='story' subject={map} provider={viewMarkerProvider} />;
 };

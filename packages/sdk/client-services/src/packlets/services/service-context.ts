@@ -15,9 +15,9 @@ import {
   EchoHost,
   type EdgeAutomergeReplicator,
   MeshEchoReplicator,
-  runSqliteHealthCheck,
-  SqliteMetadataStore,
   SpaceManager,
+  SqliteMetadataStore,
+  runSqliteHealthCheck,
   valueEncoding,
 } from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';

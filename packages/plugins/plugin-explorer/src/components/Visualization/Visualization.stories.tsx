@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SpaceGraphModel, type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
+import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type VisualizationVariantId } from './variants';
@@ -77,9 +77,9 @@ const EDGES: SpaceGraphEdge[] = [
   ),
 ];
 
-type StoryProps = { variant: VisualizationVariantId; focus?: string };
+type StoryArgs = { variant: VisualizationVariantId; focus?: string };
 
-const DefaultStory = ({ variant, focus }: StoryProps) => {
+const DefaultStory = ({ variant, focus }: StoryArgs) => {
   const model = useMemo(() => new SpaceGraphModel(Registry.make(), { nodes: NODES, edges: EDGES }), []);
   return (
     <Visualization.Root classNames='bg-base-surface' model={model} variant={variant} focus={focus}>
@@ -88,7 +88,7 @@ const DefaultStory = ({ variant, focus }: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-explorer/components/Visualization',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

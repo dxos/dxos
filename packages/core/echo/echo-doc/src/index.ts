@@ -5,9 +5,9 @@
 export * as Doc from './Doc';
 export { Edit, applyEdits } from './edits';
 export {
+  AbstractStoreAdapter,
   type BaseElement,
   type Batch,
-  type StoreAdapterOptions,
-  AbstractStoreAdapter,
   Modified,
+  type StoreAdapterOptions,
 } from './store-adapter';

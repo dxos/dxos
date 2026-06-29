@@ -11,8 +11,9 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -54,15 +55,17 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
               <Form.Group>
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
-                  <List>
-                    {devices.map((device: Device) => (
-                      <DeviceListItem
-                        key={device.deviceKey.toHex()}
-                        device={device}
-                        connectionState={connectionState}
-                      />
-                    ))}
-                  </List>
+                  <Listbox.Root>
+                    <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
+                      {devices.map((device: Device) => (
+                        <DeviceListItem
+                          key={device.deviceKey.toHex()}
+                          device={device}
+                          connectionState={connectionState}
+                        />
+                      ))}
+                    </Listbox.Content>
+                  </Listbox.Root>
                 </div>
                 {createInvitationUrl && (
                   <div role='group' className='min-w-0'>

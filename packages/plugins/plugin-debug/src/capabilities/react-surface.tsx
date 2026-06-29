@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
@@ -38,12 +39,14 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Annotation, Collection, Feed, Obj } from '@dxos/echo';
+import { Annotation, Collection, Entity, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 import { Position } from '@dxos/util';
@@ -60,7 +63,7 @@ import {
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, type Settings, Devtools } from '#types';
+import { DebugCapabilities, Devtools, type Settings } from '#types';
 
 const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
 
@@ -81,6 +84,46 @@ const isGraphDebug = (data: any): data is GraphDebug => {
   return (
     graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
   );
+};
+
+/** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
+const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {
+  const client = useClient();
+  const spaceSettings = useAtomCapability(SpaceCapabilities.Settings);
+  const showHidden = spaceSettings?.showHidden ?? false;
+
+  const allTypes = useAtomValue(useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]));
+
+  const hiddenTypenames = useMemo(() => {
+    const result = new Set<string>();
+    for (const typeEntity of allTypes) {
+      const schema = Type.getSchema(typeEntity);
+      if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+        result.add(Type.getTypename(typeEntity));
+      }
+    }
+    return result;
+  }, [allTypes]);
+
+  const onOpen = useCallback(
+    (object: Obj.Unknown) => {
+      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
+    },
+    [invokePromise],
+  );
+
+  const canOpen = useCallback(
+    (entity: Entity.Snapshot) => {
+      if (showHidden) {
+        return true;
+      }
+      const typename = Entity.getTypename(entity);
+      return !hiddenTypenames.has(typename ?? '');
+    },
+    [showHidden, hiddenTypenames],
+  );
+
+  return { onOpen, canOpen };
 };
 
 type ReactSurfaceOptions = {
@@ -183,7 +226,11 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
+        component: ({ role, data }) => {
+          const { invokePromise } = useOperationInvoker();
+          const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
+          return <DebugObjectPanel role={role} companionTo={data.companionTo} onOpen={onOpen} canOpen={canOpen} />;
+        },
       }),
       Surface.create({
         id: 'devtoolsOverview',
@@ -195,11 +242,13 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: () => {
           const space = useActiveSpace();
+          const { invokePromise } = useOperationInvoker();
+          const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
           if (!space) {
             return null;
           }
 
-          return <DebugSpaceObjectsPanel space={space} />;
+          return <DebugSpaceObjectsPanel space={space} onOpen={onOpen} canOpen={canOpen} />;
         },
       }),
 

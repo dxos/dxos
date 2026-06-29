@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -181,6 +181,62 @@ export const MaterializeGmailTarget = Operation.make({
   input: MaterializeTargetInput,
   output: MaterializeTargetOutput,
 });
+
+export const JmapSync = Operation.make({
+  meta: {
+    key: makeKey('jmapSync'),
+    name: 'Sync JMAP',
+    description: 'Sync emails from a JMAP server (e.g. Fastmail) to the mailbox feed.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
+      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
+    }),
+  }),
+  output: Schema.Struct({
+    newMessages: Schema.Number,
+  }),
+  // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
+  // HTTP client and JMAP credentials are provided by the handler from the connection.
+  services: [Capability.Service, Database.Service, Trace.TraceService],
+}).pipe(Operation.visible);
+
+/**
+ * Eagerly materializes the local Mailbox bound to a JMAP connection so a {@link SyncBinding} can be
+ * created. JMAP is a single-target connector (the account inbox), so a fresh Mailbox is always
+ * created; the connection's `accessToken.account` seeds the default name. Mirrors
+ * {@link MaterializeGmailTarget}.
+ */
+export const MaterializeJmapTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeJmapTarget'),
+    name: 'Materialize JMAP Target',
+    description: 'Create the local Mailbox bound to a JMAP connection.',
+    icon: 'ph--envelope--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
+});
+
+export const JmapSend = Operation.make({
+  meta: {
+    key: makeKey('jmapSend'),
+    name: 'Send JMAP',
+    description: 'Send an email via a JMAP server.',
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  input: Schema.Struct({
+    message: Type.getSchema(Message.Message),
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection to source JMAP credentials from.',
+    }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String,
+    threadId: Schema.String,
+  }),
+}).pipe(Operation.visible);
 
 export const GoogleCalendarSync = Operation.make({
   meta: {
@@ -489,9 +545,8 @@ export const ExtractSummaryFromMessage = Operation.make({
 
 export const ExtractMessage = Operation.make({
   meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
-  services: [Capability.Service, AiService.AiService],
+  services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    db: Database.Database,
     source: Obj.Unknown,
     extractorId: Schema.optional(Schema.String),
   }),
@@ -500,5 +555,39 @@ export const ExtractMessage = Operation.make({
     created: Schema.Number,
     updated: Schema.Number,
     summary: Schema.optional(Schema.String),
+  }),
+});
+
+/** Default parallel extraction limit for {@link ExtractMailbox}. */
+export const DEFAULT_EXTRACT_MAILBOX_CONCURRENCY = 5;
+
+export const ExtractMailbox = Operation.make({
+  meta: {
+    key: makeKey('extractMailbox'),
+    name: 'Extract Mailbox',
+    description: 'Runs a selected extractor over every message in a mailbox feed.',
+    icon: 'ph--magic-wand--regular',
+  },
+  services: [Capability.Service, AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are processed.',
+    }),
+    extractorId: Schema.String.annotations({
+      description: 'Registered ObjectExtractor id to run on each message.',
+    }),
+    concurrency: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Maximum number of messages to extract in parallel.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    extractorId: Schema.String,
+    processed: Schema.Number,
+    succeeded: Schema.Number,
+    failed: Schema.Number,
+    created: Schema.Number,
+    updated: Schema.Number,
   }),
 });

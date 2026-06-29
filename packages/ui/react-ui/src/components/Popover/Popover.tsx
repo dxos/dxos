@@ -21,8 +21,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { hideOthers } from 'aria-hidden';
 import React, {
-  type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type ComponentRef,
   type FC,
   type ReactNode,
@@ -36,7 +36,7 @@ import React, {
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
-import { useSafeCollisionPadding, useElevationContext, useThemeContext } from '../../hooks';
+import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 //
@@ -611,14 +611,14 @@ export const Popover = {
 export { createPopoverScope };
 
 export type {
-  PopoverRootProps,
   PopoverAnchorProps,
-  PopoverTriggerProps,
-  PopoverVirtualTriggerProps,
-  PopoverPortalProps,
-  PopoverContentProps,
-  PopoverCloseProps,
   PopoverArrowProps,
-  PopoverViewportProps,
+  PopoverCloseProps,
   PopoverContentInteractOutsideEvent,
+  PopoverContentProps,
+  PopoverPortalProps,
+  PopoverRootProps,
+  PopoverTriggerProps,
+  PopoverViewportProps,
+  PopoverVirtualTriggerProps,
 };

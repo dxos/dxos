@@ -21,7 +21,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
-import { type ModuleProps, ContextModule } from '../components';
+import { ContextModule, type ModuleProps } from '../components';
 
 const moduleClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden min-h-0';
 

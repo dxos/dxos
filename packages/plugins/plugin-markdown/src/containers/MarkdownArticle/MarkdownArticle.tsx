@@ -19,8 +19,8 @@ import { Text } from '@dxos/schema';
 
 import {
   MarkdownEditor,
-  MarkdownEditorProvider,
   type MarkdownEditorContentProps,
+  MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';
@@ -129,7 +129,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           <Editor.Root {...editorRootProps}>
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Panel.Toolbar classNames='bg-toolbar-surface'>
+                <Panel.Toolbar>
                   <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
                 </Panel.Toolbar>
               )}
