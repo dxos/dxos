@@ -136,7 +136,7 @@ const PreviewBlockCard = ({ dxn, label }: XmlWidgetProps<{ dxn: string; label: s
     <Card.Root>
       <Card.Header>
         <Card.Block>
-          <Icon icon='ph--circle--regular' />
+          <Icon icon='ph--arrow-square-up--regular' />
         </Card.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>

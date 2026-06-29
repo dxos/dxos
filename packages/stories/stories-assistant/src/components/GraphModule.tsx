@@ -11,7 +11,7 @@ import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -79,31 +79,37 @@ export const GraphModule = ({ space }: ModuleProps) => {
   );
 };
 
-export const SearchBar = ({ space, onSubmit }: ModuleProps & Pick<ChatEditorProps, 'onSubmit'>) => {
-  const { state: flushState, handleFlush } = useFlush(space);
-  const editorRef = useRef<EditorController>(null);
+type SearchBarProps = ModuleProps & Pick<ChatEditorProps, 'onSubmit'>;
 
-  return (
-    <Toolbar.Root>
-      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
-      <Toolbar.IconButton
-        icon='ph--magnifying-glass--regular'
-        iconOnly
-        label='Search'
-        onClick={() => onSubmit?.(editorRef.current?.view?.state.doc.toString() ?? '')}
-      />
-      <Toolbar.IconButton
-        disabled={flushState === 'flushing'}
-        icon={Match.value(flushState).pipe(
-          Match.when('idle', () => 'ph--floppy-disk--regular'),
-          Match.when('flushing', () => 'ph--spinner--regular'),
-          Match.when('flushed', () => 'ph--check--regular'),
-          Match.exhaustive,
-        )}
-        iconOnly
-        label='flush'
-        onClick={handleFlush}
-      />
-    </Toolbar.Root>
-  );
-};
+export const SearchBar = composable<HTMLDivElement, SearchBarProps>(
+  ({ space, onSubmit, ...props }, forwardedRef) => {
+    const { state: flushState, handleFlush } = useFlush(space);
+    const editorRef = useRef<EditorController>(null);
+
+    return (
+      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+        <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
+        <Toolbar.IconButton
+          icon='ph--magnifying-glass--regular'
+          iconOnly
+          label='Search'
+          onClick={() => onSubmit?.(editorRef.current?.view?.state.doc.toString() ?? '')}
+        />
+        <Toolbar.IconButton
+          disabled={flushState === 'flushing'}
+          icon={Match.value(flushState).pipe(
+            Match.when('idle', () => 'ph--floppy-disk--regular'),
+            Match.when('flushing', () => 'ph--spinner--regular'),
+            Match.when('flushed', () => 'ph--check--regular'),
+            Match.exhaustive,
+          )}
+          iconOnly
+          label='flush'
+          onClick={handleFlush}
+        />
+      </Toolbar.Root>
+    );
+  },
+);
+
+SearchBar.displayName = 'SearchBar';
