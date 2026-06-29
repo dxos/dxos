@@ -435,10 +435,10 @@ export class DataSpace {
           subject: controlFeed.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.key,
-            deviceKey: this._signingContext.deviceKey,
-            identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            'spaceKey': this.key,
+            'deviceKey': this._signingContext.deviceKey,
+            'identityKey': this._signingContext.identityKey,
+            'designation': AdmittedFeed.Designation.CONTROL,
           },
         }),
       );
@@ -455,10 +455,10 @@ export class DataSpace {
           subject: dataFeed.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            spaceKey: this.key,
-            deviceKey: this._signingContext.deviceKey,
-            identityKey: this._signingContext.identityKey,
-            designation: AdmittedFeed.Designation.DATA,
+            'spaceKey': this.key,
+            'deviceKey': this._signingContext.deviceKey,
+            'identityKey': this._signingContext.identityKey,
+            'designation': AdmittedFeed.Designation.DATA,
           },
         }),
       );

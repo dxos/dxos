@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
-  AnchorInlineWidget,
+  AnchorWidget,
   type Extension,
   type ThemeExtensionsOptions,
   type XmlWidgetProps,
@@ -27,7 +27,7 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
     block: false,
     urlSchemes: ['dxn:', 'echo:'],
     factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-      typeof label === 'string' && typeof dxn === 'string' ? new AnchorInlineWidget(label, dxn) : null,
+      typeof label === 'string' && typeof dxn === 'string' ? new AnchorWidget(label, dxn) : null,
   },
 };
 

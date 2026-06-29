@@ -5,10 +5,10 @@
 import { EditorView, WidgetType } from '@codemirror/view';
 
 /**
- * Inline widget for echo/dxn links.
- *  [Label](echo:/123)
+ * Inline widget for echo/dxn links (e.g., `[Label](echo:/123)`).
+ * The <dx-anchor> tag is a web component that renders a link chip and popover.
  */
-export class AnchorInlineWidget extends WidgetType {
+export class AnchorWidget extends WidgetType {
   constructor(
     readonly _label: string,
     readonly _dxn: string,

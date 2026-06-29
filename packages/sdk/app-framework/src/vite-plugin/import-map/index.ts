@@ -130,7 +130,7 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   'solid-js': new Set(['web/storage']),
   // `effect` publishes `./.index` for bundler internals — maps to `effect/.index`, which Vite
   // often cannot resolve for the import map and is not part of the plugin-facing surface.
-  effect: new Set(['.index']),
+  'effect': new Set(['.index']),
 };
 
 /**
