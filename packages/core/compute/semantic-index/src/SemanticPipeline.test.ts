@@ -7,11 +7,38 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { readFileSync } from 'node:fs';
 
 import { SemanticIndexError } from './errors';
-import { SemanticPipeline, extractFacts } from './SemanticPipeline';
+import { type ExtractDocument, SemanticPipeline, extractFacts } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
+
+// Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
+type FixtureMessage = {
+  id: string;
+  created?: string;
+  sender?: { name?: string };
+  blocks?: Array<{ _tag: string; text?: string }>;
+  '@meta'?: { keys?: Array<{ id?: string }> };
+};
+
+const loadDiscordDocs = (): ExtractDocument[] => {
+  const { messages = [] }: { messages?: FixtureMessage[] } = JSON.parse(
+    readFileSync(new URL('./testing/discord-messages.json', import.meta.url), 'utf8'),
+  );
+  return messages
+    .map((message): ExtractDocument => {
+      const text = (message.blocks ?? [])
+        .filter((block) => block._tag === 'text' && block.text)
+        .map((block) => block.text)
+        .join('\n')
+        .trim();
+      const key = message['@meta']?.keys?.[0]?.id ?? message.id;
+      return { text, source: `discord:${key}`, date: message.created, author: message.sender?.name };
+    })
+    .filter((doc) => doc.text.length > 0);
+};
 
 const LLM_OUTPUT = {
   facts: [
