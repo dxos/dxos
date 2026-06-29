@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { SchemaId } from '../types';
 
@@ -68,8 +67,13 @@ export class SchemaValidator {
           getProperty([...propertyPath.slice(0, i), propertyName]),
         );
         if (propertyType == null) {
-          log.warn('unknown property', { path: propertyPath, property: propertyName });
-          continue;
+          const indexSignatureType = getIndexSignatureValueType(schema.ast);
+          if (indexSignatureType != null) {
+            schema = Schema.make(indexSignatureType).annotations(indexSignatureType.annotations);
+            continue;
+          }
+
+          throw new TypeError(`Unknown property: ${formatPropertyPath([...propertyPath.slice(0, i), propertyName])}`);
         }
 
         schema = Schema.make(propertyType).annotations(propertyType.annotations);
@@ -79,9 +83,99 @@ export class SchemaValidator {
     return schema;
   }
 
+  /**
+   * Rejects properties not declared on the schema. Types with index signatures allow extra keys.
+   */
+  public static assertExactProperties(
+    schema: Schema.Schema.AnyNoContext,
+    value: unknown,
+    getProperty: (path: KeyPath) => unknown = () => undefined,
+    path: KeyPath = [],
+  ): void {
+    if (!isPlainRecord(value)) {
+      return;
+    }
+
+    const typeLiteral = resolveTypeLiteral(schema.ast, (propertyName) => getProperty([...path, propertyName]));
+    if (typeLiteral == null) {
+      return;
+    }
+
+    const propertySignatures = SchemaAST.getPropertySignatures(typeLiteral);
+    const allowedKeys = new Set(propertySignatures.map((property) => String(property.name)));
+    const indexSignatureType = typeLiteral.indexSignatures[0]?.type;
+
+    for (const key of Object.keys(value)) {
+      const propertyPath = [...path, key];
+      if (!allowedKeys.has(key)) {
+        if (indexSignatureType == null) {
+          throw new TypeError(`Unknown property: ${formatPropertyPath(propertyPath)}`);
+        }
+
+        const indexSchema = Schema.make(indexSignatureType).annotations(indexSignatureType.annotations);
+        this.assertExactProperties(indexSchema, value[key], getProperty, propertyPath);
+        continue;
+      }
+
+      const propertySignature = propertySignatures.find((property) => String(property.name) === key);
+      invariant(propertySignature, 'Property signature must exist.');
+      const propertySchema = Schema.make(propertySignature.type).annotations(propertySignature.type.annotations);
+      this.assertExactProperties(propertySchema, value[key], getProperty, propertyPath);
+    }
+  }
+
+  public static getIndexedElementSchema(
+    schema: Schema.Schema.AnyNoContext,
+    index: number | string,
+  ): Schema.Schema.AnyNoContext | null {
+    const arrayAst = unwrapArray(schema.ast);
+    if (arrayAst != null) {
+      return getArrayElementSchema(arrayAst, index);
+    }
+
+    const unionAst = unwrapAst(
+      schema.ast,
+      (candidate) => SchemaAST.isUnion(candidate) && candidate.types.some((member) => unwrapArray(member) != null),
+    );
+    if (unionAst != null && SchemaAST.isUnion(unionAst)) {
+      for (const member of unionAst.types) {
+        const memberArrayAst = unwrapArray(member);
+        if (memberArrayAst != null) {
+          return getArrayElementSchema(memberArrayAst, index);
+        }
+      }
+    }
+
+    return null;
+  }
+
   public static getTargetPropertySchema(target: any, prop: string | symbol): Schema.Schema.AnyNoContext {
     const schema: Schema.Schema.AnyNoContext | undefined = (target as any)[SchemaId];
     invariant(schema, 'target has no schema');
+
+    if (Array.isArray(target)) {
+      if (prop === 'length') {
+        return Schema.Number;
+      }
+
+      const indexedSchema = this.getIndexedElementSchema(schema, prop);
+      if (indexedSchema != null) {
+        return indexedSchema;
+      }
+
+      // Arrays sometimes carry the element struct as their stamped schema.
+      if (SchemaAST.isTypeLiteral(schema.ast)) {
+        return schema;
+      }
+    }
+
+    if (typeof prop === 'number' || (typeof prop === 'string' && /^\d+$/.test(prop))) {
+      const indexedSchema = this.getIndexedElementSchema(schema, prop);
+      if (indexedSchema != null) {
+        return indexedSchema;
+      }
+    }
+
     const arrayAst = unwrapArray(schema.ast);
     if (arrayAst != null) {
       return getArrayElementSchema(arrayAst, prop);
@@ -89,11 +183,15 @@ export class SchemaValidator {
 
     const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
     if (propertyType == null) {
-      return Schema.Any; // TODO(burdon): HACK.
+      const indexSignatureType = getIndexSignatureValueType(schema.ast);
+      if (indexSignatureType != null) {
+        return Schema.make(indexSignatureType).annotations(indexSignatureType.annotations);
+      }
+
+      throw new TypeError(`Unknown property: ${String(prop)}`);
     }
 
-    invariant(propertyType, `invalid property: ${prop.toString()}`);
-    return Schema.make(propertyType);
+    return Schema.make(propertyType).annotations(propertyType.annotations);
   }
 }
 
@@ -106,7 +204,12 @@ const getArrayElementSchema = (
   tupleAst: SchemaAST.TupleType,
   property: string | symbol | number,
 ): Schema.Schema.AnyNoContext => {
-  const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
+  const elementIndex =
+    typeof property === 'number'
+      ? property
+      : typeof property === 'string'
+        ? parseInt(property, 10)
+        : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);
     return Schema.Number;
@@ -234,6 +337,64 @@ const unwrapAst = (rootAst: SchemaAST.AST, predicate?: (ast: SchemaAST.AST) => b
 };
 
 const unwrapArray = (ast: SchemaAST.AST) => unwrapAst(ast, SchemaAST.isTupleType) as SchemaAST.TupleType | null;
+
+const getIndexSignatureValueType = (ast: SchemaAST.AST): SchemaAST.AST | null => {
+  const typeLiteral = unwrapAst(ast, SchemaAST.isTypeLiteral);
+  if (typeLiteral == null || !SchemaAST.isTypeLiteral(typeLiteral) || typeLiteral.indexSignatures.length === 0) {
+    return null;
+  }
+
+  return unwrapAst(typeLiteral.indexSignatures[0].type);
+};
+
+const resolveTypeLiteral = (
+  ast: SchemaAST.AST,
+  getTargetPropertyFn: (propertyName: string) => unknown,
+): SchemaAST.TypeLiteral | null => {
+  const anyOrObject = unwrapAst(
+    ast,
+    (candidate) =>
+      SchemaAST.isAnyKeyword(candidate) ||
+      SchemaAST.isUnknownKeyword(candidate) ||
+      SchemaAST.isObjectKeyword(candidate),
+  );
+  if (anyOrObject != null) {
+    return null;
+  }
+
+  const typeOrDiscriminatedUnion = unwrapAst(ast, (type) => {
+    return SchemaAST.isTypeLiteral(type) || (SchemaAST.isUnion(type) && type.types.some((member) => SchemaAST.isTypeLiteral(member)));
+  });
+  if (typeOrDiscriminatedUnion == null) {
+    return null;
+  }
+
+  if (SchemaAST.isTypeLiteral(typeOrDiscriminatedUnion)) {
+    return typeOrDiscriminatedUnion;
+  }
+
+  const typeAstList = typeOrDiscriminatedUnion.types.filter((type) => SchemaAST.isTypeLiteral(type)) as SchemaAST.TypeLiteral[];
+  if (typeAstList.length === 1) {
+    return typeAstList[0];
+  }
+
+  const typeDiscriminators = getTypeDiscriminators(typeAstList);
+  const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
+  const typeIndex = typeDiscriminators.findIndex((property) => targetPropertyValue === (property.type as SchemaAST.Literal).literal);
+  invariant(typeIndex !== -1, 'discriminator field not set on target');
+  return typeAstList[typeIndex];
+};
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value) || value instanceof Uint8Array) {
+    return false;
+  }
+
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+};
+
+const formatPropertyPath = (path: KeyPath): string => path.map(String).join('.');
 
 export const checkIdNotPresentOnSchema = (schema: Schema.Schema<any, any, any>) => {
   invariant(SchemaAST.isTypeLiteral(schema.ast));

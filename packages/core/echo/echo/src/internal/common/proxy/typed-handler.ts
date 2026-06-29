@@ -405,6 +405,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ): { echoRoot: object; preparedValue: any } {
     const echoRoot = getEchoRoot(target);
 
+    if (typeof prop === 'symbol') {
+      return { echoRoot, preparedValue: value };
+    }
+
     if (prop === ParentId) {
       return { echoRoot, preparedValue: value }; // Short-circuit for parent assignment.
     }
@@ -457,6 +461,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = Schema.asserts(schema)(value);
+    SchemaValidator.assertExactProperties(schema, value, (path) => getDeep(value, path));
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
     }
@@ -530,12 +535,27 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
   } else {
     defineHiddenProperty(obj, SchemaId, schema);
   }
+
+  if (Array.isArray(obj)) {
+    if (SchemaValidator.getIndexedElementSchema(schema, 0) == null) {
+      return;
+    }
+
+    for (let index = 0; index < obj.length; index++) {
+      if (isValidProxyTarget(obj[index])) {
+        const elementSchema = SchemaValidator.getIndexedElementSchema(schema, index);
+        if (elementSchema != null) {
+          setSchemaProperties(obj[index], elementSchema);
+        }
+      }
+    }
+    return;
+  }
+
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
       const elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);
-      if (elementSchema != null) {
-        setSchemaProperties(obj[key], elementSchema);
-      }
+      setSchemaProperties(obj[key], elementSchema);
     }
   }
 };
@@ -550,6 +570,7 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, 
 
   SchemaValidator.validateSchema(schema);
   const _ = Schema.asserts(schema)(target);
+  SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path));
   makeArraysReactive(target);
   setSchemaProperties(target, schema, typeSource);
 };
