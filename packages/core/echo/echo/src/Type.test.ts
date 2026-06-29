@@ -197,7 +197,7 @@ describe('Type', () => {
       expect(Type.getURI(TestSchema.Person).toString()).toBe('dxn:com.example.type.person:0.1.0');
       expect(Type.getURI(TestSchema.HasManager).toString()).toBe('dxn:com.example.type.hasManager:0.1.0');
     });
-});
+  });
 
   describe('deterministic id default', () => {
     // The default id is `EntityId.deterministic(typename, version)` — required so that
