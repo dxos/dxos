@@ -12,9 +12,9 @@ import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 const FALLBACK_SUGGESTION_KEYS = [
-  'space-home.suggestion-news-magazine.label',
-  'space-home.suggestion-mlb-spreadsheet.label',
-  'space-home.suggestion-kanban.label',
+  'space-home.magazine-suggestion.label',
+  'space-home.spreadsheet-suggestion.label',
+  'space-home.kanban.label',
 ] as const;
 
 /**
