@@ -5,9 +5,10 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+
+import { Section } from './Section';
 
 export type PermissionEntry = {
   profileId: string;
@@ -30,7 +31,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
   }
 
   return (
-    <Form.Section title={t('permissions.title')}>
+    <Section title={t('permissions.title')}>
       <table className='w-full text-sm'>
         <thead>
           <tr className='text-left text-description'>
@@ -72,6 +73,6 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
           ))}
         </tbody>
       </table>
-    </Form.Section>
+    </Section>
   );
 };

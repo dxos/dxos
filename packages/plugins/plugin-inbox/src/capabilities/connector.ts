@@ -15,12 +15,15 @@ import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
-  GMAIL_PROVIDER_ID,
-  GOOGLE_CALENDAR_PROVIDER_ID,
-  GOOGLE_CONTACTS_PROVIDER_ID,
+  GMAIL_CONNECTOR_ID,
+  GOOGLE_CALENDAR_CONNECTOR_ID,
+  GOOGLE_CONTACTS_CONNECTOR_ID,
   GOOGLE_INTEGRATION_SOURCE,
+  JMAP_DEFAULT_HOST,
+  JMAP_MAIL_CONNECTOR_ID,
 } from '../constants';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
+import { jmapCredentialForm } from './jmap-credential-form';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -67,7 +70,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Connector, [
       {
-        id: GMAIL_PROVIDER_ID,
+        id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Gmail',
         oauth: {
@@ -88,7 +91,20 @@ export default Capability.makeModule(
         onTokenCreated,
       },
       {
-        id: GOOGLE_CALENDAR_PROVIDER_ID,
+        id: JMAP_MAIL_CONNECTOR_ID,
+        // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
+        source: JMAP_DEFAULT_HOST,
+        label: 'JMAP Mail',
+        // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
+        credentialForm: jmapCredentialForm,
+        optionsSchema: SyncOptions,
+        // Single-target connector (the account inbox): no `getSyncTargets`. The coordinator calls
+        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
+        materializeTarget: InboxOperation.MaterializeJmapTarget,
+        sync: InboxOperation.JmapSync,
+      },
+      {
+        id: GOOGLE_CALENDAR_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Calendar',
         oauth: {
@@ -108,7 +124,7 @@ export default Capability.makeModule(
         onTokenCreated,
       },
       {
-        id: GOOGLE_CONTACTS_PROVIDER_ID,
+        id: GOOGLE_CONTACTS_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Contacts',
         oauth: {

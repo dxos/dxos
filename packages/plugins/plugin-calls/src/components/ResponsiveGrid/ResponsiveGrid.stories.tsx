@@ -53,9 +53,9 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
   );
 };
 
-type DefaultStoryProps = ResponsiveGridProps<TestItem> & { random?: boolean; autoHideGallery?: boolean };
+type StoryArgs = ResponsiveGridProps<TestItem> & { random?: boolean; autoHideGallery?: boolean };
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const [pinned, setPinned] = useState<string | undefined>(
     (props.pinned ?? props.items.length > 1) ? props.items[0]?.id : undefined,
   );

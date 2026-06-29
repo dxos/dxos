@@ -107,7 +107,7 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPri
 };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, size = 'md', inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
+  ({ classNames, children, size = 'sm', inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
@@ -298,17 +298,17 @@ export const Dialog = {
 };
 
 export type {
-  DialogRootProps,
-  DialogTriggerProps,
-  DialogPortalProps,
-  DialogOverlayProps,
-  DialogContentProps,
-  DialogHeaderProps,
-  DialogBodyProps,
-  DialogTitleProps,
-  DialogDescriptionProps,
   DialogActionBarProps,
-  DialogCloseProps,
   DialogActionIconButtonAction,
   DialogActionIconButtonProps,
+  DialogBodyProps,
+  DialogCloseProps,
+  DialogContentProps,
+  DialogDescriptionProps,
+  DialogHeaderProps,
+  DialogOverlayProps,
+  DialogPortalProps,
+  DialogRootProps,
+  DialogTitleProps,
+  DialogTriggerProps,
 };

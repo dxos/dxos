@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { AppAnnotation } from '@dxos/app-toolkit';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
@@ -27,15 +28,19 @@ export class Sketch extends Type.makeObject<Sketch>(DXN.make('org.dxos.type.sket
     canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
+    AppAnnotation.CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),
   ),
 ) {}
 
-export type SketchProps = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
+export type MakeOptions = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
   canvas?: Partial<Obj.MakeProps<typeof Canvas>>;
 };
 
-export const make = ({ canvas: canvasProps, ...props }: SketchProps = {}) => {
+/**
+ * Creates a {@link Sketch} with an optional inline canvas definition.
+ */
+export const make = ({ canvas: canvasProps, ...props }: MakeOptions = {}) => {
   const { schema = TLDRAW_SCHEMA, content = {} } = canvasProps ?? {};
   const canvas = Obj.make(Canvas, { schema, content });
   return Obj.make(Sketch, { ...props, canvas: Ref.make(canvas) });

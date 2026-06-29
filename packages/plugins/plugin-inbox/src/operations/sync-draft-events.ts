@@ -11,7 +11,7 @@ import { Event } from '@dxos/types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { findShadowObject, reanchorShadowObject } from '../hooks/shadow';
-import { Calendar, InboxOperation, DraftEvent } from '../types';
+import { Calendar, DraftEvent, InboxOperation } from '../types';
 import { findBindingForTarget } from '../util';
 
 export default InboxOperation.SyncDraftEvents.pipe(

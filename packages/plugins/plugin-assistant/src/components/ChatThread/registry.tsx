@@ -16,11 +16,12 @@ import {
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
-  SuggestionWidget,
   StatsWidget,
-  SummaryWidget,
-  ToolWidget,
   StatusWidget,
+  SuggestionWidget,
+  SummaryWidget,
+  SurfaceWidget,
+  ToolWidget,
 } from './widgets';
 
 /**
@@ -111,6 +112,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   summary: {
     block: true,
     Component: SummaryWidget,
+  },
+  surface: {
+    block: true,
+    Component: SurfaceWidget,
   },
   toolCall: {
     block: true,
@@ -261,6 +266,18 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       return renderXMLBlock('status', { content: block.statusText, pending: block.pending });
     }
 
+    case 'surface': {
+      if (block.pending) {
+        return;
+      }
+      // Carry the payload as JSON text content so it round-trips through the mixed XML parser
+      // without colliding with attribute quoting; `SurfaceWidget` re-parses it.
+      return renderXMLBlock('surface', {
+        content: JSON.stringify(block.data ?? {}),
+        attributes: `role="${escapeXmlAttribute(block.role)}"`,
+      });
+    }
+
     default: {
       // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
@@ -273,6 +290,9 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
  */
 const escapeXmlTextContent = (raw: string): string =>
   raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Escape a value embedded in a double-quoted XML attribute (e.g. a model-supplied surface role). */
+const escapeXmlAttribute = (raw: string): string => escapeXmlTextContent(raw).replace(/"/g, '&quot;');
 
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that the markdown parser does not split the content into multiple paragraphs.

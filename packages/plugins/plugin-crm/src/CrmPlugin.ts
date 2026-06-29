@@ -3,9 +3,9 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AutomationTemplates, SkillDefinition, OperationHandler } from '#capabilities';
+import { AutomationTemplates, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProfileOf } from '#types';

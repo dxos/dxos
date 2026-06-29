@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useMemo, useState } from 'react';
 
@@ -226,4 +226,4 @@ export const Syntax = {
 
 export { createSyntaxScope };
 
-export type { SyntaxRootProps, SyntaxContentProps, SyntaxFilterProps, SyntaxViewportProps, SyntaxCodeProps };
+export type { SyntaxCodeProps, SyntaxContentProps, SyntaxFilterProps, SyntaxRootProps, SyntaxViewportProps };

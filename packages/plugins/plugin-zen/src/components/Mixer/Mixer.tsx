@@ -6,7 +6,7 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
+import { Icon, Panel, Splitter, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { useCountdown } from '#hooks';

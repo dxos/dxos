@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
-import { Script, Operation } from '@dxos/compute';
+import { Operation, Script } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
@@ -41,10 +41,15 @@ export default Deploy.pipe(
       const existingFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
       const currentVersion = Obj.getMeta(loaded).version;
 
+      const identity = client.halo.identity.get();
+      if (!identity) {
+        return yield* Effect.fail(new Error('Identity not available.'));
+      }
+
       const functionsService = FunctionsServiceClient.fromClient(client);
       const newFunction = yield* Effect.promise(() =>
         functionsService.deploy(Context.default(), {
-          ownerPublicKey: space.key,
+          ownerUri: identity.did,
           version: currentVersion ? incrementSemverPatch(currentVersion) : '0.0.1',
           functionId: existingFunctionId,
           entryPoint: buildResult.entryPoint,

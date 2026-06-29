@@ -11,7 +11,7 @@ import { Database, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { Plan, Chat } from '../../../types';
+import { Chat, Plan } from '../../../types';
 
 export const DelegateTask = Operation.make({
   meta: {

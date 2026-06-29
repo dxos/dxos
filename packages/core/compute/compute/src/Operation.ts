@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { DXN, Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
 
 import type { NoHandlerError } from './errors';

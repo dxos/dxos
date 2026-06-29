@@ -163,7 +163,7 @@ describe('TagIndex (feed integration)', () => {
       expect(tags.tags(hello.id)).toEqual([urgent]);
 
       // Filter the feed by tag.
-      const items = yield* Feed.runQuery(feed, Filter.type(Item));
+      const items = yield* Feed.query(feed, Filter.type(Item)).run;
       const tagged = new Set(tags.objects(urgent));
       expect(items.filter((item) => tagged.has(item.id)).map((item) => item.text)).toEqual(['hello']);
 

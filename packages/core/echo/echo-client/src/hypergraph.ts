@@ -7,11 +7,13 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import {
-  batchEvents,
   type AnyProperties,
-  getStrongDependencies,
   type RefResolverRequest,
   type RefSource,
+  TypeSchema,
+  batchEvents,
+  getStrongDependencies,
+  isInstanceOf,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
@@ -20,7 +22,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, type LoadResult, LoadOpTable } from './core-db/load-op';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
 import { RequestImpl } from './core-db/ref-resolver-request';
 import { type DatabaseImpl } from './proxy-db';
 import {
@@ -163,8 +165,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  createRefResolver({ context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions): Ref.Resolver {
+  createRefResolver({ context = {} }: Hypergraph.RefResolverOptions): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
+
+    // A resolved reference that points at a persisted (db-backed) schema object surfaces as the
+    // registered `Type.Type` entity rather than the raw stored object, so consumers see a stable
+    // type entity. Other entities pass through unchanged.
+    const materializeStoredSchema = (obj: AnyProperties): AnyProperties => {
+      if (context.space != null && isInstanceOf(TypeSchema, obj) && Type.getDatabase(obj) != null) {
+        return this.getDatabase(context.space)?._getOrRegisterPersistentSchema(obj) ?? obj;
+      }
+      return obj;
+    };
 
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
@@ -176,14 +188,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
         if (EID.isEID(uri)) {
           const res = this._resolveSync(uri, context, onLoad);
-          return res ? middleware(res) : undefined;
+          return res ? materializeStoredSchema(res) : undefined;
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
         // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
           const entity = this._registry.getByURI(uri.toString());
-          return entity ? middleware(entity) : undefined;
+          return entity ? materializeStoredSchema(entity) : undefined;
         }
 
         return undefined; // Unsupported URI kind.
@@ -191,11 +203,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       resolveLegacy: async (uri) => {
         const obj = await this._resolveAsync(uri, context);
-        if (obj) {
-          return middleware(obj);
-        } else {
-          return undefined;
-        }
+        return obj ? materializeStoredSchema(obj) : undefined;
       },
 
       resolveSchema: async (uri) => {

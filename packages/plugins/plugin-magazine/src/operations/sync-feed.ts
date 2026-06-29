@@ -9,16 +9,16 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';
-import { browserCorsProxy, type FeedFetcher, fetchAtproto, fetchRss } from './sources';
+import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources';
 
-/** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, atproto uses the post URI). */
+/** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
 
 /** Resolves the appropriate fetcher for the given feed type. */
 const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
   switch (type) {
-    case 'atproto':
-      return fetchAtproto;
+    case 'standard-site':
+      return fetchStandardSite;
     case 'rss':
     default:
       return fetchRss;
@@ -36,9 +36,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
 
       const fetcher = getFetcher(subscriptionFeed.type);
-      const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () =>
-        fetcher(url, { corsProxy: browserCorsProxy() }),
-      );
+      const { feed: feedMeta, posts } = yield* fetcher(url, { corsProxy: browserCorsProxy() });
 
       // Dedup against existing posts already in the backing queue. The
       // `cursor` field on the subscription was previously used as a single-guid
@@ -50,17 +48,17 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       //
       // The dedup key is `guid ?? link`: `Post.guid` is optional in the schema,
       // and while every current fetcher populates it (RSS falls back to `link`,
-      // atproto uses the post URI), a future fetcher or malformed item could
-      // omit it. Falling back to `link` keeps such items dedup-able. Items
+      // Standard.site uses the record AT-URI), a future fetcher or malformed item
+      // could omit it. Falling back to `link` keeps such items dedup-able. Items
       // with neither field cannot be deduplicated and will sync as new every
       // time — that's an upstream data quality issue with no clean recovery.
       //
       // Pull the backing queue before reading existing posts: this handler runs in a
       // freshly-spawned process whose local queue replica may not have the blocks yet. Without
-      // this, `runQuery` returns an empty set, `seenKeys` is empty, and every fetched item
+      // this, the query returns an empty set, `seenKeys` is empty, and every fetched item
       // re-appends — duplicating the whole feed on a cold sync.
       yield* Feed.sync(echoFeed, { shouldPush: false });
-      const existing = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
+      const existing = yield* Feed.query(echoFeed, Filter.type(Subscription.Post)).run;
       const seenKeys = new Set<string>();
       for (const post of existing) {
         const key = postKey(post);
@@ -88,7 +86,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       // `_objectCache` for the deleted posts, but those same Post objects
       // persist in `space.db` (they were added there when first curated
       // into a Magazine via `createRef` → `database.add`). On the next
-      // sync/curate, `Feed.runQuery(...)` returns fresh proxies for the
+      // sync/curate, `Feed.query(...).run` returns fresh proxies for the
       // kept items, and any magazine refs to *deleted* posts now
       // reference proxies whose `_internals.database` link is unset —
       // `createRef` then tries to re-add them, hitting the
@@ -105,6 +103,9 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
             title: post.title,
             link: post.link,
             description: post.description,
+            // Persist the body so Standard.site articles render offline (see `load-post-content`);
+            // RSS `content:encoded` rides along but its fetch path is unchanged.
+            content: post.content,
             author: post.author,
             published: post.published,
             guid: post.guid,

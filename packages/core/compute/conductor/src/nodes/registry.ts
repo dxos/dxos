@@ -204,7 +204,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const feed = yield* Database.resolve(EID.parse(id), Feed.Feed).pipe(Effect.orDie);
-        const messages = yield* Feed.runQuery(feed, Filter.everything());
+        const messages = yield* Feed.query(feed, Filter.everything()).run;
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,

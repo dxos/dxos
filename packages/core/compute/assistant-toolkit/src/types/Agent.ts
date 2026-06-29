@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext, Harness } from '@dxos/assistant';
 import { type Skill } from '@dxos/compute';
-import { DXN, Annotation, Database, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';

@@ -17,12 +17,12 @@ import { Capabilities } from '@dxos/app-framework';
 import {
   AiContext,
   AiSession,
-  createSystemPrompt,
-  formatSystemPrompt,
   Harness,
   McpServerError,
   PartialBlock,
   ToolExecutionServices,
+  createSystemPrompt,
+  formatSystemPrompt,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';

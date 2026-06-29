@@ -125,7 +125,7 @@ export const gptNode = defineComputeNode({
       ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
       : undefined;
     const historyMessages = conversationFeed
-      ? yield* Feed.runQuery(conversationFeed, Filter.type(Message.Message))
+      ? yield* Feed.query(conversationFeed, Filter.type(Message.Message)).run
       : (history ?? []);
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
@@ -169,7 +169,13 @@ export const gptNode = defineComputeNode({
           prompt: fullPrompt,
           history: [...historyMessages],
         })
-        .pipe(Effect.provide(runDeps));
+        .pipe(
+          Effect.provide(runDeps),
+          // The observer publishes tokens to `tokenPubSub` during the run; once it completes no more
+          // tokens are produced, so shut the pubsub down to terminate `tokenStream` (a `Stream.fromPubSub`
+          // otherwise never ends, hanging any consumer that drains it).
+          Effect.ensuring(PubSub.shutdown(tokenPubSub)),
+        );
       log.info('messages', { messages });
 
       if (conversationFeed) {

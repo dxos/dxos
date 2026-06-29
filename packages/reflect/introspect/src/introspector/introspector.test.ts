@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, test } from 'vitest';
 
 import { formatSymbolRef, parseRef } from '../refs';
-import { createIntrospector, type Introspector } from './introspector';
+import { type Introspector, createIntrospector } from './introspector';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = join(__dirname, '..', '__fixtures__');
