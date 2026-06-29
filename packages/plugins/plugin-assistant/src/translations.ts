@@ -201,7 +201,7 @@ export const translations: Resource[] = [
         'space-home.suggestions.heading': 'Things to try',
         'space-home.suggestion-draft-doc.label': 'Draft a new document',
         'space-home.suggestion-data-type.label': 'Create a new data type',
-        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.suggestion-analyze-inbox.label': 'Analyze my inbox',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 
         'nav-tree-group-ai.label': 'Assistant',

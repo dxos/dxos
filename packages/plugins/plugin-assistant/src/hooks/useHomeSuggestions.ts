@@ -14,7 +14,7 @@ import { AssistantOperation } from '#types';
 const FALLBACK_SUGGESTION_KEYS = [
   'space-home.suggestion-draft-doc.label',
   'space-home.suggestion-data-type.label',
-  'space-home.suggestion-ideas.label',
+  'space-home.suggestion-analyze-inbox.label',
 ] as const;
 
 /**
