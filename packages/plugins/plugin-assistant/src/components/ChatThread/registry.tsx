@@ -6,7 +6,7 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
-import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+import { AnchorInlineWidget, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
@@ -48,6 +48,14 @@ export const componentRegistry: XmlWidgetRegistry = {
   // DOM Widgets
   //
 
+  'link-preview': {
+    block: false,
+    urlSchemes: ['dxn:', 'echo:'],
+    factory: ({ label, dxn }) =>
+      typeof label === 'string' && typeof dxn === 'string'
+        ? new AnchorInlineWidget({}, { label, dxn })
+        : null,
+  },
   synthetic: {
     block: true,
     factory: ({ children, range }) => {
