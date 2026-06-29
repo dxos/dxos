@@ -233,7 +233,15 @@ const CrawlerStory = () => {
     }
     void guard('crawl', async () => {
       // Fresh state + in-memory store per crawl; edge LLM does the extraction (no local key needed).
-      const layer = Layer.mergeAll(discordSourceLayer(options.token), coreLayer, AiServiceTestingPreset('edge-remote'));
+      // `Layer.fresh` on the AI layer is REQUIRED: the Discord source provides a CORS-proxy
+      // FetchHttpClient.Fetch, and Effect memoizes the shared FetchHttpClient layer — without fresh,
+      // the edge-AI client inherits the proxy and routes LLM calls through cors-proxy (→ 404). Fresh
+      // gives the AI its own direct fetch.
+      const layer = Layer.mergeAll(
+        discordSourceLayer(options.token),
+        coreLayer,
+        Layer.fresh(AiServiceTestingPreset('edge-remote')),
+      );
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           const summary = yield* run(
