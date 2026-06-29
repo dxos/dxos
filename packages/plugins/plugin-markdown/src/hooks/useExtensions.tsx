@@ -17,7 +17,7 @@ import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
-  AnchorInlineWidget,
+  AnchorWidget,
   Cursor,
   type EditorStateStore,
   EditorView,
@@ -180,6 +180,8 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
+          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
+          skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
         linkTooltip(renderLinkTooltip),
         xmlTags({
@@ -193,7 +195,7 @@ const createBaseExtensions = ({
               block: false,
               urlSchemes: ['dxn:', 'echo:'],
               factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorInlineWidget(label, dxn) : null,
+                label && dxn ? new AnchorWidget(label, dxn) : null,
             },
           },
           setWidgets,

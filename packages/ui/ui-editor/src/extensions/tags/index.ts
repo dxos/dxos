@@ -8,4 +8,5 @@ export * from './typewriter';
 export * from './xml-block-decoration';
 export * from './xml-formatting';
 export * from './xml-tags';
+export * from './placeholder';
 export * from './widgets';

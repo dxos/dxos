@@ -8,7 +8,7 @@ import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Message, type Transcript } from '@dxos/types';
 import {
-  AnchorInlineWidget,
+  AnchorWidget,
   type XmlWidgetProps,
   type XmlWidgetRegistry,
   createBasicExtensions,
@@ -28,7 +28,7 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
     block: false,
     urlSchemes: ['dxn:', 'echo:'],
     factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-      typeof label === 'string' && typeof dxn === 'string' ? new AnchorInlineWidget(label, dxn) : null,
+      typeof label === 'string' && typeof dxn === 'string' ? new AnchorWidget(label, dxn) : null,
   },
 };
 
@@ -47,7 +47,8 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),
-          decorateMarkdown(),
+          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
+          decorateMarkdown({ skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:') }),
           xmlTags({ registry: inlinePreviewRegistry }),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
           scroller(),

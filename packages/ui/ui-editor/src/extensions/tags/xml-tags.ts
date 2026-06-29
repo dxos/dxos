@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
 import { crawlerLineEffect } from '../scrolling';
-import { PlaceholderWidget, type XmlWidgetNotifier } from './widgets/placeholder';
+import { PlaceholderWidget, type XmlWidgetNotifier } from './placeholder';
 import { nodeToJson } from './xml-util';
 
 /**
@@ -566,7 +566,9 @@ const buildDecorations = (
           const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
           const nodeRange = { from: node.node.from, to: node.node.to };
           const widgetId = `cm-url-${node.from}-${dxn}`;
+          const widgetState = widgetStateMap[widgetId];
           const props: XmlWidgetProps = {
+            id: widgetId,
             _tag: node.type.name === 'Image' ? 'image' : 'link',
             range: nodeRange,
             context,
@@ -574,6 +576,7 @@ const buildDecorations = (
             dxn,
             block: isBlock,
             suggest: isBlock,
+            ...widgetState,
           };
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
