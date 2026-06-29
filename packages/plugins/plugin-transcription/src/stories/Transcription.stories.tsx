@@ -103,6 +103,7 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
   const stages = useMemo(() => [makeCorrectionStage()], []);
   useRecordingPipeline({
     config: STREAMING_TRANSCRIBE_CONFIG,
+    segmentSentences: true,
     active: running,
     track,
     stages,
@@ -131,15 +132,15 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
             />
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollContainer.Root pin>
+        <ScrollContainer.Root pin>
+          <Panel.Content asChild>
             <ScrollContainer.Content>
               <ScrollContainer.Viewport>
                 <Transcription model={model} />
               </ScrollContainer.Viewport>
             </ScrollContainer.Content>
-          </ScrollContainer.Root>
-        </Panel.Content>
+          </Panel.Content>
+        </ScrollContainer.Root>
       </Panel.Root>
     </>
   );

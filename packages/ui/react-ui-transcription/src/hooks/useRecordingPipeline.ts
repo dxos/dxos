@@ -33,6 +33,8 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 export type RecordingPipelineOptions = {
   /** Override the transcriber chunk configuration. */
   config?: Partial<TranscribeConfig>;
+  /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
+  segmentSentences?: boolean;
   /**
    * Raw capture flag — recording (mic) or playing (file). When it flips false the hook drains
    * (flushing the transcriber's buffered audio) before returning to idle.
@@ -75,6 +77,7 @@ export const useRecordingPipeline = ({
   lookup,
   onSegment,
   config,
+  segmentSentences,
 }: RecordingPipelineOptions): RecordingPipeline => {
   // Phase machine: hold 'recording' for the commit when `active` flips off, then 'draining' until the
   // transcriber flushes, then 'idle' — so the tail of speech and its enrichment are not lost.
@@ -108,6 +111,7 @@ export const useRecordingPipeline = ({
     const asr = runAsrPipeline({
       recorder,
       config: { ...DEFAULT_TRANSCRIBE_CONFIG, ...config },
+      segmentSentences,
       stages,
       commit,
       lookup,

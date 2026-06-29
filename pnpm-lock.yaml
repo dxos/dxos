@@ -5759,6 +5759,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       wavefile:
         specifier: 'catalog:'
         version: 11.0.0

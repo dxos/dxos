@@ -44,6 +44,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@effect/ai": "catalog:",
     "wavefile": "catalog:"
   },
   "devDependencies": {

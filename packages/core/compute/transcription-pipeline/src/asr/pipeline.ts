@@ -7,6 +7,7 @@ import { type ContentBlock } from '@dxos/types';
 import { type LivePipeline, runLivePipeline } from '../live';
 import { type RunOptions } from '../PipelineRuntime';
 import { type AudioRecorder } from './audio-recorder';
+import { SentenceBuffer } from './sentence-buffer';
 import { Transcriber, type TranscribeConfig, type TranscribeFn } from './transcriber';
 
 export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
@@ -16,6 +17,11 @@ export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
   transcribe?: TranscribeFn;
   /** Transcriber chunking configuration. */
   config: TranscribeConfig;
+  /**
+   * Re-segment the ASR output into complete sentences before it enters the pipeline, merging
+   * fragments that the transcriber cut mid-sentence at chunk boundaries. @default false
+   */
+  segmentSentences?: boolean;
   /** Optional raw-segment hook invoked before each block enters the pipeline (e.g. live display). */
   onSegment?: (block: ContentBlock.Transcript) => void;
   /** Silence (ms) reported on `end` so on-silence stages fire over the final window. */
@@ -46,21 +52,34 @@ export const runAsrPipeline = ({
   recorder,
   transcribe,
   config,
+  segmentSentences = false,
   onSegment,
   drainSilenceMs = 5_000,
   ...runOptions
 }: AsrPipelineOptions): AsrPipeline => {
   const live: LivePipeline = runLivePipeline(runOptions);
+  // Optionally merge mid-sentence ASR fragments into complete sentences before the pipeline sees them.
+  const sentences = segmentSentences ? new SentenceBuffer() : undefined;
+  const emit = (block: ContentBlock.Transcript) => {
+    onSegment?.(block);
+    live.block(block);
+  };
+  const handle = (blocks: ContentBlock.Transcript[]) => {
+    for (const block of blocks) {
+      if (sentences) {
+        for (const sentence of sentences.push(block)) {
+          emit(sentence);
+        }
+      } else {
+        emit(block);
+      }
+    }
+  };
   const transcriber = new Transcriber({
-    config: config,
+    config,
     recorder,
     transcribe,
-    onSegments: async (blocks: ContentBlock.Transcript[]) => {
-      for (const block of blocks) {
-        onSegment?.(block);
-        live.block(block);
-      }
-    },
+    onSegments: async (blocks: ContentBlock.Transcript[]) => handle(blocks),
   });
 
   return {
@@ -72,6 +91,12 @@ export const runAsrPipeline = ({
     abort: () => transcriber.abort(),
     end: async () => {
       await transcriber.flush();
+      // Emit any sentence still buffered after the final flush.
+      if (sentences) {
+        for (const sentence of sentences.flush()) {
+          emit(sentence);
+        }
+      }
       live.silence(drainSilenceMs);
       await live.end();
       await transcriber.close();
