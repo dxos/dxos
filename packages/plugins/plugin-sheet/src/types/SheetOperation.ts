@@ -66,6 +66,24 @@ export const ScrollToAnchor = Operation.make({
   output: Schema.Void,
 });
 
+export const Create = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.sheet.create'),
+    name: 'Create',
+    description: 'Creates a new sheet and adds it to the space.',
+    icon: 'ph--grid-nine--regular',
+  },
+  input: Schema.Struct({
+    name: Schema.optional(Schema.String).annotations({ description: 'Display name for the sheet.' }),
+    rows: Schema.optional(Schema.Number).annotations({ description: 'Initial number of rows (default 50).' }),
+    columns: Schema.optional(Schema.Number).annotations({ description: 'Initial number of columns (default 26).' }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String.annotations({ description: 'The DXN of the created sheet.' }),
+  }),
+  services: [Database.Service],
+});
+
 export const GetValues = Operation.make({
   meta: {
     key: makeKey('rangeGet'),

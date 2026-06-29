@@ -7,13 +7,14 @@ import { trim } from '@dxos/util';
 
 import { Sheet, SheetOperation } from '#types';
 
-const operations = [SheetOperation.GetValues, SheetOperation.SetValues];
+const operations = [SheetOperation.Create, SheetOperation.GetValues, SheetOperation.SetValues];
 
 const make = () =>
   Skill.make({
     key: Sheet.SKILL_KEY,
     name: 'Sheet',
     tools: Skill.toolDefinitions({ operations }),
+    agentCanEnable: true,
     instructions: Template.make({
       source: trim`
         You are an expert at working with spreadsheets.

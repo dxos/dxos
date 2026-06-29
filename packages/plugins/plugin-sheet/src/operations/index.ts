@@ -5,6 +5,7 @@
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const SheetOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./create'),
   () => import('./drop-axis'),
   () => import('./get-values'),
   () => import('./insert-axis'),
