@@ -3,7 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -88,6 +88,18 @@ export const DeckPlank = memo(
     // Stable reference so Plank's useMemo on articleData doesn't bust every render.
     const articleData = useMemo(() => ({ path }), [path]);
 
+    // Keep the companion panel mounted for 250ms after hasCompanion goes false so the Splitter's
+    // CSS transition can complete before the subtree is removed from the DOM.
+    const [companionMounted, setCompanionMounted] = useState(hasCompanion);
+    useEffect(() => {
+      if (hasCompanion) {
+        setCompanionMounted(true);
+        return;
+      }
+      const timer = setTimeout(() => setCompanionMounted(false), 250);
+      return () => clearTimeout(timer);
+    }, [hasCompanion]);
+
     const companionControls = useMemo(() => <PlankCompanionControls primary={id} />, [id]);
 
     if (!node) {
@@ -120,9 +132,8 @@ export const DeckPlank = memo(
     // to unmount and remount the entire subtree on every companion toggle, resetting article state.
     //
     // `mode` drives the animated open/close: switching between 'split' and 'start' triggers the Splitter's
-    // built-in 250ms CSS transition, which slides the companion in/out without a flash. The companion panel
-    // stays mounted while companions exist (collapsed to 0 at mode='start') so the transition always has
-    // something to animate; conditional rendering would remount it on every open, losing companion state.
+    // built-in 250ms CSS transition. `companionMounted` trails `hasCompanion` by 250ms on close so the
+    // panel stays in the DOM long enough for the collapse animation to finish before being unmounted.
     return (
       <Splitter.Root
         orientation={companionOrientation}
@@ -153,7 +164,7 @@ export const DeckPlank = memo(
             onKeyDown={handleKeyDown}
           />
         </Splitter.Panel>
-        {hasCompanion && (
+        {companionMounted && (
           <>
             <Splitter.Handle />
             <Splitter.Panel position='end'>
