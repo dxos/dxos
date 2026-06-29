@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { type CanvasBoard, type Polygon, CanvasGraphModel } from '../../types';
+import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types';
 import { Editor } from '../Editor';
-import { type GraphCanvasProps, GraphCanvas } from './GraphCanvas';
+import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
 
 // TODO(burdon): Story with conductor nodes and local processing.
 // TODO(burdon): Undo.

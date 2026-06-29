@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import {
   type FeedArchiveBlock,
   type FeedArchiveMetadata,
-  type SpaceArchiveMetadata,
   SpaceArchiveFileStructure,
+  type SpaceArchiveMetadata,
 } from '@dxos/protocols';
 import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 

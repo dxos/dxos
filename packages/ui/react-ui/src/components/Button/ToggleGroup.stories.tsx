@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
-import { type ToggleGroupProps, ToggleGroup, ToggleGroupItem } from './ToggleGroup';
+import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
 
 // TODO(burdon): Create Radix-style Root, Item, etc?
 const DefaultStory = (props: ToggleGroupProps) => {

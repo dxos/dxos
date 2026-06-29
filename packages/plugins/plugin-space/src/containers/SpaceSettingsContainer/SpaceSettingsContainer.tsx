@@ -14,7 +14,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';

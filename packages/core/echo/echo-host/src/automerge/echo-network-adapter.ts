@@ -6,9 +6,9 @@ import {
   type DocumentId,
   type Heads,
   type Message,
+  NetworkAdapter,
   type PeerId,
   type PeerMetadata,
-  NetworkAdapter,
 } from '@automerge/automerge-repo';
 
 import { Event, Trigger, synchronized } from '@dxos/async';

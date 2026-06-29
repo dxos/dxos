@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useState } from 'react';
 
-import { type View, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, type View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';

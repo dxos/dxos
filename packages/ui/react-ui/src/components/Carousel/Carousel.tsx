@@ -5,11 +5,11 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  Children,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
   type TransitionEvent,
-  Children,
   cloneElement,
   isValidElement,
   useCallback,

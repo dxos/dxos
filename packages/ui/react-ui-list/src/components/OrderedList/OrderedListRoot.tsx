@@ -6,9 +6,9 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import {
+  ScrollArea,
   type ScrollAreaRootProps,
   type ThemedClassName,
-  ScrollArea,
   composable,
   composableProps,
 } from '@dxos/react-ui';

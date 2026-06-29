@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { URI, EntityId } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';

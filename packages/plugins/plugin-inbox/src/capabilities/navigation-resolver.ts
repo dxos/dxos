@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { type AppCapabilities as AppCaps, AppCapabilities, Paths, TypeSection } from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';

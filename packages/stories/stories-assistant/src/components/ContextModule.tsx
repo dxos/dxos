@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { type Ref, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, type Ref } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { useObject, useQuery } from '@dxos/react-client/echo';

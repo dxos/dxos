@@ -8,7 +8,7 @@ import { type RefObject, createRef } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type Point, type Size, EventEmitter, Scale } from '../util';
+import { EventEmitter, type Point, Scale, type Size } from '../util';
 
 export type SVGContextOptions = {
   scale?: Scale;

@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { type ViewUpdate, Decoration, EditorView, ViewPlugin } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
 import { type Document, type Upos, sourceHash } from '@dxos/nlp';

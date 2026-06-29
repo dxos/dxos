@@ -8,11 +8,11 @@ import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
+  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  DEFAULT_CLIENT_CHANNEL,
-  STATUS_TIMEOUT,
   SpaceProperties,
+  STATUS_TIMEOUT,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';

@@ -3,7 +3,7 @@
 //
 
 import { type Message, type PeerId } from '@automerge/automerge-repo';
-import { type RedisOptions, Redis } from 'ioredis';
+import { Redis, type RedisOptions } from 'ioredis';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { type TaggedType } from '@dxos/codec-protobuf';

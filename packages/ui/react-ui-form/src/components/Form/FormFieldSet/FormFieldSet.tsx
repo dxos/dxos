@@ -14,7 +14,7 @@ import { type FieldContext } from '#types';
 
 import { type FormHandlerProps, useFormValues } from '../../../hooks';
 import { getRootFormProperties } from '../../../util';
-import { type FormFieldProps, FormField, FormFieldErrorBoundary, presentationFor } from '../FormField';
+import { FormField, FormFieldErrorBoundary, type FormFieldProps, presentationFor } from '../FormField';
 import { FormLayout } from '../FormLayout';
 import { FormFieldSetContainer } from './FormFieldSetContainer';
 

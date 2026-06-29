@@ -10,7 +10,7 @@ import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 
-import { type DxGridAxis, type DxGridFrozenPlane, DxAxisResizeInternal } from './types';
+import { DxAxisResizeInternal, type DxGridAxis, type DxGridFrozenPlane } from './types';
 
 @customElement('dx-grid-axis-resize-handle')
 export class DxGridAxisResizeHandle extends LitElement {

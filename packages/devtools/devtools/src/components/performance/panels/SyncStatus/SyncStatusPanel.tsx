@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type CustomPanelProps, Panel } from '../../Panel';
-import { type SyncStatusProps, SyncStatus } from './SyncStatus';
+import { SyncStatus, type SyncStatusProps } from './SyncStatus';
 
 export const SyncStatusPanel = ({ state, summary, feedState, debug, ...props }: CustomPanelProps<SyncStatusProps>) => {
   return (

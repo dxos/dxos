@@ -5,7 +5,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { type IconProps, type ThemedClassName, Button, DropdownMenu, Icon, Toolbar, Tooltip } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, type IconProps, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
 export type PickerButtonProps = ThemedClassName<{
   Component: FC<{ value: string; size?: IconProps['size'] }>;

@@ -3,9 +3,9 @@
 //
 
 import {
-  type Tracer,
   ROOT_CONTEXT,
   SpanStatusCode,
+  type Tracer,
   context as otelContext,
   propagation,
   trace,

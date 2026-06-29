@@ -25,7 +25,7 @@ import { translations } from '#translations';
 
 import { SerializationModel } from '../../model';
 import { renderByline } from '../../util';
-import { type TranscriptionProps, Transcription } from './Transcription';
+import { Transcription, type TranscriptionProps } from './Transcription';
 
 random.seed(1);
 

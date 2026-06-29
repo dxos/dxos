@@ -7,10 +7,10 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   type ClientServicesProvider,
-  type Echo,
-  type Space,
   CREATE_SPACE_TIMEOUT,
+  type Echo,
   IMPORT_SPACE_TIMEOUT,
+  type Space,
   SpaceProperties,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -23,9 +23,9 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError } from '@dxos/protocols';
 import {
+  Invitation,
   type Space as SerializedSpace,
   type SpaceArchive,
-  Invitation,
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';

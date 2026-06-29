@@ -3,7 +3,7 @@
 //
 
 import type { IndexingResult } from '@dxos/index-core';
-import { type EntityId, type SpaceId, DXN } from '@dxos/keys';
+import { DXN, type EntityId, type SpaceId } from '@dxos/keys';
 
 export type InvalidationHint = {
   spaceIds?: ReadonlySet<SpaceId>;

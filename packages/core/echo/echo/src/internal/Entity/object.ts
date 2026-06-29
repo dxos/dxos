@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
-import { type EntityId, DXN } from '@dxos/keys';
+import { DXN, type EntityId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';

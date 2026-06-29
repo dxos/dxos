@@ -17,7 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type MarkdownCardProps, MarkdownCard } from './MarkdownCard';
+import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
 random.seed(1234);
 

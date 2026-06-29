@@ -11,7 +11,7 @@ import { withTheme } from '../../testing';
 import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
 import { Button } from './Button';
-import { type IconButtonProps, IconButton } from './IconButton';
+import { IconButton, type IconButtonProps } from './IconButton';
 import { SystemIconButton } from './SystemIconButton';
 
 const DefaultStory = (props: IconButtonProps) => {

@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
-import { type PropertyType, PropertySchema } from './format';
+import { PropertySchema, type PropertyType } from './format';
 
 export const VIEW_FIELD_LIMIT = 32;
 

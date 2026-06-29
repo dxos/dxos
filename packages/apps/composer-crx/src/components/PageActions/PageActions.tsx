@@ -10,9 +10,9 @@ import { IconButton } from '@dxos/react-ui';
 
 import { getActionsForUrl } from '../../page-actions/registry';
 import {
-  type PageActionDescriptor,
   PAGE_ACTION_PREDICATE_MESSAGE_TYPE,
   PAGE_ACTION_RUN_MESSAGE_TYPE,
+  type PageActionDescriptor,
   decodeInvokeAck,
 } from '../../page-actions/types';
 

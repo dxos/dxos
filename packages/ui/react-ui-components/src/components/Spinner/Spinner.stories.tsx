@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type SpinnerProps, Spinner } from './Spinner';
+import { Spinner, type SpinnerProps } from './Spinner';
 
 const DefaultStory = ({ state: _state }: SpinnerProps) => {
   const [state, setState] = useState(_state);

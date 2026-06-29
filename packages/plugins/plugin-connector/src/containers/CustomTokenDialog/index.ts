@@ -3,4 +3,4 @@
 //
 
 export { CustomTokenDialog as default } from './CustomTokenDialog';
-export { type CustomTokenDialogProps, CustomTokenDialog } from './CustomTokenDialog';
+export { CustomTokenDialog, type CustomTokenDialogProps } from './CustomTokenDialog';

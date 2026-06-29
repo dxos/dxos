@@ -11,7 +11,7 @@
 // consumers can layer Tailwind classes on top of the theme defaults without forking the
 // component.
 
-import React, { type ComponentProps, type PropsWithChildren, type ReactNode, Fragment } from 'react';
+import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';

@@ -5,9 +5,9 @@
 import React, { useCallback } from 'react';
 
 import {
-  type ToolbarRootProps,
   Input,
   Toolbar as NaturalToolbar,
+  type ToolbarRootProps,
   Tooltip,
   toLocalizedString,
   useTranslation,

@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { type ComposableProps } from '@dxos/ui-types';
 
 //

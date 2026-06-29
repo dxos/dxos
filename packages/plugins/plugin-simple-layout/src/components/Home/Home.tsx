@@ -10,7 +10,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
 import { Position, getHostPlatform, isTauri } from '@dxos/util';

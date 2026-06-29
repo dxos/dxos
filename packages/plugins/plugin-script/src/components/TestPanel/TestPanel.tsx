@@ -5,7 +5,7 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type ThemedClassName, Avatar, Icon, Input, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';

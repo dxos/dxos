@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
-import { type Label, type ThemedClassName, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '#hooks';

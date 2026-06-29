@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { type Database, DXN, Annotation, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';

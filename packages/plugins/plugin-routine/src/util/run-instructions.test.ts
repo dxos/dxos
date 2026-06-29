@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { URI, Ref } from '@dxos/echo';
+import { Ref, URI } from '@dxos/echo';
 
 import { isRunInstructions, runInstructionsRef } from './run-instructions';
 

@@ -22,9 +22,9 @@ import { composable, composableProps } from '@dxos/react-ui';
 
 import { type Scene } from '#types';
 
-import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
-import { type SpacetimeCanvasProps, SpacetimeCanvas } from '../SpacetimeCanvas';
-import { type EditorActions, type SpacetimeToolbarProps, SpacetimeToolbar } from '../SpacetimeToolbar';
+import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools';
+import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
+import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
 import { handleExport as doExport, handleImport as doImport } from './import-export';
 
 //

@@ -4,12 +4,12 @@
 
 import { type Extension } from '@codemirror/state';
 import {
-  type DecorationSet,
-  type ViewUpdate,
   Decoration,
+  type DecorationSet,
   EditorView,
   MatchDecorator,
   ViewPlugin,
+  type ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
 

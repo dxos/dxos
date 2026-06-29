@@ -5,9 +5,6 @@
 // @import-as-namespace
 
 export {
-  type FormLayoutMap,
-  type GeneratorAnnotationValue,
-  type ReferenceAnnotationValue,
   DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,
@@ -17,15 +14,18 @@ export {
   FormInputAnnotation,
   FormLayoutAnnotation,
   FormLayoutAnnotationId,
+  type FormLayoutMap,
   FormOrderedAnnotation,
   GeneratorAnnotation,
   GeneratorAnnotationId,
+  type GeneratorAnnotationValue,
   HiddenAnnotation,
   IconAnnotation,
   IconFromRefAnnotation,
   LabelAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
+  type ReferenceAnnotationValue,
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,

@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { type Database, type Type, Obj } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 
 import { type InsertRowResult } from '../model';
 

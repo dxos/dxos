@@ -17,16 +17,16 @@ import React, {
 import { Obj } from '@dxos/echo';
 import {
   type ComposableProps,
-  type ThemedClassName,
   Icon,
   IconButton,
   ScrollArea,
+  type ThemedClassName,
   composable,
   composableProps,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';

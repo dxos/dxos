@@ -9,7 +9,7 @@ import { entry, range } from '@dxos/util';
 
 import { type ReplicantsSummary, type TestProps } from '../plan';
 import { type SignalTestSpec } from '../spec';
-import { type TraceEvent, LogReader, zapPreprocessor } from './logging';
+import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
 
 export const mapToJson = (m: Map<string, any>) => {
   return Object.fromEntries(

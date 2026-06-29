@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 // Organization is referenced in the inferred type of multiple types here (via Provider.Provider → Ref.Ref(Organization));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports

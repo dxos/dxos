@@ -14,7 +14,7 @@ import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
-import { type Message, ContentBlock } from '@dxos/types';
+import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';

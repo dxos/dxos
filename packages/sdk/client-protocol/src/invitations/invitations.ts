@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Observable, type Subscriber, MulticastObservable } from '@dxos/async';
+import { MulticastObservable, type Observable, type Subscriber } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 

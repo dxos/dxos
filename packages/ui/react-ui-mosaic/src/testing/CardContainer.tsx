@@ -6,7 +6,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren } from 'react';
 
 import { Icon, Popover } from '@dxos/react-ui';
-import { type Size, ResizeHandle, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
 const DEFAULT_BLOCK_SIZE = 22;
 const MIN_BLOCK_SIZE = 8;

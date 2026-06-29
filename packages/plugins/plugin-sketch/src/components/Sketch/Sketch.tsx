@@ -7,7 +7,7 @@ import './theme.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLEventInfo, type TLGridProps, type TLInstance } from '@tldraw/editor';
-import { type Editor, type TLUiAssetUrlOverrides, DefaultToolbar, Tldraw } from '@tldraw/tldraw';
+import { DefaultToolbar, type Editor, Tldraw, type TLUiAssetUrlOverrides } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';

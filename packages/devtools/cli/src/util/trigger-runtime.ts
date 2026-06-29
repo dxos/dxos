@@ -21,7 +21,7 @@ import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { type Key, Database } from '@dxos/echo';
+import { Database, type Key } from '@dxos/echo';
 import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
 import { type AiChatServices, chatLayer } from './runtime';

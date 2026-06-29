@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Credential } from '@dxos/compute';
-import { type Ref, Database } from '@dxos/echo';
+import { Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
 

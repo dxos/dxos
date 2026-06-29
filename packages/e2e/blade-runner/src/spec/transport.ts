@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { TransportKind } from '@dxos/network-manager';
 import { defaultMap, range } from '@dxos/util';
 
-import { type LogReader, type SerializedLogEntry, BORDER_COLORS, getReader, renderPNG, showPNG } from '../analysys';
+import { BORDER_COLORS, type LogReader, type SerializedLogEntry, getReader, renderPNG, showPNG } from '../analysys';
 import { type SchedulerEnvImpl } from '../env';
 import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { TransportReplicant } from '../replicants/transport-replicant';

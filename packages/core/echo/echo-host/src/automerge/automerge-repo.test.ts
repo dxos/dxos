@@ -3,8 +3,8 @@
 //
 
 import {
-  type Heads,
   next as A,
+  type Heads,
   change,
   clone,
   equals,
@@ -21,9 +21,9 @@ import {
   type DocumentProgress,
   type Message,
   type PeerId,
+  Repo,
   type SharePolicy,
   type StorageAdapterInterface,
-  Repo,
   generateAutomergeUrl,
   initSubduction,
   parseAutomergeUrl,
@@ -39,7 +39,7 @@ import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
-import { type TestConnectionStateProvider, TestAdapter } from '../testing';
+import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type HandleQueryState } from './handle-state';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';

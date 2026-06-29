@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { type ViewUpdate, EditorView, ViewPlugin } from '@codemirror/view';
+import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
 

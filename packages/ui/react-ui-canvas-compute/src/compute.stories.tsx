@@ -19,7 +19,7 @@ import { configuredCredentialsLayer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type EditorController, type EditorRootProps, Editor, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
+import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';

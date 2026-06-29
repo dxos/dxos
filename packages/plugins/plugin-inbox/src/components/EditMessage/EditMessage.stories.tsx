@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { type EditMessageProps, EditMessage } from './EditMessage';
+import { EditMessage, type EditMessageProps } from './EditMessage';
 
 const createDraft = () =>
   Obj.make(Message.Message, {

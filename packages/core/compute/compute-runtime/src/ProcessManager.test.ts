@@ -32,7 +32,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { DXN, Annotation, Database } from '@dxos/echo';
+import { Annotation, Database, DXN } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';

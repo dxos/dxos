@@ -20,7 +20,7 @@ import { type Topology } from 'topojson-specification';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type GlobeContextProviderProps, GlobeContextProvider, useGlobeContext } from '../../hooks';
+import { GlobeContextProvider, type GlobeContextProviderProps, useGlobeContext } from '../../hooks';
 import {
   type Features,
   type StyleSet,
@@ -30,7 +30,7 @@ import {
   renderLayers,
   timer,
 } from '../../util';
-import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute

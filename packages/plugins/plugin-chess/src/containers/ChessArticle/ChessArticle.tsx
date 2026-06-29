@@ -12,7 +12,7 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { type ChessboardController, type ChessboardInfoProps, Chessboard } from '#components';
+import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
 import { meta } from '#meta';
 import { Chess } from '#types';
 

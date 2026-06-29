@@ -9,11 +9,11 @@ import { type Graph } from '@dxos/graph';
 import { SVGContext } from '../../hooks';
 import { type GraphLayoutEdge } from '../types';
 import {
-  type PlexusRelation,
+  GraphPlexusProjector,
   PLEXUS_NODE_TYPE_FOCUS,
   PLEXUS_NODE_TYPE_OBJECT,
   PLEXUS_NODE_TYPE_RELATION,
-  GraphPlexusProjector,
+  type PlexusRelation,
 } from './graph-plexus-projector';
 
 const makeContext = () => {

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type EmptyProps, Empty } from './Empty';
+import { Empty, type EmptyProps } from './Empty';
 
 const meta = {
   title: 'ui/react-ui-list/Empty',

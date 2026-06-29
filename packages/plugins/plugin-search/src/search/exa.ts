@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Entity, type Type, Key, Obj } from '@dxos/echo';
+import { type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { ReferenceAnnotationId } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';

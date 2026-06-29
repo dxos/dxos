@@ -7,11 +7,11 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import {
-  type DevicesService,
-  type QueryDevicesResponse,
   Device,
   DeviceKind,
+  type DevicesService,
   EdgeStatus,
+  type QueryDevicesResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 

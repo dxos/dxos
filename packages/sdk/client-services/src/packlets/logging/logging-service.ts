@@ -12,9 +12,9 @@ import {
   type LogEntry,
   type LoggingService,
   type Metrics,
+  QueryLogsRequest,
   type QueryMetricsRequest,
   type QueryMetricsResponse,
-  QueryLogsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { numericalValues, tracer } from '@dxos/util';
 

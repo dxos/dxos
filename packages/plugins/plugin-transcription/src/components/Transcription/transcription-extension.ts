@@ -3,14 +3,14 @@
 //
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
-import { type ViewUpdate, EditorView, GutterMarker, ViewPlugin, gutter } from '@codemirror/view';
+import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@codemirror/view';
 import { format } from 'date-fns/format';
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type Message } from '@dxos/types';
 
-import { type SerializationModel, DocumentAdapter } from '../../model';
+import { DocumentAdapter, type SerializationModel } from '../../model';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.

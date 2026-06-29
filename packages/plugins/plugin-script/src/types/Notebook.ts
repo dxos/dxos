@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Instructions } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Graph } from '@dxos/plugin-explorer';

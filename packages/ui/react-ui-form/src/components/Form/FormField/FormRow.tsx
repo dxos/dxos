@@ -3,10 +3,10 @@
 //
 
 import { format as formatDate } from 'date-fns';
-import React, { type PropsWithChildren, type ReactNode, type Ref, Component } from 'react';
+import React, { Component, type PropsWithChildren, type ReactNode, type Ref } from 'react';
 
 import { Format } from '@dxos/echo';
-import { type ThemedClassName, Icon, Input, Tooltip } from '@dxos/react-ui';
+import { Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';

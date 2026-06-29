@@ -9,7 +9,7 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
-import { UNCATEGORIZED_VALUE, Kanban } from '@dxos/plugin-kanban';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 

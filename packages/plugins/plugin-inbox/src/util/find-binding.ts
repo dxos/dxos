@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Obj, Database, Filter, Query } from '@dxos/echo';
+import { Database, Filter, type Obj, Query } from '@dxos/echo';
 // Connection is referenced in the inferred type of findBindingForTarget (via SyncBinding's source
 // relation); the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports

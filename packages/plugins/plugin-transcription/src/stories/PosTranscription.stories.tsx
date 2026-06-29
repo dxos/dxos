@@ -22,7 +22,7 @@ import { pos } from '@dxos/ui-editor';
 import { translations } from '#translations';
 
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { SAMPLE_CONTENT, DefaultStory, StoryGraphPlugin } from './markdown-transcription-harness';
+import { DefaultStory, SAMPLE_CONTENT, StoryGraphPlugin } from './markdown-transcription-harness';
 
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,

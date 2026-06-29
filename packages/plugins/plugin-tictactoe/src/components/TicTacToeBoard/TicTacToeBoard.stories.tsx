@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type TicTacToeBoardProps, TicTacToeBoard } from './TicTacToeBoard';
+import { TicTacToeBoard, type TicTacToeBoardProps } from './TicTacToeBoard';
 
 const InteractiveStory = (args: TicTacToeBoardProps) => {
   const [board, setBoard] = useState(args.board);

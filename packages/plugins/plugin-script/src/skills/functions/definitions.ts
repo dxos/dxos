@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Ref } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({

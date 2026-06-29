@@ -23,7 +23,7 @@ import { Organization, Person } from '@dxos/types';
 import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
 
-import { type ChatOptionsProps, ChatOptions, ObjectsPanel } from './ChatOptions';
+import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions';
 
 const presets = [
   {

@@ -10,7 +10,7 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
-import { type ToolbarMenuActionGroupProperties, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';

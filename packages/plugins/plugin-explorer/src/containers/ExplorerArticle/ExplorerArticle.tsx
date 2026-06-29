@@ -5,11 +5,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Filter, type View, Obj } from '@dxos/echo';
+import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
-import { type QueryEditorProps, QueryEditor } from '@dxos/react-ui-components';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type ExplorerArticleVariant, type TreeNode, VARIANTS, Visualization, isVariant } from '#components';

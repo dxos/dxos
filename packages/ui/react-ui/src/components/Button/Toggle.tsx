@@ -5,7 +5,7 @@
 import * as TogglePrimitive from '@radix-ui/react-toggle';
 import React, { forwardRef } from 'react';
 
-import { type ButtonProps, Button } from './Button';
+import { Button, type ButtonProps } from './Button';
 
 type ToggleProps = Omit<TogglePrimitive.ToggleProps, 'asChild'> & ButtonProps;
 

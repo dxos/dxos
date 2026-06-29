@@ -9,12 +9,12 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import {
-  type Entity,
-  type Hypergraph,
   Collection,
   Dataset,
+  type Entity,
   Feed,
   Filter,
+  type Hypergraph,
   Obj,
   Order,
   Query,
@@ -26,14 +26,14 @@ import {
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, EID, URI, EntityId, PublicKey } from '@dxos/keys';
+import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
-import { type EchoTestPeer, EchoTestBuilder, createTmpPath } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 random.seed(1);
 

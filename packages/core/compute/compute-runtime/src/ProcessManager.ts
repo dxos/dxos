@@ -25,7 +25,7 @@ import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation } from '@dxos/echo';
-import type { URI, SpaceId } from '@dxos/keys';
+import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';

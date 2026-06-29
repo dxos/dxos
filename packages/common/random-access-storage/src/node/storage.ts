@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Storage, type StorageConstructor, MemoryStorage, StorageType } from '../common';
+import { MemoryStorage, type Storage, type StorageConstructor, StorageType } from '../common';
 import { NodeStorage } from './node-storage';
 
 export const createStorage: StorageConstructor = ({ type, root = '/tmp/dxos/testing' } = {}): Storage => {

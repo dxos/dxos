@@ -9,7 +9,7 @@ import { type Axis, ScrollArea } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type MosaicTileProps, Mosaic } from './Mosaic';
+import { Mosaic, type MosaicTileProps } from './Mosaic';
 
 type Item = { id: string; label: string };
 

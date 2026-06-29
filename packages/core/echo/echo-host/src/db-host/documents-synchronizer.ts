@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Heads, next as A } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import { type DocumentId, type DocumentQuery } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';

@@ -10,7 +10,7 @@ import { Input, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { type JsonReplacer, JsonHighlighter } from '../JsonHighlighter';
+import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter';
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
 //

@@ -9,7 +9,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { useMembers, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { type Transcript, Message } from '@dxos/types';
+import { Message, type Transcript } from '@dxos/types';
 
 import { Transcription } from '#components';
 import { useFeedModelAdapter, useTranscriptionRecording } from '#hooks';

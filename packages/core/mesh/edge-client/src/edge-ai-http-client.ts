@@ -11,7 +11,7 @@ import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { type BaseErrorOptions, BaseError } from '@dxos/errors';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { BYOK_HEADER } from '@dxos/protocols';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type RedisOptions, AbstractConnector } from 'ioredis';
+import { AbstractConnector, type RedisOptions } from 'ioredis';
 import { type ErrorEmitter } from 'ioredis/built/connectors/AbstractConnector';
 import { type NetStream } from 'ioredis/built/types';
 import WebSocketStream from 'websocket-stream';

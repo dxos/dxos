@@ -3,8 +3,8 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type Extension, type Range, Facet } from '@codemirror/state';
-import { type DecorationSet, type ViewUpdate, Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { type Extension, Facet, type Range } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 

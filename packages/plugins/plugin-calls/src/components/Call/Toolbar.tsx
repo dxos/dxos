@@ -11,11 +11,11 @@ import { Obj } from '@dxos/echo';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions, useNode } from '@dxos/plugin-graph';
 import {
-  type IconButtonProps,
-  type ThemedClassName,
   Icon,
   IconButton,
+  type IconButtonProps,
   Toolbar as NaturalToolbar,
+  type ThemedClassName,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';

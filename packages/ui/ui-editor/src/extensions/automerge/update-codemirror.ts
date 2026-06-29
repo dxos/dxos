@@ -12,7 +12,7 @@ import {
   type PutPatch,
   type SpliceTextPatch,
 } from '@automerge/automerge';
-import { type ChangeSpec, type EditorSelection, type EditorState, ChangeSet } from '@codemirror/state';
+import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { reconcileAnnotation } from './defs';

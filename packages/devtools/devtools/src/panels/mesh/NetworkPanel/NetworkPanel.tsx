@@ -8,7 +8,7 @@ import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
-import { type GraphLayoutNode, type SVGContext, SVG, GraphForceProjector } from '@dxos/react-ui-graph';
+import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';

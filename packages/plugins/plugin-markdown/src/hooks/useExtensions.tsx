@@ -17,12 +17,12 @@ import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
-  type EditorStateStore,
-  type Extension,
-  type PreviewOptions,
   Cursor,
+  type EditorStateStore,
   EditorView,
+  type Extension,
   InputModeExtensions,
+  type PreviewOptions,
   createDataExtensions,
   decorateMarkdown,
   documentId,

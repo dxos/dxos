@@ -17,6 +17,9 @@ import {
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
 import {
+  AuthStatus,
+  CredentialServerExtension,
+  DatabaseRoot,
   type EchoHost,
   type EdgeAutomergeReplicator,
   type IMetadataStore,
@@ -25,9 +28,6 @@ import {
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
-  AuthStatus,
-  CredentialServerExtension,
-  DatabaseRoot,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -35,17 +35,17 @@ import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
-import { type SpaceId, PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata, EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   type Credential,
-  type ProfileDocument,
   MembershipPolicy,
+  type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';

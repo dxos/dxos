@@ -17,7 +17,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 
 import { translations } from '#translations';
 
-import { type ToolboxProps, Toolbox } from './Toolbox';
+import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {
   return <Toolbox {...props} classNames='h-[15rem] w-[30rem] py-1 rounded-xs border border-separator' />;

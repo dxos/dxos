@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Button, IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type WaveformProps, Waveform } from './Waveform';
+import { Waveform, type WaveformProps } from './Waveform';
 
 const DefaultStory = ({ active: _active }: WaveformProps) => {
   const [active, setActive] = useState(_active);

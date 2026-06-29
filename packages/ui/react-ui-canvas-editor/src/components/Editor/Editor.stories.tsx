@@ -15,13 +15,13 @@ import { Form, TupleField } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
-import { type TypeSpec, type ValueGenerator, TestSchema, createObjectFactory } from '@dxos/schema/testing';
+import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
 import { type CanvasGraphModel, RectangleShape } from '../../types';
-import { type EditorController, type EditorRootProps, Editor } from './Editor';
+import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = random as any;
 

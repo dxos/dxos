@@ -10,7 +10,7 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppAnnotation, AppCapabilities } from '@dxos/app-toolkit';
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';

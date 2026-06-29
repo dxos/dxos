@@ -11,9 +11,9 @@ import {
   completionStatus,
   startCompletion,
 } from '@codemirror/autocomplete';
-import { type Language, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, type Language, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
-import { type EditorView, type ViewUpdate, ViewPlugin, keymap } from '@codemirror/view';
+import { type EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';

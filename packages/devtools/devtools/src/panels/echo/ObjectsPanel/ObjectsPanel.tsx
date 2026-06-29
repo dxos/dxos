@@ -7,10 +7,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
-import { type URI, EID } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { type TableFeatures, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';

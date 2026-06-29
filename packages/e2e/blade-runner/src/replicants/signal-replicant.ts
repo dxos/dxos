@@ -12,7 +12,7 @@ import { range } from '@dxos/util';
 
 import { type TraceEvent } from '../analysys';
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
-import { type TestPeer, TestBuilder } from '../test-builder';
+import { TestBuilder, type TestPeer } from '../test-builder';
 import { randomArraySlice } from '../util';
 
 export type ReplicantRunProps = {

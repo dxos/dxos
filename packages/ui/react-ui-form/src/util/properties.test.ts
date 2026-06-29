@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
-import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 

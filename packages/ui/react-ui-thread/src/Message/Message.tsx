@@ -18,9 +18,9 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import {
-  type ThemedClassName,
   Avatar,
   IconButton,
+  type ThemedClassName,
   useOnTransition,
   useThemeContext,
   useTranslation,

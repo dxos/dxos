@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type PageAction, CrxCapabilities } from '@dxos/plugin-crx/types';
+import { CrxCapabilities, type PageAction } from '@dxos/plugin-crx/types';
 
 import { meta } from '#meta';
 import { BookmarkOperation } from '#types';
