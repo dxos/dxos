@@ -20,6 +20,7 @@ import {
   StatusWidget,
   SuggestionWidget,
   SummaryWidget,
+  SurfaceWidget,
   ToolWidget,
 } from './widgets';
 
@@ -111,6 +112,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   summary: {
     block: true,
     Component: SummaryWidget,
+  },
+  surface: {
+    block: true,
+    Component: SurfaceWidget,
   },
   toolCall: {
     block: true,
@@ -259,6 +264,18 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
 
     case 'status': {
       return renderXMLBlock('status', { content: block.statusText, pending: block.pending });
+    }
+
+    case 'surface': {
+      if (block.pending) {
+        return;
+      }
+      // Carry the payload as JSON text content so it round-trips through the mixed XML parser
+      // without colliding with attribute quoting; `SurfaceWidget` re-parses it.
+      return renderXMLBlock('surface', {
+        content: JSON.stringify(block.data ?? {}),
+        attributes: `role="${block.role}"`,
+      });
     }
 
     default: {

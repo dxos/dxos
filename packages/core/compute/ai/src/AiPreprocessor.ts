@@ -488,6 +488,13 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('text', {
           text: '<toolkit/>',
         });
+      case 'surface':
+        // Round-trip the surface request so the model sees in history that it rendered a surface.
+        return Prompt.makePart('text', {
+          text: block.data
+            ? `<surface role="${block.role}">${JSON.stringify(block.data)}</surface>`
+            : `<surface role="${block.role}" />`,
+        });
       case 'json':
         return Prompt.makePart('text', {
           text: block.data,
