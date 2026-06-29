@@ -22,10 +22,10 @@ import {
 import { coreLayer } from '@dxos/crawler/testing';
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Empty } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SemanticPipeline, SemanticStore, type Type, buildSparql, generateQuery } from '@dxos/semantic-index';
 
@@ -153,11 +153,9 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
   );
 };
 
-// --- Crawler explorer -----------------------------------------------------------------------------
-
 const CrawlOptions = Schema.Struct({
   token: Schema.String.annotations({ title: 'Discord bot token' }),
-  channel: Schema.String.annotations({ title: 'Channel' }),
+  channels: Schema.Array(Schema.String).annotations({ title: 'Channels' }),
   maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
   descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
 });
@@ -169,42 +167,49 @@ type CrawlAction = 'channels' | 'crawl';
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
- * can read, pick one (the `channel` form field is a Listbox picker via `fieldMap`), crawl it through
- * the pipeline (edge LLM extraction), and view the facts.
+ * can read, select one or more (the `channels` form field is a multi-select over the discovered
+ * channels via `fieldMap` — the array-valued analogue of `createSelectField`), crawl them through the
+ * pipeline (edge LLM extraction), and view the facts.
  */
 const CrawlerStory = () => {
-  const [options, setOptions] = useState<CrawlOptions>({ token: '', channel: '', maxDays: 7, descendThreads: true });
+  const [options, setOptions] = useState<CrawlOptions>({ token: '', channels: [], maxDays: 7, descendThreads: true });
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Custom renderer for the `channel` field: a Listbox picker over the discovered channels, wired to
-  // the form value. Rebuilt when the channel list changes.
+  // Custom renderer for the array-valued `channels` field: a multi-select over the discovered channels
+  // (createSelectField is single-valued, so this is its array analogue). Rebuilt when the list changes.
   const fieldMap = useMemo<FormFieldMap>(() => {
-    const ChannelField: FormFieldRenderer = ({ type, label, required, getValue, onValueChange }) => {
-      const value = getValue() as string | undefined;
+    const ChannelsField: FormFieldRenderer = ({ type, label, required, getValue, onValueChange }) => {
+      const value = (getValue() as readonly string[] | undefined) ?? [];
+      const toggle = (id: string, checked: boolean) =>
+        onValueChange(type, checked ? [...value, id] : value.filter((existing) => existing !== id));
       return (
         <div role='none' className='flex flex-col gap-1'>
           <span className='text-sm'>{required ? `${label} *` : label}</span>
           {channels.length > 0 ? (
-            <Listbox.Root value={value} onValueChange={(next) => onValueChange(type, next)}>
-              <Listbox.Content aria-label={label}>
-                {channels.map((channel) => (
-                  <Listbox.Item key={channel.id} id={channel.id} classNames='p-2'>
-                    {channel.name ?? channel.id}
-                  </Listbox.Item>
-                ))}
-              </Listbox.Content>
-            </Listbox.Root>
+            <div role='none' className='flex flex-col gap-1'>
+              {channels.map((channel) => (
+                <Input.Root key={channel.id}>
+                  <div role='none' className='flex items-center gap-2'>
+                    <Input.Checkbox
+                      checked={value.includes(channel.id)}
+                      onCheckedChange={(checked) => toggle(channel.id, checked === true)}
+                    />
+                    <Input.Label classNames='truncate'>{channel.name ?? channel.id}</Input.Label>
+                  </div>
+                </Input.Root>
+              ))}
+            </div>
           ) : (
             <Empty icon='ph--hash--regular' label='List channels first.' />
           )}
         </div>
       );
     };
-    return { channel: ChannelField };
+    return { channels: ChannelsField };
   }, [channels]);
 
   const guard = async (action: CrawlAction, task: () => Promise<void>) => {
@@ -228,14 +233,17 @@ const CrawlerStory = () => {
         ),
       );
       setChannels(result);
-      // Default the selection to the first channel if none chosen yet.
-      setOptions((prev) => ({ ...prev, channel: prev.channel || (result[0]?.id ?? '') }));
+      // Default to the first channel if none selected yet.
+      setOptions((prev) => ({
+        ...prev,
+        channels: prev.channels.length ? prev.channels : result.slice(0, 1).map((c) => c.id),
+      }));
       setStatus(`${result.length} channel(s) visible`);
     });
 
-  // Crawl the selected channel through the pipeline, then read the resulting facts from the store.
+  // Crawl the selected channels through the pipeline, then read the resulting facts from the store.
   const handleCrawl = () => {
-    if (!options.channel) {
+    if (options.channels.length === 0) {
       return;
     }
     void guard('crawl', async () => {
@@ -244,7 +252,7 @@ const CrawlerStory = () => {
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           const summary = yield* run(
-            { channels: [options.channel], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
+            { channels: options.channels, descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
             CRAWL_STAGES,
           );
           const registry = yield* AgentRegistry;
@@ -270,7 +278,11 @@ const CrawlerStory = () => {
             <Button disabled={!options.token || !!busy} onClick={handleListChannels}>
               {busy === 'channels' ? 'Listing…' : 'List channels'}
             </Button>
-            <Button variant='primary' disabled={!options.token || !options.channel || !!busy} onClick={handleCrawl}>
+            <Button
+              variant='primary'
+              disabled={!options.token || options.channels.length === 0 || !!busy}
+              onClick={handleCrawl}
+            >
               {busy === 'crawl' ? 'Crawling…' : 'Crawl'}
             </Button>
           </Toolbar.Root>
