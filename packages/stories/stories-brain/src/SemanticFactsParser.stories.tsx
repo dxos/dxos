@@ -21,7 +21,7 @@ import { EffectEx } from '@dxos/effect';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { extractFacts } from '@dxos/semantic-index';
 
-import { type SemanticFactsParserProps, SemanticFactsParser } from './SemanticFactsParser';
+import { SemanticFactsParser, type SemanticFactsParserProps } from './SemanticFactsParser';
 import { SAMPLE_FACTS_TEXT } from './testing';
 
 // Live extraction: `extractFacts` requires only an `AiService`, satisfied here by the hosted DXOS

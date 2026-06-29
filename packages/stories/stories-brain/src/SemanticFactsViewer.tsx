@@ -8,7 +8,8 @@ import { Icon, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } fr
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
-import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
+
+import { Group, factualityColor, formatDate, formatTerm, groupFacts, humanize } from './util';
 
 export type SemanticFactsViewerProps = ThemedClassName<{
   facts: Type.Fact[];
@@ -102,90 +103,4 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
       {assertion.quote && <div className='text-sm text-description italic'>"{assertion.quote}"</div>}
     </Listbox.Item>
   );
-};
-
-//
-// Helpers.
-//
-
-type Group = {
-  subject: string;
-  facts: Type.Fact[];
-  conflicted: boolean;
-  conflictedIds: Set<string>;
-};
-
-/** Group facts by subject entity and flag predicate-level conflicts within each group. */
-const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
-  const needle = filter.trim().toLowerCase();
-  const filtered = needle
-    ? facts.filter((fact) => {
-        const { subject, predicate, object } = fact.assertion;
-        return [termLabel(subject), predicate, termLabel(object)].some((value) => value.toLowerCase().includes(needle));
-      })
-    : facts;
-
-  const bySubject = new Map<string, Type.Fact[]>();
-  for (const fact of filtered) {
-    const key = termLabel(fact.assertion.subject);
-    const list = bySubject.get(key) ?? [];
-    list.push(fact);
-    bySubject.set(key, list);
-  }
-
-  return [...bySubject.entries()].map(([subject, groupFactsList]) => {
-    const byPredicate = new Map<string, Type.Fact[]>();
-    for (const fact of groupFactsList) {
-      const list = byPredicate.get(fact.assertion.predicate) ?? [];
-      list.push(fact);
-      byPredicate.set(fact.assertion.predicate, list);
-    }
-
-    const conflictedIds = new Set<string>();
-    for (const list of byPredicate.values()) {
-      const objects = new Set(list.map((fact) => termLabel(fact.assertion.object)));
-      if (objects.size > 1) {
-        for (const fact of list) {
-          conflictedIds.add(fact.id);
-        }
-      }
-    }
-
-    return {
-      subject,
-      facts: groupFactsList,
-      conflicted: conflictedIds.size > 0,
-      conflictedIds,
-    };
-  });
-};
-
-const termLabel = (term: Type.Term): string => ('entity' in term ? term.entity : term.literal);
-
-/** Prettify entity ids for display; render literal values verbatim. */
-const formatTerm = (term: Type.Term): string => ('entity' in term ? humanize(term.entity) : term.literal);
-
-/** Render ids like `q3-board-meeting` as `Q3 Board Meeting`. */
-const humanize = (value: string): string => value.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-
-const formatDate = (iso: string): string => iso.slice(0, 10);
-
-/** Map FactBank factuality to a real react-ui palette member. */
-const factualityColor = (factuality: Type.Factuality): NeutralPalette | ChromaticPalette | MessageValence => {
-  switch (factuality) {
-    case 'CT+':
-      return 'emerald';
-    case 'PR+':
-      return 'amber';
-    case 'PS+':
-      return 'sky';
-    case 'CT-':
-    case 'PR-':
-    case 'PS-':
-      return 'red';
-    case 'CTu':
-    case 'Uu':
-    default:
-      return 'neutral';
-  }
 };

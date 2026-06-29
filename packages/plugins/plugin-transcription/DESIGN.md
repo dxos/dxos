@@ -38,9 +38,10 @@ through the `TranscriptionManagerProvider` capability as a light **interface**
 (`TranscriptionCapabilities.TranscriptionManager`).
 
 ```
-plugin-meeting -> get(TranscriptionManagerProvider)({ messageEnricher }) -> TranscriptionManager (interface)
-                                                                               ▲ implemented by
-                                                          TranscriptionManagerImpl (this plugin, internal)
+plugin-meeting
+  -> get(TranscriptionManagerProvider)({ messageEnricher })
+    -> TranscriptionManager (interface)
+      -> TranscriptionManagerImpl (this plugin, internal)
 ```
 
 Consumers depend on the interface, so the implementation's browser/SDK dependencies do not leak into
@@ -49,7 +50,8 @@ their packages.
 ## Editor capture flow
 
 ```
-Mic button -> RecordingSession.recording = true
+Mic button
+  -> RecordingSession.recording = true
   -> TranscriptionDriver (always-mounted) reads RecordingSession + Settings + EntityLookup
   -> useRecordingPipeline (react-ui-transcription): mic -> Transcriber -> runLivePipeline -> stages
   -> pending-text decorations in the markdown editor (confirm ✓ / cancel ✕)

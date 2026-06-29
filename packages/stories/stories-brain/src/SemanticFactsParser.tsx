@@ -4,8 +4,8 @@
 
 import React, { useRef, useState } from 'react';
 
-import { type ThemedClassName, Button, Panel, Tag, Toolbar } from '@dxos/react-ui';
-import { type EditorController, Editor } from '@dxos/react-ui-editor';
+import { Button, Panel, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import { type Type } from '@dxos/semantic-index';
 
 import { SemanticFactsViewer } from './SemanticFactsViewer';
