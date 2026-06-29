@@ -79,8 +79,8 @@ describe('DiscordSource live crawl', () => {
     'crawls a real channel into the fact graph and surfaces topics',
     async () => {
       // Real LLM extraction makes one call PER message, so bound the lookback (DISCORD_MAX_DAYS,
-      // default 1) to keep the run tractable; widen it for a deeper crawl. DISCORD_THREADS=0 skips threads.
-      const maxDays = Number(process.env.DISCORD_MAX_DAYS ?? 1);
+      // default 7) to keep the run tractable; widen it for a deeper crawl. DISCORD_THREADS=0 skips threads.
+      const maxDays = Number(process.env.DISCORD_MAX_DAYS ?? 7);
       const descendThreads = process.env.DISCORD_THREADS !== '0';
       const config: Type.Config = { channels: [channelId!], descendThreads, seed: { maxDays } };
       const stages: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
