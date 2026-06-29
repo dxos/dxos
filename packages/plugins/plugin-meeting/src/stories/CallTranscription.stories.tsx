@@ -64,7 +64,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
 
   // Create the same TranscriptionManager service that plugin-meeting uses in production (via the
   // call-extension) and bind it to the transcript's feed; the story drives it directly.
-  const managerRef = useRef<TranscriptionCapabilities.TranscriptionManager>();
+  const managerRef = useRef<TranscriptionCapabilities.TranscriptionManager | undefined>(undefined);
   useEffect(() => {
     if (!transcriptionManagerProvider || !space || !feed) {
       return;
@@ -81,7 +81,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
 
   // Toggle mic capture into the manager (production sources the track from the call instead).
   const [recording, setRecording] = useState(false);
-  const trackRef = useRef<MediaStreamTrack>();
+  const trackRef = useRef<MediaStreamTrack | undefined>(undefined);
   const toggleRecording = useCallback(async () => {
     const manager = managerRef.current;
     if (!manager) {
