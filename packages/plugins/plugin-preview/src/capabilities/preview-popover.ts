@@ -19,10 +19,15 @@ const customEventOptions = { capture: true, passive: false };
 
 // TODO(burdon): Factor out?
 const handlePreviewLookup = async (space: Space, { dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
+  const eid = EID.tryParse(dxn);
+  if (!eid) {
+    // dxn: type URIs and other non-EID refs cannot be resolved to an object.
+    return null;
+  }
   try {
-    const object = await space.db.makeRef(EID.parse(dxn)).load();
-    const str = Obj.getLabel(object as any, { fallback: 'typename' });
-    return { label, object };
+    const object = await space.db.makeRef(eid).load();
+    const resolvedLabel = Obj.getLabel(object as any, { fallback: 'typename' });
+    return { label: resolvedLabel ?? label, object };
   } catch {
     return null;
   }
