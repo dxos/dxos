@@ -150,7 +150,10 @@ const extractFieldValue = (
   }
 };
 
-const collectAdditionalFacts = (gaap: GaapFacts | undefined, mappedConcepts: ReadonlySet<string>): Record<string, number> => {
+const collectAdditionalFacts = (
+  gaap: GaapFacts | undefined,
+  mappedConcepts: ReadonlySet<string>,
+): Record<string, number> => {
   if (!gaap) {
     return {};
   }
@@ -167,7 +170,10 @@ const collectAdditionalFacts = (gaap: GaapFacts | undefined, mappedConcepts: Rea
   return facts;
 };
 
-const resolveAsOf = (gaap: GaapFacts | undefined, conceptGroups: readonly (readonly string[])[]): string | undefined => {
+const resolveAsOf = (
+  gaap: GaapFacts | undefined,
+  conceptGroups: readonly (readonly string[])[],
+): string | undefined => {
   for (const concepts of conceptGroups) {
     const filed = pickLatestFact(gaap, concepts)?.filed;
     if (filed) {

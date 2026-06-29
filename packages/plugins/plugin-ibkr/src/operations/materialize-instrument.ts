@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
-import { mergeForeignKeys } from '../services';
 import { TRADINGVIEW_SOURCE } from '../constants';
+import { mergeForeignKeys } from '../services';
 import { Ibkr, IbkrOperation } from '../types';
 
 const defaultForeignKeys = ({

@@ -35,24 +35,16 @@ const hasMetrics = (snapshot?: Ibkr.FundamentalsSnapshot): boolean =>
 /** Humanize an XBRL concept name for display, e.g. `StockholdersEquity` → `Stockholders Equity`. */
 const formatConceptLabel = (concept: string): string => concept.replace(/([A-Z])/g, ' $1').trim();
 
-// TODO(dmaretskyi): promote currency and percentage as core form formats.
+/** debtToEquity is a plain ratio, not currency or percent — format as a plain decimal. */
 const formatFundamentalValue = (
   format: Format.TypeFormat | undefined,
   jsonPath: string | undefined,
   value: number,
 ): string => {
-  if (format === Format.TypeFormat.Currency && Math.abs(value) >= 1_000_000_000) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      notation: 'compact',
-      maximumFractionDigits: 2,
-    }).format(value);
-  }
   if (jsonPath?.endsWith('debtToEquity')) {
     return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
-  return formatForDisplay({ type: TypeEnum.Number, format, value });
+  return formatForDisplay({ type: TypeEnum.Number, format, value, compact: true });
 };
 
 /** Read-only panel for SEC EDGAR fundamentals returned by {@link IbkrOperation.GetInstrumentFundamentals}. */

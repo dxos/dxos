@@ -55,10 +55,7 @@ export const TradingViewChart = ({
   className,
   variant = 'advanced',
 }: TradingViewChartProps) => {
-  const src = useMemo(
-    () => (symbol ? buildEmbedUrl(symbol, theme, variant) : undefined),
-    [symbol, theme, variant],
-  );
+  const src = useMemo(() => (symbol ? buildEmbedUrl(symbol, theme, variant) : undefined), [symbol, theme, variant]);
 
   if (!src) {
     return null;
