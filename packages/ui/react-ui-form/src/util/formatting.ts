@@ -11,6 +11,8 @@ type ValueFormatProps = {
   format?: Format.TypeFormat | undefined;
   value: any;
   locale?: string | undefined;
+  /** Use compact notation for large currency values (>= 1 billion). */
+  compact?: boolean | undefined;
 };
 
 /**
@@ -19,7 +21,7 @@ type ValueFormatProps = {
  */
 // TODO(burdon): Move to react-ui-form.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
-export const formatForDisplay = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
+export const formatForDisplay = ({ type, format, value, locale = undefined, compact }: ValueFormatProps): string => {
   const formatScalar = (type: TypeEnum) => {
     switch (type) {
       case TypeEnum.Boolean:
@@ -52,10 +54,18 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
       return formatScalar(TypeEnum.String);
     }
     case Format.TypeFormat.Percent: {
-      return `${(value as number) * 100}%`;
+      return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(value as number);
     }
     case Format.TypeFormat.Currency: {
-      // TODO(burdon): Get from property annotation.
+      // TODO(burdon): Get currency from property annotation.
+      if (compact && Math.abs(value as number) >= 1_000_000_000) {
+        return new Intl.NumberFormat(locale, {
+          style: 'currency',
+          currency: 'USD',
+          notation: 'compact',
+          maximumFractionDigits: 2,
+        }).format(value as number);
+      }
       return (value as number).toLocaleString(locale, {
         style: 'currency',
         currency: 'USD',

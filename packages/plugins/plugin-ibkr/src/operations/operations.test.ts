@@ -157,10 +157,7 @@ describe('IBKR operations', () => {
         keys: [{ source: TRADINGVIEW_SOURCE, id: 'NASDAQ:AAPL' }],
       });
       db.add(instrument);
-      const result = await run(
-        GetInstrumentFundamentalsHandler.handler({ instrument: Ref.make(instrument) }),
-        db,
-      );
+      const result = await run(GetInstrumentFundamentalsHandler.handler({ instrument: Ref.make(instrument) }), db);
       expect(result.performance?.revenue).toBe(391_035_000_000);
       expect(result.performance?.netIncome).toBe(93_736_000_000);
     } finally {

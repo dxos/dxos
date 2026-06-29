@@ -9,7 +9,13 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { PortfolioArticle, PortfolioProperties, PortfolioReportDetail, InstrumentArticle, InstrumentCard } from '#containers';
+import {
+  PortfolioArticle,
+  PortfolioProperties,
+  PortfolioReportDetail,
+  InstrumentArticle,
+  InstrumentCard,
+} from '#containers';
 
 import { Ibkr } from '../types';
 

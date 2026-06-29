@@ -10,12 +10,7 @@ import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 
-import {
-  EdgarAdditionalFactsAnnotation,
-  EdgarAsOfConceptsAnnotation,
-  EdgarFieldAnnotation,
-} from '../annotations';
-
+import { EdgarAdditionalFactsAnnotation, EdgarAsOfConceptsAnnotation, EdgarFieldAnnotation } from '../annotations';
 import { IBKR_FEED_KIND } from '../constants';
 
 /** An open position parsed from a Flex report. */
@@ -80,20 +75,14 @@ export const Lot = Schema.Struct({
 });
 export type Lot = Schema.Schema.Type<typeof Lot>;
 
-export const AssetClass = Schema.Literal(
-  'stock',
-  'etf',
-  'mutual_fund',
-  'adr',
-  'reit',
-  'warrant',
-  'other',
-);
+export const AssetClass = Schema.Literal('stock', 'etf', 'mutual_fund', 'adr', 'reit', 'warrant', 'other');
 export type AssetClass = Schema.Schema.Type<typeof AssetClass>;
 
 /** Valuation multiples (reserved for future market-data sources). */
 export const FundamentalsValuation = Schema.Struct({
-  marketCap: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'Market cap' }))),
+  marketCap: Schema.optional(
+    Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'Market cap' })),
+  ),
   pe: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'P/E' }))),
   pb: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotations({ title: 'P/B' }))),
 }).pipe(Schema.annotations({ title: 'Valuation' }));
@@ -140,10 +129,7 @@ export const FundamentalsRatios = Schema.Struct({
         type: 'ratio',
         numerator: { concepts: ['NetIncomeLoss', 'ProfitLoss'] },
         denominator: {
-          concepts: [
-            'StockholdersEquity',
-            'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
-          ],
+          concepts: ['StockholdersEquity', 'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'],
         },
       }),
       Schema.annotations({ title: 'ROE' }),
@@ -155,10 +141,7 @@ export const FundamentalsRatios = Schema.Struct({
         type: 'ratio',
         numerator: { concepts: ['Liabilities'] },
         denominator: {
-          concepts: [
-            'StockholdersEquity',
-            'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
-          ],
+          concepts: ['StockholdersEquity', 'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'],
         },
       }),
       Schema.multipleOf(0.01),
