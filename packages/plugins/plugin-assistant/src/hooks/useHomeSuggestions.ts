@@ -12,9 +12,9 @@ import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
 const FALLBACK_SUGGESTION_KEYS = [
-  'space-home.suggestion-draft-doc.label',
-  'space-home.suggestion-data-type.label',
-  'space-home.suggestion-analyze-inbox.label',
+  'space-home.suggestion-magazine.label',
+  'space-home.suggestion-spreadsheet.label',
+  'space-home.suggestion-kanban.label',
 ] as const;
 
 /**
@@ -25,7 +25,10 @@ const FALLBACK_SUGGESTION_KEYS = [
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);
+  const fallbacks = useMemo(
+    () => FALLBACK_SUGGESTION_KEYS.map((key) => t(key, { year: new Date().getFullYear() })),
+    [t],
+  );
   const [suggestions, setSuggestions] = useState<readonly string[] | undefined>(undefined);
 
   useAsyncEffect(
