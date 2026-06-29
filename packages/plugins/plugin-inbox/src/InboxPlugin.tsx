@@ -13,13 +13,13 @@ import { Event, Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
+  Connector,
   CreateObject,
   InboxSettings,
-  Connector,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';

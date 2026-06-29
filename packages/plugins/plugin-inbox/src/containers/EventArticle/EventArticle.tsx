@@ -16,7 +16,7 @@ import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
-import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
 

@@ -17,25 +17,25 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import {
+  type AnyProperties,
   ATTR_DELETED,
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type AnyProperties,
   ChangeId,
   EntityKind,
+  type EntityMeta,
+  type EntityMetaJSON,
+  EntityMetaSchema,
   EventId,
+  type JsonSchemaType,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
-  type EntityMeta,
-  type EntityMetaJSON,
-  EntityMetaSchema,
   ObjectVersionId,
   ParentId,
-  TypeSchema,
   type ReactiveHandler,
   Ref,
   RefImpl,
@@ -45,18 +45,18 @@ import {
   RelationTargetId,
   SchemaId,
   SchemaKindId,
-  StaticTypeSchemaSlot,
-  TypeEntityId,
   SchemaMetaSymbol,
   SchemaValidator,
   SelfURIId,
+  StaticTypeSchemaSlot,
+  TypeEntityId,
   TypeId,
   TypeIdentifierAnnotationId,
+  TypeSchema,
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
   executeChange,
-  type JsonSchemaType,
   getEntityKind,
   getProxyHandler,
   getProxySlot,
@@ -67,6 +67,7 @@ import {
   isInChangeContext,
   isInstanceOf,
   isProxy,
+  normalizeSpliceRange,
   queueNotification,
   setRefResolver,
   symbolIsProxy,
@@ -92,7 +93,12 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { createArrayMethodError, createPropertyDeleteError, createPropertySetError } from './errors';
+import {
+  createArrayMethodError,
+  createPropertyDeleteError,
+  createPropertySetError,
+  createTextMethodError,
+} from './errors';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -868,6 +874,32 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target as EchoArray<any>;
   }
 
+  textUpdate(target: ProxyTarget, path: Doc.KeyPath, newText: string): void {
+    this._checkTextMutationAllowed(target, 'update');
+    const fullPath = this._getPropertyMountPath(target, path);
+    target[symbolInternals].change((doc: any) => {
+      // `A.updateText` computes a minimal diff so cursors/anchors survive and concurrent edits merge.
+      // `.slice()` materializes a mutable copy since Automerge mutates the path array.
+      A.updateText(doc, fullPath.slice(), newText);
+    });
+  }
+
+  textSplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount: number, insert: string): string {
+    this._checkTextMutationAllowed(target, 'splice');
+    const fullPath = this._getPropertyMountPath(target, path);
+
+    let removed = '';
+    target[symbolInternals].change((doc: any) => {
+      const current = getDeep(doc, fullPath);
+      invariant(typeof current === 'string', 'Text mutation target is not a string');
+      const range = normalizeSpliceRange(current.length, start, deleteCount);
+      removed = current.slice(range.start, range.start + range.deleteCount);
+      A.splice(doc, fullPath.slice(), range.start, range.deleteCount, insert);
+    });
+
+    return removed;
+  }
+
   /**
    * Check if array mutation is allowed (inside a change context).
    */
@@ -875,6 +907,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const core = target[symbolInternals];
     if (!isInChangeContext(core)) {
       throw createArrayMethodError(method);
+    }
+  }
+
+  /**
+   * Check if text mutation is allowed (inside a change context).
+   */
+  private _checkTextMutationAllowed(target: ProxyTarget, method: string): void {
+    const core = target[symbolInternals];
+    if (!isInChangeContext(core)) {
+      throw createTextMethodError(method);
     }
   }
 

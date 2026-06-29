@@ -14,14 +14,14 @@ import { Support } from '#types';
 
 import { SupportArticle } from './SupportArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   title?: string;
   body?: string;
   status?: Support.TicketStatus;
   resolution?: string;
 };
 
-const DefaultStory = ({ title, body, status, resolution }: DefaultStoryProps) => {
+const DefaultStory = ({ title, body, status, resolution }: StoryArgs) => {
   const ticket = useMemo(() => {
     const next = Support.make({ title, body });
     if (status || resolution) {

@@ -322,4 +322,4 @@ export const Message = {
   Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };
+export type { MessageBodyProps, MessageHeaderProps, MessageRootProps, MessageViewportProps };

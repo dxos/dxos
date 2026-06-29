@@ -8,13 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
-export const SKILL_KEY = 'org.dxos.skill.sheet';
-
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
+
+export const SKILL_KEY = 'org.dxos.skill.sheet';
 
 export type SheetSize = {
   rows: number;

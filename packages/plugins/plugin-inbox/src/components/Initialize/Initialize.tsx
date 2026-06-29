@@ -15,7 +15,7 @@ export type InitializeProps<T extends Obj.Any> = {
   /** The object whose Connection we're connecting / syncing. */
   target: T;
   /** Already-translated warning shown when no connection is bound to `target`. */
-  noIntegrationMessage: string;
+  noConnectionsMessage: string;
   /** Already-translated message shown when a connection exists but the target is still empty. */
   emptyMessage?: string;
 };
@@ -29,9 +29,9 @@ export type InitializeProps<T extends Obj.Any> = {
  * Used by `InitializeMailbox` and `InitializeCalendar`.
  */
 export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
-  ({ target, noIntegrationMessage, emptyMessage, ...props }, forwardedRef) => {
+  ({ target, noConnectionsMessage, emptyMessage, ...props }, forwardedRef) => {
     const { connection } = useTargetConnection(target);
-    const message = connection ? emptyMessage : noIntegrationMessage;
+    const message = connection ? emptyMessage : noConnectionsMessage;
 
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>

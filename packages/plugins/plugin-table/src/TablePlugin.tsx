@@ -12,7 +12,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { SkillDefinition, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { TableOperation } from '#types';

@@ -205,7 +205,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
           onMoveDown={handleMoveDown}
           onDelete={handleDelete}
         >
-          <Stack.Content padding data-testid='main.stack'>
+          <Stack.Content centered padding data-testid='main.stack'>
             <Stack.Viewport>
               <Mosaic.Stack classNames='dx-document' items={items} getId={getId} Tile={Stack.Section} />
             </Stack.Viewport>

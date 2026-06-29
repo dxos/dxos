@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { createSystemPrompt, formatSystemPrompt } from '@dxos/assistant';
-import { Skill, Template, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Skill, Template } from '@dxos/compute';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';

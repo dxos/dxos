@@ -101,11 +101,11 @@ export const Avatar = {
 export { useAvatarContext };
 
 export type {
-  AvatarStatus,
-  AvatarVariant,
   AvatarAnimation,
   AvatarContentProps,
-  AvatarLabelProps,
   AvatarDescriptionProps,
+  AvatarLabelProps,
+  AvatarStatus,
+  AvatarVariant,
   NaturalDxAvatar as DxAvatar,
 };

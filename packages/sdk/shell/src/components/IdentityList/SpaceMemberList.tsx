@@ -7,7 +7,8 @@ import React, { useMemo } from 'react';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
-import { List, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -46,18 +47,24 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
   const { t } = useTranslation(translationKey);
   const visibleMembers = members.filter((member) => member.identity);
   return visibleMembers.length > 0 ? (
-    <List classNames='flex flex-col gap-2' data-testid='space-members-list'>
-      {visibleMembers.map((member) => {
-        return (
-          <IdentityListItem
-            key={member.identity.identityKey.toHex()}
-            identity={member.identity}
-            presence={member.presence}
-            onClick={onSelect && (() => onSelect(member))}
-          />
-        );
-      })}
-    </List>
+    <Listbox.Root>
+      <Listbox.Content
+        classNames='flex flex-col gap-2'
+        aria-label={t('space-member-list.heading')}
+        data-testid='space-members-list'
+      >
+        {visibleMembers.map((member) => {
+          return (
+            <IdentityListItem
+              key={member.identity.identityKey.toHex()}
+              identity={member.identity}
+              presence={member.presence}
+              onClick={onSelect && (() => onSelect(member))}
+            />
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
   ) : (
     <div className='grow flex items-center p-2'>
       <p className={mx('text-description', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>

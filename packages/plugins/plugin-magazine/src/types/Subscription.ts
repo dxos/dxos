@@ -8,14 +8,17 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
+// TODO: FeedType is currently a closed literal — plugins like plugin-bluesky must add their type here.
+// Consider making it extensible (e.g. a string schema with a well-known-values registry) so plugins can
+// register feed types without modifying core.
 /** Subscription protocol type. */
-export const FeedType = Schema.Literal('atproto', 'rss');
+export const FeedType = Schema.Literal('standard-site', 'rss', 'bluesky');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
@@ -201,27 +204,6 @@ export class PostContent extends Type.makeObject<PostContent>(
     fetchedAt: Schema.String,
   }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
-
-/** Schema for the create-feed dialog form. */
-export const CreateSubscriptionSchema = Schema.Struct({
-  name: Schema.optional(
-    Schema.String.annotations({
-      title: 'Name',
-    }),
-  ),
-  url: Schema.optional(
-    Schema.String.annotations({
-      title: 'URL',
-      description: 'RSS Subscription URL or Bluesky handle.',
-    }),
-  ),
-  type: Schema.optional(
-    FeedType.annotations({
-      title: 'Type',
-      description: 'Subscription protocol type.',
-    }),
-  ),
-});
 
 //
 // Per-Post state, keyed by Post entity id (Posts are immutable queue items). Read marker lives in

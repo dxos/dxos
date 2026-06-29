@@ -9,7 +9,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
-import { addBullet, getOrCreateEntry, Journal, JournalEntry, make, makeEntry } from './Journal';
+import { Journal, JournalEntry, addBullet, getOrCreateEntry, make, makeEntry } from './Journal';
 import { getDateString } from './util';
 
 describe('Journal', () => {

@@ -27,8 +27,8 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
-  MetaId,
   type EntityMeta,
+  MetaId,
   TypeSchema as PersistentSchema,
   type TypeAnnotation,
   TypeAnnotationId,

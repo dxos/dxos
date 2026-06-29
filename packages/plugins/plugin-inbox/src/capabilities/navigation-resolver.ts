@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, Paths, TypeSection, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
@@ -15,7 +15,7 @@ import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
 
-import { getMailboxPath, getMailboxesSectionId } from '../paths';
+import { getMailboxesSectionId, getMailboxPath } from '../paths';
 
 /**
  * Creates a path resolver for feed-object navigation paths of the form

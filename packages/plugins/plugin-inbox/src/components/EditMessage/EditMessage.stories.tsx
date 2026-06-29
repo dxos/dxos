@@ -22,9 +22,9 @@ const createDraft = () =>
     properties: {},
   });
 
-type DefaultStoryProps = Pick<EditMessageProps, 'onSend'>;
+type StoryArgs = Pick<EditMessageProps, 'onSend'>;
 
-const DefaultStory = (args: DefaultStoryProps) => {
+const DefaultStory = (args: StoryArgs) => {
   const message = useMemo(createDraft, []);
   return <EditMessage classNames='dx-expander' message={message} onSend={args.onSend} />;
 };

@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Plugin as VitePlugin } from 'vite';
 
-import { PLUGIN_DEV_SERVER_PORT, Plugin } from '../../core';
+import { Plugin, PLUGIN_DEV_SERVER_PORT } from '../../core';
 import { findDxConfigFile, loadDxConfig } from '../load';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
