@@ -6,7 +6,7 @@
  * Generates a Discord channel fixture for use in tests.
  *
  * Usage:
- *   DISCORD_TOKEN=<bot-token> DISCORD_CHANNEL_ID=<channel-id> \
+ *   DISCORD_TOKEN=<bot-token> DISCORD_CHANNEL_ID=<channel-id> [DISCORD_DAYS_OF_HISTORY=90] \
  *     moon run plugin-discord:generate-fixtures
  *
  * Output: src/__fixtures__/discord-messages.json
@@ -29,12 +29,15 @@ if (!token || !channelId) {
   process.exit(1);
 }
 
+const rawDays = process.env.DISCORD_DAYS_OF_HISTORY;
+const daysOfHistory = rawDays !== undefined ? Number(rawDays) : 30;
+
 const outDir = resolve(dirname(fileURLToPath(import.meta.url)), '../__fixtures__');
 const outPath = resolve(outDir, 'discord-messages.json');
 
 const program = Effect.gen(function* () {
-  console.log(`Fetching messages from channel ${channelId}…`);
-  const result = yield* fetchChannelMessages(channelId, { daysOfHistory: 30 });
+  console.log(`Fetching messages from channel ${channelId} (last ${daysOfHistory} days)…`);
+  const result = yield* fetchChannelMessages(channelId, { daysOfHistory });
   console.log(`Fetched ${result.messages.length} messages.`);
 
   const fixture: DiscordChannelFixture = {
