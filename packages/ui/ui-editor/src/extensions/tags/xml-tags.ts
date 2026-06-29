@@ -557,9 +557,12 @@ const buildDecorations = (
           if (!isBlock && def.block) {
             return false;
           }
+          if (isBlock && !def.block) {
+            return false;
+          }
           const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
           const nodeRange = { from: node.node.from, to: node.node.to };
-          const widgetId = `cm-url-${dxn}`;
+          const widgetId = `cm-url-${node.from}-${dxn}`;
           const props: XmlWidgetProps = {
             _tag: node.type.name === 'Image' ? 'image' : 'link',
             range: nodeRange,

@@ -24,8 +24,11 @@ export type PreviewComponentProps = XmlWidgetProps<{
  */
 export const PreviewComponent = ({ dxn }: PreviewComponentProps) => {
   const client = useClient();
-  const uri = URI.make(dxn);
-  const subject = client.graph.makeRef(uri).target;
-  const data = useMemo(() => ({ subject, attendableId: dxn }), [subject, dxn]);
+  const uri = dxn ? URI.make(dxn) : undefined;
+  const subject = uri ? client.graph.makeRef(uri).target : undefined;
+  const data = useMemo(() => (subject ? { subject, attendableId: dxn } : undefined), [subject, dxn]);
+  if (!uri || !data) {
+    return null;
+  }
   return <Surface.Surface type={AppSurface.Section} data={data} limit={1} />;
 };
