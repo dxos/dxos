@@ -2,18 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { type EditorState } from '@codemirror/state';
+import { EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { PlaceholderWidget, type XmlWidgetNotifier } from '../tags/placeholder-widget';
-
-import { type Database, Entity } from '@dxos/echo';
-import { EID, URI } from '@dxos/keys';
-
-const labelResolvedEffect = StateEffect.define<void>();
-
+/** @deprecated Use xmlTags with urlSchemes instead. */
 export type PreviewBlock = {
   link: PreviewLinkRef;
   el: HTMLElement;
@@ -30,142 +23,6 @@ export type PreviewLinkTarget = {
   label: string;
   text?: string;
   object?: any;
-};
-
-export type PreviewOptions = {
-  db?: Database.Database;
-  addBlockContainer?: (block: PreviewBlock) => void;
-  removeBlockContainer?: (block: PreviewBlock) => void;
-};
-
-/**
- * Create preview decorations.
- * The extension manages a set of blocks that are rendered in a portal outside of the editor.
- */
-export const preview = (options: PreviewOptions = {}): Extension => {
-  // Mutable ref so the StateField's onLoad callback can dispatch into the view.
-  const viewRef: { current: EditorView | undefined } = { current: undefined };
-
-  return [
-    // NOTE: Atomic block decorations must be created from a state field, now a widget, otherwise it results in the following error:
-    // "Block decorations may not be specified via plugins".
-    StateField.define<DecorationSet>({
-      create: (state) => buildDecorations(state, options, viewRef),
-      update: (decorations, tr) => {
-        if (tr.docChanged || tr.effects.some((effect) => effect.is(labelResolvedEffect))) {
-          return buildDecorations(tr.state, options, viewRef);
-        }
-
-        return decorations.map(tr.changes);
-      },
-      provide: (field) => [
-        EditorView.decorations.from(field),
-        EditorView.atomicRanges.of((view) => view.state.field(field)),
-      ],
-    }),
-    ViewPlugin.define((view) => {
-      viewRef.current = view;
-      return {
-        destroy() {
-          viewRef.current = undefined;
-        },
-      };
-    }),
-  ];
-};
-
-/**
- * Resolve a DXN to a display label using the database.
- */
-const resolveLabel = (
-  db: Database.Database,
-  dxnStr: string,
-  viewRef: { current: EditorView | undefined },
-): string | undefined => {
-  const echoUri = EID.tryParse(dxnStr);
-  const dxnRef = echoUri ?? (dxnStr.startsWith('dxn:') ? URI.make(dxnStr) : undefined);
-  if (!dxnRef) {
-    return;
-  }
-
-  const ref = db.makeRef(dxnRef);
-  const target = ref.target;
-  if (target) {
-    return Entity.getLabel(target);
-  }
-
-  // Object not loaded yet — schedule a decoration rebuild when it resolves.
-  void ref.tryLoad().then(() => {
-    viewRef.current?.dispatch({ effects: labelResolvedEffect.of(undefined) });
-  });
-};
-
-/**
- * Echo references are represented as markdown reference links.
- * https://www.markdownguide.org/basic-syntax/#reference-style-links
- */
-const buildDecorations = (
-  state: EditorState,
-  options: PreviewOptions,
-  viewRef: { current: EditorView | undefined },
-): DecorationSet => {
-  const builder = new RangeSetBuilder<Decoration>();
-
-  syntaxTree(state).iterate({
-    enter: (node) => {
-      switch (node.name) {
-        //
-        // Inline widget.
-        // [Label](echo:/123)
-        //
-        case 'Link': {
-          const link = getLinkRef(state, node.node);
-          if (link) {
-            const resolved = options.db ? resolveLabel(options.db, link.dxn, viewRef) : undefined;
-            const displayLink = resolved ? { ...link, label: resolved } : link;
-            builder.add(
-              node.from,
-              node.to,
-              Decoration.replace({
-                widget: new AnchorInlineWidget(options, displayLink),
-                side: 1,
-              }),
-            );
-          }
-          return false;
-        }
-
-        //
-        // Block widget (transclusion).
-        // ![Label](echo:/123)
-        //
-        case 'Image': {
-          if (options.addBlockContainer && options.removeBlockContainer) {
-            const link = getLinkRef(state, node.node);
-            if (link) {
-              builder.add(
-                node.from,
-                node.to,
-                Decoration.replace({
-                  block: true,
-                  widget: new PlaceholderWidget(
-                    `cm-preview-${link.dxn}`,
-                    // Stand-in component; addBlockContainer callbacks drive actual rendering until Phase 3.
-                    _PreviewPlaceholder as any,
-                    { _tag: 'preview', range: { from: node.from, to: node.to } },
-                    makePreviewNotifier(options, link),
-                  ),
-                }),
-              );
-            }
-          }
-          return false;
-        }
-      }
-    },
-  });
-
-  return builder.finish();
 };
 
 /**
@@ -190,49 +47,26 @@ export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef
 };
 
 /**
- * Inline widget.
+ * Inline widget for echo/dxn links.
  *  [Label](echo:/123)
  */
 export class AnchorInlineWidget extends WidgetType {
   constructor(
-    readonly _options: PreviewOptions,
-    readonly _link: PreviewLinkRef,
+    readonly _label: string,
+    readonly _dxn: string,
   ) {
     super();
   }
 
-  // override ignoreEvent() {
-  //   return false;
-  // }
-
   override eq(other: this) {
-    return this._link.dxn === other._link.dxn && this._link.label === other._link.label;
+    return this._dxn === other._dxn && this._label === other._label;
   }
 
   override toDOM(_view: EditorView) {
     const root = document.createElement('dx-anchor');
     root.classList.add('dx-tag--anchor');
-    root.textContent = this._link.label;
-    root.setAttribute('dxn', this._link.dxn);
+    root.textContent = this._label;
+    root.setAttribute('dxn', this._dxn);
     return root;
   }
 }
-
-// Stand-in component; addBlockContainer callbacks drive actual rendering until Phase 3.
-const _PreviewPlaceholder = () => null;
-
-const makePreviewNotifier = (options: PreviewOptions, link: PreviewLinkRef): XmlWidgetNotifier => {
-  let el: HTMLElement | null = null;
-  return {
-    mounted({ root }) {
-      el = root as HTMLElement;
-      options.addBlockContainer?.({ link, el });
-    },
-    unmounted(_id: string) {
-      if (el) {
-        options.removeBlockContainer?.({ link, el });
-        el = null;
-      }
-    },
-  };
-};

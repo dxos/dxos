@@ -53,7 +53,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     urlSchemes: ['dxn:', 'echo:'],
     factory: ({ label, dxn }) =>
       typeof label === 'string' && typeof dxn === 'string'
-        ? new AnchorInlineWidget({}, { label, dxn })
+        ? new AnchorInlineWidget(label, dxn)
         : null,
   },
   synthetic: {

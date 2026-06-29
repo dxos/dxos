@@ -193,7 +193,7 @@ const createBaseExtensions = ({
               block: false,
               urlSchemes: ['dxn:', 'echo:'],
               factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorInlineWidget({}, { label, dxn }) : null,
+                label && dxn ? new AnchorInlineWidget(label, dxn) : null,
             },
           },
           setWidgets,
