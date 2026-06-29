@@ -1,0 +1,216 @@
+{
+  "state": {
+    "channelId": "837138313172353098",
+    "cursor": "1508858950580174848",
+    "fetchedAt": "2026-06-29T00:38:46.444Z"
+  },
+  "messages": [
+    {
+      "id": "01KW8D0YX4TRJFHPVK33WHDE6K",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1392728638029299764"
+          }
+        ]
+      },
+      "created": "2025-07-10T04:46:22.953000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "Tim"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "A month or two ago we (BlueYard) were given a whirlwind tour of all the DXOS composer features and they all looked so amazing. But now that I'm building something with it I'm not sure where to start. Do you have videos on interesting things to build to get started? Would be great to take that demo you gave us and cut it up into small 5 min videos on each piece and how to implement it."
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YX760JPBYG1EN46YQ5X",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1401733347239133364"
+          }
+        ]
+      },
+      "created": "2025-08-04T01:07:52.928000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "omdesign"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "Hi DXOS Team! I'm so grateful to you and I want to introduce what I think is Web 3.5 embodied. DXOS + Nextgraph + Overlays Capture Architecture https://omdesign.is/has-needs-white-paper"
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YX8S90WYD4E5QXV9WHB",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1401955739894808597"
+          }
+        ]
+      },
+      "created": "2025-08-04T15:51:35.469000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "omdesign"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "I'll jump in call room in case anyone want's to ask a question."
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YX9TQ4D4EYZF40PYAYY",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1408698316346097785"
+          }
+        ]
+      },
+      "created": "2025-08-23T06:24:10.966000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "Justice"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "Have y'all heard of [hash.ai](https://hash.ai/)?\n\nI think it's so very fascinating how many different people are converging on the same ideas, but from all sorts of different directions"
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YX9TQ4D4EYZF40PYAYZ",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1420889791456743445"
+          }
+        ]
+      },
+      "created": "2025-09-25T21:48:45.139000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "💔⏰🤔🫶❓🍆"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "hi guys is there a guide on how we can customize the storage"
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YXAHK8V8H7Z23BM10AB",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1439995647104389351"
+          }
+        ]
+      },
+      "created": "2025-11-17T15:08:36.095000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "omdesign"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "I’m vibe coding Has-Needs and welcome any interest or feedback.. more here https://discord.gg/dd9SeEMX"
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YXAHK8V8H7Z23BM10AC",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1492701112598270082"
+          }
+        ]
+      },
+      "created": "2026-04-12T01:41:18.289000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "nandi"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "👋 hello"
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YXBCSG0K11G7PV6S75M",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1507810107432632331"
+          }
+        ]
+      },
+      "created": "2026-05-23T18:19:03.369000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "xi"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "hiya!"
+        }
+      ]
+    },
+    {
+      "id": "01KW8D0YXBCSG0K11G7PV6S75N",
+      "@type": "dxn:org.dxos.type.message:0.1.0",
+      "@meta": {
+        "keys": [
+          {
+            "source": "discord.com",
+            "id": "1508858950580174848"
+          }
+        ]
+      },
+      "created": "2026-05-26T15:46:47.062000+00:00",
+      "sender": {
+        "role": "user",
+        "name": "Maximt_698"
+      },
+      "blocks": [
+        {
+          "_tag": "text",
+          "text": "hello world!"
+        }
+      ]
+    }
+  ]
+}
