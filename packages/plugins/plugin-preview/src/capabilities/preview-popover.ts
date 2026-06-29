@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
-import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -18,13 +17,11 @@ import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
 
 const customEventOptions = { capture: true, passive: false };
 
-const handlePreviewLookup = async (
-  client: Client,
-  defaultSpace: Space,
-  { dxn, label }: PreviewLinkRef,
-): Promise<PreviewLinkTarget | null> => {
+// TODO(burdon): Factor out?
+const handlePreviewLookup = async (space: Space, { dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
   try {
-    const object = await defaultSpace.db.makeRef(EID.parse(dxn)).load();
+    const object = await space.db.makeRef(EID.parse(dxn)).load();
+    const str = Obj.getLabel(object as any, { fallback: 'typename' });
     return { label, object };
   } catch {
     return null;
@@ -79,7 +76,7 @@ export default Capability.makeModule(
       if (!space) {
         return;
       }
-      const result = await handlePreviewLookup(client, space, { dxn, label });
+      const result = await handlePreviewLookup(space, { dxn, label });
       if (!result) {
         return;
       }

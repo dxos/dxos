@@ -1,7 +1,7 @@
 {
   "jsxSingleQuote": true,
   "printWidth": 120,
-  "quoteProps": "as-needed",
+  "quoteProps": "consistent",
   "singleQuote": true,
   "trailingComma": "all",
   "sortImports": {

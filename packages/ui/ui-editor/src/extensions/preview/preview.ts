@@ -5,7 +5,7 @@
 import { EditorView, WidgetType } from '@codemirror/view';
 
 export type PreviewLinkRef = {
-  suggest?: boolean;
+  suggest?: boolean; // TODO(burdon): Remove?
   block?: boolean;
   label: string;
   dxn: string;
@@ -13,7 +13,7 @@ export type PreviewLinkRef = {
 
 export type PreviewLinkTarget = {
   label: string;
-  text?: string;
+  text?: string; // TODO(burdon): Different from label?
   object?: any;
 };
 
@@ -22,6 +22,7 @@ export type PreviewLinkTarget = {
  *  [Label](echo:/123)
  */
 export class AnchorInlineWidget extends WidgetType {
+  // TODO(burdon): Change to object.
   constructor(
     readonly _label: string,
     readonly _dxn: string,
