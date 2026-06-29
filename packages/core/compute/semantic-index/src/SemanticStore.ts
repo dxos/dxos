@@ -11,7 +11,7 @@ import { SemanticIndexError } from './errors';
 import { insertQuads, makeSqliteSource } from './internal/source/sqlite-source';
 import { makeEngine, selectTriples } from './internal/sparql/engine';
 import { factToTriples, triplesToFacts } from './internal/sparql/mapping';
-import { buildSparql, type SemanticQuery } from './internal/sparql/query-builder';
+import { type SemanticQuery, buildSparql } from './internal/sparql/query-builder';
 import { migrate } from './internal/sqlite/schema';
 import { type Fact } from './types';
 

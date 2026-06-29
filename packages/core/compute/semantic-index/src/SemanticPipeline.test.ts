@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { SemanticIndexError } from './errors';
-import { extractFacts, SemanticPipeline } from './SemanticPipeline';
+import { SemanticPipeline, extractFacts } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 

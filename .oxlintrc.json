@@ -89,7 +89,6 @@
             "groupName": "lowercase"
           }
         ],
-        "groupKind": "mixed",
         "groups": ["const", "capitalized", "lowercase"],
         "order": "asc",
         "type": "natural"
@@ -112,7 +111,6 @@
             "groupName": "lowercase"
           }
         ],
-        "groupKind": "mixed",
         "groups": ["const", "capitalized", "lowercase"],
         "order": "asc",
         "type": "natural"

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { DataFactory, type Literal, type NamedNode, type Quad, type Term as RdfTerm } from 'n3';
 
-import { type Term, Fact } from '../../types';
+import { Fact, type Term } from '../../types';
 import { ENTITY, entityIdFromIri, entityIri, factIdFromIri, factIri, prov, str, sx } from '../vocab';
 
 const { quad, defaultGraph } = DataFactory;

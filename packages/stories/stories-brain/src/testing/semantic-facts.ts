@@ -13,7 +13,7 @@ const extractor = {
 
 /**
  * Sample sentences shared by the SemanticFactsParser story (live extraction input) and the
- * {@link DEMO_FACTS} fixtures below (whose `quote` fields are drawn verbatim from these).
+ * {@link SAMPLE_FACTS} fixtures below (whose `quote` fields are drawn verbatim from these).
  */
 export const SAMPLE_FACTS_TEXT = trim`
   I think I'm probably going to Paris next week.
@@ -26,7 +26,7 @@ export const SAMPLE_FACTS_TEXT = trim`
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  * Each `quote` corresponds to a sentence in {@link SAMPLE_FACTS_TEXT} (kept in sync manually).
  */
-export const DEMO_FACTS: Type.Fact[] = [
+export const SAMPLE_FACTS: Type.Fact[] = [
   {
     id: 'f1',
     assertion: {

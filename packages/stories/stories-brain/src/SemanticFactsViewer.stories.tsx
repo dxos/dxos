@@ -17,7 +17,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SemanticFactsViewer, type SemanticFactsViewerProps } from './SemanticFactsViewer';
-import { DEMO_FACTS } from './testing';
+import { SAMPLE_FACTS } from './testing';
 
 const DefaultStory = (props: SemanticFactsViewerProps) => <SemanticFactsViewer {...props} />;
 
@@ -33,12 +33,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    facts: DEMO_FACTS,
-  },
-};
-
-export const Empty: Story = {
-  args: {
-    facts: [],
+    facts: SAMPLE_FACTS,
   },
 };
