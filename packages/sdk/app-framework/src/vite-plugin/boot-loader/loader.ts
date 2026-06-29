@@ -8,7 +8,7 @@ import * as babel from '@babel/core';
 import babelPresetTypeScript from '@babel/preset-typescript';
 // @ts-ignore — babel-preset-solid ships no .d.ts.
 import babelPresetSolid from 'babel-preset-solid';
-import { build, type Plugin as EsbuildPlugin } from 'esbuild';
+import { type Plugin as EsbuildPlugin, build } from 'esbuild';
 import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Plugin } from 'vite';

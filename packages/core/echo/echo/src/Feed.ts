@@ -6,6 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -17,6 +18,7 @@ import * as Database from './Database';
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
+import * as queryInternal from './internal/Query';
 import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
@@ -30,29 +32,25 @@ import * as Type from './Type';
  * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
  */
-export const Feed = Schema.Struct({
-  /** User-facing display name. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Identifier for the feed's kind (e.g., plugin id). */
-  kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '0.1.0'))(
+  Schema.Struct({
+    /** User-facing display name. */
+    name: Schema.String.pipe(Schema.optional),
+    /** Identifier for the feed's kind (e.g., plugin id). */
+    kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
 
-  /**
-   * Feed namespace.
-   * Controls how feed data is stored and replicated.
-   * - `data`: Data feed (default).
-   * - `trace`: Trace feed.
-   */
-  namespace: Schema.optional(Schema.Literal('data', 'trace')),
-}).pipe(
-  internal.HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
-  Type.makeObject(DXN.make('org.dxos.type.feed', '0.1.0')),
-);
-
-/**
- * TypeScript instance type for a Feed object.
- */
-export type Feed = Type.InstanceType<typeof Feed>;
+    /**
+     * Feed namespace.
+     * Controls how feed data is stored and replicated.
+     * - `data`: Data feed (default).
+     * - `trace`: Trace feed.
+     */
+    namespace: Schema.optional(Schema.Literal('data', 'trace')),
+  }).pipe(
+    internal.HiddenAnnotation.set(true),
+    Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
+  ),
+) {}
 
 //
 // Types
@@ -222,46 +220,43 @@ export const remove = (
 /**
  * Creates a reactive query over items in a feed.
  *
+ * Returns a {@link QueryResult.QueryResultEffect}: yielding it produces a subscribable
+ * `QueryResult`, while its `.run` / `.first` shorthands execute the query once. This mirrors
+ * `Database.query` so feed and database queries chain identically.
+ *
+ * Supports both data-first and data-last (curried) forms; the latter composes with `pipe`.
+ *
  * In non-Effect code, query a feed directly through the database with a feed scope:
  * `db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed))))`.
  *
  * @example
  * ```ts
  * const result = yield* Feed.query(feed, Filter.type(Person));
- * ```
- */
-// TODO(dmaretskyi): Suport chained queries:
-//                   const result = yield* feed.pipe(Feed.query(Filter.type(Person))); result.subscribe(...)
-//                   const objects = yield* feed.pipe(Feed.query(Filter.type(Person))).run;
-//                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
-// ... unify for Database and schema queries.
-export const query: {
-  <Q extends Query.Any>(
-    feed: Feed,
-    query: Q,
-  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Database.Service>;
-  <F extends Filter.Any>(
-    feed: Feed,
-    filter: F,
-  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Database.Service>;
-} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Database.Service.pipe(
-    Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter as any) as QueryResult.QueryResult<any>),
-  );
-
-/**
- * Executes a feed query once and returns the results.
+ * result.subscribe(...);
  *
- * @example
- * ```ts
- * const items = yield* Feed.runQuery(feed, Filter.type(Person));
+ * const objects = yield* Feed.query(feed, Filter.type(Person)).run;
+ * const object = yield* Feed.query(feed, Filter.type(Person)).first;
+ *
+ * // Data-last (curried) form composes with `pipe`:
+ * const objects = yield* pipe(feed, Feed.query(Filter.type(Person))).run;
  * ```
  */
-export const runQuery: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Database.Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Database.Service>;
-} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+export const query: {
+  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+  <Q extends Query.Any>(
+    query: Q,
+  ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(
+    filter: F,
+  ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
+  Database.Service.pipe(
+    Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter)),
+    Effect.withSpan('Feed.query'),
+    queryInternal.makeQueryResultEffect,
+  ),
+);
 
 /**
  * Syncs the feed with the server.

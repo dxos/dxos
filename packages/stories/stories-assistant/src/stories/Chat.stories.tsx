@@ -7,14 +7,21 @@ import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { RunInstructions, DelegationSkill, LinearSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Operation, Script, Template, Trigger } from '@dxos/compute';
+import {
+  ConnectorsSkill,
+  DelegationSkill,
+  LinearSkill,
+  PlanningSkill,
+  RunInstructions,
+  WebSearchSkill,
+} from '@dxos/assistant-toolkit';
+import { Instructions, Operation, Script, Skill, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { ChessSkill, ChessOperation } from '@dxos/plugin-chess';
+import { ChessOperation, ChessSkill } from '@dxos/plugin-chess';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
 import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
@@ -40,24 +47,24 @@ import {
 import { trim } from '@dxos/util';
 
 import {
-  SkillModule,
   ChatModule,
   ChessModule,
   CommentsModule,
+  ContextModule,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
   InvocationsModule,
   ProjectModule,
-  RoutineModule,
   ResearchInputModule,
   ResearchOutputModule,
+  RoutineModule,
   ScriptModule,
+  SkillModule,
   TasksModule,
   TokenManagerModule,
   TraceModule,
   TriggersModule,
-  ContextModule,
 } from '../components';
 import {
   ModuleContainer,
@@ -162,7 +169,6 @@ export const Default: Story = {
 export const WithPlanning: Story = {
   decorators: getDecorators({
     config: config.remote,
-    createAgent: true,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
@@ -460,6 +466,45 @@ export const WithGmail: Story = {
   },
 };
 
+/**
+ * Agent-facing connector prompt surface. The chat is seeded with an assistant turn that emits an
+ * `integration-prompt` surface (the `<surface role='integration-prompt' data='{"service":"gmail.com"}' />`
+ * content block) so the connector prompt renders inline — the model would emit this, instead of failing,
+ * when a request needs a service the user has not connected (see the Connectors skill).
+ */
+export const WithConnectorPrompt: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-connector/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), ConnectorPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [Feed.Feed, Mailbox.Mailbox],
+    onChatCreated: async ({ space, chat }) => {
+      const feed = await chat.feed.load();
+      await space.db.appendToFeed(feed, [
+        Message.make({
+          sender: 'assistant',
+          blocks: [
+            { _tag: 'text', text: 'Gmail is not connected yet. Connect it to continue:' },
+            { _tag: 'surface', role: 'integration-prompt', data: { service: 'gmail.com' } },
+          ],
+        }),
+      ]);
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    skills: [AssistantSkill.key, ConnectorsSkill.key],
+  },
+};
+
 // Test with prompt: Sync my calendar.
 export const WithCalendar: Story = {
   decorators: getDecorators({
@@ -741,7 +786,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(Reply)),
+          runnable: Ref.make(Operation.serialize(Reply)),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * * *'), // Every 5 seconds.
         }),
@@ -799,7 +844,7 @@ export const WithChessTrigger: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(ChessOperation.Play)),
+          runnable: Ref.make(Operation.serialize(ChessOperation.Play)),
           enabled: true,
           spec: Trigger.specSubscription(Query.select(Filter.type(Game))),
           input: {
@@ -839,7 +884,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(Operation.serialize(RunInstructions)),
+          runnable: Ref.make(Operation.serialize(RunInstructions)),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
@@ -967,7 +1012,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(Operation.serialize(RunInstructions)),
+        runnable: Ref.make(Operation.serialize(RunInstructions)),
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {

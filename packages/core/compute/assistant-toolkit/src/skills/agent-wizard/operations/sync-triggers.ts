@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Trigger, Operation } from '@dxos/compute';
+import { Operation, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -103,7 +103,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           enabled: triggersEnabled,
           spec: Trigger.specFeed(feedObj),
-          function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
+          runnable: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',
@@ -131,7 +131,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
                 },
               ],
             },
-            function: Ref.make(Operation.serialize(AgentWorker)),
+            runnable: Ref.make(Operation.serialize(AgentWorker)),
             enabled: triggersEnabled,
             spec: Trigger.specFeed(agentFeedOption.value),
             input: {
@@ -156,7 +156,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           enabled: triggersEnabled,
           spec: Trigger.specTimer(agent.cron),
-          function: Ref.make(Operation.serialize(AgentWorker)),
+          runnable: Ref.make(Operation.serialize(AgentWorker)),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',

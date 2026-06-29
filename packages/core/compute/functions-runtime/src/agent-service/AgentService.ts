@@ -10,23 +10,28 @@ import * as Layer from 'effect/Layer';
 
 import type { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
-import { Skill, McpServer, Process } from '@dxos/compute';
+import { McpServer, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
   type GetSessionOptions,
-  getSession,
   type Service,
   type Session,
+  getSession,
 } from '@dxos/compute/AgentService';
-import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
-import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
+
+/** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
+type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
+
+/** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
+type AgentHandle = ProcessManager.Handle<string, void, AgentRpcs>;
 
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
@@ -86,11 +91,6 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
-
-  /**
-   * When provided, checks agent-attached plan tasks before the process succeeds.
-   */
-  completionGuard?: CompletionGuard;
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
@@ -101,10 +101,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // The agent's model is bound to its process at spawn time, so the cache tracks the model
       // each session was created with. Requesting a different model for the same feed tears down
       // the old process and spawns a fresh one (see below).
-      const sessionCache = new Map<
-        string,
-        { model: ModelName | undefined; handle: ProcessManager.Handle<string, void>; session: Session }
-      >();
+      const sessionCache = new Map<string, { model: ModelName | undefined; handle: AgentHandle; session: Session }>();
 
       const makeExecutable = (model?: ModelName) =>
         AgentProcess({
@@ -113,7 +110,6 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
-          completionGuard: opts?.completionGuard,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {
@@ -164,7 +160,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const processes = yield* processManager.list({ target, key: executable.key });
             const activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
 
-            let handle: ProcessManager.Handle<string, void>;
+            let handle: AgentHandle;
             if (activeProcess) {
               yield* activeProcess.hydrate(executable);
               handle = activeProcess;
@@ -172,12 +168,17 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
               handle = yield* processManager.spawn(executable, {
                 name: 'Agent',
                 target,
+                // Stamp the host marker so the harness control surface is discoverable by annotation
+                // lookup (set once at spawn, immutable — the identity plane).
+                annotations: Annotation.buildDictionary((dictionary) => {
+                  Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+                }),
                 environment: {
                   ...(spaceId !== undefined ? { space: spaceId } : {}),
                   conversation: target,
                 },
                 traceMeta: {
-                  conversationId: feed.id,
+                  conversation: Ref.make(feed),
                 },
               });
             }
@@ -196,11 +197,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
     }),
   );
 
-const makeSession = (
-  process: ProcessManager.Handle<string, void>,
-  feed: Feed.Feed,
-  releaseSession: () => void,
-): Session => ({
+const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () => void): Session => ({
   feed,
   getContext: () =>
     Effect.gen(function* () {

@@ -301,6 +301,9 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-ibkr"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -578,9 +581,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

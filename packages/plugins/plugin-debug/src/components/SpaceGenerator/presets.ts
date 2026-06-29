@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Trigger, Operation } from '@dxos/compute';
+import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -135,7 +135,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specTimer('* * * * *'), // Every minute.
-              function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
+              runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -162,7 +162,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              function: Ref.make(Operation.serialize(RunInstructions)),
+              runnable: Ref.make(Operation.serialize(RunInstructions)),
               input: {
                 instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
@@ -786,7 +786,8 @@ const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeMode
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
   Obj.update(functionTrigger, (functionTrigger) => {
-    functionTrigger.function = Ref.make(computeModel.root);
+    // TODO(wittjosiah): Widen Runnable union to include ComputeGraph and remove cast.
+    functionTrigger.runnable = Ref.make(computeModel.root) as any;
     functionTrigger.inputNodeId = inputNode.id;
   });
 };

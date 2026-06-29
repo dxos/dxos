@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type EntityId } from '@dxos/keys';
 
+import type * as Type from '../../Type';
 import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
 import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import { EntityKind } from '../common/types';
@@ -70,4 +71,16 @@ export const EchoObjectSchema: {
       options?.id,
     );
   };
+};
+
+export const makeObjectType = <Self, _Schema extends Schema.Schema.Any>(
+  dxn: DXN.DXN,
+  schema: _Schema,
+  options?: { id?: EntityId },
+): Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}> => {
+  const type = EchoObjectSchema(dxn, options)(schema);
+  const constructor = function ObjectType() {};
+  Object.setPrototypeOf(constructor, type);
+  // Boundary cast: constructor/prototype wiring cannot be expressed in TypeScript's type system.
+  return constructor as unknown as Type.ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
 };

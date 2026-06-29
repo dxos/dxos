@@ -10,7 +10,7 @@ import { pipe } from 'effect/Function';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Process } from '@dxos/compute';
@@ -19,13 +19,13 @@ import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Timeline, type Commit } from '@dxos/react-ui-components';
+import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
-import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
-import { useTraceMessages, getTraceMessagesAtom } from '#hooks';
+import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
+import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -159,16 +159,20 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 const atomEmpty = Atom.make(() => [] as const);
 
 type UseExecutionGraphOptions = {
+  collapseCompletedSpans?: boolean;
   eventLimit?: number;
 };
 
-const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+const useExecutionGraph = (
+  space: Space,
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
+): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { eventLimit }),
-    [space, processesAtom, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit],
   );
 
   return useAtomValue(atom);
@@ -177,7 +181,7 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans = true, eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -198,6 +202,7 @@ const getExecutionGraph = (
     buildExecutionGraph({
       traceMessages: get(traceMessages),
       activeProcesses: get(activeProcesses),
+      collapseCompletedSpans,
       eventLimit,
     }),
   );

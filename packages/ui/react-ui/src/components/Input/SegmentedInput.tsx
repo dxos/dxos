@@ -4,7 +4,7 @@
 
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentProps, forwardRef, ReactNode, useCallback, useState } from 'react';
+import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
   DateField,
   type DateFieldProps,
@@ -75,6 +75,8 @@ const segmentClassNames =
   'data-[invalid]:text-rose-500 ' +
   'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
 
+const timeSegmentClassNames = `${segmentClassNames} data-[type=dayPeriod]:text-xs data-[type=dayPeriod]:text-description`;
+
 // Match bidi format characters (LRI/RLI/PDI/LRE/RLE/PDF/LRO/RLO) that React Aria inserts to
 // isolate locale-formatted portions. These are invisible glyphs but the browser still gives
 // them ~4px of width, which pushes the first visible character of time-only fields out of
@@ -91,7 +93,7 @@ type DateSegmentData = ComponentProps<typeof DateSegment>['segment'];
  * (e.g. en-US's `", "`) become a plain space; bidi format markers are kept but rendered
  * zero-width so the visible content lines up at the field's left edge.
  */
-const renderSegment = (segment: DateSegmentData) => {
+const renderSegment = (segment: DateSegmentData, classNames = segmentClassNames) => {
   if (segment.type === 'literal') {
     if (BIDI_FORMAT_RE.test(segment.text)) {
       // Render as a fixed-width spacer (between date and time portions of a datetime field),
@@ -108,7 +110,7 @@ const renderSegment = (segment: DateSegmentData) => {
     }
   }
 
-  return <DateSegment segment={segment} className={segmentClassNames} />;
+  return <DateSegment segment={segment} className={classNames} />;
 };
 
 //
@@ -345,7 +347,7 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
             classNames,
           )}
         >
-          {renderSegment}
+          {(segment) => renderSegment(segment, timeSegmentClassNames)}
         </DateInput>
       </TimeField>
     );
@@ -456,6 +458,6 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 );
 SegmentedDateTime.displayName = 'Input.SegmentedDateTime';
 
-export { SegmentedDate, SegmentedTime, SegmentedDateTime };
+export { SegmentedDate, SegmentedDateTime, SegmentedTime };
 
-export type { SegmentedDateProps, SegmentedTimeProps, SegmentedDateTimeProps };
+export type { SegmentedDateProps, SegmentedDateTimeProps, SegmentedTimeProps };

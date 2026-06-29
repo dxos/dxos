@@ -46,11 +46,13 @@ describe('ProjectionModel', () => {
   test('gets and updates projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.String.annotations({ title: 'Name' }),
-      email: Format.Email,
-      salary: Format.Currency({ code: 'usd', decimals: 2 }),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String.annotations({ title: 'Name' }),
+        email: Format.Email,
+        salary: Format.Currency({ code: 'usd', decimals: 2 }),
+      }),
+    );
     const mutable = await db.addType(schema);
 
     const view = ViewModel.make({
@@ -136,12 +138,14 @@ describe('ProjectionModel', () => {
     registry.add([TestSchema.Organization]);
 
     const typename = 'com.example.type.person';
-    const schema = Schema.Struct({
-      name: Schema.String.annotations({ title: 'Name' }),
-      email: Format.Email,
-      salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      organization: Ref(TestSchema.Organization),
-    }).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
+    const schema = Type.makeObject(DXN.make(typename, '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String.annotations({ title: 'Name' }),
+        email: Format.Email,
+        salary: Format.Currency({ code: 'usd', decimals: 2 }),
+        organization: Ref(TestSchema.Organization),
+      }),
+    );
     const jsonSchema = toJsonSchema(schema);
 
     const view = await ViewModel.makeWithReferences({
@@ -188,10 +192,12 @@ describe('ProjectionModel', () => {
   test('deletes field projections', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.String.annotations({ title: 'Name' }),
-      email: Format.Email,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String.annotations({ title: 'Name' }),
+        email: Format.Email,
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -220,11 +226,13 @@ describe('ProjectionModel', () => {
   test('field projection delete and restore', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.optional(Schema.Number),
-      email: Schema.optional(Schema.Number),
-      description: Schema.optional(Schema.String),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.Number),
+        email: Schema.optional(Schema.Number),
+        description: Schema.optional(Schema.String),
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -268,10 +276,12 @@ describe('ProjectionModel', () => {
   test('property rename', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.String,
-      email: Format.Email,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        email: Format.Email,
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -316,11 +326,13 @@ describe('ProjectionModel', () => {
   test('property rename updates schema propertyOrder and required arrays', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.String,
-      email: Format.Email,
-      age: Schema.Number,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        email: Format.Email,
+        age: Schema.Number,
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -372,9 +384,11 @@ describe('ProjectionModel', () => {
   test('single select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      status: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.task', '0.1.0'))(
+      Schema.Struct({
+        status: Schema.String,
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -480,9 +494,11 @@ describe('ProjectionModel', () => {
   test('multi select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      tags: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.task', '0.1.0'))(
+      Schema.Struct({
+        tags: Schema.String,
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -611,11 +627,13 @@ describe('ProjectionModel', () => {
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.String,
-      email: Format.Email,
-      createdAt: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        email: Format.Email,
+        createdAt: Schema.String,
+      }),
+    );
 
     const mutable = await db.addType(schema);
 
@@ -713,11 +731,13 @@ describe('ProjectionModel', () => {
     const { db } = await builder.createDatabase();
 
     // Create schema with three properties.
-    const schema = Schema.Struct({
-      title: Schema.String,
-      description: Schema.String,
-      status: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.task', '0.1.0'))(
+      Schema.Struct({
+        title: Schema.String,
+        description: Schema.String,
+        status: Schema.String,
+      }),
+    );
 
     const mutable = await db.addType(schema);
 
@@ -752,9 +772,11 @@ describe('ProjectionModel', () => {
     const { db } = await builder.createDatabase();
 
     // Create initial schema with a single field.
-    const initialSchema = Schema.Struct({
-      title: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+    const initialSchema = Type.makeObject(DXN.make('com.example.type.task', '0.1.0'))(
+      Schema.Struct({
+        title: Schema.String,
+      }),
+    );
 
     const mutable = await db.addType(initialSchema);
 
@@ -796,11 +818,13 @@ describe('ProjectionModel', () => {
   test('deleted fields should not appear in hidden properties after reinitialization', async ({ expect }) => {
     const { db } = await builder.createDatabase();
 
-    const schema = Schema.Struct({
-      name: Schema.String,
-      email: Format.Email,
-      phone: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        email: Format.Email,
+        phone: Schema.String,
+      }),
+    );
 
     const mutable = await db.addType(schema);
     const view = ViewModel.make({
@@ -901,17 +925,19 @@ describe('ProjectionModel', () => {
   test('property that is an array of objects', async () => {
     const { db } = await builder.createDatabase();
 
-    const ContactWithArrayOfEmails = Schema.Struct({
-      name: Schema.String,
-      emails: Schema.optional(
-        Schema.Array(
-          Schema.Struct({
-            value: Schema.String,
-            label: Schema.String.pipe(Schema.optional),
-          }),
+    const ContactWithArrayOfEmails = Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        emails: Schema.optional(
+          Schema.Array(
+            Schema.Struct({
+              value: Schema.String,
+              label: Schema.String.pipe(Schema.optional),
+            }),
+          ),
         ),
-      ),
-    }).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
+      }),
+    );
 
     const mutable = await db.addType(ContactWithArrayOfEmails);
 
@@ -951,9 +977,11 @@ describe('ProjectionModel', () => {
       const { db } = await builder.createDatabase();
 
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
-      const schema = Schema.Struct({
-        [fieldName]: schemaType,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.testObject', '0.1.0')));
+      const schema = Type.makeObject(DXN.make('com.example.type.testObject', '0.1.0'))(
+        Schema.Struct({
+          [fieldName]: schemaType,
+        }),
+      );
 
       const mutable = await db.addType(schema);
       const view = ViewModel.make({
@@ -1000,9 +1028,11 @@ describe('ProjectionModel', () => {
     expect(() => Schema.validateSync(Format.Email)('invalid-email')).toThrow(/Email/);
 
     // Create and register schema using Format.Email
-    const schema = Schema.Struct({
-      email: Format.Email,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.emailTest', '0.1.0')));
+    const schema = Type.makeObject(DXN.make('com.example.type.emailTest', '0.1.0'))(
+      Schema.Struct({
+        email: Format.Email,
+      }),
+    );
 
     // Check with the primary schema (id is added by Type.makeObject)
     expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '1', email: 'valid@example.com' })).not.toThrow();

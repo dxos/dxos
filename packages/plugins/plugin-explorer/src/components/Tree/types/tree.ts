@@ -19,12 +19,12 @@ export const TreeNodeType = Schema.Struct({
 
 export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 
-export const TreeType = Schema.Struct({
-  root: Key.EntityId,
-  nodes: Schema.mutable(Schema.Record({ key: Key.EntityId, value: TreeNodeType })),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.tree', '0.1.0')));
-
-export type TreeType = Type.InstanceType<typeof TreeType>;
+export class TreeType extends Type.makeObject<TreeType>(DXN.make('org.dxos.type.tree', '0.1.0'))(
+  Schema.Struct({
+    root: Key.EntityId,
+    nodes: Schema.mutable(Schema.Record({ key: Key.EntityId, value: TreeNodeType })),
+  }),
+) {}
 
 /**
  * Wrapper object for tree.

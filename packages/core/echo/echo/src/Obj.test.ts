@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expectTypeOf, test, expect } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
@@ -329,7 +329,7 @@ describe('Obj', () => {
         employer: Ref.make(employer),
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.employer).not.toBe(person.employer);
       expect(cloned.employer?.target).not.toBe(employer);
@@ -364,7 +364,7 @@ describe('Obj', () => {
         tasks: [Ref.make(task1), Ref.make(task2)],
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.tasks).not.toBe(person.tasks);
       expect(cloned.tasks?.length).toBe(2);
@@ -394,7 +394,7 @@ describe('Obj', () => {
         employer: Ref.make(employer),
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.employer).toBeDefined();
       expect(cloned.employer?.target).toBeDefined();
@@ -407,7 +407,7 @@ describe('Obj', () => {
         username: 'bob',
       });
 
-      const clonedWithoutEmployer = Obj.clone(personWithoutEmployer, { deep: true });
+      const clonedWithoutEmployer = Obj.clone(personWithoutEmployer, { deep: 'all' });
       expect(clonedWithoutEmployer.employer).toBeUndefined();
     });
 
@@ -427,7 +427,7 @@ describe('Obj', () => {
         },
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.address?.city).toBe('San Francisco');
       expect(cloned.address?.state).toBe('CA');
@@ -456,7 +456,7 @@ describe('Obj', () => {
         tasks: [Ref.make(task1), Ref.make(task2), Ref.make(task3)],
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.tasks?.length).toBe(3);
       expect(cloned.tasks?.[0]?.target?.title).toBe('Task 1');
@@ -489,7 +489,7 @@ describe('Obj', () => {
         employer: Ref.make(employer),
       });
 
-      const cloned = Obj.clone(person, { deep: true, retainId: true });
+      const cloned = Obj.clone(person, { deep: 'all', retainId: true });
 
       expect(cloned.id).toBe(person.id);
       expect(cloned.employer?.target).not.toBe(employer);
@@ -509,6 +509,48 @@ describe('Obj', () => {
 
       expect(Obj.instanceOf(TestSchema.Person, cloned)).toBe(true);
       expect(Obj.getType(cloned)).toBe(Obj.getType(person));
+    });
+
+    test("deep: 'parent' clones owned children but shares unowned refs", ({ expect }) => {
+      // An owned task (parented to the person) is cloned; a shared task (no parent link) is referenced as-is.
+      const ownedTask = Obj.make(TestSchema.Task, { title: 'Owned' });
+      const sharedTask = Obj.make(TestSchema.Task, { title: 'Shared' });
+      const person = Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        email: 'alice@example.com',
+        username: 'alice',
+        tasks: [Ref.make(ownedTask), Ref.make(sharedTask)],
+      });
+      Obj.setParent(ownedTask, person);
+
+      const cloned = Obj.clone(person, { deep: 'parent' });
+
+      // Owned child is a fresh copy.
+      expect(cloned.tasks?.[0]?.target).not.toBe(ownedTask);
+      expect(cloned.tasks?.[0]?.target?.id).not.toBe(ownedTask.id);
+      expect(cloned.tasks?.[0]?.target?.title).toBe('Owned');
+      // Unowned (shared) ref points at the original object.
+      expect(cloned.tasks?.[1]?.target).toBe(sharedTask);
+    });
+
+    test("deep: 'parent' follows transitive ownership", ({ expect }) => {
+      // grandchild ← child ← root: both are cloned because their parent chain reaches the clone root.
+      const grandchild = Obj.make(TestSchema.Task, { title: 'Grandchild' });
+      const child = Obj.make(TestSchema.Task, { title: 'Child', previous: Ref.make(grandchild) });
+      const person = Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        email: 'alice@example.com',
+        username: 'alice',
+        tasks: [Ref.make(child)],
+      });
+      Obj.setParent(child, person);
+      Obj.setParent(grandchild, child);
+
+      const cloned = Obj.clone(person, { deep: 'parent' });
+
+      expect(cloned.tasks?.[0]?.target).not.toBe(child);
+      expect(cloned.tasks?.[0]?.target?.previous?.target).not.toBe(grandchild);
+      expect(cloned.tasks?.[0]?.target?.previous?.target?.title).toBe('Grandchild');
     });
   });
 

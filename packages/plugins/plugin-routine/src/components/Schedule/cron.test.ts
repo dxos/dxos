@@ -4,7 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { cronToSchedule, fromCron, scheduleToCron, toCron } from './cron';
+import {
+  clampSchedule,
+  cronIntervalSeconds,
+  cronToSchedule,
+  fromCron,
+  scheduleIntervalSeconds,
+  scheduleToCron,
+  toCron,
+} from './cron';
 import { type ScheduleValue } from './Schedule';
 
 describe('toCron', () => {
@@ -156,5 +164,67 @@ describe('Schedule <-> cron bridge', () => {
     expect(cronToSchedule('*/15 * * * *')).toEqual({ kind: 'custom', cron: '*/15 * * * *' });
     // Multiple days of the month.
     expect(cronToSchedule('0 8 1,15 * *')).toEqual({ kind: 'custom', cron: '0 8 1,15 * *' });
+  });
+});
+
+describe('minimum interval', () => {
+  test('cronIntervalSeconds reads common cadences', ({ expect }) => {
+    expect(cronIntervalSeconds('* * * * *')).toBe(60);
+    expect(cronIntervalSeconds('*/1 * * * *')).toBe(60);
+    expect(cronIntervalSeconds('*/5 * * * *')).toBe(300);
+    expect(cronIntervalSeconds('0,30 * * * *')).toBe(1800);
+    // Offset/range step forms carry the same cadence as `*\/N`.
+    expect(cronIntervalSeconds('0/15 * * * *')).toBe(900);
+    expect(cronIntervalSeconds('0-30/10 * * * *')).toBe(600);
+    // Cyclic wrap-around: 59 -> 0 of the next hour is a 1-minute gap, not 59.
+    expect(cronIntervalSeconds('0,59 * * * *')).toBe(60);
+    // Single minute, every hour.
+    expect(cronIntervalSeconds('0 * * * *')).toBe(3600);
+    // Hour-step narrows the daily cadence.
+    expect(cronIntervalSeconds('0 */6 * * *')).toBe(6 * 3600);
+    // Single minute, every day (a weekday restriction only widens gaps, so the daily floor stands).
+    expect(cronIntervalSeconds('0 9 * * *')).toBe(86400);
+    expect(cronIntervalSeconds('0 9 * * 1-5')).toBe(86400);
+    // Expressions whose minute field cannot be analysed are treated as satisfying any minimum.
+    expect(cronIntervalSeconds('not a cron')).toBe(Number.POSITIVE_INFINITY);
+    expect(cronIntervalSeconds('JAN * * * *')).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  test('scheduleIntervalSeconds covers structured kinds', ({ expect }) => {
+    expect(scheduleIntervalSeconds({ kind: 'hourly', minute: 0 })).toBe(3600);
+    expect(scheduleIntervalSeconds({ kind: 'daily', time: '09:00' })).toBe(86400);
+    expect(scheduleIntervalSeconds({ kind: 'custom', cron: '* * * * *' })).toBe(60);
+  });
+
+  test('clampSchedule rewrites a too-frequent custom cron', ({ expect }) => {
+    expect(clampSchedule({ kind: 'custom', cron: '* * * * *' }, 300)).toEqual({ kind: 'custom', cron: '*/5 * * * *' });
+    expect(clampSchedule({ kind: 'custom', cron: '*/1 * * * *' }, 300)).toEqual({
+      kind: 'custom',
+      cron: '*/5 * * * *',
+    });
+    // An hourly minimum collapses a sub-hourly step to the top of the hour.
+    expect(clampSchedule({ kind: 'custom', cron: '*/15 * * * *' }, 3600)).toEqual({
+      kind: 'custom',
+      cron: '0 * * * *',
+    });
+    // Wrap-around list (real cadence 60s) is caught and clamped.
+    expect(clampSchedule({ kind: 'custom', cron: '0,59 * * * *' }, 300)).toEqual({
+      kind: 'custom',
+      cron: '*/5 * * * *',
+    });
+    // Offset-step form (every 15m) is caught when below an hourly minimum.
+    expect(clampSchedule({ kind: 'custom', cron: '0/15 * * * *' }, 3600)).toEqual({
+      kind: 'custom',
+      cron: '0 * * * *',
+    });
+  });
+
+  test('clampSchedule leaves satisfying schedules untouched', ({ expect }) => {
+    expect(clampSchedule({ kind: 'custom', cron: '*/15 * * * *' }, 300)).toEqual({
+      kind: 'custom',
+      cron: '*/15 * * * *',
+    });
+    expect(clampSchedule({ kind: 'custom', cron: '0 9 * * 1' }, 300)).toEqual({ kind: 'custom', cron: '0 9 * * 1' });
+    expect(clampSchedule({ kind: 'hourly', minute: 0 }, 3600)).toEqual({ kind: 'hourly', minute: 0 });
   });
 });

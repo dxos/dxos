@@ -53,10 +53,10 @@
       "path": "../../common/web-context-react"
     },
     {
-      "path": "../../core/compute-runtime"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/compute"
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/operation"
@@ -81,6 +81,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/ui-theme"

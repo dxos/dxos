@@ -16,6 +16,7 @@ import { URI } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import {
   type EditorRootProps,
   type EditorToolbarState,
@@ -264,13 +265,22 @@ const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
 
 MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
+// Each embed is independently attendable, keyed by the linked object's URI. The section surface
+// contract requires `attendableId` (type-specific section surfaces like sketch guard on it, else they
+// fall back to the generic preview card); keying per-embed also lets a surface enter edit mode only
+// while focused (e.g. a sketch shows its controls/grid on focus and renders read-only otherwise).
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
   const dxn = URI.make(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
-  const data = useMemo(() => ({ subject }), [subject]);
+  const data = useMemo(() => ({ subject, attendableId: link.dxn }), [subject, link.dxn]);
 
-  return createPortal(<Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />, el);
+  return createPortal(
+    <AttendableContainer id={link.dxn}>
+      <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+    </AttendableContainer>,
+    el,
+  );
 };
 
 //
@@ -284,7 +294,7 @@ export const MarkdownEditor = {
   Blocks: MarkdownEditorBlocks,
 };
 
-export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+export type { MarkdownEditorBlocksProps, MarkdownEditorContentProps, MarkdownEditorToolbarProps };
 
 /** @deprecated Use `MarkdownEditorProviderProps`. */
 export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

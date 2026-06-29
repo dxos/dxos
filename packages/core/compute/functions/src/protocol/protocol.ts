@@ -20,7 +20,7 @@ import {
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { EchoClient, type DatabaseImpl, makeRegistry } from '@dxos/echo-client';
+import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -29,7 +29,7 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService } from '../services';
+import { FunctionInvocationService, configuredCredentialsLayer, credentialsLayerFromDatabase } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
@@ -289,7 +289,7 @@ const makeOperationServiceLayer = (
     const result = await functionsService.invoke(op.meta.deployedId, input, {
       spaceId: options?.spaceId,
       // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
-      // services (e.g. `AiContext.Service`) needed by operations like `GetContext`.
+      // services (e.g. `HarnessService`) needed by operations like `GetContext`.
       conversation: options?.conversation,
     });
     if (result._kind === 'success') {

@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Instructions, Skill } from '@dxos/compute';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
 import { StateMap } from '@dxos/schema';
@@ -50,51 +50,68 @@ export const PostState = Schema.Struct({
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
+ * Structured output contract of the curation Routine: the Posts the agent selected, each with
+ * agent-generated display values. Declared as the Routine's `output` ({@link make}) so the agent's
+ * `completeJob` carries this payload (a Void/Unknown default would silently drop it); {@link
+ * CurateMagazine} decodes the Routine result against the same schema.
+ */
+export const CurationOutput = Schema.Struct({
+  posts: Schema.Array(
+    Schema.Struct({
+      id: Obj.ID,
+      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
+      snippet: Schema.optional(Schema.String),
+      /** Best image URL found for this article (from the post or fetched content). */
+      imageUrl: Schema.optional(Schema.String),
+    }),
+  ),
+});
+
+/**
  * An agent-curated collection of articles drawn from one or more Feeds.
  * Curation is driven by a {@link Routine.Routine} created with the magazine ({@link make}): its
  * instructions hold the editorial brief and it references the Magazine skill (the tool/output
  * contract). {@link CurateMagazine} runs the Routine to select matching Posts.
  */
-export const Magazine = Schema.Struct({
-  /** User-facing title of the magazine. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Feeds to pull content from. */
-  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
-  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
-  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
-   * references the Magazine skill. Rendered inline by the properties form (the Instructions'
-   * own fields), so the brief is edited there without a custom surface.
-   * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
-   */
-  instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
-  /**
-   * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
-   * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
-   * curation time and take precedence over the RSS-derived defaults in display.
-   */
-  postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
-   * Older posts beyond this bound are dropped; starred posts are preserved regardless.
-   * Defaults to {@link Subscription.DEFAULT_KEEP} when unset.
-   */
-  keep: Schema.Number.pipe(
-    Schema.annotations({
-      title: 'Keep',
-      description: 'Number of items to keep.',
-    }),
-    Schema.optional,
+export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.magazine', '0.2.0'))(
+  Schema.Struct({
+    /** User-facing title of the magazine. */
+    name: Schema.String.pipe(Schema.optional),
+    /** Feeds to pull content from. */
+    feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
+    /** Curated Post refs (insertion order; UI displays newest-last reversed). */
+    posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+    /**
+     * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
+     * references the Magazine skill. Rendered inline by the properties form (the Instructions'
+     * own fields), so the brief is edited there without a custom surface.
+     * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
+     */
+    instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+    /**
+     * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
+     * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
+     * curation time and take precedence over the RSS-derived defaults in display.
+     */
+    postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
+    /**
+     * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
+     * Older posts beyond this bound are dropped; starred posts are preserved regardless.
+     * Defaults to {@link Subscription.DEFAULT_KEEP} when unset.
+     */
+    keep: Schema.Number.pipe(
+      Schema.annotations({
+        title: 'Keep',
+        description: 'Number of items to keep.',
+      }),
+      Schema.optional,
+    ),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   ),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
-  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.magazine', '0.2.0')),
-);
-
-export type Magazine = Type.InstanceType<typeof Magazine>;
+) {}
 
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
@@ -128,6 +145,8 @@ export const make = (props: MakeProps = {}): Magazine => {
     skills: [Ref.fromURI(Skill.registryURI(SKILL_KEY))],
     // Bind the magazine as session context so the agent sees it, not only the candidate JSON input.
     objects: [Ref.make(magazine)],
+    // Declare the selection contract so the agent's completeJob carries the chosen Posts.
+    output: CurationOutput,
   });
   Obj.update(magazine, (magazine) => {
     magazine.instructions = Ref.make(instructions);

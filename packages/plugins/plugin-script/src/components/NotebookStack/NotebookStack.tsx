@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { DropdownMenu, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -20,6 +20,8 @@ import { NotebookMenu } from './NotebookMenu';
 
 const minSectionHeight = 'min-h-[16rem]';
 
+const getCellId = (cell: Notebook.Cell) => cell.id;
+
 export type NotebookStackProps = ThemedClassName<
   {
     notebook?: Notebook.Notebook;
@@ -29,8 +31,24 @@ export type NotebookStackProps = ThemedClassName<
 
 export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
   ({ notebook, db, graph, promptResults, onCellInsert, onCellDelete, env, ...props }, forwardedRef) => {
-    const sectionProps = { db, graph, promptResults, onCellInsert, onCellDelete, env };
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+    // Stable Tile identity: an inline component is a new type each render, so Mosaic would unmount and
+    // remount every cell (losing editor state) whenever this component re-renders.
+    const Tile = useCallback(
+      (tileProps: MosaicTileProps<Notebook.Cell>) => (
+        <NotebookSection
+          {...tileProps}
+          db={db}
+          graph={graph}
+          promptResults={promptResults}
+          onCellInsert={onCellInsert}
+          onCellDelete={onCellDelete}
+          env={env}
+        />
+      ),
+      [db, graph, promptResults, onCellInsert, onCellDelete, env],
+    );
 
     // Reorder cells in place; placeholder/tile locations are 1-based with half-step placeholders between
     // tiles, so the floor of the drop location is the destination array index (see Mosaic.Stack).
@@ -71,12 +89,7 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
         <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
           <ScrollArea.Root orientation='vertical' padding {...composableProps(props)}>
             <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.Stack
-                orientation='vertical'
-                items={notebook?.cells ?? []}
-                getId={(cell) => cell.id}
-                Tile={(tileProps) => <NotebookSection {...tileProps} {...sectionProps} />}
-              />
+              <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Mosaic.Container>
@@ -89,8 +102,7 @@ type NotebookSectionProps = MosaicTileProps<Notebook.Cell> &
   Pick<NotebookCellProps, 'db' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete' | 'env'>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-// TODO(burdon): Section resize was provided by react-ui-stack's ResizeHandle; reinstate a Mosaic-native
-//   resize affordance for query cells (currently a fixed min-height).
+// TODO(burdon): Reinstate a Mosaic-native resize affordance for query cells (currently a fixed min-height).
 const NotebookSection = ({
   data: cell,
   db,

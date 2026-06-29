@@ -7,13 +7,13 @@ import React, { PropsWithChildren } from 'react';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Panel, Flex } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
 import { SketchComponent } from '#components';
-import { type Sketch, type Settings } from '#types';
+import { type Settings, type Sketch } from '#types';
 
 export type SketchArticleProps = AppSurface.ObjectArticleProps<
   Sketch.Sketch,
@@ -25,10 +25,11 @@ export type SketchArticleProps = AppSurface.ObjectArticleProps<
 export const SketchArticle = ({ role, attendableId, subject: sketch, settings }: SketchArticleProps) => {
   const id = Obj.getURI(sketch);
   const { hasAttention } = useAttention(attendableId);
+  const section = role === AppSurface.Section.role;
 
   const props = {
     readonly: role === AppSurface.Slide.role,
-    autoZoom: role === AppSurface.Section.role ? true : undefined,
+    autoZoom: section ? true : undefined,
     maxZoom: role === AppSurface.Slide.role ? 1.5 : undefined,
   };
 
@@ -37,7 +38,7 @@ export const SketchArticle = ({ role, attendableId, subject: sketch, settings }:
   const actions = useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
-  const Comp = role === AppSurface.Section.role ? Container : Article;
+  const Comp = section ? Container : Article;
 
   return (
     <Comp>
@@ -47,8 +48,10 @@ export const SketchArticle = ({ role, attendableId, subject: sketch, settings }:
         classNames='dx-attention-surface'
         sketch={sketch}
         settings={settings}
+        // Section embeds render read-only (no controls/grid) until focused, on every platform; the
+        // isTauri allowance (always-on UI) applies only to the full article/slide roles.
         // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
-        hideUi={!hasAttention && !isTauri()}
+        hideUi={section ? !hasAttention : !hasAttention && !isTauri()}
         onThreadCreate={handleThreadCreate}
         {...props}
       />
@@ -63,7 +66,7 @@ const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef
 ));
 
 const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
-  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+  <Flex {...composableProps(props, { classNames: 'aspect-square overflow-hidden' })} ref={forwardRef}>
     {props.children}
   </Flex>
 ));

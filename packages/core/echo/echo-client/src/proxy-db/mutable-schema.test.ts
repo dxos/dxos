@@ -18,16 +18,14 @@ import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
-const TestEmpty = Schema.Struct({}).pipe(Type.makeObject(DXN.make('com.example.type.empty', '0.1.0')));
+class TestEmpty extends Type.makeObject<TestEmpty>(DXN.make('com.example.type.empty', '0.1.0'))(Schema.Struct({})) {}
 
-type TestEmpty = Type.InstanceType<typeof TestEmpty>;
-
-const TestWithRefs = Schema.Struct({
-  schema: Schema.optional(Ref(Type.Type)),
-  schemaArray: Schema.optional(Schema.Array(Ref(Type.Type))),
-}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-
-type TestWithRefs = Type.InstanceType<typeof TestWithRefs>;
+class TestWithRefs extends Type.makeObject<TestWithRefs>(DXN.make('com.example.type.test', '0.1.0'))(
+  Schema.Struct({
+    schema: Schema.optional(Ref(Type.Type)),
+    schemaArray: Schema.optional(Schema.Array(Ref(Type.Type))),
+  }),
+) {}
 
 describe('EchoSchema', () => {
   let builder: EchoTestBuilder;
@@ -44,9 +42,11 @@ describe('EchoSchema', () => {
   test.skip('set EchoSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, {}));
-    const GeneratedSchema = Schema.Struct({
-      field: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const GeneratedSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        field: Schema.String,
+      }),
+    );
 
     const schema = await db.addType(GeneratedSchema);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
@@ -70,9 +70,11 @@ describe('EchoSchema', () => {
 
   test('create echo object with EchoSchema', async () => {
     const { db } = await setupTest();
-    const GeneratedSchema = Schema.Struct({
-      field: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const GeneratedSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        field: Schema.String,
+      }),
+    );
     const schema = await db.addType(GeneratedSchema);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema) }));
     expect(Type.getTypename(instanceWithSchemaRef.schema!.target!)).to.eq(Type.getTypename(GeneratedSchema));
@@ -81,9 +83,11 @@ describe('EchoSchema', () => {
   test('push EchoSchema to echo object schema array', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schemaArray: [] }));
-    const GeneratedSchema = Schema.Struct({
-      field: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const GeneratedSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        field: Schema.String,
+      }),
+    );
     const schema = await db.addType(GeneratedSchema);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
@@ -140,14 +144,18 @@ describe('EchoSchema', () => {
   test('mutable schema refs', async () => {
     const { db } = await setupTest();
 
-    const OrgSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.org', '0.1.0')));
+    const OrgSchema = Type.makeObject(DXN.make('com.example.type.org', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+    );
 
-    const ContactSchema = Schema.Struct({
-      name: Schema.optional(Schema.String),
-      org: Schema.optional(Ref(OrgSchema)),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
+    const ContactSchema = Type.makeObject(DXN.make('com.example.type.contact', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        org: Schema.optional(Ref(OrgSchema)),
+      }),
+    );
 
     const orgSchema = await db.addType(OrgSchema);
     const contactSchema = await db.addType(ContactSchema);

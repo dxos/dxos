@@ -123,6 +123,11 @@
       "types": "./dist/types/src/Tag.d.ts",
       "default": "./dist/lib/neutral/Tag.mjs"
     },
+    "./Text": {
+      "source": "./src/Text.ts",
+      "types": "./dist/types/src/Text.d.ts",
+      "default": "./dist/lib/neutral/Text.mjs"
+    },
     "./Type": {
       "source": "./src/Type.ts",
       "types": "./dist/types/src/Type.d.ts",
@@ -145,10 +150,12 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "semver": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:"
   },
   "publishConfig": {
     "access": "public"

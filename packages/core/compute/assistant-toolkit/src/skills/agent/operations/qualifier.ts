@@ -13,7 +13,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
-import { Plan, Agent } from '../../../types';
+import { Agent, Plan } from '../../../types';
 import { Qualifier } from './definitions';
 
 const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
@@ -29,7 +29,13 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
           throw new Error('Agent has no queue.');
         }
 
-        const plan = yield* Database.load(agent.plan);
+        const chat = yield* Database.load(agent.chat);
+        const planText = chat.plan
+          ? yield* Database.load(chat.plan).pipe(
+              Effect.map(Plan.formatPlan),
+              Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
+            )
+          : 'No plan found.';
         const instructions = yield* Database.load(agent.instructions);
 
         const { value } = yield* Effect.scoped(
@@ -49,7 +55,7 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
                     ${instructions.content}
                     </instructions>
                     <plan>
-                      ${Plan.formatPlan(plan)}
+                      ${planText}
                     </plan>
                   </agent>
                 `,

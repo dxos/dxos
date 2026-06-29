@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { Sequence } from './Sequence';
@@ -17,28 +17,27 @@ export const SKILL_KEY = 'org.dxos.skill.sequencer';
  * Top-level Score. Owns the track roster and a collection of sequences,
  * plus playback metadata. This is the typed root object registered with ECHO.
  */
-export const Score = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  tempo: Schema.Number.annotations({ title: 'Tempo', description: 'Beats per minute.' }),
-  timeSignature: Schema.optional(
-    Schema.String.annotations({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
+export class Score extends Type.makeObject<Score>(DXN.make('org.dxos.type.score', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    tempo: Schema.Number.annotations({ title: 'Tempo', description: 'Beats per minute.' }),
+    timeSignature: Schema.optional(
+      Schema.String.annotations({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
+    ),
+    tracks: Schema.mutable(Schema.Array(Track)).pipe(Annotation.FormInputAnnotation.set(false)),
+    sequences: Schema.mutable(Schema.Array(Sequence)).pipe(Annotation.FormInputAnnotation.set(false)),
+    /**
+     * Playback loop range in beats. When set, playback loops between [loopStart, loopEnd)
+     * for every track simultaneously. When unset, falls back to [0, longest-sequence-length).
+     */
+    loopStart: Schema.optional(Schema.Number),
+    loopEnd: Schema.optional(Schema.Number),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--music-notes--regular', hue: 'fuchsia' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   ),
-  tracks: Schema.mutable(Schema.Array(Track)).pipe(Annotation.FormInputAnnotation.set(false)),
-  sequences: Schema.mutable(Schema.Array(Sequence)).pipe(Annotation.FormInputAnnotation.set(false)),
-  /**
-   * Playback loop range in beats. When set, playback loops between [loopStart, loopEnd)
-   * for every track simultaneously. When unset, falls back to [0, longest-sequence-length).
-   */
-  loopStart: Schema.optional(Schema.Number),
-  loopEnd: Schema.optional(Schema.Number),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--music-notes--regular', hue: 'fuchsia' }),
-  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.score', '0.1.0')),
-);
-
-export type Score = Type.InstanceType<typeof Score>;
+) {}
 
 export const make = (props?: Partial<Obj.MakeProps<typeof Score>>): Score => {
   return Obj.make(Score, {

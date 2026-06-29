@@ -15,17 +15,16 @@ const root: ComponentFunction<SplitterStyleProps> = ({ orientation }, ...etc) =>
 const panel: ComponentFunction<SplitterStyleProps> = (_props, ...etc) =>
   mx('relative grid overflow-hidden min-w-0 min-h-0', ...etc);
 
-// A grab area with a centered divider line that reveals on hover/focus, matching the react-ui-dnd
-// `ResizeHandle` treatment (subtle neutral line, not the accent color). The actual extent is governed
-// by `ratio`; this only renders the divider affordance.
+// A 7px grab area, absolutely positioned and centered on the split point (the component sets the offset),
+// containing a persistent 1px divider line that brightens on hover/focus/active.
 const handle: ComponentFunction<SplitterStyleProps> = ({ orientation }, ...etc) =>
   mx(
-    'group relative shrink-0 touch-none select-none',
-    'before:absolute before:block before:bg-focus-ring-subtle',
-    'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
+    'group absolute z-10 touch-none select-none',
+    'before:absolute before:block before:bg-separator',
+    'before:transition-colors before:duration-100 before:ease-in-out hover:before:bg-focus-ring-subtle focus-visible:before:bg-focus-ring-subtle active:before:bg-focus-ring-subtle',
     orientation === 'vertical'
-      ? 'h-2 cursor-row-resize before:inset-x-0 before:top-1/2 before:-translate-y-1/2 before:h-1.5'
-      : 'w-2 cursor-col-resize before:inset-y-0 before:left-1/2 before:-translate-x-1/2 before:w-1.5',
+      ? 'h-[7px] cursor-row-resize before:inset-x-0 before:top-1/2 before:-translate-y-1/2 before:h-px'
+      : 'w-[7px] cursor-col-resize before:inset-y-0 before:left-1/2 before:-translate-x-1/2 before:w-px',
     ...etc,
   );
 

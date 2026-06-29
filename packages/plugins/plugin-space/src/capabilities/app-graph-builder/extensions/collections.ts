@@ -80,7 +80,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             properties: {
               label: ['collections-section.label', { ns: meta.profile.key }],
               icon: 'ph--folder--regular',
-              iconHue: 'amber',
+              iconHue: 'indigo',
               role: 'branch',
               testId: 'spacePlugin.collectionsSection',
               draggable: false,

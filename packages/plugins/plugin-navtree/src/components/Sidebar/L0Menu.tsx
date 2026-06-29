@@ -30,7 +30,6 @@ import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
   IconButton,
-  ListItem,
   ScrollArea,
   type ThemedClassName,
   Tooltip,
@@ -38,6 +37,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { DropIndicator } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
@@ -59,8 +59,8 @@ type L0ItemData = {
   type: 'l0Item';
 };
 
-// Local rearrange handler (formerly `@dxos/react-ui-stack` `StackItemRearrangeHandler`); drag-and-drop is
-// wired directly via pragmatic-dnd in `L0Item`, so only the callback shape is needed here.
+// Local rearrange-handler callback shape; drag-and-drop is wired directly via pragmatic-dnd in `L0Item`,
+// so only the callback signature is needed here.
 type StackItemRearrangeHandler<Data extends { id: string } = { id: string }> = (
   source: Data,
   target: Data,
@@ -239,7 +239,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+      {closestEdge && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });

@@ -15,9 +15,9 @@ random.seed(1234);
 
 type ItemProps = { id: string; text: string };
 
-type DefaultStoryProps = { items: ItemProps[] };
+type StoryArgs = { items: ItemProps[] };
 
-const DefaultStory = ({ items = [] }: DefaultStoryProps) => {
+const DefaultStory = ({ items = [] }: StoryArgs) => {
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>

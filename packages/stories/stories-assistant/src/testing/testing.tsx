@@ -21,15 +21,17 @@ import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@d
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
-  AgentSkill,
   AgentHandlers,
-  DelegationSkill,
+  AgentSkill,
+  Chat,
   DelegationHandlers,
-  PlanningSkill,
+  DelegationSkill,
+  Plan,
   PlanningHandlers,
+  PlanningSkill,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Skill, Instructions, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -40,7 +42,7 @@ import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { MarkdownSkill, Markdown } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -106,6 +108,7 @@ const buildPluginManagerOptions = ({
       types: [
         AccessToken.AccessToken,
         Assistant.Chat,
+        Plan.Plan,
         Skill.Skill,
         Operation.PersistentOperation,
         Markdown.Document,
@@ -367,22 +370,22 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
               invariant(space, 'Space not found');
 
               const feed = space.db.add(Feed.make());
-              const chat = Obj.make(Assistant.Chat, {
-                name,
-                feed: Ref.make(feed),
-              });
+              const chat = Chat.make({ name, feed: Ref.make(feed) });
+              Obj.setParent(feed, chat);
               const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
               const binder = new AiContext.Binder({ feed, runtime, registry });
 
-              // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
               yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
+              yield* Effect.tryPromise(() => binder.open());
+              yield* Effect.tryPromise(() => binder.bind({ objects: [Ref.make(chat)] }));
+
               if (onChatCreated) {
-                yield* Effect.tryPromise(() => binder.open());
                 yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-                yield* Effect.tryPromise(() => binder.close());
               }
+
+              yield* Effect.tryPromise(() => binder.close());
 
               return {
                 object: chat,

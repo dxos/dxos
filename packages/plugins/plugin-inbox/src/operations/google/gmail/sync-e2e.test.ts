@@ -9,10 +9,10 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Trigger, Operation } from '@dxos/compute';
+import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Query, Relation, Scope, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Relation, Scope } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
@@ -23,7 +23,7 @@ import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
 
-import { GMAIL_PROVIDER_ID } from '../../../constants';
+import { GMAIL_CONNECTOR_ID } from '../../../constants';
 import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
@@ -93,7 +93,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
         input: { binding: Ref.make(binding), restrictedMode: true },
       }),
@@ -124,7 +124,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
         input: { binding: Ref.make(binding), restrictedMode: true },
       }),
@@ -153,7 +153,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
-        function: Ref.make(func),
+        runnable: Ref.make(func),
         spec: Trigger.specTimer('*/3 * * * * *'),
         input: { binding: Ref.make(binding), restrictedMode: true },
       }),
@@ -202,7 +202,7 @@ const setup = async () => {
   const connection = space.db.add(
     Connection.make({
       name: 'Gmail',
-      connectorId: GMAIL_PROVIDER_ID,
+      connectorId: GMAIL_CONNECTOR_ID,
       accessToken: Ref.make(accessToken),
     }),
   );

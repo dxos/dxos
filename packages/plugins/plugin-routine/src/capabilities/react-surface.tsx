@@ -9,9 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Skill } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
 
-import { RoutineArticle, RoutineCompanion, RoutineSettings, SkillArticle } from '#containers';
+import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
 import { meta } from '#meta';
 import { Routine } from '#types';
 
@@ -44,12 +43,16 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data }) => {
-          const db = Obj.getDatabase(data.companionTo);
-          if (!db) {
-            return null;
-          }
-          return <RoutineCompanion db={db} object={data.companionTo} />;
+          return <RoutineCompanion attendableId={data.attendableId} subject={data.companionTo} />;
         },
+      }),
+      Surface.create({
+        id: 'routine.runs',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'runs'),
+          AppSurface.companion(AppSurface.Article, Routine.Routine),
+        ),
+        component: ({ data, role }) => <RoutineTraceCompanion role={role} subject={data.companionTo} />,
       }),
       Surface.create({
         id: 'skill',

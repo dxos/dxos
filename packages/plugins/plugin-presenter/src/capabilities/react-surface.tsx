@@ -12,7 +12,7 @@ import { Collection, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Position } from '@dxos/util';
 
-import { CollectionPresenterArticle, DocumentPresenterContainer, MarkdownSlide } from '#containers';
+import { CollectionArticle, DocumentArticle, SlideArticle } from '#containers';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
             data.subject.type === meta.profile.key &&
             Obj.instanceOf(Markdown.Document, data.subject.object),
         ),
-        component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
+        component: ({ role, data }) => <DocumentArticle role={role} subject={data.subject.object} />,
       }),
       Surface.create({
         id: 'collection',
@@ -46,12 +46,12 @@ export default Capability.makeModule(() =>
             data.subject.type === meta.profile.key &&
             Obj.instanceOf(Collection.Collection, data.subject.object),
         ),
-        component: ({ role, data }) => <CollectionPresenterArticle role={role} subject={data.subject.object} />,
+        component: ({ role, data }) => <CollectionArticle role={role} subject={data.subject.object} />,
       }),
       Surface.create({
         id: 'slide',
         filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
-        component: ({ data }) => <MarkdownSlide document={data.subject} />,
+        component: ({ data }) => <SlideArticle {...data} />,
       }),
     ]),
   ),

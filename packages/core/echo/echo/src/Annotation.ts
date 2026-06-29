@@ -5,25 +5,27 @@
 // @import-as-namespace
 
 export {
+  DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,
-  FormInputAnnotation,
-  FormInlineAnnotation,
   FormCreateAnnotation,
   FormCreateAnnotationId,
-  FormOrderedAnnotation,
+  FormInlineAnnotation,
+  FormInputAnnotation,
   FormLayoutAnnotation,
   FormLayoutAnnotationId,
   type FormLayoutMap,
-  DEFAULT_LAYOUT_NAME,
+  FormOrderedAnnotation,
   GeneratorAnnotation,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
+  HiddenAnnotation,
+  IconAnnotation,
+  IconFromRefAnnotation,
   LabelAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  HiddenAnnotation,
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,
@@ -31,8 +33,6 @@ export {
   getTypeIdentifierAnnotation,
   setDescriptionWithSchema,
   setLabelWithSchema,
-  IconAnnotation,
-  IconFromRefAnnotation,
 } from './internal/Annotation';
 
 import * as Function from 'effect/Function';
@@ -237,3 +237,20 @@ export const setDictionary: {
 >(3, (values, annotation, value) => {
   return internalAnnotations.setDictionary(values, annotation, value);
 });
+
+/**
+ * Build a dictionary by mutating it in a callback.
+ *
+ * @example
+ * ```ts
+ * const dictionary = Annotation.buildDictionary((dictionary) => {
+ *   Annotation.setDictionary(dictionary, ColorAnnotation, 'red');
+ *   Annotation.setDictionary(dictionary, SizeAnnotation, '10px');
+ * });
+ * ```
+ */
+export const buildDictionary = (build: (dictionary: Types.Mutable<Dictionary>) => void): Dictionary => {
+  const dictionary = Schema.encodeSync(Dictionary)({});
+  build(dictionary);
+  return dictionary;
+};

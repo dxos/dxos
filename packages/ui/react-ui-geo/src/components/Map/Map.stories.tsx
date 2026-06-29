@@ -10,11 +10,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMapZoomHandler } from '../../hooks';
 import { type GeoMarker } from '../../types';
-import { Map, MapMarkersProps, MapTilesProps, type MapController } from './Map';
+import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map';
 
-type DefaultStoryProps = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
+type StoryArgs = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
 
-const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
+const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
   const [controller, setController] = useState<MapController>();
   const [key, setKey] = useState('');
   // Substitute the `${key}` placeholder in a keyed tile URL (e.g. MapTiler); undefined → default OSM tiles.

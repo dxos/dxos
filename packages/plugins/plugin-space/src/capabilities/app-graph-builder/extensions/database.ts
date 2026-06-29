@@ -85,6 +85,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
+        // Read settings reactively — same pattern as the translator read below.
+        const settingsAtom = get(capabilities.atom(SpaceCapabilities.Settings)).at(0);
+        const showHidden = settingsAtom ? get(settingsAtom).showHidden : false;
+
         // Persisted types live in the space db; static/runtime types live in the shared registry.
         // Fan across both so the space's own types appear without leaking other spaces' types.
         const allSchemas = get(
@@ -99,7 +103,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             return false;
           }
           const schema = Type.getSchema(type);
-          if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (!showHidden && HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {

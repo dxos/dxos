@@ -86,10 +86,12 @@ describe('TablePresentation', () => {
   });
 });
 
-const Test = Schema.Struct({
-  title: Schema.String,
-  count: Schema.Number,
-}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    count: Schema.Number,
+  }),
+);
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Type.getSchema(Test));

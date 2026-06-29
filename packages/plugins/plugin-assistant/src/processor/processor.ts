@@ -17,11 +17,12 @@ import { Capabilities } from '@dxos/app-framework';
 import {
   AiContext,
   AiSession,
-  createSystemPrompt,
-  formatSystemPrompt,
+  Harness,
   McpServerError,
   PartialBlock,
   ToolExecutionServices,
+  createSystemPrompt,
+  formatSystemPrompt,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
@@ -214,7 +215,7 @@ export class AiChatProcessor {
     }
   }
 
-  get context() {
+  get context(): AiContext.Binder {
     return this._conversation.context;
   }
 
@@ -241,12 +242,16 @@ export class AiChatProcessor {
       Effect.gen(this, function* () {
         const skills = this.context.getSkills();
         const objects = this.context.getObjects();
-        return yield* formatSystemPrompt({ system: this._options.system, skills, objects });
-      }).pipe(
-        Effect.provideService(AiContext.Service, { binder: this.context }),
-        Effect.provide(this._spaceLayer),
-        Effect.orDie,
-      ),
+        // Tier A only: system-prompt formatting runs operations that read the conversation context;
+        // the live-host Tier B control surface is not reachable from this fiber.
+        const runtime = yield* Effect.runtime<Database.Service>();
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects }).pipe(
+          Effect.provideService(
+            Harness.HarnessService,
+            Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),
+          ),
+        );
+      }).pipe(Effect.provide(this._spaceLayer), Effect.orDie),
     );
   }
 

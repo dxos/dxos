@@ -113,7 +113,8 @@ const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
   Obj.update(functionTrigger, (functionTrigger) => {
-    functionTrigger.function = Ref.make(graph.root);
+    // TODO(wittjosiah): Widen Runnable union to include ComputeGraph and remove cast.
+    functionTrigger.runnable = Ref.make(graph.root) as any;
     functionTrigger.inputNodeId = computeNode.id;
   });
 };

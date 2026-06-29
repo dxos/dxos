@@ -151,9 +151,6 @@
       "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {
-      "path": "packages/core/compute-runtime/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
@@ -173,6 +170,9 @@
     },
     {
       "path": "packages/core/compute/compute-hyperformula/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/compute-runtime/tsconfig.json"
     },
     {
       "path": "packages/core/compute/conductor/tsconfig.json"
@@ -199,7 +199,16 @@
       "path": "packages/core/compute/mcp-client/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/nlp/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/operation/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/semantic-index/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/transcription-pipeline/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
@@ -395,6 +404,9 @@
     },
     {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ibkr/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
@@ -628,6 +640,9 @@
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-brain/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
@@ -736,9 +751,6 @@
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-stack/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-syntax-highlighter/tsconfig.json"
     },
     {
@@ -749,6 +761,9 @@
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-transcription/tsconfig.json"
     },
     {
       "path": "packages/ui/solid-ui/tsconfig.json"

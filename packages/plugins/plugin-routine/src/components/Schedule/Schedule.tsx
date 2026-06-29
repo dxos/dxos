@@ -6,19 +6,26 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 
 import { invariant } from '@dxos/invariant';
 import {
-  composable,
-  composableProps,
   Input,
   ThemedClassName,
   ToggleGroup,
   ToggleGroupItem,
+  composable,
+  composableProps,
   useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { fromCron, scheduleToCron } from './cron';
+import {
+  MAX_MIN_INTERVAL_SECONDS,
+  clampSchedule,
+  describeCron,
+  fromCron,
+  scheduleIntervalSeconds,
+  scheduleToCron,
+} from './cron';
 
 //
 // Value model.
@@ -58,6 +65,16 @@ export type ScheduleValue =
   | { kind: 'custom'; cron: string };
 
 const DEFAULT_TIME = '08:00';
+
+/** Default minimum interval: a schedule may fire at most once every 60s (the finest 5-field cron granularity). */
+const DEFAULT_MIN_INTERVAL_SECONDS = 60;
+
+/** Clamp a requested minimum interval to the achievable range; a 5-field cron cannot fire more often than every minute or require slower than hourly. */
+const normalizeMinInterval = (minInterval: number): number => {
+  // Guard non-finite input (NaN/Infinity) so the clamp can't yield NaN and produce a `*/NaN` cron.
+  const finite = Number.isFinite(minInterval) ? minInterval : DEFAULT_MIN_INTERVAL_SECONDS;
+  return Math.min(MAX_MIN_INTERVAL_SECONDS, Math.max(DEFAULT_MIN_INTERVAL_SECONDS, Math.round(finite)));
+};
 
 const KIND_LABEL_KEYS: Record<ScheduleKind, string> = {
   // once: 'schedule.kind.once.label',
@@ -134,6 +151,8 @@ type ScheduleContextValue = {
   value: ScheduleValue;
   onValueChange: (value: ScheduleValue) => void;
   kinds: readonly ScheduleKind[];
+  /** Minimum seconds between fires; schedules that would fire more often are clamped. */
+  minInterval: number;
   timezone?: string;
 };
 
@@ -158,6 +177,11 @@ export type ScheduleRootProps = ThemedClassName<
     onValueChange?: (value: ScheduleValue) => void;
     /** Restrict which frequency tabs are offered (defaults to all kinds). */
     kinds?: readonly ScheduleKind[];
+    /**
+     * Minimum seconds between fires (default 60). Schedules that would fire more often are clamped, and
+     * frequency tabs that cannot satisfy it are hidden. Capped to the hourly cadence a 5-field cron can model.
+     */
+    minInterval?: number;
   }>
 >;
 
@@ -168,22 +192,46 @@ export type ScheduleRootProps = ThemedClassName<
  */
 const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
   (
-    { children, value: valueProp, defaultValue, onValueChange, kinds = ScheduleKinds, timezone, ...props },
+    {
+      children,
+      value: valueProp,
+      defaultValue,
+      onValueChange,
+      kinds = ScheduleKinds,
+      minInterval: minIntervalProp = DEFAULT_MIN_INTERVAL_SECONDS,
+      timezone,
+      ...props
+    },
     forwardedRef,
   ) => {
-    const [value, setValue] = useState<ScheduleValue>(valueProp ?? defaultValue ?? DEFAULTS.weekly);
+    const minInterval = normalizeMinInterval(minIntervalProp);
+    const [value, setValue] = useState<ScheduleValue>(() =>
+      clampSchedule(valueProp ?? defaultValue ?? DEFAULTS.weekly, minInterval),
+    );
 
     const handleValueChange = useCallback(
       (next: ScheduleValue) => {
-        setValue(next);
-        onValueChange?.(next);
+        const clamped = clampSchedule(next, minInterval);
+        setValue(clamped);
+        onValueChange?.(clamped);
       },
-      [onValueChange],
+      [onValueChange, minInterval],
+    );
+
+    // Only offer frequencies whose cadence can satisfy the minimum; `custom` always stays (it is clamped on edit).
+    const allowedKinds = kinds.filter(
+      (kind) => kind === 'custom' || scheduleIntervalSeconds(DEFAULTS[kind]) >= minInterval,
     );
 
     return (
       <ScheduleContext.Provider
-        value={{ value: valueProp ?? value, onValueChange: handleValueChange, kinds, timezone }}
+        value={{
+          value: clampSchedule(valueProp ?? value, minInterval),
+          onValueChange: handleValueChange,
+          kinds: allowedKinds,
+          minInterval,
+          timezone,
+        }}
       >
         <div {...composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
           {children}
@@ -234,7 +282,12 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <ToggleGroup type='single' value={value.kind} onValueChange={handleKindChange}>
+    <ToggleGroup
+      classNames='overflow-x-auto scrollbar-none'
+      type='single'
+      value={value.kind}
+      onValueChange={handleKindChange}
+    >
       {kinds.map((kind) => (
         <ToggleGroupItem key={kind} value={kind}>
           {t(KIND_LABEL_KEYS[kind])}
@@ -275,8 +328,8 @@ export const Schedule = {
 // Per-kind editors.
 //
 
-const Field = ({ label, children }: PropsWithChildren<{ label: string }>) => (
-  <label className='flex items-center gap-2'>
+const Field = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
+  <label className={mx('flex items-center gap-2 shrink-0', classNames)}>
     <span className='text-sm'>{label}</span>
     {children}
   </label>
@@ -335,22 +388,21 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='flex justify-between'>
+        <div className='@container dx-inline-size-container min-w-0 flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <Field label={t('schedule.at.label')}>
             <Input.Root>
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
             </Input.Root>
           </Field>
-          <div className='flex gap-2'>
-            <div className='flex items-center text-sm'>{t('schedule.on.label')}</div>
-            <div className='grid grid-cols-7 gap-2 w-fit pr-2'>
+          <div className='flex shrink-0 items-center gap-2'>
+            <span className='shrink-0 text-sm'>{t('schedule.on.label')}</span>
+            <div className='grid w-max shrink-0 grid-cols-7 gap-x-2'>
               {Days.map(({ value: day, label }) => {
                 const checked = value.days.includes(day);
                 return (
-                  <label key={day} className='flex items-center gap-1'>
+                  <div key={day} className='flex shrink-0 items-center gap-1'>
                     <Input.Root>
                       <Input.Checkbox
-                        size={4}
                         checked={checked}
                         onCheckedChange={(next) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
@@ -362,9 +414,10 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                           onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
                         }}
                       />
+                      <Input.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Input.Label>
+                      <Input.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Input.Label>
                     </Input.Root>
-                    <span className='text-sm'>{label}</span>
-                  </label>
+                  </div>
                 );
               })}
             </div>
@@ -444,6 +497,7 @@ const formatTime = (time: string): string => {
 const withZone = (text: string, timezone?: string): string => (timezone ? `${text} ${timezone}` : text);
 
 /** Human-readable summary of the schedule, suitable for the header. */
+// TODO(wittjosiah): Just use cronstrue for all cases?
 export const describeSchedule = (value: ScheduleValue, timezone?: string): string => {
   switch (value.kind) {
     // case 'once':
@@ -468,6 +522,6 @@ export const describeSchedule = (value: ScheduleValue, timezone?: string): strin
     case 'monthly':
       return withZone(`Runs monthly on day ${value.day} at ${formatTime(value.time)}`, timezone);
     case 'custom':
-      return `Runs on schedule ${value.cron}`;
+      return withZone(describeCron(value.cron), timezone);
   }
 };

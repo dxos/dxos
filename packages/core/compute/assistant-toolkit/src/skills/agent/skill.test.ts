@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill, Trigger, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Skill, Trigger } from '@dxos/compute';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -25,9 +25,9 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan, Agent } from '../../types';
+import { Agent, Chat, Plan } from '../../types';
 import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
-import { PlanningSkill, PlanningHandlers } from '../planning';
+import { PlanningHandlers, PlanningSkill } from '../planning';
 import { AgentSkillHandlers } from './operations';
 import { AgentWorker } from './operations/definitions';
 import AgentSkillDef from './skill';
@@ -182,7 +182,7 @@ describe('Agent', () => {
           Trigger.make({
             enabled: true,
             spec: Trigger.specFeed(inboxFeed),
-            function: Ref.make(Operation.serialize(AgentWorker)),
+            runnable: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),
               event: '{{event}}',
@@ -240,8 +240,8 @@ describe('Agent', () => {
         expect(timerTrigger.enabled).toBe(true);
 
         // Timer trigger bypasses the qualifier and points to the agent worker.
-        invariant(timerTrigger.function);
-        const operation = yield* Database.load(timerTrigger.function);
+        invariant(timerTrigger.runnable);
+        const operation = yield* Database.load(timerTrigger.runnable);
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
         expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
       },
@@ -357,7 +357,12 @@ const dumpAgent = async (agent: Agent.Agent) => {
   text += `============== Instructions ==============\n\n`;
   text += `${await agent.instructions.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
-  text += `${await agent.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
+  if (agent.chat) {
+    const chat = await agent.chat.load();
+    text += chat.plan ? `${await chat.plan.load().then((plan) => Plan.formatPlan(plan))}\n` : 'No plan found.\n';
+  } else {
+    text += 'No plan found.\n';
+  }
   text += `============== Artifacts ==============\n\n`;
   for (const artifact of agent.artifacts) {
     const data = await artifact.data.load();

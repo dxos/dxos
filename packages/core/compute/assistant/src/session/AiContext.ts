@@ -6,15 +6,13 @@
 
 import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
 import { Skill } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Annotation, Database, DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,19 +21,19 @@ import { ComplexSet, isNonNullable } from '@dxos/util';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-export const Binding = Schema.Struct({
-  skills: Schema.Struct({
-    added: Schema.Array(Ref.Ref(Skill.Skill)),
-    removed: Schema.Array(Ref.Ref(Skill.Skill)),
-  }),
+export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.contextBinding', '0.1.0'))(
+  Schema.Struct({
+    skills: Schema.Struct({
+      added: Schema.Array(Ref.Ref(Skill.Skill)),
+      removed: Schema.Array(Ref.Ref(Skill.Skill)),
+    }),
 
-  objects: Schema.Struct({
-    added: Schema.Array(Ref.Ref(Obj.Unknown)),
-    removed: Schema.Array(Ref.Ref(Obj.Unknown)),
-  }),
-}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
-
-export type Binding = Type.InstanceType<typeof Binding>;
+    objects: Schema.Struct({
+      added: Schema.Array(Ref.Ref(Obj.Unknown)),
+      removed: Schema.Array(Ref.Ref(Obj.Unknown)),
+    }),
+  }).pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 export type BindingProps = Partial<{
   skills: Ref.Ref<Skill.Skill>[];
   objects: Ref.Ref<Obj.Unknown>[];
@@ -397,24 +395,4 @@ export class Binder extends Resource {
       })
       .filter(isNonNullable);
   }
-}
-
-export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
-  Service,
-  {
-    binder: Binder;
-  }
->() {
-  static bindContext = ({ skills, objects }: BindingProps): Effect.Effect<void, never, Service> =>
-    Effect.gen(function* () {
-      const { binder } = yield* Service;
-      yield* Effect.promise(() => binder.bind({ skills, objects }));
-    });
-
-  static findObjects = <T extends Type.AnyObj>(type: T): Effect.Effect<Type.InstanceType<T>[], never, Service> => {
-    return Effect.gen(function* () {
-      const { binder } = yield* Service;
-      return binder.getObjects().filter(Obj.instanceOf(type));
-    });
-  };
 }

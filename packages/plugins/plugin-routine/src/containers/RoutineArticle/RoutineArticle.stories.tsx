@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Skill, Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
@@ -106,7 +106,7 @@ const TwoColumnStory = () => {
     return <Loading />;
   }
   return (
-    <div role='none' className='grid grid-cols-2 gap-px bg-separator divide-x divide-separator min-bs-0'>
+    <div role='none' className='w-full grid grid-cols-2 gap-px'>
       <RoutineArticle role='article' subject={automation} attendableId='story' />
       <div role='none' className='overflow-y-auto p-2 bg-baseSurface'>
         <ObjectProperties object={automation} />

@@ -275,11 +275,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute-runtime/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/ai/package.json",
           "jsonpath": "$.version"
         },
@@ -311,6 +306,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/compute-hyperformula/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/compute-runtime/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -355,7 +355,22 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/nlp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/operation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/semantic-index/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/transcription-pipeline/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -686,6 +701,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-ibkr/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1075,6 +1095,11 @@
         },
         {
           "type": "json",
+          "path": "packages/stories/stories-brain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/stories/stories-inbox/package.json",
           "jsonpath": "$.version"
         },
@@ -1255,11 +1280,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-stack/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
@@ -1276,6 +1296,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-transcription/package.json",
           "jsonpath": "$.version"
         },
         {

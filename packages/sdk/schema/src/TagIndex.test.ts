@@ -15,15 +15,19 @@ import { EntityId } from '@dxos/keys';
 import * as TagIndex from './TagIndex';
 
 /** A minimal item standing in for an immutable feed object. */
-const Item = Schema.Struct({
-  text: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0')));
+const Item = Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0'))(
+  Schema.Struct({
+    text: Schema.String,
+  }),
+);
 
 /** A host pairing an immutable feed of items with a referenced tag index over them. */
-const Host = Schema.Struct({
-  feed: Ref.Ref(Feed.Feed),
-  tags: Ref.Ref(TagIndex.TagIndex),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0')));
+const Host = Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0'))(
+  Schema.Struct({
+    feed: Ref.Ref(Feed.Feed),
+    tags: Ref.Ref(TagIndex.TagIndex),
+  }),
+);
 
 describe('TagIndex', () => {
   test('sets, unsets, and inverts feed-object tags', () => {
@@ -159,7 +163,7 @@ describe('TagIndex (feed integration)', () => {
       expect(tags.tags(hello.id)).toEqual([urgent]);
 
       // Filter the feed by tag.
-      const items = yield* Feed.runQuery(feed, Filter.type(Item));
+      const items = yield* Feed.query(feed, Filter.type(Item)).run;
       const tagged = new Set(tags.objects(urgent));
       expect(items.filter((item) => tagged.has(item.id)).map((item) => item.text)).toEqual(['hello']);
 

@@ -58,7 +58,7 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
           assetPath: (name, variant) =>
             `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
           spriteFile: resolve(__dirname, '../static/icons.svg'),
-          contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
+          contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}'), join(packages, '/**/dx.config.{ts,tsx,js,jsx}')],
         }),
 
         ThemePlugin({}),

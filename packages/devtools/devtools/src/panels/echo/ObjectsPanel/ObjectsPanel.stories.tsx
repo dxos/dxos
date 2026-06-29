@@ -15,7 +15,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectViewer, ObjectsTree } from '../../../components';
+import { ObjectsTree, ObjectViewer } from '../../../components';
 import { DevtoolsContextProvider } from '../../../hooks';
 import { ObjectsPanel } from './ObjectsPanel';
 
@@ -27,13 +27,12 @@ const withDevtoolsContext: Decorator = (Story) => (
   </DevtoolsContextProvider>
 );
 
-const WorksAt = Schema.Struct({
-  role: Schema.optional(Schema.String),
-}).pipe(
-  Type.makeRelation({
-    dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
-    source: TestSchema.Person,
-    target: TestSchema.Organization,
+const WorksAt = Type.makeRelation(DXN.make('com.example.story.worksAt', '0.1.0'))({
+  source: TestSchema.Person,
+  target: TestSchema.Organization,
+})(
+  Schema.Struct({
+    role: Schema.optional(Schema.String),
   }),
 );
 

@@ -5,27 +5,26 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
 
 /** Calendar object schema. */
-export const Calendar = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
-  // items, so their tag associations live in this child `TagIndex` rather than in object meta.
-  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  FeedAnnotation.set(true),
-  Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
-  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.calendar', '0.1.0')),
-);
-
-export type Calendar = Type.InstanceType<typeof Calendar>;
+export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.calendar', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
+    // items, so their tag associations live in this child `TagIndex` rather than in object meta.
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    FeedAnnotation.set(true),
+    Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+  ),
+) {}
 
 /** Checks if a value is a Calendar object. */
 export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);

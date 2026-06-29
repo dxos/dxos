@@ -13,12 +13,15 @@ import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
+// Connection is referenced in the inferred type of this module's default export via
+// InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { InboxResolver, GoogleCredentials } from '../../../services';
+import { GoogleCredentials, InboxResolver } from '../../../services';
 import { InboxOperation } from '../../../types';
 import { mapGooglePerson } from './mapper';
 

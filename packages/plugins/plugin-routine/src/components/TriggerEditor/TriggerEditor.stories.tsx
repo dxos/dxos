@@ -31,7 +31,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <TriggerEditor classNames='p-2' db={space.db} automation={automation} trigger={trigger} />;
+  return <TriggerEditor classNames='p-2' db={space.db} routine={automation} trigger={trigger} />;
 };
 
 const withSeededSpace = (seed: (space: Space) => void) =>

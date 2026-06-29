@@ -3,8 +3,8 @@
 //
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
-import { Operation, Instructions, Trace, Trigger } from '@dxos/compute';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import {
@@ -27,20 +27,15 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({
-    schema: [
-      Routine.Routine,
-      Routine.AppliesTo,
-      Operation.PersistentOperation,
-      Instructions.Instructions,
-      Trigger.Trigger,
-      Trace.Message,
-    ],
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
+  AppPlugin.addSchemaModule({
+    schema: [Routine.Routine, Operation.PersistentOperation, Instructions.Instructions, Trigger.Trigger, Trace.Message],
+  }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -52,12 +47,10 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.ClientReady,
     activate: RegistrySync,
   }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
     activate: TriggerRuntimeController,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

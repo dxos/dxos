@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { AccessToken } from '@dxos/types';
 
@@ -21,20 +21,19 @@ import { AccessToken } from '@dxos/types';
  * bindings (e.g. several mailboxes). Routed by `connectorId` (not
  * `accessToken.source` alone — multiple connectors may share a source).
  */
-export const Connection = Schema.Struct({
-  /** Display name (e.g. "Work Gmail"); defaults to `${connector.label} · ${accessToken.account}`. */
-  name: Schema.String.pipe(Schema.optional),
-  /** Selects the {@link Connector} registry entry that operates this connection; optional for legacy rows. */
-  connectorId: Schema.String.pipe(Schema.optional),
-  /** Stored OAuth/API credential (internal primitive). */
-  accessToken: Ref.Ref(AccessToken.AccessToken),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'indigo' }),
-  Type.makeObject(DXN.make('org.dxos.type.connection', '0.1.0')),
-);
-
-export type Connection = Type.InstanceType<typeof Connection>;
+export class Connection extends Type.makeObject<Connection>(DXN.make('org.dxos.type.connection', '0.1.0'))(
+  Schema.Struct({
+    /** Display name (e.g. "Work Gmail"); defaults to `${connector.label} · ${accessToken.account}`. */
+    name: Schema.String.pipe(Schema.optional),
+    /** Selects the {@link Connector} registry entry that operates this connection; optional for legacy rows. */
+    connectorId: Schema.String.pipe(Schema.optional),
+    /** Stored OAuth/API credential (internal primitive). */
+    accessToken: Ref.Ref(AccessToken.AccessToken),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'emerald' }),
+  ),
+) {}
 
 export const instanceOf = (value: unknown): value is Connection => Obj.instanceOf(Connection, value);
 

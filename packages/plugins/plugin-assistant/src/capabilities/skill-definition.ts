@@ -7,27 +7,30 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import {
+  AgentHandlers,
   AgentSkill,
   AgentSkillHandlers,
-  AgentHandlers,
-  AgentWizardSkill,
   AgentWizardHandlers,
-  SkillManagerSkill,
-  SkillManagerHandlers,
+  AgentWizardSkill,
+  AlarmHandlers,
+  AlarmSkill,
+  AutomationSkill,
   BrowserSkill,
-  DatabaseSkill,
+  ConnectorsSkill,
   DatabaseHandlers,
+  DatabaseSkill,
+  DelegationHandlers,
+  DelegationSkill,
   DiscordSkill,
   LinearSkill,
-  PlanningSkill,
-  WebSearchSkill,
-  WebSearchHandlers,
   MemorySkill,
-  AutomationSkill,
-  DelegationSkill,
-  DelegationHandlers,
+  PlanningHandlers,
+  PlanningSkill,
+  SkillManagerHandlers,
+  SkillManagerSkill,
+  WebSearchHandlers,
+  WebSearchSkill,
   makeDelegationStrategy,
-  makePlanCompletionGuard,
 } from '@dxos/assistant-toolkit';
 import { RoutineCapabilities } from '@dxos/plugin-routine';
 
@@ -37,6 +40,7 @@ const skillDefinition = () =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.SkillDefinition, AssistantSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, BrowserSkill),
+    Capability.contributes(AppCapabilities.SkillDefinition, ConnectorsSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, DatabaseSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, WebSearchSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, DiscordSkill),
@@ -48,6 +52,7 @@ const skillDefinition = () =>
     Capability.contributes(AppCapabilities.SkillDefinition, SkillManagerSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, AgentWizardSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
+    Capability.contributes(AppCapabilities.SkillDefinition, AlarmSkill),
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentSkillHandlers),
@@ -56,11 +61,12 @@ const skillDefinition = () =>
     Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
     Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
+    Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+    Capability.contributes(Capabilities.OperationHandler, AlarmHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
     Capability.contributes(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
-    Capability.contributes(RoutineCapabilities.AgentCompletionGuard, makePlanCompletionGuard()),
   ]);
 
 export default skillDefinition;

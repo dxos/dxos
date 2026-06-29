@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parse, type HTMLElement } from 'node-html-parser';
+import { type HTMLElement, parse } from 'node-html-parser';
 
-import { type ResultMapping, type FieldExtractor } from '../types/Provider';
+import { type FieldExtractor, type ResultMapping } from '../types/Provider';
 
 export type ResultData = {
   title: string;

@@ -6,9 +6,9 @@ import { type RefObject } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 
-import { type Scene, Model } from '#types';
+import { Model, type Scene } from '#types';
 
-import { exportSTL, downloadFile } from '../../engine';
+import { downloadFile, exportSTL } from '../../engine';
 
 export type ImportExportOptions = {
   scene: Scene.Scene | undefined;

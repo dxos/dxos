@@ -180,6 +180,23 @@ export const isContentBlockResult = (result: unknown): result is ContentBlockRes
 };
 
 /**
+ * Why the model stopped generating a turn. Mirrors the provider-agnostic finish reasons surfaced by
+ * `@effect/ai`. `pause` signals a server-tool turn that the provider paused mid-execution and which
+ * must be resumed by resending the assistant content verbatim (e.g. Anthropic `pause_turn`).
+ */
+export const FinishReason = Schema.Literal(
+  'stop',
+  'length',
+  'content-filter',
+  'tool-calls',
+  'error',
+  'pause',
+  'other',
+  'unknown',
+);
+export type FinishReason = Schema.Schema.Type<typeof FinishReason>;
+
+/**
  * GPT Summary
  */
 export const Stats = Schema.TaggedStruct('stats', {
@@ -199,6 +216,7 @@ export const Stats = Schema.TaggedStruct('stats', {
   duration: Schema.optional(Schema.Number).annotations({
     description: 'Duration in ms.',
   }),
+  finishReason: Schema.optional(FinishReason),
   ...Base.fields,
 });
 
@@ -296,11 +314,36 @@ export const Reference = Schema.TaggedStruct('reference', {
 
 export type Reference = Schema.Schema.Type<typeof Reference>;
 /**
+ * A noun / proper noun surfaced by the extraction stage that is not (yet) linked to an object.
+ */
+export const Candidate = Schema.Struct({
+  text: Schema.String,
+  kind: Schema.Literal('noun', 'proper-noun'),
+  start: Schema.Number,
+  end: Schema.Number,
+  suggested: Schema.optional(Schema.Struct({ typename: Schema.String })),
+});
+
+export type Candidate = Schema.Schema.Type<typeof Candidate>;
+
+/**
  * Transcript block.
  */
 export const Transcript = Schema.TaggedStruct('transcript', {
   started: Schema.String,
   text: Schema.String,
+
+  /** Corrected text (punctuation / capitalization / cross-batch word repair); renderers prefer this when present. */
+  corrected: Schema.optional(Schema.String),
+
+  /** Resolved entity links surfaced by the extraction stage. */
+  references: Schema.optional(Schema.mutable(Schema.Array(Ref.Ref(Obj.Unknown)))),
+
+  /** Nouns / proper nouns mentioned in the block that are not (yet) linked to an object. */
+  candidates: Schema.optional(Schema.mutable(Schema.Array(Candidate))),
+
+  /** Target-language rendering produced by the translation stage. */
+  translation: Schema.optional(Schema.String),
 
   ...Base.fields,
 });
@@ -387,6 +430,23 @@ export const Toolkit = Schema.TaggedStruct('toolkit', {
 
 export type Toolkit = Schema.Schema.Type<typeof Toolkit>;
 /**
+ * Request to render a registered UI surface inline in the conversation.
+ * Emitted by the model (via the `<surface>` tag) so an agent can render an interactive
+ * affordance — e.g. a connector prompt to authenticate a service it needs — instead of
+ * failing silently. The `role` selects which surface renders; `data` is passed to it.
+ */
+export const Surface = Schema.TaggedStruct('surface', {
+  /** Logical surface role, e.g. `integration-prompt`. */
+  role: Schema.String,
+
+  /** JSON-serializable payload passed to the surface, e.g. `{ service: 'gmail.com' }`. */
+  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+
+  ...Base.fields,
+});
+
+export type Surface = Schema.Schema.Type<typeof Surface>;
+/**
  * JSON
  * @deprecated Use {@link Text} with mime type of `application/json`.
  */
@@ -410,6 +470,7 @@ export const Any = Schema.Union(
   Status,
   Suggestion,
   Stats,
+  Surface,
   Text,
   Summary,
   Toolkit,

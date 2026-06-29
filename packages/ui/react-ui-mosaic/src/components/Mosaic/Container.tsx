@@ -235,10 +235,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
               return (data && eventHandler.canDrop?.({ source: data })) || false;
             },
 
-            // TODO(burdon): Provide semantic intent to onDrop.
-            // getDropEffect: () => {
-            //   return 'move';
-            // },
+            // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+            getDropEffect: () => 'move',
 
             /**
              * Dragging started in this container.
@@ -279,9 +277,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           autoscrollElement && [
             autoScrollForElements({
               element: autoscrollElement,
-              // canScroll: ({ element: _ }) => {
-              //   return true;
-              // },
+              // Only autoscroll for tile (reorder) drags. Resize-handle drags carry no tile data, so
+              // resizing a tile near a viewport edge must not scroll the container.
+              canScroll: ({ source }) => getSourceData(source) != null,
               getAllowedAxis: () => orientation,
               getConfiguration: () => ({
                 maxScrollSpeed: 'fast',

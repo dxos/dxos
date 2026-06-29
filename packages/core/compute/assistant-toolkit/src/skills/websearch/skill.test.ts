@@ -20,7 +20,7 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe('WebToolkit', () => {
+describe('WebSearchSkill', () => {
   // Keep skipped, this test is flaky.
   it.effect.skip(
     'WebFetch handler returns response text',

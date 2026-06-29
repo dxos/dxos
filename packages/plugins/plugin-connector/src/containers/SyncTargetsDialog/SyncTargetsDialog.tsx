@@ -10,7 +10,8 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, Input, List, ListItem, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -123,33 +124,41 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         )}
 
         {availableTargets.length === 0 ? (
-          <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
+          <Empty label={t('no-available-targets.message')} />
         ) : (
-          <ScrollArea.Root classNames='max-bs-[24rem]' orientation='vertical'>
+          <ScrollArea.Root padding>
             <ScrollArea.Viewport>
-              <List>
-                {availableTargets.map((target) => (
-                  <ListItem.Root key={target.id} classNames='px-2'>
-                    <ListItem.Endcap>
-                      {/* The checkbox carries an `aria-label` because the visible label is the row heading. */}
-                      <Input.Root>
-                        <Input.Checkbox
-                          checked={selected.has(target.id)}
-                          onCheckedChange={() => handleToggle(target.id)}
-                          disabled={submitting}
-                          aria-label={target.name}
-                        />
-                      </Input.Root>
-                    </ListItem.Endcap>
-                    <ListItem.Heading classNames='flex flex-col items-start grow truncate'>
-                      <div className='truncate'>{target.name}</div>
-                      {target.description && (
-                        <div className='text-description text-sm truncate'>{target.description}</div>
-                      )}
-                    </ListItem.Heading>
-                  </ListItem.Root>
-                ))}
-              </List>
+              <Listbox.Root>
+                <Listbox.Content>
+                  {availableTargets.map((target) => {
+                    // Associate the visible label with the checkbox so clicking the name toggles it.
+                    const checkboxId = `sync-target-${target.id}`;
+                    return (
+                      <Listbox.Item key={target.id} id={target.id}>
+                        <Input.Root>
+                          <Listbox.ItemContent
+                            icon={
+                              <Input.Checkbox
+                                id={checkboxId}
+                                checked={selected.has(target.id)}
+                                onCheckedChange={() => handleToggle(target.id)}
+                                disabled={submitting}
+                                aria-label={target.name}
+                              />
+                            }
+                            title={
+                              <Input.Label htmlFor={checkboxId} classNames='text-base text-base-text'>
+                                {target.name}
+                              </Input.Label>
+                            }
+                            description={target.description}
+                          />
+                        </Input.Root>
+                      </Listbox.Item>
+                    );
+                  })}
+                </Listbox.Content>
+              </Listbox.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}

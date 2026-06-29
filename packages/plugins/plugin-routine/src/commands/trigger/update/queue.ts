@@ -13,11 +13,11 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Feed as Feed$, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Obj, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
 import { Enabled, Feed, Input, TriggerId } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectFeed, selectTrigger } from '../util';
+import { printTrigger, promptForSchemaInput, selectFeed, selectFunction, selectTrigger } from '../util';
 
 export const queue = Command.make(
   'feed',
@@ -67,8 +67,8 @@ export const queue = Command.make(
  * @returns The current function (either original or newly assigned)
  */
 const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionIdOption: Option.Option<string>) {
-  let currentFn: Operation.PersistentOperation | undefined = trigger.function
-    ? yield* Database.load(trigger.function) as any
+  let currentFn: Operation.PersistentOperation | undefined = trigger.runnable
+    ? yield* Database.load(trigger.runnable)
     : undefined;
   if (currentFn && !Obj.instanceOf(Operation.PersistentOperation, currentFn)) {
     currentFn = undefined;
@@ -93,14 +93,14 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
     Obj.update(trigger, (trigger) => {
-      trigger.function = Ref.make(foundFn);
+      trigger.runnable = Ref.make(foundFn);
     });
     currentFn = foundFn;
   }
 
   if (!currentFn) {
-    const functionId = (trigger.function ? trigger.function.uri.toString() : undefined) ?? 'unknown';
-    return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
+    const runnableId = (trigger.runnable ? trigger.runnable.uri.toString() : undefined) ?? 'unknown';
+    return yield* Effect.fail(new Error(`Invalid reference for ${runnableId}`));
   }
 
   return currentFn;

@@ -16,12 +16,16 @@ import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
+  AsyncSelectField,
+  AutofillField,
   BooleanField,
+  ComboboxField,
   DateField,
   GeoPointField,
   InlineRefField,
@@ -75,7 +79,7 @@ export const FormField = (props: FormFieldProps) => {
   const {
     type,
     name,
-    label: labelOverride,
+    label: labelProp,
     path,
     required,
     projection,
@@ -94,6 +98,7 @@ export const FormField = (props: FormFieldProps) => {
     useType,
     getOptions,
     onCreate,
+    resolveCreateEntry,
     refInline,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -101,13 +106,9 @@ export const FormField = (props: FormFieldProps) => {
   const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
-  // `name === null` means "no header" -- collapse to an empty string so
-  // downstream consumers keep their `label: string` types, and the falsy
-  // value lets `FormFieldSet`'s `label && <FormFieldLabel ...>` guard skip
-  // the header.
   const label = useMemo(
-    () => labelOverride ?? title ?? (name == null ? '' : String.capitalize(name)),
-    [labelOverride, title, name],
+    () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [labelProp, title, name],
   );
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
@@ -163,6 +164,24 @@ export const FormField = (props: FormFieldProps) => {
   }
 
   //
+  // Dynamic, value-driven fields (options/value/validation loaded via a self-contained Effect annotation).
+  //
+
+  const optionsLookup = Option.getOrUndefined(OptionsLookupAnnotation.getFromAst(type));
+  if (optionsLookup) {
+    return optionsLookup.combobox ? (
+      <ComboboxField {...fieldProps} lookup={optionsLookup} />
+    ) : (
+      <AsyncSelectField {...fieldProps} lookup={optionsLookup} />
+    );
+  }
+
+  const autofill = Option.getOrUndefined(AutofillAnnotation.getFromAst(type));
+  if (autofill) {
+    return <AutofillField {...fieldProps} autofill={autofill} />;
+  }
+
+  //
   // Array field.
   //
 
@@ -215,7 +234,16 @@ export const FormField = (props: FormFieldProps) => {
     const inline =
       refInline || Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
     if (inline && !refProps.isArray) {
-      return <InlineRefField {...fieldProps} {...refProps} db={db} useType={useType} onCreate={onCreate} />;
+      return (
+        <InlineRefField
+          {...fieldProps}
+          {...refProps}
+          db={db}
+          useType={useType}
+          onCreate={onCreate}
+          resolveCreateEntry={resolveCreateEntry}
+        />
+      );
     }
 
     const isCreateTarget = !createTypename || refProps.typename === createTypename;
@@ -231,6 +259,7 @@ export const FormField = (props: FormFieldProps) => {
         useType={useType}
         getOptions={getOptions}
         onCreate={onCreate}
+        resolveCreateEntry={resolveCreateEntry}
       />
     );
   }
@@ -265,6 +294,7 @@ export const FormField = (props: FormFieldProps) => {
           useType={useType}
           getOptions={getOptions}
           onCreate={onCreate}
+          resolveCreateEntry={resolveCreateEntry}
         />
       );
     }

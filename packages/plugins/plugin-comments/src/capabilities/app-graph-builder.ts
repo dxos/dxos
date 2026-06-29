@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 import { Position } from '@dxos/util';
 
@@ -62,8 +62,8 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'commentsCompanion',
-        match: (node) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+        match: (node, get) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
@@ -82,8 +82,8 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'commentToolbar',
-        match: (node) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+        match: (node, get) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);

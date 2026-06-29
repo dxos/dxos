@@ -21,9 +21,9 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
+import { Operation, Process, Trigger, TriggerEvent } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -331,12 +331,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
         }
 
-        if (!trigger.function) {
-          return yield* Effect.dieMessage('Trigger has no function reference');
+        if (!trigger.runnable) {
+          return yield* Effect.dieMessage('Trigger has no runnable reference');
         }
 
         // Resolve the operation definition from the persistent record.
-        const serializedOperation = yield* Database.load(trigger.function!).pipe(Effect.orDie);
+        const serializedOperation = yield* Database.load(trigger.runnable).pipe(Effect.orDie);
         invariant(Obj.instanceOf(Operation.PersistentOperation, serializedOperation));
         const functionDef = Operation.deserialize(serializedOperation);
 
@@ -364,6 +364,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
           environment: { space: db.spaceId },
+          traceMeta: { trigger: Ref.make(trigger) },
         });
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
@@ -467,7 +468,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
               // TODO(dmaretskyi): Include cursor & limit in the query.
-              const chunks = yield* Feed.runQuery(feed, Filter.everything()).pipe(
+              const chunks = yield* Feed.query(feed, Filter.everything()).run.pipe(
                 Effect.map((objects) => filterReadyFeedItems(objects, cursor)),
                 Effect.map(Array.chunksOf(concurrency)),
               );

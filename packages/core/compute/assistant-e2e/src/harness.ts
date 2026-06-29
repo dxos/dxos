@@ -15,11 +15,14 @@ import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/a
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
-import { configPreset, type ConfigPresetOptions } from '@dxos/config';
-import { Database, Obj, Ref, Tag, Type } from '@dxos/echo';
+// Skill is imported so TypeScript can name Skill.Skill in the emitted .d.ts for getDefaultSkills
+// (SkillManagerSkill.make() returns Skill.Skill, which propagates into the inferred return type).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import { type ConfigPresetOptions, configPreset } from '@dxos/config';
+import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
@@ -36,6 +39,9 @@ import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
+// Memoized replays still initialize the test harness and process conversations — allow enough
+// headroom for slow CI nodes without enabling full LLM generation.
+const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 export const getDefaultSkills = () => [Ref.make(SkillManagerSkill.make()), Ref.make(DatabaseSkill.make())];
 
@@ -83,6 +89,11 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
    * When true, skip per-test entity ID seeding so IDs vary between runs (e.g. sandbox-service KV).
    */
   randomEntityIds?: boolean;
+
+  /**
+   * When true, provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work.
+   */
+  sessionChat?: boolean;
 }
 
 const STABLE_ENTITY_ID_EPOCH = new Date('2025-01-01').getTime();
@@ -170,10 +181,20 @@ const runInstructions = (
   instructions: Instructions.Instructions,
   model: ModelName,
   spaceId: SpaceId,
+  sessionChat?: boolean,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
+
+      let chatRef: Ref.Ref<Chat.Chat> | undefined;
+      if (sessionChat) {
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Agent E2E Chat' }));
+        yield* Database.flush();
+        chatRef = Ref.make(chat);
+      }
+
       return yield* Operation.invoke(
         RunInstructions,
         {
@@ -181,6 +202,7 @@ const runInstructions = (
           input: {},
           systemInstructions: INSTRUCTIONS,
           model,
+          ...(chatRef ? { chat: chatRef } : {}),
         },
         { spaceId },
       );
@@ -246,7 +268,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         );
         yield* logTraceEvents(harness, personalSpace.id);
 
-        const exit = yield* Effect.promise(() => runInstructions(harness, instructions, model, personalSpace.id)).pipe(
+        const exit = yield* Effect.promise(() =>
+          runInstructions(harness, instructions, model, personalSpace.id, options.sessionChat),
+        ).pipe(
           Effect.flatMap((output: OutputSchema) => {
             const missedCriteria = pipe(
               output.completedCriteria,
@@ -274,8 +298,9 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   }, TestHelpers.provideTestContext);
 };
 
-// Use long timeout when generation is enabled or when running live (memoization disabled).
-// Memoized replay still needs breathing room for harness setup — 30s avoids flaky timeouts
-// when plugin surface area grows (e.g. after merging inbox plugin changes).
+/**
+ * Returns the appropriate e2e test timeout: full generation timeout when LLM generation is
+ * enabled or memoization is disabled, and a shorter replay timeout for memoized runs.
+ */
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
-  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : 30_000;
+  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;

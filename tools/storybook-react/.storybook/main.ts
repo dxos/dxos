@@ -24,6 +24,10 @@ const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
+// tldraw self-hosts its fonts/icons; plugin-sketch points tldraw at `/assets/plugin-sketch` and the
+// app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
+// surfaces render (tldraw blocks the editor behind an asset preload).
+const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-sketch/dist/assets');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
@@ -42,7 +46,10 @@ export const modules = [
 
 // NOTE: Storybook test depends on relative paths.
 export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
-export const content = modules.map((dir) => join(packages, dir, contentFiles));
+export const content = [
+  ...modules.map((dir) => join(packages, dir, contentFiles)),
+  join(packages, '**/dx.config.{ts,tsx,js,jsx}'),
+];
 
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));
@@ -75,7 +82,7 @@ export const createConfig = ({
     '@storybook/addon-themes',
     '@storybook/addon-vitest',
   ],
-  staticDirs: [staticDir],
+  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-sketch' }],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,

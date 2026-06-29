@@ -25,10 +25,10 @@ import {
   DocumentRecordType,
   PageRecordType,
   TLDOCUMENT_ID,
+  type TLRecord,
   createTLSchema,
   geoShapeMigrations,
   geoShapeProps,
-  type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
 import * as Option from 'effect/Option';
@@ -74,40 +74,41 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 // The jsonSchema is baked into each View.View so Table/Kanban can render these
 // objects at runtime without the schema being registered in the app.
 // -----------------------------------------------------------------------------
-const RoastLog = S.Struct({
-  title: S.String.pipe(S.annotations({ title: 'Batch' })),
-  date: S.optional(S.String.pipe(S.annotations({ title: 'Date' }))),
-  origin: S.optional(S.String.pipe(S.annotations({ title: 'Origin / Lot' }))),
-  machine: S.optional(S.String.pipe(S.annotations({ title: 'Machine' }))),
-  roaster: S.optional(Ref.Ref(Person.Person).annotations({ title: 'Roaster' })),
-  greenWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Green (kg)' }))),
-  roastWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Roast (kg)' }))),
-  chargeTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Charge (°C)' }))),
-  firstCrackTime: S.optional(S.String.pipe(S.annotations({ title: 'First Crack' }))),
-  developmentTime: S.optional(S.String.pipe(S.annotations({ title: 'Dev Time' }))),
-  dropTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Drop (°C)' }))),
-  roastLevel: S.optional(S.String.pipe(S.annotations({ title: 'Roast Level' }))),
-  status: S.Literal('planned', 'roasted', 'cupped', 'approved').pipe(
-    FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-    S.annotations({
-      title: 'Status',
-      [PropertyMetaAnnotationId]: {
-        singleSelect: {
-          options: [
-            { id: 'planned', title: 'Planned', color: 'indigo' },
-            { id: 'roasted', title: 'Roasted', color: 'orange' },
-            { id: 'cupped', title: 'Cupped', color: 'purple' },
-            { id: 'approved', title: 'Approved', color: 'green' },
-          ],
+const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
+  S.Struct({
+    title: S.String.pipe(S.annotations({ title: 'Batch' })),
+    date: S.optional(S.String.pipe(S.annotations({ title: 'Date' }))),
+    origin: S.optional(S.String.pipe(S.annotations({ title: 'Origin / Lot' }))),
+    machine: S.optional(S.String.pipe(S.annotations({ title: 'Machine' }))),
+    roaster: S.optional(Ref.Ref(Person.Person).annotations({ title: 'Roaster' })),
+    greenWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Green (kg)' }))),
+    roastWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Roast (kg)' }))),
+    chargeTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Charge (°C)' }))),
+    firstCrackTime: S.optional(S.String.pipe(S.annotations({ title: 'First Crack' }))),
+    developmentTime: S.optional(S.String.pipe(S.annotations({ title: 'Dev Time' }))),
+    dropTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Drop (°C)' }))),
+    roastLevel: S.optional(S.String.pipe(S.annotations({ title: 'Roast Level' }))),
+    status: S.Literal('planned', 'roasted', 'cupped', 'approved').pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      S.annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'planned', title: 'Planned', color: 'indigo' },
+              { id: 'roasted', title: 'Roasted', color: 'orange' },
+              { id: 'cupped', title: 'Cupped', color: 'purple' },
+              { id: 'approved', title: 'Approved', color: 'green' },
+            ],
+          },
         },
-      },
-    }),
+      }),
+    ),
+    notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
+  }).pipe(
+    LabelAnnotation.set(['title']),
+    Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
   ),
-  notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
-}).pipe(
-  LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
-  Type.makeObject(DXN.make('example.type.roastLog', '0.1.0')),
 );
 
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.

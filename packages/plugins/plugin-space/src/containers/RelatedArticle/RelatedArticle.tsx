@@ -14,7 +14,6 @@ import { Menu } from '@dxos/react-ui-menu';
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
 
-// TODO(burdon): Companion type.
 export type RelatedArticleProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
   'role' | 'companionTo'
@@ -31,7 +30,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Masonry.Content classNames='p-2' centered>
+          <Masonry.Content centered>
             <Masonry.Viewport items={items} />
           </Masonry.Content>
         </Panel.Content>

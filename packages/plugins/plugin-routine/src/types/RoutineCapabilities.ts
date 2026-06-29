@@ -6,7 +6,7 @@ import type * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import type { Database, Obj } from '@dxos/echo';
-import type { CompletionGuard, DelegationStrategy } from '@dxos/functions-runtime';
+import type { DelegationStrategy } from '@dxos/functions-runtime';
 
 import * as Routine from './Routine';
 
@@ -18,14 +18,6 @@ import * as Routine from './Routine';
  */
 export const AgentDelegationStrategy = Capability.make<DelegationStrategy>(
   'org.dxos.plugin.routine.capability.agentDelegationStrategy',
-);
-
-/**
- * Optional plan-completion guard for the agent chat service. When contributed, the agent process
- * runs an ephemeral stop/continue check before succeeding if open plan tasks remain.
- */
-export const AgentCompletionGuard = Capability.make<CompletionGuard>(
-  'org.dxos.plugin.routine.capability.agentCompletionGuard',
 );
 
 /**
@@ -47,9 +39,11 @@ export type Template = {
    */
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
-   * Build the Automation from the user's input. The returned Automation is added to the database by the
-   * create flow; any auxiliary objects (runnable, triggers) must be added by the scaffold itself via
-   * Database.Service. `subject` is set when scaffolding from an object's companion.
+   * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
+   * trigger and instructions, assembled by `Routine.make`. The create flow persists it with a single
+   * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
+   * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `subject` is set
+   * when scaffolding from an object's companion.
    */
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };

@@ -91,8 +91,12 @@
       "default": "./dist/lib/neutral/skills/index.mjs"
     },
     "./plugin": {
-      "source": "./src/plugin.ts",
+      "source": {
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.ts"
+      },
       "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./testing": {
@@ -141,6 +145,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",

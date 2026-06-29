@@ -13,7 +13,7 @@ export type FormBehavior = { showDescription: boolean };
 const formStyles = tv({
   slots: {
     viewport: '',
-    content: 'pb-3',
+    content: '',
     section: 'flex flex-col py-form-section-gap first:pt-0',
     group: 'flex flex-col gap-3 p-trim-md border border-separator rounded-sm',
     sectionHeader: '',
@@ -26,6 +26,15 @@ const formStyles = tv({
     fieldDescription: 'text-description',
     fieldControl: '',
     fieldValidation: '',
+    // Action bar (cancel/save), equal-width columns flowing horizontally.
+    actions: 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding',
+    // Standalone submit row (full-width primary button).
+    submit: 'flex w-full pt-form-padding',
+    // Collapsible field-set body: indented column of sub-fields.
+    fieldSetBody: 'flex flex-col gap-2 px-2 pb-2',
+    // Bordered container wrapping a collapsible nested group, plus its top spacing.
+    fieldSetBox: 'border border-subdued-separator rounded-sm',
+    fieldSetBoxOuter: 'pt-trim-md',
   },
   variants: {
     variant: {

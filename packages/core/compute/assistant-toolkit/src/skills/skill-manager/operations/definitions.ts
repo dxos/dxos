@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiContext } from '@dxos/assistant';
-import { Skill, Operation } from '@dxos/compute';
+import { Harness } from '@dxos/assistant';
+import { Operation, Skill } from '@dxos/compute';
 import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -44,5 +44,5 @@ export const EnableSkills = Operation.make({
       }),
     ),
   }),
-  services: [Registry.Service, Database.Service, AiContext.Service],
+  services: [Registry.Service, Database.Service, Harness.HarnessService],
 });

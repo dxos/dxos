@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 // (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
+import { Annotation, DXN, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -66,22 +66,18 @@ export type KanbanItemsSpec = Schema.Schema.Type<typeof KanbanItemsSpec>;
 export const KanbanSpec = Schema.Union(KanbanViewSpec, KanbanItemsSpec);
 export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
 
-export const Kanban = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  arrangement: Arrangement,
-  /** How this kanban sources its items. Discriminated by `spec.kind`. */
-  spec: KanbanSpec,
-}).pipe(
-  LabelAnnotation.set(['name']),
-  ViewAnnotation.set(['spec', 'view']),
-  Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
-  Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
-);
-
-/**
- * Instance type; narrow on `kanban.spec.kind` (or use the guards below).
- */
-export interface Kanban extends Type.InstanceType<typeof Kanban> {}
+export class Kanban extends Type.makeObject<Kanban>(DXN.make('org.dxos.type.kanban', '0.2.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    arrangement: Arrangement,
+    /** How this kanban sources its items. Discriminated by `spec.kind`. */
+    spec: KanbanSpec,
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    ViewAnnotation.set(['spec', 'view']),
+    Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
+  ),
+) {}
 
 /** Narrowed view-variant kanban. */
 export type KanbanView = Kanban & { spec: KanbanViewSpec };

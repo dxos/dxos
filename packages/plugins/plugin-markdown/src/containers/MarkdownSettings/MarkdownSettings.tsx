@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Input } from '@dxos/react-ui';
-import { Form, FormRow, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { Form, type FormFieldRendererProps, FormRow } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';

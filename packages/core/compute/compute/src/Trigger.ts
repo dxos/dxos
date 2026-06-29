@@ -7,9 +7,11 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
+import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
+
+import * as Runnable from './Runnable';
 
 /**
  * Type discriminator for TriggerType.
@@ -142,18 +144,29 @@ export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpe
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
- * Function trigger.
- * Function is invoked with the `payload` passed as input data.
- * The event that triggers the function is available in the function context.
+ * Forms the input data passed to the function.
+ * Must match the function's input schema.
+ *
+ * @example
+ * {
+ *   item: '{{event.item}}',
+ *   instructions: 'Summarize and perform entity-extraction'
+ *   mailbox: { '/': 'echo://AAA/ZZZ' }
+ * }
  */
-export class Trigger extends Type.declareObj<Trigger>()(
+export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.Any });
+
+/**
+ * Function trigger.
+ * Runnable is invoked with the `payload` passed as input data.
+ * The event that fires the trigger is available in the runnable context.
+ */
+export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.trigger', '0.1.0'))(
   Schema.Struct({
     /**
-     * Function or workflow to invoke.
+     * Runnable (operation or workflow) to invoke.
      */
-    // TODO(burdon): Runnable?
-    // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-    function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+    runnable: Schema.optional(Ref.Ref(Runnable.Runnable).annotations({ title: 'Runnable' })),
     spec: Schema.optional(Spec),
     enabled: Schema.optional(Schema.Boolean),
 
@@ -179,25 +192,10 @@ export class Trigger extends Type.declareObj<Trigger>()(
     ),
 
     /**
-     * Passed as the input data to the function.
-     * Must match the function's input schema.
-     *
-     * @example
-     * {
-     *   item: '{{event.item}}',
-     *   instructions: 'Summarize and perform entity-extraction'
-     *   mailbox: { '/': 'echo://AAA/ZZZ' }
-     * }
+     * Passed as the input data to the runnable.
      */
-    input: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
-      Annotation.FormInputAnnotation.set(false),
-      Schema.optional,
-    ),
-  }).pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-    HiddenAnnotation.set(true),
-    Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
-  ),
+    input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }), HiddenAnnotation.set(true)),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

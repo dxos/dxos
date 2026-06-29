@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { AgentHandlers, AgentSkillHandlers, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { OperationHandlerSet } from '@dxos/operation';
 

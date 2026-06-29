@@ -5,16 +5,17 @@
 import { describe, test } from 'vitest';
 
 import {
-  Skill,
   Credential,
   FunctionNotFoundError,
+  Instructions,
   Operation,
   OperationHandlerSet,
   OperationRegistry,
   Process,
-  Instructions,
+  Runnable,
   Script,
   ServiceResolver,
+  Skill,
   StorageService,
   Template,
   Trace,
@@ -37,6 +38,7 @@ describe('umbrella re-exports', () => {
 
     // Function primitives.
     expect(Process).toBeDefined();
+    expect(Runnable).toBeDefined();
     expect(Trigger).toBeDefined();
     expect(TriggerEvent).toBeDefined();
     expect(Script).toBeDefined();

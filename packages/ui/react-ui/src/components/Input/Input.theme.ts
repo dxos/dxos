@@ -3,7 +3,7 @@
 //
 
 import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
-import { getSize, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
+import { getSize, mx, sizeValue, snapSize, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
   type ComponentFunction,
@@ -89,10 +89,10 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 
 const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
 
-const checkbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
-const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
+const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4, checked }, ...etc) =>
   mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
 const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-checkbox--switch dx-focus-ring', ...etc);

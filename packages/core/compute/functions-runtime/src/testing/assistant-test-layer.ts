@@ -11,19 +11,19 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AiContext, AiSession } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import {
   AgentService,
-  Skill,
   Credential,
+  Instructions,
   Operation,
   OperationHandlerSet,
   Process,
-  Instructions,
   ServiceNotAvailableError,
   ServiceResolver,
+  Skill,
   Trace,
   Trigger,
 } from '@dxos/compute';
@@ -31,7 +31,6 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
@@ -112,12 +111,23 @@ export const AssistantTestLayer = (
   const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
   agentOptions.model ??= resolvedModel;
 
+  // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
+  // `ProcessManager.layer` requires the `ServiceResolver` — a construction cycle. Resolve it by
+  // sharing a late-bound holder: the resolver reads the manager lazily (only at resolution time,
+  // when the manager exists), and a downstream layer fills the holder once it is built.
+  const processManagerHolder: ProcessManagerHolder = {};
+
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
+    // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by
+    // layers added later (whose outputs feed it). `captureProcessManager` needs the manager, the
+    // manager needs the `ServiceResolver`, and the resolver needs nothing (it reads the manager via
+    // the holder), so they must appear in exactly this order.
+    Layer.provideMerge(captureProcessManager(processManagerHolder)),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder)),
     Layer.provideMerge(AiService.model(resolvedModel)),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
@@ -133,12 +143,26 @@ export const AssistantTestLayer = (
   );
 };
 
+/** Late-bound reference to the {@link ProcessManager.Service}, filled once the manager is built. */
+interface ProcessManagerHolder {
+  current?: Context.Tag.Service<ProcessManager.Service>;
+}
+
+/** Fills the {@link ProcessManagerHolder} once the manager is available, breaking the build cycle. */
+const captureProcessManager = (holder: ProcessManagerHolder): Layer.Layer<never, never, ProcessManager.Service> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      holder.current = yield* ProcessManager.Service;
+    }),
+  );
+
 /**
  * Service resolver for testing.
  */
-export const AssistantTestServiceResolverLayer = ({
-  extraServices = Layer.empty,
-}: Pick<TestLayerOptions, 'extraServices'>) =>
+export const AssistantTestServiceResolverLayer = (
+  { extraServices = Layer.empty }: Pick<TestLayerOptions, 'extraServices'>,
+  processManagerHolder: ProcessManagerHolder,
+) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
@@ -150,38 +174,19 @@ export const AssistantTestServiceResolverLayer = ({
       const extraServicesRt = yield* Layer.toRuntime(extraServices);
 
       return ServiceResolver.compose(
-        ServiceResolver.succeed(AiContext.Service, (context) =>
+        ServiceResolver.succeed(Harness.HarnessService, (context) =>
           Effect.gen(function* () {
             if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
+              return yield* Effect.fail(new ServiceNotAvailableError(Harness.HarnessService.key));
             }
-            const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Database.Service>();
-            const binder = yield* EffectEx.acquireReleaseResource(
-              () =>
-                new AiContext.Binder({
-                  feed,
-                  runtime,
-                }),
-            );
-            return { binder };
-          }).pipe(Effect.provide(services)),
-        ),
-        ServiceResolver.succeed(AiSession.Service, (context) =>
-          Effect.gen(function* () {
-            if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
+            // Read the manager lazily: the resolver is invoked at spawn time, by which point the
+            // holder has been filled (see the construction-cycle note in `AssistantTestLayer`).
+            const processManager = processManagerHolder.current;
+            if (!processManager) {
+              return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
             }
-            const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
             const runtime = yield* Effect.runtime<Database.Service>();
-            const session = yield* EffectEx.acquireReleaseResource(
-              () =>
-                new AiSession.Session({
-                  feed,
-                  runtime,
-                }),
-            );
-            return session;
+            return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
         ),
         yield* ServiceResolver.fromRequirements(

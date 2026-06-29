@@ -6,7 +6,7 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -20,12 +20,11 @@ import {
   AgentRuntime,
   AiContext as AiContextCapability,
   AiService,
-  Connector,
   AppGraphBuilder,
-  AutomationTemplates,
   AssistantState,
-  SkillDefinition,
+  AutomationTemplates,
   CompanionChatProvisioner,
+  Connector,
   CreateObject,
   EdgeModelResolver,
   LocalModelResolver,
@@ -35,6 +34,7 @@ import {
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -111,7 +111,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: () => AiService(options),
     })),
     Plugin.addModule({
-      // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+      // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
       // dispatched as their own processes (e.g. via `Operation.invoke` from
       // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
       // conversation-scoped services without an inline `Effect.provideService`

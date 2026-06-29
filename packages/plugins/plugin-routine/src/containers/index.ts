@@ -5,7 +5,7 @@
 import { type ComponentType, lazy } from 'react';
 
 export const RoutineArticle: ComponentType<any> = lazy(() => import('./RoutineArticle'));
+export const RoutineTraceCompanion: ComponentType<any> = lazy(() => import('./RoutineTraceCompanion'));
 export const RoutineSettings: ComponentType<any> = lazy(() => import('./RoutineSettings'));
 export const RoutineCompanion: ComponentType<any> = lazy(() => import('./RoutineCompanion'));
-export const AutomationCompanionDeprecated: ComponentType<any> = lazy(() => import('./AutomationCompanionDeprecated'));
 export const SkillArticle: ComponentType<any> = lazy(() => import('./SkillArticle'));

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiContext, AiRequest, AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiRequest, AiSession, GenerationObserver, Harness } from '@dxos/assistant';
 import type { Skill } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -44,12 +44,11 @@ export const runSteps: (
  */
 // TODO(dmaretskyi): Potentially the agent will auto-bind the skills.
 export const addSkills = Effect.fnUntraced(function* (skills: Skill.Definition[]) {
-  yield* AiContext.Service.bindContext({
-    skills: yield* pipe(
-      skills,
-      Arr.map((skill) => skill.make()),
-      Effect.forEach(Database.add),
-      Effect.map(Arr.map(Ref.make)),
-    ),
-  });
+  const skillRefs = yield* pipe(
+    skills,
+    Arr.map((skill) => skill.make()),
+    Effect.forEach(Database.add),
+    Effect.map(Arr.map(Ref.make)),
+  );
+  yield* Harness.bindContext({ skills: skillRefs });
 });

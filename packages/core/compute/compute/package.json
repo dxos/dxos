@@ -51,7 +51,8 @@
     "@dxos/schema": "workspace:*",
     "@dxos/vendor-kbn-handlebars": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "@effect/platform": "catalog:"
+    "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",

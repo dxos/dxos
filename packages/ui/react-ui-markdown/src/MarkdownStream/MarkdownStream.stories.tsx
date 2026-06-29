@@ -66,7 +66,7 @@ const registry: XmlWidgetRegistry = {
   },
 };
 
-type DefaultStoryProps = MarkdownStreamProps & {
+type StoryArgs = MarkdownStreamProps & {
   initialContent?: string;
   streamOptions?: TextStreamOptions;
 };
@@ -77,7 +77,7 @@ const DefaultStory = ({
   streamOptions = defaultStreamOptions,
   debug: debugProp,
   ...props
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [debug, setDebug] = useState(debugProp);

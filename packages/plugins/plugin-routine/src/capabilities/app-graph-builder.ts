@@ -40,7 +40,7 @@ export default Capability.makeModule(
               type: `${meta.profile.key}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
-              iconHue: 'indigo',
+              iconHue: 'emerald',
               position: Position.last,
             }),
           ]);
@@ -57,6 +57,19 @@ export default Capability.makeModule(
               icon: 'ph--lightning--regular',
               data: 'automation',
               position: Position.last,
+            }),
+          ]),
+      }),
+      GraphBuilder.createTypeExtension({
+        id: 'routineRuns',
+        type: Routine.Routine,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'runs',
+              label: ['routine-runs.label', { ns: meta.profile.key }],
+              icon: 'ph--clock-countdown--regular',
+              data: 'runs',
             }),
           ]),
       }),

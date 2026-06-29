@@ -3,9 +3,7 @@
 //
 
 export * from './skills';
-export * from './crud';
-export * from './functions';
+export * from './operations';
 export * from './supervisor';
 export * from './sync';
-export * from './toolkits';
 export * from './types';

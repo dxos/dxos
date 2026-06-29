@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 
@@ -28,33 +28,32 @@ export type Kind = Schema.Schema.Type<typeof Kind>;
  * crash or navigation away mid-job won't strand the user — the next mount
  * sees the stored id and continues polling.
  */
-export const Generation = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  type: Kind.annotations({ title: 'Type' }),
-  avatarId: Schema.optional(
-    Schema.String.annotations({
-      title: 'Avatar',
-      description: 'Provider-specific avatar / character identifier.',
-    }).pipe(FormInputAnnotation.set(false)),
+export class Generation extends Type.makeObject<Generation>(DXN.make('org.dxos.type.generation', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+    type: Kind.annotations({ title: 'Type' }),
+    avatarId: Schema.optional(
+      Schema.String.annotations({
+        title: 'Avatar',
+        description: 'Provider-specific avatar / character identifier.',
+      }).pipe(FormInputAnnotation.set(false)),
+    ),
+    voiceId: Schema.optional(
+      Schema.String.annotations({
+        title: 'Voice',
+        description: 'Provider-specific voice identifier.',
+      }).pipe(FormInputAnnotation.set(false)),
+    ),
+    prompt: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    urls: Schema.optional(
+      Schema.Array(Schema.String).annotations({ title: 'URLs' }).pipe(FormInputAnnotation.set(false)),
+    ),
+    jobId: Schema.optional(Schema.String.annotations({ title: 'Job ID' }).pipe(FormInputAnnotation.set(false))),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--film-reel--regular', hue: 'fuchsia' }),
   ),
-  voiceId: Schema.optional(
-    Schema.String.annotations({
-      title: 'Voice',
-      description: 'Provider-specific voice identifier.',
-    }).pipe(FormInputAnnotation.set(false)),
-  ),
-  prompt: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-  urls: Schema.optional(
-    Schema.Array(Schema.String).annotations({ title: 'URLs' }).pipe(FormInputAnnotation.set(false)),
-  ),
-  jobId: Schema.optional(Schema.String.annotations({ title: 'Job ID' }).pipe(FormInputAnnotation.set(false))),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--film-reel--regular', hue: 'fuchsia' }),
-  Type.makeObject(DXN.make('org.dxos.type.generation', '0.1.0')),
-);
-
-export type Generation = Type.InstanceType<typeof Generation>;
+) {}
 
 export type MakeProps = Partial<{
   name: string;

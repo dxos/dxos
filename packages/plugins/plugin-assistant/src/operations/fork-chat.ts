@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Paths, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext, SessionLink } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
@@ -21,8 +21,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
   Operation.withHandler(
     Effect.fnUntraced(function* ({ chat, companionTo }) {
       const { db } = yield* Database.Service;
-      const sourceFeed = chat.feed.target;
-      invariant(sourceFeed, 'Chat feed not found.');
+      const sourceFeed = yield* Database.load(chat.feed);
 
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
@@ -30,7 +29,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       const dbLayer = Database.layer(space.db);
 
-      const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(Effect.provide(dbLayer));
+      const messages = yield* Feed.query(sourceFeed, Filter.type(Message.Message)).run.pipe(Effect.provide(dbLayer));
 
       // Sort chronologically to find the last message.
       const sorted = messages
@@ -43,8 +42,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         db,
         name: sourceName ? `${sourceName} (fork)` : undefined,
       });
-      const newFeed = newChat.feed.target;
-      invariant(newFeed, 'New chat feed not found.');
+      const newFeed = yield* Database.load(newChat.feed);
 
       if (sorted.length > 0) {
         const lastMessage = sorted[sorted.length - 1];
@@ -60,7 +58,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       // Copy source chat's skill and object bindings to the new feed.
       // Sort chronologically so add/remove events are applied in the correct order.
-      const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
+      const sourceBindings = (yield* Feed.query(sourceFeed, Filter.type(AiContext.Binding)).run.pipe(
         Effect.provide(dbLayer),
       )).filter(Obj.instanceOf(AiContext.Binding));
 
