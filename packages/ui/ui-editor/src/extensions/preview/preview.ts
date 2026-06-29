@@ -4,8 +4,6 @@
 
 import { EditorView, WidgetType } from '@codemirror/view';
 
-export { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
-
 /**
  * Inline widget for echo/dxn links.
  *  [Label](echo:/123)
