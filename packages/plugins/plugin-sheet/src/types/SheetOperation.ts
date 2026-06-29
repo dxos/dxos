@@ -8,9 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
+
+import * as Sheet from './Sheet';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -61,6 +64,46 @@ export const ScrollToAnchor = Operation.make({
     ref: Schema.optional(Schema.Any.annotations({ description: 'Active refs for highlighting.' })),
   }),
   output: Schema.Void,
+});
+
+export const GetValues = Operation.make({
+  meta: {
+    key: makeKey('rangeGet'),
+    name: 'Get Range Values',
+    description: 'Returns cell values from a sheet as a 2D array. Defaults to the entire occupied area.',
+    icon: 'ph--table--regular',
+  },
+  input: Schema.Struct({
+    sheet: Ref.Ref(Sheet.Sheet).annotations({ description: 'The sheet to read from.' }),
+    range: Schema.optional(Schema.String).annotations({
+      description: 'Range in A1 notation (e.g. "A1:C5"). Omit to return the entire occupied area.',
+    }),
+  }),
+  output: Schema.Struct({
+    values: Schema.Array(Schema.Array(Schema.Any)).annotations({
+      description:
+        '2D array of cell values indexed [row][col]. Empty cells are null. Formulas are shown in A1 notation.',
+    }),
+    range: Schema.String.annotations({ description: 'The A1 range actually returned (e.g. "A1:E5").' }),
+  }),
+  services: [Database.Service],
+});
+
+export const SetValues = Operation.make({
+  meta: {
+    key: makeKey('rangeSet'),
+    name: 'Set Range Values',
+    description: 'Sets multiple cell values in a sheet at once.',
+    icon: 'ph--pencil--regular',
+  },
+  input: Schema.Struct({
+    sheet: Ref.Ref(Sheet.Sheet).annotations({ description: 'The sheet to write to.' }),
+    cells: Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+      description: 'Map of A1 address to value (e.g. { "A1": "Name", "B1": 42, "C1": "=A1+B1" }).',
+    }),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
 });
 
 /**

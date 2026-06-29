@@ -6,10 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
+
+export const SKILL_KEY = 'org.dxos.skill.sheet';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
 
@@ -66,6 +69,7 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
     ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     CollectionItemAnnotation.set(true),
   ),
 ) {}
