@@ -25,7 +25,10 @@ const FALLBACK_SUGGESTION_KEYS = [
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key, { year: new Date().getFullYear() })), [t]);
+  const fallbacks = useMemo(
+    () => FALLBACK_SUGGESTION_KEYS.map((key) => t(key, { year: new Date().getFullYear() })),
+    [t],
+  );
   const [suggestions, setSuggestions] = useState<readonly string[] | undefined>(undefined);
 
   useAsyncEffect(
