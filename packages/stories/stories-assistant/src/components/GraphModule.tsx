@@ -87,12 +87,12 @@ export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, on
 
   return (
     <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
+      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} ref={editorRef} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly
         label='Search'
-        onClick={() => onSubmit?.(editorRef.current?.view?.state.doc.toString() ?? '')}
+        onClick={() => onSubmit?.(editorRef.current?.getText() ?? '')}
       />
       <Toolbar.IconButton
         disabled={flushState === 'flushing'}
