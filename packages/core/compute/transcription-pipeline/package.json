@@ -1,7 +1,6 @@
 {
   "name": "@dxos/transcription-pipeline",
   "version": "0.9.0",
-  "private": true,
   "description": "Streaming stage pipeline for transcription post-processing (correction, entity extraction, summarization).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -55,7 +54,7 @@
     "effect": "catalog:"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "beast": {}
 }
