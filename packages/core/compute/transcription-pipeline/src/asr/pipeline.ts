@@ -15,7 +15,7 @@ export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
   /** Optional ASR transport override (default: `fetch` to the edge transcription service). */
   transcribe?: TranscribeFn;
   /** Transcriber chunking configuration. */
-  transcribeConfig: TranscribeConfig;
+  config: TranscribeConfig;
   /** Optional raw-segment hook invoked before each block enters the pipeline (e.g. live display). */
   onSegment?: (block: ContentBlock.Transcript) => void;
   /** Silence (ms) reported on `end` so on-silence stages fire over the final window. */
@@ -45,14 +45,14 @@ export type AsrPipeline = {
 export const runAsrPipeline = ({
   recorder,
   transcribe,
-  transcribeConfig,
+  config,
   onSegment,
   drainSilenceMs = 5_000,
   ...runOptions
 }: AsrPipelineOptions): AsrPipeline => {
   const live: LivePipeline = runLivePipeline(runOptions);
   const transcriber = new Transcriber({
-    config: transcribeConfig,
+    config: config,
     recorder,
     transcribe,
     onSegments: async (blocks: ContentBlock.Transcript[]) => {

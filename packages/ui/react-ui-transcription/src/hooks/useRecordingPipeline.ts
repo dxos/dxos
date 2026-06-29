@@ -31,6 +31,8 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 };
 
 export type RecordingPipelineOptions = {
+  /** Override the transcriber chunk configuration. */
+  config?: Partial<TranscribeConfig>;
   /**
    * Raw capture flag — recording (mic) or playing (file). When it flips false the hook drains
    * (flushing the transcriber's buffered audio) before returning to idle.
@@ -50,8 +52,6 @@ export type RecordingPipelineOptions = {
   lookup?: EntityLookup;
   /** Optional raw-segment hook (pre-pipeline), e.g. for live display before enrichment. */
   onSegment?: (block: ContentBlock.Transcript) => void;
-  /** Override the transcriber chunk configuration. */
-  transcribeConfig?: Partial<TranscribeConfig>;
 };
 
 export type RecordingPipeline = {
@@ -74,7 +74,7 @@ export const useRecordingPipeline = ({
   commit,
   lookup,
   onSegment,
-  transcribeConfig,
+  config,
 }: RecordingPipelineOptions): RecordingPipeline => {
   // Phase machine: hold 'recording' for the commit when `active` flips off, then 'draining' until the
   // transcriber flushes, then 'idle' — so the tail of speech and its enrichment are not lost.
@@ -107,7 +107,7 @@ export const useRecordingPipeline = ({
     }
     const asr = runAsrPipeline({
       recorder,
-      transcribeConfig: { ...DEFAULT_TRANSCRIBE_CONFIG, ...transcribeConfig },
+      config: { ...DEFAULT_TRANSCRIBE_CONFIG, ...config },
       stages,
       commit,
       lookup,
