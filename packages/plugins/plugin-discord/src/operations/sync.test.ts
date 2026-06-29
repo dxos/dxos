@@ -28,31 +28,35 @@ describe('Discord channel sync', () => {
     await builder.close();
   });
 
-  test.skipIf(!hasCredentials)('fetches messages and appends them to an in-memory feed', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Feed.Feed, Message.Message] });
-    const db = await peer.createDatabase();
+  test.skipIf(!hasCredentials)(
+    'fetches messages and appends them to an in-memory feed',
+    async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, Message.Message] });
+      const db = await peer.createDatabase();
 
-    const { messages, cursor, fetchedAt } = await EffectEx.runPromise(
-      fetchChannelMessages(channelId!, { daysOfHistory: 1 }).pipe(Effect.provide(makeDiscordLayerFromToken(token!))),
-    );
-
-    expect(messages.length).toBeGreaterThan(0);
-    expect(cursor).toBeDefined();
-    expect(fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-
-    await Effect.gen(function* () {
-      const feed = yield* Database.add(Feed.make({ name: 'discord-test' }));
-      yield* Feed.append(
-        feed,
-        messages.map((message) => Obj.make(Message.Message, message)),
+      const { messages, cursor, fetchedAt } = await EffectEx.runPromise(
+        fetchChannelMessages(channelId!, { maxDays: 30 }).pipe(Effect.provide(makeDiscordLayerFromToken(token!))),
       );
 
-      const stored = yield* Feed.runQuery(feed, Filter.type(Message.Message));
-      expect(stored.length).toBe(messages.length);
+      expect(messages.length).toBeGreaterThan(0);
+      expect(cursor).toBeDefined();
+      expect(fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
 
-      const first = stored[0];
-      expect(first.sender?.name).toBeDefined();
-      expect(Array.isArray(first.blocks)).toBe(true);
-    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
-  }, 30_000);
+      await Effect.gen(function* () {
+        const feed = yield* Database.add(Feed.make({ name: 'discord-test' }));
+        yield* Feed.append(
+          feed,
+          messages.map((message) => Obj.make(Message.Message, message)),
+        );
+
+        const stored = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+        expect(stored.length).toBe(messages.length);
+
+        const first = stored[0];
+        expect(first.sender?.name).toBeDefined();
+        expect(Array.isArray(first.blocks)).toBe(true);
+      }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+    },
+    30_000,
+  );
 });
