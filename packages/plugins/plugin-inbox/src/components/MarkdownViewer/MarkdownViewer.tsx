@@ -17,6 +17,10 @@ import {
   createThemeExtensions,
   xmlTags,
 } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isTruthy } from '@dxos/util';
+
+import { inboxMarkdown } from '../../extensions';
 
 const inlinePreviewRegistry: XmlWidgetRegistry = {
   'link-preview': {
@@ -28,10 +32,6 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
         : null,
   },
 };
-import { mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
-
-import { inboxMarkdown } from '../../extensions';
 
 export type MarkdownViewerProps = ThemedClassName<{
   content: string;
