@@ -63,8 +63,13 @@ export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
  * keyed by short id or provider domain.
  */
 const matchConnectors = (connectors: ConnectorEntry[], service: string): ConnectorEntry[] => {
-  const needle = service.toLowerCase();
+  const needle = service.trim().toLowerCase();
+  // A malformed service (e.g. `.gmail.com` or `/`) can yield an empty base token, which would make
+  // `value.includes(base)` match every connector; bail so the unavailable state is shown instead.
   const base = needle.split(/[.@/]/)[0];
+  if (!needle || !base) {
+    return [];
+  }
   return connectors.filter((connector) => {
     const candidates = [connector.id, connector.source, connector.label]
       .filter((value): value is string => typeof value === 'string')

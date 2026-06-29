@@ -274,7 +274,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       // without colliding with attribute quoting; `SurfaceWidget` re-parses it.
       return renderXMLBlock('surface', {
         content: JSON.stringify(block.data ?? {}),
-        attributes: `role="${block.role}"`,
+        attributes: `role="${escapeXmlAttribute(block.role)}"`,
       });
     }
 
@@ -290,6 +290,9 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
  */
 const escapeXmlTextContent = (raw: string): string =>
   raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Escape a value embedded in a double-quoted XML attribute (e.g. a model-supplied surface role). */
+const escapeXmlAttribute = (raw: string): string => escapeXmlTextContent(raw).replace(/"/g, '&quot;');
 
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that the markdown parser does not split the content into multiple paragraphs.
