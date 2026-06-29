@@ -10296,6 +10296,9 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

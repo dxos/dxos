@@ -92,6 +92,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "vite": "catalog:"

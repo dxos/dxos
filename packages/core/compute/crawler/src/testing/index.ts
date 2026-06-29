@@ -259,17 +259,23 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
 // --- Composed test layer + synthetic fixtures -----------------------------------------------------
 
 /**
- * Everything the crawler needs EXCEPT a {@link Source}: in-memory state + agent registry +
- * semantic store + the deterministic extractor. Compose with any `Source` layer (fixture or a live
- * `DiscordSource`) to run the crawler offline (no AI token).
+ * State + agent registry + semantic store, with NO `Source` and NO `AiService`. Compose with a
+ * `Source` layer and an `AiService` (the deterministic stand-in or a real model) to run the crawler.
  */
-export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | SemanticStore | AiService.AiService> =
-  Layer.mergeAll(
-    StateStore.layerMemory,
-    AgentRegistry.layerMemory,
-    SemanticStore.layerMemory,
-    deterministicAiService(),
-  );
+export const coreLayer: Layer.Layer<StateStore | AgentRegistry | SemanticStore> = Layer.mergeAll(
+  StateStore.layerMemory,
+  AgentRegistry.layerMemory,
+  SemanticStore.layerMemory,
+);
+
+/**
+ * Everything the crawler needs EXCEPT a {@link Source}: {@link coreLayer} + the deterministic
+ * extractor. Compose with any `Source` layer to run the crawler offline (no AI token).
+ */
+export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | SemanticStore | AiService.AiService> = Layer.merge(
+  coreLayer,
+  deterministicAiService(),
+);
 
 /** All services the crawler needs, wired against a fixture + the deterministic extractor. */
 export const TestLayer = (

@@ -3,10 +3,13 @@
 //
 
 import type { MessageResponse } from 'dfx/types';
+import type * as ConfigError from 'effect/ConfigError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, expect, test } from 'vitest';
 
+import { type AiService } from '@dxos/ai';
+import { DirectAiServiceLayer } from '@dxos/ai/testing';
 import {
   AgentRegistry,
   Source,
@@ -18,7 +21,7 @@ import {
   makeExtractFactsStage,
   run,
 } from '@dxos/crawler';
-import { servicesLayer } from '@dxos/crawler/testing';
+import { coreLayer, deterministicAiService } from '@dxos/crawler/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { discordSourceLayer, mapDiscordMessage, threadRefsOf } from './discord-source';
@@ -77,10 +80,18 @@ describe('DiscordSource live crawl', () => {
     async () => {
       const config: Type.Config = { channels: [channelId!], descendThreads: true };
       const stages: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
-      const layer = Layer.merge(discordSourceLayer(token!), servicesLayer);
+
+      // Real LLM extraction (attributed S-P-O + valence) when an Anthropic key is set; otherwise the
+      // deterministic proper-noun stand-in. DirectAiServiceLayer reads DX_ANTHROPIC_API_KEY.
+      const useRealLlm = Boolean(process.env.DX_ANTHROPIC_API_KEY);
+      const aiLayer: Layer.Layer<AiService.AiService, ConfigError.ConfigError> = useRealLlm
+        ? DirectAiServiceLayer
+        : deterministicAiService();
+      const layer = Layer.mergeAll(discordSourceLayer(token!), coreLayer, aiLayer);
 
       // Set DISCORD_LIST_FACTS=1 to dump every extracted fact after processing.
       const dumpFacts = Boolean(process.env.DISCORD_LIST_FACTS);
+      console.log(`\nExtractor: ${useRealLlm ? 'LLM (claude-haiku-4-5)' : 'deterministic (no LLM)'}`);
 
       const { summary, agents, report, facts } = await EffectEx.runPromise(
         Effect.gen(function* () {
