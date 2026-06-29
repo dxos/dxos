@@ -12,10 +12,10 @@
  * Output: src/__fixtures__/discord-messages.json
  */
 
-import { writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
 import * as Effect from 'effect/Effect';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { EffectEx } from '@dxos/effect';
 
@@ -24,7 +24,6 @@ import { type DiscordChannelFixture, fetchChannelMessages } from './index';
 
 const token = process.env.DISCORD_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
-
 if (!token || !channelId) {
   console.error('DISCORD_TOKEN and DISCORD_CHANNEL_ID must be set.');
   process.exit(1);
@@ -43,6 +42,7 @@ const program = Effect.gen(function* () {
     messages: result.messages,
   };
 
+  mkdirSync(outDir, { recursive: true });
   writeFileSync(outPath, JSON.stringify(fixture, null, 2));
   console.log(`Written to ${outPath}`);
 });
