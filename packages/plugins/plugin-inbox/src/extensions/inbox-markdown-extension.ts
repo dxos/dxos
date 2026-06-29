@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension, EditorView, decorateMarkdown } from '@dxos/ui-editor';
+import { EditorView, type Extension, decorateMarkdown } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
 import { hideRemoteImages } from './hide-images-extension';

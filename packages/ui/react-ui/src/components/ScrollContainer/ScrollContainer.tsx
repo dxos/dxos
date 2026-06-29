@@ -24,7 +24,7 @@ import { type SlottableProps } from '@dxos/ui-types';
 import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
-import { type ScrollAreaRootProps, ScrollArea } from '../ScrollArea';
+import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);

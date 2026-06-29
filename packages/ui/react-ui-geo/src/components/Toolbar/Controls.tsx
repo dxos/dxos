@@ -5,7 +5,7 @@
 import { type ControlPosition } from 'leaflet';
 import React from 'react';
 
-import { type ThemedClassName, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 

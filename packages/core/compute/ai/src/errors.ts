@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseErrorOptions, BaseError } from '@dxos/errors';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 import { type ModelName } from './defs';
 

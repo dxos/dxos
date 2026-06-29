@@ -13,7 +13,7 @@ import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 
 import { ControlExtension } from './control-extension';
-import { type CreateChannelOpts, type MuxerStats, type RpcPort, Muxer } from './muxing';
+import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
 
 export type TeleportProps = {
   initiator: boolean;

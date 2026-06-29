@@ -6,8 +6,8 @@ import * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type ReadOnlyEvent, Event } from '@dxos/async';
-import { type Database, type Filter, type QueryResult, Entity, Query, Registry, Type } from '@dxos/echo';
+import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';

@@ -8,7 +8,7 @@ import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type EncodedTrackName, type TrackObject, TrackNameCodec } from './types';
+import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types';
 import {
   type CallsServiceConfig,
   CallsServicePeer,

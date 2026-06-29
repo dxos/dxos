@@ -5,7 +5,7 @@
 /* eslint-disable react/no-unknown-property */
 
 import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei';
-import { type ThreeEvent, Canvas, useThree } from '@react-three/fiber';
+import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 

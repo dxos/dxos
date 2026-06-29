@@ -4,10 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { type ThemedClassName, Icon, Toolbar as NaturalToolbar, Select } from '@dxos/react-ui';
+import { Icon, Toolbar as NaturalToolbar, Select, type ThemedClassName } from '@dxos/react-ui';
 
 import { type ActionHandler } from '../../actions';
-import { type LayoutKind, LAYOUTS } from '../../layout';
+import { LAYOUTS, type LayoutKind } from '../../layout';
 
 export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;

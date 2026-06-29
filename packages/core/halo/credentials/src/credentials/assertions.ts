@@ -3,7 +3,7 @@
 //
 
 import { type PublicKey } from '@dxos/keys';
-import { type TypedMessage, type TYPES } from '@dxos/protocols/proto';
+import { type TYPES, type TypedMessage } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export const getCredentialAssertion = (credential: Credential): TypedMessage => credential.subject.assertion;

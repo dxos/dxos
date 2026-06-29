@@ -10,7 +10,7 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { type FeedbackSubmitHandler, FeedbackForm } from '#components';
+import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { useDiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';

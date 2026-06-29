@@ -6,12 +6,12 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
+  DEFAULT_CLIENT_CHANNEL,
+  STATUS_TIMEOUT,
   type ClientServices,
   type ClientServicesProvider,
   type Echo,
   type Halo,
-  DEFAULT_CLIENT_CHANNEL,
-  STATUS_TIMEOUT,
   SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';

@@ -21,9 +21,9 @@ import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
+  EditorMenuProvider,
   type EditorMenuProviderProps,
   type UseTextEditorProps,
-  EditorMenuProvider,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';

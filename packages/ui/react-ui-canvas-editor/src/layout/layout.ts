@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PlainObject, Graph as NaturalGraph } from '@antv/graphlib';
+import { Graph as NaturalGraph, type PlainObject } from '@antv/graphlib';
 import {
+  CircularLayout,
   type CircularLayoutOptions,
   type D3ForceLayoutOptions,
-  type ForceLayoutOptions,
-  type GridLayoutOptions,
-  type RadialLayoutOptions,
-  CircularLayout,
   ForceLayout,
+  type ForceLayoutOptions,
   GridLayout,
+  type GridLayoutOptions,
   RadialLayout,
+  type RadialLayoutOptions,
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
@@ -20,7 +20,7 @@ import { type Graph, type GraphModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
-import { type Polygon, CanvasGraphModel } from '../types';
+import { CanvasGraphModel, type Polygon } from '../types';
 import { type Intersection } from './util';
 
 // TODO(burdon): Custom UML layout heuristics:

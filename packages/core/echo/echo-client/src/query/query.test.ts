@@ -9,12 +9,12 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import {
-  type Entity,
-  type Hypergraph,
   Collection,
   Dataset,
+  type Entity,
   Feed,
   Filter,
+  type Hypergraph,
   Obj,
   Order,
   Query,
@@ -33,7 +33,7 @@ import { range } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
-import { type EchoTestPeer, EchoTestBuilder, createTmpPath } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 random.seed(1);
 

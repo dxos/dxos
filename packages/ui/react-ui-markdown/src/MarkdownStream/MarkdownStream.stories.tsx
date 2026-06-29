@@ -17,7 +17,7 @@ import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback, trim } from '@dxos/util';
 
-import { type MarkdownStreamController, type MarkdownStreamProps, MarkdownStream } from './MarkdownStream';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
 import TEXT from './testing/text.md?raw';
 

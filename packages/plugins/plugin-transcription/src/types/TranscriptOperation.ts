@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { DXN, Database, Ref, Type } from '@dxos/echo';
 // Message and Person are used via Type.getSchema(Message.Message); they also appear in emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Person, Message, Transcript } from '@dxos/types';
+import { Message, type Person, Transcript } from '@dxos/types';
 
 import { meta } from '#meta';
 

@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, type Hypergraph, type Registry, Feed, Filter, Query, Ref, Type } from '@dxos/echo';
+import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   type RefResolverRequest,
@@ -14,21 +14,21 @@ import {
   getStrongDependencies,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { type EntityId, type SpaceId, type URI, DXN, EID } from '@dxos/keys';
+import { DXN, EID, type URI, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, type LoadResult, LoadOpTable } from './core-db/load-op';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
 import { RequestImpl } from './core-db/ref-resolver-request';
 import { type DatabaseImpl } from './proxy-db';
 import {
-  type QueryContext,
-  type QuerySource,
   GraphQueryContext,
+  type QueryContext,
   QueryResultCache,
   QueryResultImpl,
+  type QuerySource,
   RegistryQuerySource,
   SpaceQuerySource,
 } from './query';

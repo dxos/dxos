@@ -3,11 +3,11 @@
 //
 
 import {
+  NODE_INPUT,
+  NODE_OUTPUT,
   type ComputeNode,
   type Executable,
   type NodeType,
-  NODE_INPUT,
-  NODE_OUTPUT,
   getTemplateInputSchema,
   registry,
 } from '@dxos/conductor';

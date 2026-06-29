@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { type SerializedSpace } from '@dxos/echo-client';
 import { URI, EntityId, SpaceId } from '@dxos/keys';
 import {
-  type FeedArchiveBlock,
   FEED_ARCHIVE_BLOCKS_PER_CHUNK,
+  type FeedArchiveBlock,
   SpaceArchiveFileStructure,
   SpaceArchiveVersion,
 } from '@dxos/protocols';

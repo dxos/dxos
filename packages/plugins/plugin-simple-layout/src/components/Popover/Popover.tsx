@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type PopoverContentInteractOutsideEvent, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 
 import { useSimpleLayoutState } from '#hooks';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type Dispatch, type FC, type SetStateAction, useCallback, useState } from 'react';
+import React, { type FC, type Dispatch, type SetStateAction, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -12,13 +12,13 @@ import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
-  type ActionMenuItem,
-  type InvitationListProps,
-  type SpaceMemberListProps,
   ActionBar,
+  type ActionMenuItem,
   BifurcatedAction,
   InvitationList,
+  type InvitationListProps,
   SpaceMemberList,
+  type SpaceMemberListProps,
 } from '../../components';
 import { translationKey } from '../../translations';
 import { type SpacePanelStepProps } from './SpacePanelProps';

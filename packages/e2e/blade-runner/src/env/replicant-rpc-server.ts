@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import { type RpcPort, RpcPeer } from '@dxos/rpc';
+import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
 import { rpcCodec } from '../redis';
 

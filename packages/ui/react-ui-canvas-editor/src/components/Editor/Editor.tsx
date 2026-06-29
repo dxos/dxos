@@ -22,7 +22,7 @@ import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import { type ActionHandler } from '../../actions';
-import { type EditingState, type EditorContextType, type EditorOptions, DragMonitor, EditorContext } from '../../hooks';
+import { DragMonitor, type EditingState, EditorContext, type EditorContextType, type EditorOptions } from '../../hooks';
 import { defaultShapes } from '../../shapes';
 import { type CanvasBoard, CanvasGraphModel } from '../../types';
 import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';

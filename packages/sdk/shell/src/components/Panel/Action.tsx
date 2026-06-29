@@ -12,12 +12,12 @@ import React, {
 } from 'react';
 
 import {
-  type ButtonProps,
-  type ThemedClassName,
   Button,
+  type ButtonProps,
   DropdownMenu,
   Icon,
   IconButton,
+  type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

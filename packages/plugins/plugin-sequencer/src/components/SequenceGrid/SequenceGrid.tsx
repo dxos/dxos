@@ -9,11 +9,11 @@ import { useResizeDetector } from 'react-resize-detector';
 import {
   type Cell,
   type CellCoord,
+  CellGrid,
   type RenderCell,
   type Row,
   type ToggleMode,
   type Tool,
-  CellGrid,
   cellKey,
   createCellGridAtoms,
   toggleCell,

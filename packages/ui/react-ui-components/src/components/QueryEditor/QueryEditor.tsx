@@ -7,11 +7,11 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  Editor,
   type EditorController,
   type EditorMenuProviderProps,
   type EditorViewProps,
   type UseEditorMenuProps,
-  Editor,
   createMenuGroup,
 } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';

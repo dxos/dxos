@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SpaceId, type URI } from '@dxos/keys';
+import { type URI, type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
 import type { SerializedError } from '../index';

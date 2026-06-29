@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LogConfig, type LogEntry, type LogProcessor, LogLevel, shouldLog } from '@dxos/log';
+import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 
 export type LogPrinter = Pick<Console, 'debug' | 'log' | 'info' | 'warn' | 'error'>;
 

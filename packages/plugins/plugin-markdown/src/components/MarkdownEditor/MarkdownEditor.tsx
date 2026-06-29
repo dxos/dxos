@@ -35,12 +35,12 @@ import {
 } from '#hooks';
 
 import {
-  type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
   MarkdownEditorContent as NaturalMarkdownEditorContent,
+  type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
 } from './MarkdownEditorContent';
 import {
-  type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
+  type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
 } from './MarkdownEditorToolbar';
 
 //

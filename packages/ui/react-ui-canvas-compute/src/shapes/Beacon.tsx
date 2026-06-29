@@ -10,7 +10,7 @@ import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const BeaconShape = Schema.extend(
   ComputeShape,

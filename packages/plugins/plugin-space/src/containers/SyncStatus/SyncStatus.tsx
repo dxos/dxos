@@ -13,7 +13,7 @@ import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
-import { type UnitFormat, Unit } from '@dxos/util';
+import { Unit, type UnitFormat } from '@dxos/util';
 
 import { createClientSaveTracker, getIcon, getStatus } from '#components';
 import { meta } from '#meta';

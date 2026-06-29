@@ -10,7 +10,7 @@ import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ThemedClassName, IconButton, Input, ScrollContainer, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 

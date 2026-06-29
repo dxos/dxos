@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
 import {
-  type GraphRadialProjectorOptions,
   GraphRadialProjector,
+  type GraphRadialProjectorOptions,
   layoutRadial,
   updateNode,
 } from './graph-radial-projector';

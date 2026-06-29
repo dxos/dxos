@@ -9,10 +9,10 @@ import { log } from '@dxos/log';
 import { isComposerUrl } from '../bridge/urls';
 import { renderUrl } from './render';
 import {
-  type PingAck,
-  type RenderAck,
   PING_MESSAGE_TYPE,
   RENDER_MESSAGE_TYPE,
+  type PingAck,
+  type RenderAck,
   decodePingRequest,
   decodeRenderRequest,
 } from './types';

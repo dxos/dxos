@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type RenderOptions, type RenderResult, render as rtlRender } from '@testing-library/react';
-import React, { type FC, type PropsWithChildren, type ReactNode, Fragment } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 

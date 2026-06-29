@@ -22,10 +22,10 @@
 
 import { Store } from '@tldraw/store';
 import {
-  type TLRecord,
   TLDOCUMENT_ID,
   DocumentRecordType,
   PageRecordType,
+  type TLRecord,
   createTLSchema,
   geoShapeMigrations,
   geoShapeProps,

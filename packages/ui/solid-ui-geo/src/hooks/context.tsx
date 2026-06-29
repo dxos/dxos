@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Accessor, type JSX, type Setter, createContext, createEffect, createSignal, useContext } from 'solid-js';
+import { type JSX, type Accessor, type Setter, createContext, createEffect, createSignal, useContext } from 'solid-js';
 
 import { raise } from '@dxos/debug';
 

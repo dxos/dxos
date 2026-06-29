@@ -21,8 +21,8 @@ import {
   type FilesystemEntry,
   type FilesystemFile,
   type FilesystemWorkspace,
-  type NativeFilesystemState,
   NativeFilesystemCapabilities,
+  type NativeFilesystemState,
   isFilesystemDirectory,
   isFilesystemWorkspace,
 } from '#types';

@@ -6,7 +6,7 @@ import React, { forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type IconButtonProps, IconButton } from './IconButton';
+import { IconButton, type IconButtonProps } from './IconButton';
 
 export type ToggleIconButtonProps = Omit<IconButtonProps, 'icon'> & {
   active?: boolean;

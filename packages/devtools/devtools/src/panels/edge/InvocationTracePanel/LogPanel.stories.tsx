@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type TraceEvent as TraceEventType, TraceEvent as TraceEventSchema } from '@dxos/functions-runtime';
+import { TraceEvent as TraceEventSchema, type TraceEvent as TraceEventType } from '@dxos/functions-runtime';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { LogPanel } from './LogPanel';

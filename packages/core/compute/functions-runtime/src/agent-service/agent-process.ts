@@ -14,7 +14,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { type ModelName, AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
 import {
   AgentRequestBegin,
   AgentRequestEnd,

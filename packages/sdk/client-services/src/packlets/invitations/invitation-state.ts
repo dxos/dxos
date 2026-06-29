@@ -6,7 +6,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PushStream, Mutex } from '@dxos/async';
+import { Mutex, type PushStream } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

@@ -3,7 +3,7 @@
 //
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
-import { type StateCommand, EditorState } from '@codemirror/state';
+import { EditorState, type StateCommand } from '@codemirror/state';
 import { describe, expect, test } from 'vitest';
 
 import {

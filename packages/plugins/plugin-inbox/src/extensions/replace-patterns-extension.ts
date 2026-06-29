@@ -3,7 +3,7 @@
 //
 
 import { type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
-import { type DecorationSet, Decoration, EditorView, WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
 export type Pattern = { pattern: RegExp; classNames: string };
 

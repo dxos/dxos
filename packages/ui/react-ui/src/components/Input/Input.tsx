@@ -18,24 +18,24 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import {
-  type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
-  type DescriptionProps as DescriptionPrimitiveProps,
-  type InputRootProps,
-  type InputScopedProps,
-  type LabelProps as LabelPrimitiveProps,
-  type PinInputProps as PinInputPrimitiveProps,
-  type TextAreaProps as TextAreaPrimitiveProps,
-  type TextInputProps as TextInputPrimitiveProps,
-  type ValidationProps as ValidationPrimitiveProps,
   INPUT_NAME,
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
+  type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
   Description as DescriptionPrimitive,
+  type DescriptionProps as DescriptionPrimitiveProps,
   InputRoot,
+  type InputRootProps,
+  type InputScopedProps,
   Label as LabelPrimitive,
+  type LabelProps as LabelPrimitiveProps,
   PinInput as PinInputPrimitive,
+  type PinInputProps as PinInputPrimitiveProps,
   TextArea as TextAreaPrimitive,
+  type TextAreaProps as TextAreaPrimitiveProps,
   TextInput as TextInputPrimitive,
+  type TextInputProps as TextInputPrimitiveProps,
   Validation as ValidationPrimitive,
+  type ValidationProps as ValidationPrimitiveProps,
   useInputContext,
 } from '@dxos/react-input';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
@@ -47,12 +47,12 @@ import { type ThemedClassName } from '../../util';
 import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import {
-  type SegmentedDateProps,
-  type SegmentedDateTimeProps,
-  type SegmentedTimeProps,
   SegmentedDate,
+  type SegmentedDateProps,
   SegmentedDateTime,
+  type SegmentedDateTimeProps,
   SegmentedTime,
+  type SegmentedTimeProps,
 } from './SegmentedInput';
 
 type InputVariant = 'default' | 'subdued';

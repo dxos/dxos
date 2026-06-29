@@ -14,10 +14,10 @@ import React, {
 } from 'react';
 
 import {
-  type IconButtonProps,
-  type ThemedClassName,
   IconBlock,
   IconButton,
+  type IconButtonProps,
+  type ThemedClassName,
   ToggleIconButton,
   useTranslation,
 } from '@dxos/react-ui';

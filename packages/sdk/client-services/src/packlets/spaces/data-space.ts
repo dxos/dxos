@@ -24,7 +24,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol, CancelledError, SystemError } from '@dxos/protocols';
+import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
 import {
   type CreateEpochRequest,
   type Space as SpaceProto,
@@ -34,11 +34,11 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
+  AdmittedFeed,
   type Credential,
   type Epoch,
-  type ProfileDocument,
-  AdmittedFeed,
   MembershipPolicy,
+  type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

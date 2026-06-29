@@ -9,7 +9,7 @@ import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObject
 import { ToolManager } from './tool-manager';
 import { ExtrudeTool, MoveTool, SelectTool } from './tools';
 
-export { type EditorState, DEFAULT_EDITOR_STATE } from './editor-state';
+export { DEFAULT_EDITOR_STATE, type EditorState } from './editor-state';
 export type { Tool } from './tool';
 export type {
   FaceSelection,

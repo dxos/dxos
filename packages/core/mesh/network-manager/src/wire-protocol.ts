@@ -5,7 +5,7 @@
 import { type Duplex } from 'node:stream';
 
 import { type PublicKey } from '@dxos/keys';
-import { type TeleportProps, Teleport } from '@dxos/teleport';
+import { Teleport, type TeleportProps } from '@dxos/teleport';
 
 export type WireProtocolProps = {
   initiator: boolean;

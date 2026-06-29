@@ -10,11 +10,11 @@ import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { type ComboboxRootProps, Combobox } from '@dxos/react-ui-list';
+import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type GridContentProps, type GridEditing, type GridRootProps, Grid } from './Grid';
+import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 
 const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 

@@ -26,7 +26,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type Density, type Elevation, type ThemedClassName, Input, useThemeContext } from '@dxos/react-ui';
+import { type Density, type Elevation, Input, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';

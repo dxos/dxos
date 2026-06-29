@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type Diagnostic, type DiagnosticSeverity, Compiler } from './compiler';
+export { Compiler, type Diagnostic, type DiagnosticSeverity } from './compiler';
 export { getCompiler, resetCompiler } from './singleton';
 export {
+  ENTRY_CANDIDATES,
   type BuildResult,
   type LoadedFile,
   type RunResult,
-  ENTRY_CANDIDATES,
   compileEntry,
   executeScript,
 } from './build';

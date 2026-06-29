@@ -8,7 +8,7 @@ import React, { type RefObject, useContext, useEffect, useRef, useState } from '
 
 import { composable, composableProps } from '@dxos/react-ui';
 
-import { type Scene, Model } from '#types';
+import { Model, type Scene } from '#types';
 
 import {
   SceneManager,
@@ -20,9 +20,9 @@ import {
   rawDataToBabylon,
 } from '../../engine';
 import {
+  DEFAULT_EDITOR_STATE,
   type EditorState,
   type Selection,
-  DEFAULT_EDITOR_STATE,
   ToolManager,
   createToolManager,
   getSelectedObjectIds,

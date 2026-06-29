@@ -12,7 +12,7 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type FallbackProps, ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
+import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 

@@ -8,7 +8,7 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { OperationHandlerSet, Skill } from '@dxos/compute';
-import { type Type, Feed, Tag } from '@dxos/echo';
+import { Feed, Tag, type Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/skills` and `/types`) so the CLI's
 // `bun run --conditions=source` only walks plugin source files that are free of

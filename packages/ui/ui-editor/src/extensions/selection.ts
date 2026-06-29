@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension, type TransactionSpec, Transaction } from '@codemirror/state';
+import { type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import * as Schema from 'effect/Schema';
 

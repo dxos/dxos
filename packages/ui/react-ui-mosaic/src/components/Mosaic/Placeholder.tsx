@@ -3,8 +3,8 @@
 //
 
 import {
-  type DropIndicatorProps as NaturalDropIndicatorProps,
   DropIndicator as NaturalDropIndicator,
+  type DropIndicatorProps as NaturalDropIndicatorProps,
 } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { Primitive } from '@radix-ui/react-primitive';

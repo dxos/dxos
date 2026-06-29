@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ScheduleValue, Schedule } from './Schedule';
+import { Schedule, type ScheduleValue } from './Schedule';
 
 const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInterval?: number }) => {
   const [value, setValue] = useState<ScheduleValue>(initial);

@@ -6,7 +6,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 
 import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type MosaicTileProps, Focus, Mosaic, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { type Subscription } from '#types';
 

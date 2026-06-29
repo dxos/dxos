@@ -20,7 +20,7 @@ import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Instructions, Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { type Ref, DXN, Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';

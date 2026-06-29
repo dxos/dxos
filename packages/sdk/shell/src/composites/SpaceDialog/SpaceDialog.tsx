@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { type DialogContentProps, Clipboard, Dialog, useId } from '@dxos/react-ui';
+import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
 
-import { type SpacePanelProps, SpacePanel } from '../../panels';
+import { SpacePanel, type SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
   extends Omit<DialogContentProps, 'children'>, Omit<SpacePanelProps, 'doneActionParent'> {}

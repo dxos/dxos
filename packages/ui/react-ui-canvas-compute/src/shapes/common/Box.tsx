@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, Icon, IconButton } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { type CanvasBoard, useEditorContext, useShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 

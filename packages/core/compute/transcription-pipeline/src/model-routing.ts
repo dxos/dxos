@@ -4,7 +4,7 @@
 
 import { type ModelName } from '@dxos/ai';
 
-import { type StageConfig, DEFAULT_STAGE_MODEL } from './PipelineConfig';
+import { DEFAULT_STAGE_MODEL, type StageConfig } from './PipelineConfig';
 import { type Stage } from './Stage';
 
 /**

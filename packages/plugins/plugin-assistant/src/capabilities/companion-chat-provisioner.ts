@@ -7,17 +7,17 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { type Node, Graph } from '@dxos/app-graph';
+import { Graph, type Node } from '@dxos/app-graph';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
-  type StoredDeckState,
   COMPANION_VIEW_STATE_CONTEXT,
   PLANK_COMPANION_TYPE,
   DeckCapabilities,
+  type StoredDeckState,
   companionVariantAspect,
 } from '@dxos/plugin-deck';
 import { getLinkedVariant } from '@dxos/react-ui-attention';

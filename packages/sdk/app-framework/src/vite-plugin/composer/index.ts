@@ -8,7 +8,7 @@ import { type Plugin as VitePlugin } from 'vite';
 
 import { PLUGIN_DEV_SERVER_PORT, Plugin } from '../../core';
 import { findDxConfigFile, loadDxConfig } from '../load';
-import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest';
+import { ENTRY_FILENAME, MANIFEST_ASSET_NAME, type BuildMeta, serializeManifest, toBuildMeta } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };

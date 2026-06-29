@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type RpcPort, RpcPeer } from '@dxos/rpc';
+import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
 import { type ReplicantClass } from '../plan';
 import { rpcCodec } from '../redis';

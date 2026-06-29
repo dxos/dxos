@@ -15,7 +15,7 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { createMessage } from '#testing';
 
 import { createBlockRenderer } from './registry';
-import { type BlockRenderer, type MessageThreadContext, type TextModel, MessageSyncer } from './sync';
+import { type BlockRenderer, MessageSyncer, type MessageThreadContext, type TextModel } from './sync';
 
 class TestDocument implements TextModel {
   private readonly _view = new EditorView({ extensions: [] });

@@ -3,11 +3,11 @@
 //
 
 import {
+  next as A,
   type Doc as AutomergeDoc,
   type ChangeFn,
   type ChangeOptions,
   type Heads,
-  next as A,
 } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
@@ -18,14 +18,14 @@ import { inspectCustom } from '@dxos/debug';
 import { type Entity, type Type } from '@dxos/echo';
 import {
   type DatabaseDirectory,
-  type EntityStructure,
   EncodedReference,
+  type EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { type EntityMeta, EntityKind, getStrongDependencyUris } from '@dxos/echo/internal';
+import { EntityKind, type EntityMeta, getStrongDependencyUris } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type SpaceId, EID, URI, EntityId } from '@dxos/keys';
+import { EID, URI, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 

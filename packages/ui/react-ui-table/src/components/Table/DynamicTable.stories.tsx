@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { type JsonSchema, Filter, Obj, Type } from '@dxos/echo';
+import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { random } from '@dxos/random';
 import { useQuery, useType } from '@dxos/react-client/echo';

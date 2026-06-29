@@ -9,14 +9,14 @@ import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { type EdgeConnection, EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type SignalManager, EdgeSignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  type TransportFactory,
   SwarmNetworkManager,
+  type TransportFactory,
   createIceProvider,
   createRtcTransportFactory,
 } from '@dxos/network-manager';
@@ -37,12 +37,12 @@ import {
 import { type CreateIdentityOptions, IdentityServiceImpl } from '../identity';
 import { ContactsServiceImpl } from '../identity/contacts-service';
 import { InvitationsServiceImpl } from '../invitations';
-import { type ResourceLock, Lock } from '../locks';
+import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { SystemServiceImpl } from '../system';
-import { type ServiceContextRuntimeProps, ServiceContext } from './service-context';
+import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostProps = {

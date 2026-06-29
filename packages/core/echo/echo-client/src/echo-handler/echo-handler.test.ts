@@ -11,10 +11,10 @@ import { Context } from '@dxos/context';
 import { DXN, Annotation, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
-  type RefSchema,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   EchoObjectSchema,
+  type RefSchema,
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';

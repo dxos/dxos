@@ -6,14 +6,14 @@ import { snippet } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import {
   type ChangeSpec,
+  EditorSelection,
   type EditorState,
   type Extension,
   type Line,
   type StateCommand,
   type Text,
-  EditorSelection,
 } from '@codemirror/state';
-import { type ViewUpdate, EditorView, keymap } from '@codemirror/view';
+import { EditorView, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode, type SyntaxNodeRef } from '@lezer/common';
 
 import { debounceAndThrottle } from '@dxos/async';

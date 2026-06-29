@@ -21,7 +21,7 @@ import { translations } from '#translations';
 
 import { TestLayout, TestPanel } from '../../../testing';
 import { omitId } from '../../../util';
-import { type FormRootProps, Form } from '../Form';
+import { Form, type FormRootProps } from '../Form';
 import { parseLayout } from './parser';
 
 /**

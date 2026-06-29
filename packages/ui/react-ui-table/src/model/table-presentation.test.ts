@@ -11,7 +11,7 @@ import { createEchoSchema } from '@dxos/echo/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
-import { type TableModelProps, TableModel } from './table-model';
+import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
 
 describe('TablePresentation', () => {

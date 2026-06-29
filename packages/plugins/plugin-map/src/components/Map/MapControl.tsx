@@ -7,10 +7,10 @@ import React, { useCallback, useState } from 'react';
 import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
+  Map,
   type MapController,
   type MapRootProps,
   type MapViewportProps,
-  Map,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
 

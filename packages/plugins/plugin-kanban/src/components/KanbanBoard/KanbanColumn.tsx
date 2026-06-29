@@ -5,10 +5,10 @@
 import React, { FC, forwardRef, useState } from 'react';
 
 import type { Obj } from '@dxos/echo';
-import { type MosaicTileProps, Board, useBoard } from '@dxos/react-ui-mosaic';
+import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { useKanbanItemEventHandler } from '#hooks';
-import { type ColumnStructure, UNCATEGORIZED_VALUE } from '#types';
+import { UNCATEGORIZED_VALUE, type ColumnStructure } from '#types';
 
 import { type KanbanColumnProps, useKanbanBoard } from './context';
 

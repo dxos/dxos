@@ -21,11 +21,11 @@ import {
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
+  Repo,
   type StorageKey,
   type SubductionPeerBinding,
   type SubductionPeerId,
   type SubductionPolicy,
-  Repo,
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';

@@ -28,11 +28,11 @@ import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import {
+  PLANK_COMPANION_TYPE,
+  DeckCapabilities,
   type EphemeralDeckState,
   type Settings,
   type StoredDeckState,
-  PLANK_COMPANION_TYPE,
-  DeckCapabilities,
   defaultDeck,
   getMode,
 } from '#types';

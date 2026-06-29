@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type EventStackAction, type EventStackActionHandler, type EventStackProps, EventStack } from './EventStack';
+export { EventStack, type EventStackAction, type EventStackActionHandler, type EventStackProps } from './EventStack';

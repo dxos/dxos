@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Instructions, Operation, Trigger } from '@dxos/compute';
-import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form, RefField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Routine } from '#types';

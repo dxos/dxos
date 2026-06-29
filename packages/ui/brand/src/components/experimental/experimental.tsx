@@ -5,8 +5,8 @@
 import { type IconWeight } from '@phosphor-icons/react';
 import { arc, interpolateString, select } from 'd3';
 import React, {
-  type CSSProperties,
   type FC,
+  type CSSProperties,
   type HTMLAttributes,
   type ReactElement,
   forwardRef,

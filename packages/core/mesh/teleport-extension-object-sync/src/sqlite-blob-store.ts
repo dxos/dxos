@@ -17,7 +17,7 @@ import { type BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsyn
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { BitField, arrayToBuffer } from '@dxos/util';
 
-import { type BlobStoreApi, type GetOptions, DEFAULT_CHUNK_SIZE } from './blob-store';
+import { DEFAULT_CHUNK_SIZE, type BlobStoreApi, type GetOptions } from './blob-store';
 
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 

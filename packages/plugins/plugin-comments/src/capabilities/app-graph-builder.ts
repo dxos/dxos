@@ -18,7 +18,7 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
-import { type CommentState, CommentCapabilities } from '#types';
+import { CommentCapabilities, type CommentState } from '#types';
 
 import { getAnchor } from '../util';
 

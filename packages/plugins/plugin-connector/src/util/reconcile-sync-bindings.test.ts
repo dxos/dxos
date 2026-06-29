@@ -17,8 +17,8 @@ import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import {
-  type ConnectorEntry,
   Connection,
+  type ConnectorEntry,
   MaterializeTargetInput,
   MaterializeTargetOutput,
   SyncBinding,

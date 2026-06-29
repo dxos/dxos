@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Query, DXN, Annotation, Feed, Obj, QueryAST, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 

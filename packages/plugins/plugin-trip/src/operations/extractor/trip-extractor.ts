@@ -17,7 +17,7 @@ import {
   makeTemplateExtractor,
 } from '@dxos/extractor';
 import { log } from '@dxos/log';
-import { type ContentBlock, type Provider, Message, Organization } from '@dxos/types';
+import { type ContentBlock, Message, Organization, type Provider } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';

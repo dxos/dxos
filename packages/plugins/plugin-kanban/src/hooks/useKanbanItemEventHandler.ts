@@ -7,11 +7,11 @@ import { useMemo } from 'react';
 import type { BoardModel, MosaicEventHandler, MosaicTileData } from '@dxos/react-ui-mosaic';
 
 import {
+  UNCATEGORIZED_VALUE,
   type ArrangedCards,
   type BaseKanbanItem,
   type ColumnStructure,
   type KanbanChangeCallback,
-  UNCATEGORIZED_VALUE,
 } from '#types';
 
 function findColumn<T extends BaseKanbanItem>(

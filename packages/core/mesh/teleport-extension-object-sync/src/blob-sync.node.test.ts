@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { type TestConnection, TestBuilder, TestPeer } from '@dxos/teleport/testing';
+import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 import { range } from '@dxos/util';
 
 import { DEFAULT_CHUNK_SIZE, BlobStore } from './blob-store';

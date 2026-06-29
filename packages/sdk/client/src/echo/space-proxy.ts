@@ -15,11 +15,11 @@ import {
   synchronized,
 } from '@dxos/async';
 import {
+  SPACE_TAG,
   type ClientServicesProvider,
   type ExportSpaceOptions,
   type Space,
   type SpaceInternal,
-  SPACE_TAG,
   SpaceProperties,
 } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
@@ -42,13 +42,13 @@ import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
   type Contact,
-  type Space as SpaceData,
-  type SpaceMember,
-  type UpdateMemberRoleRequest,
   CreateEpochRequest,
   Invitation,
   SpaceArchive,
+  type Space as SpaceData,
+  type SpaceMember,
   SpaceState,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';

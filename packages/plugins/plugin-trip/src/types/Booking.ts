@@ -11,7 +11,7 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
 // Organization is referenced in the inferred type of Booking (via Provider.Provider → Ref.Ref(Organization));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Organization, Account, Provider } from '@dxos/types';
+import { Account, type Organization, Provider } from '@dxos/types';
 
 /**
  * A purchased ticket or reservation.

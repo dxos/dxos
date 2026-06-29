@@ -4,7 +4,7 @@
 
 import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
-import { type Tag, Filter } from '@dxos/echo';
+import { Filter, type Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 

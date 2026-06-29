@@ -13,7 +13,7 @@ import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { DXN, URI, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
-import { type DiagnosticMetadata, type TraceProcessor, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_PROCESSOR, type DiagnosticMetadata, type TraceProcessor } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
 import { type Client } from '../client';

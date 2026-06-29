@@ -45,9 +45,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
   type CommitFn,
+  PipelineRuntime,
   type Stage,
   type TelemetryEvent,
-  PipelineRuntime,
   TranscriptEvent,
   makeCorrectionStage,
   makeDatabaseLookup,

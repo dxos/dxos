@@ -11,7 +11,7 @@ import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { type MakeOptional, ComplexMap } from '@dxos/util';
+import { ComplexMap, type MakeOptional } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
 

@@ -6,8 +6,8 @@ import 'leaflet/dist/leaflet.css';
 
 import L, { type ControlPosition, type LatLngLiteral, latLngBounds } from 'leaflet';
 import {
-  type Accessor,
   type JSX,
+  type Accessor,
   type Setter,
   Show,
   createContext,
@@ -19,7 +19,7 @@ import {
 } from 'solid-js';
 
 import { type GeoMarker } from '../../types';
-import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 // TODO(burdon): Guess initial location.
 

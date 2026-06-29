@@ -17,7 +17,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
-import { type EventStackActionHandler, EventStack, useTargetConnection } from '#components';
+import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
 import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 

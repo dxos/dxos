@@ -11,14 +11,14 @@ import React, {
   useState,
 } from 'react';
 
-import { type ClientOptions, type ClientServicesProvider, Client, SystemStatus } from '@dxos/client';
+import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus } from '@dxos/client';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useControlledState } from '@dxos/react-hooks';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 import { printBanner } from '../banner';
-import { type ClientContextProps, ClientContext } from './context';
+import { ClientContext, type ClientContextProps } from './context';
 
 /**
  * Properties for the ClientProvider.

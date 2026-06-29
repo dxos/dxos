@@ -11,7 +11,7 @@ import { describe, test, vi } from 'vitest';
 vi.mock('webextension-polyfill', () => ({ default: {} }));
 
 import { type InvokeBridgeApi, deliverInvoke } from './invoke';
-import { type InvokeRequest, PAGE_ACTION_INVOKE_MESSAGE_TYPE } from './types';
+import { PAGE_ACTION_INVOKE_MESSAGE_TYPE, type InvokeRequest } from './types';
 
 const request: InvokeRequest = {
   version: 1,

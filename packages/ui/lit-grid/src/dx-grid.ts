@@ -12,13 +12,16 @@ import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
 import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs';
 import {
+  DxAxisResize,
   type DxAxisResizeInternal,
+  DxEditRequest,
   type DxGridAnnotatedPanEvent,
   type DxGridAxis,
   type DxGridAxisMeta,
   type DxGridAxisMetaProps,
   type DxGridAxisSizes,
   type DxGridCells,
+  DxGridCellsSelect,
   type DxGridCellValue,
   type DxGridFixedPlane,
   type DxGridFocusIndicatorVariant,
@@ -37,9 +40,6 @@ import {
   type DxGridPosition,
   type DxGridRange,
   type DxGridSelectionProps,
-  DxAxisResize,
-  DxEditRequest,
-  DxGridCellsSelect,
   separator,
 } from './types';
 import {

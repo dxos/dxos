@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useDevtoolsState } from '../../../hooks';
-import { type InvocationTraceContainerProps, InvocationTraceContainer } from './InvocationTraceContainer';
+import { InvocationTraceContainer, type InvocationTraceContainerProps } from './InvocationTraceContainer';
 
 export type InvocationTracePanelProps = Pick<InvocationTraceContainerProps, 'db' | 'feedDXN' | 'target' | 'detailAxis'>;
 

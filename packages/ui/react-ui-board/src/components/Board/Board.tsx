@@ -23,10 +23,10 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
 import {
-  type ThemedClassName,
-  type ToolbarRootProps,
   IconButton,
+  type ThemedClassName,
   Toolbar,
+  type ToolbarRootProps,
   usePx,
   useTranslation,
 } from '@dxos/react-ui';
@@ -35,7 +35,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { type BoardCellProps, BoardCell } from './BoardCell';
+import { BoardCell, type BoardCellProps } from './BoardCell';
 import { defaultGrid, defaultLayout } from './defs';
 import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter } from './geometry';
 import { type BoardLayout, type Position, type Size } from './types';

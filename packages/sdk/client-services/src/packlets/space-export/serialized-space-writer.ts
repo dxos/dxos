@@ -10,7 +10,7 @@ import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
 import { type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
-import { type EntityId, type IdentityDid, type SpaceId, DXN } from '@dxos/keys';
+import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';

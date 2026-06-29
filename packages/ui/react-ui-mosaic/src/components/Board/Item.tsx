@@ -13,7 +13,7 @@ import { getHashStyles } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { Focus } from '../Focus';
-import { type MosaicTileProps, Mosaic } from '../Mosaic';
+import { Mosaic, type MosaicTileProps } from '../Mosaic';
 import { useBoard } from './Board';
 import { useBoardColumn } from './Column';
 
@@ -124,4 +124,4 @@ const BoardItem = BoardItemInner as <TItem extends Obj.Unknown = any>(
   props: BoardItemProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;
 
-export { type BoardItemProps, BoardItem };
+export { BoardItem, type BoardItemProps };

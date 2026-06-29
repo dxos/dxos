@@ -13,7 +13,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 // Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name
 // it in the emitted .d.ts for AddMessage.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Person, Actor, AnchoredTo, Message, Thread } from '@dxos/types';
+import { Actor, AnchoredTo, Message, type Person, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 

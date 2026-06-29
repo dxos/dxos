@@ -3,7 +3,7 @@
 //
 
 import { useEditor } from '@tldraw/editor';
-import { type TLUiStylePanelProps, DefaultStylePanelContent, useRelevantStyles } from '@tldraw/tldraw';
+import { DefaultStylePanelContent, type TLUiStylePanelProps, useRelevantStyles } from '@tldraw/tldraw';
 import React, { memo, useCallback } from 'react';
 
 import { mx } from '@dxos/ui-theme';

@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
-import { type ThemedClassName, Icon, useControlledState } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

@@ -3,9 +3,9 @@
 //
 
 import React, {
+  type FC,
   type Context,
   type Dispatch,
-  type FC,
   type ReactNode,
   type SetStateAction,
   createContext,

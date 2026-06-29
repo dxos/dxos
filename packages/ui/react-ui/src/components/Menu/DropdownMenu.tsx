@@ -15,13 +15,13 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
+  type FC,
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
   type ComponentRef,
-  type FC,
+  PropsWithChildren,
   type ReactNode,
   type RefObject,
-  PropsWithChildren,
   forwardRef,
   useCallback,
   useEffect,

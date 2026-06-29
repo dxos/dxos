@@ -4,7 +4,7 @@
 
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
-import { type Hypergraph, Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Filter, type Hypergraph, Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';

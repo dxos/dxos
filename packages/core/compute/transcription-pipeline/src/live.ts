@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock } from '@dxos/types';
 
-import { type RunOptions, PipelineRuntime } from './PipelineRuntime';
+import { PipelineRuntime, type RunOptions } from './PipelineRuntime';
 import { TranscriptEvent } from './TranscriptEvent';
 
 /**

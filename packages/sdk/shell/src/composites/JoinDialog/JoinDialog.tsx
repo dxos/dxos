@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { type AlertDialogContentProps, AlertDialog, useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
+import { AlertDialog, type AlertDialogContentProps, useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
 
-import { type JoinPanelProps, JoinPanel } from '../../panels';
+import { JoinPanel, type JoinPanelProps } from '../../panels';
 import { translationKey } from '../../translations';
 
 export interface JoinDialogProps

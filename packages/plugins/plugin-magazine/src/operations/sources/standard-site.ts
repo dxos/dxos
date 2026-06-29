@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { Subscription } from '#types';
 
 import { makeSnippet } from '../../util/text';
-import { type FeedFetcher, type FetchOptions, FeedFetchError } from './feed-fetcher';
+import { type FeedFetcher, FeedFetchError, type FetchOptions } from './feed-fetcher';
 import { getJson } from './http';
 
 // Standard.site (`site.standard.*`) is the AT Protocol lexicon for long-form articles. Reading is

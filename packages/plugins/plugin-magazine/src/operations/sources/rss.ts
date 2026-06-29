@@ -11,7 +11,7 @@ import { normalizeText } from '@dxos/markdown';
 import { Subscription } from '#types';
 
 import { decodeEntities } from '../../util/text';
-import { type FeedFetcher, type FetchResult, FeedFetchError } from './feed-fetcher';
+import { type FeedFetcher, FeedFetchError, type FetchResult } from './feed-fetcher';
 import { getText } from './http';
 
 /**

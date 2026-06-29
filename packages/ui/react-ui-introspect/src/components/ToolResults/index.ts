@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type ToolResultsProps, ToolResults } from './ToolResults';
+export { ToolResults, type ToolResultsProps } from './ToolResults';

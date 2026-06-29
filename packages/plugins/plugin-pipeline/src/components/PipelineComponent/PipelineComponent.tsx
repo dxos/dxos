@@ -8,9 +8,9 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type ToolbarRootProps, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, slottable } from '@dxos/react-ui';
-import { type BoardModel, Board, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
+import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 

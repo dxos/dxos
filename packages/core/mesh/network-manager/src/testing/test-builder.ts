@@ -6,9 +6,9 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type SignalManager,
   MemorySignalManager,
   MemorySignalManagerContext,
+  type SignalManager,
   WebsocketSignalManager,
 } from '@dxos/messaging';
 import { schema } from '@dxos/protocols/proto';
@@ -22,10 +22,10 @@ import { TcpTransportFactory } from '#tcp-transport';
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
-  type TransportFactory,
   MemoryTransportFactory,
   RtcTransportProxyFactory,
   RtcTransportService,
+  type TransportFactory,
   TransportKind,
   createRtcTransportFactory,
 } from '../transport';

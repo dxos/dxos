@@ -60,11 +60,11 @@ import React, {
 
 import { List, ListItem } from '@dxos/react-list';
 import {
+  Icon,
   type IconProps,
+  ScrollArea,
   type ScrollAreaRootProps,
   type ThemedClassName,
-  Icon,
-  ScrollArea,
   composable,
   composableProps,
 } from '@dxos/react-ui';
@@ -77,7 +77,7 @@ import {
   useListSelection,
 } from '../../aspects';
 import { listTheme } from '../List.theme';
-import { type ListItemContentProps, ListItemContent } from './ListItemContent';
+import { ListItemContent, type ListItemContentProps } from './ListItemContent';
 
 const styles = listTheme.styles();
 

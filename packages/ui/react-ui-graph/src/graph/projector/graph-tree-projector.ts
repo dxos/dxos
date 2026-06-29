@@ -8,7 +8,7 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { type GraphRadialProjectorOptions, GraphRadialProjector, updateNode } from './graph-radial-projector';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
 
 export type GraphTreeProjectorOptions = GraphRadialProjectorOptions & {
   /** Id of the root node, placed at the centre. When unset, falls back to a ring. */

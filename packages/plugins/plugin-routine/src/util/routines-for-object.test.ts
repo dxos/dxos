@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Instructions, Trigger } from '@dxos/compute';
-import { type Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, type Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, URI } from '@dxos/keys';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';

@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type ClientOptions, Client } from './client';
+export { Client, type ClientOptions } from './client';
 export * from './client-service';

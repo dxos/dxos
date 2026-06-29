@@ -13,13 +13,13 @@ import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';
-import { type Kanban, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
+import { UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE, type Kanban } from '#types';
 
 import {
+  KanbanBoardContext,
   type KanbanBoardContextValue,
   type KanbanCardProps,
   type KanbanColumnProps,
-  KanbanBoardContext,
   useKanbanBoard,
 } from './context';
 import { KanbanCard } from './KanbanCard';

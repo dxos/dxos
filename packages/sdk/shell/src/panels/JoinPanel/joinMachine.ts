@@ -15,7 +15,7 @@ import {
 } from 'xstate';
 
 import { log } from '@dxos/log';
-import { type Client, AlreadyJoinedError } from '@dxos/react-client';
+import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 

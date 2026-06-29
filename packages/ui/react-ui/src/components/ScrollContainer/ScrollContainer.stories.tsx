@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
-import { type ScrollContainerRootProps, type ScrollController, ScrollContainer } from './ScrollContainer';
+import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
 type StoryArgs = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
 

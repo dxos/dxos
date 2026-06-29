@@ -5,11 +5,11 @@
 import { type SelectOption } from '@dxos/echo/Format';
 
 import {
+  UNCATEGORIZED_VALUE,
   type ArrangedCards,
   type BaseKanbanItem,
   type ColumnStructure,
   type Kanban,
-  UNCATEGORIZED_VALUE,
 } from '#types';
 
 /**

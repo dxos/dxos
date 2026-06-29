@@ -9,7 +9,7 @@ import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Action } from '../Panel';
-import { type ViewportScopedProps, Viewport, useViewportContext } from './Viewport';
+import { Viewport, type ViewportScopedProps, useViewportContext } from './Viewport';
 
 type StorybookViewportProps = {};
 

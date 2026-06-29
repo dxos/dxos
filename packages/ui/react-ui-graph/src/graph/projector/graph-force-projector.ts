@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
 import { forcePoint } from './graph-forces';
-import { type GraphProjectorOptions, GraphProjector } from './graph-projector';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 
 /**
  * Return value or invoke function.

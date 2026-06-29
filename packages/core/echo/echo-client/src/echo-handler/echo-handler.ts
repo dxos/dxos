@@ -10,33 +10,33 @@ import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import {
-  type EntityStructure,
   DATA_NAMESPACE,
   PROPERTY_ID,
   EncodedReference,
+  type EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import {
-  type AnyProperties,
-  type EntityMeta,
-  type EntityMetaJSON,
-  type JsonSchemaType,
-  type ObjectJSON,
-  type ReactiveHandler,
   ATTR_DELETED,
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
+  type AnyProperties,
   ChangeId,
   EntityKind,
+  type EntityMeta,
+  type EntityMetaJSON,
   EntityMetaSchema,
   EventId,
+  type JsonSchemaType,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
+  type ObjectJSON,
   ObjectVersionId,
   ParentId,
+  type ReactiveHandler,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -74,12 +74,12 @@ import {
   toEffectSchema,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type URI, EID, EntityId } from '@dxos/keys';
+import { EID, type URI, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc';
-import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore } from '../core-db';
+import { META_NAMESPACE, type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';

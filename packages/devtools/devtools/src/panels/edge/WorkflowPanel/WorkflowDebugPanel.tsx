@@ -7,7 +7,7 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ComputeGraph, type WorkflowLoader, ComputeNodeContext, ValueBag } from '@dxos/conductor';
+import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -19,7 +19,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { type ThemedClassName, Avatar, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 

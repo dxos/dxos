@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import {
-  type ShellServiceBundle,
   DEFAULT_SHELL_CHANNEL,
+  type ShellServiceBundle,
   appServiceBundle,
   shellServiceBundle,
 } from '@dxos/client-protocol';

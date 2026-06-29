@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, type RangeSet, type Transaction, StateField } from '@codemirror/state';
+import { type EditorState, type Extension, type RangeSet, StateField, type Transaction } from '@codemirror/state';
 
 // eslint-disable-next-line no-console
 export const debugNodeLogger = (log: (...args: any[]) => void = console.log): Extension => {

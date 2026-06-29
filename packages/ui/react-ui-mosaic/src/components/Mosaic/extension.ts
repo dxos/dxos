@@ -3,7 +3,7 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { type DecorationSet, Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 export type DropHandlerEvent = {
   text: string;

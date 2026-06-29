@@ -25,7 +25,7 @@ import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
-import { type Mailbox, InboxCapabilities, InboxOperation } from '../types';
+import { InboxCapabilities, InboxOperation, type Mailbox } from '../types';
 
 /** Read `syncBackDays` and `filter` from the binding options (opaque record). */
 export const readBindingOptions = (binding: SyncBinding.SyncBinding) => {

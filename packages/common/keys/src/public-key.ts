@@ -4,7 +4,7 @@
 
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
-import { type inspect, type InspectOptionsStylized } from 'node:util';
+import { type InspectOptionsStylized, type inspect } from 'node:util';
 
 import {
   type DevtoolsFormatter,

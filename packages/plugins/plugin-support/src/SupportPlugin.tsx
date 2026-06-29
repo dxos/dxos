@@ -21,7 +21,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type Tour, Support, SupportOperation } from '#types';
+import { Support, SupportOperation, type Tour } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';

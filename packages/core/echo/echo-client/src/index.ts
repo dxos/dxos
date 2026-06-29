@@ -7,6 +7,7 @@ export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 export * from './automerge';
 export * from './client';
 export {
+  META_NAMESPACE,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type BindOptions,
@@ -17,18 +18,17 @@ export {
   type LoadObjectOptions,
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
-  META_NAMESPACE,
   objectIsUpdated,
 } from './core-db';
 export {
   type CloneOptions,
+  EchoReactiveHandler,
+  MutationOutsideChangeContextError,
+  ObjectVersion,
   type ProxyTarget,
   type Selection,
   type SubscriptionHandle,
   type UpdateInfo,
-  EchoReactiveHandler,
-  MutationOutsideChangeContextError,
-  ObjectVersion,
   checkoutVersion,
   clone,
   createArrayMethodError,

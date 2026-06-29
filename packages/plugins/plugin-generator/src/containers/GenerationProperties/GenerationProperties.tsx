@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form, SelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { type GenerationOption, type GenerationProvider, HeyGenProvider } from '#services';

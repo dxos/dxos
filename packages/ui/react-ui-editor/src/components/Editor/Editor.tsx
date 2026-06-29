@@ -13,20 +13,20 @@ import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
+  EditorMenuProvider,
   type EditorMenuProviderProps,
   type UseEditorMenuProps,
-  EditorMenuProvider,
   useEditorMenu,
 } from '../EditorMenuProvider';
 import {
   type EditorToolbarState,
-  type EditorToolbarProps as NaturalEditorToolbarProps,
   EditorToolbar as NaturalEditorToolbar,
+  type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar';
 import {
   type EditorController,
-  type EditorViewProps as NaturalEditorContentProps,
   EditorView as NaturalEditorContent,
+  type EditorViewProps as NaturalEditorContentProps,
   createEditorController,
   noopController,
 } from './EditorView';

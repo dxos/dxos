@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type MosaicTileProps, Focus, Mosaic, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';

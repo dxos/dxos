@@ -11,7 +11,7 @@ import { DeviceKind } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type NetworkStatus, ConnectionState, Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type DataProvider } from '../observability';
 

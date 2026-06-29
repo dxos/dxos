@@ -15,7 +15,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { type BoardModel, Board, Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type TextInputProps, Input, useControlledState } from '@dxos/react-ui';
+import { Input, type TextInputProps, useControlledState } from '@dxos/react-ui';
 
 export type SearchbarProps = Pick<TextInputProps, 'placeholder'> & {
   delay?: number;

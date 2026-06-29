@@ -11,7 +11,7 @@ import { CallsCapabilities } from '#types';
 
 import { type EncodedTrackName, type UserState } from '../../calls';
 import { VideoObject } from '../Media';
-import { type ResponsiveGridItemProps, ResponsiveGridItem } from '../ResponsiveGrid';
+import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 
 export const SCREENSHARE_SUFFIX = '_screenshare';
 

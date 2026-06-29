@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type QueryAST, type View, DXN, EID, Filter, JsonSchema, Obj, Query, Scope, Tag, Type } from '@dxos/echo';
+import { DXN, EID, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { type Mutable } from '@dxos/echo/Obj';
 import { useQuery } from '@dxos/react-client/echo';
@@ -19,7 +19,7 @@ import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 import { translations } from '#translations';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL, TestLayout } from '../../testing';
-import { type ViewEditorProps, ViewEditor } from './ViewEditor';
+import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
   { value: Type.getURI(Organization.Organization), label: 'Organization' },

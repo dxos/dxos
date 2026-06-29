@@ -14,7 +14,7 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type EntityId, EID } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import { HarnessContextError } from '../errors';

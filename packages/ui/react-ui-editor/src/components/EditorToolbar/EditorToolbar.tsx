@@ -7,8 +7,8 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { type ThemedClassName, ElevationProvider } from '@dxos/react-ui';
-import { type ActionGraphProps, type MenuAction, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { addBlocks } from './blocks';

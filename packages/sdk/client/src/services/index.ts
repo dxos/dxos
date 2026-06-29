@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-export { type FromAgentOptions, AgentClientServiceProvider, fromAgent, getUnixSocket } from './agent';
+export { AgentClientServiceProvider, type FromAgentOptions, fromAgent, getUnixSocket } from './agent';
 export { type CreateClientServicesOptions, createClientServices } from './client-services-factory';
 // TODO(wittjosiah): Remove this once this is internal to shell manager.
 export { IFrameManager } from './iframe-manager';
-export { type LocalClientServicesParams, LocalClientServices, fromHost } from './local-client-services';
+export { LocalClientServices, type LocalClientServicesParams, fromHost } from './local-client-services';
 export { ClientServicesProxy } from './service-proxy';
 export { Shell } from './shell';
 export { ShellManager } from './shell-manager';

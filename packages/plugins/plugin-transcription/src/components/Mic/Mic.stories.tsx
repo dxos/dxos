@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { MicButton, Toolbar } from '@dxos/react-ui';
-import { type AudioInputDevice, type RecordMode, MicSettings } from '@dxos/react-ui-transcription';
+import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';

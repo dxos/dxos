@@ -3,10 +3,10 @@
 //
 
 import { sleep } from '@dxos/async';
-import { type TraceContextData, TRACE_SPAN_ATTRIBUTE, Context } from '@dxos/context';
+import { TRACE_SPAN_ATTRIBUTE, Context, type TraceContextData } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type EdgeFailure, EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError } from '@dxos/protocols';
+import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { encodeAuthHeader } from './http-client';

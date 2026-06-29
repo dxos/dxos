@@ -3,9 +3,9 @@
 //
 
 import {
-  type Tracer,
   ROOT_CONTEXT,
   SpanStatusCode,
+  type Tracer,
   context as otelContext,
   propagation,
   trace,
@@ -24,7 +24,7 @@ import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
-import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_ALL_KEY, TRACE_PROCESSOR, type RemoteSpan, type StartSpanOptions } from '@dxos/tracing';
 
 import { type OtelOptions, resolveOtlpUrl } from './otel';
 import { TagInjectorSpanProcessor } from './span-processors';

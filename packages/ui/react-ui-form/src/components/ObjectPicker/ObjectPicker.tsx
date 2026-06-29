@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
-import { type ThemedClassName, Popover, useTranslation } from '@dxos/react-ui';
+import { Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 

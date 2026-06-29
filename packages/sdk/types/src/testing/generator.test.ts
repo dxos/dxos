@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type Database, DXN, Obj, Query, Relation, Type } from '@dxos/echo';
+import { DXN, type Database, Obj, Query, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

@@ -25,23 +25,23 @@ import React, {
 } from 'react';
 
 import {
+  Button,
   type ButtonProps,
+  Icon,
   type IconProps,
+  Popover,
   type PopoverArrowProps,
   type PopoverContentProps,
   type PopoverVirtualTriggerProps,
-  type ThemedClassName,
-  Button,
-  Icon,
-  Popover,
   ScrollArea,
+  type ThemedClassName,
   useId,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
-import { type PickerInputProps, type PickerItemProps, Picker } from '../Picker';
+import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
 
 const styles = listTheme.styles();
 

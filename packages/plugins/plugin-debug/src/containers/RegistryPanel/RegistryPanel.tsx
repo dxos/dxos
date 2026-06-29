@@ -9,7 +9,7 @@ import { JsonView, PanelContainer, Placeholder, Searchbar } from '@dxos/devtools
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Toolbar } from '@dxos/react-ui';
-import { type TableFeatures, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
 type RegistryRow = {

@@ -15,7 +15,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { type MasterDetailAdornment, type MasterDetailIcon, MasterDetail, RoutineForm } from '#components';
+import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon, RoutineForm } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 

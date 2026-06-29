@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Scene, Color3, Mesh, StandardMaterial, VertexBuffer, VertexData } from '@babylonjs/core';
+import { Color3, Mesh, type Scene, StandardMaterial, VertexBuffer, VertexData } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
 export type ConvertOptions = {

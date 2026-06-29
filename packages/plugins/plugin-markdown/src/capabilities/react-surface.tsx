@@ -22,9 +22,9 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Position } from '@dxos/util';
 
 import {
-  type MarkdownArticleProps,
   EditableMarkdownCard,
   MarkdownArticle,
+  type MarkdownArticleProps,
   MarkdownCard,
   MarkdownSettings,
 } from '#containers';

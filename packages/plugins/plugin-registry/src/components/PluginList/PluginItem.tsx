@@ -6,13 +6,13 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import {
-  type ChromaticPalette,
-  type NeutralPalette,
   Button,
+  type ChromaticPalette,
   Icon,
   IconButton,
   Input,
   Link,
+  type NeutralPalette,
   Tag,
   useTranslation,
 } from '@dxos/react-ui';

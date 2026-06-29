@@ -18,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { URI } from '@dxos/keys';
 
-import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { NODE_INPUT, NODE_OUTPUT, type GptOutput } from '../nodes';
 import { TestRuntime } from '../testing';
 import { DEFAULT_OUTPUT, ComputeGraphModel, ValueBag } from '../types';
 

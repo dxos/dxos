@@ -10,10 +10,10 @@ import { Context, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
-  type EdgeAutomergeReplicator,
   EchoEdgeReplicator,
   EchoEdgeSubductionReplicator,
   EchoHost,
+  type EdgeAutomergeReplicator,
   MeshEchoReplicator,
   SpaceManager,
   SqliteMetadataStore,
@@ -48,20 +48,20 @@ import { EdgeAgentManager } from '../agents';
 import {
   type CreateIdentityOptions,
   type Identity,
+  IdentityManager,
   type IdentityManagerProps,
   type JoinIdentityProps,
-  IdentityManager,
 } from '../identity';
 import { EdgeIdentityRecoveryManager } from '../identity/identity-recovery-manager';
 import {
+  DeviceInvitationProtocol,
   type InvitationConnectionProps,
   type InvitationProtocol,
-  DeviceInvitationProtocol,
   InvitationsHandler,
   InvitationsManager,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { type DataSpaceManagerRuntimeProps, type SigningContext, DataSpaceManager } from '../spaces';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 import { FeedSyncer } from './feed-syncer';
 import { SqliteStorage } from './sqlite-storage';
 

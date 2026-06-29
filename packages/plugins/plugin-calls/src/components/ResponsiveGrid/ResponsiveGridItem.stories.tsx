@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ResponsiveGridItemProps, ResponsiveGridItem } from './ResponsiveGridItem';
+import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
 type TestItem = { id: string; name: string };
 

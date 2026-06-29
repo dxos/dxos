@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type PushStream, type Trigger, TimeoutError, scheduleTask } from '@dxos/async';
+import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
@@ -14,7 +14,7 @@ import { type SwarmConnection, type SwarmNetworkManager, createTeleportProtocolF
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type IntroductionResponse, AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';

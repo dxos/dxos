@@ -9,7 +9,7 @@ import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { range } from '@dxos/util';
 
-import { type AttentionGlyphProps, AttentionGlyph } from './AttentionGlyph';
+import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
 
 const DefaultStory = (props: AttentionGlyphProps) => {
   return (

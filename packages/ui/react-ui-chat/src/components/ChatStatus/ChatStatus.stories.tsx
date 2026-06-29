@@ -9,7 +9,7 @@ import { Button, Toolbar } from '@dxos/react-ui';
 import { Matrix } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ChatStatusController, ChatStatus, useChatStatusContext } from './ChatStatus';
+import { ChatStatus, type ChatStatusController, useChatStatusContext } from './ChatStatus';
 
 const meta = {
   title: 'ui/react-ui-chat/ChatStatus',

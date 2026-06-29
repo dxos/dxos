@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type MasterDetailIcon, MasterDetail } from './MasterDetail';
+import { MasterDetail, type MasterDetailIcon } from './MasterDetail';
 
 type Row = { id: string; label: string };
 

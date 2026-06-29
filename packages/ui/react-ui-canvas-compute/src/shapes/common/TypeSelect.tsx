@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { type SelectRootProps, Select } from '@dxos/react-ui';
+import { Select, type SelectRootProps } from '@dxos/react-ui';
 
 // TODO(burdon): Factor out.
 export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {

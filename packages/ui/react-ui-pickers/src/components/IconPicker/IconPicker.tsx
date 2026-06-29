@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { type ButtonProps, type IconProps, type ThemedClassName, Icon, useTranslation } from '@dxos/react-ui';
+import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { type PickerButtonProps, PickerButton } from '../PickerButton';
+import { PickerButton, type PickerButtonProps } from '../PickerButton';
 import { iconValues } from './icons';
 
 export type IconPickerProps = {

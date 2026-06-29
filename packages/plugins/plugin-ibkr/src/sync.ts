@@ -3,7 +3,7 @@
 //
 
 import { Operation, Trigger } from '@dxos/compute';
-import { type Database, EID, Ref } from '@dxos/echo';
+import { EID, type Database, Ref } from '@dxos/echo';
 
 import { IBKR_SYNC_CRON } from './constants';
 import { IbkrOperation } from './types';

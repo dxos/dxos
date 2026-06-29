@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type cloneElement, type FC } from 'react';
+import { type FC, type cloneElement } from 'react';
 import { type Event, type SingleOrArray } from 'xstate';
 
 import { type Space } from '@dxos/react-client/echo';

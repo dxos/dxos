@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Factor out common tree with react-ui-list.

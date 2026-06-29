@@ -11,8 +11,8 @@ import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { type QueryEditorProps, QueryEditor } from '@dxos/react-ui-components';
-import { type EditorViewProps, Editor } from '@dxos/react-ui-editor';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -28,7 +28,7 @@ import { meta } from '#meta';
 import { type Notebook } from '#types';
 
 import { type ComputeGraph } from '../../notebook';
-import { type TypescriptEditorProps, TypescriptEditor } from '../TypescriptEditor';
+import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
 import { type NotebookMenuProps } from './NotebookMenu';
 
 const editorStyles = 'p-2 ps-3';

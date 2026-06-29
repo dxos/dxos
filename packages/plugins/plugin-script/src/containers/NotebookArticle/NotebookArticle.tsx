@@ -24,7 +24,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type NotebookStackProps, type TypescriptEditorProps, NotebookMenu, NotebookStack } from '#components';
+import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
 import { meta } from '#meta';
 import { type Notebook } from '#types';
 
