@@ -150,7 +150,7 @@ const buildDecorations = (
                   block: true,
                   widget: new PlaceholderWidget(
                     `cm-preview-${link.dxn}`,
-                    // Stand-in component; addBlockContainer callbacks drive actual rendering until Phase 2.
+                    // Stand-in component; addBlockContainer callbacks drive actual rendering until Phase 3.
                     _PreviewPlaceholder as any,
                     { _tag: 'preview', range: { from: node.from, to: node.to } },
                     makePreviewNotifier(options, link),
