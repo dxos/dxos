@@ -428,7 +428,7 @@ class FilterClass implements Filter$.Any {
   /** Create a predicate from a filter. */
   // Cast required: TypeScript cannot verify a plain overloaded function satisfies a type-predicate
   // overload signature without the cast; Effect's dual() has the same limitation here.
-  static toPredicate = ((entityOrFilter: any, filter?: any): any => {
+  static 'toPredicate' = ((entityOrFilter: any, filter?: any): any => {
     if (filter === undefined) {
       return (entity: any) => _filterMatchEntityLocal(entityOrFilter.ast, entity);
     }
