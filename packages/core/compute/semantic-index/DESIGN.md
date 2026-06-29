@@ -39,14 +39,19 @@ time-varying facts are simply multiple Facts — never merged at write time.
 
 ## Storage & query engine
 
-One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a custom RDF/JS
-`Source` whose `match()` reads **SQLite**. The backend is therefore swappable and durable:
+One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
+`Source`. `SemanticStore.query` → `buildSparql` → Comunica → `Source.match()` in every
+configuration below; only the backend differs.
 
-- **Browser** — `@dxos/sql-sqlite` (wa-sqlite + OPFS).
-- **Cloudflare** — Durable-Object SQLite, or D1.
-- **Node / fixtures** — `@dxos/sql-sqlite` (better-sqlite3).
+| Config                 | Source                                              | Persistence | Platform          |
+| ---------------------- | --------------------------------------------------- | ----------- | ----------------- |
+| **N3**                 | N3 `Store` (in-memory)                              | memory only | browser or node   |
+| **SQLite (OPFS)**      | `makeSqliteSource` — wa-sqlite + OPFS (worker)      | persistent  | browser           |
+| **SQLite (file / DO)** | `makeSqliteSource` — better-sqlite3 / Cloudflare DO | persistent  | node / Cloudflare |
 
-Persistence is the database itself — no whole-graph snapshot, no in-memory size ceiling.
+For SQLite, persistence is the database itself — no whole-graph snapshot, no in-memory size
+ceiling. N3 is fast and dependency-light but ephemeral (optionally snapshotted to
+localStorage/IndexedDB).
 
 Why Comunica over an embeddable store (e.g. Oxigraph): Oxigraph's WASM build is in-memory
 with a fixed backend, so it cannot persist to or stream from storage we control. Comunica
