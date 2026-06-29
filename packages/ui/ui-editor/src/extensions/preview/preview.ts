@@ -5,7 +5,6 @@
 import { EditorView, WidgetType } from '@codemirror/view';
 
 export type PreviewLinkRef = {
-  suggest?: boolean; // TODO(burdon): Remove?
   block?: boolean;
   label: string;
   dxn: string;
