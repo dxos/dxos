@@ -645,7 +645,13 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
 
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
-      const elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);
+      let elementSchema: Schema.Schema<any>;
+      try {
+        elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);
+      } catch {
+        // Property not in schema — treat as untyped so the proxy can still wrap it.
+        elementSchema = Schema.Any;
+      }
       setSchemaProperties(obj[key], elementSchema);
     }
   }
