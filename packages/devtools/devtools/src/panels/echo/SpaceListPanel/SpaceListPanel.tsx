@@ -13,7 +13,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
-import { type TableFeatures, type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';

@@ -20,8 +20,8 @@ import { translations } from '#translations';
 import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
-import { type MosaicEventHandler, Mosaic } from '../Mosaic';
-import { type BoardModel, Board } from './Board';
+import { Mosaic, type MosaicEventHandler } from '../Mosaic';
+import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 
 random.seed(999);

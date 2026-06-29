@@ -14,11 +14,11 @@ import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { type FlexProps, Flex } from '@dxos/react-ui';
+import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
-  type ComputeShape,
   ComputeContext,
   ComputeGraphController,
+  type ComputeShape,
   ComputeShapeLayout,
   computeShapes,
   useComputeGraphController,
@@ -26,9 +26,9 @@ import {
 } from '@dxos/react-ui-canvas-compute';
 import {
   type CanvasBoard,
-  type EditorController,
   CanvasGraphModel,
   Editor,
+  type EditorController,
   KeyboardContainer,
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';

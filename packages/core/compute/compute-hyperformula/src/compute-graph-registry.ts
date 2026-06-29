@@ -15,7 +15,7 @@ import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackag
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 
 import { ComputeGraph } from './compute-graph';
-import { type FunctionContextOptions, EdgeFunctionPlugin, EdgeFunctionPluginTranslations } from './functions';
+import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions';
 
 export type ComputeGraphPlugin = {
   plugin: FunctionPluginDefinition;

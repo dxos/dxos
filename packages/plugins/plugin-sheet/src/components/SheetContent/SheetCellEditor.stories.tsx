@@ -11,7 +11,7 @@ import { getRegisteredFunctionNames } from '@dxos/compute-hyperformula/testing';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { type CellEditorProps, CellEditor } from '@dxos/react-ui-grid';
+import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/react-ui/testing';
 import { automerge } from '@dxos/ui-editor';
 

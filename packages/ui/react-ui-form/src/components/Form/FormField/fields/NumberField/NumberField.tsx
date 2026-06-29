@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type TextInputProps, Input } from '@dxos/react-ui';
+import { Input, type TextInputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';

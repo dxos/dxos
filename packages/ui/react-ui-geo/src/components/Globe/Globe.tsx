@@ -41,12 +41,12 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
+  GlobeContext,
   type GlobeContextType,
   type GlobeController,
   type Point,
   type Size,
   type Vector,
-  GlobeContext,
   useGlobeContext,
 } from '../../hooks';
 import {
@@ -60,7 +60,7 @@ import {
   renderLayers,
   timer,
 } from '../../util';
-import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute

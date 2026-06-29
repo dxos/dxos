@@ -3,7 +3,7 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { type Registry, Atom } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';

@@ -17,17 +17,17 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {
+  GraphForceProjector,
   type GraphForceProjectorOptions,
   type GraphLayoutEdge,
   type GraphLayoutNode,
-  GraphForceProjector,
   GraphRenderer,
   createGraphDrag,
   createMarkers,
   linkerRenderer,
 } from '../graph';
 import { useGrid, useSvgContext, useZoom } from '../hooks';
-import { type TestNode, TestGraphModel, convertTreeToGraph, createTree } from '../testing';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
 
 type ComponentProps = PropsWithChildren<{
   graph: () => Graph.Graph<TestNode, Graph.Edge.Any>;

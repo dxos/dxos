@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { type Database, type Ref, Obj } from '@dxos/echo';
+import { type Database, Obj, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SyncBinding } from '@dxos/plugin-connector';
 

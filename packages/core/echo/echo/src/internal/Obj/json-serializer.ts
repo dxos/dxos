@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, EntityStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, URI, EntityId } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -27,13 +27,13 @@ import {
 import { ATTR_META, EntityMetaSchema } from '../common/types/meta';
 import { MetaId } from '../common/types/model-symbols';
 import {
-  type ObjectJSON,
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
   ObjectDatabaseId,
+  type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
@@ -41,7 +41,7 @@ import {
   SelfURIId,
   assertObjectModel,
 } from '../Entity';
-import { type RefResolver, Ref, refFromEncodedReference, setRefResolver } from '../Ref';
+import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
 
 // Re-export for backward compatibility.
 export { attachTypedJsonSerializer };

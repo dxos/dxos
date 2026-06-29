@@ -6,8 +6,6 @@ import { CalendarDate, parseDate } from '@internationalized/date';
 import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef } from 'react';
 import {
   type DateValue,
-  type CalendarProps as RACCalendarProps,
-  type RangeCalendarProps as RACRangeCalendarProps,
   Button as RACButton,
   Calendar as RACCalendar,
   CalendarCell as RACCalendarCell,
@@ -15,8 +13,10 @@ import {
   CalendarGridBody as RACCalendarGridBody,
   CalendarGridHeader as RACCalendarGridHeader,
   CalendarHeaderCell as RACCalendarHeaderCell,
+  type CalendarProps as RACCalendarProps,
   Heading as RACHeading,
   RangeCalendar as RACRangeCalendar,
+  type RangeCalendarProps as RACRangeCalendarProps,
 } from 'react-aria-components';
 
 import { type ClassNameValue } from '@dxos/ui-types';

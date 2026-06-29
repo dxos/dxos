@@ -7,8 +7,8 @@ import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@auto
 
 import {
   type CleanupFn,
-  type ReadOnlyEvent,
   Event,
+  type ReadOnlyEvent,
   TimeoutError,
   Trigger,
   UpdateScheduler,
@@ -20,15 +20,15 @@ import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context'
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
 import {
-  type EntityStructure,
-  type SpaceState,
   DatabaseDirectory,
   EncodedReference,
+  type EntityStructure,
   SpaceDocVersion,
+  type SpaceState,
 } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
-import { type EntityId, type PublicKey, type SpaceId, EID } from '@dxos/keys';
+import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -36,7 +36,7 @@ import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/ech
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
-import { type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent, RepoProxy } from '../automerge';
+import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
 import { type IDatabaseBinding, ObjectCore } from './object-core';
 import {

@@ -21,7 +21,7 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
-import { type FormFieldProps, CompactIconButton, FormField } from '../../FormField';
+import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
 import { FormFieldHeader } from '../../FormFieldHeader';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form

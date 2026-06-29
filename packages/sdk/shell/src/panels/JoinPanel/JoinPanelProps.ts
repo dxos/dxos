@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type cloneElement, type FC } from 'react';
+import { type FC, type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
 import type { AuthenticatingInvitationObservable, Invitation, InvitationResult } from '@dxos/react-client/invitations';

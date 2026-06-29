@@ -11,14 +11,14 @@ import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
   type ShapeDef,
+  TextBox,
   type TextBoxControl,
   type TextBoxProps,
-  TextBox,
 } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
 import { Box, TypeSelect, createFunctionAnchors } from './common';
-import { type CreateShapeProps, ComputeShape, createShape } from './defs';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 //
 // Data

@@ -8,7 +8,7 @@ import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 import { Obj } from '@dxos/echo';
 import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { type MosaicTileProps, Focus, Mosaic, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 

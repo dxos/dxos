@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Callback, type RedisOptions, Redis } from 'ioredis';
+import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -11,6 +11,7 @@ import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import {
+  AGENT_LOG_FILE,
   type GlobalOptions,
   type ProcessHandle,
   type ReplicantBrain,
@@ -19,7 +20,6 @@ import {
   type ReplicantRuntimeProps,
   type ReplicantsSummary,
   type TestProps,
-  AGENT_LOG_FILE,
   runBrowser,
   runNode,
 } from '../plan';

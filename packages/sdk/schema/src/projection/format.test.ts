@@ -10,7 +10,7 @@ import { TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { type PropertyType, PropertySchema, formatToSchema, getFormatSchema } from './format';
+import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
 
 describe('format', () => {
   test('get format schema', ({ expect }) => {

@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { type Entity, DXN, Obj, Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

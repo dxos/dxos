@@ -4,7 +4,7 @@
 
 import { indentMore } from '@codemirror/commands';
 import { getIndentUnit } from '@codemirror/language';
-import { type ChangeSpec, type Extension, EditorSelection } from '@codemirror/state';
+import { type ChangeSpec, EditorSelection, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
 import { getSelection, selectAll, selectDown, selectNone, selectUp } from './selection';

@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { type ReactNode, PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
@@ -32,7 +32,7 @@ import { translations } from '#translations';
 import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
 import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
-import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
+import { PLAYBACK_INTERVAL_MS, SimulatedAgent, STEP_STORAGE_KEY, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
 type BaseStoryProps = PropsWithChildren<{

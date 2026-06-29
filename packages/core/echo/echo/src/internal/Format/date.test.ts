@@ -9,11 +9,11 @@ import { log } from '@dxos/log';
 
 import { toJsonSchema } from '../JsonSchema';
 import {
+  DateOnly,
+  DateTime,
   type SimpleDate,
   type SimpleDateTime,
   type SimpleTime,
-  DateOnly,
-  DateTime,
   TimeOnly,
   toSimpleDate,
   toSimpleTime,

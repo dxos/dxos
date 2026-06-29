@@ -8,7 +8,7 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
 
-import { type MosaicTileProps, Focus, Mosaic, useMosaicContainer } from '../..';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../..';
 
 export type SearchStackAction = {
   type: 'select';

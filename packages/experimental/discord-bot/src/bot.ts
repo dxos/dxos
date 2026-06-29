@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TextChannel, Client, IntentsBitField, SnowflakeUtil } from 'discord.js';
+import { Client, IntentsBitField, SnowflakeUtil, type TextChannel } from 'discord.js';
 
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';

@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type QueryResult, Entity } from '@dxos/echo';
+import { Entity, type QueryResult } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';

@@ -13,9 +13,9 @@ import { ClientOperation } from '@dxos/plugin-client';
 import { useObject, useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { type ChatRootProps, Chat as ChatComponent } from '#components';
+import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
-import { type Assistant, type ChatType, AssistantCapabilities } from '#types';
+import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
   companionTo?: Obj.Unknown;

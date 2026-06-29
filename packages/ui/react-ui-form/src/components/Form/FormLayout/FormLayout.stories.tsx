@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DXN, Annotation, Format, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Card, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -21,7 +21,7 @@ import { translations } from '#translations';
 
 import { TestLayout, TestPanel } from '../../../testing';
 import { omitId } from '../../../util';
-import { type FormRootProps, Form } from '../Form';
+import { Form, type FormRootProps } from '../Form';
 import { parseLayout } from './parser';
 
 /**

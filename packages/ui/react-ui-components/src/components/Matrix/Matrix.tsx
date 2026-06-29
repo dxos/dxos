@@ -5,7 +5,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName, ClassNameValue } from '@dxos/react-ui';
+import { ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type MatrixProps = ThemedClassName<{

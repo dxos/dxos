@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { type AppCapabilities as AppCaps, AppCapabilities, AppSpace, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, AppSpace, Paths } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';

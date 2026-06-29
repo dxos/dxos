@@ -14,7 +14,7 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { translations } from '#translations';
 
 import { MobileLayout } from '../MobileLayout';
-import { type AppBarProps, AppBar } from './AppBar';
+import { AppBar, type AppBarProps } from './AppBar';
 
 const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 

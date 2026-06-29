@@ -8,7 +8,7 @@ import type * as Brand from 'effect/Brand';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import type { EntityMeta } from '@dxos/echo-protocol';
-import type { URI, SpaceId } from '@dxos/keys';
+import type { SpaceId, URI } from '@dxos/keys';
 
 import * as Doc from '../automerge/Doc';
 

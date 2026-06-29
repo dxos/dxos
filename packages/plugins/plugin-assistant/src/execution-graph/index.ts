@@ -5,9 +5,9 @@
 export {
   type BuildExecutionGraphParams,
   type CollectProcessActivityOptions,
+  CommitSelector,
   type ExecutionGraph,
   type ExecutionGraphDetailsMap,
-  CommitSelector,
   buildExecutionGraph,
   collectProcessActivityLines,
   deriveInFlightActivityLine,
@@ -20,12 +20,12 @@ export {
   resolveEphemeralStatusUpdate,
 } from './pending-block-status';
 export {
-  type BuildSpanTreeOptions,
-  type Span,
-  type SpanMeta,
   BEGIN_EVENT_TYPES,
+  type BuildSpanTreeOptions,
   END_EVENT_TYPES,
   ROOT_SPAN_ID,
+  type Span,
+  type SpanMeta,
   buildSpanTree,
   flattenSpanTree,
   isSpanBeginEvent,

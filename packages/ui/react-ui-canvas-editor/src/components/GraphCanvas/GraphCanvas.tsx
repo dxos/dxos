@@ -5,18 +5,18 @@
 import '@xyflow/react/dist/style.css'; // TODO(burdon): Replace with tailwind; or override vars (e.g., --xy-background-color-default)
 
 import {
-  type Dimensions,
-  type Edge,
-  type Node,
-  type NodeTypes,
-  type ReactFlowProps,
-  type XYPosition,
   Background,
   BackgroundVariant,
   Controls,
+  type Dimensions,
+  type Edge,
   MiniMap,
+  type Node,
+  type NodeTypes,
   ReactFlow,
+  type ReactFlowProps,
   ReactFlowProvider,
+  type XYPosition,
   useEdgesState,
   useNodesState,
 } from '@xyflow/react';

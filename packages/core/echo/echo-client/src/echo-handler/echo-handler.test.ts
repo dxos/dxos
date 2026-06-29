@@ -8,17 +8,17 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { DXN, Annotation, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
-  type RefSchema,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   EchoObjectSchema,
+  type RefSchema,
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EID, URI, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 

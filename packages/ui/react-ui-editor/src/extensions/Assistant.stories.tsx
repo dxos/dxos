@@ -18,7 +18,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { type EditorViewProps, Editor } from '../components';
+import { Editor, type EditorViewProps } from '../components';
 import { type AssistantOptions, assistant } from './assistant-extension';
 
 // TODO(burdon): Factor out.

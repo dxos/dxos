@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { makeCallState, makeUser } from '../../testing';
-import { type CallDebugPanelProps, CallDebugPanel } from './CallDebugPanel';
+import { CallDebugPanel, type CallDebugPanelProps } from './CallDebugPanel';
 
 const state = makeCallState(makeUser('self', 'Alice'), [
   makeUser('self', 'Alice'),

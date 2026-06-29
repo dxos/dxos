@@ -19,15 +19,15 @@ import { Paths } from '@dxos/app-toolkit';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
-  type ThemedClassName,
   DropdownMenu,
   Icon,
   ScrollArea,
   ScrollAreaRootProps,
+  type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { type MosaicEventHandler, type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 

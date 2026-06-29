@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { type ModelName, AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Harness } from '@dxos/assistant';
 import {

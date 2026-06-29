@@ -9,7 +9,7 @@ import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { withTheme } from '../../testing';
-import { type AvatarAnimation, type AvatarStatus, type AvatarVariant, Avatar } from './Avatar';
+import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
 type StoryArgs = PropsWithChildren<{
   id?: string;

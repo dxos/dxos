@@ -26,7 +26,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type StackArticleProps, StackArticle } from './StackArticle';
+import { StackArticle, type StackArticleProps } from './StackArticle';
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test image.
 const SKETCH_CONTENT = new SketchBuilder()

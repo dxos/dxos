@@ -13,13 +13,13 @@ import {
 } from 'solid-js';
 
 import {
-  type ContextCallback,
-  type ContextType,
-  type UnknownContext,
   CONTEXT_PROVIDER_EVENT,
   CONTEXT_REQUEST_EVENT,
+  type ContextCallback,
   ContextProviderEvent,
   ContextRequestEvent,
+  type ContextType,
+  type UnknownContext,
 } from '@dxos/web-context';
 
 /**

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { ReactNode } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { type ThemeMode, type ThemeProviderProps, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
 import { meta } from './meta';

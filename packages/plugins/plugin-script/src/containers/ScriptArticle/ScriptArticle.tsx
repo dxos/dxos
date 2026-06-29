@@ -13,7 +13,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
 import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
-import { type TypescriptEditorProps, ScriptToolbar, TypescriptEditor } from '#components';
+import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';
 import { type Settings } from '#types';
 

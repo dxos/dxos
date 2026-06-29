@@ -13,7 +13,7 @@ import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
-import { type Magazine, FeedOperation } from '#types';
+import { FeedOperation, type Magazine } from '#types';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;

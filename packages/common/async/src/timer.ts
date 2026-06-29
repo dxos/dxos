@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ReadOnlyEvent, Event } from './events';
+import { Event, type ReadOnlyEvent } from './events';
 
 export type TimerOptions = { count: number; interval: number; jitter?: number };
 

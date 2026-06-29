@@ -19,18 +19,18 @@ import { EID, EntityId } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
-  type ComputeNode,
-  type ComputeResult,
-  type Executable,
   AnyInput,
   AnyOutput,
   ComputeGraph,
   ComputeGraphModel,
+  type ComputeNode,
   ComputeNodeContext,
+  type ComputeResult,
+  type Executable,
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
-import { type WorkflowLoaderProps, WorkflowLoader } from './loader';
+import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(
   ComputeNodeContext.layerNoop,

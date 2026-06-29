@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName, Card, composable, useTranslation } from '@dxos/react-ui';
+import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';

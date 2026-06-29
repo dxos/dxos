@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, Atom } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -13,8 +13,8 @@ import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
-import { type MediaState, MediaManager } from './media-manager';
-import { type ActivityState, type EncodedTrackName, type UserState, TrackNameCodec } from './types';
+import { MediaManager, type MediaState } from './media-manager';
+import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
 export type GlobalState = {
   call: CallState;

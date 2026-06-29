@@ -8,9 +8,9 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type MainContentProps, IconButton, Main, ScrollArea, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { IconButton, Main, type MainContentProps, ScrollArea, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
-import { type MosaicStackTileComponent, type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useDeckState } from '#hooks';

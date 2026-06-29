@@ -23,7 +23,7 @@ import { Message, Organization, Person } from '@dxos/types';
 import { createMessageGenerator } from '#testing';
 import { translations } from '#translations';
 
-import { type ChatThreadProps, ChatThread } from './ChatThread';
+import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);
 

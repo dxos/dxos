@@ -7,7 +7,7 @@ import React, { memo, useEffect, useMemo, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { type ThemedClassName, Icon, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';

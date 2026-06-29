@@ -11,7 +11,7 @@ import { useObject } from '@dxos/react-client/echo';
 import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
-import { type MosaicTileProps, Board, Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 

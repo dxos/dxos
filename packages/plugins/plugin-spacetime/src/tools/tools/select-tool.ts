@@ -3,10 +3,10 @@
 //
 
 import {
-  type PointerInfo,
   Color3,
   Mesh,
   PointerEventTypes,
+  type PointerInfo,
   StandardMaterial,
   Vector3,
   VertexData,

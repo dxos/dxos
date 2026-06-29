@@ -17,7 +17,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type SVGContextOptions, SVGContext, SVGContextProvider } from '../../hooks';
+import { SVGContext, type SVGContextOptions, SVGContextProvider } from '../../hooks';
 
 export type RootProps = ThemedClassName<PropsWithChildren<SVGContextOptions & ComponentPropsWithoutRef<'div'>>>;
 

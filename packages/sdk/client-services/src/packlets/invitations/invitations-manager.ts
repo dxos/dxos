@@ -4,10 +4,10 @@
 
 import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';
 import {
-  AUTHENTICATION_CODE_LENGTH,
-  INVITATION_TIMEOUT,
   AuthenticatingInvitation,
+  AUTHENTICATION_CODE_LENGTH,
   CancellableInvitation,
+  INVITATION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';

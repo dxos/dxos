@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type PointerEvent, forwardRef, useCallback, useRef } from 'react';
 
-import { type IconButtonProps, IconButton } from './IconButton';
+import { IconButton, type IconButtonProps } from './IconButton';
 
 export type MicButtonMode = 'toggle' | 'hold';
 

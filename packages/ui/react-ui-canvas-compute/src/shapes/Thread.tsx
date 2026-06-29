@@ -7,13 +7,13 @@ import React, { useEffect, useRef } from 'react';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { type ThemedClassName, ScrollArea } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { Box, createFunctionAnchors } from './common';
-import { type CreateShapeProps, ComputeShape, createShape } from './defs';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 const InputSchema = createInputSchema(Type.getSchema(Message.Message));
 const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSchema(Message.Message))));

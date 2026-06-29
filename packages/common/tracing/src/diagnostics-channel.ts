@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 
 import {
   type DiagnosticMetadata,
+  DIAGNOSTICS_TIMEOUT,
   type DiagnosticsData,
   type DiagnosticsManager,
   type DiagnosticsRequest,
-  DIAGNOSTICS_TIMEOUT,
 } from './diagnostic';
 import { createId } from './util';
 

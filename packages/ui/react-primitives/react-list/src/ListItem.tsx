@@ -22,7 +22,7 @@ import React, {
 
 import { useId } from '@dxos/react-hooks';
 
-import { type ListScopedProps, LIST_NAME, useListContext } from './List';
+import { LIST_NAME, type ListScopedProps, useListContext } from './List';
 
 const LIST_ITEM_NAME = 'ListItem';
 

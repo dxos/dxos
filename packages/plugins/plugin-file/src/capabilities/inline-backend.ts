@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 
-import { MAX_FILE_SIZE, File, FileCapabilities, Settings, isAcceptedMimeType } from '#types';
+import { File, FileCapabilities, MAX_FILE_SIZE, Settings, isAcceptedMimeType } from '#types';
 
 import { FileTooLargeError, UnsupportedFileTypeError } from '../operations/create';
 

@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type AiService, type ModelName, type ModelRegistry, type OpaqueToolkit, DEFAULT_EDGE_MODEL } from '@dxos/ai';
+import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry, type OpaqueToolkit } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import {
   AiContext,
@@ -25,8 +25,8 @@ import {
   formatSystemPrompt,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Credential, type ServiceNotAvailableError, AgentService, Operation, Trace } from '@dxos/compute';
-import { type Database, type Registry, Feed, Obj, Ref } from '@dxos/echo';
+import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
+import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

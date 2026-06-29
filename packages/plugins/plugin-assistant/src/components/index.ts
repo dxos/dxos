@@ -10,4 +10,4 @@ export * from './ProcessTree';
 export * from './TaskList';
 export * from './Toolbox';
 
-export { type ChatPromptProps, ChatPrompt } from './ChatPrompt/ChatPrompt';
+export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt';

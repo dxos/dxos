@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import {
-  type PromiseIntentDispatcher,
   Capabilities,
   Capability,
   LayoutAction,
+  type PromiseIntentDispatcher,
   createIntent,
 } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';

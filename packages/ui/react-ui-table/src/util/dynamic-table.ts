@@ -5,10 +5,10 @@
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
-import { type JsonSchema, type QueryAST, type View, Filter, Obj, Order, Query, Ref, Type } from '@dxos/echo';
+import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {
-  type SchemaPropertyDefinition,
   ProjectionModel,
+  type SchemaPropertyDefinition,
   ViewModel,
   createEchoChangeCallback,
   getSchemaFromJsonSchema,

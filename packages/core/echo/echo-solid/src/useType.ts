@@ -4,7 +4,7 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Database, DXN, EID, URI, Filter, Query, Scope, Type } from '@dxos/echo';
+import { type Database, DXN, EID, Filter, Query, Scope, Type, URI } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 

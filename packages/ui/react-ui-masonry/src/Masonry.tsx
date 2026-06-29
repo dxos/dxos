@@ -5,7 +5,7 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { type VirtuosoMasonryProps, VirtuosoMasonry as NaturalVirtuosoMasonry } from '@virtuoso.dev/masonry';
+import { VirtuosoMasonry as NaturalVirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
 import React, {
   type ComponentType,
   type CSSProperties,

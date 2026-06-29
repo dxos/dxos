@@ -8,10 +8,10 @@ import { useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ControlProps,
+  Globe,
   type GlobeController,
   type GlobeRootProps,
   type LatLngLiteral,
-  Globe,
   geoToPosition,
   globeStyles,
   positionToRotation,

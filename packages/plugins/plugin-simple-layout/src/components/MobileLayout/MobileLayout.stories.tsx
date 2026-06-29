@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { type SplitterMode, Column, Flex, Input, Panel, Splitter, Toolbar } from '@dxos/react-ui';
+import { Column, Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type MobileLayoutRootProps, MobileLayout } from './MobileLayout';
+import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
 
 /**
  * Simulate ios keyboard.

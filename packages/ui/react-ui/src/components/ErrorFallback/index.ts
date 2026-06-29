@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type ErrorBoundaryProps, type FallbackProps, ErrorBoundary } from '@dxos/react-error-boundary';
+export { ErrorBoundary, type ErrorBoundaryProps, type FallbackProps } from '@dxos/react-error-boundary';
 
 export * from './ErrorFallback';
 export * from './ErrorStack';

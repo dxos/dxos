@@ -7,11 +7,11 @@ import {
   type EditorState,
   type Extension,
   type Range,
-  type Transaction,
   StateEffect,
   StateField,
+  type Transaction,
 } from '@codemirror/state';
-import { type DecorationSet, Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { focusField } from '../focus';
 

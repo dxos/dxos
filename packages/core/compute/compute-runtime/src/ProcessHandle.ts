@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Registry, Atom } from '@effect-atom/atom';
+import { Atom, type Registry } from '@effect-atom/atom';
 import * as RpcClient from '@effect/rpc/RpcClient';
 import * as Cause from 'effect/Cause';
 import type * as Clock from 'effect/Clock';
@@ -20,7 +20,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { type Trace, Process } from '@dxos/compute';
+import { Process, type Trace } from '@dxos/compute';
 import type * as StorageService from '@dxos/compute/StorageService';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';

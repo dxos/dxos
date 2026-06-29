@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type IconPickerProps, IconPicker } from './IconPicker';
+import { IconPicker, type IconPickerProps } from './IconPicker';
 
 const DefaultStory = (props: IconPickerProps) => {
   const [icon, setIcon] = useState<string | undefined>(props.value ?? props.defaultValue);

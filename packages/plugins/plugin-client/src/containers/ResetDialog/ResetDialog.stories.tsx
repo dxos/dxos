@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { ClientPlugin } from '../../ClientPlugin';
-import { type ResetDialogProps, ResetDialog } from './ResetDialog';
+import { ResetDialog, type ResetDialogProps } from './ResetDialog';
 
 const DefaultStory = (props: Omit<ResetDialogProps, 'capabilityManager'>) => {
   const manager = usePluginManager();

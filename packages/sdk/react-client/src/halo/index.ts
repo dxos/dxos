@@ -6,11 +6,11 @@
 export {
   type Contact,
   type Credential,
-  type Halo,
-  type Identity,
   Device,
   DeviceKind,
   DeviceType,
+  type Halo,
+  type Identity,
 } from '@dxos/client/halo';
 
 export * from './useContacts';

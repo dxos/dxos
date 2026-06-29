@@ -40,7 +40,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { type ClientPluginOptions, ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';

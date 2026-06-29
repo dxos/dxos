@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type CapabilityManager, Capabilities } from '@dxos/app-framework';
+import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';

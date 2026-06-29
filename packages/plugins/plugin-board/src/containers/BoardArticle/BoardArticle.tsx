@@ -16,8 +16,8 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type BoardController, type BoardRootProps, type Position, Board } from '@dxos/react-ui-board';
-import { type ObjectPickerContentProps, ObjectPicker } from '@dxos/react-ui-form';
+import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
+import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '#types';

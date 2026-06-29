@@ -11,7 +11,7 @@ import { useObject, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
-import { type ChatRootProps, Chat } from '#components';
+import { Chat, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { type Assistant, AssistantCapabilities } from '#types';

@@ -23,7 +23,7 @@ import { createIdFromSpaceKey } from '../common/space-id';
 import { type IMetadataStore } from '../metadata';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
-import { type SwarmIdentity, SpaceProtocol } from './space-protocol';
+import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 
 export type SpaceManagerProps = {
   feedStore: FeedStore<FeedMessage>;

@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { URI, EntityId } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';

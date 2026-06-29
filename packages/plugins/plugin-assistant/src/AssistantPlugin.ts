@@ -39,7 +39,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type AssistantPluginOptions, AssistantEvents } from '#types';
+import { AssistantEvents, type AssistantPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';

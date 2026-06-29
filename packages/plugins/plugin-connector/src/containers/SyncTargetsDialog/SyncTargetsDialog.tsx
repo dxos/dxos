@@ -15,7 +15,7 @@ import { Empty, Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { type RemoteTarget, ConnectorCoordinator } from '#types';
+import { ConnectorCoordinator, type RemoteTarget } from '#types';
 
 import { type Connection, SyncBinding } from '../../types';
 

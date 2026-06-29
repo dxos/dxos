@@ -17,7 +17,7 @@ import {
 } from '@dxos/echo-host/testing';
 import { Ref, getTypeAnnotation } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { type EntityId, type URI, DXN, PublicKey } from '@dxos/keys';
+import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

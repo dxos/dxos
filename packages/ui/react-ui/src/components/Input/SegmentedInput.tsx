@@ -6,15 +6,15 @@ import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTi
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
-  type DateFieldProps,
-  type TimeFieldProps,
   DateField,
+  type DateFieldProps,
   DateInput,
   DateSegment,
   TimeField,
+  type TimeFieldProps,
 } from 'react-aria-components';
 
-import { type InputScopedProps, INPUT_NAME, useInputContext } from '@dxos/react-input';
+import { INPUT_NAME, type InputScopedProps, useInputContext } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

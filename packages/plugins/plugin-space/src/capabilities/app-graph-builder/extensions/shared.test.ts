@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { DXN, Annotation, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';

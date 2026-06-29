@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { type TypescriptEditorProps, TypescriptEditor } from './TypescriptEditor';
+import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
 const SCRIPT = trim`
   x * 2

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { type Ref, Database, Obj } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
 
 import { type SourceFile } from '#types';
 

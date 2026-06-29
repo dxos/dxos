@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { generateName } from '@dxos/display-name';
 import { Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { type ThemedClassName, Avatar, Button, DropdownMenu, Icon, Tag, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, DropdownMenu, Icon, Tag, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 

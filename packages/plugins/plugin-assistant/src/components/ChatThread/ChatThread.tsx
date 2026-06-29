@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
-import { type MarkdownStreamController, type MarkdownStreamProps, MarkdownStream } from '@dxos/react-ui-markdown';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 

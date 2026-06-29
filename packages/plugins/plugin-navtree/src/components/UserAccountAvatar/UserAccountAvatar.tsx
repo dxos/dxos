@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AvatarStatus, type Size, Avatar } from '@dxos/react-ui';
+import { Avatar, type AvatarStatus, type Size } from '@dxos/react-ui';
 import { hexToFallback } from '@dxos/util';
 
 import { L0ItemActiveTabIndicator } from '../Sidebar';

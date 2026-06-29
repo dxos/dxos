@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type EntityId, DXN } from '@dxos/keys';
+import { DXN, type EntityId } from '@dxos/keys';
 
 // Type-only imports (erased at runtime — no import cycle); `internal` may depend
 // on the top-level `Obj` / `Type` API at the type level only.
@@ -22,7 +22,6 @@ import {
 } from '../Annotation/annotations';
 import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import {
-  type UnknownTypeSchema,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   EntityKind,
@@ -30,6 +29,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  type UnknownTypeSchema,
   getStaticTypeSchema,
 } from '../common/types';
 

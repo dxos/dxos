@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type Registry, type View, Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, type Registry, Type, type View } from '@dxos/echo';
 import { Format, FormatEnums, formatToType } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -20,7 +20,7 @@ import { translationKey } from '#translations';
 import { type FormFieldMap } from '#types';
 
 import { getFormProperties } from '../../util';
-import { type FormRootProps, Form, SelectField, SelectOptionField } from '../Form';
+import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = Pick<FormRootProps<any>, 'readonly'> & {
   projection: ProjectionModel;

@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { type QueryEditorProps, QueryEditor } from './QueryEditor';
+import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const SCRIPT = trim`
   Query.select(Filter.type('org.dxos.type.person'))

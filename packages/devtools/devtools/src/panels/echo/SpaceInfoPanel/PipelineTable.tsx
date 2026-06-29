@@ -8,7 +8,7 @@ import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { type TableFeatures, type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Database, type Entity, type Filter } from '@dxos/echo';
-import { type SpaceGraphModelOptions, SpaceGraphModel } from '@dxos/schema';
+import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
 
 // TODO(burdon): Factor out.
 export const useGraphModel = (

@@ -25,7 +25,7 @@ import { Channel, Message, Thread } from '@dxos/types';
 import { translations } from '#translations';
 
 import { ThreadPlugin } from '../../ThreadPlugin';
-import { type ChannelArticleProps, ChannelArticle } from './ChannelArticle';
+import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelArticleProps) => {

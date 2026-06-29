@@ -4,7 +4,7 @@
 
 import React, { type ReactElement, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';

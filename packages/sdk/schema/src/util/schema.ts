@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Registry, Format, Type } from '@dxos/echo';
-import { type SelectOption, FormatAnnotation, TypeEnum, formatToType } from '@dxos/echo/Format';
+import { Format, type Registry, Type } from '@dxos/echo';
+import { FormatAnnotation, type SelectOption, TypeEnum, formatToType } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
 import { type Mutable } from '@dxos/echo/Obj';

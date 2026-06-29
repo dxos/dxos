@@ -12,7 +12,7 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-import { type GameVariant, GameCapabilities } from '#types';
+import { GameCapabilities, type GameVariant } from '#types';
 
 export type CreateGamePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to GameCapabilities.VariantProvider. */

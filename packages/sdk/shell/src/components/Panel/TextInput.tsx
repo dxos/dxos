@@ -4,7 +4,7 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { type TextInputProps as NaturalTextInputProps, Input as NaturalInput } from '@dxos/react-ui';
+import { Input as NaturalInput, type TextInputProps as NaturalTextInputProps } from '@dxos/react-ui';
 
 export type TextInputProps = NaturalTextInputProps & {
   validationMessage?: string;

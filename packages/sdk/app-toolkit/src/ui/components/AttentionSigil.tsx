@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, Fragment, forwardRef, useState } from 'react';
+import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import { type ButtonProps, Button, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';

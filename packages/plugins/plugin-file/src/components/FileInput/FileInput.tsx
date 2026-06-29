@@ -11,7 +11,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { MAX_FILE_SIZE, FileAction } from '#types';
+import { FileAction, MAX_FILE_SIZE } from '#types';
 
 export type FileInputProps = {
   schema: Schema.Schema.AnyNoContext;

@@ -3,4 +3,4 @@
 //
 
 export { SyncTargetsDialog as default } from './SyncTargetsDialog';
-export { type SyncTargetsDialogProps, SyncTargetsDialog } from './SyncTargetsDialog';
+export { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';

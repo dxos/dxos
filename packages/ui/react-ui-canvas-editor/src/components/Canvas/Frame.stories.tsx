@@ -11,7 +11,7 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { createRectangle } from '../../shapes';
 import { Editor } from '../Editor';
-import { type ShapesProps, Shapes } from './Shapes';
+import { Shapes, type ShapesProps } from './Shapes';
 
 const DefaultStory = ({ layout }: ShapesProps) => {
   return (

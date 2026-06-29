@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { URI, EntityId } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import * as objInternal from './internal/Obj';

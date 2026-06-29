@@ -21,7 +21,7 @@ import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
-import { type CreateObjectOption, type CreateObjectPanelProps, CreateObjectPanel } from '#components';
+import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 

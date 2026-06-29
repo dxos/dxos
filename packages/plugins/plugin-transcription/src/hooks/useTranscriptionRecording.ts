@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Transcript, Message } from '@dxos/types';
+import { Message, type Transcript } from '@dxos/types';
 
 import { TranscriptionCapabilities, TranscriptOperation } from '#types';
 

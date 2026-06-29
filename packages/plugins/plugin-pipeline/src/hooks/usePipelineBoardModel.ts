@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, Atom } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 

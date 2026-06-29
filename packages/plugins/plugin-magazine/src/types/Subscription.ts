@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { DXN, Annotation, Database, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
-import { type FactoryFn, FactoryAnnotation, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
+import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
 // TODO: FeedType is currently a closed literal — plugins like plugin-bluesky must add their type here.
 // Consider making it extensible (e.g. a string schema with a well-known-values registry) so plugins can

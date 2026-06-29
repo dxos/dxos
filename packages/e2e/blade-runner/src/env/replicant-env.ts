@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Callback, type RedisOptions, Redis } from 'ioredis';
+import { type Callback, Redis, type RedisOptions } from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';

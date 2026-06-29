@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Ref, Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, type Ref, Type } from '@dxos/echo';
 
 import { Game } from '../types/Game';
 

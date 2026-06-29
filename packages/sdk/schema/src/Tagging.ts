@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Database, type Tag, Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref, type Tag } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';

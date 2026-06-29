@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { SKILL_KEY, default as FileSkill } from './file-skill';
+export { default as FileSkill, SKILL_KEY } from './file-skill';

@@ -4,11 +4,11 @@
 
 import { type Extension, Prec } from '@codemirror/state';
 import {
-  type DecorationSet,
-  type ViewUpdate,
   Decoration,
+  type DecorationSet,
   EditorView,
   ViewPlugin,
+  type ViewUpdate,
   WidgetType,
   keymap,
 } from '@codemirror/view';

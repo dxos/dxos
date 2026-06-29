@@ -7,7 +7,7 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import React, { useEffect, useRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';

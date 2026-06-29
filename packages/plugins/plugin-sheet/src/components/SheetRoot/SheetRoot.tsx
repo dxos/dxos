@@ -12,10 +12,10 @@ import {
 } from '@dxos/compute-hyperformula';
 import { raise } from '@dxos/debug';
 import {
+  Grid,
   type GridContentProps,
   type GridEditing,
   type GridScopedProps,
-  Grid,
   useGridContext,
 } from '@dxos/react-ui-grid';
 

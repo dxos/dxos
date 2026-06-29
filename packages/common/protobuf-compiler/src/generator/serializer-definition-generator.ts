@@ -7,7 +7,7 @@ import * as ts from 'typescript';
 
 import { compressSchema } from '@dxos/codec-protobuf';
 
-import { type ModuleSpecifier, CODEC_MODULE } from '../module-specifier';
+import { CODEC_MODULE, type ModuleSpecifier } from '../module-specifier';
 import { serializeSchemaToJson } from '../protobuf-json';
 
 const f = ts.factory;

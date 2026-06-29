@@ -6,13 +6,13 @@ import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
-  type ColumnRootProps,
-  type IconButtonProps,
-  type ThemedClassName,
   Column,
+  type ColumnRootProps,
   IconButton,
+  type IconButtonProps,
   Input,
   ScrollArea,
+  type ThemedClassName,
   composable,
   composableProps,
   useMergeRefs,
@@ -26,17 +26,17 @@ import { type Merge } from '@dxos/util';
 import { translationKey } from '#translations';
 
 import {
+  FormContextProvider,
   type FormContextValue,
   type FormHandlerProps,
   type FormUpdateMeta,
-  FormContextProvider,
   useFormContext,
   useFormHandler,
   useKeyHandler,
 } from '../../hooks';
 import { formTheme } from './Form.theme';
-import { type FormFieldSetProps as NaturalFormFieldSetProps, FormFieldSet } from './FormFieldSet';
-import { type FormLayoutProps as NaturalFormLayoutProps, FormLayout } from './FormLayout';
+import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
+import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
 
 //
 // Root

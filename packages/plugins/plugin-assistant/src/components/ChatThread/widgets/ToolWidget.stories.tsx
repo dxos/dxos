@@ -9,7 +9,7 @@ import { type ContentBlock } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { type ToolWidgetProps, ToolWidget } from './ToolWidget';
+import { ToolWidget, type ToolWidgetProps } from './ToolWidget';
 
 const baseWidgetProps = {
   _tag: 'toolCall',

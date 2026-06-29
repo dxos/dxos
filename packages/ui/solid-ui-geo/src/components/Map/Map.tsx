@@ -19,7 +19,7 @@ import {
 } from 'solid-js';
 
 import { type GeoMarker } from '../../types';
-import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 // TODO(burdon): Guess initial location.
 

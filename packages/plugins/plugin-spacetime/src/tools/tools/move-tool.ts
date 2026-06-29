@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Mesh, type PointerInfo, Plane, PointerEventTypes, Vector3 } from '@babylonjs/core';
+import { type Mesh, Plane, PointerEventTypes, type PointerInfo, Vector3 } from '@babylonjs/core';
 
 import { Obj } from '@dxos/echo';
 

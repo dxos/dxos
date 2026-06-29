@@ -14,11 +14,11 @@ import {
   type Contact,
   type CreateEpochRequest,
   type Invitation,
+  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
   type UpdateMemberRoleRequest,
-  SpaceArchive,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';

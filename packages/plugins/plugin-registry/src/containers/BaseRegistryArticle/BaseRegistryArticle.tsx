@@ -14,7 +14,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
-import { type PluginListProps, PluginList } from '#components';
+import { PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';
 
 import { useDisableConfirmation } from '../../hooks';

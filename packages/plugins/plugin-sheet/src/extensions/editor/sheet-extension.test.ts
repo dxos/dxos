@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type CompletionSource, CompletionContext } from '@codemirror/autocomplete';
+import { CompletionContext, type CompletionSource } from '@codemirror/autocomplete';
 import { EditorState } from '@codemirror/state';
 import { testTree } from '@lezer/generator/test';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';

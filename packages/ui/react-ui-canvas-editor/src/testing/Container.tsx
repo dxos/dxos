@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AttendableContainerProps, AttendableContainer } from '@dxos/react-ui-attention';
+import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-ui-attention';
 
 import { KeyboardContainer } from '../components/KeyboardContainer';
 
