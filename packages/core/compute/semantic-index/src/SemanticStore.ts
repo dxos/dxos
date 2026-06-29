@@ -13,8 +13,9 @@ import { insertQuadsMemory, makeMemorySource } from './internal/source/memory-so
 import { insertQuads, makeSqliteSource } from './internal/source/sqlite-source';
 import { makeEngine, selectTriples } from './internal/sparql/engine';
 import { factToTriples, triplesToFacts } from './internal/sparql/mapping';
-import { type SemanticQuery, buildSparql } from './internal/sparql/query-builder';
+import { type SemanticQuery } from './internal/sparql/query-builder';
 import { queryMemory } from './internal/sparql/query-memory';
+import { querySqlite } from './internal/sparql/query-sqlite';
 import { migrate } from './internal/sqlite/schema';
 import { type Fact } from './types';
 
@@ -90,11 +91,12 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to clear store', cause })),
         );
 
-      // SQLite: structured query builds SPARQL and runs it through Comunica (server-side only).
-      const select = makeSelect(source);
-      const query: SemanticStoreApi['query'] = (q) => select(buildSparql(q));
+      // Structured query runs directly over the `triples` table (no SPARQL engine), so the SQLite
+      // path works everywhere (browser worker / node / CF DO) — Comunica does not bundle for browser
+      // or Workers. `select` (raw SPARQL via Comunica) stays for node-only callers/tests.
+      const query: SemanticStoreApi['query'] = (q) => querySqlite(sql, q);
 
-      return { putFacts, cursor, setCursor, query, select, clear };
+      return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
     }),
   );
 

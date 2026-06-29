@@ -112,4 +112,35 @@ describe('SemanticStore', () => {
       });
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'filters by entity (object position), source, and minConfidence',
+    Effect.fnUntraced(function* () {
+      const store = yield* SemanticStore;
+      yield* store.putFacts([
+        mk({ id: 'f1' }), // alice travelsTo paris, conf 0.6, source dxn:q:m1
+        mk({
+          id: 'f2',
+          valence: { factuality: 'PS+', polarity: '+', confidence: 0.3 },
+          attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
+        }),
+      ]);
+
+      const byObject = yield* store.query({ entity: 'paris' }); // both have object paris
+      const bySource = yield* store.query({ source: 'dxn:q:m1' }); // only f1
+      const confident = yield* store.query({ minConfidence: 0.5 }); // only f1 (0.6 ≥ 0.5)
+
+      yield* Effect.sync(() => {
+        if (byObject.length !== 2) {
+          throw new Error(`entity(object) expected 2, got ${byObject.length}`);
+        }
+        if (bySource.length !== 1) {
+          throw new Error(`source expected 1, got ${bySource.length}`);
+        }
+        if (confident.length !== 1 || confident[0].valence.confidence !== 0.6) {
+          throw new Error(`minConfidence expected 1 (0.6), got ${confident.length}`);
+        }
+      });
+    }, Effect.provide(TestLayer)),
+  );
 });
