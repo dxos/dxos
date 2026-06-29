@@ -4,7 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type SemanticIndexError, SemanticStore, type Type as SemanticType } from '@dxos/semantic-index';
+import {
+  type SemanticIndexError,
+  type SemanticQuery,
+  SemanticStore,
+  type Type as SemanticType,
+} from '@dxos/semantic-index';
 
 /** A topic discussed across the corpus, ranked by reach (distinct agents) then volume. */
 export type Topic = {
@@ -84,4 +89,31 @@ export const extractTopics = (options?: TopicOptions): Effect.Effect<TopicReport
       .slice(0, limit);
 
     return { topics, factCount: facts.length };
+  });
+
+/** A single extracted fact flattened for display. */
+export type FactLine = {
+  readonly subject: string;
+  readonly predicate: string;
+  readonly object: string;
+  /** Attributed agent (resolved sender token), if any. */
+  readonly agent?: string;
+  /** Source DXN the fact was extracted from. */
+  readonly source: string;
+};
+
+const termValue = (term: SemanticType.Term): string => ('entity' in term ? term.entity : term.literal);
+
+/** List the stored facts (optionally filtered) as flat display lines — for inspection / demos. */
+export const listFacts = (query: SemanticQuery = {}): Effect.Effect<FactLine[], SemanticIndexError, SemanticStore> =>
+  Effect.gen(function* () {
+    const store = yield* SemanticStore;
+    const facts = yield* store.query(query);
+    return facts.map((fact) => ({
+      subject: termValue(fact.assertion.subject),
+      predicate: fact.assertion.predicate,
+      object: termValue(fact.assertion.object),
+      ...(fact.attribution.agent ? { agent: fact.attribution.agent } : {}),
+      source: fact.attribution.source,
+    }));
   });

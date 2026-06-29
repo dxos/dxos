@@ -13,6 +13,7 @@ import {
   type Stage,
   type Type,
   extractTopics,
+  listFacts,
   makeAgentProfileStage,
   makeExtractFactsStage,
   run,
@@ -78,13 +79,17 @@ describe('DiscordSource live crawl', () => {
       const stages: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
       const layer = Layer.merge(discordSourceLayer(token!), servicesLayer);
 
-      const { summary, agents, report } = await EffectEx.runPromise(
+      // Set DISCORD_LIST_FACTS=1 to dump every extracted fact after processing.
+      const dumpFacts = Boolean(process.env.DISCORD_LIST_FACTS);
+
+      const { summary, agents, report, facts } = await EffectEx.runPromise(
         Effect.gen(function* () {
           const summary = yield* run(config, stages);
           const registry = yield* AgentRegistry;
           const agents = yield* registry.list();
           const report = yield* extractTopics({ limit: 15 });
-          return { summary, agents, report };
+          const facts = dumpFacts ? yield* listFacts() : [];
+          return { summary, agents, report, facts };
         }).pipe(Effect.provide(layer)),
       );
 
@@ -94,6 +99,12 @@ describe('DiscordSource live crawl', () => {
       );
       for (const topic of report.topics) {
         console.log(`  ${topic.label}  (agents ${topic.agents}, mentions ${topic.mentions})`);
+      }
+      if (dumpFacts) {
+        console.log(`\nFacts (${facts.length}):`);
+        for (const fact of facts) {
+          console.log(`  ${fact.agent ?? '?'}  ${fact.subject} —${fact.predicate}→ ${fact.object}   (${fact.source})`);
+        }
       }
 
       // The run always completes cleanly; inaccessible channels are skipped, not fatal.
