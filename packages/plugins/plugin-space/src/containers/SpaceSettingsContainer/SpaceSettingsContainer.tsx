@@ -231,8 +231,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             </Form.Row>
           </Form.Section>
 
-          <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
-            {!personal && (
+          {!personal && (
+            <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
               <Form.Row label={t('delete-space.title')} description={t('delete-space.description')}>
                 <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
                   <Dialog.Trigger asChild>
@@ -266,8 +266,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Dialog.Portal>
                 </Dialog.Root>
               </Form.Row>
-            )}
-          </Form.Section>
+            </Form.Section>
+          )}
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
