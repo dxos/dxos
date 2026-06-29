@@ -13,14 +13,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAudioFile, useRecordingPipeline } from '@dxos/react-ui-transcription';
+import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
+import { Transcription, useAudioFile, useRecordingPipeline } from '@dxos/react-ui-transcription';
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators, useStoryMessageModel } from './testing';
-import { TranscriptionStory } from './TranscriptionStory';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
@@ -45,9 +45,16 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
       }
     };
   }, [uploadedUrl]);
-  const handleUpload = useCallback((file: File) => {
-    setRunning(false);
-    setUploadedUrl(URL.createObjectURL(file));
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleFileChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setRunning(false);
+      setUploadedUrl(URL.createObjectURL(file));
+    }
+    // Reset so the same file can be re-selected.
+    event.target.value = '';
   }, []);
   const { audio, stream, track } = useAudioFile(uploadedUrl ?? audioUrl, audioConstraints);
 
@@ -95,22 +102,46 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
 
   const stages = useMemo(() => [makeCorrectionStage()], []);
   useRecordingPipeline({
+    config: STREAMING_TRANSCRIBE_CONFIG,
     active: running,
     track,
     stages,
     commit,
-    transcribeConfig: STREAMING_TRANSCRIBE_CONFIG,
   });
 
   return (
-    <TranscriptionStory
-      model={model}
-      audioRef={audioRef}
-      disabled={!stream}
-      running={running}
-      onRunningChange={setRunning}
-      onUpload={handleUpload}
-    />
+    <>
+      <audio ref={audioRef} autoPlay />
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <IconButton
+              iconOnly
+              disabled={!stream}
+              icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+              label={running ? 'Pause' : 'Play'}
+              onClick={() => setRunning((value) => !value)}
+            />
+            <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
+            <IconButton
+              iconOnly
+              icon='ph--upload--regular'
+              label='Upload audio'
+              onClick={() => fileInputRef.current?.click()}
+            />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollContainer.Root pin>
+            <ScrollContainer.Content>
+              <ScrollContainer.Viewport>
+                <Transcription model={model} />
+              </ScrollContainer.Viewport>
+            </ScrollContainer.Content>
+          </ScrollContainer.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </>
   );
 };
 
