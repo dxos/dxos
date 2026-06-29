@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { keySymbols, Keyboard } from '@dxos/keyboard';
+import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

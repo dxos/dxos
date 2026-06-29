@@ -14,7 +14,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveSkills, useSkillHandlers, useSkills, useContextObjects, useFilteredTypes } from '#hooks';
+import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, type ChatPresetProps } from '#types';
 

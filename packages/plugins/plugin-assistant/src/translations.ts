@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Skill, Instructions } from '@dxos/compute';
+import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
@@ -129,6 +129,17 @@ export const translations: Resource[] = [
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
         'microphone.button': 'Click to speak',
+        'recording.placeholder': 'Recording…',
+        'stop-recording.label': 'Stop recording',
+        'hold-to-record.label': 'Hold to record',
+        'start-recording.label': 'Start recording',
+        'recording-options.label': 'Recording options',
+        'record-mode.label': 'Record mode',
+        'record-mode.toggle.label': 'Toggle',
+        'record-mode.hold.label': 'Hold (push-to-talk)',
+        'audio-device.label': 'Microphone',
+        'audio-device.default.label': 'System default',
+        'settings.entity-extraction.label': 'Entity extraction',
         'cancel-processing.button': 'Stop processing',
 
         'options.skills.title': 'Skills',

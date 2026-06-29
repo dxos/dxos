@@ -5,7 +5,7 @@
 import { format, intervalToDuration } from 'date-fns';
 import React, { type MouseEvent, useCallback, useRef } from 'react';
 
-import { Obj, type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import {
@@ -284,7 +284,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
         {tags.map((tag) => (
           <Tag
             key={tag.id}
-            palette={toHue(tag.hue)}
+            hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
             onClick={
               onTagClick
@@ -349,4 +349,4 @@ export const Row = {
   Star: RowStar,
 };
 
-export type { RowDateProps, RowRefProps, RowPersonProps, RowTagsProps, RowStarProps };
+export type { RowDateProps, RowPersonProps, RowRefProps, RowStarProps, RowTagsProps };

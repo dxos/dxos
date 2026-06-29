@@ -10,14 +10,14 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
+import { AiService, ModelName, OpaqueToolkit } from '@dxos/ai';
 import {
   AiSession,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Template, Trace, Operation } from '@dxos/compute';
+import { Operation, Template, Trace } from '@dxos/compute';
 import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

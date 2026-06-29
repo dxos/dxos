@@ -13,7 +13,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { HeyGenProvider, type GenerationOption, type GenerationProvider } from '#services';
+import { type GenerationOption, type GenerationProvider, HeyGenProvider } from '#services';
 import { type Generation, GeneratorCapabilities } from '#types';
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';

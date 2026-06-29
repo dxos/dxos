@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.text', '0.1.0'))(
   Schema.Struct({

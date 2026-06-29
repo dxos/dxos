@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 
 import { OperationHandler, Templates } from '#capabilities';

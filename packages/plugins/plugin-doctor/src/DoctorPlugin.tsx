@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, SkillDefinition, DiagnosticProviders, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, DiagnosticProviders, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 

@@ -10,11 +10,11 @@ import * as fs from 'node:fs/promises';
 
 import { CommandConfig } from '@dxos/cli-util';
 import {
+  DEFAULT_PROFILE,
   DX_CACHE,
   DX_CONFIG,
   DX_DATA,
   DX_STATE,
-  DEFAULT_PROFILE,
   getProfileConfigPath,
   getProfilePath,
 } from '@dxos/client-protocol';

@@ -17,7 +17,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
-import { withLayout, Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';

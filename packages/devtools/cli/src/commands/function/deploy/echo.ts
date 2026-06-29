@@ -11,7 +11,7 @@ import path from 'node:path';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig } from '@dxos/cli-util';
 import { type Space } from '@dxos/client/echo';
-import { Script, Operation } from '@dxos/compute';
+import { Operation, Script } from '@dxos/compute';
 import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';

@@ -6,12 +6,12 @@ import { describe, test } from 'vitest';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import {
-  AgentSkillHandlers,
   AgentHandlers,
+  AgentSkillHandlers,
   AgentWizardHandlers,
-  SkillManagerHandlers,
   DatabaseHandlers,
   DelegationHandlers,
+  SkillManagerHandlers,
   WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';

@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { type KeyHandler, Keyboard } from './keyboard';
+import { Keyboard, type KeyHandler } from './keyboard';
 
 const contexts = ['/', '/space/1', '/space/2', '/space/2/a', '/space/2/b'];
 

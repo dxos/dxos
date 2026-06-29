@@ -3,7 +3,7 @@
 // Copyright 2024 Observable, Inc.
 //
 
-import { curveBumpX, link as d3Link, select, tree as d3Tree } from 'd3';
+import { curveBumpX, link as d3Link, tree as d3Tree, select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';

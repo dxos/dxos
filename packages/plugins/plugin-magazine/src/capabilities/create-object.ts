@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '@dxos/react-ui-form';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
 
 import { CreateSubscription, FeedOperation, Magazine, Subscription } from '#types';
 

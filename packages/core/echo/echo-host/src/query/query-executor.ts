@@ -19,7 +19,7 @@ import {
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { EffectEx, type RuntimeProvider } from '@dxos/effect';
-import { EscapedPropPath, type IndexEngine, type EntityMeta, type ReverseRef } from '@dxos/index-core';
+import { type EntityMeta, EscapedPropPath, type IndexEngine, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

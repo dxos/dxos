@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Skill, Instructions } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Filter, Ref } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, JsonSchema, Obj, Ref, Type, Format } from '@dxos/echo';
+import { Annotation, DXN, Format, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import * as Skill from './Skill';

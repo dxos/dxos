@@ -11,8 +11,8 @@ import {
   DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  STATUS_TIMEOUT,
   SpaceProperties,
+  STATUS_TIMEOUT,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';

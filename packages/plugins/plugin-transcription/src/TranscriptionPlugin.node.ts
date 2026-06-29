@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Transcript } from '@dxos/types';
 
-import { SkillDefinition, OperationHandler, TextContent } from '#capabilities';
+import { OperationHandler, SkillDefinition, TextContent } from '#capabilities';
 import { meta } from '#meta';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(

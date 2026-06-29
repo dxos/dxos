@@ -38,18 +38,18 @@ export const Mosaic = {
 };
 
 export type {
-  MosaicRootProps,
   MosaicContainerProps,
-  MosaicDragHandleProps,
   MosaicContainerState,
-  MosaicScrollController,
-  MosaicTileProps,
-  MosaicTileState,
-  MosaicResizeHandleProps,
-  MosaicPlaceholderProps,
+  MosaicDragHandleProps,
   MosaicDropIndicatorProps,
+  MosaicPlaceholderProps,
+  MosaicResizeHandleProps,
+  MosaicRootProps,
+  MosaicScrollController,
   MosaicStackProps,
   MosaicStackTileComponent,
+  MosaicTileProps,
+  MosaicTileState,
 };
 
 export {

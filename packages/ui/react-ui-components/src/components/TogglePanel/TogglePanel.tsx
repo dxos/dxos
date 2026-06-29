@@ -169,9 +169,9 @@ export const TogglePanel = {
 };
 
 export type {
-  RootProps as TogglePanelRootProps,
+  BodyProps as TogglePanelBodyProps,
   ContentProps as TogglePanelContentProps,
   HeaderProps as TogglePanelHeaderProps,
-  BodyProps as TogglePanelBodyProps,
+  RootProps as TogglePanelRootProps,
   ViewportProps as TogglePanelViewportProps,
 };

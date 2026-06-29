@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ArcRotateCamera, type HighlightLayer, type Mesh, type Scene as BabylonScene } from '@babylonjs/core';
+import { type ArcRotateCamera, type Scene as BabylonScene, type HighlightLayer, type Mesh } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
-import { type Scene, type Model } from '#types';
+import { type Model, type Scene } from '#types';
 
 import { type getManifold } from '../engine';
 import { type EditorState } from './editor-state';

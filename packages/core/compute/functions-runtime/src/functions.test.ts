@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
-import { Skill, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';

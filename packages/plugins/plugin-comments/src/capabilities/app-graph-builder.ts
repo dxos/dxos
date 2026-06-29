@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 import { Position } from '@dxos/util';
 

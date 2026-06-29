@@ -137,4 +137,4 @@ export const PipelineComponent = {
 
 export { usePipeline };
 
-export type { ItemProps, PipelineContextValue, PipelineRootProps, PipelineContentProps, PipelineColumnsProps };
+export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineContextValue, PipelineRootProps };

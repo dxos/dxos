@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Skill, Instructions } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { type Database, Entity, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { Form } from '@dxos/react-ui-form';

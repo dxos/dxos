@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Event, Message } from '@dxos/types';
 
-import { SkillDefinition, CreateObject, OperationHandler } from '#capabilities';
+import { CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
 

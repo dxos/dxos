@@ -200,4 +200,4 @@ export const Editor = {
   UI,
 };
 
-export type { EditorRootProps, EditorController };
+export type { EditorController, EditorRootProps };

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 export class Profile extends Type.makeObject<Profile>(DXN.make('org.dxos.type.sidekick.profile', '0.1.0'))(
   Schema.Struct({

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type PointerInfo, PointerEventTypes } from '@babylonjs/core';
+import { PointerEventTypes, type PointerInfo } from '@babylonjs/core';
 
 import { log } from '@dxos/log';
 

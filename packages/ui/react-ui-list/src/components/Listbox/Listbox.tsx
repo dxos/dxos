@@ -384,10 +384,10 @@ export { Listbox, useListboxSelection };
 
 export type {
   ListItemContentProps as ItemContentProps,
+  ContentProps as ListboxContentProps,
+  IndicatorProps as ListboxIndicatorProps,
+  ItemLabelProps as ListboxItemLabelProps,
+  ItemProps as ListboxItemProps,
   RootProps as ListboxRootProps,
   ViewportProps as ListboxViewportProps,
-  ContentProps as ListboxContentProps,
-  ItemProps as ListboxItemProps,
-  ItemLabelProps as ListboxItemLabelProps,
-  IndicatorProps as ListboxIndicatorProps,
 };

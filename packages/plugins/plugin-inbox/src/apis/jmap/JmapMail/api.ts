@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import { JmapApiError } from '../../../errors';
 import { MAIL_CAPABILITIES, SUBMISSION_CAPABILITIES, getMethodResponse, jmapRequest } from '../Jmap/api';
 import {
+  type EmailAddress,
   EmailGetResult,
   EmailQueryResult,
   EmailSetResult,
   EmailSubmissionSetResult,
   IdentityGetResult,
   MailboxGetResult,
-  type EmailAddress,
 } from './types';
 
 /** Resolved per-request context: the session `apiUrl` and the mail account id. */

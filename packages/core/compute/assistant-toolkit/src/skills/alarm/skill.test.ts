@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';

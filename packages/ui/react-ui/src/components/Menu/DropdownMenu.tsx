@@ -15,8 +15,8 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type ComponentRef,
   type FC,
   PropsWithChildren,
@@ -652,22 +652,22 @@ const useDropdownMenuMenuScope: (scope?: DropdownMenuScope) => any = useMenuScop
 export { createDropdownMenuScope, useDropdownMenuContext, useDropdownMenuMenuScope };
 
 export type {
-  DropdownMenuRootProps,
-  DropdownMenuTriggerProps,
-  DropdownMenuVirtualTriggerProps,
-  DropdownMenuPortalProps,
-  DropdownMenuContentProps,
-  DropdownMenuViewportProps,
-  DropdownMenuGroupProps,
-  DropdownMenuLabelProps,
-  DropdownMenuItemProps,
+  DropdownMenuArrowProps,
   DropdownMenuCheckboxItemProps,
+  DropdownMenuContentProps,
+  DropdownMenuGroupProps,
+  DropdownMenuItemIndicatorProps,
+  DropdownMenuItemProps,
+  DropdownMenuLabelProps,
+  DropdownMenuPortalProps,
   DropdownMenuRadioGroupProps,
   DropdownMenuRadioItemProps,
-  DropdownMenuItemIndicatorProps,
+  DropdownMenuRootProps,
   DropdownMenuSeparatorProps,
-  DropdownMenuArrowProps,
+  DropdownMenuSubContentProps,
   DropdownMenuSubProps,
   DropdownMenuSubTriggerProps,
-  DropdownMenuSubContentProps,
+  DropdownMenuTriggerProps,
+  DropdownMenuViewportProps,
+  DropdownMenuVirtualTriggerProps,
 };

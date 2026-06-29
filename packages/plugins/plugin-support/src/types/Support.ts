@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 export const SKILL_KEY = 'org.dxos.skill.support';

@@ -176,12 +176,12 @@ export const Editor = {
 };
 
 export type {
+  EditorContentProps,
   EditorController,
   EditorRootProps,
-  EditorContentProps,
-  EditorViewProps,
   EditorToolbarProps,
   EditorToolbarState,
+  EditorViewProps,
 };
 
 export { createEditorController };

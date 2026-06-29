@@ -15,6 +15,11 @@ describe('correctText', () => {
     expect(correctText('done!')).toEqual('Done!');
   });
 
+  test('replaces a trailing comma rather than appending (no "Years,.")', ({ expect }) => {
+    expect(correctText('Years,')).toEqual('Years.');
+    expect(correctText('well, anyway,')).toEqual('Well, anyway.');
+  });
+
   test('empty input stays empty', ({ expect }) => {
     expect(correctText('   ')).toEqual('');
   });

@@ -13,7 +13,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
-import { BookmarkOperation, type Bookmark } from '#types';
+import { type Bookmark, BookmarkOperation } from '#types';
 
 import { useImageLoads } from '../useImageLoads';
 

@@ -11,12 +11,12 @@ import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
-  NavigationResolver,
-  RoutineTemplates,
-  SkillDefinition,
   CreateObject,
+  NavigationResolver,
   OperationHandler,
   ReactSurface,
+  RoutineTemplates,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

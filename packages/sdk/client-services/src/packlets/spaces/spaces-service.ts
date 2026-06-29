@@ -34,6 +34,7 @@ import {
   type ContactAdmission,
   type CreateEpochRequest,
   type CreateEpochResponse,
+  type CreateSpaceRequest,
   type ExportSpaceRequest,
   type ExportSpaceResponse,
   type ImportSpaceRequest,
@@ -46,11 +47,10 @@ import {
   type Space,
   SpaceArchive,
   SpaceMember,
-  SpaceState,
   type SpacesService,
+  SpaceState,
   type SubscribeMessagesRequest,
   type UpdateMemberRoleRequest,
-  type CreateSpaceRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -64,9 +64,9 @@ import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
   extractSpaceArchive,
+  objJsonToObjectStructure,
   readSerializedSpaceArchive,
   writeSerializedSpaceArchive,
-  objJsonToObjectStructure,
 } from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';

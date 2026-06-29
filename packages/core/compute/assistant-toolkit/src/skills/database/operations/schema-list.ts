@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Instructions, Skill, Operation } from '@dxos/compute';
+import { Instructions, Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Query, Scope, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';

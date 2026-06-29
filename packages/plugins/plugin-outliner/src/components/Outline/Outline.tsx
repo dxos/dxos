@@ -7,8 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
-  type RefObject,
   type PropsWithChildren,
+  type RefObject,
   forwardRef,
   useCallback,
   useImperativeHandle,
@@ -196,4 +196,4 @@ export const Outline = {
   Content: OutlineContent,
 };
 
-export type { OutlineController, OutlineRootProps, OutlineContentProps };
+export type { OutlineContentProps, OutlineController, OutlineRootProps };

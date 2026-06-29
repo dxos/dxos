@@ -5,7 +5,7 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
-import { useSafeCollisionPadding, useElevationContext, useThemeContext } from '../../hooks';
+import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';
@@ -222,22 +222,22 @@ export const Select = {
 };
 
 export type {
-  SelectRootProps,
-  SelectTriggerProps,
-  SelectTriggerButtonProps,
-  SelectValueProps,
-  SelectIconProps,
-  SelectPortalProps,
+  SelectArrowProps,
   SelectContentProps,
-  SelectScrollUpButtonProps,
-  SelectScrollDownButtonProps,
-  SelectViewportProps,
+  SelectGroupProps,
+  SelectIconProps,
+  SelectItemIndicatorProps,
   SelectItemProps,
   SelectItemTextProps,
-  SelectItemIndicatorProps,
-  SelectOptionProps,
-  SelectGroupProps,
   SelectLabelProps,
+  SelectOptionProps,
+  SelectPortalProps,
+  SelectRootProps,
+  SelectScrollDownButtonProps,
+  SelectScrollUpButtonProps,
   SelectSeparatorProps,
-  SelectArrowProps,
+  SelectTriggerButtonProps,
+  SelectTriggerProps,
+  SelectValueProps,
+  SelectViewportProps,
 };

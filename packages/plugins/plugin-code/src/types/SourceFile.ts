@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { meta } from '../meta';

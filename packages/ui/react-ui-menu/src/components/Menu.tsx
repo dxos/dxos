@@ -5,7 +5,7 @@
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { createContext, type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, createContext, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
@@ -334,10 +334,10 @@ export { Menu, menuContextDefaults, useMenu, useMenuItems, useMenuScoped };
 export type { MenuContentProps, MenuRootProps, MenuScopedProps };
 
 export type {
-  ToolbarMenuProps,
   ToolbarMenuActionGroupProperties,
   ToolbarMenuActionGroupProps,
   ToolbarMenuActionProps,
   ToolbarMenuDropdownMenuActionGroup,
+  ToolbarMenuProps,
   ToolbarMenuToggleGroupActionGroup,
 } from './ToolbarMenu';

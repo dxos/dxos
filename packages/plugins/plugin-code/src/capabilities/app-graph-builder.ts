@@ -16,9 +16,9 @@ import { meta } from '#meta';
 import { CodeProject } from '#types';
 
 import {
-  CODE_PROJECTS_SECTION_TYPE,
   CODE_PROJECT_BUILD_TYPE,
   CODE_PROJECT_SPEC_TYPE,
+  CODE_PROJECTS_SECTION_TYPE,
   PLUGIN_SPEC_TYPE,
 } from '../constants';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';

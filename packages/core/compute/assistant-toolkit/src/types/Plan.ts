@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Process } from '@dxos/compute';
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 export const TaskId = Schema.String.pipe(Schema.brand('@dxos/assistant-toolkit/TaskId'));
 export type TaskId = Schema.Schema.Type<typeof TaskId>;

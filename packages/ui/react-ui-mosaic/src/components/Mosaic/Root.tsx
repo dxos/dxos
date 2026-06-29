@@ -285,4 +285,4 @@ MosaicRoot.displayName = MOSAIC_ROOT_NAME;
 
 export { MosaicRoot, useMosaicRootContext };
 
-export type { MosaicRootProps, MosaicDraggingState };
+export type { MosaicDraggingState, MosaicRootProps };

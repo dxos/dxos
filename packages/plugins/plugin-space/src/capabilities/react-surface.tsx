@@ -34,6 +34,7 @@ import {
   RecordArticle,
   RelatedArticle,
   RenamePopover,
+  type RenameSubject,
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
@@ -44,7 +45,6 @@ import {
   SyncStatus,
   TypeCollectionArticle,
   ViewEditor,
-  type RenameSubject,
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -52,9 +52,9 @@ import {
   HueAnnotationId,
   IconAnnotationId,
   Settings,
+  SPACE_HOME_NODE_TYPE,
   SpaceCapabilities,
   SpaceHomeContent,
-  SPACE_HOME_NODE_TYPE,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';

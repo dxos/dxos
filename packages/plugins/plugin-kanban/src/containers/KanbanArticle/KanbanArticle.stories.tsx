@@ -22,7 +22,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useType, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useSpaces, useType } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';

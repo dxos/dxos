@@ -1,20 +1,48 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
   "categories": {},
-  "options": {
-    "typeAware": true,
-    "denyWarnings": true
+  "env": {
+    "builtin": true
   },
+  "globals": {},
+  "ignorePatterns": [
+    "*.d.ts",
+    "**/*.astro",
+    "**/tailwind.ts",
+    "**/gen/*",
+    "**/typings/**",
+    ".idea/**",
+    ".vscode/**",
+    ".claude/**",
+    "templates/**",
+    "scripts/**",
+    "docs/legacy/**",
+    "docs/public/webflow/**",
+    "docs/scripts/**"
+  ],
+  "jsPlugins": [
+    "@dxos/eslint-plugin-rules",
+    "eslint-plugin-unused-imports",
+    "eslint-plugin-perfectionist",
+    {
+      "name": "import-x-js",
+      "specifier": "eslint-plugin-import-x"
+    }
+  ],
+  "options": {
+    "denyWarnings": true,
+    "typeAware": true
+  },
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
   "rules": {
     "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
-    "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
     "eslint/no-constant-binary-expression": "off",
@@ -28,9 +56,7 @@
     "eslint/no-useless-escape": "off",
     "eslint/no-useless-rename": "off",
     "eslint/require-yield": "off",
-    "jsdoc/check-tag-names": "off",
-    "jsdoc/no-defaults": "off",
-    "jsdoc/require-yields": "off",
+    "import-x-js/order": "off",
     "jest/expect-expect": "off",
     "jest/no-conditional-expect": "off",
     "jest/no-disabled-tests": "off",
@@ -41,8 +67,47 @@
     "jest/valid-describe-callback": "off",
     "jest/valid-expect": "off",
     "jest/valid-title": "off",
-    "no-unused-vars": "off", // TODO(burdon): Fix no-unused-imports.
+    "jsdoc/check-tag-names": "off",
+    "jsdoc/no-defaults": "off",
+    "jsdoc/require-yields": "off",
+    "no-unused-vars": "off",
     "oxc/only-used-in-recursion": "off",
+    "perfectionist/sort-named-exports": [
+      "warn",
+      {
+        "customGroups": [
+          {
+            "elementNamePattern": "^[A-Z][A-Za-z0-9_]*$",
+            "groupName": "capitalized"
+          },
+          {
+            "elementNamePattern": "^[a-z][A-Za-z0-9_]*$",
+            "groupName": "lowercase"
+          }
+        ],
+        "groups": ["capitalized", "lowercase"],
+        "order": "asc",
+        "type": "natural"
+      }
+    ],
+    "perfectionist/sort-named-imports": [
+      "warn",
+      {
+        "customGroups": [
+          {
+            "elementNamePattern": "^[A-Z][A-Za-z0-9_]*$",
+            "groupName": "capitalized"
+          },
+          {
+            "elementNamePattern": "^[a-z][A-Za-z0-9_]*$",
+            "groupName": "lowercase"
+          }
+        ],
+        "groups": ["capitalized", "lowercase"],
+        "order": "asc",
+        "type": "natural"
+      }
+    ],
     "promise/no-callback-in-promise": "off",
     "promise/valid-params": "off",
     "react-hooks/exhaustive-deps": "off",
@@ -71,59 +136,34 @@
     "unicorn/no-useless-fallback-in-spread": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
-    "vitest/require-mock-type-parameters": "off",
-    "vitest/warn-todo": "off",
     "unused-imports/no-unused-imports": "warn",
-    "import-x-js/order": "off"
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/warn-todo": "off"
   },
   "settings": {
+    "jsdoc": {
+      "augmentsExtendsReplacesDocs": false,
+      "exemptDestructuredRootsFromChecks": false,
+      "ignoreInternal": false,
+      "ignorePrivate": false,
+      "ignoreReplacesDocs": true,
+      "implementsReplacesDocs": false,
+      "overrideReplacesDocs": true,
+      "tagNamePreference": {}
+    },
     "jsx-a11y": {
-      "polymorphicPropName": null,
+      "attributes": {},
       "components": {},
-      "attributes": {}
+      "polymorphicPropName": null
     },
     "react": {
+      "componentWrapperFunctions": [],
       "formComponents": [],
       "linkComponents": [],
-      "version": null,
-      "componentWrapperFunctions": []
-    },
-    "jsdoc": {
-      "ignorePrivate": false,
-      "ignoreInternal": false,
-      "ignoreReplacesDocs": true,
-      "overrideReplacesDocs": true,
-      "augmentsExtendsReplacesDocs": false,
-      "implementsReplacesDocs": false,
-      "exemptDestructuredRootsFromChecks": false,
-      "tagNamePreference": {}
+      "version": null
     },
     "vitest": {
       "typecheck": false
     }
-  },
-  "env": {
-    "builtin": true
-  },
-  "globals": {},
-  "ignorePatterns": [
-    "*.d.ts",
-    "**/*.astro",
-    "**/tailwind.ts",
-    "**/gen/*",
-    "**/typings/**",
-    ".idea/**",
-    ".vscode/**",
-    ".claude/**",
-    "templates/**",
-    "scripts/**",
-    "docs/legacy/**",
-    "docs/public/webflow/**",
-    "docs/scripts/**"
-  ],
-  "jsPlugins": [
-    "@dxos/eslint-plugin-rules",
-    "eslint-plugin-unused-imports",
-    { "name": "import-x-js", "specifier": "eslint-plugin-import-x" }
-  ]
+  }
 }

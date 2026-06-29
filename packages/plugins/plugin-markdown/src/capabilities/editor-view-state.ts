@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { type ViewStateManager, defineViewState } from '@dxos/react-ui-attention';
-import { type EditorStateStore, EditorSelectionStateSchema } from '@dxos/ui-editor';
+import { EditorSelectionStateSchema, type EditorStateStore } from '@dxos/ui-editor';
 
 /** Per-document editor scroll/caret state, persisted to localStorage on this device. */
 export const editorViewStateAspect = defineViewState({

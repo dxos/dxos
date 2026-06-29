@@ -15,9 +15,9 @@ import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
+  type AnyEntity,
   ATTR_PARENT,
   ATTR_TYPE,
-  type AnyEntity,
   EntityKind,
   KindId,
   ParentId,

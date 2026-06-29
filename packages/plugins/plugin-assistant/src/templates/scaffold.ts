@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Skill, Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Routine } from '@dxos/plugin-routine/types';
 

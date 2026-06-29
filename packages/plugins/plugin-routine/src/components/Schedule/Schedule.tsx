@@ -6,12 +6,12 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 
 import { invariant } from '@dxos/invariant';
 import {
-  composable,
-  composableProps,
   Input,
   ThemedClassName,
   ToggleGroup,
   ToggleGroupItem,
+  composable,
+  composableProps,
   useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

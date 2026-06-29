@@ -15,7 +15,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { Routine } from '#types';
 
-import { routinesForObject, connectedRoutinesQuery } from './routines-for-object';
+import { connectedRoutinesQuery, routinesForObject } from './routines-for-object';
 
 // A minimal feed-annotated host (like a mailbox): an object holding a `feed` ref.
 const FeedHost = Type.makeObject(DXN.make('org.dxos.test.feedHost', '0.1.0'))(

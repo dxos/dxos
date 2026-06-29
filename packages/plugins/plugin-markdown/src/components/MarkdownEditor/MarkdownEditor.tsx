@@ -294,7 +294,7 @@ export const MarkdownEditor = {
   Blocks: MarkdownEditorBlocks,
 };
 
-export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+export type { MarkdownEditorBlocksProps, MarkdownEditorContentProps, MarkdownEditorToolbarProps };
 
 /** @deprecated Use `MarkdownEditorProviderProps`. */
 export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

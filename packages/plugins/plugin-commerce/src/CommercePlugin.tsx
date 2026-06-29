@@ -9,7 +9,7 @@ import { TagIndex } from '@dxos/schema';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler, ReactSurface } from './capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Provider, Result, Search } from './types';

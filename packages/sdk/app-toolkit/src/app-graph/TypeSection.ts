@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { isSpace, type Space } from '@dxos/client/echo';
-import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
+import { Annotation, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
-import { inferObjectOrder, Position } from '@dxos/util';
+import { Position, inferObjectOrder } from '@dxos/util';
 
 import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';

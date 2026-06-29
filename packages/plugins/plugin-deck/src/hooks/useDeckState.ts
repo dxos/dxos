@@ -11,9 +11,9 @@ import { invariant } from '@dxos/invariant';
 
 import {
   DeckCapabilities,
-  type EphemeralDeckState,
   type DeckPluginState,
   type DeckState,
+  type EphemeralDeckState,
   type StoredDeckState,
 } from '#types';
 

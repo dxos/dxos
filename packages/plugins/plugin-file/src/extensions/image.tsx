@@ -16,7 +16,7 @@ import { defaultTx } from '@dxos/react-ui';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
-import { FileCapabilities, File } from '#types';
+import { File, FileCapabilities } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { keyPair, validateKeyPair, sign, verify, randomBytes, discoveryKey, default } from 'hypercore-crypto';
+export { default, discoveryKey, keyPair, randomBytes, sign, validateKeyPair, verify } from 'hypercore-crypto';

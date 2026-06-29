@@ -10,7 +10,7 @@ import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import { MetaId, type EntityMeta, getSchemaURI } from './internal';
+import { type EntityMeta, MetaId, getSchemaURI } from './internal';
 import * as Type from './Type';
 
 /**

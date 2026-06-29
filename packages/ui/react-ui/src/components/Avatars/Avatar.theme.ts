@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { mx, getSize, getHeight } from '@dxos/ui-theme';
+import { getHeight, getSize, mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Size, type Theme } from '@dxos/ui-types';
 
 export type AvatarStyleProps = Partial<{

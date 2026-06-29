@@ -15,8 +15,8 @@ import React, {
   type ComponentPropsWithRef,
   type ElementType,
   type KeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
   type PropsWithChildren,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -374,6 +374,6 @@ export const Picker = {
   Item: PickerItem,
 };
 
-export type { PickerRootProps, PickerInputProps, PickerItemProps };
+export type { PickerInputProps, PickerItemProps, PickerRootProps };
 
 export { usePickerInputContext, usePickerItemContext } from './context';

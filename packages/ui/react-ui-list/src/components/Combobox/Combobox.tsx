@@ -383,14 +383,14 @@ export const Combobox = {
 };
 
 export type {
-  ComboboxRootProps,
-  ComboboxPortalProps,
+  ComboboxArrowProps,
   ComboboxContentProps,
+  ComboboxEmptyProps,
+  ComboboxInputProps,
+  ComboboxItemProps,
+  ComboboxListProps,
+  ComboboxPortalProps,
+  ComboboxRootProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,
-  ComboboxInputProps,
-  ComboboxListProps,
-  ComboboxItemProps,
-  ComboboxArrowProps,
-  ComboboxEmptyProps,
 };

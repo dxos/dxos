@@ -21,7 +21,7 @@ import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { InboxResolver, GoogleCredentials } from '../../../services';
+import { GoogleCredentials, InboxResolver } from '../../../services';
 import { InboxOperation } from '../../../types';
 import { mapGooglePerson } from './mapper';
 

@@ -4,7 +4,7 @@
 
 export * from 'quickjs-emscripten';
 
-import { newVariant, RELEASE_SYNC, newQuickJSWASMModuleFromVariant } from 'quickjs-emscripten';
+import { RELEASE_SYNC, newQuickJSWASMModuleFromVariant, newVariant } from 'quickjs-emscripten';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error - ?url returns a URL resolving to the given asset.
 import wasmLocation from '@jitl/quickjs-wasmfile-release-sync/wasm?url';

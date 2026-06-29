@@ -7,8 +7,8 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   DEFAULT_PROFILE,
-  DXEnv,
   DX_RUNTIME,
+  DXEnv,
   clientServiceBundle,
   getProfilePath,
 } from '@dxos/client-protocol';

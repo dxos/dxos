@@ -26,19 +26,19 @@ import {
 } from '@dxos/types';
 
 import {
+  AppGraphBuilder,
   CreateObject,
   IdentityCreated,
   NavigationHandler,
   NavigationResolver,
   OperationHandler,
-  UndoMappings,
   ReactRoot,
   ReactSurface,
   Repair,
   SpaceSettings,
-  SpaceState,
   SpacesReady,
-  AppGraphBuilder,
+  SpaceState,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

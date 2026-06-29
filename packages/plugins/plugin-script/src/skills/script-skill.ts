@@ -7,14 +7,14 @@ import { trim } from '@dxos/util';
 
 import {
   Create,
-  Read,
-  Update,
   Delete,
   Deploy,
-  Invoke,
   InspectInvocations,
-  QueryDeployedFunctions,
   InstallFunction,
+  Invoke,
+  QueryDeployedFunctions,
+  Read,
+  Update,
 } from './functions';
 
 const SKILL_KEY = 'org.dxos.skill.script';

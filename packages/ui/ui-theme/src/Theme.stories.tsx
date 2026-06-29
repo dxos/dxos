@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
-import { hueShades, hues } from './defs';
+import { hues, hueShades } from './defs';
 import { mx } from './util';
 
 // prettier-ignore

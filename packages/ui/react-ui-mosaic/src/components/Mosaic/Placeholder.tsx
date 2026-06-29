@@ -136,6 +136,6 @@ MosaicDropIndicator.displayName = DROP_INDICATOR_NAME;
 // Exports
 //
 
-export { MosaicPlaceholder, MosaicDropIndicator };
+export { MosaicDropIndicator, MosaicPlaceholder };
 
-export type { MosaicPlaceholderProps, MosaicDropIndicatorProps };
+export type { MosaicDropIndicatorProps, MosaicPlaceholderProps };

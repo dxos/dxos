@@ -10,7 +10,7 @@ import { DXN, EID } from '@dxos/keys';
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
-import { getTypeURI, getTypename } from '../Annotation';
+import { getTypename, getTypeURI } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
 import { MetaId } from '../common/types/model-symbols';

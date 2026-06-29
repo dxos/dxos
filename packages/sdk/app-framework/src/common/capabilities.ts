@@ -13,9 +13,9 @@ import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
+  OperationHandlerSet,
   LayerSpec as LayerSpec$,
   Operation as Operation$,
-  OperationHandlerSet,
   Process as Process$,
   ServiceResolver as ServiceResolver$,
   Trace as Trace$,

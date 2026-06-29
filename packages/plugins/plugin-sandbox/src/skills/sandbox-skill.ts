@@ -6,7 +6,7 @@ import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import * as Sandbox from '../types/Sandbox';
-import { CreateSandbox, Exec, UploadFile, DownloadFile } from './functions';
+import { CreateSandbox, DownloadFile, Exec, UploadFile } from './functions';
 
 const make = () =>
   Skill.make({

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Trace, TriggerEvent, Operation } from '@dxos/compute';
+import { Operation, Trace, TriggerEvent } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 

@@ -548,5 +548,5 @@ const useJoinMachine = (
   });
 };
 
-export type { JoinMachine, JoinState, JoinSend, JoinEvent, JoinMachineContext };
+export type { JoinEvent, JoinMachine, JoinMachineContext, JoinSend, JoinState };
 export { joinMachine, useJoinMachine };

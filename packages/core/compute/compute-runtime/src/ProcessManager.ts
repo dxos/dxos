@@ -30,7 +30,7 @@ import { log } from '@dxos/log';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessManagerService } from './process-manager-service';
-import { ProcessStore, type PersistedProcess } from './process-store';
+import { type PersistedProcess, ProcessStore } from './process-store';
 import { createProcessTraceService } from './process-trace';
 import * as ProcessHandle from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
@@ -38,9 +38,9 @@ import { layer as storageServiceLayer } from './storage-service-layer';
 
 export {
   type ProcessIdGenerator,
-  UUIDProcessIdGenerator,
-  SequentialProcessIdGenerator,
   SequentialProcessIdGenerator as SequentialIdGenerator,
+  SequentialProcessIdGenerator,
+  UUIDProcessIdGenerator,
 } from './process-id';
 
 export { ProcessOperationInvoker };

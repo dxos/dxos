@@ -4,7 +4,7 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineProject, defineConfig } from 'vitest/config';
+import { defineConfig, defineProject } from 'vitest/config';
 
 import { TEST_TAGS } from '../../vitest.tags';
 

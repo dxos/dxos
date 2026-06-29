@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export { type Extension, EditorState } from '@codemirror/state';
+export { EditorState, type Extension } from '@codemirror/state';
 export { EditorView, keymap } from '@codemirror/view';
 export { tags } from '@lezer/highlight';
 

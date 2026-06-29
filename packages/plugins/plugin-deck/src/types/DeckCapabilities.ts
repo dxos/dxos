@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
-import { type EphemeralDeckState, type DeckState, type StoredDeckState } from './schema';
+import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './schema';
 
 export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
   `${meta.profile.key}.capability.settings`,

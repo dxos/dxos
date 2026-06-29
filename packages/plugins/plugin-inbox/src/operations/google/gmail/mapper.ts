@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
-import { resolve, type Resolver } from '@dxos/extractor';
+import { type Resolver, resolve } from '@dxos/extractor';
 import { normalizeText } from '@dxos/markdown';
 import { Message, Person } from '@dxos/types';
 

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export { Game, Player, GameRef, make } from './Game';
+export { Game, GameRef, Player, make } from './Game';
 export * from './types';
-export { loadGame, GameVariantMismatchError } from '../util/load-game';
+export { GameVariantMismatchError, loadGame } from '../util/load-game';
 
 export * as GameCapabilities from './GameCapabilities';

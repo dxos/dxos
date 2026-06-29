@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { Operation, Instructions, Trigger } from '@dxos/compute';
-import { DXN, type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Instructions, Operation, Trigger } from '@dxos/compute';
+import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';

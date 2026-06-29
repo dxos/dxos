@@ -7,12 +7,12 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
   BuildRunState,
   CreateObject,
   OperationHandler,
   ReactSurface,
   Settings as SettingsCapability,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import {
   TicTacToeBoard,
-  computeAiMove,
   checkWin,
+  computeAiMove,
   currentTurn,
   getWinningCells,
   makeBoard,

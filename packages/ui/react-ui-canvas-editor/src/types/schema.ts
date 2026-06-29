@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?

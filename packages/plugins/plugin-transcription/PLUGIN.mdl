@@ -82,7 +82,7 @@ component Transcription
   desc: Read-only CodeMirror editor that renders transcript messages as Markdown with byline headings.
   props:
     transcript?: Transcript
-    model: SerializationModel<Message>
+    model: TranscriptModel<Message>
   slots:
     (none — self-contained editor viewport)
   layout: |
@@ -254,7 +254,7 @@ feat F-4: Transcript Display
 
   req F-4.2:
     when: new messages arrive during live recording
-    then: the SerializationModel is updated and the editor scrolls to show the latest content
+    then: the TranscriptModel is updated and the editor scrolls to show the latest content
 ```
 
 ```mdl

@@ -11,7 +11,7 @@ import { Card, IconButton } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
-import { type MosaicTileProps, Mosaic, useMosaicContainer, Focus } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type SearchResult } from '@dxos/react-ui-search';
 
 //

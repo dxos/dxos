@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
-import { WorkingSetQueryExecutor, type WorkingSetDataProvider } from './working-set-executor';
+import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor';
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 

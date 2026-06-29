@@ -3,7 +3,7 @@
 //
 
 import { init as initCjsLexer, parse as parseCjs } from 'cjs-module-lexer';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
 import { type Plugin } from 'vite';

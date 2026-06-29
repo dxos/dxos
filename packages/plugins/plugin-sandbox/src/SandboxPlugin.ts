@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AccessToken } from '@dxos/types';
 
-import { SkillDefinition, OperationHandler } from '#capabilities';
+import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { Sandbox } from '#types';
 

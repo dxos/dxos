@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TREEGRID_PARENT_OF_SEPARATOR, TREEGRID_PATH_SEPARATOR, Treegrid } from './Treegrid';
+import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR, TREEGRID_PATH_SEPARATOR } from './Treegrid';
 
 random.seed(1234);
 

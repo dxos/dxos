@@ -108,8 +108,8 @@ const TaskListItem = ({ task, space, traceMessages, conversationId }: TaskListIt
             {task.status === 'done' ? 'done' : task.status === 'in-progress' ? 'in progress' : 'to do'}
           </span>
           <span className='truncate flex-1'>{task.title}</span>
-          {task.status === 'in-progress' && <Tag palette='info'>pending</Tag>}
-          {task.agentPid && <Tag palette='info'>{Plan.formatAgentPidTag(task.agentPid)}</Tag>}
+          {task.status === 'in-progress' && <Tag hue='info'>pending</Tag>}
+          {task.agentPid && <Tag hue='info'>{Plan.formatAgentPidTag(task.agentPid)}</Tag>}
         </div>
         {showActivity && agentPid != null && <DelegatedTaskActivity agentPid={agentPid} lines={activityLines} />}
       </div>

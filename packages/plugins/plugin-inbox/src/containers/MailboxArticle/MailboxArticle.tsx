@@ -20,7 +20,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { type MessageStackActionHandler, MessageStack } from '#components';
+import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';

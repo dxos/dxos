@@ -5,17 +5,17 @@
 import { describe, test } from 'vitest';
 
 import {
-  Skill,
   Credential,
   FunctionNotFoundError,
+  Instructions,
   Operation,
   OperationHandlerSet,
   OperationRegistry,
   Process,
   Runnable,
-  Instructions,
   Script,
   ServiceResolver,
+  Skill,
   StorageService,
   Template,
   Trace,

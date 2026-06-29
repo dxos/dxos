@@ -6,7 +6,7 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { describe, expect } from 'vitest';
 
-import { AiSession, AiContext } from '@dxos/assistant';
+import { AiContext, AiSession } from '@dxos/assistant';
 import { Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';

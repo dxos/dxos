@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';

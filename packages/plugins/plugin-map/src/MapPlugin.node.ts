@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, SkillDefinition, CreateObject, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { Map } from '#types';
 

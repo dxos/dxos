@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { TableCard, TableArticle } from '#containers';
+import { TableArticle, TableCard } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

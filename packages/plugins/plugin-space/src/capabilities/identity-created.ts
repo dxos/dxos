@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppAnnotation, AppSpace } from '@dxos/app-toolkit';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';

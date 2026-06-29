@@ -13,11 +13,11 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Feed as Feed$, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Obj, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
 import { Enabled, Feed, Input, TriggerId } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectFeed, selectTrigger } from '../util';
+import { printTrigger, promptForSchemaInput, selectFeed, selectFunction, selectTrigger } from '../util';
 
 export const queue = Command.make(
   'feed',

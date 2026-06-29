@@ -16,7 +16,7 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Skill, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

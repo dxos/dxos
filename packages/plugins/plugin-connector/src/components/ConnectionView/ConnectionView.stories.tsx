@@ -10,7 +10,7 @@ import React, { useCallback } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { initializeIdentity, ClientPlugin } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';

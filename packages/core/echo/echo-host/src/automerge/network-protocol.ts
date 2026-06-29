@@ -11,7 +11,7 @@ import {
   MESSAGE_TYPE_COLLECTION_STATE,
 } from '@dxos/protocols';
 
-export { type CollectionStateMessage, type CollectionQueryMessage };
+export { type CollectionQueryMessage, type CollectionStateMessage };
 
 export const isCollectionQueryMessage = (message: Message): message is CollectionQueryMessage =>
   message.type === MESSAGE_TYPE_COLLECTION_QUERY;

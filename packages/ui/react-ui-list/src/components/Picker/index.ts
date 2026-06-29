@@ -3,4 +3,4 @@
 //
 
 export { Picker, usePickerInputContext, usePickerItemContext } from './Picker';
-export type { PickerRootProps, PickerInputProps, PickerItemProps } from './Picker';
+export type { PickerInputProps, PickerItemProps, PickerRootProps } from './Picker';

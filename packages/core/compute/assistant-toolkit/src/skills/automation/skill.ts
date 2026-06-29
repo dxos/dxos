@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Trigger, Operation } from '@dxos/compute';
+import { Operation, Skill, Trigger } from '@dxos/compute';
 import { Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';

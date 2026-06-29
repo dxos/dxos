@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { beforeEach, afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';

@@ -6,8 +6,8 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { RunInstructions, Chat } from '@dxos/assistant-toolkit';
-import { Operation, Instructions, ServiceResolver } from '@dxos/compute';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
+import { Instructions, Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';

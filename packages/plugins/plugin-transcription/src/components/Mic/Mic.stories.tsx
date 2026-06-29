@@ -6,12 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { MicButton, Toolbar } from '@dxos/react-ui';
+import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { type Settings } from '#types';
-
-import { type AudioInputDevice, MicSettings } from './MicSettings';
 
 const DEVICES: AudioInputDevice[] = [
   { deviceId: 'default', label: 'Default — MacBook Pro Microphone' },
@@ -23,7 +22,7 @@ const DEVICES: AudioInputDevice[] = [
 // press-and-hold can be exercised without capabilities.
 const DefaultStory = () => {
   const [recording, setRecording] = useState(false);
-  const [recordMode, setRecordMode] = useState<Settings.RecordMode>('toggle');
+  const [recordMode, setRecordMode] = useState<RecordMode>('toggle');
   const [entityExtraction, setEntityExtraction] = useState(true);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
 
@@ -40,6 +39,7 @@ const DefaultStory = () => {
         onPressEnd={() => setRecording(false)}
       />
       <MicSettings
+        translationNs={pluginMeta.profile.key}
         recordMode={recordMode}
         entityExtraction={entityExtraction}
         devices={DEVICES}

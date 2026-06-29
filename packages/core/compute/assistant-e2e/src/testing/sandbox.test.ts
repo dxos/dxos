@@ -8,7 +8,7 @@ import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { Sandbox } from '@dxos/plugin-sandbox/types';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).

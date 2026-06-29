@@ -60,7 +60,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
         <div className='flex gap-2 items-center' role='none'>
-          <Tag palette={outcomeColor}>{outcomeLabel}</Tag>
+          <Tag hue={outcomeColor}>{outcomeLabel}</Tag>
           <span className='text-sm text-neutral'>{timestamp}</span>
           <span className='text-sm'>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
         </div>

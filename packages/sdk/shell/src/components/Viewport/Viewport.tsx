@@ -122,6 +122,6 @@ export const Viewport = {
   View: ViewportView,
 };
 
-export { useViewportContext, createViewportScope };
+export { createViewportScope, useViewportContext };
 
-export type { ViewportRootProps, ViewportViewsProps, ViewportViewProps, ViewportScopedProps };
+export type { ViewportRootProps, ViewportScopedProps, ViewportViewProps, ViewportViewsProps };

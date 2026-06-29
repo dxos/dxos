@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { FileAction, FileOperation, File } from '#types';
+import { File, FileAction, FileOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

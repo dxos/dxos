@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { SkillDefinition, CreateObject, OperationHandler, UndoMappings } from '#capabilities';
+import { CreateObject, OperationHandler, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 import { Kanban } from '#types';
 

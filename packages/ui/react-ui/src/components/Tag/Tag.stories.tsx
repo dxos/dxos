@@ -19,7 +19,7 @@ const meta = {
   render: () => (
     <div>
       {palettes.map((palette) => (
-        <Tag key={palette} palette={palette}>
+        <Tag key={palette} hue={palette}>
           {palette}
         </Tag>
       ))}

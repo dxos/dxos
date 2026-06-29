@@ -25,7 +25,7 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { InboxResolver, GoogleCredentials } from '../../../services';
+import { GoogleCredentials, InboxResolver } from '../../../services';
 import { InboxOperation, Mailbox } from '../../../types';
 import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
 import { mapMessage } from './mapper';

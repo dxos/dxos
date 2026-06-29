@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Key, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Key, Obj, Type } from '@dxos/echo';
 
 export const Step = Schema.Struct({
   id: Key.EntityId,

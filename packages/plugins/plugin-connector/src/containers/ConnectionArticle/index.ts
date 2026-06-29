@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { ConnectionArticle as default, ConnectionArticle, type ConnectionArticleProps } from './ConnectionArticle';
+export { ConnectionArticle, type ConnectionArticleProps, ConnectionArticle as default } from './ConnectionArticle';

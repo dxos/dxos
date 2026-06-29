@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
+import { OPFS_SQLITE_DB_FILENAME, createSqliteProfileArchive, encodeProfileArchive } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
@@ -17,7 +17,7 @@ import { resolveRecoveryDebugOrigin } from '../recovery/constants';
 import { runDebugPortLoop } from '../recovery/debug-port';
 import { runRecoveryDiagnostics } from '../recovery/diagnostics';
 import { downloadRecoveryLogs } from '../recovery/download-logs';
-import { attachRecoveryHelpers, getDxos, installDxosGlobals, type RecoveryHelpers } from '../recovery/dxos-globals';
+import { type RecoveryHelpers, attachRecoveryHelpers, getDxos, installDxosGlobals } from '../recovery/dxos-globals';
 import { importProfileFromUrl, importSqliteInRecovery } from '../recovery/import-sqlite';
 import { downloadProfileArchiveExport, exportOpfsSqlite } from '../recovery/opfs-export';
 import { resetComposerStorage } from '../recovery/reset-storage';

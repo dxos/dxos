@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';

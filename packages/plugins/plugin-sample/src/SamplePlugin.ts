@@ -11,7 +11,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, CreateObject, SampleSettings, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { SampleItem } from '#types';

@@ -8,17 +8,17 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import {
-  Query,
-  Load,
-  ObjectCreate,
-  ObjectUpdate,
-  ObjectDelete,
-  SchemaAdd,
-  SchemaList,
   ContextAdd,
   ContextRemove,
+  Load,
+  ObjectCreate,
+  ObjectDelete,
+  ObjectUpdate,
+  Query,
   RelationCreate,
   RelationDelete,
+  SchemaAdd,
+  SchemaList,
   TagAdd,
   TagRemove,
 } from './operations/definitions';

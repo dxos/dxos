@@ -14,7 +14,7 @@ import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../../apis';
-import { InboxResolver, GoogleCredentials } from '../../../services';
+import { GoogleCredentials, InboxResolver } from '../../../services';
 import { mapMessage } from './mapper';
 
 const TestLayer = Layer.mergeAll(

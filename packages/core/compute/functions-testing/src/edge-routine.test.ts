@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { RunInstructions, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
+import { Chat, DatabaseSkill, RunInstructions } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
-import { Skill, Operation, Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Skill, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';

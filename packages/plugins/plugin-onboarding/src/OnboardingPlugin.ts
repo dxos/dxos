@@ -12,10 +12,10 @@ import {
   DefaultContent,
   OAuthRecoveryRedirect,
   Onboarding,
+  type OnboardingOptions,
   OperationHandler,
   ReactSurface,
   Settings,
-  type OnboardingOptions,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';

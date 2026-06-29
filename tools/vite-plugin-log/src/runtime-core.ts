@@ -3,12 +3,12 @@
 //
 
 import {
-  shortLevelName,
-  log,
   type LogConfig,
   type LogEntry,
   type LogProcessor,
+  log,
   parseFilter,
+  shortLevelName,
   shouldLog,
 } from '@dxos/log';
 

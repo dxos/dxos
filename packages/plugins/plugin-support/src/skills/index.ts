@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as ComposerSkill, COMPOSER_SKILL_KEY } from './composer-skill';
+export { COMPOSER_SKILL_KEY, default as ComposerSkill } from './composer-skill';
 export { default as SupportSkill } from './support-skill';

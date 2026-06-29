@@ -13,7 +13,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { spawn, execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import os from 'os';
 
 if (process.argv.length < 3) {

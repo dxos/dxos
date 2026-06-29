@@ -9,51 +9,51 @@ import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
 import React, {
-  forwardRef,
   type ReactNode,
+  type RefObject,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor, type UseTextEditor } from '@dxos/react-ui-editor';
+import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
+  crawlerLineEffect,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
   extendedMarkdown,
+  fader,
+  lineSpacing,
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
   scroller,
-  crawlerLineEffect,
-  fader,
   typewriter,
   typewriterBypass,
+  xmlBlockDecoration,
+  xmlFormatting,
   xmlTagContextEffect,
   xmlTagResetEffect,
-  xmlTagUpdateEffect,
   xmlTags,
-  documentSlots,
-  xmlFormatting,
-  xmlBlockDecoration,
-  lineSpacing,
+  xmlTagUpdateEffect,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { setFooterVisibleEffect, footer } from './footer';
+import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;

@@ -195,4 +195,4 @@ export const Column = {
   Center: ColumnCenter,
 };
 
-export type { ColumnRootProps, ColumnRowProps, ColumnBlockProps, ColumnBleedProps, ColumnCenterProps };
+export type { ColumnBleedProps, ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps };

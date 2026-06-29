@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EID, EntityId, DXN } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 
 import * as Type from '../../Type';
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity';

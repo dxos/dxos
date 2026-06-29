@@ -12,7 +12,7 @@ import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { FormFieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
+import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';

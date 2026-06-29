@@ -129,7 +129,7 @@ export const ReportSections = ({ positions, trades, cash, openLots, closedLots }
             <span>{formatDate(trade.date)}</span>
             <span>{trade.symbol}</span>
             <span>
-              <Tag palette={trade.side === 'BUY' ? 'green' : 'red'}>{trade.side}</Tag>
+              <Tag hue={trade.side === 'BUY' ? 'green' : 'red'}>{trade.side}</Tag>
             </span>
             <span className='text-right'>{formatNumber(Math.abs(trade.quantity))}</span>
             <span className='text-right'>{formatNumber(trade.price)}</span>

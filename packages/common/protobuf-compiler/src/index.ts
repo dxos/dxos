@@ -6,4 +6,4 @@ export { preconfigureProtobufjs } from './configure';
 export { ModuleSpecifier } from './module-specifier';
 export * from './namespaces';
 export { registerResolver } from './parser';
-export { generateSchema, type GenerateSchemaOptions, parseAndGenerateSchema } from './type-generator';
+export { type GenerateSchemaOptions, generateSchema, parseAndGenerateSchema } from './type-generator';

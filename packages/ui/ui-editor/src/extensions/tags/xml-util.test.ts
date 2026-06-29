@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 import { extendedMarkdown } from './extended-markdown';
 import TEXT from './testing/text.md?raw';
 import { xmlTags } from './xml-tags';
-import { nodeToJson, type Tag } from './xml-util';
+import { type Tag, nodeToJson } from './xml-util';
 
 type ParsedElement = Tag & {
   /** Element spans the entire document (opening through closing tag). */

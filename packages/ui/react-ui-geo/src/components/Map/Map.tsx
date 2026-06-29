@@ -5,7 +5,7 @@
 import 'leaflet/dist/leaflet.css';
 
 import { createContext } from '@radix-ui/react-context';
-import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, point, latLngBounds } from 'leaflet';
+import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds, point } from 'leaflet';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -533,10 +533,10 @@ export const Map = {
 
 export {
   type MapController,
-  type MapRootProps,
-  type MapViewportProps,
-  type MapTilesProps,
-  type MapMarkersProps,
-  type MapLinesProps,
   type MapControlProps,
+  type MapLinesProps,
+  type MapMarkersProps,
+  type MapRootProps,
+  type MapTilesProps,
+  type MapViewportProps,
 };

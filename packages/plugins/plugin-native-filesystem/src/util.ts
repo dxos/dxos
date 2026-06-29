@@ -8,11 +8,11 @@ import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
 import {
-  isFilesystemDirectory,
   type FilesystemDirectory,
   type FilesystemEntry,
   type FilesystemFile,
   type FilesystemWorkspace,
+  isFilesystemDirectory,
 } from '#types';
 
 /** Persisted per-workspace metadata stored in `.composer/meta.json`. */

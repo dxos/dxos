@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineFunction, S } from 'dxos:functions';
+import { S, defineFunction } from 'dxos:functions';
 
 export default defineFunction({
   key: 'org.dxos.function.inbox.hello',

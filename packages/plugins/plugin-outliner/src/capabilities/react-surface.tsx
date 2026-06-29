@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { JournalArticle, OutlineCard, OutlineArticle, QuickEntryDialog } from '#containers';
+import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal, Outline } from '#types';
 

@@ -12,8 +12,8 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,
   type ComponentPropsWithoutRef,
-  type Dispatch,
   type ComponentRef,
+  type Dispatch,
   type ForwardRefExoticComponent,
   type RefAttributes,
   type SetStateAction,
@@ -152,19 +152,19 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
 ListItem.displayName = LIST_ITEM_NAME;
 
 export {
+  LIST_ITEM_NAME,
   ListItem,
-  ListItemHeading,
   ListItemCollapsibleContent,
+  ListItemHeading,
   ListItemOpenTrigger,
   createListItemScope,
   useListItemContext,
-  LIST_ITEM_NAME,
 };
 
 export type {
-  ListItemProps,
-  ListItemHeadingProps,
   ListItemCollapsibleContentProps,
+  ListItemHeadingProps,
   ListItemOpenTriggerProps,
+  ListItemProps,
   ListItemScopedProps,
 };

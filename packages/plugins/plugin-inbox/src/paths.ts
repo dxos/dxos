@@ -64,4 +64,4 @@ export const getCalendarRangeSelectionId = (contextId: string): string => `${con
  */
 export const getEventNodeId = (attendableId: string, eventSegment: string): string => `${attendableId}/${eventSegment}`;
 
-export { getCalendarsPath, getCalendarPath };
+export { getCalendarPath, getCalendarsPath };

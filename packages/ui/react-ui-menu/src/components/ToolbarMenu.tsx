@@ -7,8 +7,8 @@ import React, { useCallback } from 'react';
 import {
   Input,
   Toolbar as NaturalToolbar,
-  Tooltip,
   type ToolbarRootProps,
+  Tooltip,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';

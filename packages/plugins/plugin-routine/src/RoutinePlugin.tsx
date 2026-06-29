@@ -3,8 +3,8 @@
 //
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
-import { Operation, Instructions, Trace, Trigger } from '@dxos/compute';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Instructions, Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import {

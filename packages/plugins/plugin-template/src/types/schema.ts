@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 export namespace Template {
   export class Data extends Type.makeObject<Data>(DXN.make('org.dxos.type.data', '0.1.0'))(

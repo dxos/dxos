@@ -25,8 +25,8 @@ import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOXES_SECTION_TYPE, MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE } from '../constants';
-import { getCalendarsPath, getDraftsId, getMailboxesSectionId, getMailboxesPath } from '../paths';
+import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
+import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 

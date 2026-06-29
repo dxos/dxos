@@ -3,32 +3,32 @@
 //
 
 export {
+  type BuildExecutionGraphParams,
+  type CollectProcessActivityOptions,
   CommitSelector,
+  type ExecutionGraph,
+  type ExecutionGraphDetailsMap,
   buildExecutionGraph,
   collectProcessActivityLines,
   deriveInFlightActivityLine,
-  type BuildExecutionGraphParams,
-  type CollectProcessActivityOptions,
-  type ExecutionGraph,
-  type ExecutionGraphDetailsMap,
 } from './execution-graph';
 export {
+  type EphemeralStatusUpdate,
   estimateTokenCount,
   formatPendingBlockStatus,
   pendingStatusFromEphemeralMessage,
   resolveEphemeralStatusUpdate,
-  type EphemeralStatusUpdate,
 } from './pending-block-status';
 export {
   BEGIN_EVENT_TYPES,
+  type BuildSpanTreeOptions,
   END_EVENT_TYPES,
   ROOT_SPAN_ID,
+  type Span,
+  type SpanMeta,
   buildSpanTree,
   flattenSpanTree,
   isSpanBeginEvent,
   isSpanEndEvent,
   walkSpanTree,
-  type BuildSpanTreeOptions,
-  type Span,
-  type SpanMeta,
 } from './span-tree';

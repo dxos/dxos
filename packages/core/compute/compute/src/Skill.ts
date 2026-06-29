@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
+import { Annotation, Database, DXN, Filter, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 // Text is referenced in the inferred type of Skill (via Template.Template → Ref.Ref(Text.Text));
 // the import lets TypeScript name it in the emitted .d.ts.

@@ -7,13 +7,13 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
   CreateObject,
   MapSettings,
   MapState,
   MarkerProvider,
   OperationHandler,
   ReactSurface,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

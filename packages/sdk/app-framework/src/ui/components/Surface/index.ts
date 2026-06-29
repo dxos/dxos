@@ -15,10 +15,10 @@ import {
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext';
 import {
-  type Definition as SurfaceDefinition,
-  type RoleToken as SurfaceRoleToken,
   type SurfaceBinding as SurfaceBindingType,
+  type Definition as SurfaceDefinition,
   type SurfaceFilter as SurfaceFilterType,
+  type RoleToken as SurfaceRoleToken,
   type TokenData as SurfaceTokenData,
   type TypedProps as SurfaceTypedProps,
   create as createSurface,

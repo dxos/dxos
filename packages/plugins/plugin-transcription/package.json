@@ -87,11 +87,6 @@
       "types": "./dist/types/src/components/index.d.ts",
       "default": "./dist/lib/neutral/components/index.mjs"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "default": "./dist/lib/neutral/hooks/index.mjs"
-    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -117,13 +112,11 @@
   ],
   "dependencies": {
     "@codemirror/state": "catalog:",
-    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/av": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -145,24 +138,19 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-transcription": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/transcription-pipeline": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "date-fns": "catalog:",
-    "effect": "catalog:",
-    "extendable-media-recorder": "catalog:",
-    "extendable-media-recorder-wav-encoder": "catalog:",
-    "wavefile": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/nlp": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
@@ -171,6 +159,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",

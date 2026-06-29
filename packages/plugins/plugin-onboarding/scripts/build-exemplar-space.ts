@@ -25,10 +25,10 @@ import {
   DocumentRecordType,
   PageRecordType,
   TLDOCUMENT_ID,
+  type TLRecord,
   createTLSchema,
   geoShapeMigrations,
   geoShapeProps,
-  type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
 import * as Option from 'effect/Option';

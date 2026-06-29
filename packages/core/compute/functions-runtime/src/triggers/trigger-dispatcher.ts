@@ -21,7 +21,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
+import { Operation, Process, Trigger, TriggerEvent } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

@@ -12,8 +12,8 @@ import { createUrl, makeGoogleApiRequest } from '../google-api';
 import {
   BatchGetPeopleResponse,
   ContactGroupResponse,
-  ListContactGroupsResponse,
   ListConnectionsResponse,
+  ListContactGroupsResponse,
 } from './types';
 
 /**

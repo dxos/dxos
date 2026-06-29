@@ -4,14 +4,14 @@
 
 import { scanIdioms } from '../idioms';
 import {
+  type PackageSymbols,
+  type PluginRecord,
   cacheFilePath,
   computePackageMtimes,
   discoverPackages,
   extractPlugins,
   extractSymbols,
   loadCache,
-  type PackageSymbols,
-  type PluginRecord,
   saveCache,
 } from '../indexer';
 import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from '../query';

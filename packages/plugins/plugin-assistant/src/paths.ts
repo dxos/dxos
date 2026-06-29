@@ -9,4 +9,4 @@ const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = Paths.creat
   groupId: Paths.GroupSegments.ai,
 });
 
-export { getChatsPath, getChatPath };
+export { getChatPath, getChatsPath };

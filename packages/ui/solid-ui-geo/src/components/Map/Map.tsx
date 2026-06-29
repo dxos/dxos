@@ -341,4 +341,4 @@ export const Map = {
   Action: MapAction,
 };
 
-export { type MapRootProps, type MapMarkersProps, type MapControlProps };
+export { type MapControlProps, type MapMarkersProps, type MapRootProps };

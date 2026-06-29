@@ -13,12 +13,12 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 import {
   AgentRunner,
   AppGraphBuilder,
-  SkillDefinition,
+  CommentState,
   Markdown,
   OperationHandler,
-  UndoMappings,
   ReactSurface,
-  CommentState,
+  SkillDefinition,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

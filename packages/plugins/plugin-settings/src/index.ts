@@ -4,4 +4,4 @@
 
 export * from './actions';
 export * from './meta';
-export { SETTINGS_ID, SETTINGS_KEY, getPluginSettingsSectionPath, getPluginRegistrySectionPath } from './types';
+export { SETTINGS_ID, SETTINGS_KEY, getPluginRegistrySectionPath, getPluginSettingsSectionPath } from './types';

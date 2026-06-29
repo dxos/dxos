@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, URI, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type SpaceId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';

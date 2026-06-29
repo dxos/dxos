@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { arrayToHex, arraysEqual } from '@dxos/util';
+import { arraysEqual, arrayToHex } from '@dxos/util';
 
 import { formatDigest, getLevelHex } from './common';
 

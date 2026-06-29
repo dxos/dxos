@@ -12,14 +12,14 @@ import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
-import { Calendar as NaturalCalendar, type CalendarController, type DateMarker } from '@dxos/react-ui-calendar';
+import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 
 import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';

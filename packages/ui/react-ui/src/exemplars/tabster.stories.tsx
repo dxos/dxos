@@ -4,8 +4,8 @@
 
 import {
   useArrowNavigationGroup,
-  useFocusFinders,
   useFocusableGroup,
+  useFocusFinders,
   useMergedTabsterAttributes_unstable,
 } from '@fluentui/react-tabster';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';

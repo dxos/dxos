@@ -5,6 +5,12 @@ tags:
   - ts-test
   - pack
 tasks:
+  generate-fixtures:
+    command: 'pnpm exec tsx src/testing/generate-fixtures.ts'
+    options:
+      runInCI: false
+      cache: false
+
   compile:
     args:
       - '--entryPoint=src/index.ts'

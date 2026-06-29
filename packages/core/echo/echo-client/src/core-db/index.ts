@@ -7,7 +7,6 @@ export * from './object-core';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
-  TargetKey,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type DecodedAutomergePrimaryValue,
@@ -18,4 +17,5 @@ export {
   type LoadObjectDocumentOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
+  TargetKey,
 } from './types';

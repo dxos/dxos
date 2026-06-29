@@ -134,16 +134,16 @@ export const ContextMenu = {
 };
 
 export type {
-  ContextMenuRootProps,
-  ContextMenuTriggerProps,
-  ContextMenuPortalProps,
-  ContextMenuContentProps,
-  ContextMenuViewportProps,
   ContextMenuArrowProps,
-  ContextMenuGroupProps,
-  ContextMenuItemProps,
   ContextMenuCheckboxItemProps,
-  ContextMenuItemIndicatorProps,
-  ContextMenuSeparatorProps,
+  ContextMenuContentProps,
   ContextMenuGroupLabelProps,
+  ContextMenuGroupProps,
+  ContextMenuItemIndicatorProps,
+  ContextMenuItemProps,
+  ContextMenuPortalProps,
+  ContextMenuRootProps,
+  ContextMenuSeparatorProps,
+  ContextMenuTriggerProps,
+  ContextMenuViewportProps,
 };

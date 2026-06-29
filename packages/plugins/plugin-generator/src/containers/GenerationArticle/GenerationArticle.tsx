@@ -14,7 +14,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PromptEditor } from '#components';
 import { meta } from '#meta';
-import { HeyGenProvider, type GenerationProvider, MissingApiKeyError } from '#services';
+import { type GenerationProvider, HeyGenProvider, MissingApiKeyError } from '#services';
 import { type Generation, GeneratorCapabilities } from '#types';
 
 type Status = 'idle' | 'busy' | 'error';

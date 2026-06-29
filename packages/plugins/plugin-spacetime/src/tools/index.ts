@@ -7,18 +7,18 @@
 
 import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObjectsAction } from './actions';
 import { ToolManager } from './tool-manager';
-import { SelectTool, MoveTool, ExtrudeTool } from './tools';
+import { ExtrudeTool, MoveTool, SelectTool } from './tools';
 
-export { type EditorState, DEFAULT_EDITOR_STATE } from './editor-state';
+export { DEFAULT_EDITOR_STATE, type EditorState } from './editor-state';
 export type { Tool } from './tool';
 export type {
-  ToolContext,
-  Selection,
-  ObjectSelection,
   FaceSelection,
   MultiObjectSelection,
+  ObjectSelection,
+  Selection,
   SelectionMode,
   SelectionState,
+  ToolContext,
 } from './tool-context';
 export { getSelectedObjectIds } from './tool-context';
 export { ToolManager } from './tool-manager';
