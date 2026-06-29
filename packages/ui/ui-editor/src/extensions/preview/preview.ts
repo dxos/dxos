@@ -127,7 +127,7 @@ const buildDecorations = (
               node.from,
               node.to,
               Decoration.replace({
-                widget: new PreviewInlineWidget(options, displayLink),
+                widget: new AnchorInlineWidget(options, displayLink),
                 side: 1,
               }),
             );
@@ -193,7 +193,7 @@ export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef
  * Inline widget.
  *  [Label](echo:/123)
  */
-class PreviewInlineWidget extends WidgetType {
+export class AnchorInlineWidget extends WidgetType {
   constructor(
     readonly _options: PreviewOptions,
     readonly _link: PreviewLinkRef,
