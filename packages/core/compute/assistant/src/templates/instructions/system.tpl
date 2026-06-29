@@ -47,7 +47,7 @@
 
 - When the user asks to open, go to, navigate to, or show a specific document, page, or object, use the navigation tools instead of loading content inline. Navigation is always two steps: first resolve a navigation path with Resolve navigation targets, then open that path with Open.
 - The Open tool accepts navigation **paths** only. Never pass an object DXN, URI, or id to Open — pass only a `path` returned by Resolve navigation targets. Passing anything else will fail to navigate.
-- To open a specific object: call Resolve navigation targets with the object's DXN (the `<dxn>` of a context object, or a DXN from a database query) in the `query`, then pass the returned target's `path` to Open.
+- To open a specific object: call Resolve navigation targets with the object's URI in the `query.uri` field — use the value from the object's `<dxn>` tag in context (which may be an `echo:` EID or a `dxn:` DXN), then pass the returned target's `path` to Open.
 - To navigate to a page (not a specific object): call Resolve navigation targets without arguments to list the available pages, then pass the chosen target's `path` to Open.
 - Do not respond with the document's content when the user asks to open it — open it in the main content area instead.
 - If multiple targets match, present the options to the user and let them choose which to open.
