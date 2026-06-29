@@ -17,7 +17,7 @@ import { type FormPresentation } from '#types';
 
 import { useFormContext, useFormFieldState } from '../../../hooks';
 import { formTheme } from '../Form.theme';
-import { type FormFieldProps, FormField, FormFieldErrorBoundary, FormFieldLabel, presentationFor } from '../FormField';
+import { FormField, FormFieldErrorBoundary, FormFieldLabel, type FormFieldProps, presentationFor } from '../FormField';
 import { type LayoutNode, LayoutParseError, parseLayout } from './parser';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';

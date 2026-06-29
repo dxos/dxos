@@ -13,9 +13,9 @@ import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
-import { type MaybePromise, Callback } from '@dxos/util';
+import { Callback, type MaybePromise } from '@dxos/util';
 
-import { type ClientRpcServerProps, type ClientServicesHost, ClientRpcServer } from '../services';
+import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
 
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;

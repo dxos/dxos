@@ -12,9 +12,9 @@ import * as Schema from 'effect/Schema';
 
 import { Skill } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { type QueryResult, DXN, Annotation, Database, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { type URI, EID } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 

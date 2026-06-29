@@ -3,9 +3,9 @@
 //
 
 import { AgentStatus } from '@dxos/ai';
-import { type Entity, type Ref, Obj } from '@dxos/echo';
+import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
-import { type EntityId, EID } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';

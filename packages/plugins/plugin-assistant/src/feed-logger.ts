@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Space, getSpace } from '@dxos/client/echo';
-import { type SequenceEvent, type SequenceLogger, Sequence } from '@dxos/conductor';
+import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';

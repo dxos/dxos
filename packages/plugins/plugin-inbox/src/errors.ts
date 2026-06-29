@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type BaseErrorOptions, BaseError } from '@dxos/errors';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 /** OAuth finished but `AccessToken.token` is still empty (race or incomplete persist). */
 export class AccessTokenNotPopulatedError extends BaseError.extend(

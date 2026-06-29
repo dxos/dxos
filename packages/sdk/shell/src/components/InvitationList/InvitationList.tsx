@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { translationKey } from '../../translations';
-import { type InvitationListItemProps, InvitationListItem } from './InvitationListItem';
+import { InvitationListItem, type InvitationListItemProps } from './InvitationListItem';
 import { type SharedInvitationListProps } from './InvitationListProps';
 
 export interface InvitationListProps

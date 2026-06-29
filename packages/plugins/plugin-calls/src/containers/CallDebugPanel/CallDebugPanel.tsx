@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type WebRTCStatsEvent, WebRTCStats } from '@peermetrics/webrtc-stats';
+import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { JsonView, Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { type ThemedClassName, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

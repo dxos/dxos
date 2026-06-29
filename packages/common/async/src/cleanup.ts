@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PrimitiveProjection, ComplexMap } from '@dxos/util';
+import { ComplexMap, type PrimitiveProjection } from '@dxos/util';
 
 export type CleanupFn = () => void;
 

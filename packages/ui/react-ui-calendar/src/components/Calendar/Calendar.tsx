@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
-import { type ListProps, type ListRowRenderer, List } from 'react-virtualized';
+import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -26,15 +26,15 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import {
+  CalendarContextProvider,
   type CalendarContextValue,
   type CalendarController,
   type CalendarScrollEvent,
   type Range,
-  CalendarContextProvider,
   useCalendarContext,
 } from './context';
 import { getDate, getRowIndex, gridEpoch, isSameDay } from './util';
-import { type CalendarEvent, type CalendarWeekProps, CalendarWeek } from './Week';
+import { type CalendarEvent, CalendarWeek, type CalendarWeekProps } from './Week';
 import { Weekdays } from './Weekdays';
 
 const maxRows = 50 * 100;

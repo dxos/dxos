@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type ConnectorCompanionProps, ConnectorCompanion, ConnectorCompanion as default } from './ConnectorCompanion';
+export { ConnectorCompanion, type ConnectorCompanionProps, ConnectorCompanion as default } from './ConnectorCompanion';

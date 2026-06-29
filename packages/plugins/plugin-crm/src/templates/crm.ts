@@ -8,7 +8,7 @@ import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { type RoutineCapabilities, Routine } from '@dxos/plugin-routine/types';
+import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
 /**

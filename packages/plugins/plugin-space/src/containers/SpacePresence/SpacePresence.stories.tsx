@@ -11,7 +11,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type Member, type MemberPresenceProps, FullPresence, SmallPresence } from './SpacePresence';
+import { FullPresence, type Member, type MemberPresenceProps, SmallPresence } from './SpacePresence';
 
 const viewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({

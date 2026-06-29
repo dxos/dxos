@@ -6,11 +6,11 @@ import * as Predicate from 'effect/Predicate';
 
 import { DeferredTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, type Feed, type Query, type Ref, Entity, Obj } from '@dxos/echo';
+import { type Database, Entity, type Feed, Obj, type Query, type Ref } from '@dxos/echo';
 import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type SpaceId, EID, EntityId } from '@dxos/keys';
+import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 

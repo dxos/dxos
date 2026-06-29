@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type LogConfig, type LogEntryInit, LogEntry, LogLevel } from './index';
+import { type LogConfig, LogEntry, type LogEntryInit, LogLevel } from './index';
 import { LogBuffer } from './log-buffer';
 
 const baseConfig: LogConfig = {

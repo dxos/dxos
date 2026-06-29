@@ -7,7 +7,7 @@ import React, { type FC, useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { type TableFeatures, type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
 import { createTextBitbar } from '../../../util';

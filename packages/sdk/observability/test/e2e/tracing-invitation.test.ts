@@ -6,7 +6,7 @@ import * as Function from 'effect/Function';
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { DXOS_VERSION, Client, Config, LocalClientServices } from '@dxos/client';
+import { Client, Config, DXOS_VERSION, LocalClientServices } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

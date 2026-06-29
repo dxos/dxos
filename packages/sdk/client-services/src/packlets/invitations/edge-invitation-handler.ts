@@ -10,10 +10,10 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type JoinSpaceRequest,
-  type JoinSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
+  type JoinSpaceRequest,
+  type JoinSpaceResponseBody,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

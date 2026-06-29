@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, type Obj, type Ref, Filter, Relation } from '@dxos/echo';
+import { type Database, Filter, type Obj, type Ref, Relation } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';

@@ -6,10 +6,10 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { type CalendarController, Calendar } from '@dxos/react-ui-calendar';
+import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
-import { type JournalProps, Journal as JournalComponent } from '#components';
+import { Journal as JournalComponent, type JournalProps } from '#components';
 import { meta } from '#meta';
 import { type Journal } from '#types';
 

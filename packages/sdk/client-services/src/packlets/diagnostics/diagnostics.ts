@@ -17,8 +17,8 @@ import {
   type Metrics,
   type NetworkStatus,
   type Platform,
-  type Space as SpaceProto,
   SpaceMember,
+  type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';

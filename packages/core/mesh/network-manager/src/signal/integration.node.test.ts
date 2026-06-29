@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vit
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { type PeerInfo, Messenger, WebsocketSignalManager } from '@dxos/messaging';
+import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { type SignalMessage } from './signal-messenger';

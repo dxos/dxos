@@ -20,7 +20,7 @@ import {
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
-import { type BaseHttpClientOptions, type EdgeHttpCallArgs, BaseHttpClient } from './base-http-client';
+import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
 
 /**
  * HTTP client for the hub-service API (accounts, invitations, email verification).

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type QueryAST, Format } from '@dxos/echo';
+import { Format, type QueryAST } from '@dxos/echo';
 
 /**
  * Gets a normalized sort value for a given value and format.

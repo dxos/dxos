@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { type OnTokenCreated, Connector } from '@dxos/plugin-connector';
+import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';

@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type EditableMarkdownCardProps, EditableMarkdownCard } from './EditableMarkdownCard';
+export { EditableMarkdownCard, type EditableMarkdownCardProps } from './EditableMarkdownCard';
 export { EditableMarkdownCard as default } from './EditableMarkdownCard';

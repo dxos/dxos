@@ -3,7 +3,7 @@
 //
 
 import { type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
-import { type DecorationSet, Decoration, EditorView } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 
 const hidden = Decoration.replace({});
 

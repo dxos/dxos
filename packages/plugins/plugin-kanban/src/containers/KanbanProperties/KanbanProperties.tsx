@@ -9,11 +9,11 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { useObject, useType } from '@dxos/react-client/echo';
-import { type FormFieldMap, Form, SelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';
-import { type Kanban, UNCATEGORIZED_VALUE, KanbanSettingsSchema, KanbanViewSettingsSchema } from '#types';
+import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema, UNCATEGORIZED_VALUE } from '#types';
 
 export type KanbanPropertiesProps = AppSurface.ObjectPropertiesProps<Kanban.Kanban>;
 

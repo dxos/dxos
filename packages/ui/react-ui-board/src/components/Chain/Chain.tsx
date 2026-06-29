@@ -5,12 +5,12 @@
 import './styles.css';
 
 import {
-  type Edge,
-  type Node,
-  type ReactFlowProps,
   BackgroundVariant,
+  type Edge,
   Background as NaturalBackground,
+  type Node,
   ReactFlow,
+  type ReactFlowProps,
   useEdgesState,
   useNodesState,
 } from '@xyflow/react';

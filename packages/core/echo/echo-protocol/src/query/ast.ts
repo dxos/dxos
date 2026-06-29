@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { EID, URI, EntityId } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 

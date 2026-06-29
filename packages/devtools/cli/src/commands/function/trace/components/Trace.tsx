@@ -9,10 +9,10 @@ import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import {
-  type InvocationSpan,
-  type InvocationTraceEvent,
   InvocationOutcome,
+  type InvocationSpan,
   InvocationTraceEndEvent,
+  type InvocationTraceEvent,
   InvocationTraceStartEvent,
   createInvocationSpans,
 } from '@dxos/functions-runtime';

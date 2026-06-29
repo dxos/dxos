@@ -6,12 +6,12 @@ import { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { type GraphProps as SVGGraphProps, Graph } from '../Graph';
-import { type MeshProps as SVGMeshProps, Mesh } from '../Mesh';
-import { type FPSProps as SVGFPSProps, FPS } from './FPS';
-import { type GridProps as SVGGridProps, Grid } from './Grid';
-import { type MarkersProps as SVGMarkersProps, Markers } from './Markers';
-import { type RootProps as SVGRootProps, Root } from './Root';
+import { Graph, type GraphProps as SVGGraphProps } from '../Graph';
+import { Mesh, type MeshProps as SVGMeshProps } from '../Mesh';
+import { FPS, type FPSProps as SVGFPSProps } from './FPS';
+import { Grid, type GridProps as SVGGridProps } from './Grid';
+import { Markers, type MarkersProps as SVGMarkersProps } from './Markers';
+import { Root, type RootProps as SVGRootProps } from './Root';
 import { type ZoomProps as SVGZoomProps, Zoom } from './Zoom';
 
 export type SVGProps = PropsWithChildren<ThemedClassName>;

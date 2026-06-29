@@ -12,12 +12,12 @@ import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
   type ComputeNode,
+  ComputeNodeContext,
   type ComputeRequirements,
   type ConductorError,
   type Executable,
   type ValueBag,
   type ValueRecord,
-  ComputeNodeContext,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
 

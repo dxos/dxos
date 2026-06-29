@@ -9,7 +9,7 @@ import { Obj, Query } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ValueGenerator, TestSchema, createObjectFactory } from '@dxos/schema/testing';
+import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Domino, mx } from '@dxos/ui';
 import { insertAtCursor, insertAtLineStart, join } from '@dxos/ui-editor';
 
@@ -17,8 +17,8 @@ import {
   type EditorController,
   type EditorMenuGroup,
   type EditorMenuItem,
-  type UseEditorMenuProps,
   EditorMenuProvider,
+  type UseEditorMenuProps,
   createMenuGroup,
   filterMenuGroups,
   formattingCommands,

@@ -11,8 +11,8 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, type QueryAST, Filter, Query, Scope, Type } from '@dxos/echo';
-import { type ReferenceAnnotationValue, ReferenceAnnotationId, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

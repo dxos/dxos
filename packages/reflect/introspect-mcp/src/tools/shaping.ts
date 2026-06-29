@@ -23,7 +23,7 @@ import type {
   SymbolDetail,
   SymbolMatch,
 } from '@dxos/introspect';
-import { type ListOptions, DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from '@dxos/introspect-tools';
+import { DEFAULT_LIST_LIMIT, type ListOptions, MAX_LIST_LIMIT } from '@dxos/introspect-tools';
 
 const SOURCE_PREVIEW = 1200;
 const JSDOC_PREVIEW = 600;

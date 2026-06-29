@@ -10,7 +10,7 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type SearchStackProps, SearchStack } from './SearchStack';
+import { SearchStack, type SearchStackProps } from './SearchStack';
 
 const createMockResults = (count: number): SearchResult[] => {
   return Array.from({ length: count }, (_, index) => ({

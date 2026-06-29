@@ -7,9 +7,9 @@ import React, { useCallback, useState } from 'react';
 
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type EditorToolbarProps, Editor } from '@dxos/react-ui-editor';
+import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
 
-import { type FileUploadAction, FileUpload } from './FileUpload';
+import { FileUpload, type FileUploadAction } from './FileUpload';
 
 export type MarkdownEditorToolbarProps = {
   id: string;

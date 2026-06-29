@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Obj } from '@dxos/echo';
+import { Database, DXN, Obj } from '@dxos/echo';
 import { Chess } from '@dxos/plugin-chess';
 import { Game, GameRef, loadGame } from '@dxos/plugin-game';
 

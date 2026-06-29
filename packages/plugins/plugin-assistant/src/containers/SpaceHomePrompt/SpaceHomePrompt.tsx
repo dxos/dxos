@@ -14,7 +14,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { type ChatEvent, ChatPrompt } from '#components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { meta } from '#meta';
-import { type ChatType, AssistantCapabilities, AssistantOperation } from '#types';
+import { AssistantCapabilities, AssistantOperation, type ChatType } from '#types';
 
 import { getChatPath } from '../../paths';
 

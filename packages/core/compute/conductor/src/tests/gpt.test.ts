@@ -20,7 +20,7 @@ import { URI } from '@dxos/keys';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
-import { DEFAULT_OUTPUT, ComputeGraphModel, ValueBag } from '../types';
+import { ComputeGraphModel, DEFAULT_OUTPUT, ValueBag } from '../types';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(

@@ -17,7 +17,7 @@ import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type URI, DXN, EID, EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import type * as Type from '../../Type';

@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createSlide } from '#testing';
 
 import { Panel } from './Panel';
-import { type SlideProps, Slide } from './Slide';
+import { Slide, type SlideProps } from './Slide';
 
 const DefaultStory = ({ content = '' }: SlideProps) => {
   return (

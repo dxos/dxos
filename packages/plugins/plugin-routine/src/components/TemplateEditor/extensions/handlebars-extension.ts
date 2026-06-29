@@ -10,11 +10,11 @@ import {
 } from '@codemirror/autocomplete';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import {
+  Decoration,
   type DecorationSet,
   type EditorView,
-  type ViewUpdate,
-  Decoration,
   ViewPlugin,
+  type ViewUpdate,
   WidgetType,
   keymap,
 } from '@codemirror/view';

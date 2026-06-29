@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
-import { type ReferenceAnnotationValue, ANY_OBJECT_TYPENAME, ReferenceAnnotationId } from '@dxos/echo/internal';
+import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, EID, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';

@@ -7,11 +7,11 @@ import { type PublicKey } from '@dxos/keys';
 import { type TypedMessage } from '@dxos/protocols/proto';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
+  AdmittedFeed,
   type Credential,
   type DeviceProfileDocument,
-  type ProfileDocument,
-  AdmittedFeed,
   MembershipPolicy,
+  type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';

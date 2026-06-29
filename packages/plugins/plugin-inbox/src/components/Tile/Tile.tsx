@@ -4,8 +4,8 @@
 
 import React, { type MouseEvent, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName, Card } from '@dxos/react-ui';
-import { type MosaicTileProps, Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Card, type ThemedClassName } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { Row } from '../Row';
 

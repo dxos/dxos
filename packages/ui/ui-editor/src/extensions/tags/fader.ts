@@ -3,7 +3,7 @@
 //
 
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
-import { type DecorationSet, Decoration, EditorView, ViewPlugin } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin } from '@codemirror/view';
 
 const DEFAULT_REMOVAL_DELAY = 5_000; // ms.
 const DEFAULT_COALESCE_WINDOW = 100; // ms.

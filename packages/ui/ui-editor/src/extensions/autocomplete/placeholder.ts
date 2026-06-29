@@ -4,7 +4,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { type ViewUpdate, Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 import { clientRectsFor, flattenRect } from '../../util';
 import { isBusy } from '../busy-state';

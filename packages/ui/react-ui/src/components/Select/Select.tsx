@@ -7,7 +7,7 @@ import React, { forwardRef } from 'react';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
-import { type ButtonProps, Button } from '../Button';
+import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 
 type SelectRootProps = SelectPrimitive.SelectProps;

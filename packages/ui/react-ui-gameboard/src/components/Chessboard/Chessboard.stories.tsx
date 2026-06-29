@@ -10,9 +10,9 @@ import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { type GameboardRootProps, type Move, type Player, Gameboard } from '../Gameboard';
+import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
 import { ChessModel } from './chess';
-import { type ChessboardProps, Chessboard } from './Chessboard';
+import { Chessboard, type ChessboardProps } from './Chessboard';
 
 type StoryArgs = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   pgn?: string;

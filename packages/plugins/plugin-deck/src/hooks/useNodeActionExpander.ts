@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { type Node, Graph } from '@dxos/plugin-graph';
+import { Graph, type Node } from '@dxos/plugin-graph';
 
 export const useNodeActionExpander = (node?: Node.Node) => {
   useEffect(() => {

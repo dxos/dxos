@@ -22,7 +22,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 import { CommentThread } from '#components';
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
-import { type ViewState, CommentCapabilities } from '#types';
+import { CommentCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 

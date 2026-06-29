@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type SampleItemViewProps, SampleItemView } from './SampleItemView';
+import { SampleItemView, type SampleItemViewProps } from './SampleItemView';
 
 type StatusValue = 'active' | 'archived' | 'draft';
 

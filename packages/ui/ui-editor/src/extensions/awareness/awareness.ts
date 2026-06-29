@@ -2,21 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Extension, type Range, Annotation, RangeSet } from '@codemirror/state';
+import { Annotation, type Extension, type Range, RangeSet } from '@codemirror/state';
 import {
-  type DecorationSet,
-  type PluginValue,
-  type ViewUpdate,
   Decoration,
+  type DecorationSet,
   EditorView,
+  type PluginValue,
   ViewPlugin,
+  type ViewUpdate,
   WidgetType,
 } from '@codemirror/view';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { type CursorConverter, Cursor, singleValueFacet } from '../../util';
+import { Cursor, type CursorConverter, singleValueFacet } from '../../util';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;

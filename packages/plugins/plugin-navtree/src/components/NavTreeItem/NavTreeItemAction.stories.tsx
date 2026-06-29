@@ -11,7 +11,7 @@ import { type Node } from '@dxos/app-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 
-import { type NavTreeItemActionMenuProps, NavTreeItemAction } from './NavTreeItemAction';
+import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 
 const parent = {
   id: random.string.uuid(),

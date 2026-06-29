@@ -8,11 +8,11 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import {
-  type OnboardingOptions,
   AppGraphBuilder,
   DefaultContent,
   OAuthRecoveryRedirect,
   Onboarding,
+  type OnboardingOptions,
   OperationHandler,
   ReactSurface,
   Settings,

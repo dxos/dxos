@@ -16,14 +16,14 @@ import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
 import {
-  type Executable,
-  DEFAULT_INPUT,
-  DEFAULT_OUTPUT,
   AnyInput,
   AnyOutput,
   AppendInput,
   ConstantOutput,
+  DEFAULT_INPUT,
+  DEFAULT_OUTPUT,
   DefaultInput,
+  type Executable,
   JsonTransformInput,
   NotExecuted,
   QueueInput,

@@ -9,7 +9,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 
-import { type RoutineCapabilities, Routine } from '#types';
+import { Routine, type RoutineCapabilities } from '#types';
 
 /**
  * Blank template: an instructions-action routine draft with an empty trigger; the action kind, schedule, and

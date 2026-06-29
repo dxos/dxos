@@ -9,7 +9,7 @@ import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwa
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
-import { type LinkProps, Link } from '../Link';
+import { Link, type LinkProps } from '../Link';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   'aria-label': string;

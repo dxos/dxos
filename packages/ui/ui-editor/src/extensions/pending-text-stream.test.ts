@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Scheduler, PendingTextStreamer, memoryPendingTextSink } from './pending-text-stream';
+import { PendingTextStreamer, type Scheduler, memoryPendingTextSink } from './pending-text-stream';
 
 // Deterministic fake clock: `advance` runs due timers in time order (including timers they schedule).
 const createFakeScheduler = (): Scheduler & { advance: (ms: number) => void } => {

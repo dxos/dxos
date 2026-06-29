@@ -15,9 +15,9 @@ import {
   type EditorBlurHandler,
   type EditorKeyEvent,
   type EditorKeyOrBlurHandler,
+  GridCellEditor,
   type GridCellEditorProps,
   type GridScopedProps,
-  GridCellEditor,
   editorKeys,
   parseCellIndex,
   useGridContext,
@@ -26,7 +26,7 @@ import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
 import { CellValidationMessage } from './CellValidationMessage';
-import { type OnCreateHandler, FormCellEditor } from './FormCellEditor';
+import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
 /**
  * Option to create new object/value.

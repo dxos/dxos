@@ -12,11 +12,11 @@ import { type DialogSize } from '../../theme';
 import { type ThemedClassName } from '../../util';
 import { Column } from '../Column';
 import {
+  Dialog,
   type DialogActionBarProps,
   type DialogActionIconButtonProps,
   type DialogBodyProps,
   type DialogHeaderProps,
-  Dialog,
 } from './Dialog';
 
 //

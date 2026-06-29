@@ -27,10 +27,10 @@ import { log } from '@dxos/log';
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
 
 import {
-  type SqliteJournalMode,
-  type SqliteSynchronous,
   DEFAULT_JOURNAL_MODE,
   DEFAULT_SYNCHRONOUS,
+  type SqliteJournalMode,
+  type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
 } from './opfs-pragmas';

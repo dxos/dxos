@@ -17,7 +17,7 @@ import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -28,7 +28,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
 import { Plank } from '../Plank';
-import { type MatrixController, type MatrixRootProps, Matrix } from './Matrix';
+import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
 random.seed(123);
 

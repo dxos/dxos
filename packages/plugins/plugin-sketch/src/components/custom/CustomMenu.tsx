@@ -3,10 +3,10 @@
 //
 
 import {
-  type TLUiStylePanelProps,
   DefaultQuickActions,
   DefaultQuickActionsContent,
   TldrawUiMenuItem,
+  type TLUiStylePanelProps,
   useActions,
   useReadonly,
 } from '@tldraw/tldraw';

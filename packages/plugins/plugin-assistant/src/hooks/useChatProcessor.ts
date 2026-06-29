@@ -21,7 +21,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Assistant } from '#types';
 
-import { type AiServicePreset, AiChatProcessor } from '../processor';
+import { AiChatProcessor, type AiServicePreset } from '../processor';
 
 export type UseChatProcessorProps = {
   space?: Space;

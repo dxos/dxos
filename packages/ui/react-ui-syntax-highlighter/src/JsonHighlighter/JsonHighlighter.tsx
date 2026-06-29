@@ -7,7 +7,7 @@ import React from 'react';
 import { composable } from '@dxos/react-ui';
 import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/util';
 
-import { type SyntaxHighlighterProps, SyntaxHighlighter } from '../SyntaxHighlighter';
+import { SyntaxHighlighter, type SyntaxHighlighterProps } from '../SyntaxHighlighter';
 
 export type JsonReplacer = CreateReplacerProps | ((key: string, value: any) => any);
 

@@ -18,7 +18,7 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
-import { type Space, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager, SpaceProtocol } from '../space';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../space';
 import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => SwarmNetworkManager;

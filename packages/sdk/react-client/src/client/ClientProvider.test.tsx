@@ -3,7 +3,7 @@
 //
 
 import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
-import React, { type PropsWithChildren, Component } from 'react';
+import React, { Component, type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';

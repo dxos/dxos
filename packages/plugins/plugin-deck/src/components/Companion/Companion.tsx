@@ -13,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type PaneTab, Pane } from '../Pane';
+import { Pane, type PaneTab } from '../Pane';
 
 //
 // Companion

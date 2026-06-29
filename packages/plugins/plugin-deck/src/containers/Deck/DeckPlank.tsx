@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, memo, useCallback, useEffect, useRef } from 
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ThemedClassName, Splitter } from '@dxos/react-ui';
+import { Splitter, type ThemedClassName } from '@dxos/react-ui';
 
 import { Companion, Plank } from '#components';
 import { useCompanionSplit } from '#hooks';

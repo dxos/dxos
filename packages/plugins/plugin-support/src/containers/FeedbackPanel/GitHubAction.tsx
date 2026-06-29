@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { type FeedbackSubmitHandler, FeedbackForm } from '#components';
+import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 

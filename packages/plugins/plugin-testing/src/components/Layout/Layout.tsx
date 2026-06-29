@@ -9,12 +9,12 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { type LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
-  type PopoverContentInteractOutsideEvent,
   AlertDialog,
   Button,
   Dialog,
   Main,
   Popover,
+  type PopoverContentInteractOutsideEvent,
   Toast,
   toLocalizedString,
   useTranslation,

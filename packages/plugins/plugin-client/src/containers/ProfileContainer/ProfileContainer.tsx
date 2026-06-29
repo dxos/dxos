@@ -9,7 +9,7 @@ import { debounce } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 

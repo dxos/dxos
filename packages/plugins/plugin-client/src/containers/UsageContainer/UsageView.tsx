@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
 import { IconButton, Message, Status, ToggleIconButton, useTranslation } from '@dxos/react-ui';
-import { type FormFieldProvider, Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';

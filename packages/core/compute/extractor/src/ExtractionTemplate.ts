@@ -12,11 +12,11 @@ import { type Operation } from '@dxos/compute';
 import { type Database, type Obj } from '@dxos/echo';
 
 import {
+  ExtractError,
   type ExtractInput,
   type ExtractResult,
   type MatchResult,
   type ObjectExtractor,
-  ExtractError,
 } from './ObjectExtractor';
 import { type Resolver } from './Resolver';
 

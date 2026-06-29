@@ -15,7 +15,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, Trace } from '@dxos/compute';
-import { DXN, URI, Annotation, Collection, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';

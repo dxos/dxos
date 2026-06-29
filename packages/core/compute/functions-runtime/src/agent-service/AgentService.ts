@@ -13,10 +13,10 @@ import { AiContext } from '@dxos/assistant';
 import { McpServer, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
+  AgentService,
   type GetSessionOptions,
   type Service,
   type Session,
-  AgentService,
   getSession,
 } from '@dxos/compute/AgentService';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';

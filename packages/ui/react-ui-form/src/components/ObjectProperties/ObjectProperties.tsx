@@ -17,7 +17,7 @@ import { FactoryAnnotation } from '@dxos/schema';
 import { translationKey } from '#translations';
 import { type FormFieldMap, type RefFieldDataProps } from '#types';
 
-import { META_TAGS_KEY, Form, withMetaTags } from '../Form';
+import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectPropertiesProps = PropsWithChildren<
   { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>

@@ -3,7 +3,7 @@
 //
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
-import { type DecorationSet, type ViewUpdate, Decoration, EditorView, ViewPlugin } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { REPLY_REGEXP } from '../util';
 

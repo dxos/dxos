@@ -9,7 +9,7 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { Box } from './common';
-import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const TextToImageShape = Schema.extend(
   ComputeShape,

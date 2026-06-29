@@ -3,7 +3,7 @@
 //
 
 export {
-  type ConnectorAuthButtonProps,
   ConnectorAuthButton,
+  type ConnectorAuthButtonProps,
   ConnectorAuthButton as default,
 } from './ConnectorAuthButton';

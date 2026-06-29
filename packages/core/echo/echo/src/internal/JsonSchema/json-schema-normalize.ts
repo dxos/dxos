@@ -4,7 +4,7 @@
 
 import type * as Types from 'effect/Types';
 
-import { type JsonSchemaType, JsonSchemaFields } from './json-schema-type';
+import { JsonSchemaFields, type JsonSchemaType } from './json-schema-type';
 
 /**
  * Normalize schema to to draft-07 format.

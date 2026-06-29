@@ -3,7 +3,7 @@
 //
 
 export {
-  type ConnectionSettingsArticleProps,
   ConnectionSettingsArticle,
+  type ConnectionSettingsArticleProps,
   ConnectionSettingsArticle as default,
 } from './ConnectionSettingsArticle';

@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { type ReferenceAnnotationValue, ReferenceAnnotationId } from '@dxos/echo/Annotation';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { DEFAULT_EDGE_MODELS, DEFAULT_LMSTUDIO_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldMap, Form, createSelectField } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Assistant } from '#types';

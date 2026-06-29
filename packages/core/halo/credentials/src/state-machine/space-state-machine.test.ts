@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
-import { type Chain, AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, type Chain, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, verifyCredential } from '../credentials';
 import { SpaceStateMachine } from './space-state-machine';

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { withTheme } from '../../testing';
 import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
-import { type MicButtonProps, MicButton } from './MicButton';
+import { MicButton, type MicButtonProps } from './MicButton';
 
 const DefaultStory = ({ mode = 'toggle', ...props }: MicButtonProps) => {
   const [recording, setRecording] = useState(false);

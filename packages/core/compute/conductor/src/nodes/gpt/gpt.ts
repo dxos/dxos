@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { DEFAULT_EDGE_MODEL, AiService, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Credential, Operation } from '@dxos/compute';
-import { DXN, Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 
 import * as Ibkr from './Ibkr';
 

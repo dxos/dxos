@@ -3,13 +3,13 @@
 //
 
 import { invertedEffects } from '@codemirror/commands';
-import { type ChangeDesc, type Extension, type Text, StateEffect, StateField } from '@codemirror/state';
+import { type ChangeDesc, type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import {
   type Command,
-  type PluginValue,
-  type Rect,
   Decoration,
   EditorView,
+  type PluginValue,
+  type Rect,
   ViewPlugin,
   hoverTooltip,
   keymap,

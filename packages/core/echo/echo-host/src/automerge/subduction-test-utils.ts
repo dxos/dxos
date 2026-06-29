@@ -10,9 +10,9 @@ import {
   type Message,
   type PeerId,
   type QueryState,
+  Repo,
   type StorageAdapterInterface,
   type SubductionPolicy,
-  Repo,
   documentIdToBinary,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
@@ -24,7 +24,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable } from '@dxos/util';
 
-import { type TestConnectionStateProvider, TestAdapter } from '../testing';
+import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 export const HOST_AND_CLIENT: [string, string] = ['host', 'client'];

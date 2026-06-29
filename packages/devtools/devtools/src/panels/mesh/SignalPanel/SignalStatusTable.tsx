@@ -12,7 +12,7 @@ import { type SignalStatus } from '@dxos/messaging';
 import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 export interface SignalStatusProps {
   status: SignalStatus[];

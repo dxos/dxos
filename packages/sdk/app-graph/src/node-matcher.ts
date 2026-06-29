@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 
-import { type Type, Entity, Obj } from '@dxos/echo';
+import { Entity, Obj, type Type } from '@dxos/echo';
 
 import * as Node from './node';
 

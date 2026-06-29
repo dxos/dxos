@@ -6,10 +6,10 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { HighlightStyle, bracketMatching, syntaxHighlighting } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
-import { type ChangeSpec, type Extension, type TransactionSpec, EditorState } from '@codemirror/state';
+import { type ChangeSpec, EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import {
-  type KeyBinding,
   EditorView,
+  type KeyBinding,
   ViewPlugin,
   drawSelection,
   dropCursor,

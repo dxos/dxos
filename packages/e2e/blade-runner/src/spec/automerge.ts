@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { type SchedulerEnvImpl } from '../env';
 import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { type StorageAdaptorKind, AutomergeReplicant } from '../replicants/automerge-replicant';
+import { AutomergeReplicant, type StorageAdaptorKind } from '../replicants/automerge-replicant';
 
 export type AutomergeTestSpec = {
   platform: Platform;

@@ -5,17 +5,17 @@
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { type Graph as Graph$, GraphModel } from '@dxos/graph';
+import { GraphModel, type Graph as Graph$ } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
+  GraphForceProjector,
   type GraphLayoutNode,
   type GraphProjector,
-  type GraphRendererOptions,
-  GraphForceProjector,
   GraphRenderer,
+  type GraphRendererOptions,
   createGraphDrag,
 } from '../../graph';
 import { useSvgContext } from '../../hooks';

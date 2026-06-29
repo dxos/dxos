@@ -6,7 +6,7 @@ import { transact } from '@tldraw/state';
 import { type TLRecord, createTLStore, defaultShapeUtils } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
-import { type Batch, AbstractStoreAdapter, Modified } from '@dxos/echo-doc';
+import { AbstractStoreAdapter, type Batch, Modified } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 
 /**

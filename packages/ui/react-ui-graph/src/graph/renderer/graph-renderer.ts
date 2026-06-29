@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type D3Callable, type D3Selection, type Point, getCircumferencePoints } from '../../util';
 import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types';
 import { createBullets } from './bullets';
-import { type RendererOptions, Renderer } from './renderer';
+import { Renderer, type RendererOptions } from './renderer';
 
 /**
  * Replace the default `<circle>` with a custom node shape. Invoked once per

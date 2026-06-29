@@ -6,7 +6,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';

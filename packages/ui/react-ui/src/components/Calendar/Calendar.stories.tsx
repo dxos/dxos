@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '../../testing';
-import { type DateRange, Calendar } from './Calendar';
+import { Calendar, type DateRange } from './Calendar';
 
 const meta: Meta<typeof Calendar.Root> = {
   title: 'ui/react-ui-core/components/Calendar',

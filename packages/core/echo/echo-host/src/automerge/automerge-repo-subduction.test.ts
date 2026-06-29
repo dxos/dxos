@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Heads, next as A, getHeads, saveSince } from '@automerge/automerge';
+import { next as A, type Heads, getHeads, saveSince } from '@automerge/automerge';
 import {
   type AutomergeUrl,
   type DocHandle,

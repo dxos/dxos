@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 
 import { captureCommit } from './dispatch';
-import { type TelemetryEvent, PipelineRuntime } from './PipelineRuntime';
+import { PipelineRuntime, type TelemetryEvent } from './PipelineRuntime';
 import { type Stage, StageWrite } from './Stage';
 import { makeCorrectionStage, makeSummarizationStage } from './stages';
 import { SAMPLE_MEETING, scriptedSource } from './testing';

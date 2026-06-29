@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
-import { INITIAL_SPACE_COUNT, INITIAL_URL, AppManager } from './app-manager';
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973

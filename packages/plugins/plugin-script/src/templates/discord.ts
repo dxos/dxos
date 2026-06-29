@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { DXN, S, EchoObject, EntityId, Filter, create, defineFunction } from 'dxos:functions';
+import { DXN, EchoObject, EntityId, Filter, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 import {

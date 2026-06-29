@@ -15,8 +15,8 @@ import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credential
 import {
   type AdmissionRequest,
   type AdmissionResponse,
-  type InvitationHostService,
   AuthenticationResponse,
+  type InvitationHostService,
   InvitationOptions,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';

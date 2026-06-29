@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, EditorSelection, Transaction } from '@codemirror/state';
+import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -22,7 +22,7 @@ import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
-import { type ThemedClassName, ErrorBoundary, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
+import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,

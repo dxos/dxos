@@ -5,7 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { type ThemedClassName, Column, Icon, IconBlock, IconButton, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Column, Icon, IconBlock, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Empty, OrderedList } from '@dxos/react-ui-list';
 import { type ActionGraphProps, Menu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';

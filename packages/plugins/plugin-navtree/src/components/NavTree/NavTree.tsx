@@ -13,7 +13,7 @@ import { Position } from '@dxos/util';
 import { useLoadDescendents } from '#hooks';
 
 import { useNavTreeContext } from '../NavTreeContext';
-import { type L1TabsProps, L0Menu, L1Tabs } from '../Sidebar';
+import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 

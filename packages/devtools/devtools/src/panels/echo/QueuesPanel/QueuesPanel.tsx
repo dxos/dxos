@@ -7,7 +7,7 @@ import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { type TableFeatures, type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
 import { PanelContainer, Searchbar } from '../../../components';

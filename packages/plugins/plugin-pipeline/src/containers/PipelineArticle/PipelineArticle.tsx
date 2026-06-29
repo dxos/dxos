@@ -8,9 +8,9 @@ import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import {
+  AppSurface,
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-  AppSurface,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';

@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { type AiService, AiModelResolver } from '@dxos/ai';
+import { AiModelResolver, type AiService } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';

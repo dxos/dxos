@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
-import { type ThreadComponents, Message as MessageComponent, Thread } from '@dxos/react-ui-thread';
+import { Message as MessageComponent, Thread, type ThreadComponents } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 

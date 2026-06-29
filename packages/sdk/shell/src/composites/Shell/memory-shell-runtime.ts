@@ -8,8 +8,8 @@ import {
   type InvitationUrlRequest,
   type LayoutRequest,
   type PublicKey,
-  type ShellRuntime,
   ShellLayout,
+  type ShellRuntime,
 } from '@dxos/react-client';
 
 // TODO(wittjosiah): Remove?

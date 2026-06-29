@@ -23,7 +23,7 @@ import type {
 import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
-import { type PluginManager as PluginManager$, Capability as Capability$, Plugin as Plugin$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,

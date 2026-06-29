@@ -4,17 +4,17 @@
 
 import React, {
   type ComponentProps,
+  Fragment,
   type KeyboardEventHandler,
   type ReactNode,
-  Fragment,
   forwardRef,
   useMemo,
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AttentionSigilAction, AppSurface, AttentionSigil } from '@dxos/app-toolkit/ui';
+import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
-import { type ThemedClassName, Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';

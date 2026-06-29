@@ -4,7 +4,7 @@
 
 import { type Context } from '@dxos/context';
 
-import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from '../signal-manager';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '../signal-manager';
 import { type Message } from '../signal-methods';
 import { TestPeer } from './test-peer';
 

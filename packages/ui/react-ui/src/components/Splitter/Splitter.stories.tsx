@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
 import { ScrollArea } from '../ScrollArea';
 import { Toolbar } from '../Toolbar';
-import { type SplitterMode, type SplitterRootProps, Splitter } from './Splitter';
+import { Splitter, type SplitterMode, type SplitterRootProps } from './Splitter';
 
 const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
   ({ label, ...props }, forwardedRef) => (

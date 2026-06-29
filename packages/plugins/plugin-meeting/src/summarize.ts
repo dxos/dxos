@@ -8,9 +8,9 @@ import * as Layer from 'effect/Layer';
 
 import {
   type AiModelNotAvailableError,
+  AiService,
   type AiToolNotFoundError,
   type PromptPreprocessingError,
-  AiService,
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';

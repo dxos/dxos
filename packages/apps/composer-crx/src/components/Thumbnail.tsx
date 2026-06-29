@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { type ThemedClassName, Input, Toolbar } from '@dxos/react-ui';
+import { Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Generalize to card.

@@ -9,7 +9,7 @@ import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { type ServiceContextRuntimeProps, ClientServicesHost } from '@dxos/client-services';
+import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -20,8 +20,8 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  type TransportFactory,
   MemoryTransportFactory,
+  type TransportFactory,
   TransportKind,
   createIceProvider,
   createRtcTransportFactory,
@@ -35,9 +35,9 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { Client } from '../client';
 import {
-  type LeaderTimeoutOptions,
   ClientServicesProxy,
   DedicatedWorkerClientServices,
+  type LeaderTimeoutOptions,
   LocalClientServices,
   MemoryWorkerCoordiantor,
 } from '../services';

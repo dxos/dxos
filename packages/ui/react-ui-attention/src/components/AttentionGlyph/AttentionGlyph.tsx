@@ -5,7 +5,7 @@
 import { type Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
-import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const attentionGlyphStyles = mx(

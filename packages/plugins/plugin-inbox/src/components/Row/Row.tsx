@@ -6,14 +6,14 @@ import { format, intervalToDuration } from 'date-fns';
 import React, { type MouseEvent, useCallback, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { type URI, EID } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import {
-  type IconButtonProps,
   Card,
   DxAnchorActivate,
   Icon,
   IconButton,
+  type IconButtonProps,
   SystemIconButton,
   Tag,
   useTranslation,

@@ -25,7 +25,7 @@ import {
 } from '#containers';
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
-import { type Settings, Notebook, ScriptCapabilities } from '#types';
+import { Notebook, ScriptCapabilities, type Settings } from '#types';
 
 import { DEPLOYMENT_DIALOG } from '../constants';
 import { getAccessCredential } from '../util';

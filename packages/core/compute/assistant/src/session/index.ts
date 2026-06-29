@@ -8,6 +8,6 @@ export * as AiContext from './AiContext';
 export * as AiSession from './AiSession';
 export * as Harness from './Harness';
 export * as SkillHooks from './SkillHooks';
-export { type HarnessControlRpcs, HarnessControl } from './harness-control';
+export { HarnessControl, type HarnessControlRpcs } from './harness-control';
 export { SessionLoader } from './SessionLoader';
 export * as SessionLink from './SessionLink';

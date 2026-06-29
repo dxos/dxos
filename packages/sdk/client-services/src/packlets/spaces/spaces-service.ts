@@ -45,14 +45,14 @@ import {
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
+  SpaceArchive,
+  SpaceMember,
   type SpacesService,
+  SpaceState,
   type SubscribeMessagesRequest,
   type UpdateMemberRoleRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
-  SpaceArchive,
-  SpaceMember,
-  SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';

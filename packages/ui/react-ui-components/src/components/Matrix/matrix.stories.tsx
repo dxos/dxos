@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type MatrixProps, Matrix } from './Matrix';
+import { Matrix, type MatrixProps } from './Matrix';
 
 const DefaultStory = (props: MatrixProps) => {
   const [active, setActive] = useState(props.active ?? true);

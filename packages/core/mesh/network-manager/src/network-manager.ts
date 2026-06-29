@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type PeerInfo, type SignalManager, Messenger } from '@dxos/messaging';
+import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 

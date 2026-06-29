@@ -19,22 +19,22 @@ import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Pulsar } from '../../fx';
 import {
+  GraphForceProjector,
   type GraphForceProjectorOptions,
+  GraphHierarchicalProjector,
   type GraphHierarchicalProjectorOptions,
   type GraphLayoutEdge,
   type GraphLayoutNode,
   type GraphProjector,
-  type GraphRadialProjectorOptions,
-  type GraphRelationalProjectorOptions,
-  GraphForceProjector,
-  GraphHierarchicalProjector,
   GraphRadialProjector,
+  type GraphRadialProjectorOptions,
   GraphRelationalProjector,
+  type GraphRelationalProjectorOptions,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
-import { type TestNode, TestGraphModel, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
-import { type SVGGridProps, SVG } from '../SVG';
-import { type GraphController, type GraphProps, Graph as GraphComponent } from './Graph';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
+import { SVG, type SVGGridProps } from '../SVG';
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 

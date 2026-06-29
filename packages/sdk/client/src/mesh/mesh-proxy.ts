@@ -6,7 +6,7 @@ import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';
 

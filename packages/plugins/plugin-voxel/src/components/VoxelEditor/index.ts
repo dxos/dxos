@@ -3,11 +3,11 @@
 //
 
 export {
-  type ToolMode,
-  type VoxelBounds,
-  type VoxelEditorProps,
   DEFAULT_HUE,
   PALETTE_STYLES,
+  type ToolMode,
+  type VoxelBounds,
   VoxelEditor,
+  type VoxelEditorProps,
   computeVoxelBounds,
 } from './VoxelEditor';

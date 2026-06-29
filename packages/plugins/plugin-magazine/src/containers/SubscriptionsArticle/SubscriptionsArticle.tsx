@@ -14,7 +14,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 
-import { type SubscriptionStackAction, SubscriptionStack } from '#components';
+import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
