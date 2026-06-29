@@ -11,12 +11,10 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useAudioTrack } from '@dxos/react-ui-transcription';
+import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type Transcript, Message } from '@dxos/types';
 
 import { TranscriptionCapabilities, TranscriptOperation } from '#types';
-
-import { useTranscriber } from './useTranscriber';
 
 export type TranscriptionRecording = {
   recording: boolean;

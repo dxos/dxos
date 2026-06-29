@@ -12135,6 +12135,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute

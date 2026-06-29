@@ -25,8 +25,7 @@ export type CreateTranscriberOptions = {
 /**
  * Builds a {@link Transcriber} backed by a browser {@link MediaStreamRecorder} for the given track —
  * the low-level audio→text construction, co-located with the recorder so it can be tested outside the
- * plugin. The plugin's `TranscriberProvider` capability contributes this to the app-framework so
- * other plugins can obtain a transcriber via DI.
+ * plugin. Consumed directly via the {@link useTranscriber} hook.
  */
 export const createTranscriber = ({
   audioStreamTrack,

@@ -16,6 +16,8 @@ import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 import { Transcriber } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import { type TranscriptionCapabilities } from '#types';
+
 /**
  * Length of the chunk in ms.
  */
@@ -32,8 +34,6 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
-
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
   registry: Registry.Registry;
@@ -41,15 +41,17 @@ export type TranscriptionManagerOptions = {
   /**
    * Enrich the message before it is written to the transcription feed.
    */
-  messageEnricher?: TranscriptMessageEnricher;
+  messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
 };
 
 /**
- * Manages transcription state for a meeting.
+ * Manages transcription state for a meeting. Concrete implementation of the
+ * {@link TranscriptionCapabilities.TranscriptionManager} service contract; consumers depend on the
+ * interface (via the `TranscriptionManagerProvider` capability), not this class.
  */
-export class TranscriptionManager extends Resource {
+export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
   private readonly _edgeClient: EdgeHttpClient;
-  private readonly _messageEnricher?: TranscriptMessageEnricher;
+  private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private readonly _registry: Registry.Registry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;

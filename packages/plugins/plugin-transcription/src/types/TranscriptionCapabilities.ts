@@ -7,44 +7,48 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type MediaStreamRecorderProps } from '@dxos/react-ui-transcription';
-import {
-  type EntityLookup as EntityLookupFn,
-  type TranscriberProps,
-  type Transcriber as TranscriberType,
-} from '@dxos/transcription-pipeline';
+import { type Space } from '@dxos/client/echo';
+import { type Feed } from '@dxos/echo';
+import { type EntityLookup as EntityLookupFn } from '@dxos/transcription-pipeline';
+import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import {
-  type TranscriptionManager as TranscriptionManagerType,
-  type TranscriptMessageEnricher,
-} from '../capabilities/transcription-manager';
-import * as Settings$ from './Settings'; // eslint-disable-line
+import * as SettingsModule from './Settings';
 
-export type TranscriberProviderProps = {
-  audioStreamTrack: MediaStreamTrack;
-  recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
-  transcriberConfig?: Partial<TranscriberProps['config']>;
-  transcribe?: TranscriberProps['transcribe'];
-  onSegments: TranscriberProps['onSegments'];
-};
+/**
+ * Enriches a transcript message before it is written to the feed (e.g. entity linking).
+ */
+export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
 
-export type TranscriberProvider = (props: TranscriberProviderProps) => TranscriberType;
+/**
+ * Service contract for the meeting transcription manager. Consumers (e.g. plugin-meeting) depend on
+ * this interface via the {@link TranscriptionManagerProvider} capability, not on the concrete
+ * implementation, keeping the manager's browser/SDK dependencies out of consumer packages.
+ */
+export interface TranscriptionManager {
+  readonly enabled: Atom.Atom<boolean>;
+  setFeed(space: Space, feed: Feed.Feed): void;
+  setAudioTrack(track?: MediaStreamTrack): Promise<void>;
+  setRecording(recording?: boolean): void;
+  setEnabled(enabled: boolean): Promise<void>;
+  open(): Promise<this>;
+  close(): Promise<this>;
+}
 
 export type TranscriptionManagerProviderProps = {
   messageEnricher?: TranscriptMessageEnricher;
 };
 
-export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManagerType;
-
-export const TranscriberProvider = Capability.make<TranscriberProvider>(`${meta.profile.key}.capability.transcriber`);
+export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManager;
 
 export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
   `${meta.profile.key}.capability.transcription-manager`,
 );
 
-export const Settings = Capability.make<Atom.Writable<Settings$.Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 /**
  * The single active editor transcription session. `id` is the editor's attendable id (the key it

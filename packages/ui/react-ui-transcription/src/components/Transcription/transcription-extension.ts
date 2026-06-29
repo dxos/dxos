@@ -10,12 +10,13 @@ import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type Message } from '@dxos/types';
 
-import { type SerializationModel, DocumentAdapter } from '../../model';
+import { type SerializationModel, DocumentAdapter } from '../../recorder';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptionOptions = {
+  // TODO(burdon): Rename property serializer.
   model: SerializationModel<Message.Message>;
   started?: Date;
 };

@@ -4,7 +4,6 @@
 
 export * from './components';
 export * from './hooks';
-export * from './model';
 export * from './recorder';
 export * from './util';
 export * from './types';

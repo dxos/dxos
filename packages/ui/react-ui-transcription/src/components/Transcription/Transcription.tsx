@@ -17,7 +17,7 @@ import {
   scroller,
 } from '@dxos/ui-editor';
 
-import { type SerializationModel } from '../../model';
+import { type SerializationModel } from '../../recorder';
 import { transcription } from './transcription-extension';
 
 export type TranscriptionProps = {
@@ -25,7 +25,7 @@ export type TranscriptionProps = {
   model: SerializationModel<Message.Message>;
 };
 
-// TODO(burdon): Remove forwardedRef/use react-ui-editor.
+// TODO(burdon): Rename Transcript.
 export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
   ({ transcript: object, model, children, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();

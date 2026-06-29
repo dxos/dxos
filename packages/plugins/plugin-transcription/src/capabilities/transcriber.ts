@@ -6,16 +6,15 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createTranscriber } from '@dxos/react-ui-transcription';
 
 import { TranscriptionCapabilities } from '#types';
 
-import { TranscriptionManager } from './transcription-manager';
+import { TranscriptionManagerImpl } from '../transcription-manager';
 
 /**
- * Provides the audio transcriber (and the higher-level transcription manager) to the app-framework
- * so other plugins can obtain them via DI. The low-level construction lives in
- * `@dxos/react-ui-transcription`; this module is the provision seam.
+ * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it
+ * via DI. The low-level construction lives in `@dxos/react-ui-transcription`; this module is the
+ * provision seam.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -27,7 +26,7 @@ export default Capability.makeModule(
       messageEnricher,
     }) => {
       const client = capabilities.get(ClientCapabilities.Client);
-      const transcriptionManager = new TranscriptionManager({
+      const transcriptionManager = new TranscriptionManagerImpl({
         edgeClient: client.edge.http,
         messageEnricher,
         registry,
@@ -42,7 +41,6 @@ export default Capability.makeModule(
     };
 
     return [
-      Capability.contributes(TranscriptionCapabilities.TranscriberProvider, createTranscriber),
       Capability.contributes(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider),
     ];
   }),

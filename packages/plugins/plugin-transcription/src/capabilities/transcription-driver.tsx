@@ -9,12 +9,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { useAudioTrack } from '@dxos/react-ui-transcription';
+import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { linkEntities } from '@dxos/transcription-pipeline';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
-import { useTranscriber } from '#hooks';
 import { meta } from '#meta';
 import { TranscriptionCapabilities } from '#types';
 

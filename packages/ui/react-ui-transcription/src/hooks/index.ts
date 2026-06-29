@@ -8,3 +8,4 @@ export * from './useFeedModelAdapter';
 export * from './useIsSpeaking';
 export * from './useRecordingPipeline';
 export * from './useSpeechRecognition';
+export * from './useTranscriber';

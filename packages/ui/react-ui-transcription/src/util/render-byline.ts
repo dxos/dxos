@@ -5,7 +5,6 @@
 import { type Identity } from '@dxos/react-client/halo';
 import { type Message } from '@dxos/types';
 
-// TODO(thure): Move this?
 export const renderByline =
   (identities: Identity[]) =>
   (message: Message.Message, index: number, debug = false): string[] => {

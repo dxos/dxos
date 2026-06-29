@@ -79,6 +79,7 @@ type ChunkChange<T extends Chunk> =
  * Ideally we would implement a custom virtual Text model for the View, but this currently isn't possible in Codemirror.
  * Instead this model tracks changes and syncs them with the ChunkDocument.
  */
+// TODO(burdon): Rename.
 export class SerializationModel<T extends Chunk> {
   /** Emits when the document is updated. */
   public readonly update = new Event<void>();
