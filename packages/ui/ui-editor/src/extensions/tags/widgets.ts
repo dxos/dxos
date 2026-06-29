@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { EditorView, WidgetType } from '@codemirror/view';
@@ -9,7 +9,6 @@ import { EditorView, WidgetType } from '@codemirror/view';
  *  [Label](echo:/123)
  */
 export class AnchorInlineWidget extends WidgetType {
-  // TODO(burdon): Change to object.
   constructor(
     readonly _label: string,
     readonly _dxn: string,

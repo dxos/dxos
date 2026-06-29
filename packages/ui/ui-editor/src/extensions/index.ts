@@ -28,7 +28,6 @@ export * from './outliner';
 export * from './pending-text';
 export * from './pending-text-stream';
 export * from './pos';
-export * from './preview';
 export * from './replacer';
 export * from './scrolling';
 export * from './selection';
