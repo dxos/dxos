@@ -3,4 +3,3 @@
 //
 
 export * from './SemanticFactsViewer';
-export * from './SemanticFactsParser';
