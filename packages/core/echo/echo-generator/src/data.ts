@@ -96,8 +96,8 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
         organizations?.length && random.datatype.boolean({ probability: 0.8 })
           ? Ref.make(random.helpers.arrayElement(organizations))
           : undefined,
-      lat: airport?.lat,
-      lng: airport?.lng,
+      lat: airport?.location?.[1],
+      lng: airport?.location?.[0],
     };
   },
 
