@@ -85,6 +85,31 @@ export const useAtomCapabilityState = <T>(
 };
 
 /**
+ * Hook to get value and updater for an optional atom capability.
+ * Returns [undefined, noop] when the capability is not registered (e.g. the owning plugin is absent).
+ * @example const [session, setSession] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+ */
+export const useOptionalAtomCapabilityState = <T>(
+  atomCapability: Capability.InterfaceDef<Atom.Writable<T>>,
+): [T | undefined, (fn: (current: T | undefined) => T | undefined) => void] => {
+  const registry = useOptionalCapability(Capabilities.AtomRegistry);
+  const atom = useOptionalCapability(atomCapability) as Atom.Writable<T> | undefined;
+  const value = useAtomValue(atom ?? (emptyCapabilities as unknown as Atom.Atom<T>));
+  const update = useCallback(
+    (fn: (current: T | undefined) => T | undefined) => {
+      if (registry && atom) {
+        const next = fn(registry.get(atom));
+        if (next !== undefined) {
+          registry.set(atom, next);
+        }
+      }
+    },
+    [registry, atom],
+  );
+  return [atom ? value : undefined, update];
+};
+
+/**
  * Hook to get the operation invoker capability.
  */
 export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapability(Capabilities.OperationInvoker);
