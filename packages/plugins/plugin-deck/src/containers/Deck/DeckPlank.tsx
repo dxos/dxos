@@ -149,7 +149,7 @@ export const DeckPlank = memo(
             onKeyDown={handleKeyDown}
           />
         </Splitter.Panel>
-        {companions.length > 0 && (
+        {hasCompanion && (
           <>
             <Splitter.Handle />
             <Splitter.Panel position='end'>
