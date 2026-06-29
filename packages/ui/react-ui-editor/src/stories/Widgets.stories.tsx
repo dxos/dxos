@@ -116,7 +116,7 @@ const PreviewCard = () => {
               </Popover.Close>
             </Card.Header>
             <Card.Row>
-              <Card.Text variant='description'>{target.text}</Card.Text>
+              <Card.Text variant='description'>{target.label}</Card.Text>
             </Card.Row>
           </Card.Root>
         </Popover.Viewport>

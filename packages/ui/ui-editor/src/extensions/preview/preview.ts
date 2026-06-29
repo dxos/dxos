@@ -5,14 +5,13 @@
 import { EditorView, WidgetType } from '@codemirror/view';
 
 export type PreviewLinkRef = {
-  block?: boolean;
-  label: string;
   dxn: string;
+  label: string;
+  block?: boolean;
 };
 
 export type PreviewLinkTarget = {
   label: string;
-  text?: string; // TODO(burdon): Different from label?
   object?: any;
 };
 
