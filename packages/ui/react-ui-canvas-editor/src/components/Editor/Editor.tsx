@@ -98,8 +98,10 @@ const RootInner = <S extends CanvasBoard.Shape = CanvasBoard.Shape>(
   const [snapToGrid, setSnapToGrid] = useState(snapToGridProp);
 
   // Repaint.
+  // The graph model is mutated in place (and may be non-reactive), so mutations don't trigger React on their
+  // own; `repaint` forces a re-render after structural edits (e.g. delete) so the canvas reflects the change.
   const [, forceUpdate] = useState({});
-  const repaint = useCallback(() => {}, []);
+  const repaint = useCallback(() => forceUpdate({}), []);
 
   // Canvas layout.
   const overlayRef = useRef<SVGSVGElement>(null);
@@ -198,4 +200,4 @@ export const Editor = {
   UI,
 };
 
-export type { EditorRootProps, EditorController };
+export type { EditorController, EditorRootProps };

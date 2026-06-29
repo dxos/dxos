@@ -17,8 +17,8 @@ import {
 import {
   type ClientServicesProvider,
   type ExportSpaceOptions,
-  SPACE_TAG,
   type Space,
+  SPACE_TAG,
   type SpaceInternal,
   SpaceProperties,
 } from '@dxos/client-protocol';
@@ -26,15 +26,15 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import {
-  type CustomInspectFunction,
   type CustomInspectable,
+  type CustomInspectFunction,
   inspectCustom,
   loadashEqualityFn,
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
-import { type EchoClient, type EchoDatabase, type DatabaseImpl, type SpaceSyncState } from '@dxos/echo-client';
+import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -55,8 +55,8 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
   type Epoch,
-  MembershipPolicy,
   SpaceMember as HaloSpaceMember,
+  MembershipPolicy,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';

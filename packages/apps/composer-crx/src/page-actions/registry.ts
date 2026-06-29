@@ -9,11 +9,11 @@ import { log } from '@dxos/log';
 import { findComposerTab } from '../bridge/sender';
 import { matchesUrlPatterns } from './match-pattern';
 import {
+  PAGE_ACTIONS_LIST_MESSAGE_TYPE,
+  PAGE_ACTIONS_STORAGE_KEY,
   type PageActionContext,
   type PageActionDescriptor,
   type PageActionsRegistry,
-  PAGE_ACTIONS_LIST_MESSAGE_TYPE,
-  PAGE_ACTIONS_STORAGE_KEY,
   decodeListAck,
   decodeRegistry,
 } from './types';

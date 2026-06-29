@@ -4,8 +4,8 @@
 
 export * from './date';
 export * from './format';
-export { CurrencyAnnotationId, DecimalPrecision, Currency } from './number';
-export { GeoPoint, GeoLocation } from './object';
+export { Currency, CurrencyAnnotationId, DecimalPrecision } from './number';
+export { GeoLocation, GeoPoint } from './object';
 export * from './select';
 export * from './string';
 export * from './types';

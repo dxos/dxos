@@ -10,13 +10,13 @@ import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  SkillDefinition,
   CommentConfig,
   CreateObject,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
   ReactSurface,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

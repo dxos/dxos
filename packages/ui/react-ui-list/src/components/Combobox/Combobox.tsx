@@ -40,7 +40,10 @@ import {
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { listTheme } from '../List.theme';
 import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
+
+const styles = listTheme.styles();
 
 const COMBOBOX_NAME = 'Combobox';
 const COMBOBOX_CONTENT_NAME = 'ComboboxContent';
@@ -176,7 +179,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && 'text-subdued')}>
+              <span className={styles.comboboxTriggerText({ class: !value && 'text-subdued' })}>
                 {value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
@@ -207,13 +210,7 @@ type ComboboxInputProps = ThemedClassName<
 >;
 
 const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <Picker.Input
-      {...props}
-      classNames={['m-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]', classNames]}
-      ref={forwardedRef}
-    />
-  );
+  return <Picker.Input {...props} classNames={styles.comboboxInput({ class: classNames })} ref={forwardedRef} />;
 });
 
 ComboboxInput.displayName = 'Combobox.Input';
@@ -228,7 +225,7 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: ['py-form-chrome', classNames] })}
+        {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
         centered
         padding
@@ -307,16 +304,12 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         disabled={disabled}
         onSelect={handleSelect}
         ref={forwardedRef}
-        classNames={[
-          // Full width inside the viewport (no horizontal margin).
-          // `px-3 py-1`, `cursor-pointer`, `select-none` and the
-          // `dx-hover` / `dx-selected` pairing come from `Picker.Item`'s
-          // defaults; we only add the row-shape (flex / icons + label)
-          // and the disabled overrides on top.
-          'flex w-full gap-2 items-center',
-          disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent',
-          classNames,
-        ]}
+        classNames={styles.comboboxItem({
+          // `px-3 py-1`, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
+          // pairing come from `Picker.Item`'s defaults; the slot only adds row-shape (flex /
+          // icons + label). Disabled overrides are layered on per-instance.
+          class: mx(disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent', classNames),
+        })}
       >
         {children ?? (
           <>
@@ -324,7 +317,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
             {description ? (
               <span className='w-0 grow flex flex-col'>
                 <span className='truncate'>{label}</span>
-                <span className='text-sm text-description truncate'>{description}</span>
+                <span className={styles.comboboxItemDescription()}>{description}</span>
               </span>
             ) : (
               <span className='w-0 grow truncate'>{label}</span>
@@ -390,14 +383,14 @@ export const Combobox = {
 };
 
 export type {
-  ComboboxRootProps,
-  ComboboxPortalProps,
+  ComboboxArrowProps,
   ComboboxContentProps,
+  ComboboxEmptyProps,
+  ComboboxInputProps,
+  ComboboxItemProps,
+  ComboboxListProps,
+  ComboboxPortalProps,
+  ComboboxRootProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,
-  ComboboxInputProps,
-  ComboboxListProps,
-  ComboboxItemProps,
-  ComboboxArrowProps,
-  ComboboxEmptyProps,
 };

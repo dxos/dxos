@@ -30,7 +30,7 @@ import {
   SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
-import { Support, type Settings } from '#types';
+import { type Settings, Support } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';

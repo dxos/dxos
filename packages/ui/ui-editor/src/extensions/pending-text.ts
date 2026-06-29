@@ -64,8 +64,11 @@ export const pendingTextState = StateField.define<PendingTextState | null>({
         const base = next ?? emptyAt(tr.state.selection.main.head);
         next = { ...base, interim: effect.value };
       } else if (effect.is(setPendingFinal)) {
-        const base = next ?? emptyAt(tr.state.selection.main.head);
-        next = { ...base, final: effect.value, placeholder: undefined };
+        // Replace the EXISTING buffer only; never resurrect a cancelled/empty session. This lets a
+        // late post-process result (e.g. entity linking) be dropped if the user cancelled meanwhile.
+        if (next) {
+          next = { ...next, final: effect.value, placeholder: undefined };
+        }
       } else if (effect.is(cancelPendingText)) {
         next = null;
       }

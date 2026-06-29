@@ -8,12 +8,12 @@ import { Script } from '@dxos/compute';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
   Compiler,
   CreateObject,
   OperationHandler,
   ReactSurface,
   ScriptSettings,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

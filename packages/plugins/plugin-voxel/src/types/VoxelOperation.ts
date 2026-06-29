@@ -7,9 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref, DXN } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 
-import { type ModelType, MODEL_TYPES } from '../models';
+import { MODEL_TYPES, type ModelType } from '../models';
 import * as Voxel from './Voxel';
 
 const VoxelCoord = Schema.Struct({

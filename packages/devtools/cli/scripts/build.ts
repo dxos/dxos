@@ -7,7 +7,7 @@
 import solidPlugin from '@opentui/solid/bun-plugin';
 import type { BunPlugin } from 'bun';
 import { existsSync } from 'fs';
-import { mkdir, writeFile, rm, copyFile } from 'fs/promises';
+import { copyFile, mkdir, rm, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
 
 /**

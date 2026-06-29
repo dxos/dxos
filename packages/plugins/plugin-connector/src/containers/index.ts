@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+import { type ComponentType, type LazyExoticComponent, lazy } from 'react';
 
 import type { ConnectionArticleProps } from './ConnectionArticle';
 import type { ConnectionSettingsArticleProps } from './ConnectionSettingsArticle';

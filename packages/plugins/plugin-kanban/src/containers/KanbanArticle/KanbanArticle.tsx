@@ -7,7 +7,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
