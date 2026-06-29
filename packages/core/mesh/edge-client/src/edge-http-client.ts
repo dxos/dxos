@@ -15,13 +15,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  EDGE_CLIENT_TAG_HEADER,
   type CompleteOAuthRegistrationRequest,
   type CompleteOAuthRegistrationResponse,
   type CreateAgentRequestBody,
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
+  EDGE_CLIENT_TAG_HEADER,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,

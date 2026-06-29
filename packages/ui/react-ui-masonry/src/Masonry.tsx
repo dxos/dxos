@@ -7,9 +7,9 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { VirtuosoMasonry as NaturalVirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
 import React, {
-  type JSX,
   type ComponentType,
   type CSSProperties,
+  type JSX,
   type PropsWithChildren,
   type Ref,
   useMemo,

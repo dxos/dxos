@@ -15,10 +15,10 @@ import {
   synchronized,
 } from '@dxos/async';
 import {
-  SPACE_TAG,
   type ClientServicesProvider,
   type ExportSpaceOptions,
   type Space,
+  SPACE_TAG,
   type SpaceInternal,
   SpaceProperties,
 } from '@dxos/client-protocol';

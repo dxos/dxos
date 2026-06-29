@@ -3,10 +3,10 @@
 //
 
 import {
-  NODE_INPUT,
-  NODE_OUTPUT,
   type ComputeNode,
   type Executable,
+  NODE_INPUT,
+  NODE_OUTPUT,
   type NodeType,
   getTemplateInputSchema,
   registry,

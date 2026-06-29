@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { TRACE_SPAN_ATTRIBUTE, Context, Resource, type TraceContextData } from '@dxos/context';
+import { Context, Resource, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';

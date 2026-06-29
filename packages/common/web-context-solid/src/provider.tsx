@@ -3,8 +3,8 @@
 //
 
 import {
-  type JSX,
   type Accessor,
+  type JSX,
   createEffect,
   createContext as createSolidContext,
   onCleanup,

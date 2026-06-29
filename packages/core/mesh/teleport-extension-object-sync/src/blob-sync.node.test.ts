@@ -11,7 +11,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 import { range } from '@dxos/util';
 
-import { DEFAULT_CHUNK_SIZE, BlobStore } from './blob-store';
+import { BlobStore, DEFAULT_CHUNK_SIZE } from './blob-store';
 import { BlobSync } from './blob-sync';
 
 class TestAgent extends TestPeer {

@@ -6,7 +6,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { MAX_LIST_LIMIT, TOOL_METADATA, type PickerKind } from '@dxos/introspect-tools';
+import { MAX_LIST_LIMIT, type PickerKind, TOOL_METADATA } from '@dxos/introspect-tools';
 import { Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

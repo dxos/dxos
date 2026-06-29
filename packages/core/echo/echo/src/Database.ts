@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type URI, type SpaceId } from '@dxos/keys';
+import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';

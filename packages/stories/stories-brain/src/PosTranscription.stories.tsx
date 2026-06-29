@@ -22,7 +22,7 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-mar
 import { translations } from '@dxos/plugin-transcription/translations';
 import { pos } from '@dxos/ui-editor';
 
-import { SAMPLE_CONTENT, DefaultStory, createMarkdownStoryDecorators } from './testing';
+import { DefaultStory, SAMPLE_CONTENT, createMarkdownStoryDecorators } from './testing';
 
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,

@@ -15,7 +15,7 @@ import {
   transition,
 } from 'd3';
 import { type ControlPosition } from 'leaflet';
-import { type JSX, type Accessor, type Setter, Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { type Accessor, type JSX, type Setter, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { type Topology } from 'topojson-specification';
 
 import { mx } from '@dxos/ui-theme';

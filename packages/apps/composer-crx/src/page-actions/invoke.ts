@@ -10,10 +10,10 @@ import { findComposerTab, openComposerTab } from '../bridge/sender';
 import { getRegistry } from './registry';
 import { enrichSnapshotWithThumbnail } from './thumbnail';
 import {
-  PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
-  PAGE_ACTION_INVOKE_MESSAGE_TYPE,
   type InvokeAck,
   type InvokeRequest,
+  PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
+  PAGE_ACTION_INVOKE_MESSAGE_TYPE,
   decodeInvokeAck,
 } from './types';
 import { nextId, sleep } from './util';

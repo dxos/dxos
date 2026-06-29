@@ -3,7 +3,7 @@
 //
 
 import { sleep } from '@dxos/async';
-import { TRACE_SPAN_ATTRIBUTE, Context, type TraceContextData } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';

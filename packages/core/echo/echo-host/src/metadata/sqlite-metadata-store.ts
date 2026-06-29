@@ -13,7 +13,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { STORAGE_VERSION, DataCorruptionError } from '@dxos/protocols';
+import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {

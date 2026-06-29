@@ -10,8 +10,8 @@ import { isComposerUrl } from '../bridge/urls';
 import { renderUrl } from './render';
 import {
   PING_MESSAGE_TYPE,
-  RENDER_MESSAGE_TYPE,
   type PingAck,
+  RENDER_MESSAGE_TYPE,
   type RenderAck,
   decodePingRequest,
   decodeRenderRequest,

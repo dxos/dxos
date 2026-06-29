@@ -22,7 +22,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { DEFAULT_AGENT_IDENTITY, AgentIdentity } from '#types';
+import { AgentIdentity, DEFAULT_AGENT_IDENTITY } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';

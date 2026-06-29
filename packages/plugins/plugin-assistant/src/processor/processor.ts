@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { DEFAULT_EDGE_MODEL, type AiService, type ModelName, type ModelRegistry, type OpaqueToolkit } from '@dxos/ai';
+import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry, type OpaqueToolkit } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import {
   AiContext,

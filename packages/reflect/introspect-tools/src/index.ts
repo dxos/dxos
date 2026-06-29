@@ -6,7 +6,7 @@
 // metadata, and the zod adapter the MCP SDK needs. No node:fs, no ts-morph,
 // no MCP transport machinery — those live in @dxos/introspect-mcp.
 
-export { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, type ListOptions } from './limits';
+export { DEFAULT_LIST_LIMIT, type ListOptions, MAX_LIST_LIMIT } from './limits';
 export { TOOL_METADATA, type ToolMetadata, inputSchemaToZod } from './metadata';
 export {
   type Capability,

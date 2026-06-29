@@ -21,9 +21,9 @@ import { type TooltipProps } from '@radix-ui/react-tooltip';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import * as VisuallyHiddenPrimitive from '@radix-ui/react-visually-hidden';
 import React, {
-  type FC,
   type ComponentPropsWithoutRef,
   type ComponentRef,
+  type FC,
   type ReactNode,
   type RefObject,
   type SyntheticEvent,

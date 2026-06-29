@@ -11,7 +11,7 @@ import { type Database, Entity, type Filter, Query, type QueryResult, Registry, 
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, URI, EntityId, PublicKey } from '@dxos/keys';
+import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 
 import { QueryResultCache } from '../query';
 

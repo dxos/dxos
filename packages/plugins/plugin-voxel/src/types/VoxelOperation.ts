@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Ref } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 
 import { MODEL_TYPES, type ModelType } from '../models';
 import * as Voxel from './Voxel';

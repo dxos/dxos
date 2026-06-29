@@ -30,9 +30,9 @@ import { Input, Message, type ThemedClassName, ToggleIconButton, useTranslation 
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
-  VIEW_FIELD_LIMIT,
   ParentLabelAnnotation,
   ProjectionModel,
+  VIEW_FIELD_LIMIT,
   createEchoChangeCallback,
   getTypeURIFromQuery,
 } from '@dxos/schema';

@@ -13,7 +13,7 @@ import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
 import { meta } from '#meta';
-import { PLANK_COMPANION_TYPE, DeckOperation, type LayoutMode, type ResolvedPart } from '#types';
+import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];

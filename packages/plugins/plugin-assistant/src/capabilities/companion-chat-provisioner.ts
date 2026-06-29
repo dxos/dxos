@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   COMPANION_VIEW_STATE_CONTEXT,
-  PLANK_COMPANION_TYPE,
   DeckCapabilities,
+  PLANK_COMPANION_TYPE,
   type StoredDeckState,
   companionVariantAspect,
 } from '@dxos/plugin-deck';

@@ -22,7 +22,7 @@ import { ComplexSet } from '@dxos/util';
 
 import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler';
 import { InvitationGuestExtension } from './invitation-guest-extenstion';
-import { MAX_OTP_ATTEMPTS, InvitationHostExtension, isAuthenticationRequired } from './invitation-host-extension';
+import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
 import { createGuardedInvitationState } from './invitation-state';
 import { InvitationTopology } from './invitation-topology';

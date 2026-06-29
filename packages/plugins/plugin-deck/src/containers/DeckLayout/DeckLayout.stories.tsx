@@ -28,9 +28,9 @@ import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import {
-  PLANK_COMPANION_TYPE,
   DeckCapabilities,
   type EphemeralDeckState,
+  PLANK_COMPANION_TYPE,
   type Settings,
   type StoredDeckState,
   defaultDeck,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, type JSX, type ComponentType, useMemo } from 'react';
+import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { type TraceEvent } from '@dxos/functions-runtime';

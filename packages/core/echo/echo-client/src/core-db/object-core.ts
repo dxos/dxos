@@ -25,7 +25,7 @@ import {
 import { EntityKind, type EntityMeta, getStrongDependencyUris } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, URI, EntityId, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 

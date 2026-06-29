@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { Process } from '@dxos/compute';
 import { Icon, IconButton, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
-import { TREEGRID_PATH_SEPARATOR, Treegrid } from '@dxos/react-ui-list';
+import { Treegrid, TREEGRID_PATH_SEPARATOR } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 

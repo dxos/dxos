@@ -23,7 +23,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { DXN, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

@@ -21,9 +21,9 @@ export {
 } from './pending-block-status';
 export {
   BEGIN_EVENT_TYPES,
+  type BuildSpanTreeOptions,
   END_EVENT_TYPES,
   ROOT_SPAN_ID,
-  type BuildSpanTreeOptions,
   type Span,
   type SpanMeta,
   buildSpanTree,

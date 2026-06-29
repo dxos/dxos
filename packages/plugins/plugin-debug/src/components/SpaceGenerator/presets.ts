@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, Trigger } from '@dxos/compute';
-import { NODE_INPUT, type ComputeGraphModel } from '@dxos/conductor';
+import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';

@@ -14,7 +14,7 @@ import {
   getStrongDependencies,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { DXN, EID, type URI, type EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';

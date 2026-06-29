@@ -8,12 +8,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { composableProps, slottable } from '@dxos/react-ui';
 import {
-  SVG,
   type GraphLayout,
   type GraphLayoutNode,
   type GraphProjector,
   GraphSwarmProjector,
   type ModelPoint,
+  SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';

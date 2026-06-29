@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
-import { DXN, type Database, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';

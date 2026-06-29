@@ -28,7 +28,6 @@ import type * as Schema from 'effect/Schema';
 
 import type { Introspector } from '@dxos/introspect';
 import {
-  TOOL_METADATA,
   type FindSymbolArgs,
   type GetPackageArgs,
   type GetSymbolArgs,
@@ -41,6 +40,7 @@ import {
   type ListSchemasArgs,
   type ListSurfacesArgs,
   type ListSymbolsArgs,
+  TOOL_METADATA,
 } from '@dxos/introspect-tools';
 
 import type { ToolLogger } from './logger';

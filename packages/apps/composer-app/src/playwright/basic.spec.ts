@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
 // import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
-import { INITIAL_SPACE_COUNT, INITIAL_URL, AppManager } from './app-manager';
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {

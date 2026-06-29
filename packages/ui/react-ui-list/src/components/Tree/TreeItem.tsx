@@ -35,7 +35,7 @@ import {
   mx,
 } from '@dxos/ui-theme';
 
-import { TREEGRID_PARENT_OF_SEPARATOR, Treegrid } from '../Treegrid';
+import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '../Treegrid';
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
 import { TreeDropIndicator } from './TreeDropIndicator';

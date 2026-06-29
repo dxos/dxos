@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Skill } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { DXN, Annotation, Database, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

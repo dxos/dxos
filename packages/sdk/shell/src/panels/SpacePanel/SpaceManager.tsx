@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, type Dispatch, type SetStateAction, useCallback, useState } from 'react';
+import React, { type Dispatch, type FC, type SetStateAction, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';

@@ -19,7 +19,7 @@ import * as Option from 'effect/Option';
 
 import { createCliApp } from '@dxos/app-framework/cli';
 import { unrefTimeout } from '@dxos/async';
-import { DXOS_VERSION, ConfigService } from '@dxos/client';
+import { ConfigService, DXOS_VERSION } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';

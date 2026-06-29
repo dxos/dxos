@@ -9,11 +9,11 @@ import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
-  SVG,
   type GraphController,
   GraphForceProjector,
   type GraphLayoutNode,
   type GraphProps,
+  SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';

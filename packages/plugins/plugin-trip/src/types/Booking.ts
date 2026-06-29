@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 // Organization is referenced in the inferred type of Booking (via Provider.Provider → Ref.Ref(Organization));
 // the import lets TypeScript name it in the emitted .d.ts.

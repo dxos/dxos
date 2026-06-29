@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, EntityStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, URI, EntityId } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -15,9 +15,9 @@ import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
+  type AnyEntity,
   ATTR_PARENT,
   ATTR_TYPE,
-  type AnyEntity,
   EntityKind,
   KindId,
   ParentId,

@@ -10,7 +10,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { DXN, Database, type Key, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, DXN, type Key, Obj, Ref, Relation } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

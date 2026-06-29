@@ -4,8 +4,8 @@
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import {
-  PROXY_CONNECTION_TIMEOUT,
   type IframeServiceBundle,
+  PROXY_CONNECTION_TIMEOUT,
   iframeServiceBundle,
   workerServiceBundle,
 } from '@dxos/client-protocol';

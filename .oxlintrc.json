@@ -77,19 +77,15 @@
       {
         "customGroups": [
           {
-            "elementNamePattern": "^[A-Z][A-Z0-9_]*$",
-            "groupName": "const"
-          },
-          {
-            "elementNamePattern": "^[A-Z][a-zA-Z0-9]*$",
+            "elementNamePattern": "^[A-Z][A-Za-z0-9_]*$",
             "groupName": "capitalized"
           },
           {
-            "elementNamePattern": "^[a-z][a-zA-Z0-9]*$",
+            "elementNamePattern": "^[a-z][A-Za-z0-9_]*$",
             "groupName": "lowercase"
           }
         ],
-        "groups": ["const", "capitalized", "lowercase"],
+        "groups": ["capitalized", "lowercase"],
         "order": "asc",
         "type": "natural"
       }
@@ -99,19 +95,15 @@
       {
         "customGroups": [
           {
-            "elementNamePattern": "^[A-Z][A-Z0-9_]*$",
-            "groupName": "const"
-          },
-          {
-            "elementNamePattern": "^[A-Z][a-zA-Z0-9]*$",
+            "elementNamePattern": "^[A-Z][A-Za-z0-9_]*$",
             "groupName": "capitalized"
           },
           {
-            "elementNamePattern": "^[a-z][a-zA-Z0-9]*$",
+            "elementNamePattern": "^[a-z][A-Za-z0-9_]*$",
             "groupName": "lowercase"
           }
         ],
-        "groups": ["const", "capitalized", "lowercase"],
+        "groups": ["capitalized", "lowercase"],
         "order": "asc",
         "type": "natural"
       }

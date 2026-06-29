@@ -12,7 +12,7 @@ import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { TRACE_PROCESSOR, type Diagnostics, type DiagnosticsRequest } from '@dxos/tracing';
+import { type Diagnostics, type DiagnosticsRequest, TRACE_PROCESSOR } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
 import { getDeep } from '@dxos/util';
 

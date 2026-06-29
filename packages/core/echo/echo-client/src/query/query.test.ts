@@ -26,7 +26,7 @@ import {
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, EID, URI, EntityId, PublicKey } from '@dxos/keys';
+import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';

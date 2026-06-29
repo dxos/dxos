@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

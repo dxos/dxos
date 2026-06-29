@@ -10,7 +10,7 @@ import {
   scheduleMicroTask,
   scheduleTaskInterval,
 } from '@dxos/async';
-import { TRACE_SPAN_ATTRIBUTE, Context, type TraceContextData } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';

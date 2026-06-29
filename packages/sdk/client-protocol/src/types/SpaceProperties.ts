@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Feed, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Ref, Type } from '@dxos/echo';
 
 /**
  * Where do triggers get executed.

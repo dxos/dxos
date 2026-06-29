@@ -7,7 +7,6 @@ export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 export * from './automerge';
 export * from './client';
 export {
-  META_NAMESPACE,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type BindOptions,
@@ -16,6 +15,7 @@ export {
   type InitRootProxyFn,
   type ItemsUpdatedEvent,
   type LoadObjectOptions,
+  META_NAMESPACE,
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
   objectIsUpdated,

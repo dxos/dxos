@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
 export class Outline extends Type.makeObject<Outline>(DXN.make('org.dxos.type.outline', '0.1.0'))(

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { DXN, Annotation, Database, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';

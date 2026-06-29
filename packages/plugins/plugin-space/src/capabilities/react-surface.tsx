@@ -49,10 +49,10 @@ import {
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import {
-  SPACE_HOME_NODE_TYPE,
   HueAnnotationId,
   IconAnnotationId,
   Settings,
+  SPACE_HOME_NODE_TYPE,
   SpaceCapabilities,
   SpaceHomeContent,
   type TypeInputOptions,

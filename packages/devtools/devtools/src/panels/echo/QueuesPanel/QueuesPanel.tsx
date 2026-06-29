@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type JSX, type ComponentType, useMemo, useState } from 'react';
+import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { Toolbar } from '@dxos/react-ui';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { DXN, type Database, Filter, Obj } from '@dxos/echo';
+import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Event as EventType } from '@dxos/types';

@@ -18,11 +18,11 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import {
-  INPUT_NAME,
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
   type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
   Description as DescriptionPrimitive,
   type DescriptionProps as DescriptionPrimitiveProps,
+  INPUT_NAME,
   InputRoot,
   type InputRootProps,
   type InputScopedProps,

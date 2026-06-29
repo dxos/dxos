@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeEdge, ComputeGraphModel, type ComputeNode } from '@dxos/conductor';
+import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type CanvasBoard, type CanvasGraphModel, type GraphMonitor } from '@dxos/react-ui-canvas-editor';

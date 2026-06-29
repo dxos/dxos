@@ -7,7 +7,7 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 
 import { log } from '@dxos/log';
-import { TRACE_PROCESSOR, type MetricData } from '@dxos/tracing';
+import { type MetricData, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 

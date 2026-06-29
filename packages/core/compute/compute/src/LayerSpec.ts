@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 import * as Types from 'effect/Types';
 
-import { type URI, SpaceId } from '@dxos/keys';
+import { SpaceId, type URI } from '@dxos/keys';
 
 import type * as Process from './Process';
 

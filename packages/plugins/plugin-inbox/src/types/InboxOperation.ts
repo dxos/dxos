@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { DXN, Collection, Database, Obj, Ref, Type } from '@dxos/echo';
+import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import {
   Connection,
   GetSyncTargetsInput,

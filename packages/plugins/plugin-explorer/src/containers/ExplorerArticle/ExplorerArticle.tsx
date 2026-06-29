@@ -12,7 +12,7 @@ import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { VARIANTS, type ExplorerArticleVariant, type TreeNode, Visualization, isVariant } from '#components';
+import { type ExplorerArticleVariant, type TreeNode, VARIANTS, Visualization, isVariant } from '#components';
 import { useGraphModel } from '#hooks';
 
 export type { ExplorerArticleVariant } from '#components';

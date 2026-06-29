@@ -11,18 +11,18 @@ import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/
 import { Entity, Obj, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
-  PROPERTY_ID,
   EncodedReference,
   type EntityStructure,
+  PROPERTY_ID,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import {
+  type AnyProperties,
   ATTR_DELETED,
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type AnyProperties,
   ChangeId,
   EntityKind,
   type EntityMeta,
@@ -74,12 +74,12 @@ import {
   toEffectSchema,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, type URI, EntityId } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc';
-import { META_NAMESPACE, type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
+import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';

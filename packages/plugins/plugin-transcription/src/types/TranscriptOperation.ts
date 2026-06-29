@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Ref, Type } from '@dxos/echo';
 // Message and Person are used via Type.getSchema(Message.Message); they also appear in emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Message, type Person, Transcript } from '@dxos/types';

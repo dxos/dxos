@@ -21,10 +21,10 @@ import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { hideOthers } from 'aria-hidden';
 import React, {
-  type FC,
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
   type ComponentRef,
+  type FC,
   type ReactNode,
   type RefObject,
   forwardRef,

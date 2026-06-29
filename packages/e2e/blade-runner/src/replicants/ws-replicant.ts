@@ -8,10 +8,10 @@ import { Trigger, latch } from '@dxos/async';
 import { DXN, Type } from '@dxos/echo';
 import {
   EdgeClient,
+  SwarmRequest_Action,
   SwarmRequestSchema,
   createEphemeralEdgeIdentity,
   protocol,
-  SwarmRequest_Action,
 } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

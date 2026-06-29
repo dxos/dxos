@@ -5,8 +5,8 @@
 export { Compiler, type Diagnostic, type DiagnosticSeverity } from './compiler';
 export { getCompiler, resetCompiler } from './singleton';
 export {
-  ENTRY_CANDIDATES,
   type BuildResult,
+  ENTRY_CANDIDATES,
   type LoadedFile,
   type RunResult,
   compileEntry,

@@ -5,10 +5,10 @@
 import type { Message } from '@automerge/automerge-repo';
 
 import {
-  MESSAGE_TYPE_COLLECTION_QUERY,
-  MESSAGE_TYPE_COLLECTION_STATE,
   type CollectionQueryMessage,
   type CollectionStateMessage,
+  MESSAGE_TYPE_COLLECTION_QUERY,
+  MESSAGE_TYPE_COLLECTION_STATE,
 } from '@dxos/protocols';
 
 export { type CollectionQueryMessage, type CollectionStateMessage };
