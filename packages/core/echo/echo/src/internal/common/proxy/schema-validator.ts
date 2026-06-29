@@ -158,9 +158,11 @@ export class SchemaValidator {
         return Schema.Number;
       }
 
-      const indexedSchema = this.getIndexedElementSchema(schema, prop);
-      if (indexedSchema != null) {
-        return indexedSchema;
+      if (typeof prop !== 'symbol') {
+        const indexedSchema = this.getIndexedElementSchema(schema, prop);
+        if (indexedSchema != null) {
+          return indexedSchema;
+        }
       }
 
       // Arrays sometimes carry the element struct as their stamped schema.
@@ -370,6 +372,10 @@ const resolveTypeLiteral = (
 
   if (SchemaAST.isTypeLiteral(typeOrDiscriminatedUnion)) {
     return typeOrDiscriminatedUnion;
+  }
+
+  if (!SchemaAST.isUnion(typeOrDiscriminatedUnion)) {
+    return null;
   }
 
   const typeAstList = typeOrDiscriminatedUnion.types.filter((type) =>
