@@ -18,6 +18,8 @@ export type RunSummary = {
   readonly steps: number;
   /** True if the frontier is fully drained; false if stopped at the step bound. */
   readonly done: boolean;
+  /** Targets skipped because the source fetch failed (e.g. a 403 on an inaccessible channel). */
+  readonly errored: number;
 };
 
 /** Dispatch one event to every stage that handles it; isolate per-stage failures on the target. */
@@ -66,12 +68,23 @@ export const advance = (
       );
     }
 
-    const page = yield* source.fetchMessages({
-      channelId: target.channelId,
-      threadId: target.threadId,
-      cursor: target.cursor,
-      maxDays: config.seed?.maxDays,
-    });
+    // A source-fetch failure is isolated to this target: mark it errored and continue with the rest
+    // of the frontier rather than aborting the whole crawl (e.g. a 403 on one inaccessible channel).
+    const fetched = yield* Effect.either(
+      source.fetchMessages({
+        channelId: target.channelId,
+        threadId: target.threadId,
+        cursor: target.cursor,
+        maxDays: config.seed?.maxDays,
+      }),
+    );
+    if (fetched._tag === 'Left') {
+      yield* Effect.logWarning(`crawl: skipping ${target.id} — ${fetched.left.message}`);
+      yield* store.setStatus(target.id, 'error', fetched.left.message);
+      const remaining = yield* store.hasActionable();
+      return remaining ? { _tag: 'more' as const } : { _tag: 'done' as const };
+    }
+    const page = fetched.right;
 
     for (const message of page.messages) {
       yield* runStages(stages, { _tag: 'Message', target, message });
@@ -134,6 +147,9 @@ export const run = (
     yield* seedFrontier(config);
     yield* store.setRunStatus('running');
 
+    const erroredCount = () =>
+      store.listTargets().pipe(Effect.map((targets) => targets.filter((target) => target.status === 'error').length));
+
     const maxSteps = options?.maxSteps ?? Number.POSITIVE_INFINITY;
     let steps = 0;
     while (steps < maxSteps) {
@@ -141,9 +157,9 @@ export const run = (
       steps++;
       if (result._tag === 'done') {
         yield* store.setRunStatus('done');
-        return { steps, done: true };
+        return { steps, done: true, errored: yield* erroredCount() };
       }
     }
     yield* store.setRunStatus('paused');
-    return { steps, done: false };
+    return { steps, done: false, errored: yield* erroredCount() };
   });

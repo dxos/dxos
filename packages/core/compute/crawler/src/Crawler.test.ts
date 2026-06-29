@@ -4,23 +4,32 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { SemanticStore } from '@dxos/semantic-index';
 
 import { AgentRegistry } from './AgentRegistry';
 import { run } from './Crawler';
+import { CrawlError } from './errors';
+import { Source } from './Source';
 import { type Stage } from './Stage';
 import { makeAgentProfileStage } from './stages/agent-profile';
 import { makeExtractFactsStage } from './stages/extract-facts';
 import { extractTopics } from './stages/topics';
 import { StateStore } from './StateStore';
-import { TestLayer, THREADED_FIXTURE } from './testing';
+import { TestLayer, THREADED_FIXTURE, servicesLayer } from './testing';
 import type * as Type from './types';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 
 const STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
+
+/** A source whose fetch always fails — exercises per-target error isolation. */
+const FAILING_SOURCE = Layer.succeed(Source, {
+  listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
+  fetchMessages: () => Effect.fail(new CrawlError({ message: 'Missing Access' })),
+});
 
 /** A stage that records the event sequence, to assert traversal order. */
 const recorder = (log: string[]): Stage => ({
@@ -112,6 +121,24 @@ describe('Crawler', () => {
         expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
       },
       Effect.provide(TestLayer(THREADED_FIXTURE)),
+    ),
+  );
+
+  it.effect(
+    'isolates a source-fetch failure to the target and finishes cleanly',
+    Effect.fnUntraced(
+      function* () {
+        const summary = yield* run({ channels: ['chan-1'], descendThreads: false }, STAGES);
+        const state = yield* StateStore;
+        const targets = yield* state.listTargets();
+
+        // The run completes rather than crashing; the bad target is marked errored.
+        expect(summary.done).toBe(true);
+        expect(summary.errored).toBe(1);
+        expect(targets[0].status).toBe('error');
+        expect(targets[0].lastError).toContain('Missing Access');
+      },
+      Effect.provide(Layer.merge(FAILING_SOURCE, servicesLayer)),
     ),
   );
 
