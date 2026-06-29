@@ -180,4 +180,50 @@ describe('SemanticPipeline', () => {
       Effect.provide(queuedAiService([LLM_OUTPUT])),
     ),
   );
+
+  it.effect(
+    'loads the discord fixture, runs it through the pipeline, and answers a query',
+    Effect.fnUntraced(function* () {
+      // One fact per extracted chunk so persisted-fact count equals the LLM call count.
+      const ai = countingAiService({
+        facts: [{ subject: 'Composer', predicate: 'discussedIn', object: 'Discord', factuality: 'CT+', polarity: '+' }],
+      });
+      // In-memory (browser/test) store layer — no SQLite.
+      const layer = SemanticStore.layerMemory.pipe(Layer.provideMerge(ai.layer));
+      yield* Effect.gen(function* () {
+        const docs = loadDiscordDocs();
+        yield* SemanticPipeline.run(docs);
+        const store = yield* SemanticStore;
+
+        // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.
+        const byEntity = yield* store.query({ entity: 'composer' });
+        const all = yield* store.select('SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }');
+
+        yield* Effect.sync(() => {
+          if (docs.length === 0) {
+            throw new Error('no fixture documents loaded');
+          }
+          if (ai.calls() < docs.length) {
+            throw new Error(`expected >= ${docs.length} extractions (one per message), got ${ai.calls()}`);
+          }
+          if (byEntity.length !== ai.calls()) {
+            throw new Error(`query returned ${byEntity.length} facts but pipeline extracted ${ai.calls()}`);
+          }
+          if (all.length !== byEntity.length) {
+            throw new Error(`raw select (${all.length}) and structured query (${byEntity.length}) disagree`);
+          }
+          const [fact] = byEntity;
+          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'composer') {
+            throw new Error('subject entity not linked');
+          }
+          if (fact.assertion.predicate !== 'discussedIn') {
+            throw new Error('predicate not extracted');
+          }
+          if (!fact.attribution.source.startsWith('discord:')) {
+            throw new Error(`attribution source not from discord: ${fact.attribution.source}`);
+          }
+        });
+      }).pipe(Effect.provide(layer));
+    }),
+  );
 });
