@@ -24,13 +24,12 @@ const make = () =>
 
         Use the \`getValues\` tool to read cell values from the sheet.
         It returns a 2D array indexed [row][col] and the A1 range it covers.
-        Omit the \`range\` parameter to read the entire occupied area.
-        Use \`getCellValue\` to read a single cell.
+        Omit the \`range\` parameter to read the entire occupied area, or pass a range like "A1:C5" to read a subset.
 
         ## Writing data
 
-        Use \`setValues\` to write multiple cells at once (preferred for bulk updates).
-        Use \`setCellValue\` to write a single cell.
+        Use \`setValues\` to write one or more cells at once.
+        Pass a map of A1 addresses to values, e.g. \`{ "A1": "Name", "B1": 42, "C1": "=SUM(A1:A5)" }\`.
         Cell values can be plain scalars (string, number, boolean) or formula strings starting with "=".
         Formula examples: "=SUM(A1:A5)", "=A1*B1", "=IF(C2>0,\"yes\",\"no\")".
         Over 400 HyperFormula functions are available: arithmetic, statistical, text, date/time, financial, logical.

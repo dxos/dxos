@@ -15,10 +15,10 @@ const handler: Operation.WithHandler<typeof SheetOperation.GetValues> = SheetOpe
     Effect.fn(function* ({ sheet: sheetRef, range }) {
       const sheet = yield* Database.load(sheetRef);
 
-      let fromRow = 0;
-      let fromCol = 0;
-      let toRow = -1;
-      let toCol = -1;
+      let fromRow: number;
+      let fromCol: number;
+      let toRow: number;
+      let toCol: number;
 
       if (range) {
         const [fromPart, toPart = fromPart] = range.split(':');
@@ -29,18 +29,32 @@ const handler: Operation.WithHandler<typeof SheetOperation.GetValues> = SheetOpe
         toRow = to.row;
         toCol = to.col;
       } else {
+        let minRow = Infinity;
+        let minCol = Infinity;
+        let maxRow = -1;
+        let maxCol = -1;
         for (const key of Object.keys(sheet.cells)) {
           const cellValue = sheet.cells[key]?.value;
           if (cellValue !== undefined && cellValue !== null) {
             const { row, col } = addressFromIndex(sheet, key);
-            if (row > toRow) {
-              toRow = row;
+            if (row < minRow) {
+              minRow = row;
             }
-            if (col > toCol) {
-              toCol = col;
+            if (row > maxRow) {
+              maxRow = row;
+            }
+            if (col < minCol) {
+              minCol = col;
+            }
+            if (col > maxCol) {
+              maxCol = col;
             }
           }
         }
+        fromRow = minRow === Infinity ? 0 : minRow;
+        fromCol = minCol === Infinity ? 0 : minCol;
+        toRow = maxRow;
+        toCol = maxCol;
       }
 
       if (toRow < 0) {
