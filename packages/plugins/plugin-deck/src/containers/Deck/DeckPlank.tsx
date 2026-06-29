@@ -114,13 +114,19 @@ export const DeckPlank = memo(
     // Splitter.Root is always the outer element so <Plank> stays at the same tree position regardless of
     // whether the companion is open. A root-element-type change (Plank ↔ Splitter.Root) would force React
     // to unmount and remount the entire subtree on every companion toggle, resetting article state.
+    //
+    // `mode` drives the animated open/close: switching between 'split' and 'start' triggers the Splitter's
+    // built-in 250ms CSS transition, which slides the companion in/out without a flash. The companion panel
+    // stays mounted while companions exist (collapsed to 0 at mode='start') so the transition always has
+    // something to animate; conditional rendering would remount it on every open, losing companion state.
     return (
       <Splitter.Root
         orientation={companionOrientation}
         anchor='end'
+        mode={hasCompanion ? 'split' : 'start'}
         resizable={hasCompanion}
         size={companionSize}
-        minSize={hasCompanion ? 20 : 0}
+        minSize={20}
         onSizeChange={onCompanionSizeChange}
         classNames={classNames}
       >
@@ -143,7 +149,7 @@ export const DeckPlank = memo(
             onKeyDown={handleKeyDown}
           />
         </Splitter.Panel>
-        {hasCompanion && (
+        {companions.length > 0 && (
           <>
             <Splitter.Handle />
             <Splitter.Panel position='end'>
