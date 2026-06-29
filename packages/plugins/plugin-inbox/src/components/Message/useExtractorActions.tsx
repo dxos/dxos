@@ -51,11 +51,7 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
       // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
       // (e.g. `AiService`) can materialize.
       return invoker
-        .invokePromise(
-          InboxOperation.ExtractMessage,
-          { db: space.db, source: message, extractorId },
-          { spaceId: space.id },
-        )
+        .invokePromise(InboxOperation.ExtractMessage, { source: message, extractorId }, { spaceId: space.id })
         .catch((err) => {
           // Distinguish the startup race where the assistant plugin's `AiService` LayerSpec is not
           // yet in the process-manager runtime: surface an actionable message instead of an opaque

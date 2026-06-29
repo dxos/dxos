@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       const dbLayer = Database.layer(space.db);
 
-      const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(Effect.provide(dbLayer));
+      const messages = yield* Feed.query(sourceFeed, Filter.type(Message.Message)).run.pipe(Effect.provide(dbLayer));
 
       // Sort chronologically to find the last message.
       const sorted = messages
@@ -58,7 +58,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       // Copy source chat's skill and object bindings to the new feed.
       // Sort chronologically so add/remove events are applied in the correct order.
-      const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
+      const sourceBindings = (yield* Feed.query(sourceFeed, Filter.type(AiContext.Binding)).run.pipe(
         Effect.provide(dbLayer),
       )).filter(Obj.instanceOf(AiContext.Binding));
 

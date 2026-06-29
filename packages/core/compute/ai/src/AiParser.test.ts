@@ -189,6 +189,63 @@ describe('parser', () => {
     );
 
     it.effect(
+      'surface tag parsed with role and json data attribute',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          ...text([`<surface role='integration-prompt' data='{"service":"gmail.com"}' />`]),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'surface',
+            role: 'integration-prompt',
+            data: { service: 'gmail.com' },
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'surface tag parsed with json data as text content',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          ...text([`<surface role="integration-prompt">{"service":"gmail.com"}</surface>`]),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'surface',
+            role: 'integration-prompt',
+            data: { service: 'gmail.com' },
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'surface tag without data parsed with role only',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text([`<surface role="integration-prompt" />`])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'surface',
+            role: 'integration-prompt',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
       'multi choice select',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([

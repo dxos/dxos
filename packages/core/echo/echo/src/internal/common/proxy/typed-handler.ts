@@ -28,7 +28,15 @@ import {
   wouldCreateCycle,
 } from './ownership';
 import { type ReactiveHandler, objectData } from './proxy-types';
-import { createProxy, isProxy, isValidProxyTarget, normalizeSpliceRange, symbolIsProxy } from './proxy-utils';
+import {
+  createProxy,
+  isProxy,
+  isReactiveRecord,
+  isValidProxyTarget,
+  normalizeSpliceRange,
+  symbolIsProxy,
+  symbolReactivePrototype,
+} from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
 import { SchemaValidator } from './schema-validator';
 import { ChangeId, EventId } from './symbols';
@@ -93,9 +101,10 @@ const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
     return copy as T;
   }
 
-  // Don't copy other class instances (objects with non-Object prototype).
+  // Don't copy other class instances (objects with non-Object prototype). A reactive record
+  // (its metadata moved onto a behaviour prototype) still counts as a plain data record here.
   const proto = Object.getPrototypeOf(actualValue);
-  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) {
+  if (proto !== Array.prototype && proto !== null && !isReactiveRecord(actualValue)) {
     return value; // Return as-is, don't copy class instances.
   }
 
@@ -131,6 +140,138 @@ const copyHiddenProperties = (source: any, target: any): void => {
   }
 };
 
+//
+// Object layering for an in-memory typed reactive object (`TypedReactiveHandler`).
+//
+// Unlike the database-backed handler (echo-client/echo-prototypes.ts), here USER DATA lives as
+// real OWN properties on the target — there is no document behind it. Only the per-object metadata
+// is relocated onto a prototype, so swapping handlers doesn't disturb the data shape:
+//
+//   proxy ──Proxy(target, ProxyHandlerSlot → TypedReactiveHandler)
+//     │         get/set/has/... traps run here
+//     ▼
+//   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
+//     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
+//     ▼
+//   instanceState     `Object.create(TypedObjectPrototype)`. Holds the relocated symbol-keyed
+//     │ [[Prototype]] metadata as hidden props: [EventId] (root only), [ObjectDeletedId], [SchemaId],
+//     │               [TypeId], [TypeEntityId], cached [StaticTypeSchemaSlot], ... (Arrays are
+//     │               exempt — they keep their ReactiveArray chain and are never compacted.)
+//     ▼
+//   TypedObjectPrototype     shared behaviour. Carries [symbolReactivePrototype]=true (so the
+//     │ [[Prototype]] "plain object" gates still treat the record as data) plus the system
+//     │               accessors [objectData], [ChangeId], [StaticTypeSchemaSlot]; the get trap
+//     │               delegates to these via `isBehaviourAccessor` instead of switching.
+//     ▼
+//   Object.prototype ──▶ null     a `getPrototypeOf` trap reports `Object.prototype` so consumers
+//                     see a plain object; the real instanceState prototype stays hidden.
+//
+// Root vs nested: a root object owns an `[EventId]`; nested records share their root's reactivity
+// and have none. That presence is the "is this an initialized root" signal (it replaced an earlier
+// `[ChangeId] === true` marker).
+//
+// `this` in the accessors below: the get trap calls `Reflect.get(target, prop, receiver)`, so
+// `this` is the PROXY (receiver) on the common path, or the raw target when read directly.
+// `getRawTarget(this)` normalizes to the underlying target — needed here because user data and the
+// metadata chain both hang off the raw target, and `executeChange` keys the change context by it.
+//
+/**
+ * Behaviour prototype for typed reactive records. A record's per-object metadata is moved onto an
+ * intermediate instance-state object whose prototype is this, so that swapping the handler that
+ * backs an object (e.g. an in-memory object becoming database-backed) is a prototype re-point that
+ * doesn't perturb the target's own-property shape. Marked as a reactive prototype so the "plain
+ * object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
+ */
+const TypedObjectPrototype: object = Object.create(Object.prototype);
+defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
+
+// The ECHO system surface is exposed as accessors on the behaviour prototype rather than as
+// branches in the `get` trap. `this` is the proxy receiver (or the raw target when read directly);
+// `getRawTarget` resolves either to the underlying target.
+Object.defineProperties(TypedObjectPrototype, {
+  // TODO(burdon): Remove?
+  [objectData]: {
+    get(this: ProxyTarget) {
+      return toJSON(getRawTarget(this));
+    },
+  },
+  [ChangeId]: {
+    // A function that runs a mutation inside a controlled change context. Only root objects (which
+    // own an `EventId`) expose one; nested records share their root's reactivity and return undefined.
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      if (!(EventId in target)) {
+        return undefined;
+      }
+      return (callback: (obj: any) => void) => executeChange(target, target, this, callback);
+    },
+  },
+  [StaticTypeSchemaSlot]: {
+    // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it as an own (hidden)
+    // property so subsequent reads short-circuit this accessor; the set-trap deletes the cache when
+    // `jsonSchema` is mutated.
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      const jsonSchema = (target as any).jsonSchema;
+      if (jsonSchema == null) {
+        return undefined;
+      }
+      const rebuilt = toEffectSchema(jsonSchema);
+      defineHiddenProperty(target, StaticTypeSchemaSlot, rebuilt);
+      return rebuilt;
+    },
+  },
+});
+
+/** True if `prop` resolves to an accessor on the behaviour-prototype chain (not an own property). */
+const isBehaviourAccessor = (target: object, prop: symbol): boolean => {
+  let proto = Object.getPrototypeOf(target);
+  while (proto != null && proto !== Object.prototype) {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, prop);
+    if (descriptor != null) {
+      return descriptor.get != null;
+    }
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+};
+
+/**
+ * Enforce that user-data mutations only happen inside `Obj.update()`. A root object owns an
+ * `EventId` once initialized; before that (and for non-root records or symbol-keyed system
+ * properties) mutations pass through. Returns whether the root is initialized so callers can gate
+ * change notifications.
+ */
+const assertMutableWithinChange = (echoRoot: object, prop: string | symbol): boolean => {
+  const isInitialized = EventId in echoRoot;
+  if (isInitialized && typeof prop !== 'symbol' && !isInChangeContext(echoRoot)) {
+    throw new Error(
+      `Cannot modify object property "${String(prop)}" outside of Obj.update(). ` +
+        'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
+    );
+  }
+  return isInitialized;
+};
+
+/**
+ * Move a record's per-object metadata (symbol-keyed hidden properties) onto a fresh instance-state
+ * object inserted between the target and {@link TypedObjectPrototype}. The target keeps only its
+ * user data as own properties. Arrays are exempt — they keep their own (ReactiveArray) prototype chain.
+ */
+const compactMetadataToInstanceState = (target: ProxyTarget): void => {
+  if (Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) {
+    return;
+  }
+  const state = Object.create(TypedObjectPrototype);
+  for (const symbol of Object.getOwnPropertySymbols(target)) {
+    Object.defineProperty(state, symbol, Object.getOwnPropertyDescriptor(target, symbol)!);
+    // Dynamic delete over arbitrary symbol keys: `ProxyTarget` declares these as required, so the
+    // statically-typed view cannot express deleting them; the symbol set is only known at runtime.
+    delete (target as any)[symbol];
+  }
+  Object.setPrototypeOf(target, state);
+};
+
 /**
  * Typed in-memory reactive store (with Schema).
  * Reactivity is based on Event subscriptions, not signals.
@@ -155,12 +296,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, ObjectDeletedId, false);
-
-    // Mark root objects as having a change handler.
-    // The actual handler is returned dynamically in get() to have access to the proxy.
-    if (!hasOwner && !(ChangeId in target)) {
-      defineHiddenProperty(target, ChangeId, true);
-    }
 
     // Only set owners if this is a root object (no existing owner).
     // Nested objects already have owners set by their root's initialization.
@@ -193,47 +328,36 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       configurable: true,
       value: this._inspect.bind(target),
     });
+
+    // Relocate per-object metadata onto an instance-state prototype, leaving only user data as own
+    // properties on the target. Done last so all metadata set above (and by `prepareTypedTarget`) moves.
+    compactMetadataToInstanceState(target);
+  }
+
+  /**
+   * Hide the internal instance-state prototype so consumers see a plain object; arrays keep their
+   * real (ReactiveArray) prototype.
+   */
+  getPrototypeOf(target: ProxyTarget): object | null {
+    return Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype;
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    switch (prop) {
-      // TODO(burdon): Remove?
-      case objectData: {
-        return toJSON(target);
-      }
-      case ChangeId: {
-        // Return change handler only for root objects that have been marked with ChangeId.
-        if ((target as any)[ChangeId] !== true) {
-          return undefined;
-        }
-        // Return a function that allows mutations within a controlled context.
-        // Uses target as both the context key and event target for non-database objects.
-        return (callback: (obj: any) => void) => executeChange(target, target, receiver, callback);
-      }
-      case TypeEntityId: {
-        // The back-reference to the type entity is metadata — return the raw
-        // value so we don't re-wrap an already-reactive `Type.Type` entity in
-        // another proxy (which would fail the SchemaId-in-target invariant).
-        return Reflect.get(target, prop, receiver);
-      }
-      case StaticTypeSchemaSlot: {
-        // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it on
-        // the slot; the set-trap invalidates the cache when `jsonSchema` is mutated.
-        const existing = Reflect.get(target, prop, receiver);
-        if (existing !== undefined) {
-          return existing;
-        }
-        const jsonSchema = (target as any).jsonSchema;
-        if (jsonSchema == null) {
-          return undefined;
-        }
-        const rebuilt = toEffectSchema(jsonSchema);
-        defineHiddenProperty(target, StaticTypeSchemaSlot, rebuilt);
-        return rebuilt;
-      }
+    // The ECHO system surface (objectData, ChangeId, StaticTypeSchemaSlot, ...) lives as accessors
+    // on the behaviour prototype; resolve them via Reflect.get and return as-is — these are not user
+    // data and must never be proxy-wrapped.
+    if (typeof prop === 'symbol' && isBehaviourAccessor(target, prop)) {
+      return Reflect.get(target, prop, receiver);
     }
 
-    // Handle getter properties.
+    // The back-reference to the type entity is own metadata — return the raw value so we don't
+    // re-wrap an already-reactive `Type.Type` entity in another proxy (which would fail the
+    // SchemaId-in-target invariant).
+    if (prop === TypeEntityId) {
+      return Reflect.get(target, prop, receiver);
+    }
+
+    // Own getter properties (e.g. the `SchemaId` slot installed by `setSchemaProperties`).
     if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
       return Reflect.get(target, prop, receiver);
     }
@@ -248,19 +372,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     const echoRoot = getEchoRoot(target);
-
-    // Check readonly enforcement - mutations only allowed within Obj.update().
-    // Skip check if the object is still being initialized (no ChangeId handler yet).
-    // Also skip for non-initialized root objects (those without EventId).
-    // Skip for symbol properties (internal infrastructure, not user data).
-    const isInitialized = ChangeId in echoRoot || EventId in echoRoot;
-    const isSymbolProp = typeof prop === 'symbol';
-    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
-      throw new Error(
-        `Cannot modify object property "${String(prop)}" outside of Obj.update(). ` +
-          'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
-      );
-    }
+    const isInitialized = assertMutableWithinChange(echoRoot, prop);
 
     let result: boolean = false;
     this._inSet = true;
@@ -295,7 +407,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // Check readonly enforcement - mutations only allowed within Obj.update().
     // Skip for symbol properties (internal infrastructure, not user data).
-    const isInitialized = (echoRoot as any)[ChangeId] === true || EventId in echoRoot;
+    const isInitialized = EventId in echoRoot;
     const isSymbolProp = typeof property === 'symbol';
     if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
       throw createPropertyDeleteError(property);
@@ -310,18 +422,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const echoRoot = getEchoRoot(target);
-
-    // Check readonly enforcement - mutations only allowed within Obj.update().
-    // Skip check if the object is still being initialized (no ChangeId handler yet).
-    // Skip for symbol properties (internal infrastructure, not user data).
-    const isInitialized = ChangeId in echoRoot || EventId in echoRoot;
-    const isSymbolProp = typeof property === 'symbol';
-    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
-      throw new Error(
-        `Cannot modify object property "${String(property)}" outside of Obj.update(). ` +
-          'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
-      );
-    }
+    const isInitialized = assertMutableWithinChange(echoRoot, property);
 
     const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {

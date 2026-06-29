@@ -8,12 +8,13 @@ import { userEvent, within } from 'storybook/test';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
+  ConnectorsSkill,
+  DatabaseSkill,
   DelegationSkill,
   LinearSkill,
   PlanningSkill,
   RunInstructions,
   WebSearchSkill,
-  DatabaseSkill,
 } from '@dxos/assistant-toolkit';
 import { Instructions, Operation, Script, Skill, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
@@ -469,6 +470,45 @@ export const WithGmail: Story = {
     showContext: true,
     modules: [[ChatModule], [InboxModule, TokenManagerModule]],
     skills: [AssistantSkill.key, InboxSkill.key],
+  },
+};
+
+/**
+ * Agent-facing connector prompt surface. The chat is seeded with an assistant turn that emits an
+ * `integration-prompt` surface (the `<surface role='integration-prompt' data='{"service":"gmail.com"}' />`
+ * content block) so the connector prompt renders inline — the model would emit this, instead of failing,
+ * when a request needs a service the user has not connected (see the Connectors skill).
+ */
+export const WithConnectorPrompt: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-connector/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), ConnectorPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [Feed.Feed, Mailbox.Mailbox],
+    onChatCreated: async ({ space, chat }) => {
+      const feed = await chat.feed.load();
+      await space.db.appendToFeed(feed, [
+        Message.make({
+          sender: 'assistant',
+          blocks: [
+            { _tag: 'text', text: 'Gmail is not connected yet. Connect it to continue:' },
+            { _tag: 'surface', role: 'integration-prompt', data: { service: 'gmail.com' } },
+          ],
+        }),
+      ]);
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    skills: [AssistantSkill.key, ConnectorsSkill.key],
   },
 };
 

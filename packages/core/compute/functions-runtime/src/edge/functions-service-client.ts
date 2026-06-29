@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient, type TriggersDispatcherStatus } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
@@ -38,7 +38,8 @@ export type FunctionDeployOptions = {
    * Service-side function id in case this function is a re-upload of a previous version.
    */
   functionId?: string;
-  ownerPublicKey: PublicKey;
+  /** Owner identity DID (`did:halo:…`). Must equal the authenticated presenter DID. */
+  ownerUri: string;
 
   runtime?: FunctionRuntimeKind;
 
@@ -99,7 +100,7 @@ export class FunctionsServiceClient {
         {
           name: request.name,
           version: request.version,
-          ownerPublicKey: request.ownerPublicKey.toHex(),
+          ownerUri: request.ownerUri,
           entryPoint: request.entryPoint,
           assets: request.assets,
           runtime: request.runtime,

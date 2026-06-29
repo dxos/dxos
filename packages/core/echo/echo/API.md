@@ -160,11 +160,19 @@ await db.flush({ indexes: true, updates: true });
 ```ts
 const feed = Feed.make({ name: 'notifications', kind: 'plugin/v1' });
 
-// Effectful operations (require Feed.Service)
+// Effectful operations (require Database.Service)
 yield * Feed.append(feed, [item]);
 yield * Feed.remove(feed, [item]);
+
+// Feed.query chains like Database.query: yield it for a subscribable QueryResult,
+// or use the .run / .first shorthands to execute once.
 const result = yield * Feed.query(feed, Filter.type(Person));
-const items = yield * Feed.runQuery(feed, Filter.type(Person));
+result.subscribe(() => {});
+const items = yield * Feed.query(feed, Filter.type(Person)).run;
+const first = yield * Feed.query(feed, Filter.type(Person)).first; // Option<Person>
+
+// Data-last (curried) form composes with `pipe`.
+const piped = yield * pipe(feed, Feed.query(Filter.type(Person))).run;
 ```
 
 ## Live Objects vs Snapshots

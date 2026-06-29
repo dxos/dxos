@@ -41,7 +41,7 @@ describe('Agent prompt (composer plugin harness)', () => {
         Effect.gen(function* () {
           const feed = yield* Database.add(Feed.make());
 
-          const messageCountBefore = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+          const messageCountBefore = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
             Effect.map(Array.length),
           );
 
@@ -65,7 +65,7 @@ describe('Agent prompt (composer plugin harness)', () => {
             { spaceId: personalSpace.id },
           );
 
-          const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+          const messageCountAfter = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
             Effect.map(Array.length),
           );
 
