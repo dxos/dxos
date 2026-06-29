@@ -339,3 +339,65 @@ These are semantic-index changes, tracked here because the crawler is their prim
 - Design research (query/insight catalog; idea-thread construction) was conducted during brainstorming;
   the idea-thread construction study (argumentation mining / discourse graphs / IBIS / TDT) informs the
   fact→fact edge vocabulary above.
+
+## 19. Temporal dynamics: send-time, medium, TTL / atrophy, as-of
+
+Facts are not timeless; weight and relevance change with time and channel.
+
+- **Send-time & medium are weighting inputs.** Each fact already carries `generatedAtTime` (when it was
+  said) and `recordedAt` (when ingested). Add **`medium`** to source metadata
+  (`discord | meeting | email | article | …`): a decision minuted in a meeting or committed in email
+  typically weighs more than a public Discord aside. Medium + send-time join the scoring inputs in §15.7.
+- **TTL / atrophy.** Facts lose weight over time via a **decay function**, so stale or likely-outdated
+  facts fade _without being deleted_ (the append-only model is preserved — atrophy is computed at
+  query/scoring time, not by mutation). The decay rate is keyed by predicate/entity kind and medium:
+  durable facts (a birthdate) barely decay; volatile ones (status, plans, "currently working on") decay
+  fast. This is how the system "forgets" things that may no longer be true.
+- **As-of / time-window queries.** Support "**what did we know as of T?**" by filtering on `recordedAt <= T`
+  (and `validFrom`/`validTo` for when the asserted state _held_). This enables both historical
+  reconstruction and forgetting (exclude atrophied/superseded facts), and pairs with the `supersedes`
+  fact→fact edge (§17). semantic-index's append-only conflicting-facts + temporal validity already
+  underpin as-of; `medium` and the atrophy function are the additions.
+
+## 20. Subject framing — graph-as-tool for grounded LLM answers
+
+The payoff: an LLM answers about a subject by **using the fact graph as a tool**, not from parametric
+memory alone.
+
+1. **Frame what is known.** A `subject(entity)` tool assembles a dossier from the graph: every fact where
+   the entity is subject/object, with agents, valence, time, and relationship edges — i.e. an attributed,
+   time-stamped, provenance-carrying picture of what is known and how certain/contested it is.
+2. **Augment with ECHO.** Join the entity's `ref` to its ECHO object (Person/Org/Event) for structured
+   fields and links the graph doesn't hold.
+3. **Research & fact-check.** The LLM then calls _other_ tools (web research, email search, verification)
+   to extend and check the framed dossier, citing sources.
+
+This grounded loop (graph priors + ECHO structure + research tools) is materially more powerful and less
+hallucination-prone than an LLM-only system, because every claim is attributed, dated, valenced, and
+citable, and disagreements/atrophy are explicit rather than averaged away.
+
+## 21. Example queries to support
+
+These motivate concrete model additions (current-user-as-agent, event entities, n-ary relationship facts,
+and the fact→fact edges of §17):
+
+- **"Who is Chad?"** — subject dossier (§20): aggregate all facts about entity `chad` (+ ECHO Person),
+  summarized by role/expertise/recent activity, with citations and confidence; atrophy de-emphasizes stale
+  facts.
+- **"Who has Chad ever introduced me to?"** — relationship traversal over `introduced` facts
+  (`(chad) introduced (me) → (X)`). Requires **the current user as a first-class agent** and an n-ary
+  `introduced` relation (reified: introducer, introducee, recipient, time, source).
+- **"Who did I meet at the BlueYard event?"** — event-scoped relationship: `(me) met (X)` whose context is
+  the `BlueYard` **event entity**. Requires event entities and event-scoping on facts.
+
+## 22. Sidekick plugin (concept)
+
+A plugin that builds a small, **ephemeral, locally-scoped** knowledge base of the _user's_ priorities and
+goals — by **interrogating the user** (and brainstorming a plan with them) — then layers that kbase over
+the persistent fact graph + agent registry to do real work: triage and analyze emails, draft auto-responses
+to colleagues / users / customers in the user's voice and priorities, and surface what needs attention.
+
+The sidekick kbase is distinct from the durable fact graph (session/task-scoped, not append-only history),
+and it feeds **relevance re-weighting**: user priorities bias the §15.7 scorer toward facts that matter for
+the task at hand. This is a downstream consumer of the crawler/semantic-index stack, tracked here to keep
+the producing model aligned with it.
