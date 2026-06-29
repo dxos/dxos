@@ -7,8 +7,12 @@ import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateFi
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
+import { PlaceholderWidget, type XmlWidgetNotifier } from '../tags/placeholder-widget';
+
 import { type Database, Entity } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
+
+const labelResolvedEffect = StateEffect.define<void>();
 
 export type PreviewBlock = {
   link: PreviewLinkRef;
@@ -34,10 +38,9 @@ export type PreviewOptions = {
   removeBlockContainer?: (block: PreviewBlock) => void;
 };
 
-const labelResolvedEffect = StateEffect.define<void>();
-
 /**
  * Create preview decorations.
+ * The extension manages a set of blocks that are rendered in a portal outside of the editor.
  */
 export const preview = (options: PreviewOptions = {}): Extension => {
   // Mutable ref so the StateField's onLoad callback can dispatch into the view.
@@ -145,7 +148,13 @@ const buildDecorations = (
                 node.to,
                 Decoration.replace({
                   block: true,
-                  widget: new PreviewBlockWidget(options, link),
+                  widget: new PlaceholderWidget(
+                    `cm-preview-${link.dxn}`,
+                    // Stand-in component; addBlockContainer callbacks drive actual rendering until Phase 2.
+                    _PreviewPlaceholder as any,
+                    { _tag: 'preview', range: { from: node.from, to: node.to } },
+                    makePreviewNotifier(options, link),
+                  ),
                 }),
               );
             }
@@ -209,34 +218,21 @@ class PreviewInlineWidget extends WidgetType {
   }
 }
 
-/**
- * Block widget (e.g., for surfaces).
- * ![Label][echo:/123]
- */
-class PreviewBlockWidget extends WidgetType {
-  constructor(
-    readonly _options: PreviewOptions,
-    readonly _link: PreviewLinkRef,
-  ) {
-    super();
-  }
+// Stand-in component; addBlockContainer callbacks drive actual rendering until Phase 3.
+const _PreviewPlaceholder = () => null;
 
-  // override ignoreEvent() {
-  //   return true;
-  // }
-
-  override eq(other: this) {
-    return this._link.dxn === other._link.dxn;
-  }
-
-  override toDOM(_view: EditorView) {
-    const root = document.createElement('div');
-    root.classList.add('cm-preview-block', 'dx-density-md');
-    this._options.addBlockContainer?.({ link: this._link, el: root });
-    return root;
-  }
-
-  override destroy(root: HTMLDivElement) {
-    this._options.removeBlockContainer?.({ link: this._link, el: root });
-  }
-}
+const makePreviewNotifier = (options: PreviewOptions, link: PreviewLinkRef): XmlWidgetNotifier => {
+  let el: HTMLElement | null = null;
+  return {
+    mounted({ root }) {
+      el = root as HTMLElement;
+      options.addBlockContainer?.({ link, el });
+    },
+    unmounted(_id: string) {
+      if (el) {
+        options.removeBlockContainer?.({ link, el });
+        el = null;
+      }
+    },
+  };
+};
