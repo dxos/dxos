@@ -68,7 +68,7 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/stories/KeywordDetection',
+  title: 'plugins/plugin-transcription/stories/Keyword',
   render: DefaultStory,
   decorators: createStoryDecorators(),
   parameters: {

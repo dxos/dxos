@@ -54,9 +54,7 @@ import { TranscriptionCapabilities } from '#types';
 
 import { SAMPLE_CONTENT, createMarkdownStoryDecorators, enableQueryIndexes } from './testing';
 
-// Properly-cased transcript that names seeded entities (DXOS, Cyberdyne, Amco, Sarah Johnson,
-// Michael Chen) so the deterministic extraction heuristic + full-text lookup link them.
-const SCRIPT = trim`
+const TRANSCRIPT = trim`
   So I caught up with Sarah Johnson this morning
   We talked about the DXOS and Cyberdyne partnership
   Amco might join the project later this year
@@ -72,7 +70,9 @@ const STAGE_FACTORY: Record<StageId, () => Stage<any, any>> = {
 };
 
 type StoryArgs = {
-  /** When set, drives `PipelineRuntime` over the scripted transcript through these stages. */
+  /**
+   * When set, drives `PipelineRuntime` over the scripted transcript through these stages.
+   */
   stages?: readonly StageId[];
   /**
    * Seeds the pending-text decoration directly (final/interim), bypassing audio capture, to
@@ -135,6 +135,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
     if (trySeed()) {
       return;
     }
+
     const interval = setInterval(() => {
       if (cancelled || trySeed()) {
         clearInterval(interval);
@@ -156,7 +157,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
     setTelemetry([]);
     setSummary(undefined);
 
-    const blocks: ContentBlock.Transcript[] = SCRIPT.map((text, index) => ({
+    const blocks: ContentBlock.Transcript[] = TRANSCRIPT.map((text, index) => ({
       _tag: 'transcript',
       started: new Date(index * 1000).toISOString(),
       text,
@@ -241,7 +242,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/stories/TranscriptionPipeline',
+  title: 'plugins/plugin-transcription/stories/Pipeline',
   render: DefaultStory,
   decorators: createMarkdownStoryDecorators({
     layout: 'fullscreen',
