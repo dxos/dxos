@@ -9,19 +9,17 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { DEFAULT_DAYS_OF_HISTORY, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
+import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 
-const MAX_DAYS_OF_HISTORY = 365 * 3;
+const MAX_DAYS = 365 * 3;
 const MESSAGE_PAGE_LIMIT = 100;
 
-const computeInitialCursor = (cursor: string | undefined, daysOfHistory?: number): string => {
+const computeInitialCursor = (cursor: string | undefined, maxDays?: number): string => {
   if (cursor) {
     return cursor;
   }
-  const days =
-    typeof daysOfHistory === 'number' && daysOfHistory > 0
-      ? Math.min(daysOfHistory, MAX_DAYS_OF_HISTORY)
-      : DEFAULT_DAYS_OF_HISTORY;
+
+  const days = typeof maxDays === 'number' && maxDays > 0 ? Math.min(maxDays, MAX_DAYS) : DEFAULT_DAYS;
   return snowflakeForTimestamp(Date.now() - days * 24 * 60 * 60 * 1000);
 };
 
@@ -52,7 +50,7 @@ export type FetchOptions = {
   /** Start cursor (Discord snowflake id). When set, only messages newer than this id are fetched. */
   cursor?: string;
   /** How many days of history to fetch on the first sync (when cursor is absent). Default: 30. */
-  daysOfHistory?: number;
+  maxDays?: number;
 };
 
 export type FetchResult = {
@@ -91,7 +89,7 @@ export const fetchChannelMessages = (
 ): Effect.Effect<FetchResult, unknown, DiscordREST> =>
   Effect.gen(function* () {
     const rest = yield* DiscordREST;
-    const initialAfter = computeInitialCursor(options?.cursor, options?.daysOfHistory);
+    const initialAfter = computeInitialCursor(options?.cursor, options?.maxDays);
 
     const raw: MessageResponse[] = [];
     let after = initialAfter;
@@ -108,9 +106,7 @@ export const fetchChannelMessages = (
       after = sorted[sorted.length - 1].id;
     }
 
-    const messages = raw
-      .map(mapDiscordMessage)
-      .filter((message): message is Message.Message => message !== undefined);
+    const messages = raw.map(mapDiscordMessage).filter((message): message is Message.Message => message !== undefined);
 
     const cursor = raw.length > 0 ? raw[raw.length - 1].id : options?.cursor;
 
