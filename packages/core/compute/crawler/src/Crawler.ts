@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { type CrawlError, type StateError } from './errors';
 import { Source } from './Source';
@@ -68,9 +70,10 @@ export const advance = (
       );
     }
 
-    // A source-fetch failure is isolated to this target: mark it errored and continue with the rest
-    // of the frontier rather than aborting the whole crawl (e.g. a 403 on one inaccessible channel).
-    const fetched = yield* Effect.either(
+    // A source fetch can fail (typed error) OR die (defect — e.g. dfx/proxy surfacing a 403 as a
+    // throw). Either way it is isolated to this target: mark it errored and continue with the rest
+    // of the frontier rather than aborting the whole crawl. `Effect.exit` captures both outcomes.
+    const fetched = yield* Effect.exit(
       source.fetchMessages({
         channelId: target.channelId,
         threadId: target.threadId,
@@ -78,13 +81,15 @@ export const advance = (
         maxDays: config.seed?.maxDays,
       }),
     );
-    if (fetched._tag === 'Left') {
-      yield* Effect.logWarning(`crawl: skipping ${target.id} — ${fetched.left.message}`);
-      yield* store.setStatus(target.id, 'error', fetched.left.message);
+    if (Exit.isFailure(fetched)) {
+      const error = Cause.squash(fetched.cause);
+      const reason = error instanceof Error ? error.message : String(error);
+      yield* Effect.logWarning(`crawl: skipping ${target.id} — ${reason}`);
+      yield* store.setStatus(target.id, 'error', reason);
       const remaining = yield* store.hasActionable();
       return remaining ? { _tag: 'more' as const } : { _tag: 'done' as const };
     }
-    const page = fetched.right;
+    const page = fetched.value;
 
     for (const message of page.messages) {
       yield* runStages(stages, { _tag: 'Message', target, message });

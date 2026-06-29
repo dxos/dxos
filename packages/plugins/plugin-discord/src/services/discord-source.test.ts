@@ -9,6 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   AgentRegistry,
+  Source,
   type Stage,
   type Type,
   extractTopics,
@@ -103,5 +104,29 @@ describe('DiscordSource live crawl', () => {
       }
     },
     60_000,
+  );
+});
+
+// Channel discovery. Skipped unless a token is provided. Backs `moon run plugin-discord:channels`.
+//   DISCORD_TOKEN=... moon run plugin-discord:channels
+describe('DiscordSource channels', () => {
+  test.skipIf(!token)(
+    'lists channels the bot can access',
+    async () => {
+      const channels = await EffectEx.runPromise(
+        Effect.gen(function* () {
+          const source = yield* Source;
+          return yield* source.listChannels();
+        }).pipe(Effect.provide(discordSourceLayer(token!))),
+      );
+
+      console.log(`\n${channels.length} channel(s) visible to the bot:`);
+      for (const channel of channels) {
+        console.log(`  ${channel.id}  ${channel.name ?? ''}`);
+      }
+
+      expect(Array.isArray(channels)).toBe(true);
+    },
+    30_000,
   );
 });

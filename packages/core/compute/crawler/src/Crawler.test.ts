@@ -25,10 +25,16 @@ const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 
 const STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
-/** A source whose fetch always fails — exercises per-target error isolation. */
+/** A source whose fetch fails with a typed error — exercises per-target failure isolation. */
 const FAILING_SOURCE = Layer.succeed(Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.fail(new CrawlError({ message: 'Missing Access' })),
+});
+
+/** A source whose fetch DIES (defect) — exercises defect isolation (dfx can surface a 403 this way). */
+const DYING_SOURCE = Layer.succeed(Source, {
+  listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
+  fetchMessages: () => Effect.die(new Error('Missing Access')),
 });
 
 /** A stage that records the event sequence, to assert traversal order. */
@@ -139,6 +145,22 @@ describe('Crawler', () => {
         expect(targets[0].lastError).toContain('Missing Access');
       },
       Effect.provide(Layer.merge(FAILING_SOURCE, servicesLayer)),
+    ),
+  );
+
+  it.effect(
+    'isolates a source-fetch defect (die) to the target too',
+    Effect.fnUntraced(
+      function* () {
+        const summary = yield* run({ channels: ['chan-1'], descendThreads: false }, STAGES);
+        const state = yield* StateStore;
+        const targets = yield* state.listTargets();
+
+        expect(summary.done).toBe(true);
+        expect(summary.errored).toBe(1);
+        expect(targets[0].status).toBe('error');
+      },
+      Effect.provide(Layer.merge(DYING_SOURCE, servicesLayer)),
     ),
   );
 

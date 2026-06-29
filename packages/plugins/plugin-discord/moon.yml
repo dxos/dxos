@@ -11,6 +11,13 @@ tasks:
       runInCI: false
       cache: false
 
+  # List the channels the bot can see. Requires DISCORD_TOKEN; prints `<id>  <#channel — guild>`.
+  channels:
+    command: 'pnpm exec vitest run src/services/discord-source.test.ts -t "lists channels"'
+    options:
+      runInCI: false
+      cache: false
+
   compile:
     args:
       - '--entryPoint=src/index.ts'
