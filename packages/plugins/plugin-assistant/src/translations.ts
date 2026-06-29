@@ -198,12 +198,12 @@ export const translations: Resource[] = [
         'subscriptions.label': 'Subscriptions',
 
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
-        'space-home.suggestion.label': 'Get started',
-        'space-home.magazine-suggestion.label':
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-magazine.label':
           'Create feeds for tracking the latest AI news and build a magazine',
-        'space-home.spreadsheet-suggestion.label':
+        'space-home.suggestion-spreadsheet.label':
           "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
-        'space-home.kanban.label': 'Create a kanban view for tracking tasks',
+        'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 
         'nav-tree-group-ai.label': 'Assistant',
