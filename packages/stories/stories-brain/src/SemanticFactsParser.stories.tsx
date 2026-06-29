@@ -22,9 +22,10 @@ import {
   makeExtractFactsStage,
   run,
 } from '@dxos/crawler';
+import { Format } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -166,6 +167,11 @@ const CrawlOptions = Schema.Struct({
   channel: Schema.String.annotations({ title: 'Channel' }),
   maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
   descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
+  // Markdown-annotated → the form renders a code editor (MarkdownField); executed via the toolbar.
+  query: Schema.String.pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'SPARQL' }),
+  ),
 });
 type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
@@ -184,6 +190,11 @@ const saveFacts = (facts: readonly Type.Fact[]) => {
   }
 };
 
+type CrawlAction = 'channels' | 'crawl' | 'reset' | 'sparql';
+
+// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
+const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
+
 // Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
 // e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
 const initialOptions = (): CrawlOptions => ({
@@ -191,12 +202,8 @@ const initialOptions = (): CrawlOptions => ({
   channel: String(import.meta.env.VITE_DISCORD_CHANNEL ?? ''),
   maxDays: Number(import.meta.env.VITE_DISCORD_MAX_DAYS ?? 7),
   descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
+  query: DEFAULT_SPARQL,
 });
-
-type CrawlAction = 'channels' | 'crawl' | 'reset' | 'sparql';
-
-// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
-const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
@@ -211,7 +218,6 @@ const CrawlerStory = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sparql, setSparql] = useState(DEFAULT_SPARQL);
 
   // Stable in-memory store across crawls; recreated if disposed (StrictMode remount).
   const storeRef = useRef<ReturnType<typeof makeStore> | null>(null);
@@ -329,10 +335,11 @@ const CrawlerStory = () => {
       setStatus('Cleared persisted facts.');
     });
 
-  // Parse the SPARQL into a structured query and run it over the persisted store (no Comunica).
+  // Parse the SPARQL (the form's `query` field) into a structured query and run it over the
+  // persisted store (no Comunica).
   const handleRunSparql = () =>
     void guard('sparql', async () => {
-      const query = parseSparqlToQuery(sparql);
+      const query = parseSparqlToQuery(options.query);
       const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(query))));
       setFacts(results);
       setStatus(`SPARQL → ${results.length} fact(s)`);
@@ -349,12 +356,15 @@ const CrawlerStory = () => {
             <Button variant='primary' disabled={!options.token || !options.channel || !!busy} onClick={handleCrawl}>
               {busy === 'crawl' ? 'Crawling…' : 'Crawl'}
             </Button>
+            <Button disabled={!!busy || !options.query} onClick={handleRunSparql}>
+              {busy === 'sparql' ? 'Running…' : 'Run SPARQL'}
+            </Button>
             <Button disabled={!!busy || facts.length === 0} onClick={handleReset}>
               {busy === 'reset' ? 'Resetting…' : 'Reset'}
             </Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container flex flex-col gap-2 overflow-auto'>
+        <Panel.Content classNames='dx-container'>
           <Form.Root
             schema={CrawlOptions}
             values={options}
@@ -367,21 +377,6 @@ const CrawlerStory = () => {
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
-
-          <div role='none' className='flex flex-col gap-1 p-2'>
-            <Input.Root>
-              <Input.Label>SPARQL</Input.Label>
-              <Input.TextArea
-                rows={4}
-                classNames='font-mono text-xs'
-                value={sparql}
-                onChange={(event) => setSparql(event.target.value)}
-              />
-            </Input.Root>
-            <Button disabled={!!busy} onClick={handleRunSparql}>
-              {busy === 'sparql' ? 'Running…' : 'Run SPARQL'}
-            </Button>
-          </div>
         </Panel.Content>
         {(error || status) && (
           <Panel.Statusbar asChild>
