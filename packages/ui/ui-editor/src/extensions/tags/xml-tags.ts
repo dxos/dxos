@@ -561,7 +561,7 @@ const buildDecorations = (
           const nodeRange = { from: node.node.from, to: node.node.to };
           const widgetId = `cm-url-${dxn}`;
           const props: XmlWidgetProps = {
-            _tag: node.type.name.toLowerCase() as 'link' | 'image',
+            _tag: node.type.name === 'Image' ? 'image' : 'link',
             range: nodeRange,
             context,
             label,
