@@ -101,7 +101,7 @@ const buildPluginManagerOptions = ({
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
   // Fire SetupSettings so plugins (e.g. AssistantPlugin) contribute their settings capabilities,
   // which surfaces such as the TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
-  setupEvents: [AppActivationEvents.SetupSettings],
+  setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
   plugins: [
     ...corePlugins(),
     ClientPlugin({
