@@ -20,6 +20,9 @@ import {
   xmlTags,
 } from '@dxos/ui-editor';
 
+import { type TranscriptModel } from '../../model';
+import { transcription } from './transcription-extension';
+
 const inlinePreviewRegistry: XmlWidgetRegistry = {
   'link-preview': {
     block: false,
@@ -30,9 +33,6 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
         : null,
   },
 };
-
-import { type TranscriptModel } from '../../model';
-import { transcription } from './transcription-extension';
 
 export type TranscriptionProps = {
   transcript?: Transcript.Transcript;
