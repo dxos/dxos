@@ -9,7 +9,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Button, Panel, Tag, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SemanticPipeline, SemanticStore, type Type, generateSparql } from '@dxos/semantic-index';
@@ -101,26 +101,23 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
     <div className='dx-container grid grid-cols-2 gap-2'>
       <Panel.Root>
         <Panel.Toolbar asChild>
-          <Toolbar.Root classNames='justify-between'>
-            <div className='flex gap-2'>
-              <Button variant='primary' disabled={!!busy} onClick={handleParse}>
-                {busy === 'parse' ? 'Parsing…' : 'Parse'}
-              </Button>
-              <Button disabled={!!busy} onClick={() => fileInputRef.current?.click()}>
-                {busy === 'fixture' ? 'Loading…' : 'Load fixture'}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type='file'
-                accept='application/json,.json'
-                className='hidden'
-                onChange={handleFixtureFile}
-              />
-              <Button disabled={!!busy} onClick={handleQuery}>
-                {busy === 'query' ? 'Querying…' : 'Query'}
-              </Button>
-            </div>
-            {error && <Tag hue='red'>{error}</Tag>}
+          <Toolbar.Root>
+            <Button variant='primary' disabled={!!busy} onClick={handleParse}>
+              {busy === 'parse' ? 'Parsing…' : 'Parse'}
+            </Button>
+            <Button disabled={!!busy} onClick={() => fileInputRef.current?.click()}>
+              {busy === 'fixture' ? 'Loading…' : 'Load fixture'}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='application/json,.json'
+              className='hidden'
+              onChange={handleFixtureFile}
+            />
+            <Button disabled={!!busy} onClick={handleQuery}>
+              {busy === 'query' ? 'Querying…' : 'Query'}
+            </Button>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container grid grid-row-2'>
@@ -135,6 +132,7 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
             )}
           </div>
         </Panel.Content>
+        {error && <Panel.Statusbar classNames='text-error truncate'>{error}</Panel.Statusbar>}
       </Panel.Root>
       <SemanticFactsViewer facts={facts} />
     </div>
