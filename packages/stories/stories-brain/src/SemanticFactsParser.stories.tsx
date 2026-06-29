@@ -244,13 +244,17 @@ const CrawlerStory = () => {
           const agents = yield* registry.list();
           const store = yield* SemanticStore;
           const extracted = yield* store.query({});
-          return { summary, agentCount: agents.length, facts: extracted };
+          // Every message is observed by the agent-profile stage, so the summed counts == messages seen.
+          const messages = agents.reduce((total, agent) => total + agent.messageCount, 0);
+          return { summary, messages, agentCount: agents.length, facts: extracted };
         }).pipe(Effect.provide(layer)),
       );
       setFacts(result.facts);
+      const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
-        `Crawled ${result.summary.steps} step(s) · ${result.agentCount} agents · ${result.facts.length} facts` +
-          (result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : ''),
+        result.messages === 0 && result.summary.errored === 0
+          ? `No messages in the last ${options.maxDays}d — widen the lookback.`
+          : `Crawled ${result.messages} messages · ${result.agentCount} agents · ${result.facts.length} facts${skipped}`,
       );
     });
   };
@@ -283,8 +287,12 @@ const CrawlerStory = () => {
           </Form.Root>
         </Panel.Content>
         {(error || status) && (
-          <Panel.Statusbar classNames={error ? 'text-error truncate' : 'text-subdued truncate'}>
-            {error ?? status}
+          <Panel.Statusbar asChild>
+            <Toolbar.Root>
+              <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued-text']}>
+                {error ?? status}
+              </Toolbar.Text>
+            </Toolbar.Root>
           </Panel.Statusbar>
         )}
       </Panel.Root>
