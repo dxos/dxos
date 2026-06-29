@@ -29,15 +29,15 @@ export type DisclosureItemBinding = {
   panelId: string;
   /** Spread onto the trigger element (button, title row, …). */
   triggerProps: {
-    'id': string;
+    id: string;
     'aria-expanded': boolean;
     'aria-controls': string;
-    'onClick': (event: MouseEvent) => void;
+    onClick: (event: MouseEvent) => void;
   };
   /** Spread onto the disclosed panel; carries role=region for SR navigation. */
   panelProps: {
-    'id': string;
-    'role': 'region';
+    id: string;
+    role: 'region';
     'aria-labelledby': string;
   };
 };
@@ -141,14 +141,14 @@ export const useListDisclosure: {
         triggerId,
         panelId,
         triggerProps: {
-          'id': triggerId,
+          id: triggerId,
           'aria-expanded': expanded,
           'aria-controls': panelId,
-          'onClick': () => setExpanded(id, !expanded),
+          onClick: () => setExpanded(id, !expanded),
         },
         panelProps: {
-          'id': panelId,
-          'role': 'region',
+          id: panelId,
+          role: 'region',
           'aria-labelledby': triggerId,
         },
       };

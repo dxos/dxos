@@ -43,7 +43,7 @@ export const performRecoveryOAuthFlow = Effect.fn(function* (params: RecoveryOAu
       try: () =>
         fetch(initiateUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Origin': server.origin },
+          headers: { 'Content-Type': 'application/json', Origin: server.origin },
           body: JSON.stringify({
             provider: params.provider,
             scopes: params.scopes,

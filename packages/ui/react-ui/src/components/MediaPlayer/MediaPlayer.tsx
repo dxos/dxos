@@ -14,10 +14,10 @@ export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
 /** Static map to keep Tailwind's class scanner happy (no dynamic `object-${fit}`). */
 const FIT_CLASS: Record<MediaFit, string> = {
-  'cover': 'object-cover',
-  'contain': 'object-contain',
-  'fill': 'object-fill',
-  'none': 'object-none',
+  cover: 'object-cover',
+  contain: 'object-contain',
+  fill: 'object-fill',
+  none: 'object-none',
   'scale-down': 'object-scale-down',
 };
 

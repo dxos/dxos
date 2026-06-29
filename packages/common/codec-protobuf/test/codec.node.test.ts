@@ -20,7 +20,7 @@ describe('extending protobuf', () => {
     const data = {
       payload: {
         '@type': 'example.testing.another.AnotherMessage',
-        'foo': 'foo',
+        foo: 'foo',
       },
     };
 
@@ -40,7 +40,7 @@ describe('extending protobuf', () => {
     const data = {
       payload: {
         '@type': 'example.testing.another.AnotherMessageWithAny',
-        'foo': 'foo',
+        foo: 'foo',
       },
     };
 

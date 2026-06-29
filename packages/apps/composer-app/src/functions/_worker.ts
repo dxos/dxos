@@ -29,7 +29,7 @@ const corsHeaders = (origin: string | null): Record<string, string> => ({
   'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
-  'Vary': 'Origin',
+  Vary: 'Origin',
 });
 
 /** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */

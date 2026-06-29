@@ -24,7 +24,7 @@ export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: Types.Covariant<T> };
 
-  'ast': QueryAST.Filter;
+  ast: QueryAST.Filter;
 }
 
 export type Props<T> = {
@@ -39,7 +39,7 @@ export type Type<F extends Any> = F extends Filter<infer T> ? T : never;
 class FilterClass implements Any {
   private static 'variance': Any['~Filter'] = {} as Any['~Filter'];
 
-  'constructor'(public readonly ast: QueryAST.Filter) {}
+  constructor(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }

@@ -582,8 +582,8 @@ describe('query api', () => {
       const feed = (await Obj.fromJSON(
         {
           '@type': 'dxn:org.dxos.type.feed:0.1.0',
-          'id': feedId,
-          'name': 'test-feed',
+          id: feedId,
+          name: 'test-feed',
         },
         { uri: feedDxn },
       )) as Feed.Feed;

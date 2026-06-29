@@ -4,7 +4,7 @@
 
 type SpaceArchiveObject = {
   '@type'?: string;
-  'token'?: string;
+  token?: string;
 };
 
 /**

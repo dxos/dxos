@@ -41,8 +41,8 @@ describe('GossipExtension', () => {
       messageId: PublicKey.random(),
       payload: {
         '@type': 'dxos.mesh.presence.PeerState',
-        'connections': [peer2.peerId],
-        'identityKey': PublicKey.random(),
+        connections: [peer2.peerId],
+        identityKey: PublicKey.random(),
       },
     });
 
@@ -53,8 +53,8 @@ describe('GossipExtension', () => {
       messageId: PublicKey.random(),
       payload: {
         '@type': 'dxos.mesh.presence.PeerState',
-        'connections': [peer1.peerId],
-        'identityKey': PublicKey.random(),
+        connections: [peer1.peerId],
+        identityKey: PublicKey.random(),
       },
     });
 

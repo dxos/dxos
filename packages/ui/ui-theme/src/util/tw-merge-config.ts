@@ -22,7 +22,7 @@ export const twMergeConfig = {
         'font-extrabold',
         'font-black',
       ],
-      'density': ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
+      density: ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
       'dx-focus-ring': [
         'dx-focus-ring',
         'dx-focus-ring-inset',

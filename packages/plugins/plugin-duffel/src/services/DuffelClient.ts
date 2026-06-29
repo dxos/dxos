@@ -43,9 +43,9 @@ export const createOfferRequest = async (
   const response = await proxyFetchLegacy(target, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Duffel-Version': DUFFEL_VERSION,
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),

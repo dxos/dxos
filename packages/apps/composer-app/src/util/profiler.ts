@@ -99,7 +99,7 @@ export const startupProfiler = (): Profiler => {
       console.log('Total startup time:', snap.total, 'ms');
       console.table(
         snap.phases.map((entry) => ({
-          'Phase': entry.name,
+          Phase: entry.name,
           'Duration (ms)': entry.duration,
           'Start (ms)': entry.startTime,
         })),
@@ -107,7 +107,7 @@ export const startupProfiler = (): Profiler => {
       console.log(`\nActivation Events (${snap.events.length}):`);
       console.table(
         snap.events.map((entry) => ({
-          'Event': entry.name,
+          Event: entry.name,
           'Duration (ms)': entry.duration,
           'Start (ms)': entry.startTime,
         })),
@@ -115,7 +115,7 @@ export const startupProfiler = (): Profiler => {
       console.log(`\nSlowest Modules (top 20 of ${snap.modules.length}):`);
       console.table(
         snap.modules.slice(0, 20).map((entry) => ({
-          'Module': entry.name,
+          Module: entry.name,
           'Duration (ms)': entry.duration,
           'Start (ms)': entry.startTime,
         })),

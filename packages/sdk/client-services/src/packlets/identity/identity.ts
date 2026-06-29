@@ -210,7 +210,7 @@ export class Identity {
       subject: deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        'identityKey': this.identityKey,
+        identityKey: this.identityKey,
         deviceKey,
       },
     });
@@ -222,20 +222,20 @@ export class Identity {
           subject: controlFeedKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': this.haloSpaceKey,
+            spaceKey: this.haloSpaceKey,
             deviceKey,
-            'identityKey': this.identityKey,
-            'designation': AdmittedFeed.Designation.CONTROL,
+            identityKey: this.identityKey,
+            designation: AdmittedFeed.Designation.CONTROL,
           },
         }),
         await signer.createCredential({
           subject: dataFeedKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': this.haloSpaceKey,
+            spaceKey: this.haloSpaceKey,
             deviceKey,
-            'identityKey': this.identityKey,
-            'designation': AdmittedFeed.Designation.DATA,
+            identityKey: this.identityKey,
+            designation: AdmittedFeed.Designation.DATA,
           },
         }),
       ].map((credential): FeedMessage.Payload => ({ credential: { credential } })),

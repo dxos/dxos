@@ -117,7 +117,7 @@ describe('parseProto / config.proto', () => {
 
     const value = {
       id: 'mod',
-      record: { '@type': 'dxos.example.Frame', 'payload': { x: 1, y: 'two' } },
+      record: { '@type': 'dxos.example.Frame', payload: { x: 1, y: 'two' } },
     };
     expect(Schema.decodeUnknownSync(Module)(value)).toEqual(value);
   });

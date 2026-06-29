@@ -91,7 +91,7 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(result.objects).toHaveLength(2);
-      expect(JSON.parse(result.objects![1])).toMatchObject({ 'id': object1Id, '@deleted': true });
+      expect(JSON.parse(result.objects![1])).toMatchObject({ id: object1Id, '@deleted': true });
     }).pipe(Effect.provide(TestLayer)),
   );
 

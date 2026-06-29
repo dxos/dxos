@@ -61,7 +61,7 @@ export const twMergeConfig = {
       'font-weight': [
         /* …existing… */
       ],
-      'density': ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
+      density: ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
       'dx-focus-ring': [
         /* …existing… */
       ],

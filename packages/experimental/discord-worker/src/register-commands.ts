@@ -45,7 +45,7 @@ const main = async () => {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bot ${botToken}`,
+      Authorization: `Bot ${botToken}`,
     },
     body: JSON.stringify(commands),
   });

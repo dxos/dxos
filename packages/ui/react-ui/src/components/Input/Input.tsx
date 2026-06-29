@@ -400,7 +400,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
+          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >

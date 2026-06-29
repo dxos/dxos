@@ -183,7 +183,7 @@ const IS_LEAVES: Record<string, Filter> = {
 
 const ROLE_ALIASES: Record<string, string> = { spam: 'junk', bin: 'trash', deleted: 'trash' };
 
-const SIZE_UNITS: Record<string, number> = { '': 1, 'k': 1024, 'm': 1024 * 1024, 'g': 1024 * 1024 * 1024 };
+const SIZE_UNITS: Record<string, number> = { '': 1, k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 };
 const DATE_RE = /^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/;
 const RELATIVE_RE = /^(\d+)([dwmy])$/;
 const SIZE_RE = /^(\d+)([kmg]?)b?$/i;

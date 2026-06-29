@@ -467,7 +467,7 @@ describe('Protobuf service', () => {
               return {
                 payload: {
                   '@type': 'example.testing.rpc.PingReponse',
-                  'nonce': 10,
+                  nonce: 10,
                 },
               };
             },
@@ -488,7 +488,7 @@ describe('Protobuf service', () => {
       const response = await client.rpc.TestAnyService.testCall({
         payload: {
           '@type': 'example.testing.rpc.PingRequest',
-          'nonce': 5,
+          nonce: 5,
         },
       });
 

@@ -30,13 +30,13 @@ import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type To
 const CARD_ROOT_NAME = 'Card.Root';
 
 type CardRootProps = {
-  'id'?: string;
-  'border'?: boolean;
-  'fullWidth'?: boolean;
-  'density'?: Density;
-  'style'?: CSSProperties;
-  'tabIndex'?: number;
-  'onClick'?: MouseEventHandler<HTMLDivElement>;
+  id?: string;
+  border?: boolean;
+  fullWidth?: boolean;
+  density?: Density;
+  style?: CSSProperties;
+  tabIndex?: number;
+  onClick?: MouseEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
   'data-testid'?: string;
 };

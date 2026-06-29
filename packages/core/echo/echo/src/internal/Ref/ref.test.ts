@@ -45,16 +45,16 @@ describe('Ref', () => {
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
-      'id': contact.id,
+      id: contact.id,
       '@type': `dxn:${Type.getTypename(Contact)}:${Type.getVersion(Contact)}`,
       '@meta': {
         keys: [],
       },
-      'name': 'John Doe',
-      'tasks': [
+      name: 'John Doe',
+      tasks: [
         {
           '/': getObjectEchoUri(task)!.toString(),
-          'target': JSON.parse(JSON.stringify(task)),
+          target: JSON.parse(JSON.stringify(task)),
         },
       ],
     });
@@ -66,13 +66,13 @@ describe('Ref', () => {
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
-      'id': contact.id,
+      id: contact.id,
       '@type': `dxn:${Type.getTypename(Contact)}:${Type.getVersion(Contact)}`,
       '@meta': {
         keys: [],
       },
-      'name': 'John Doe',
-      'tasks': [{ '/': getObjectEchoUri(task)!.toString() }],
+      name: 'John Doe',
+      tasks: [{ '/': getObjectEchoUri(task)!.toString() }],
     });
   });
 

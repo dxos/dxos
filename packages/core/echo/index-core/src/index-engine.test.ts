@@ -376,7 +376,7 @@ describe('IndexEngine', () => {
         createdAt: null,
         updatedAt: Date.now(),
         data: {
-          'id': EntityId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_DEFAULT,
           '@deleted': true,
         },

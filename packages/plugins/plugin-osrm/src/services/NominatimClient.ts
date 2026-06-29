@@ -31,7 +31,7 @@ export const geocode = async (
 
   let response: Response;
   try {
-    response = await fetchFn(url, { headers: { 'User-Agent': USER_AGENT, 'Accept': 'application/json' } });
+    response = await fetchFn(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } });
   } catch {
     // Wrap transport failures (DNS / timeout / network) so callers always see a GeocodeError.
     throw new Routing.GeocodeError(query);

@@ -60,9 +60,9 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'profile': creatorProfile,
-          'genesisFeedKey': controlKey,
+          role: SpaceMember.Role.ADMIN,
+          profile: creatorProfile,
+          genesisFeedKey: controlKey,
         },
       }),
 
@@ -91,7 +91,7 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          'role': SpaceMember.Role.EDITOR,
+          role: SpaceMember.Role.EDITOR,
           genesisFeedKey,
         },
       }),
@@ -112,7 +112,7 @@ export class CredentialGenerator {
       subject: deviceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        'identityKey': this._identityKey,
+        identityKey: this._identityKey,
         deviceKey,
       },
     });
@@ -148,8 +148,8 @@ export class CredentialGenerator {
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
         spaceKey,
-        'identityKey': this._identityKey,
-        'deviceKey': this._deviceKey,
+        identityKey: this._identityKey,
+        deviceKey: this._deviceKey,
         designation,
       },
     });
@@ -174,8 +174,8 @@ export class CredentialGenerator {
       subject: spaceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.Epoch',
-        'number': 0,
-        'timeframe': new Timeframe(),
+        number: 0,
+        timeframe: new Timeframe(),
       },
     });
   }
@@ -237,7 +237,7 @@ export const createAdmissionCredentials = async (
         profile,
         genesisFeedKey,
         invitationCredentialId,
-        'tags': tags ?? [],
+        tags: tags ?? [],
       },
     }),
   ]);
@@ -256,13 +256,13 @@ export const createDelegatedSpaceInvitationCredential = async (
     subject,
     assertion: {
       '@type': 'dxos.halo.invitations.DelegateSpaceInvitation',
-      'invitationId': invitation.invitationId,
-      'authMethod': invitation.authMethod,
-      'swarmKey': invitation.swarmKey,
-      'role': invitation.role,
-      'guestKey': invitation.guestKey,
-      'expiresOn': invitation.expiresOn,
-      'multiUse': invitation.multiUse,
+      invitationId: invitation.invitationId,
+      authMethod: invitation.authMethod,
+      swarmKey: invitation.swarmKey,
+      role: invitation.role,
+      guestKey: invitation.guestKey,
+      expiresOn: invitation.expiresOn,
+      multiUse: invitation.multiUse,
     },
   });
   return { credential: { credential } };
@@ -282,7 +282,7 @@ export const createCancelDelegatedSpaceInvitationCredential = async (
     subject,
     assertion: {
       '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
-      'credentialId': invitationCredentialId,
+      credentialId: invitationCredentialId,
     },
   });
   return { credential: { credential } };
