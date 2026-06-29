@@ -83,6 +83,7 @@ await EffectEx.runPromise(
       } else {
         console.error('Discord API error:', err);
       }
+
       return Effect.sync(() => process.exit(1));
     }),
   ),
