@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ResolveNavigation
         const eid = query?.uri ? EID.tryParse(query.uri) : undefined;
         const spaceId = eid ? EID.getSpaceId(eid) : undefined;
         const space = client
-          ? (spaceId ? client.spaces.get(spaceId) : undefined) ?? AppSpace.getActiveSpace(client, capabilities)
+          ? ((spaceId ? client.spaces.get(spaceId) : undefined) ?? AppSpace.getActiveSpace(client, capabilities))
           : undefined;
 
         // Delegate to contributed resolvers.
@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ResolveNavigation
         const resolve = Effect.forEach(resolvers, (resolver) =>
           resolver(query).pipe(Effect.catchAll(() => Effect.succeed([]))),
         );
-        const results = yield* (space ? resolve.pipe(Effect.provide(Database.layer(space.db))) : resolve);
+        const results = yield* space ? resolve.pipe(Effect.provide(Database.layer(space.db))) : resolve;
         return { targets: results.flat() };
       }),
     ),
