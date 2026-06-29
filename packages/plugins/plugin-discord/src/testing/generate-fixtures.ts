@@ -6,7 +6,7 @@
  * Generates a Discord channel fixture for use in tests.
  *
  * Usage:
- *   DISCORD_TOKEN=<bot-token> DISCORD_CHANNEL_ID=<channel-id> [DISCORD_DAYS_OF_HISTORY=90] \
+ *   DISCORD_TOKEN=<bot-token> DISCORD_CHANNEL_ID=<channel-id> [DISCORD_MAX_DAYS=90] \
  *     moon run plugin-discord:generate-fixtures
  *
  * Output: src/__fixtures__/discord-messages.json
@@ -29,15 +29,15 @@ if (!token || !channelId) {
   process.exit(1);
 }
 
-const rawDays = process.env.DISCORD_DAYS_OF_HISTORY;
-const daysOfHistory = rawDays !== undefined ? Number(rawDays) : 30;
+const rawDays = process.env.DISCORD_MAX_DAYS;
+const maxDays = rawDays !== undefined ? Number(rawDays) : 30;
 
 const outDir = resolve(dirname(fileURLToPath(import.meta.url)), '../__fixtures__');
 const outPath = resolve(outDir, 'discord-messages.json');
 
 const program = Effect.gen(function* () {
-  console.log(`Fetching messages from channel ${channelId} (last ${daysOfHistory} days)…`);
-  const result = yield* fetchChannelMessages(channelId, { daysOfHistory });
+  console.log(`Fetching messages from channel ${channelId} (last ${maxDays} days)…`);
+  const result = yield* fetchChannelMessages(channelId, { maxDays });
   console.log(`Fetched ${result.messages.length} messages.`);
 
   const fixture: DiscordChannelFixture = {
@@ -50,4 +50,24 @@ const program = Effect.gen(function* () {
   console.log(`Written to ${outPath}`);
 });
 
-await EffectEx.runPromise(program.pipe(Effect.provide(makeDiscordLayerFromToken(token))));
+const isDiscordError = (value: unknown): value is { message: string; code: number } =>
+  typeof value === 'object' && value !== null && 'message' in value && 'code' in value;
+
+await EffectEx.runPromise(
+  program.pipe(
+    Effect.provide(makeDiscordLayerFromToken(token)),
+    Effect.catchAll((err) => {
+      // dfx surfaces the Discord API body as a `[cause]` property on the wrapper error.
+      const cause = typeof err === 'object' && err !== null && '[cause]' in err ? err['[cause]' as keyof typeof err] : err;
+      if (isDiscordError(cause)) {
+        console.error(`Discord API error: ${cause.message} (code ${cause.code})`);
+        if (cause.code === 50001) {
+          console.error('Hint: the bot lacks READ_MESSAGE_HISTORY permission on this channel, or has not been invited to the server.');
+        }
+      } else {
+        console.error('Discord API error:', err);
+      }
+      return Effect.sync(() => process.exit(1));
+    }),
+  ),
+);
