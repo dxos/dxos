@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMailbox> = Inb
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, extractorId, concurrency = DEFAULT_CONCURRENCY }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
-      const messages = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
 
       const stats = {
         succeeded: 0,
