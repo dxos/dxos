@@ -193,17 +193,17 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </Form.Section>
 
           <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-            <Form.Row label={t('space-key.title')} description={t('space-key.description')}>
+            <Form.Row label={t('space-id.title')} description={t('space-id.description')}>
               <div className='flex items-center gap-2'>
                 <Input.Root>
-                  <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+                  <Input.TextInput value={space.id} disabled classNames='flex-1 font-mono text-xs' />
                 </Input.Root>
                 <IconButton
                   icon='ph--copy--regular'
                   iconOnly
-                  label={t('copy-space-key.label')}
+                  label={t('copy-space-id.label')}
                   onClick={() => {
-                    void navigator.clipboard.writeText(space.key.toHex());
+                    void navigator.clipboard.writeText(space.id);
                   }}
                 />
               </div>
