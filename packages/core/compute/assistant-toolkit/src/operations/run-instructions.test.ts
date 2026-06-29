@@ -32,7 +32,7 @@ const TestLayer = AssistantTestLayer({
 
 const countFeedMessages = (feed: Feed.Feed) =>
   Effect.gen(function* () {
-    const items = yield* Feed.runQuery(feed, Filter.everything());
+    const items = yield* Feed.query(feed, Filter.everything()).run;
     return items.filter(Obj.instanceOf(Message.Message)).length;
   });
 

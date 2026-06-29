@@ -18,9 +18,10 @@ import * as Database from './Database';
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
+import * as queryInternal from './internal/Query';
 import * as Obj from './Obj';
 import type * as Query from './Query';
-import * as QueryResult from './QueryResult';
+import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
 
 /**
@@ -253,27 +254,9 @@ export const query: {
   Database.Service.pipe(
     Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter)),
     Effect.withSpan('Feed.query'),
-    QueryResult.makeQueryResultEffect,
+    queryInternal.makeQueryResultEffect,
   ),
 );
-
-/**
- * Executes a feed query once and returns the results.
- *
- * Convenience shorthand for `Feed.query(feed, filter).run`.
- *
- * @example
- * ```ts
- * const items = yield* Feed.runQuery(feed, Filter.type(Person));
- * ```
- */
-export const runQuery: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Database.Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Database.Service>;
-} = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  // Cast required: the `Query.Any | Filter.Any` union does not satisfy either branch of the
-  // overloaded `query` signature individually; `queryFeed` dispatches on the runtime value.
-  query(feed, queryOrFilter as any).run;
 
 /**
  * Syncs the feed with the server.

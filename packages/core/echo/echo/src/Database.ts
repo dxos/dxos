@@ -22,10 +22,11 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types'
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri';
+import * as queryInternal from './internal/Query';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
-import * as QueryResult from './QueryResult';
+import type * as QueryResult from './QueryResult';
 import type * as Registry from './Registry';
 import type * as Type from './Type';
 
@@ -374,5 +375,5 @@ export const query: {
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
-    QueryResult.makeQueryResultEffect,
+    queryInternal.makeQueryResultEffect,
   );

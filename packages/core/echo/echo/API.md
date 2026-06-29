@@ -173,9 +173,6 @@ const first = yield * Feed.query(feed, Filter.type(Person)).first; // Option<Per
 
 // Data-last (curried) form composes with `pipe`.
 const piped = yield * pipe(feed, Feed.query(Filter.type(Person))).run;
-
-// Shorthand for `Feed.query(feed, filter).run`.
-const items2 = yield * Feed.runQuery(feed, Filter.type(Person));
 ```
 
 ## Live Objects vs Snapshots

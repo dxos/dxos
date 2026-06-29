@@ -468,7 +468,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
               // TODO(dmaretskyi): Include cursor & limit in the query.
-              const chunks = yield* Feed.runQuery(feed, Filter.everything()).pipe(
+              const chunks = yield* Feed.query(feed, Filter.everything()).run.pipe(
                 Effect.map((objects) => filterReadyFeedItems(objects, cursor)),
                 Effect.map(Array.chunksOf(concurrency)),
               );

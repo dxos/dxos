@@ -75,7 +75,7 @@ describe('Feed', () => {
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [alice, bob]);
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(2);
       expect(results.map((item: any) => item.name).sort()).toEqual(['alice', 'bob']);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
@@ -147,7 +147,7 @@ describe('Feed', () => {
       const alice = Obj.make(TestSchema.Person, { name: 'alice' });
       yield* Feed.append(feed, [alice]);
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(1);
 
       const feedObject = results[0];
@@ -186,7 +186,7 @@ describe('Feed', () => {
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [alice, bob]);
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(2);
       for (const item of results) {
         const parent = Obj.getParent(item);
@@ -260,7 +260,7 @@ describe('Feed', () => {
       yield* Feed.sync(feed, { shouldPush: false });
       yield* Feed.sync(feed, { shouldPull: false });
 
-      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(1);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
@@ -282,7 +282,7 @@ describe('Feed', () => {
       yield* Feed.append(feed, [post]);
 
       // Re-query to obtain a queue-decoded proxy (cross-db ref resolution path).
-      const items = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      const items = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(items).toHaveLength(1);
       const queuePost = items[0];
 
@@ -402,7 +402,7 @@ describe('Feed', () => {
       await Effect.gen(function* () {
         traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
-        const results = yield* Feed.runQuery(traceFeed, Filter.type(TestSchema.Person));
+        const results = yield* Feed.query(traceFeed, Filter.type(TestSchema.Person)).run;
         expect(results).toHaveLength(1);
         expect((results[0] as TestSchema.Person).name).toBe('trace-item');
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);

@@ -103,7 +103,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     log('jmap sync: folders resolved', { folders: folders.length, inboxId: inbox?.id });
 
     // Dedup set — same pattern as Gmail's `existingGmailIds`.
-    const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+    const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
     const existingIds = collectForeignIds(objects, JMAP_MESSAGE_SOURCE, MAX_SCAN);
 
     // Build the query filter: Inbox scope + optional date window + optional Gmail-like query DSL.

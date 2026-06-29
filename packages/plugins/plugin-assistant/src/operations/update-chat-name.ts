@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
           );
         } else {
           const feed = yield* Database.load(chat.feed);
-          const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+          const history = yield* Feed.query(feed, Filter.type(Message.Message)).run;
           log.info('history', { history: history.length });
           const historyPrompt = yield* AiPreprocessor.preprocessPrompt(history, {
             system,

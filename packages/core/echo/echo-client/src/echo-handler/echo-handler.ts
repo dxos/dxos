@@ -946,7 +946,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     let otherEchoObj = proxy;
 
     // Honour a Queue URI carried by the source. Queue-decoded objects (returned by
-    // `Feed.runQuery` / `queue.queryObjects`) have a `SelfURIId` annotation set directly
+    // `Feed.query(...).run` / `queue.queryObjects`) have a `SelfURIId` annotation set directly
     // on the plain object (not via proxy) and do not live in `space.db`. Without this
     // short-circuit, the path below would wrap the queue object as a fresh ECHO proxy
     // and call `database.add()`, leaking the object into `space.db`.

@@ -82,7 +82,7 @@ const syncSingleMailbox = (input: {
     );
     log('synced labels', { count: labelMap.size });
 
-    const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+    const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
     const lastMessage = objects.at(-1);
     const existingGmailIds = collectForeignIds(objects, GMAIL_SOURCE, STREAMING_CONFIG.maxResults);
 
