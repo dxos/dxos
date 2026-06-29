@@ -634,16 +634,10 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
   }
 
   if (Array.isArray(obj)) {
-    if (SchemaValidator.getIndexedElementSchema(schema, 0) == null) {
-      return;
-    }
-
     for (let index = 0; index < obj.length; index++) {
       if (isValidProxyTarget(obj[index])) {
-        const elementSchema = SchemaValidator.getIndexedElementSchema(schema, index);
-        if (elementSchema != null) {
-          setSchemaProperties(obj[index], elementSchema);
-        }
+        const elementSchema = SchemaValidator.getIndexedElementSchema(schema, index) ?? Schema.Any;
+        setSchemaProperties(obj[index], elementSchema);
       }
     }
     return;
