@@ -28,9 +28,9 @@ import {
   RelationSourceId,
   RelationTargetId,
   SchemaId,
-  TypeEntityId,
   SchemaValidator,
   SelfURIId,
+  TypeEntityId,
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
@@ -301,7 +301,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const newTarget = defaultMap(
         target[symbolInternals].targetsMap,
         targetKey,
-        (): ProxyTarget => createRecordTarget(createInstanceState(target[symbolInternals], namespace, dataPath)),
+        // Reuse the root target's event: the central `core.updates` subscription emits on the root's
+        // event only, so a derived record proxy with its own event would never notify its subscribers
+        // (arrays preserve `target[EventId]` for the same reason).
+        (): ProxyTarget =>
+          createRecordTarget(
+            createInstanceState(target[symbolInternals], namespace, dataPath, { event: target[EventId] }),
+          ),
       );
 
       return createProxy(newTarget, this);

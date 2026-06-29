@@ -53,7 +53,7 @@ import * as Schema from 'effect/Schema';
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
-import { EncodedReference, DATA_NAMESPACE, isEncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -61,16 +61,16 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
   ChangeId,
+  EntityKind,
   type EntityMeta,
   type EntityMetaJSON,
-  EntityKind,
   EntityMetaSchema,
   EventId,
   type JsonSchemaType,
   MetaId,
-  type ObjectJSON,
   ObjectDatabaseId,
   ObjectDeletedId,
+  type ObjectJSON,
   ObjectVersionId,
   ParentId,
   type Ref,
@@ -87,6 +87,7 @@ import {
   TypeEntityId,
   TypeId,
   TypeIdentifierAnnotationId,
+  TypeSchema,
   createProxy,
   defineHiddenProperty,
   executeChange,
@@ -97,7 +98,6 @@ import {
   isProxy,
   setRefResolver,
   toEffectSchema,
-  TypeSchema,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
@@ -107,7 +107,7 @@ import * as Doc from '../automerge/Doc';
 import { type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
-import { getEchoDatabase, type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
+import { type ProxyTarget, getEchoDatabase, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 
 const META_NAMESPACE = 'meta';
 
@@ -349,7 +349,11 @@ export const getVersion = (target: ProxyTarget): Obj.Version => {
 /** The meta sub-proxy for the object. `self` is the proxy (its handler backs the meta proxy). */
 const getMeta = (self: ProxyTarget): EntityMeta => {
   const target = rawTarget(self);
-  const metaTarget = createRecordTarget(createInstanceState(target[symbolInternals], META_NAMESPACE, []));
+  // Reuse the root target's event so subscribers of the meta proxy are notified: the central
+  // `core.updates` subscription emits on the root's event only (see the nested-record path).
+  const metaTarget = createRecordTarget(
+    createInstanceState(target[symbolInternals], META_NAMESPACE, [], { event: target[EventId] }),
+  );
   return createProxy(metaTarget, getProxyHandler(self)) as any;
 };
 

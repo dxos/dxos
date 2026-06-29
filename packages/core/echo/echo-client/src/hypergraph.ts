@@ -8,13 +8,13 @@ import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import {
   type AnyProperties,
-  isInstanceOf,
   type RefResolverRequest,
   type RefSource,
+  TypeSchema,
   batchEvents,
   getStrongDependencies,
+  isInstanceOf,
   setRefResolver,
-  TypeSchema,
 } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
