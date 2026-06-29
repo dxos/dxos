@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ObjectsTree } from '@dxos/devtools';
