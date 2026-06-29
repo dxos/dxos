@@ -14,7 +14,8 @@ compose these primitives; they do not re-implement capture or rendering.
         ▲                                   ▲
         │ implements                        │ drives
 @dxos/react-ui-transcription   (this package — browser + React)
-  recorder/   MediaStreamRecorder · createTranscriber · SerializationModel
+  capture/    MediaStreamRecorder · createTranscriber          (audio in → text)
+  model/      TranscriptModel · EditorChunkDocument · ChunkRenderer  (text → editor)
   hooks/      useAudioTrack · useAudioFile · useIsSpeaking · useSpeechRecognition
               useTranscriber · useRecordingPipeline · useFeedModelAdapter
   components/ Transcription · PipelineStatus · MicSettings
@@ -26,16 +27,16 @@ plugins (plugin-transcription / plugin-assistant / plugin-meeting)
 
 ## Type hierarchy
 
-**Capture / ASR (audio → text)**
+**Capture / ASR (audio → text)** — `capture/`
 - `AudioRecorder` *(engine interface)* ← `MediaStreamRecorder` — browser mic/track → `AudioChunk` (wav).
 - `Transcriber` *(engine)* — buffers chunks, calls Whisper, emits `ContentBlock.Transcript[]`.
 - `createTranscriber(CreateTranscriberOptions): Transcriber` — wires a `MediaStreamRecorder` into a `Transcriber`.
 - `AsrPipeline` *(engine)* — `Transcriber → runLivePipeline(stages) → CommitFn`, created by `runAsrPipeline`.
 
-**Transcript document projection (text → editor)**
+**Transcript document projection (text → editor)** — `model/`
 - `Chunk` `{ id }` → `ChunkRenderer<T>` `(chunk) => string[]`.
-- `ChunkDocument` *(interface)* ← `DocumentAdapter` — wraps a CodeMirror `EditorView`.
-- `SerializationModel<T extends Chunk>` — owns a chunk queue; diffs renders and syncs lines into a `ChunkDocument`.
+- `ChunkDocument` *(interface)* ← `EditorChunkDocument` — wraps a CodeMirror `EditorView`.
+- `TranscriptModel<T extends Chunk>` — owns a chunk queue; diffs renders and syncs lines into a `ChunkDocument`.
 
 **Lifecycle**
 - `PipelinePhase = 'idle' | 'recording' | 'draining'`.
@@ -56,8 +57,8 @@ useAudioFile(url) → track        ─┤→ useRecordingPipeline({ active, trac
 ```
 objects (e.g. useQuery feed)
   → useFeedModelAdapter(renderByline, objects)
-  → SerializationModel<T>(ChunkRenderer)
-  → DocumentAdapter(EditorView)            (Transcription component + transcription-extension)
+  → TranscriptModel<T>(ChunkRenderer)
+  → EditorChunkDocument(EditorView)        (Transcription component + transcription-extension)
 ```
 
 **Standalone hooks**

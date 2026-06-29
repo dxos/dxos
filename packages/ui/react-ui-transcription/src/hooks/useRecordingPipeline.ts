@@ -15,7 +15,7 @@ import {
 } from '@dxos/transcription-pipeline';
 import { type ContentBlock } from '@dxos/types';
 
-import { MediaStreamRecorder } from '../recorder';
+import { MediaStreamRecorder } from '../capture';
 import { type PipelinePhase } from '../types';
 import { useAudioTrack } from './useAudioTrack';
 

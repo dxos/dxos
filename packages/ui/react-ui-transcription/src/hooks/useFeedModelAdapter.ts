@@ -6,11 +6,11 @@ import { useEffect, useMemo } from 'react';
 
 import type { Obj } from '@dxos/echo';
 
-import { type ChunkRenderer, SerializationModel } from '../recorder';
+import { type ChunkRenderer, TranscriptModel } from '../model';
 
 /**
  * Feeds an array of objects (typically from `useQuery(db, Query.from(feed))`) into a
- * `SerializationModel`, appending each new tail item as the array grows.
+ * `TranscriptModel`, appending each new tail item as the array grows.
  *
  * @param renderer - chunk renderer.
  * @param objects - current snapshot of feed items.
@@ -20,8 +20,8 @@ export const useFeedModelAdapter = <T extends Obj.Unknown>(
   renderer: ChunkRenderer<T>,
   objects: readonly T[],
   initialChunks: T[] = [],
-): SerializationModel<T> => {
-  const model = useMemo(() => new SerializationModel<T>(renderer, initialChunks), [renderer]);
+): TranscriptModel<T> => {
+  const model = useMemo(() => new TranscriptModel<T>(renderer, initialChunks), [renderer]);
 
   // Seed the model with the current snapshot on first render and whenever the
   // identity of `objects` changes (e.g. feed swapped).

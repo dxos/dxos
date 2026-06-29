@@ -10,14 +10,13 @@ import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
 import { type Message } from '@dxos/types';
 
-import { type SerializationModel, DocumentAdapter } from '../../recorder';
+import { type TranscriptModel, EditorChunkDocument } from '../../model';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptionOptions = {
-  // TODO(burdon): Rename property serializer.
-  model: SerializationModel<Message.Message>;
+  model: TranscriptModel<Message.Message>;
   started?: Date;
 };
 
@@ -59,11 +58,11 @@ export const transcription = ({ model, started }: TranscriptionOptions): Extensi
       class {
         private readonly _controls?: HTMLDivElement;
         private readonly _cleanup: CleanupFn;
-        private readonly _adapter: DocumentAdapter;
+        private readonly _adapter: EditorChunkDocument;
         private _initialized = false;
 
         constructor(view: EditorView) {
-          this._adapter = new DocumentAdapter(view);
+          this._adapter = new EditorChunkDocument(view);
 
           const scroller = view.scrollDOM;
           let isAutoScrolling = false;

@@ -17,12 +17,12 @@ import {
   scroller,
 } from '@dxos/ui-editor';
 
-import { type SerializationModel } from '../../recorder';
+import { type TranscriptModel } from '../../model';
 import { transcription } from './transcription-extension';
 
 export type TranscriptionProps = {
   transcript?: Transcript.Transcript;
-  model: SerializationModel<Message.Message>;
+  model: TranscriptModel<Message.Message>;
 };
 
 // TODO(burdon): Rename Transcript.
