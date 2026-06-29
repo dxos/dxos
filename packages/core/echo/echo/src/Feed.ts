@@ -242,6 +242,8 @@ export const query: {
   ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Database.Service>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
   Database.Service.pipe(
+    // TypeScript cannot unify Query.Any | Filter.Any against the overloaded db.queryFeed signature; the overloads
+    // guarantee type safety at the call sites above.
     Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter as any) as QueryResult.QueryResult<any>),
   );
 
@@ -257,6 +259,8 @@ export const runQuery: {
   <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Database.Service>;
   <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Database.Service>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
+  // TypeScript cannot unify Query.Any | Filter.Any against the overloaded query signature; the overloads guarantee
+  // type safety at the call sites above.
   query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
 
 /**
