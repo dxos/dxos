@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
 import { crawlerLineEffect } from '../scrolling';
-import { PlaceholderWidget, type XmlWidgetNotifier } from './placeholder';
+import { StubWidget, type XmlWidgetNotifier } from './stub';
 import { nodeToJson } from './xml-util';
 
 /**
@@ -210,7 +210,7 @@ export type XmlTagsOptions = {
  * Basic mechanism:
  * - Decorations are created from XML tags that matched the provided Widget registry.
  * - Native widgets are rendered inline.
- * - React/Solid widgets are rendered in portals outside of the editor via the PlaceholderWidget.
+ * - React/Solid widgets are rendered in portals outside of the editor via the StubWidget.
  * - Widget state can be update via effects.
  *   - NOTE: Widget state may be updated BEFORE the widget is mounted.
  */
@@ -369,7 +369,7 @@ const createWidgetUpdatePlugin = (
               const widget = deco?.spec?.widget;
 
               // NOTE: If the widget has not yet been mounted, then the root will be null.
-              if (widget && widget instanceof PlaceholderWidget && widget.id === effect.value.id && widget.root) {
+              if (widget && widget instanceof StubWidget && widget.id === effect.value.id && widget.root) {
                 const props = { ...widget.props, ...widgetState };
                 notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
               }
@@ -512,7 +512,7 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new PlaceholderWidget(widgetId, Component, props, notifier)
+                    ? new StubWidget(widgetId, Component, props, notifier)
                     : undefined;
 
                 // Add decoration.
@@ -581,7 +581,7 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new PlaceholderWidget(widgetId, def.Component, props, notifier)
+              ? new StubWidget(widgetId, def.Component, props, notifier)
               : undefined;
           if (widget) {
             builder.add(
@@ -643,7 +643,7 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new PlaceholderWidget(widgetId, def.Component, mergedProps, notifier, true)
+            ? new StubWidget(widgetId, def.Component, mergedProps, notifier, true)
             : undefined;
 
         if (widget) {

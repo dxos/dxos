@@ -178,7 +178,7 @@ const xmlTagsText = trim`
 `;
 
 /**
- * XML tag names in the document trigger React components via xmlTags / PlaceholderWidget.
+ * XML tag names in the document trigger React components via xmlTags.
  */
 export const XmlTags: Story = {
   render: () => <XmlTagsStory text={xmlTagsText} />,
@@ -200,7 +200,7 @@ const previewText = trim`
 `;
 
 /**
- * Markdown image/link URLs (echo:/…) trigger block widgets via xmlTags / PlaceholderWidget.
+ * Markdown image/link URLs (echo:/…) trigger block widgets via xmlTags.
  */
 export const Preview: Story = {
   render: () => {
