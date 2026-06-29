@@ -14,7 +14,7 @@ import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Message } from '@dxos/types';
 
-import { MessageStack, type MessageStackActionHandler } from '#components';
+import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
 import { DraftMessage, Mailbox } from '#types';
 

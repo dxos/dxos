@@ -60,11 +60,11 @@ import React, {
 
 import { List, ListItem } from '@dxos/react-list';
 import {
-  Icon,
   type IconProps,
-  ScrollArea,
   type ScrollAreaRootProps,
   type ThemedClassName,
+  Icon,
+  ScrollArea,
   composable,
   composableProps,
 } from '@dxos/react-ui';
@@ -77,7 +77,7 @@ import {
   useListSelection,
 } from '../../aspects';
 import { listTheme } from '../List.theme';
-import { ListItemContent, type ListItemContentProps } from './ListItemContent';
+import { type ListItemContentProps, ListItemContent } from './ListItemContent';
 
 const styles = listTheme.styles();
 
@@ -384,10 +384,10 @@ export { Listbox, useListboxSelection };
 
 export type {
   ListItemContentProps as ItemContentProps,
+  ContentProps as ListboxContentProps,
+  IndicatorProps as ListboxIndicatorProps,
+  ItemLabelProps as ListboxItemLabelProps,
+  ItemProps as ListboxItemProps,
   RootProps as ListboxRootProps,
   ViewportProps as ListboxViewportProps,
-  ContentProps as ListboxContentProps,
-  ItemProps as ListboxItemProps,
-  ItemLabelProps as ListboxItemLabelProps,
-  IndicatorProps as ListboxIndicatorProps,
 };

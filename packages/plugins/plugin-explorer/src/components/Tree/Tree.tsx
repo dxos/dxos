@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { type BundleEdge, HierarchicalEdgeBundling, RadialTree, TidyTree, type TreeLayoutSlots } from './layout';
+import { type BundleEdge, type TreeLayoutSlots, HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { type TreeNode } from './types';
 
 export type LayoutVariant = 'tidy' | 'radial' | 'edge';

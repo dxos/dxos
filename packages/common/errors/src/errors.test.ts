@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { BaseError, type BaseErrorOptions } from './base';
+import { type BaseErrorOptions, BaseError } from './base';
 import { SystemError } from './errors';
 
 describe('errors', () => {

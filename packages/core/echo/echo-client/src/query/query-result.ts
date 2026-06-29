@@ -7,7 +7,7 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryResult } from '@dxos/echo';
+import { type Entity, type QueryResult, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';

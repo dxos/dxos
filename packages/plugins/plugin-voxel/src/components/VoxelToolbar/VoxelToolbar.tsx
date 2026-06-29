@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { type ToolbarRootProps, Toolbar } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { type Hue } from '@dxos/ui-theme';

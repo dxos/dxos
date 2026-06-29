@@ -63,7 +63,7 @@ import {
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, type Settings, Devtools } from '#types';
+import { type Settings, DebugCapabilities, Devtools } from '#types';
 
 const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
 

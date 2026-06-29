@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type SpaceId } from '@dxos/keys';
 import { type FeedSyncStateMap, type PeerSyncState, type SpaceSyncStateMap } from '@dxos/react-client/echo';
-import { IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { SpaceRowContainer } from './Space';

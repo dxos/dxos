@@ -4,7 +4,7 @@
 
 import { type Capabilities } from '@dxos/app-framework';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { SubscriptionList, type Trigger } from '@dxos/async';
+import { type Trigger, SubscriptionList } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
@@ -13,7 +13,7 @@ import { Account, ClientOperation } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { HelpOperation } from '@dxos/plugin-support';
 import { type Client } from '@dxos/react-client';
-import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
+import { type Credential, type Identity, DeviceType } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { WELCOME_SCREEN } from './components';

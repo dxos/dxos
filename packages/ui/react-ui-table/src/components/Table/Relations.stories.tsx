@@ -24,7 +24,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { translations } from '#translations';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
-import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
+import { type TableFeatures, type TableRow, TablePresentation } from '../../model';
 import { Table } from '../../types';
 import { Table as TableComponent } from './Table';
 

@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useEffect, useLayoutEffect } from 'react
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
-import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
+import { type StartupProgress, type UseAppOptions, LoadingState, useCapabilities, useLoading } from '../../hooks';
 
 declare global {
   interface Window {

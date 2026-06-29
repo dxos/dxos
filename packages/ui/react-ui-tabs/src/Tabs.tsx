@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup, useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
@@ -10,12 +10,12 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
 import {
-  Button,
   type ButtonProps,
-  IconButton,
   type IconButtonProps,
   type SlottableProps,
   type ThemedClassName,
+  Button,
+  IconButton,
   composableProps,
   slottable,
   useForwardedRef,
@@ -365,11 +365,11 @@ export const Tabs = {
 
 export type {
   TabsActivePart,
-  TabsRootProps,
-  TabsTablistProps,
-  TabsTabProps,
-  TabsTabPrimitiveProps,
-  TabsTabGroupHeadingProps,
-  TabsViewportProps,
   TabsPanelProps,
+  TabsRootProps,
+  TabsTabGroupHeadingProps,
+  TabsTablistProps,
+  TabsTabPrimitiveProps,
+  TabsTabProps,
+  TabsViewportProps,
 };

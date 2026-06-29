@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Chat, type ChatProps, Container, PageActions, Thumbnail } from './components';
+import { type ChatProps, Chat, Container, PageActions, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.

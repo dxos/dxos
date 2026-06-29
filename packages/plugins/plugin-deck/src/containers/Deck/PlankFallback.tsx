@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
-import { ErrorFallback, type ErrorFallbackProps, useTranslation } from '@dxos/react-ui';
+import { type ErrorFallbackProps, ErrorFallback, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

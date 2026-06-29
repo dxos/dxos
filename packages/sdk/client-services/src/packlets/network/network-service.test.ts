@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { ConnectionState, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
+import { type NetworkService, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';

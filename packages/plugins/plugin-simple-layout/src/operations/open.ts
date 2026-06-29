@@ -6,7 +6,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Database, EID } from '@dxos/echo';
+import { EID, Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 

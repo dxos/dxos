@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { HuePicker, type HuePickerProps } from './HuePicker';
+import { type HuePickerProps, HuePicker } from './HuePicker';
 
 const DefaultStory = (props: HuePickerProps) => {
   const [hue, setHue] = useState<string | undefined>(props.defaultValue);

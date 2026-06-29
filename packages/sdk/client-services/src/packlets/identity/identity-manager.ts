@@ -18,11 +18,11 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
-  AdmittedFeed,
   type Credential,
   type DeviceProfileDocument,
-  DeviceType,
   type ProfileDocument,
+  AdmittedFeed,
+  DeviceType,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';

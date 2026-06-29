@@ -12,13 +12,13 @@ import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
-  ActionBar,
   type ActionMenuItem,
+  type InvitationListProps,
+  type SpaceMemberListProps,
+  ActionBar,
   BifurcatedAction,
   InvitationList,
-  type InvitationListProps,
   SpaceMemberList,
-  type SpaceMemberListProps,
 } from '../../components';
 import { translationKey } from '../../translations';
 import { type SpacePanelStepProps } from './SpacePanelProps';

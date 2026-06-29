@@ -10,7 +10,7 @@ import * as Queue from 'effect/Queue';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
+import { type Plugin, ActivationEvents, Capabilities } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Client, Config } from '@dxos/react-client';

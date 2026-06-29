@@ -10,10 +10,10 @@ import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
+import { type Credential, AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type TestConnection, TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
-import { NotarizationPlugin, type NotarizationPluginProps } from './notarization-plugin';
+import { type NotarizationPluginProps, NotarizationPlugin } from './notarization-plugin';
 
 class TestAgent extends TestPeer {
   private readonly _ctx = new Context();

@@ -14,7 +14,7 @@ import { CallsCapabilities } from '#types';
 import { type CallManager } from '../../calls';
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { type ToolbarProps, Toolbar } from './Toolbar';
 
 //
 // Root

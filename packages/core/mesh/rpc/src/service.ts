@@ -10,7 +10,7 @@ import {
 } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 
-import { RpcPeer, type RpcPeerOptions } from './rpc';
+import { type RpcPeerOptions, RpcPeer } from './rpc';
 
 /**
  * Map of service definitions.

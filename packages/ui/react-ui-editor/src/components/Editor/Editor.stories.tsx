@@ -21,7 +21,7 @@ import {
 } from '@dxos/ui-editor';
 
 import { createMenuGroup } from '../EditorMenuProvider';
-import { Editor, type EditorViewProps } from './Editor';
+import { type EditorViewProps, Editor } from './Editor';
 
 random.seed(1234);
 

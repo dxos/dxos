@@ -15,8 +15,8 @@ import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
 import { redeemAccountInvitation } from '../credentials';
 import { OnboardingOperation } from '../operations';
 import {
-  OAUTH_RECOVERY_REDIRECT_PATH,
   type OAuthRecoveryPendingSnapshot,
+  OAUTH_RECOVERY_REDIRECT_PATH,
   oauthRecoveryPendingKey,
 } from '../operations/shared';
 

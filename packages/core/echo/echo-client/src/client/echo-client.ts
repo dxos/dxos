@@ -14,7 +14,7 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
-import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
+import { type LoadObjectProps, type ObjectUpdate, IndexQuerySourceProvider } from './index-query-source-provider';
 
 export type EchoClientProps = {};
 

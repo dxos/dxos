@@ -11,7 +11,7 @@ import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/
 import { Chaos, shaderPresets } from '@dxos/react-ui-experimental';
 
 import { useComputeNodeState } from '../hooks';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
 
 export const ScopeShape = Schema.extend(
   ComputeShape,

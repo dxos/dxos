@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Client, type ClientOptions } from '@dxos/client';
+import { type ClientOptions, Client } from '@dxos/client';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 

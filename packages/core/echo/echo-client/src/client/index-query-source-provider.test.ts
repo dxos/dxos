@@ -8,8 +8,8 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
-import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { type SpaceId, DXN, EntityId, SpaceId as SpaceId$ } from '@dxos/keys';
+import { type QueryRequest, type QueryService, QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { type ObjectUpdate } from './index-query-source-provider';
 import { IndexQuerySource } from './index-query-source-provider';

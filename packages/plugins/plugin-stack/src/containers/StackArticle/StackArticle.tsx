@@ -11,10 +11,10 @@ import { type Collection, Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { Mosaic, type MosaicEventHandler } from '@dxos/react-ui-mosaic';
+import { type MosaicEventHandler, Mosaic } from '@dxos/react-ui-mosaic';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
-import { Stack, type StackSectionItem } from '#components';
+import { type StackSectionItem, Stack } from '#components';
 import { meta } from '#meta';
 
 export type StackArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;

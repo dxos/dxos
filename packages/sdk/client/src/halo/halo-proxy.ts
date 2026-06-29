@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
-import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Halo, AUTH_TIMEOUT } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
@@ -16,8 +16,8 @@ import { ApiError } from '@dxos/protocols';
 import {
   type Contact,
   type Device,
-  DeviceKind,
   type Identity,
+  DeviceKind,
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
 import {

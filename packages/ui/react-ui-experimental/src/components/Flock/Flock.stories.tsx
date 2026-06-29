@@ -9,7 +9,7 @@ import React, { useContext, useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Flock, type FlockColoring, type FlockStartingPosition } from './Flock';
+import { type FlockColoring, type FlockStartingPosition, Flock } from './Flock';
 import { FlockModel } from './FlockModel';
 
 const StoryFlock = () => {

@@ -28,7 +28,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
 import { Plank } from '../Plank';
-import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+import { type MatrixController, type MatrixRootProps, Matrix } from './Matrix';
 
 random.seed(123);
 

@@ -13,9 +13,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Connection, type RemoteTarget } from '#types';
+import { type RemoteTarget, Connection } from '#types';
 
-import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
+import { type SyncTargetsDialogProps, SyncTargetsDialog } from './SyncTargetsDialog';
 
 const availableTargets: RemoteTarget[] = [
   { id: 'board-1', name: 'Product Roadmap', description: 'Quarterly planning board.' },

@@ -26,7 +26,7 @@ import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { createJsonBlock } from './Markdown';
-import { Picker, type PickerProps } from './Picker';
+import { type PickerProps, Picker } from './Picker';
 import { StatusBar } from './StatusBar';
 
 export type ChatProps = {

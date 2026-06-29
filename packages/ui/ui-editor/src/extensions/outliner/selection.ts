@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Compartment, type EditorState, Facet, type SelectionRange } from '@codemirror/state';
+import { type EditorState, type SelectionRange, Compartment, Facet } from '@codemirror/state';
 import { type Command, type EditorView } from '@codemirror/view';
 
 import { treeFacet } from './tree';

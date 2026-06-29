@@ -6,8 +6,8 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 import React, {
   type FC,
-  Fragment,
   type NamedExoticComponent,
+  Fragment,
   Profiler,
   Suspense,
   memo,

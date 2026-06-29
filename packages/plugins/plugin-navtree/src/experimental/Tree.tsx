@@ -4,7 +4,7 @@
 
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
-import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
+import { type ClassNameValue, type Size, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export const IconButton = ({

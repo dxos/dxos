@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Plugin, type Plugin as PluginNS } from '@dxos/app-framework';
+import { type Plugin as PluginNS, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
@@ -16,9 +16,9 @@ import { meta } from '#meta';
 import { CodeProject } from '#types';
 
 import {
-  CODE_PROJECTS_SECTION_TYPE,
   CODE_PROJECT_BUILD_TYPE,
   CODE_PROJECT_SPEC_TYPE,
+  CODE_PROJECTS_SECTION_TYPE,
   PLUGIN_SPEC_TYPE,
 } from '../constants';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';

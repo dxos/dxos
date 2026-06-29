@@ -10,9 +10,9 @@ import { useClient } from '@dxos/react-client';
 import {
   type InvitationUrlRequest,
   type LayoutRequest,
+  type ShellRuntime,
   ShellDisplay,
   ShellLayout,
-  type ShellRuntime,
 } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';

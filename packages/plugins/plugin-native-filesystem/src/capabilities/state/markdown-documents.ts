@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry, Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -19,12 +19,12 @@ import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from 
 
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
+  type FileMapEntry,
   getFileXattrDXN,
   readFileMap,
   setFileXattrDXN,
   watchMarkdownFile,
   writeFileMap,
-  type FileMapEntry,
 } from './disk-io';
 import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers';
 

@@ -24,13 +24,13 @@ import { meta } from '#meta';
 
 import { AiUsageQuotaError } from '../../processor';
 import {
+  type ChatPromptProps as NaturalChatPromptProps,
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
-  type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
-import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
+import { type ChatThreadProps as NaturalChatThreadProps, ChatThread as NaturalChatThread } from '../ChatThread';
 import { TaskList } from '../TaskList';
-import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
+import { type ChatContextValue, type ChatRequestTiming, ChatContextProvider, useChatContext } from './context';
 import { type ChatEvent } from './events';
 
 //
@@ -390,4 +390,4 @@ export const Chat = {
   TaskList: ChatTaskList,
 };
 
-export type { ChatRootProps, ChatToolbarProps, ChatContentProps, ChatPromptProps, ChatThreadProps, ChatEvent };
+export type { ChatContentProps, ChatEvent, ChatPromptProps, ChatRootProps, ChatThreadProps, ChatToolbarProps };

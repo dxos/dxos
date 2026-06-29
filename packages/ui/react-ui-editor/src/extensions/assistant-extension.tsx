@@ -3,7 +3,7 @@
 //
 
 import { type Diagnostic, forEachDiagnostic, linter, setDiagnostics } from '@codemirror/lint';
-import { ChangeSet, type Extension } from '@codemirror/state';
+import { type Extension, ChangeSet } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';

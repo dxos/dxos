@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN } from '@dxos/echo';
+import { DXN, Database } from '@dxos/echo';
 
 import * as PageAction from './PageAction';
 

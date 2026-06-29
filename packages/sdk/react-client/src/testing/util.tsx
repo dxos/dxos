@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Client, type Config, fromHost } from '@dxos/client';
+import { type Config, Client, fromHost } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 
 import { ClientContext, ClientProvider } from '../client';

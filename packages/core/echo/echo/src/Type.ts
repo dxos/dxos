@@ -10,7 +10,7 @@ import type * as Types from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
+import { type EntityId, type URI, DXN, EID } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as EntityModule from './Entity';

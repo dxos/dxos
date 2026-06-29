@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { type TextInputProps, Input } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 

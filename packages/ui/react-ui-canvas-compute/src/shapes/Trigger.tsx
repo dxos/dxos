@@ -11,11 +11,11 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/Obj';
 import { type SpaceId } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
+import { type SelectRootProps, Select } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createShape } from './defs';
 
 const TriggerShapeSchema = Schema.extend(
   ComputeShape,

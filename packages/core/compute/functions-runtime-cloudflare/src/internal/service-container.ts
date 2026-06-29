@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/Type';
-import { EID, type SpaceId } from '@dxos/keys';
+import { type SpaceId, EID } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';

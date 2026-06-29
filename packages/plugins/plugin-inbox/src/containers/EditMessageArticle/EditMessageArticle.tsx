@@ -14,7 +14,7 @@ import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
+import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 
 import { EditMessage } from '#components';

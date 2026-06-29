@@ -12,12 +12,12 @@ import {
   type CheckboxProps,
   type DateInputProps,
   type DateTimeInputProps,
-  Input,
   type PinInputProps,
   type SwitchProps,
   type TextAreaProps,
   type TextInputProps,
   type TimeProps,
+  Input,
 } from './Input';
 
 type VariantMap = {

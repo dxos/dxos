@@ -13,20 +13,20 @@ import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
-  EditorMenuProvider,
   type EditorMenuProviderProps,
   type UseEditorMenuProps,
+  EditorMenuProvider,
   useEditorMenu,
 } from '../EditorMenuProvider';
 import {
   type EditorToolbarState,
-  EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
+  EditorToolbar as NaturalEditorToolbar,
 } from '../EditorToolbar';
 import {
   type EditorController,
-  EditorView as NaturalEditorContent,
   type EditorViewProps as NaturalEditorContentProps,
+  EditorView as NaturalEditorContent,
   createEditorController,
   noopController,
 } from './EditorView';
@@ -176,12 +176,12 @@ export const Editor = {
 };
 
 export type {
+  EditorContentProps,
   EditorController,
   EditorRootProps,
-  EditorContentProps,
-  EditorViewProps,
   EditorToolbarProps,
   EditorToolbarState,
+  EditorViewProps,
 };
 
 export { createEditorController };

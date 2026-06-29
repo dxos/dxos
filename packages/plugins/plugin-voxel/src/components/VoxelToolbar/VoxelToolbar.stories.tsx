@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Hue } from '@dxos/ui-theme';
 
-import { DEFAULT_HUE, type ToolMode } from '../VoxelEditor';
+import { type ToolMode, DEFAULT_HUE } from '../VoxelEditor';
 import { VoxelToolbar } from './VoxelToolbar';
 
 const DefaultStory = () => {

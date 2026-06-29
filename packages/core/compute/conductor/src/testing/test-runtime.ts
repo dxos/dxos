@@ -10,7 +10,6 @@ import { type URI } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
 import {
-  ComputeNodeContext,
   type ComputeGraphModel,
   type ComputeNode,
   type ComputeRequirements,
@@ -18,6 +17,7 @@ import {
   type Executable,
   type ValueBag,
   type ValueRecord,
+  ComputeNodeContext,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
 

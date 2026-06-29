@@ -7,7 +7,7 @@
 import { Node } from '@dxos/app-graph';
 import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, type URI } from '@dxos/keys';
+import { type URI, DXN, EID } from '@dxos/keys';
 
 /**
  * Prefix for pinned (non-space) workspace IDs in the graph.

@@ -20,9 +20,9 @@ import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { Message, type ContentBlock } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
+import { type GenerationObserver, AiRequest, formatSystemPrompt } from '../request';
 import { ToolExecutionServices } from '../tool-runtime';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { markdown, markdownLanguage, insertNewlineContinueMarkup } from '@codemirror/lang-markdown';
+import { insertNewlineContinueMarkup, markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorSelection, EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { parseProto, type ProtoRegistry } from './proto-to-effect';
+export { type ProtoRegistry, parseProto } from './proto-to-effect';

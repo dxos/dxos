@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type HierarchyNode, cluster as d3Cluster, curveBundle, hierarchy, lineRadial } from 'd3';
+import { type HierarchyNode, curveBundle, cluster as d3Cluster, hierarchy, lineRadial } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphRadialProjectorOptions, GraphRadialProjector, updateNode } from './graph-radial-projector';
 
 export type GraphBundleProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the bundle (screen pixels). */

@@ -10,7 +10,7 @@ import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { PostStack, type PostStackAction } from '#components';
+import { type PostStackAction, PostStack } from '#components';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';

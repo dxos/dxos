@@ -11,7 +11,7 @@ import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
-import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
+import { type TranslationsProviderProps, TranslationsProvider } from './TranslationsProvider';
 
 export type ThemeContextValue = {
   tx: ThemeFunction<any>;

@@ -19,7 +19,7 @@ import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { SegmentStack, type SegmentCardAction } from '#components';
+import { type SegmentCardAction, SegmentStack } from '#components';
 import { meta } from '#meta';
 import { Routing, RoutingOperation, Segment, Trip } from '#types';
 

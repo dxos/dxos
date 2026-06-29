@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +23,7 @@ import {
   MaterializeTargetOutput,
   SyncBinding,
 } from '../types';
-import { reconcileSyncBindings, type SyncTargetSelection } from './reconcile-sync-bindings';
+import { type SyncTargetSelection, reconcileSyncBindings } from './reconcile-sync-bindings';
 
 describe('reconcileSyncBindings', () => {
   let builder: EchoTestBuilder;

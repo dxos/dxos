@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { IconButton, type IconButtonProps } from '@dxos/react-ui';
+import { type IconButtonProps, IconButton } from '@dxos/react-ui';
 
 export const TEST_ID = 'test';
 

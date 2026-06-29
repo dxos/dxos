@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { AppGraphBuilder, SkillDefinition, OperationHandler, UndoMappings } from '#capabilities';
+import { AppGraphBuilder, OperationHandler, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 
 export const CommentsPlugin = Plugin.define(meta).pipe(

@@ -8,7 +8,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
 

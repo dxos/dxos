@@ -15,7 +15,7 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { Database, type Ref } from '@dxos/echo';
+import { type Ref, Database } from '@dxos/echo';
 import { Connection } from '@dxos/plugin-connector';
 
 import { SLACK_API_BASE } from '../constants';

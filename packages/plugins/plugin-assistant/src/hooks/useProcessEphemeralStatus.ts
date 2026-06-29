@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { Process, ServiceResolver, type Trace } from '@dxos/compute';
+import { type Trace, Process, ServiceResolver } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { type Space } from '@dxos/react-client/echo';
 

@@ -16,17 +16,17 @@ import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
-  ComputeBeginEvent,
-  ComputeEndEvent,
-  ComputeInputEvent,
-  ComputeNodeContext,
-  ComputeOutputEvent,
   type ComputeGraphModel,
   type ComputeNode,
   type ComputeNodeMeta,
   type ComputeRequirements,
   type ComputeResult,
   type Executable,
+  ComputeBeginEvent,
+  ComputeEndEvent,
+  ComputeInputEvent,
+  ComputeNodeContext,
+  ComputeOutputEvent,
   NotExecuted,
   ValueBag,
   isNotExecuted,
@@ -34,10 +34,10 @@ import {
 import { createDefectLogger } from '../util';
 import {
   type GraphDiagnostic,
-  InputKind,
   type Topology,
   type TopologyNode,
   type TopologyNodeConnector,
+  InputKind,
   createTopology,
 } from './topology';
 

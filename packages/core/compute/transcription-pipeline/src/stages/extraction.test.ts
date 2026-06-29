@@ -36,7 +36,7 @@ describe('extraction (with full-text index)', () => {
     await builder.close();
   });
 
-  test('links matching proper nouns to objects and reports the rest as candidates', async ({ expect }) => {
+  test('links an unambiguous match and reports the rest as candidates', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Organization.Organization] });
     db.add(Obj.make(Organization.Organization, { name: 'Amco' }));
     await db.flush({ indexes: true });
@@ -54,5 +54,26 @@ describe('extraction (with full-text index)', () => {
     const candidates = (update.candidates ?? []).map((candidate) => candidate.text);
     expect(candidates).toContain('Globex');
     expect(candidates).not.toContain('Amco');
+  });
+
+  test('leaves an ambiguous noun (multiple matches) as a candidate rather than linking', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Organization.Organization] });
+    // Two objects match the same surface noun, so the match is ambiguous.
+    db.add(Obj.make(Organization.Organization, { name: 'Acme' }));
+    db.add(Obj.make(Organization.Organization, { name: 'Acme' }));
+    await db.flush({ indexes: true });
+
+    const stage = makeExtractionStage();
+    const block = { _tag: 'transcript' as const, started: 's', text: 'we met Acme today' };
+    const write = await EffectEx.runPromise(
+      stage.run({ window: [block] }, { lookup: makeDatabaseLookup(db), model: stage.model! }),
+    );
+
+    const update = write.blockUpdates?.[0];
+    // Ambiguous noun is surfaced as a candidate, not auto-linked.
+    expect(update?.references ?? []).toHaveLength(0);
+    expect(update?.corrected).toBeUndefined();
+    const candidates = (update?.candidates ?? []).map((candidate) => candidate.text);
+    expect(candidates).toContain('Acme');
   });
 });

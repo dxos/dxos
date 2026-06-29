@@ -10,7 +10,7 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from '@dxos/edge-client';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId, PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';

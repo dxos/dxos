@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
+import { type EditorStateConfig, type Text, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import {
   type ComponentPropsWithoutRef,

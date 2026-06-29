@@ -8,20 +8,20 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { useAppGraph, useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
+import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
+import { type Database, type QueryAST, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
-  Table as TableComponent,
   type TableController,
   type TableFeatures,
   type TableModelProps,
-  TablePresentation,
   type TableRowAction,
+  Table as TableComponent,
+  TablePresentation,
   extractOrder,
   useAddRow,
   useProjectionModel,

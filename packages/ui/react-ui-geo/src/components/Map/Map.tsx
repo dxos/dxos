@@ -5,7 +5,7 @@
 import 'leaflet/dist/leaflet.css';
 
 import { createContext } from '@radix-ui/react-context';
-import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, point, latLngBounds } from 'leaflet';
+import L, { type ControlPosition, type LatLngLiteral, Control, DomEvent, DomUtil, latLngBounds, point } from 'leaflet';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -17,8 +17,8 @@ import React, {
 } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  MapContainer,
   type MapContainerProps,
+  MapContainer,
   Marker,
   Polyline,
   Popup,
@@ -32,7 +32,7 @@ import { composable, composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type ControlProps, ActionControls, ZoomControls, controlPositions } from '../Toolbar';
 
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 // TODO(burdon): react-leaflet v5 is not compatible with react 18.
@@ -533,10 +533,10 @@ export const Map = {
 
 export {
   type MapController,
-  type MapRootProps,
-  type MapViewportProps,
-  type MapTilesProps,
-  type MapMarkersProps,
-  type MapLinesProps,
   type MapControlProps,
+  type MapLinesProps,
+  type MapMarkersProps,
+  type MapRootProps,
+  type MapTilesProps,
+  type MapViewportProps,
 };

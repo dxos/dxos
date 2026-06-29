@@ -15,18 +15,18 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import {
-  AiParser,
-  AiPreprocessor,
-  AiSummarizer,
   type AiToolNotFoundError,
-  callTool,
   type OpaqueToolkit,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
+  AiParser,
+  AiPreprocessor,
+  AiSummarizer,
+  callTool,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Skill, Trace, Operation } from '@dxos/compute';
+import { type Skill, Operation, Trace } from '@dxos/compute';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';

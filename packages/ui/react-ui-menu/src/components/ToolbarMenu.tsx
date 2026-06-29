@@ -5,10 +5,10 @@
 import React, { useCallback } from 'react';
 
 import {
+  type ToolbarRootProps,
   Input,
   Toolbar as NaturalToolbar,
   Tooltip,
-  type ToolbarRootProps,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -309,6 +309,11 @@ const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem
   const action = item as MenuAction;
   if (action.properties?.variant === 'switch') {
     return <SwitchToolbarItem __menuScope={__menuScope} action={action} />;
+  }
+
+  // The contributor owns the rendered element (interactions the action model cannot express).
+  if (action.properties?.variant === 'custom' && action.properties.render) {
+    return <>{action.properties.render()}</>;
   }
 
   return <ActionToolbarItem __menuScope={__menuScope} action={action} />;

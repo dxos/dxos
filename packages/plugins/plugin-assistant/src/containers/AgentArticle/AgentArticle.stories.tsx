@@ -18,7 +18,7 @@ import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { createObjectFactory, TypeSpec } from '@dxos/schema/testing';
+import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';

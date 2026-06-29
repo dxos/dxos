@@ -15,7 +15,7 @@ import type * as Scope from 'effect/Scope';
 
 import { LayerSpec, Process, ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
+import { type URI, EID, Annotation, Database, Feed, Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';

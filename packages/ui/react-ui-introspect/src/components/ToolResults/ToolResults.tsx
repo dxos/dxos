@@ -13,7 +13,7 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Input, Message, Panel, ScrollArea, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, Input, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';

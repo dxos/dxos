@@ -3,7 +3,7 @@
 //
 
 import { type ChartConfiguration } from 'chart.js';
-import { ChartJSNodeCanvas, type ChartJSNodeCanvasOptions } from 'chartjs-node-canvas';
+import { type ChartJSNodeCanvasOptions, ChartJSNodeCanvas } from 'chartjs-node-canvas';
 import { exec } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 

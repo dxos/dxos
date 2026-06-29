@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
+import { type View, DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
-import { Kanban, UNCATEGORIZED_VALUE } from '#types';
+import { UNCATEGORIZED_VALUE, Kanban } from '#types';
 
 import {
   computeColumnStructure,

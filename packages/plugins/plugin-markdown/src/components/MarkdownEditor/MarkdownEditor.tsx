@@ -35,12 +35,12 @@ import {
 } from '#hooks';
 
 import {
-  MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
+  MarkdownEditorContent as NaturalMarkdownEditorContent,
 } from './MarkdownEditorContent';
 import {
-  MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
+  MarkdownEditorToolbar as NaturalMarkdownToolbar,
 } from './MarkdownEditorToolbar';
 
 //
@@ -294,7 +294,7 @@ export const MarkdownEditor = {
   Blocks: MarkdownEditorBlocks,
 };
 
-export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+export type { MarkdownEditorBlocksProps, MarkdownEditorContentProps, MarkdownEditorToolbarProps };
 
 /** @deprecated Use `MarkdownEditorProviderProps`. */
 export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

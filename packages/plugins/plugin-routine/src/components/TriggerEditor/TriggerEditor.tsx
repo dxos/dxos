@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
-import { DXN, type Database, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldRendererProps, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldMap, type FormFieldRendererProps, Form, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
@@ -17,15 +17,15 @@ import { meta } from '#meta';
 import { Routine } from '#types';
 
 import {
-  FrequencyDefaults,
-  Schedule,
   type ScheduleKind,
   type ScheduleValue,
+  FrequencyDefaults,
+  Schedule,
   cronToSchedule,
   scheduleToCron,
   toCron,
 } from '../Schedule';
-import { TriggerKindSelector, type TriggerKind } from './TriggerKindSelector';
+import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];

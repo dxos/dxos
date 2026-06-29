@@ -10,7 +10,7 @@ import { type GetProfileUsageResponse } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useHubHttpClient } from '../../hooks';
-import { UsageView, type UsageViewState } from './UsageView';
+import { type UsageViewState, UsageView } from './UsageView';
 
 /** State + payload kept together so `ready` always carries data (mirrors the discriminated `UsageViewProps`). */
 type UsageFetchState = { state: Exclude<UsageViewState, 'ready'> } | { state: 'ready'; data: GetProfileUsageResponse };

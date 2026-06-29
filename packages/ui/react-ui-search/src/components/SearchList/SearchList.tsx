@@ -29,7 +29,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { type Density, type Elevation, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type Density, type Elevation, type ThemedClassName, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -328,11 +328,11 @@ export const SearchList = {
 };
 
 export type {
-  SearchListRootProps,
   SearchListContentProps,
-  SearchListViewportProps,
-  SearchListInputProps,
-  SearchListItemProps,
   SearchListEmptyProps,
   SearchListGroupProps,
+  SearchListInputProps,
+  SearchListItemProps,
+  SearchListRootProps,
+  SearchListViewportProps,
 };

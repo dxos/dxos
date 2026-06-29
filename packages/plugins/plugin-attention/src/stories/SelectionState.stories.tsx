@@ -18,8 +18,8 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
-  EditorSelectionStateSchema,
   type EditorStateStore,
+  EditorSelectionStateSchema,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,

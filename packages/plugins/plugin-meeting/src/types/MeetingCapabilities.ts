@@ -11,7 +11,7 @@ import { type TranscriptionManager } from '@dxos/plugin-transcription';
 
 import { meta } from '#meta';
 
-import { Meeting, type Settings as SettingsType } from './index';
+import { type Settings as SettingsType, Meeting } from './index';
 
 export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(
   `${meta.profile.key}.capability.settings`,

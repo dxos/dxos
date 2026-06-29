@@ -8,7 +8,7 @@ export * as Graph from './graph';
 export * as GraphBuilder from './graph-builder';
 export * as Node from './node';
 export * as NodeMatcher from './node-matcher';
-export { qualifyId, getParentId, getSegmentId } from './util';
+export { getParentId, getSegmentId, qualifyId } from './util';
 
 // TODO(wittjosiah): Direct re-export needed for portable type references.
 export type { BuilderExtensions } from './graph-builder';

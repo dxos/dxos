@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Obj } from '@dxos/echo';
-import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
+import { type Node, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 

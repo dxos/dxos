@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Subscription } from '#types';
 
-import { SubscriptionStack, type SubscriptionStackAction } from './SubscriptionStack';
+import { type SubscriptionStackAction, SubscriptionStack } from './SubscriptionStack';
 
 const generateFeeds = (count: number): Subscription.Subscription[] =>
   Array.from({ length: count }, () =>

@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, ObjectArticle, type ViewMode } from '#components';
+import { type MessageHeaderProps, type ViewMode, Message, ObjectArticle } from '#components';
 import { useActorContact } from '#hooks';
 import { InboxOperation } from '#types';
 import { Mailbox } from '#types';

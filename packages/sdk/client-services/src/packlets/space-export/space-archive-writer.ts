@@ -8,11 +8,11 @@ import { type Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
 import {
-  FEED_ARCHIVE_BLOCKS_PER_CHUNK,
   type FeedArchiveBlock,
   type FeedArchiveMetadata,
-  SpaceArchiveFileStructure,
   type SpaceArchiveMetadata,
+  FEED_ARCHIVE_BLOCKS_PER_CHUNK,
+  SpaceArchiveFileStructure,
   SpaceArchiveVersion,
 } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';

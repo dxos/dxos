@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, Filter, Ref, Registry } from '@dxos/echo';
+import { DXN, Database, Filter, Ref, Registry } from '@dxos/echo';
 import type { EntityNotFoundError } from '@dxos/echo/Err';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

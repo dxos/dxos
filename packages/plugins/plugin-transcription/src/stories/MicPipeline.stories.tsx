@@ -17,8 +17,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
   type CommitFn,
-  PipelineRuntime,
   type TelemetryEvent,
+  PipelineRuntime,
   TranscriptEvent,
   makeCorrectionStage,
   makeDatabaseLookup,

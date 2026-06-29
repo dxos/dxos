@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { Skill } from '@dxos/compute';
-import { type Database, Filter, Obj, Ref, type Registry } from '@dxos/echo';
+import { type Database, type Registry, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { distinctBy } from '@dxos/util';
 

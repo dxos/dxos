@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Trace } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { EID, type EntityId } from '@dxos/keys';
+import { type EntityId, EID } from '@dxos/keys';
 
 import { groupIntoRuns } from './runs';
 

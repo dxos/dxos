@@ -6,6 +6,7 @@ import { type Context } from '@dxos/context';
 import {
   type CheckEmailExistsResponse,
   type GetAccountResponse,
+  type GetProfileUsageResponse,
   type IssueInvitationResponse,
   type ListAccountInvitationsResponse,
   type LoginRequest,
@@ -14,13 +15,12 @@ import {
   type RedeemInvitationCodeResponse,
   type RequestAccessRequest,
   type RequestAccessResponse,
-  type GetProfileUsageResponse,
   type ResendVerificationEmailResponse,
   type ValidateInvitationCodeResponse,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
-import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
+import { type BaseHttpClientOptions, type EdgeHttpCallArgs, BaseHttpClient } from './base-http-client';
 
 /**
  * HTTP client for the hub-service API (accounts, invitations, email verification).

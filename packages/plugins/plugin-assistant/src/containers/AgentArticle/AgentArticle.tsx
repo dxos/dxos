@@ -16,7 +16,7 @@ import { Card, Icon, IconButton, Message, Panel, ScrollArea, Toolbar, useTransla
 import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { type MosaicTileProps, Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';

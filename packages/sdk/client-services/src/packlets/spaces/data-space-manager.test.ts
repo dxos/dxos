@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
-import { TestBuilder, type TestPeer } from '../testing';
+import { type TestPeer, TestBuilder } from '../testing';
 
 describe('DataSpaceManager', () => {
   test('create space', async () => {

@@ -109,6 +109,6 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
 
 ButtonGroup.displayName = BUTTON_GROUP_NAME;
 
-export { Button, ButtonGroup, BUTTON_GROUP_NAME, useButtonGroupContext };
+export { BUTTON_GROUP_NAME, Button, ButtonGroup, useButtonGroupContext };
 
-export type { ButtonProps, ButtonGroupProps };
+export type { ButtonGroupProps, ButtonProps };

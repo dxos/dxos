@@ -8,7 +8,7 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type GraphProjectorOptions, GraphProjector } from './graph-projector';
 
 // Boids swarming simulation rendered through the react-ui-graph SVG renderer.
 // Mirrors the canvas Swarm component's tick (alignment / cohesion / separation)

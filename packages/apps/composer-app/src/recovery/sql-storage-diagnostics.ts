@@ -5,7 +5,7 @@
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 
-import { isValidSqliteDatabase, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
+import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
 import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';

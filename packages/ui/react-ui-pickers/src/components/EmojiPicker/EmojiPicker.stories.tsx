@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker';
+import { type EmojiPickerProps, EmojiPickerBlock, EmojiPickerToolbarButton } from './EmojiPicker';
 
 const meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',

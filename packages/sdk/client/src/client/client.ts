@@ -8,9 +8,9 @@ import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
+  DEFAULT_CLIENT_CHANNEL,
   STATUS_TIMEOUT,
   SpaceProperties,
   clientServiceBundle,

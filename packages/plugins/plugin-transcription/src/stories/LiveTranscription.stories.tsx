@@ -10,7 +10,7 @@ import { Message } from '@dxos/types';
 import { useAudioTrack } from '#hooks';
 
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
-import { useIsSpeaking, createStoryDecorators, useStoryMessageModel, useStoryTranscriber } from './common';
+import { createStoryDecorators, useIsSpeaking, useStoryMessageModel, useStoryTranscriber } from './common';
 import { TranscriptionStory } from './TranscriptionStory';
 
 const DEFAULT_TRANSCRIBER_CONFIG = {

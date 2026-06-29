@@ -12,7 +12,7 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { useComputeNodeState } from '../hooks';
 import { Box, createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
 
 //
 // Data

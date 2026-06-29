@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
-import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { type TablePropertyDefinition, DynamicTable } from '@dxos/react-ui-table';
 import { ComplexMap } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';

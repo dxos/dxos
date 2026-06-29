@@ -18,13 +18,13 @@ import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
 import {
-  MarkdownEditor,
-  MarkdownEditorProvider,
   type MarkdownEditorContentProps,
   type MarkdownEditorProviderProps,
+  MarkdownEditor,
+  MarkdownEditorProvider,
 } from '#components';
 import { useLinkQuery } from '#hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
+import { type MarkdownPluginState, Markdown, MarkdownCapabilities } from '#types';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,

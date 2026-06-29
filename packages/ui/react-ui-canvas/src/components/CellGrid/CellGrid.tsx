@@ -10,8 +10,8 @@ import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { Ruler, TrackHeader } from './headers';
-import { attachPointerHandlers, attachWheelHandlers, type PointerHandlers } from './input';
-import { drawCells, drawOverlay, type OverlayStyle, type RenderCell, type StaticLayerStyle } from './render';
+import { type PointerHandlers, attachPointerHandlers, attachWheelHandlers } from './input';
+import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, drawOverlay } from './render';
 import type { CellGridAtoms } from './state/atoms';
 import type { Cell, Headers, Row } from './state/types';
 

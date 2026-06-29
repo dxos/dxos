@@ -10,7 +10,7 @@ import { Icon, IconButton, Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
+import { type ItemMap, type TreeNodeData, type TreeProps, Tree, visitNodes, visitor } from './Tree';
 
 random.seed(1234);
 

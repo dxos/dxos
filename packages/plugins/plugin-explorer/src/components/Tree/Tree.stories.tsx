@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTree } from '../../testing';
-import { Tree, type TreeComponentProps } from './Tree';
+import { type TreeComponentProps, Tree } from './Tree';
 import { treeTypeToTreeNode } from './types';
 
 random.seed(1);

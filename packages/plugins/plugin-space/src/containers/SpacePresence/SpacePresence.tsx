@@ -11,17 +11,17 @@ import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember, useMembers, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
-  Avatar,
   type AvatarContentProps,
   type DxAvatar,
-  Popover,
   type Size,
   type ThemedClassName,
+  Avatar,
+  Popover,
   Tooltip,
   useDefaultValue,
   useTranslation,
 } from '@dxos/react-ui';
-import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
+import { type AttentionGlyphProps, AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 

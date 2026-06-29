@@ -4,7 +4,7 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { type ChangeSpec, Transaction } from '@codemirror/state';
-import { type PluginValue, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type PluginValue, type ViewUpdate, ViewPlugin } from '@codemirror/view';
 
 /**
  * Monitors and augments changes.

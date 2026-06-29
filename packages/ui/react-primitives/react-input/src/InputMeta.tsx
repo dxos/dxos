@@ -6,7 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from './Root';
+import { type InputScopedProps, INPUT_NAME, useInputContext } from './Root';
 
 type LabelProps = ComponentPropsWithRef<typeof Primitive.label> & { asChild?: boolean };
 
@@ -83,6 +83,6 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
   },
 );
 
-export { Label, Validation, Description, DescriptionAndValidation, ErrorMessage };
+export { Description, DescriptionAndValidation, ErrorMessage, Label, Validation };
 
-export type { LabelProps, ValidationProps, DescriptionProps, DescriptionAndValidationProps, ErrorMessageProps };
+export type { DescriptionAndValidationProps, DescriptionProps, ErrorMessageProps, LabelProps, ValidationProps };
