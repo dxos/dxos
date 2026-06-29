@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+/// <reference types="vite/client" />
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -163,6 +165,18 @@ type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
+// Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
+// e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNELS=id1,id2 moon run storybook-react:serve`.
+const initialOptions = (): CrawlOptions => ({
+  token: String(import.meta.env.VITE_DISCORD_TOKEN ?? ''),
+  channels: String(import.meta.env.VITE_DISCORD_CHANNELS ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean),
+  maxDays: Number(import.meta.env.VITE_DISCORD_MAX_DAYS ?? 7),
+  descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
+});
+
 type CrawlAction = 'channels' | 'crawl';
 
 /**
@@ -172,7 +186,7 @@ type CrawlAction = 'channels' | 'crawl';
  * pipeline (edge LLM extraction), and view the facts.
  */
 const CrawlerStory = () => {
-  const [options, setOptions] = useState<CrawlOptions>({ token: '', channels: [], maxDays: 7, descendThreads: true });
+  const [options, setOptions] = useState<CrawlOptions>(initialOptions);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [status, setStatus] = useState<string | null>(null);
