@@ -30,7 +30,7 @@ export type GaapFacts = Record<
 
 const DEFAULT_UNIT_KEYS = ['USD', 'USD/shares', 'shares'] as const;
 
-const isOption = (node: SchemaAST.AST): boolean =>
+const isOption = (node: SchemaAST.AST): node is SchemaAST.Union =>
   SchemaAST.isUnion(node) && node.types.length === 2 && SchemaAST.isUndefinedKeyword(node.types[1]);
 
 const reduceRefinements = (type: SchemaAST.AST): SchemaAST.AST => {
