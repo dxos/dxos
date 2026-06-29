@@ -125,11 +125,13 @@ describe('DiscordSource live crawl', () => {
         }
       }
 
-      // The run always completes cleanly; inaccessible channels are skipped, not fatal.
+      // A clean completion is the smoke signal. Content depends on activity in the lookback window —
+      // a quiet channel legitimately yields zero facts, so hint rather than fail.
       expect(summary.done).toBe(true);
-      // Only assert content when at least one channel was actually readable.
-      if (summary.errored === 0) {
-        expect(report.factCount).toBeGreaterThan(0);
+      if (report.factCount === 0) {
+        console.log(
+          `No facts in the last ${maxDays}d (${agents.length} agents seen). Widen with DISCORD_MAX_DAYS=<n>.`,
+        );
       }
     },
     // Real LLM extraction is one call per message; allow headroom (tune lookback to fit).
