@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
 import { crawlerLineEffect } from '../scrolling';
-import { PlaceholderWidget, type XmlWidgetNotifier } from './placeholder-widget';
+import { PlaceholderWidget, type XmlWidgetNotifier } from './widgets/placeholder';
 import { nodeToJson } from './xml-util';
 
 /**

@@ -8,7 +8,7 @@ import { type FunctionComponent } from 'react';
 import { invariant } from '@dxos/invariant';
 import { Domino } from '@dxos/ui';
 
-import { type XmlWidgetProps, type XmlWidgetState } from './xml-tags';
+import { type XmlWidgetProps, type XmlWidgetState } from '../xml-tags';
 
 export interface XmlWidgetNotifier {
   mounted(widget: XmlWidgetState): void;
