@@ -16,10 +16,9 @@ import { createPortal } from 'react-dom';
 import { random } from '@dxos/random';
 import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 import {
   AnchorInlineWidget,
-  type PreviewLinkRef,
-  type PreviewLinkTarget,
   type XmlWidgetProps,
   type XmlWidgetRegistry,
   type XmlWidgetState,

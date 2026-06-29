@@ -4,16 +4,7 @@
 
 import { EditorView, WidgetType } from '@codemirror/view';
 
-export type PreviewLinkRef = {
-  dxn: string;
-  label: string;
-  block?: boolean;
-};
-
-export type PreviewLinkTarget = {
-  label: string;
-  object?: any;
-};
+export { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 /**
  * Inline widget for echo/dxn links.

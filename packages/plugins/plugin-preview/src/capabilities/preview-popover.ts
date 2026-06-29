@@ -13,7 +13,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
-import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 const customEventOptions = { capture: true, passive: false };
 
