@@ -16,17 +16,31 @@ import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
-import { Transcription, useAudioFile, useRecordingPipeline } from '@dxos/react-ui-transcription';
+import {
+  Transcription,
+  renderByline,
+  useAudioFile,
+  useFeedModelAdapter,
+  useRecordingPipeline,
+} from '@dxos/react-ui-transcription';
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { createStoryDecorators, useStoryMessageModel } from './testing';
+import { createStoryDecorators } from './testing';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
 const STREAMING_TRANSCRIBE_CONFIG: Partial<TranscribeConfig> = {
   transcribeAfterChunksAmount: 25,
   prefixBufferChunksAmount: 10,
+};
+
+// In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).
+const useStoryMessageModel = () => {
+  const [messages, setMessages] = useState<Message.Message[]>([]);
+  const appendMessage = useCallback((message: Message.Message) => setMessages((prev) => [...prev, message]), []);
+  const model = useFeedModelAdapter(renderByline([]), messages);
+  return { model, appendMessage };
 };
 
 type StoryArgs = {

@@ -16,17 +16,26 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
 
 import { Mic } from '#components';
 import { translations } from '#translations';
+import { TranscriptionCapabilities } from '#types';
 
-import { createStoryDecorators, useRecordingSession } from './testing';
+import { createStoryDecorators } from './testing';
 
 // Stable session key for the Mic button; any non-editor id works (the editor driver ignores it).
 const DOC_ID = 'keyword-detection';
+
+// Reads the shared recording flag toggled by the `Mic` button (the editor driver stays idle when no
+// editor view is registered for this session).
+const useRecordingSession = (docId: string): boolean => {
+  const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  return !!session?.recording && session.id === docId;
+};
 
 type StoryArgs = {
   keywords: string[];
