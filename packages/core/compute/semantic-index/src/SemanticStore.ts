@@ -40,13 +40,15 @@ const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
   });
 
 // The structured `query` and raw `select` are identical across sources (the engine is source-agnostic).
-const makeQueryApi = (
-  engine: ReturnType<typeof makeEngine>,
-  source: Parameters<typeof selectTriples>[1],
-): Pick<SemanticStoreApi, 'query' | 'select'> => ({
-  query: (q) => selectTriples(engine, source, buildSparql(q)).pipe(Effect.flatMap(reassemble)),
-  select: (sparql) => selectTriples(engine, source, sparql).pipe(Effect.flatMap(reassemble)),
-});
+// The Comunica engine is constructed lazily so persist-only flows never pay for (or require) it.
+const makeQueryApi = (source: Parameters<typeof selectTriples>[1]): Pick<SemanticStoreApi, 'query' | 'select'> => {
+  let engine: ReturnType<typeof makeEngine> | undefined;
+  const getEngine = () => (engine ??= makeEngine());
+  return {
+    query: (q) => selectTriples(getEngine(), source, buildSparql(q)).pipe(Effect.flatMap(reassemble)),
+    select: (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble)),
+  };
+};
 
 export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<
   SemanticStore,
@@ -58,7 +60,6 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
       const sql = yield* SqlClient.SqlClient;
       // Schema creation is a fatal store-construction failure (not a recoverable per-operation error), so die here.
       yield* migrate().pipe(Effect.orDie);
-      const engine = makeEngine();
       const source = makeSqliteSource(sql);
 
       const putFacts: SemanticStoreApi['putFacts'] = (facts) =>
@@ -79,7 +80,7 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to write cursor', cause })),
         );
 
-      return { putFacts, cursor, setCursor, ...makeQueryApi(engine, source) };
+      return { putFacts, cursor, setCursor, ...makeQueryApi(source) };
     }),
   );
 
@@ -88,7 +89,6 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
    * lifetime of the layer; the same engine + query/select path is reused.
    */
   static layerMemory: Layer.Layer<SemanticStore> = Layer.sync(SemanticStore, () => {
-    const engine = makeEngine();
     const source = makeMemorySource();
     const cursors = new Map<string, string>();
 
@@ -98,6 +98,6 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
     const cursor: SemanticStoreApi['cursor'] = (src) => Effect.sync(() => cursors.get(src));
     const setCursor: SemanticStoreApi['setCursor'] = (src, hash) => Effect.sync(() => void cursors.set(src, hash));
 
-    return { putFacts, cursor, setCursor, ...makeQueryApi(engine, source) };
+    return { putFacts, cursor, setCursor, ...makeQueryApi(source) };
   });
 }

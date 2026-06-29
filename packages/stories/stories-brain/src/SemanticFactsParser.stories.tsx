@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Button, Panel, Tag, Toolbar } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SemanticPipeline, SemanticStore, type Type, generateSparql } from '@dxos/semantic-index';
 
 import { SemanticFactsViewer } from './SemanticFactsViewer';
-import { DISCORD_FIXTURE_DOCS, SAMPLE_FACTS_TEXT } from './testing';
+import { SAMPLE_FACTS_TEXT, parseDiscordFixture } from './testing';
 
 // One in-memory store (browser-friendly, no SQLite) + the edge LLM. Built lazily per story instance.
 const makeRuntime = () =>
@@ -27,6 +27,7 @@ type StoryArgs = { initialText?: string };
 
 const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
   const editorRef = useRef<EditorController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [sparql, setSparql] = useState<string | null>(null);
   const [busy, setBusy] = useState<Action | null>(null);
@@ -66,15 +67,23 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
       setFacts((prev) => [...prev, ...extracted]);
     });
 
-  // Stream the discord fixture through the pipeline one message at a time, appending facts as each completes.
-  const handleLoadFixture = () =>
-    run('fixture', async () => {
+  // Stream a picked discord fixture file (plugin-discord:generate-fixtures JSON) through the pipeline
+  // one message at a time, appending facts as each completes.
+  const handleFixtureFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = ''; // Allow re-picking the same file.
+    if (!file) {
+      return;
+    }
+    void run('fixture', async () => {
+      const docs = parseDiscordFixture(JSON.parse(await file.text()));
       setFacts([]);
-      for (const doc of DISCORD_FIXTURE_DOCS) {
+      for (const doc of docs) {
         const extracted = await getRuntime().runPromise(SemanticPipeline.run([doc]));
         setFacts((prev) => [...prev, ...extracted]);
       }
     });
+  };
 
   // Turn the editor text into a SPARQL query (LLM), execute it over the store, and show the results.
   const handleQuery = () =>
@@ -89,7 +98,7 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
     });
 
   return (
-    <div className='dx-container grid grid-cols-2 gap-2 p-2'>
+    <div className='dx-container grid grid-cols-2 gap-2'>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root classNames='justify-between'>
@@ -97,9 +106,16 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
               <Button variant='primary' disabled={!!busy} onClick={handleParse}>
                 {busy === 'parse' ? 'Parsing…' : 'Parse'}
               </Button>
-              <Button disabled={!!busy} onClick={handleLoadFixture}>
+              <Button disabled={!!busy} onClick={() => fileInputRef.current?.click()}>
                 {busy === 'fixture' ? 'Loading…' : 'Load fixture'}
               </Button>
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='application/json,.json'
+                className='hidden'
+                onChange={handleFixtureFile}
+              />
               <Button disabled={!!busy} onClick={handleQuery}>
                 {busy === 'query' ? 'Querying…' : 'Query'}
               </Button>
@@ -107,15 +123,17 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
             {error && <Tag hue='red'>{error}</Tag>}
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content classNames='flex flex-col gap-2 border'>
+        <Panel.Content classNames='dx-container grid grid-row-2'>
           <Editor.Root ref={editorRef}>
-            <Editor.View classNames='h-full p-1' value={initialText} />
+            <Editor.View value={initialText} />
           </Editor.Root>
-          {sparql && (
-            <pre className='text-xs whitespace-pre-wrap bg-base-surface p-2 rounded border border-separator overflow-auto'>
-              {sparql}
-            </pre>
-          )}
+          <div className='dx-expander'>
+            {sparql && (
+              <pre className='text-xs whitespace-pre-wrap bg-base-surface p-2 rounded border border-separator overflow-auto'>
+                {sparql}
+              </pre>
+            )}
+          </div>
         </Panel.Content>
       </Panel.Root>
       <SemanticFactsViewer facts={facts} />
