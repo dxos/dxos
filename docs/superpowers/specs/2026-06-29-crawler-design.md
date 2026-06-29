@@ -1,8 +1,11 @@
 # @dxos/crawler — Incremental Source Crawl + Stage Pipeline
 
-- **Status:** Draft (awaiting review)
+- **Status:** Phase 1 prototype implemented (`packages/core/compute/crawler`); browser/worker hosts deferred.
 - **Date:** 2026-06-29
 - **Related:** [@dxos/semantic-index design](./2026-06-27-semantic-index-design.md), `packages/plugins/plugin-discord`
+
+> Sections 1–14 are the original design. Sections 15–18 record decisions locked during review,
+> what the phase-1 prototype actually implements, and research-informed next steps.
 
 ## 1. Problem
 
@@ -27,13 +30,13 @@ These are verified against the current code on this branch, not assumed:
   `ExtractDocument = { text: string; source: string; author?: string; date?: string }`.
   The semantic-index integration test maps a Discord message to
   `{ text, source: \`discord:${messageId}\`, date: created, author: sender.name }`. The crawler's
-  `extract-facts` stage formalizes exactly this mapping.
+`extract-facts` stage formalizes exactly this mapping.
 - `@dxos/semantic-index` exposes `SemanticStore.layerMemory` (browser/test) and
   `SemanticStore.layer` + `SqlClient` (worker/node). The crawler reuses these directly for the
   facts stage; it does **not** reimplement fact storage.
 - semantic-index already de-duplicates at the fact level via a per-`source` text-hash cursor
   (unchanged re-ingest skips the LLM). The crawler's own per-thread cursors sit **on top of**
-  this — they bound *what we fetch*, semantic-index bounds *what we re-extract*.
+  this — they bound _what we fetch_, semantic-index bounds _what we re-extract_.
 - `plugin-discord` already has a testable `fetchChannelMessages()` (dfx + CORS-proxy transport,
   snowflake pagination, thread discovery) and a 216-message fixture, now mirrored at
   `semantic-index/src/testing/discord-messages.json`. The Discord `Source` adapter wraps these;
@@ -75,27 +78,27 @@ The crawl loop emits a typed event stream that stages consume:
 type CrawlEvent =
   | { _tag: 'ChannelStart'; target: CrawlTarget }
   | { _tag: 'Message'; target: CrawlTarget; message: CrawlMessage; author: CrawlUser }
-  | { _tag: 'UserSeen'; author: CrawlUser }            // emitted with each Message
+  | { _tag: 'UserSeen'; author: CrawlUser } // emitted with each Message
   | { _tag: 'ThreadStart'; target: CrawlTarget; parentMessageId: string }
-  | { _tag: 'ThreadEnd'; target: CrawlTarget }         // triggers summarize/aggregate stages
+  | { _tag: 'ThreadEnd'; target: CrawlTarget } // triggers summarize/aggregate stages
   | { _tag: 'ChannelEnd'; target: CrawlTarget };
 ```
 
 `CrawlMessage` and `CrawlUser` are source-neutral shapes (id, text, author, timestamp, raw
 metadata bag) the Discord adapter populates; the core never sees a Discord type.
 
-**Frontier** is a *persisted* LIFO stack of crawl targets:
+**Frontier** is a _persisted_ LIFO stack of crawl targets:
 
 ```ts
 type CrawlTarget = {
-  id: string;                  // stable: `${channelId}` or `${channelId}:${threadId}`
+  id: string; // stable: `${channelId}` or `${channelId}:${threadId}`
   channelId: string;
   threadId?: string;
   parentMessageId?: string;
-  cursor?: string;             // snowflake — the per-thread sync point
+  cursor?: string; // snowflake — the per-thread sync point
   depth: number;
   status: 'pending' | 'active' | 'done' | 'error';
-  lastError?: string;          // set when status === 'error'
+  lastError?: string; // set when status === 'error'
 };
 ```
 
@@ -132,14 +135,14 @@ ordering is awkward to express as a queue).
 ```ts
 interface Stage {
   readonly name: string;
-  readonly handles: ReadonlyArray<CrawlEvent['_tag']>;   // events this stage wants
+  readonly handles: ReadonlyArray<CrawlEvent['_tag']>; // events this stage wants
   apply(event: CrawlEvent, ctx: StageContext): Effect.Effect<void, StageError, StageDeps>;
 }
 
 type StageContext = {
   store: StateStore;
-  semantic: SemanticStore;       // from @dxos/semantic-index
-  ai: AiService.AiService;       // for LLM stages
+  semantic: SemanticStore; // from @dxos/semantic-index
+  ai: AiService.AiService; // for LLM stages
   config: SyncConfig;
 };
 ```
@@ -157,8 +160,7 @@ interface StateStore {
   pushTargets(targets: CrawlTarget[]): Effect.Effect<void, StateError>;
   popTarget(): Effect.Effect<CrawlTarget | undefined, StateError>;
   setCursor(targetId: string, cursor: string): Effect.Effect<void, StateError>;
-  setTargetStatus(targetId: string, status: CrawlTarget['status'], error?: string):
-    Effect.Effect<void, StateError>;
+  setTargetStatus(targetId: string, status: CrawlTarget['status'], error?: string): Effect.Effect<void, StateError>;
   // users
   upsertUserProfile(delta: UserProfileDelta): Effect.Effect<void, StateError>;
   // stage artifacts (summaries, tags, faq, …)
@@ -178,12 +180,12 @@ interface StateStore {
 
 ```ts
 type SyncConfig = {
-  channels: ChannelSelector[];        // explicit ids and/or guild glob
+  channels: ChannelSelector[]; // explicit ids and/or guild glob
   descendThreads: boolean;
-  maxDepth?: number;                  // thread recursion bound
-  seed: { maxDays?: number };         // initial lookback when a target has no cursor
+  maxDepth?: number; // thread recursion bound
+  seed: { maxDays?: number }; // initial lookback when a target has no cursor
   batch: { pageSize: number; maxStepsPerTick: number; concurrency: number };
-  stages: StageConfig[];              // ordered; each { name; enabled; params }
+  stages: StageConfig[]; // ordered; each { name; enabled; params }
 };
 ```
 
@@ -253,3 +255,87 @@ operation delegate to the crawler, but that is out of scope here.
 - Vector/embedding retrieval (owned by semantic-index's own roadmap).
 - ECHO replication inside the worker (the worker uses SqliteStateStore + semantic-index SQLite,
   not a replicated space).
+
+## 15. Decisions locked during review
+
+1. **Package name:** `@dxos/crawler` (source-agnostic; intended for server-side reuse).
+2. **Worker host:** the Cloudflare Worker driver lives in **`@dxos/edge`**, and is **deferred** — phase 1
+   ships the browser/in-process path with in-memory stores only.
+3. **State store:** pluggable `StateStore`; the ECHO-backed (browser) and DO-SQLite (worker) impls are
+   deferred. The browser impl may generalize `SyncBinding` to per-thread targets.
+4. **Entity resolution is two distinct problems** (a key correction):
+   - **Layer 1 — agent identity (authoritative).** Senders/authors are _known_ by a stable identifier
+     (Discord `userid`, later email). Resolved by exact lookup into an **agent registry** — a first-order
+     concept, _not_ part of fuzzy mention-extraction. Each agent carries a SET of identifiers across
+     namespaces; identity-merge (`sameAs`) unions them (e.g. when an email corpus later matches a Discord
+     user). Tokenized by stable id, never display name.
+   - **Layer 2 — mention resolution (fuzzy).** Names _mentioned in text_ resolve to ECHO objects via the
+     shared `EntityLookup` (FTS + context). This is where the semantic index adds value: accumulated facts
+     disambiguate ambiguous mentions; thread participants are supplied as `LookupContext` priors.
+5. **Shared entity-resolution abstraction** (`EntityLookup` / `resolveEntities` / `LookupContext`) moves
+   into **`@dxos/extractor`** (alongside `Resolver`/`getOrCreate`); transcription-pipeline rewires onto it
+   (no compat shim). Fulfills transcription's documented "LLM NER + context disambiguation" TODO.
+6. **Sender/interlocutor context = provenance metadata, not facts.** Minting `(Alice) sent (msgX)` facts
+   per message would dwarf the real assertions. Authorship lives in `Attribution` (`source` = message DXN,
+   `agent` = resolved sender). The agent is an ordinary `Type.Entity` whose `ref` is populated — **no
+   `Attribution` schema change**. Thread participants live in the StateStore, fed to the resolver as
+   context.
+7. **Fact scoring is a deferred, query-time function** — `weight(fact) = f(agent role/team, expertise,
+forum kind, recency, confidence, corroboration)`. Phase 1 only guarantees the _inputs_ are captured
+   (resolved agent, profile, source metadata). **Learned expertise is itself facts** (`(Alice) hasExpertise
+(X)`), which feed the scorer — closing the loop. Canonical token = ECHO `Person` DXN in the browser;
+   the raw identifier (e.g. `discord-user:<id>`) is the provisional token in the deferred worker.
+
+## 16. Phase 1 — implemented prototype
+
+Built in `packages/core/compute/crawler` (`@dxos/crawler`), pure Effect, depends only on
+`@dxos/semantic-index`, `@dxos/ai`, `@dxos/errors`, `@dxos/log`, `effect`. Green build + lint; 7 tests pass.
+
+- **Crawl loop** — `advance()` (one resumable step) + `run()` (loop, with `maxSteps` for bounded
+  start/stop). Depth-first descent into threads via a persisted LIFO frontier; per-target snowflake
+  cursors. Resumability lives entirely in the `StateStore` (no in-memory continuation).
+- **Typed event stream** — `ChannelStart | Message | ThreadStart | ThreadEnd | ChannelEnd`.
+- **`Source`** seam — `FixtureSource` replays a captured Discord fixture (no token). The live
+  `DiscordSource` (wrapping `fetchChannelMessages()`) is the next adapter.
+- **`StateStore`** seam — in-memory frontier/cursors/run-status impl. ECHO + DO-SQLite impls deferred.
+- **Agent registry** (`AgentRegistry`) — first-order, identifier-keyed, multi-identifier, with
+  `observe` (stats), `resolve`, and `merge` (`sameAs` union). In-memory; ECHO-`Person` backing deferred.
+- **Stages** — `extract-facts` (resolves author → agent, runs `SemanticPipeline.run` with `source =
+discord:<id>`), `agent-profile` (counts, first/last seen). `summarize-thread` is specced; not yet wired.
+- **Topics output** — `extractTopics()` aggregates the fact graph into topics ranked by reach (distinct
+  agents), excluding agent entities. Each topic's `entity` drives `SemanticStore.query({ entity })` — the
+  bridge from "topics discussed" to "ask the system".
+- **Deterministic extractor** (`testing/`) — a content-aware `AiService` fake that derives facts from real
+  message text, so the fact graph is genuinely populated **offline**; swap in a live `AiService` for
+  model-quality extraction over the same pipeline.
+- **Runnable demo** — `moon run crawler:demo` crawls the real fixture and prints crawl stats, the agent
+  registry, ranked topics, and a sample topic query. (Runs via vitest, since `@dxos/ai` has a `parsimmon`
+  CJS/ESM interop that breaks under `tsx`.)
+
+**Not yet implemented (next):** `DiscordSource`; `entity-resolution` stage (Layer-2, on the shared
+`@dxos/extractor` lookup, populating `Entity.ref`); `summarize-thread`; ECHO `StateStore`/agent backing;
+the `@dxos/edge` worker driver.
+
+## 17. Research-informed model extensions (future)
+
+A query/insight-catalog study (Discord support + company email corpora) surfaced gaps worth folding into
+the **semantic-index** model to unlock the high-value queries and the "canonical idea thread" vision:
+
+- **Speech-act type** on the assertion (`asks | answers | requests | commits | proposes | reports |
+confirms | decides`) — distinct from the domain `predicate`. Powers unanswered-question, commitment, and
+  decision-log queries.
+- **Fact→fact typed edges** (`answers | confirms | contradicts | supersedes | fulfills | cites`) — the
+  single biggest gap; many marquee queries are traversals over these. These edges are also the spine of
+  **idea threads** (vs message threads).
+- **Source/agent class on `Attribution`** (`sourceKind`, `agentRole`) — makes the public/private/
+  third-party distinction and the deferred scoring queryable without external joins.
+- **Richer entity kinds** (`feature`, `error`, `task`, `decision`, `document`, `release`) and a
+  topic/`broader` grouping so "all auth questions" is one query.
+
+These are semantic-index changes, tracked here because the crawler is their primary producer.
+
+## 18. References
+
+- Design research (query/insight catalog; idea-thread construction) was conducted during brainstorming;
+  the idea-thread construction study (argumentation mining / discourse graphs / IBIS / TDT) informs the
+  fact→fact edge vocabulary above.
