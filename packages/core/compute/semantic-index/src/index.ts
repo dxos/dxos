@@ -8,3 +8,4 @@ export * from './SemanticStore';
 export * from './errors';
 export * from './nl-to-query';
 export { buildSparql } from './internal/sparql/query-builder';
+export { parseSparqlToQuery } from './internal/sparql/sparql-to-query';
