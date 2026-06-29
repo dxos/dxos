@@ -18,10 +18,13 @@ export type ExportColumn = {
 };
 
 const escapeCsvCell = (value: string): string => {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Neutralize spreadsheet formula injection: Excel/Sheets execute cells beginning with
+  // =, +, -, or @ even when quoted, so prefix such values with a single quote to keep them inert.
+  const sanitized = /^\s*[=+\-@]/.test(value) ? `'${value}` : value;
+  if (/[",\n\r]/.test(sanitized)) {
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  return value;
+  return sanitized;
 };
 
 const escapeXmlText = (value: string): string =>
@@ -29,7 +32,10 @@ const escapeXmlText = (value: string): string =>
 
 const xmlElementName = (title: string, index: number): string => {
   const sanitized = title.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/^(\d)/, '_$1');
-  return sanitized.length > 0 ? sanitized : `field_${index}`;
+  // XML element names must begin with a letter or underscore, so prefix names that would
+  // otherwise start with a hyphen (or any other non-letter) to keep the document parseable.
+  const safeName = /^[A-Za-z_]/.test(sanitized) ? sanitized : `_${sanitized}`;
+  return safeName.replace(/^_+$/, '') !== '' ? safeName : `field_${index}`;
 };
 
 /** Resolves a visible column value using the same display rules as the table grid. */

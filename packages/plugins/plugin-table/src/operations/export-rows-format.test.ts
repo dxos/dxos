@@ -42,6 +42,19 @@ describe('export-rows-format', () => {
     expect(xml).toContain('<Name>Beta, &quot;quoted&quot;</Name>');
   });
 
+  test('csv neutralizes spreadsheet formula injection', ({ expect }) => {
+    const formulaColumns = [{ path: SchemaEx.createJsonPath(['value']), title: 'Value', type: TypeEnum.String }];
+    const formulaRows = [{ value: '=1+1' }, { value: '+SUM(A1)' }, { value: '-2' }, { value: '@cmd' }];
+    const csv = exportRowsAsCsv(formulaRows, formulaColumns);
+    expect(csv).toBe(['Value', "'=1+1", "'+SUM(A1)", "'-2", "'@cmd"].join('\n'));
+  });
+
+  test('xml prefixes element names that would start with a hyphen', ({ expect }) => {
+    const hyphenColumns = [{ path: SchemaEx.createJsonPath(['status']), title: '-status', type: TypeEnum.String }];
+    const xml = exportRowsAsXml([{ status: 'ok' }], hyphenColumns);
+    expect(xml).toContain('<_-status>ok</_-status>');
+  });
+
   test('ref columns resolve referencePath for tabular export', ({ expect }) => {
     const refColumns = [
       {
