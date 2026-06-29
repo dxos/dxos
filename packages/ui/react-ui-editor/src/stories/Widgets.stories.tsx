@@ -17,10 +17,10 @@ import { random } from '@dxos/random';
 import { Card, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
+  AnchorInlineWidget,
   type XmlWidgetProps,
   type XmlWidgetRegistry,
   type XmlWidgetState,
-  AnchorInlineWidget,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
