@@ -32,6 +32,9 @@ const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
               NativePasskey.loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
             );
             invariant(result, 'Native passkey login returned no result');
+            // user_handle may be empty if the passkey was registered without a userId or the
+            // native authenticator did not store one; an empty key would be rejected by the server.
+            invariant(result.user_handle, 'Passkey did not return a user handle — please re-register your passkey.');
             return {
               lookupKey: PublicKey.from(NativePasskey.decodeUrlSafeBase64(result.user_handle)),
               signature: Buffer.from(NativePasskey.decodeUrlSafeBase64(result.signature)),
@@ -51,8 +54,11 @@ const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
                 },
               }),
             );
+            const userHandle: ArrayBuffer | null = (credential as any).response.userHandle;
+            // userHandle is null for passkeys created without residentKey/userHandle stored.
+            invariant(userHandle, 'Passkey did not return a user handle — please re-register your passkey.');
             return {
-              lookupKey: PublicKey.from(new Uint8Array((credential as any).response.userHandle)),
+              lookupKey: PublicKey.from(new Uint8Array(userHandle)),
               signature: Buffer.from((credential as any).response.signature),
               clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
               authenticatorData: Buffer.from((credential as any).response.authenticatorData),

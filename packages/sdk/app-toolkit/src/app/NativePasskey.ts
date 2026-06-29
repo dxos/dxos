@@ -34,6 +34,7 @@ export type NativePasskeyLoginResult = {
   client_data_json: string;
   authenticator_data: string;
   signature: string;
+  /** Empty string when the authenticator stored no user handle (passkeys pre-dating userId requirement). */
   user_handle: string;
   prf_output: number[];
 };
