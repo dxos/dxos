@@ -17,12 +17,14 @@ import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
+  AnchorInlineWidget,
   Cursor,
   type EditorStateStore,
   EditorView,
   type Extension,
   InputModeExtensions,
-  type PreviewOptions,
+  type XmlWidgetProps,
+  type XmlWidgetState,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -30,16 +32,17 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
-  preview,
   replacer,
   selectionState,
   snippets,
+  xmlTags,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
+import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -53,7 +56,7 @@ export type ExtensionsOptions = {
   editable?: boolean;
   viewState?: ViewStateManager;
   editorStateStore?: EditorStateStore;
-  previewOptions?: PreviewOptions;
+  setWidgets?: (widgets: XmlWidgetState[]) => void;
   platform?: 'mobile' | 'desktop';
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
@@ -68,7 +71,7 @@ export const useExtensions = ({
   viewMode,
   viewState,
   editorStateStore,
-  previewOptions,
+  setWidgets,
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
@@ -96,7 +99,7 @@ export const useExtensions = ({
         compact,
         viewMode,
         viewState,
-        previewOptions,
+        setWidgets,
         platform,
         onSelectObject,
       }),
@@ -106,7 +109,7 @@ export const useExtensions = ({
       compact,
       viewMode,
       viewState,
-      previewOptions,
+      setWidgets,
       settings,
       settings?.debug,
       settings?.editorInputMode,
@@ -156,7 +159,7 @@ const createBaseExtensions = ({
   compact,
   viewMode,
   viewState,
-  previewOptions,
+  setWidgets,
   platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
@@ -179,7 +182,22 @@ const createBaseExtensions = ({
           renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
         }),
         linkTooltip(renderLinkTooltip),
-        preview(previewOptions),
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              Component: PreviewComponent,
+            },
+            'link-preview': {
+              block: false,
+              urlSchemes: ['dxn:', 'echo:'],
+              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+                label && dxn ? new AnchorInlineWidget({}, { label, dxn }) : null,
+            },
+          },
+          setWidgets,
+        }),
         replacer(),
       ],
     );
