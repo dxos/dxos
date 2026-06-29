@@ -22,7 +22,7 @@ export default Capability.makeModule(
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
     const resolver: AppCaps.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
-        if (!query?.dxn) {
+        if (!query?.uri) {
           return [
             {
               path: getPluginSettingsSectionPath(meta.profile.key),
@@ -32,13 +32,13 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = EID.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
-        if (!dxn) {
+        const eid = EID.tryParse(query.uri);
+        if (!eid) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
+        const ref = db.makeRef(eid);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object) {
           return [];

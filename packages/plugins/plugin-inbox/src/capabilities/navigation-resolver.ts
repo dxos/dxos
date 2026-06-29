@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, Paths, TypeSection, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
-import { EID, URI } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 
@@ -47,7 +47,7 @@ export default Capability.makeModule(
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
     const resolver: AppCapabilities.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
-        if (!query?.dxn) {
+        if (!query?.uri) {
           return [
             {
               path: getPluginSettingsSectionPath(meta.profile.key),
@@ -57,14 +57,13 @@ export default Capability.makeModule(
           ];
         }
 
-        const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
-        const dxnRef = EID.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
-        if (!dxnRef) {
+        const targetUri = EID.tryParse(query.uri) ?? DXN.tryMake(query.uri);
+        if (!targetUri) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxnRef);
+        const ref = db.makeRef(targetUri);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
