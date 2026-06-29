@@ -47,8 +47,11 @@ import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
+
+import { initClientFromSpaceSnapshot } from './snapshot';
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -83,6 +86,8 @@ type DecoratorsProps = {
   plugins?: Plugin.Plugin[];
   lazyPlugins?: () => Promise<LazyPluginsResult>;
   accessTokens?: AccessToken.AccessToken[];
+  /** Import a `.dx.json` space archive instead of creating an empty space. */
+  importSnapshot?: () => Promise<unknown>;
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
@@ -94,6 +99,7 @@ const buildPluginManagerOptions = ({
   types = [],
   plugins = [],
   accessTokens = [],
+  importSnapshot,
   onInit,
   onChatCreated,
   createAgent,
@@ -124,6 +130,23 @@ const buildPluginManagerOptions = ({
             return;
           }
 
+          if (importSnapshot) {
+            yield* initClientFromSpaceSnapshot(importSnapshot)({ client });
+            const space = client.spaces.get()[0];
+            invariant(space, 'No space available after snapshot import.');
+
+            for (const accessToken of accessTokens) {
+              space.db.add(Obj.clone(accessToken));
+            }
+
+            if (onInit) {
+              yield* Effect.promise(() => onInit({ client, space }));
+            }
+
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            return;
+          }
+
           yield* Effect.promise(() => client.halo.createIdentity());
 
           const space = yield* Effect.promise(() => client.spaces.create());
@@ -151,6 +174,7 @@ const buildPluginManagerOptions = ({
     PreviewPlugin(),
     RoutinePlugin(),
     AssistantPlugin(),
+    TranscriptionPlugin(),
 
     // Test-specific.
     StorybookPlugin({}),
