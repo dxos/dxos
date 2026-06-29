@@ -24,11 +24,18 @@ import {
 } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SemanticPipeline, SemanticStore, type Type, buildSparql, generateQuery } from '@dxos/semantic-index';
+import {
+  SemanticPipeline,
+  SemanticStore,
+  type Type,
+  buildSparql,
+  generateQuery,
+  parseSparqlToQuery,
+} from '@dxos/semantic-index';
 
 import { SemanticFactsViewer } from './SemanticFactsViewer';
 import { SAMPLE_FACTS_TEXT, parseDiscordFixture } from './testing';
@@ -186,7 +193,10 @@ const initialOptions = (): CrawlOptions => ({
   descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
 });
 
-type CrawlAction = 'channels' | 'crawl' | 'reset';
+type CrawlAction = 'channels' | 'crawl' | 'reset' | 'sparql';
+
+// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
+const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
@@ -201,6 +211,7 @@ const CrawlerStory = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sparql, setSparql] = useState(DEFAULT_SPARQL);
 
   // Stable in-memory store across crawls; recreated if disposed (StrictMode remount).
   const storeRef = useRef<ReturnType<typeof makeStore> | null>(null);
@@ -318,6 +329,15 @@ const CrawlerStory = () => {
       setStatus('Cleared persisted facts.');
     });
 
+  // Parse the SPARQL into a structured query and run it over the persisted store (no Comunica).
+  const handleRunSparql = () =>
+    void guard('sparql', async () => {
+      const query = parseSparqlToQuery(sparql);
+      const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(query))));
+      setFacts(results);
+      setStatus(`SPARQL → ${results.length} fact(s)`);
+    });
+
   return (
     <div className='dx-container grid grid-cols-2 gap-2'>
       <Panel.Root>
@@ -334,7 +354,7 @@ const CrawlerStory = () => {
             </Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container'>
+        <Panel.Content classNames='dx-container flex flex-col gap-2 overflow-auto'>
           <Form.Root
             schema={CrawlOptions}
             values={options}
@@ -347,6 +367,21 @@ const CrawlerStory = () => {
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
+
+          <div role='none' className='flex flex-col gap-1 p-2'>
+            <Input.Root>
+              <Input.Label>SPARQL</Input.Label>
+              <Input.TextArea
+                rows={4}
+                classNames='font-mono text-xs'
+                value={sparql}
+                onChange={(event) => setSparql(event.target.value)}
+              />
+            </Input.Root>
+            <Button disabled={!!busy} onClick={handleRunSparql}>
+              {busy === 'sparql' ? 'Running…' : 'Run SPARQL'}
+            </Button>
+          </div>
         </Panel.Content>
         {(error || status) && (
           <Panel.Statusbar asChild>
