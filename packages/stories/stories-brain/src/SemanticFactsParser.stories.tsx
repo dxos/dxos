@@ -17,11 +17,11 @@ import {
   type ChannelInfo,
   Source,
   type Stage,
+  StateStore,
   makeAgentProfileStage,
   makeExtractFactsStage,
   run,
 } from '@dxos/crawler';
-import { coreLayer } from '@dxos/crawler/testing';
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
@@ -164,6 +164,19 @@ type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
+// Browser persistence: the semantic store runs in-memory (OPFS SQLite is worker-only, so it can't run
+// on the storybook main thread), and the extracted facts are snapshotted to localStorage — rehydrated
+// on mount and re-saved after each crawl, so facts survive reloads. Reset clears both.
+const FACTS_STORAGE_KEY = 'dxos.crawler.facts';
+const makeStore = () => ManagedRuntime.make(SemanticStore.layerMemory);
+const saveFacts = (facts: readonly Type.Fact[]) => {
+  try {
+    localStorage.setItem(FACTS_STORAGE_KEY, JSON.stringify(facts));
+  } catch {
+    // Over quota — skip the snapshot.
+  }
+};
+
 // Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
 // e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
 const initialOptions = (): CrawlOptions => ({
@@ -173,7 +186,7 @@ const initialOptions = (): CrawlOptions => ({
   descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
 });
 
-type CrawlAction = 'channels' | 'crawl';
+type CrawlAction = 'channels' | 'crawl' | 'reset';
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
@@ -188,6 +201,33 @@ const CrawlerStory = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Stable in-memory store across crawls; recreated if disposed (StrictMode remount).
+  const storeRef = useRef<ReturnType<typeof makeStore> | null>(null);
+  const getStore = () => (storeRef.current ??= makeStore());
+  useEffect(
+    () => () => {
+      void storeRef.current?.dispose();
+      storeRef.current = null;
+    },
+    [],
+  );
+
+  // Rehydrate persisted facts into the store + view on mount.
+  useEffect(() => {
+    const raw = localStorage.getItem(FACTS_STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      const saved: Type.Fact[] = JSON.parse(raw);
+      void getStore()
+        .runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
+        .then(() => setFacts(saved));
+    } catch {
+      // Ignore a malformed snapshot.
+    }
+  }, []);
 
   // The `channel` field uses the form's built-in select, populated with the discovered channels.
   const fieldMap = useMemo<FormFieldMap>(
@@ -232,17 +272,18 @@ const CrawlerStory = () => {
       return;
     }
     void guard('crawl', async () => {
-      // Fresh state + in-memory store per crawl; edge LLM does the extraction (no local key needed).
-      // `Layer.fresh` on the AI layer is REQUIRED: the Discord source provides a CORS-proxy
-      // FetchHttpClient.Fetch, and Effect memoizes the shared FetchHttpClient layer — without fresh,
-      // the edge-AI client inherits the proxy and routes LLM calls through cors-proxy (→ 404). Fresh
-      // gives the AI its own direct fetch.
-      const layer = Layer.mergeAll(
+      // Per-crawl frontier + agents + edge LLM; the SemanticStore comes from the persistent runtime so
+      // facts accumulate across crawls. `Layer.fresh` on the AI layer is REQUIRED: the Discord source
+      // provides a CORS-proxy FetchHttpClient.Fetch, and Effect memoizes the shared FetchHttpClient
+      // layer — without fresh, the edge-AI client inherits the proxy and routes LLM calls through
+      // cors-proxy (→ 404). Fresh gives the AI its own direct fetch.
+      const perCrawl = Layer.mergeAll(
         discordSourceLayer(options.token),
-        coreLayer,
+        StateStore.layerMemory,
+        AgentRegistry.layerMemory,
         Layer.fresh(AiServiceTestingPreset('edge-remote')),
       );
-      const result = await EffectEx.runPromise(
+      const result = await getStore().runPromise(
         Effect.gen(function* () {
           const summary = yield* run(
             { channels: [options.channel], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
@@ -255,9 +296,10 @@ const CrawlerStory = () => {
           // Every message is observed by the agent-profile stage, so the summed counts == messages seen.
           const messages = agents.reduce((total, agent) => total + agent.messageCount, 0);
           return { summary, messages, agentCount: agents.length, facts: extracted };
-        }).pipe(Effect.provide(layer)),
+        }).pipe(Effect.provide(perCrawl)),
       );
       setFacts(result.facts);
+      saveFacts(result.facts);
       const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
         result.messages === 0 && result.summary.errored === 0
@@ -266,6 +308,15 @@ const CrawlerStory = () => {
       );
     });
   };
+
+  // Clear the persisted facts (store + snapshot).
+  const handleReset = () =>
+    void guard('reset', async () => {
+      await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.clear())));
+      localStorage.removeItem(FACTS_STORAGE_KEY);
+      setFacts([]);
+      setStatus('Cleared persisted facts.');
+    });
 
   return (
     <div className='dx-container grid grid-cols-2 gap-2'>
@@ -277,6 +328,9 @@ const CrawlerStory = () => {
             </Button>
             <Button variant='primary' disabled={!options.token || !options.channel || !!busy} onClick={handleCrawl}>
               {busy === 'crawl' ? 'Crawling…' : 'Crawl'}
+            </Button>
+            <Button disabled={!!busy || facts.length === 0} onClick={handleReset}>
+              {busy === 'reset' ? 'Resetting…' : 'Reset'}
             </Button>
           </Toolbar.Root>
         </Panel.Toolbar>

@@ -31,6 +31,8 @@ export interface SemanticStoreApi {
   readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;
   /** Upsert the ingest cursor for the given source DXN. */
   readonly setCursor: (source: string, hash: string) => Effect.Effect<void, SemanticIndexError>;
+  /** Remove all facts, entities, and cursors from the store. */
+  readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 
 // triplesToFacts validates via Schema and can throw a ParseError on malformed stored data.
@@ -78,11 +80,21 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to write cursor', cause })),
         );
 
+      const clear: SemanticStoreApi['clear'] = () =>
+        Effect.gen(function* () {
+          yield* sql`DELETE FROM triples`;
+          yield* sql`DELETE FROM entities`;
+          yield* sql`DELETE FROM cursors`;
+        }).pipe(
+          Effect.asVoid,
+          Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to clear store', cause })),
+        );
+
       // SQLite: structured query builds SPARQL and runs it through Comunica (server-side only).
       const select = makeSelect(source);
       const query: SemanticStoreApi['query'] = (q) => select(buildSparql(q));
 
-      return { putFacts, cursor, setCursor, query, select };
+      return { putFacts, cursor, setCursor, query, select, clear };
     }),
   );
 
@@ -107,6 +119,12 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
         catch: (cause) => new SemanticIndexError({ message: 'Failed to query facts', cause }),
       });
 
-    return { putFacts, cursor, setCursor, query, select: makeSelect(source) };
+    const clear: SemanticStoreApi['clear'] = () =>
+      Effect.sync(() => {
+        source.removeQuads(source.getQuads(null, null, null, null));
+        cursors.clear();
+      });
+
+    return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
   });
 }

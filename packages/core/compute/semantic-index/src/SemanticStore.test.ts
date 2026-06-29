@@ -90,4 +90,26 @@ describe('SemanticStore', () => {
       });
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'clear removes all facts and cursors',
+    Effect.fnUntraced(function* () {
+      const store = yield* SemanticStore;
+      yield* store.putFacts([mk({ id: 'f1' })]);
+      yield* store.setCursor('dxn:q:m1', 'hashA');
+
+      yield* store.clear();
+
+      const facts = yield* store.query({});
+      const cursor = yield* store.cursor('dxn:q:m1');
+      yield* Effect.sync(() => {
+        if (facts.length !== 0) {
+          throw new Error(`expected 0 facts after clear, got ${facts.length}`);
+        }
+        if (cursor !== undefined) {
+          throw new Error(`expected cleared cursor, got ${cursor}`);
+        }
+      });
+    }, Effect.provide(TestLayer)),
+  );
 });
