@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EditorState } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
-import { type SyntaxNode } from '@lezer/common';
 
 export type PreviewLinkRef = {
   suggest?: boolean;
@@ -17,27 +15,6 @@ export type PreviewLinkTarget = {
   label: string;
   text?: string;
   object?: any;
-};
-
-/**
- * Link references.
- *  [Label](echo:/123) Inline reference
- * ![Label](echo:/123) Block reference
- */
-export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
-  const mark = node.getChildren('LinkMark');
-  const urlNode = node.getChild('URL');
-  if (mark && urlNode) {
-    const dxn = state.sliceDoc(urlNode.from, urlNode.to);
-    if (dxn.startsWith('dxn:') || dxn.startsWith('echo:')) {
-      const label = state.sliceDoc(mark[0].to, mark[1].from);
-      return {
-        block: state.sliceDoc(mark[0].from, mark[0].from + 1) === '!',
-        label,
-        dxn,
-      };
-    }
-  }
 };
 
 /**
