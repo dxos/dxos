@@ -5927,6 +5927,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../compute/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5960,6 +5963,9 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -18409,6 +18415,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-crm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-crm
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../../plugins/plugin-deck
