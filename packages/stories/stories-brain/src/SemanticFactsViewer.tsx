@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Icon, Input, Panel, ScrollArea, Tag, Toolbar, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';

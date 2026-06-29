@@ -4,7 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 
-import { Button, Panel, Tag, Toolbar, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, Button, Panel, Tag, Toolbar } from '@dxos/react-ui';
 import { type EditorController, Editor } from '@dxos/react-ui-editor';
 import { type Type } from '@dxos/semantic-index';
 

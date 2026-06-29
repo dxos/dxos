@@ -13,40 +13,46 @@ compose these primitives; they do not re-implement capture or rendering.
   Stage · CommitFn · TranscribeConfig · EntityLookup
         ▲                                   ▲
         │ implements                        │ drives
+        │                                   │
 @dxos/react-ui-transcription   (this package — browser + React)
-  capture/    MediaStreamRecorder · createTranscriber          (audio in → text)
-  model/      TranscriptModel · EditorChunkDocument · ChunkRenderer  (text → editor)
-  hooks/      useAudioTrack · useAudioFile · useIsSpeaking · useSpeechRecognition
-              useTranscriber · useRecordingPipeline · useFeedModelAdapter
-  components/ Transcription · PipelineStatus · MicSettings
+  capture/    MediaStreamRecorder · createTranscriber (audio in → text)
+  model/      TranscriptModel     · EditorChunkDocument · ChunkRenderer (text → editor)
+  hooks/      useAudioTrack       · useAudioFile · useIsSpeaking · useSpeechRecognition
+              useTranscriber      · useRecordingPipeline · useFeedModelAdapter
+  components/ Transcription       · PipelineStatus · MicSettings
   util/       renderByline
         ▲
         │ compose
+        │
 plugins (plugin-transcription / plugin-assistant / plugin-meeting)
 ```
 
 ## Type hierarchy
 
 **Capture / ASR (audio → text)** — `capture/`
-- `AudioRecorder` *(engine interface)* ← `MediaStreamRecorder` — browser mic/track → `AudioChunk` (wav).
-- `Transcriber` *(engine)* — buffers chunks, calls Whisper, emits `ContentBlock.Transcript[]`.
+
+- `AudioRecorder` _(engine interface)_ ← `MediaStreamRecorder` — browser mic/track → `AudioChunk` (wav).
+- `Transcriber` _(engine)_ — buffers chunks, calls Whisper, emits `ContentBlock.Transcript[]`.
 - `createTranscriber(CreateTranscriberOptions): Transcriber` — wires a `MediaStreamRecorder` into a `Transcriber`.
-- `AsrPipeline` *(engine)* — `Transcriber → runLivePipeline(stages) → CommitFn`, created by `runAsrPipeline`.
+- `AsrPipeline` _(engine)_ — `Transcriber → runLivePipeline(stages) → CommitFn`, created by `runAsrPipeline`.
 
 **Transcript document projection (text → editor)** — `model/`
+
 - `Chunk` `{ id }` → `ChunkRenderer<T>` `(chunk) => string[]`.
-- `ChunkDocument` *(interface)* ← `EditorChunkDocument` — wraps a CodeMirror `EditorView`.
+- `ChunkDocument` _(interface)_ ← `EditorChunkDocument` — wraps a CodeMirror `EditorView`.
 - `TranscriptModel<T extends Chunk>` — owns a chunk queue; diffs renders and syncs lines into a `ChunkDocument`.
 
 **Lifecycle**
+
 - `PipelinePhase = 'idle' | 'recording' | 'draining'`.
 
 ## Dataflow
 
 **Live capture (mic or file) → enriched commit**
+
 ```
-useAudioTrack(active)            ─┐
-useAudioFile(url) → track        ─┤→ useRecordingPipeline({ active, track, stages, commit })
+  useAudioTrack(active)            ─┐
+  useAudioFile(url) → track        ─┤→ useRecordingPipeline({ active, track, stages, commit })
                                     │      └─ runAsrPipeline:
                                     │         MediaStreamRecorder → Transcriber → runLivePipeline
                                     │         → Stage[] (correct/extract/summarize…) → CommitFn → sink
@@ -54,6 +60,7 @@ useAudioFile(url) → track        ─┤→ useRecordingPipeline({ active, trac
 ```
 
 **Display (objects → editor view)**
+
 ```
 objects (e.g. useQuery feed)
   → useFeedModelAdapter(renderByline, objects)
@@ -62,6 +69,7 @@ objects (e.g. useQuery feed)
 ```
 
 **Standalone hooks**
+
 - `useIsSpeaking(track)` — VAD boolean.
 - `useSpeechRecognition({ active, onTranscript })` — browser Web Speech API (no engine).
 - `useTranscriber(opts)` — a `Transcriber` for callers that orchestrate capture themselves.

@@ -16,7 +16,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SemanticFactsViewer, type SemanticFactsViewerProps } from './SemanticFactsViewer';
+import { type SemanticFactsViewerProps, SemanticFactsViewer } from './SemanticFactsViewer';
 import { DEMO_FACTS } from './testing';
 
 const DefaultStory = (props: SemanticFactsViewerProps) => <SemanticFactsViewer {...props} />;
