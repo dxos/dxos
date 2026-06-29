@@ -305,7 +305,6 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
-  const target = getLabelTarget(object);
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
     assertArgument(
@@ -313,7 +312,7 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
       'accessor',
       'Label annotation must be a string or an array of strings',
     );
-    const value = SchemaEx.getField(target, accessor as SchemaEx.JsonPath);
+    const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
     switch (typeof value) {
       case 'string': {
         const trimmed = value.trim();
@@ -335,24 +334,6 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
   }
 
   return undefined;
-};
-
-/**
- * Resolve the value whose data fields a label accessor reads from.
- *
- * A static type entity (`Type.makeObject(...)` result) is a JS class constructor whose ECHO data
- * lives on the reactive entity in its prototype chain. Symbol-keyed reads (schema, meta) resolve
- * through that chain, but a string accessor like `name` is shadowed by the constructor's intrinsic
- * `Function.name` — the class name, which production minifiers mangle to a single character. Walk
- * past the constructor(s) so the accessor resolves against the reactive entity (where `name` is the
- * data field, absent on static types) instead of the class name.
- */
-const getLabelTarget = (object: unknown): any => {
-  let current: unknown = object;
-  while (typeof current === 'function') {
-    current = Object.getPrototypeOf(current);
-  }
-  return current;
 };
 
 /**
