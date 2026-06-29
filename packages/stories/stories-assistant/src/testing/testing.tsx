@@ -99,8 +99,9 @@ const buildPluginManagerOptions = ({
   createAgent,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
-  // Fire SetupSettings so plugins (e.g. AssistantPlugin) contribute their settings capabilities,
-  // which surfaces such as the TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
+  // SetupSchema registers ECHO schemas so plugin-scoped types are available in stories.
+  // SetupSettings causes plugins (e.g. AssistantPlugin) to contribute settings capabilities
+  // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
   setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
   plugins: [
     ...corePlugins(),
