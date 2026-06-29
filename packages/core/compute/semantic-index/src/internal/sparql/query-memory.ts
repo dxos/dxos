@@ -29,9 +29,17 @@ export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
     restrict(subjectsMatching(sx('subject'), entityIri(query.subjectEntity)));
   }
   if (query.predicate) {
-    restrict(
-      new Set(store.getQuads(null, sx('predicate'), literal(query.predicate), null).map((q) => q.subject.value)),
-    );
+    // Fuzzy predicate match: case-insensitive substring in either direction (e.g. "discussed" ~ "discussedIn",
+    // "going to" ~ "go to"), since the LLM rarely reproduces the stored verb phrase verbatim.
+    const needle = query.predicate.trim().toLowerCase();
+    const matches = store
+      .getQuads(null, sx('predicate'), null, null)
+      .filter((quad) => {
+        const value = quad.object.value.trim().toLowerCase();
+        return value.includes(needle) || needle.includes(value);
+      })
+      .map((quad) => quad.subject.value);
+    restrict(new Set(matches));
   }
   if (query.source) {
     restrict(

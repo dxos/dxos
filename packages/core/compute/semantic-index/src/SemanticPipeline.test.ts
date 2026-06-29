@@ -198,6 +198,8 @@ describe('SemanticPipeline', () => {
         // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.
         const byEntity = yield* store.query({ entity: 'composer' });
         const all = yield* store.select('SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }');
+        // Fuzzy predicate: "discussed" is a substring of the stored "discussedIn".
+        const byFuzzyPredicate = yield* store.query({ predicate: 'discussed' });
 
         yield* Effect.sync(() => {
           if (docs.length === 0) {
@@ -211,6 +213,9 @@ describe('SemanticPipeline', () => {
           }
           if (all.length !== byEntity.length) {
             throw new Error(`raw select (${all.length}) and structured query (${byEntity.length}) disagree`);
+          }
+          if (byFuzzyPredicate.length !== byEntity.length) {
+            throw new Error(`fuzzy predicate query returned ${byFuzzyPredicate.length}, expected ${byEntity.length}`);
           }
           const [fact] = byEntity;
           if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'composer') {
