@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Transcriber, type TranscribeConfig, type TranscribeFn } from '@dxos/transcription-pipeline';
+import { type TranscribeConfig, type TranscribeFn, Transcriber } from '@dxos/transcription-pipeline';
 import { type ContentBlock } from '@dxos/types';
 
 import { MediaStreamRecorder } from './media-stream-recorder';

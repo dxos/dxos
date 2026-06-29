@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { type ModelName, AiService } from '@dxos/ai';
 import { type ContentBlock } from '@dxos/types';
 
 import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';

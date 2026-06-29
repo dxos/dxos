@@ -8,7 +8,7 @@ import { type LivePipeline, runLivePipeline } from '../live';
 import { type RunOptions } from '../PipelineRuntime';
 import { type AudioRecorder } from './audio-recorder';
 import { SentenceBuffer } from './sentence-buffer';
-import { Transcriber, type TranscribeConfig, type TranscribeFn } from './transcriber';
+import { type TranscribeConfig, type TranscribeFn, Transcriber } from './transcriber';
 
 export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
   /** Audio source — browser `MediaStreamRecorder` or any `AudioRecorder` implementation. */
