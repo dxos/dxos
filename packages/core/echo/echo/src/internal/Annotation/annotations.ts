@@ -395,12 +395,8 @@ export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
   object: Schema.Schema.Type<S>,
   description: string,
 ) => {
-  const accessor = DescriptionAnnotation.get(schema);
-  if (Option.isNone(accessor)) {
-    return;
-  }
-
-  object[accessor.value] = description;
+  const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
+  object[accessor] = description;
 };
 
 /**

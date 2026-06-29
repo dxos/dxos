@@ -368,9 +368,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     const _ = Schema.asserts(propertySchema)(value);
-    SchemaValidator.assertExactProperties(propertySchema, value, (path) => {
-      return target[symbolInternals].getDecoded([getNamespace(target), ...path]);
-    });
+    SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
     return value;
   }
 
@@ -765,6 +763,7 @@ const isEchoObjectField = (value: any) => {
 };
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
+
 
 /**
  * Walk the prototype chain looking for an accessor with a setter for `prop`.

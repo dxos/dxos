@@ -87,7 +87,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
 
   [TestSchemaType.contact]: async (provider) => {
     const organizations = await provider?.(TestSchemaType.organization);
-    const location = random.datatype.boolean() ? random.geo.airport() : {};
+    const airport = random.datatype.boolean() ? random.geo.airport() : undefined;
 
     return {
       name: random.person.fullName(),
@@ -96,7 +96,8 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
         organizations?.length && random.datatype.boolean({ probability: 0.8 })
           ? Ref.make(random.helpers.arrayElement(organizations))
           : undefined,
-      ...location,
+      lat: airport?.lat,
+      lng: airport?.lng,
     };
   },
 
