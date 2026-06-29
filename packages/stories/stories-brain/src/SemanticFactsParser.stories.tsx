@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
@@ -24,7 +24,7 @@ import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SemanticPipeline, SemanticStore, type Type, buildSparql, generateQuery } from '@dxos/semantic-index';
@@ -157,6 +157,7 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
 
 const CrawlOptions = Schema.Struct({
   token: Schema.String.annotations({ title: 'Discord bot token' }),
+  channel: Schema.String.annotations({ title: 'Channel' }),
   maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
   descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
 });
@@ -168,16 +169,43 @@ type CrawlAction = 'channels' | 'crawl';
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
- * can read, pick one, crawl it through the pipeline (edge LLM extraction), and view the facts.
+ * can read, pick one (the `channel` form field is a Listbox picker via `fieldMap`), crawl it through
+ * the pipeline (edge LLM extraction), and view the facts.
  */
 const CrawlerStory = () => {
-  const [options, setOptions] = useState<CrawlOptions>({ token: '', maxDays: 7, descendThreads: true });
+  const [options, setOptions] = useState<CrawlOptions>({ token: '', channel: '', maxDays: 7, descendThreads: true });
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
-  const [selected, setSelected] = useState<string | undefined>(undefined);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Custom renderer for the `channel` field: a Listbox picker over the discovered channels, wired to
+  // the form value. Rebuilt when the channel list changes.
+  const fieldMap = useMemo<FormFieldMap>(() => {
+    const ChannelField: FormFieldRenderer = ({ type, label, required, getValue, onValueChange }) => {
+      const value = getValue() as string | undefined;
+      return (
+        <div role='none' className='flex flex-col gap-1'>
+          <span className='text-sm'>{required ? `${label} *` : label}</span>
+          {channels.length > 0 ? (
+            <Listbox.Root value={value} onValueChange={(next) => onValueChange(type, next)}>
+              <Listbox.Content aria-label={label}>
+                {channels.map((channel) => (
+                  <Listbox.Item key={channel.id} id={channel.id} classNames='p-2'>
+                    {channel.name ?? channel.id}
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
+          ) : (
+            <Empty icon='ph--hash--regular' label='List channels first.' />
+          )}
+        </div>
+      );
+    };
+    return { channel: ChannelField };
+  }, [channels]);
 
   const guard = async (action: CrawlAction, task: () => Promise<void>) => {
     setBusy(action);
@@ -200,13 +228,14 @@ const CrawlerStory = () => {
         ),
       );
       setChannels(result);
-      setSelected(result[0]?.id);
+      // Default the selection to the first channel if none chosen yet.
+      setOptions((prev) => ({ ...prev, channel: prev.channel || (result[0]?.id ?? '') }));
       setStatus(`${result.length} channel(s) visible`);
     });
 
   // Crawl the selected channel through the pipeline, then read the resulting facts from the store.
   const handleCrawl = () => {
-    if (!selected) {
+    if (!options.channel) {
       return;
     }
     void guard('crawl', async () => {
@@ -215,7 +244,7 @@ const CrawlerStory = () => {
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           const summary = yield* run(
-            { channels: [selected], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
+            { channels: [options.channel], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
             CRAWL_STAGES,
           );
           const registry = yield* AgentRegistry;
@@ -241,15 +270,16 @@ const CrawlerStory = () => {
             <Button disabled={!options.token || !!busy} onClick={handleListChannels}>
               {busy === 'channels' ? 'Listing…' : 'List channels'}
             </Button>
-            <Button variant='primary' disabled={!options.token || !selected || !!busy} onClick={handleCrawl}>
+            <Button variant='primary' disabled={!options.token || !options.channel || !!busy} onClick={handleCrawl}>
               {busy === 'crawl' ? 'Crawling…' : 'Crawl'}
             </Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container grid grid-rows-[auto_1fr] gap-2'>
+        <Panel.Content classNames='dx-container'>
           <Form.Root
             schema={CrawlOptions}
             values={options}
+            fieldMap={fieldMap}
             onValuesChanged={(next) => setOptions((prev) => ({ ...prev, ...next }))}
           >
             <Form.Viewport>
@@ -258,19 +288,6 @@ const CrawlerStory = () => {
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
-          {channels.length > 0 ? (
-            <Listbox.Root value={selected} onValueChange={setSelected}>
-              <Listbox.Content aria-label='Channels'>
-                {channels.map((channel) => (
-                  <Listbox.Item key={channel.id} id={channel.id} classNames='p-2'>
-                    {channel.name ?? channel.id}
-                  </Listbox.Item>
-                ))}
-              </Listbox.Content>
-            </Listbox.Root>
-          ) : (
-            <Empty icon='ph--hash--regular' label='Enter a token and list channels to begin.' />
-          )}
         </Panel.Content>
         {(error || status) && (
           <Panel.Statusbar classNames={error ? 'text-error truncate' : 'text-subdued truncate'}>
