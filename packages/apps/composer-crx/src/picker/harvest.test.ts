@@ -30,7 +30,7 @@ describe('harvest', () => {
     expect(hints.ogImage).toBe('https://dxos.org/logo.png');
     expect(hints.h1).toBe('DXOS');
     expect(hints.firstImage).toBe('https://dxos.org/hero.jpg');
-    expect(hints.jsonLd).toEqual([{ '@type': 'Organization', name: 'DXOS' }]);
+    expect(hints.jsonLd).toEqual([{ '@type': 'Organization', 'name': 'DXOS' }]);
   });
 
   test('harvestHints falls back to twitter + meta name', ({ expect }) => {

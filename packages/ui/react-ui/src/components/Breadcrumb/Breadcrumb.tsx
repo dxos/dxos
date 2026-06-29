@@ -13,7 +13,7 @@ import { Link, type LinkProps } from '../Link';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   'aria-label': string;
-  asChild?: boolean;
+  'asChild'?: boolean;
 };
 
 const BreadcrumbRoot = forwardRef<HTMLDivElement, BreadcrumbRootProps>(
