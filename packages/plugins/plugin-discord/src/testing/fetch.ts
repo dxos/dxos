@@ -46,11 +46,47 @@ const mapDiscordMessage = (message: MessageResponse): Message.Message | undefine
   });
 };
 
+/** Drain all pages of messages from a channel/thread into a flat array, oldest-first. */
+const drainMessages = (channelId: string, after: string): Effect.Effect<MessageResponse[], unknown, DiscordREST> =>
+  Effect.gen(function* () {
+    const rest = yield* DiscordREST;
+    const raw: MessageResponse[] = [];
+    let cursor = after;
+    while (true) {
+      const page = yield* rest.listMessages(channelId, { after: cursor, limit: MESSAGE_PAGE_LIMIT });
+      if (page.length === 0) {
+        break;
+      }
+      const sorted = [...page].sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+      raw.push(...sorted);
+      if (sorted.length < MESSAGE_PAGE_LIMIT) {
+        break;
+      }
+      cursor = sorted[sorted.length - 1].id;
+    }
+    return raw;
+  });
+
 export type FetchOptions = {
   /** Start cursor (Discord snowflake id). When set, only messages newer than this id are fetched. */
   cursor?: string;
   /** How many days of history to fetch on the first sync (when cursor is absent). Default: 30. */
   maxDays?: number;
+};
+
+/** Fetch result for a single Discord thread sub-channel. */
+export type ThreadFetchResult = {
+  /** The thread's own Discord channel id. */
+  channelId: string;
+  /** Id of the message in the parent channel that started this thread. */
+  parentMessageId: string;
+  /** Display name of the thread. */
+  name: string;
+  messages: Message.Message[];
+  /** Snowflake id of the newest thread message fetched; persist as the next cursor. */
+  cursor: string | undefined;
+  /** ISO-8601 timestamp of when the thread was fetched. */
+  fetchedAt: string;
 };
 
 export type FetchResult = {
@@ -59,6 +95,8 @@ export type FetchResult = {
   cursor: string | undefined;
   /** ISO-8601 timestamp of when the fetch completed. */
   fetchedAt: string;
+  /** Thread sub-channels discovered from messages in this window, each fetched separately. */
+  threads: ThreadFetchResult[];
 };
 
 /** Binding-level state that mirrors the fields written onto a `SyncBinding`. */
@@ -68,47 +106,62 @@ export type BindingState = {
   fetchedAt: string;
 };
 
+/** Binding-level state for a thread. */
+export type ThreadBindingState = BindingState & {
+  parentMessageId: string;
+  name: string;
+};
+
 /**
  * Fixture shape produced by `generate-fixtures.ts`.
  * `state` mirrors the `SyncBinding` cursor fields; `messages` is the feed content.
+ * Each discovered thread is stored as a separate entry with its own state.
  */
 export type DiscordChannelFixture = {
   state: BindingState;
   messages: Message.Message[];
+  threads: Array<{ state: ThreadBindingState; messages: Message.Message[] }>;
 };
 
 /**
  * Fetch all messages newer than `options.cursor` (or the initial lookback window)
- * from a Discord channel. Depends only on `DiscordREST`; no ECHO required.
+ * from a Discord channel, plus all thread sub-channels spawned by messages in
+ * that window. Each thread is returned as a separate `ThreadFetchResult`.
  *
- * Suitable for tests and the fixture-generation script.
+ * Depends only on `DiscordREST`; no ECHO required.
  */
 export const fetchChannelMessages = (
   channelId: string,
   options?: FetchOptions,
 ): Effect.Effect<FetchResult, unknown, DiscordREST> =>
   Effect.gen(function* () {
-    const rest = yield* DiscordREST;
     const initialAfter = computeInitialCursor(options?.cursor, options?.maxDays);
+    const raw = yield* drainMessages(channelId, initialAfter);
 
-    const raw: MessageResponse[] = [];
-    let after = initialAfter;
-    while (true) {
-      const page = yield* rest.listMessages(channelId, { after, limit: MESSAGE_PAGE_LIMIT });
-      if (page.length === 0) {
-        break;
-      }
-      const sorted = [...page].sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
-      raw.push(...sorted);
-      if (sorted.length < MESSAGE_PAGE_LIMIT) {
-        break;
-      }
-      after = sorted[sorted.length - 1].id;
-    }
-
-    const messages = raw.map(mapDiscordMessage).filter((message): message is Message.Message => message !== undefined);
-
+    const messages = raw.map(mapDiscordMessage).filter((msg): msg is Message.Message => msg !== undefined);
     const cursor = raw.length > 0 ? raw[raw.length - 1].id : options?.cursor;
 
-    return { messages, cursor, fetchedAt: new Date().toISOString() };
+    // Discover threads from messages in this window and fetch each separately.
+    const threads: ThreadFetchResult[] = [];
+    for (const msg of raw) {
+      if (!msg.thread) {
+        continue;
+      }
+      const threadId = msg.thread.id;
+      const threadName = msg.thread.name;
+      const threadRaw = yield* drainMessages(threadId, '0');
+      const threadMessages = threadRaw
+        .map(mapDiscordMessage)
+        .filter((threadMsg): threadMsg is Message.Message => threadMsg !== undefined);
+      threads.push({
+        channelId: threadId,
+        parentMessageId: msg.id,
+        name: threadName,
+        messages: threadMessages,
+        cursor: threadRaw.length > 0 ? threadRaw[threadRaw.length - 1].id : undefined,
+        fetchedAt: new Date().toISOString(),
+      });
+    }
+
+    return { messages, cursor, fetchedAt: new Date().toISOString(), threads };
   });

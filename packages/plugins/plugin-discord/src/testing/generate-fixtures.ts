@@ -38,11 +38,24 @@ const outPath = resolve(outDir, 'discord-messages.json');
 const program = Effect.gen(function* () {
   console.log(`Fetching messages from channel ${channelId} (last ${maxDays} days)…`);
   const result = yield* fetchChannelMessages(channelId, { maxDays });
-  console.log(`Fetched ${result.messages.length} messages.`);
+  console.log(`Fetched ${result.messages.length} messages, ${result.threads.length} threads.`);
+  for (const thread of result.threads) {
+    console.log(`  thread "${thread.name}" (${thread.channelId}): ${thread.messages.length} messages`);
+  }
 
   const fixture: DiscordChannelFixture = {
     state: { channelId, cursor: result.cursor, fetchedAt: result.fetchedAt },
     messages: result.messages,
+    threads: result.threads.map((thread) => ({
+      state: {
+        channelId: thread.channelId,
+        parentMessageId: thread.parentMessageId,
+        name: thread.name,
+        cursor: thread.cursor,
+        fetchedAt: thread.fetchedAt,
+      },
+      messages: thread.messages,
+    })),
   };
 
   mkdirSync(outDir, { recursive: true });
@@ -58,11 +71,14 @@ await EffectEx.runPromise(
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.catchAll((err) => {
       // dfx surfaces the Discord API body as a `[cause]` property on the wrapper error.
-      const cause = typeof err === 'object' && err !== null && '[cause]' in err ? err['[cause]' as keyof typeof err] : err;
+      const cause =
+        typeof err === 'object' && err !== null && '[cause]' in err ? err['[cause]' as keyof typeof err] : err;
       if (isDiscordError(cause)) {
         console.error(`Discord API error: ${cause.message} (code ${cause.code})`);
         if (cause.code === 50001) {
-          console.error('Hint: the bot lacks READ_MESSAGE_HISTORY permission on this channel, or has not been invited to the server.');
+          console.error(
+            'Hint: the bot lacks READ_MESSAGE_HISTORY permission on this channel, or has not been invited to the server.',
+          );
         }
       } else {
         console.error('Discord API error:', err);

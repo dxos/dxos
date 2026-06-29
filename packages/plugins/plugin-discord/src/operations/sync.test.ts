@@ -34,13 +34,19 @@ describe('Discord channel sync', () => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, Message.Message] });
       const db = await peer.createDatabase();
 
-      const { messages, cursor, fetchedAt } = await EffectEx.runPromise(
+      const { messages, cursor, fetchedAt, threads } = await EffectEx.runPromise(
         fetchChannelMessages(channelId!, { maxDays: 30 }).pipe(Effect.provide(makeDiscordLayerFromToken(token!))),
       );
 
       expect(messages.length).toBeGreaterThan(0);
       expect(cursor).toBeDefined();
       expect(fetchedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(Array.isArray(threads)).toBe(true);
+      for (const thread of threads) {
+        expect(thread.channelId).toBeDefined();
+        expect(thread.parentMessageId).toBeDefined();
+        expect(Array.isArray(thread.messages)).toBe(true);
+      }
 
       await Effect.gen(function* () {
         const feed = yield* Database.add(Feed.make({ name: 'discord-test' }));
