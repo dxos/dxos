@@ -7,7 +7,7 @@ import * as Data from 'effect/Data';
 
 import { StateMap } from '@dxos/schema';
 
-import { Magazine, type Subscription } from '../types';
+import { type Subscription, Magazine } from '../types';
 
 /** Per-Post magazine-scoped curation slice (agent-written snippet/hero image). */
 export type CurationSlice = { snippet: string | undefined; imageUrl: string | undefined };

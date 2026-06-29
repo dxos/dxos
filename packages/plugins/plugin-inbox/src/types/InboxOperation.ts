@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { DXN, Collection, Database, Obj, Ref, Type } from '@dxos/echo';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -21,7 +21,7 @@ import {
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Actor, Event, Message, type Person } from '@dxos/types';
+import { type Person, Actor, Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 

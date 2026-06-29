@@ -16,7 +16,7 @@ import { Document, Item } from '../data';
 import { defs } from '../defs';
 import { exportData, importData } from '../util';
 import { AppToolbar } from './AppToolbar';
-import { DataToolbar, type DataView } from './DataToolbar';
+import { type DataView, DataToolbar } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';

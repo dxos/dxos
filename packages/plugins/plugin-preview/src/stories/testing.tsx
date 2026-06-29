@@ -10,7 +10,7 @@ import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
+import { type CardContainerProps, CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 

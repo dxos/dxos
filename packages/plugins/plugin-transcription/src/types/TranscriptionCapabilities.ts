@@ -16,7 +16,7 @@ import {
 
 import { meta } from '#meta';
 
-import { type TranscriptMessageEnricher, type TranscriptionManager as TranscriptionManagerType } from '../transcriber';
+import { type TranscriptMessageEnricher, type TranscriptionManager as TranscriptionManagerType, } from '../transcriber';
 import * as Settings$ from './Settings'; // eslint-disable-line
 
 export type TranscriberProviderProps = {

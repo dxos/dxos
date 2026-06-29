@@ -6,7 +6,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
-import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
+import { type Database, type Registry, URI, Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -14,9 +14,9 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveSkills, useSkillHandlers, useSkills, useContextObjects, useFilteredTypes } from '#hooks';
+import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
-import { Assistant, type ChatPresetProps } from '#types';
+import { type ChatPresetProps, Assistant } from '#types';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',

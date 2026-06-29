@@ -7,11 +7,11 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import {
-  DIAGNOSTICS_TIMEOUT,
   type DiagnosticMetadata,
   type DiagnosticsData,
   type DiagnosticsManager,
   type DiagnosticsRequest,
+  DIAGNOSTICS_TIMEOUT,
 } from './diagnostic';
 import { createId } from './util';
 

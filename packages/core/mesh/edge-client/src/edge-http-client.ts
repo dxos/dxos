@@ -12,7 +12,7 @@ import { type Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type CompleteOAuthRegistrationRequest,
@@ -21,7 +21,6 @@ import {
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
-  EDGE_CLIENT_TAG_HEADER,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -41,6 +40,7 @@ import {
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  EDGE_CLIENT_TAG_HEADER,
 } from '@dxos/protocols';
 import {
   type QueryRequest as QueryRequestProto,
@@ -48,7 +48,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { createUrl } from '@dxos/util';
 
-import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
+import { type BaseHttpClientOptions, type EdgeHttpCallArgs, BaseHttpClient } from './base-http-client';
 import { proxyFetchLegacy } from './cors-proxy';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client';
 

@@ -10,7 +10,7 @@ import { useMembers, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';
-import { Message, type Transcript } from '@dxos/types';
+import { type Transcript, Message } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';

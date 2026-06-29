@@ -9,9 +9,9 @@ import { DXN, Type } from '@dxos/echo';
 import {
   EdgeClient,
   SwarmRequestSchema,
-  SwarmRequest_Action,
   createEphemeralEdgeIdentity,
   protocol,
+  SwarmRequest_Action,
 } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

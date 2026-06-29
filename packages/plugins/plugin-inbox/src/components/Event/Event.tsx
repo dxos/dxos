@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
@@ -192,4 +192,4 @@ export const Event = {
   Body: EventBody,
 };
 
-export type { EventRootProps, EventToolbarProps, EventViewportProps, EventHeaderProps, EventBodyProps };
+export type { EventBodyProps, EventHeaderProps, EventRootProps, EventToolbarProps, EventViewportProps };

@@ -11,9 +11,9 @@ import { random } from '@dxos/random';
 import { Input, Toolbar } from '@dxos/react-ui';
 import { Panel } from '@dxos/react-ui';
 import {
-  MarkdownStream,
   type MarkdownStreamController,
   type MarkdownStreamProps,
+  MarkdownStream,
   textStream,
 } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

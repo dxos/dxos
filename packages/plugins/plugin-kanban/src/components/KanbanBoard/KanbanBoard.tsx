@@ -16,10 +16,10 @@ import { meta } from '#meta';
 import { type Kanban, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
 
 import {
-  KanbanBoardContext,
   type KanbanBoardContextValue,
   type KanbanCardProps,
   type KanbanColumnProps,
+  KanbanBoardContext,
   useKanbanBoard,
 } from './context';
 import { KanbanCard } from './KanbanCard';

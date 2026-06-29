@@ -11,7 +11,7 @@ import { Context } from '@dxos/context';
 import { valueEncoding } from '@dxos/echo-host';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
+import { type FeedWrapper, FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';

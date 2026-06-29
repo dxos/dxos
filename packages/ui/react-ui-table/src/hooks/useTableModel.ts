@@ -10,10 +10,10 @@ import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
 
 import {
-  TableModel,
   type TableModelProps,
   type TableRow,
   type TableRowAction,
+  TableModel,
   createEchoChangeCallback,
 } from '../model';
 import { type Table } from '../types';

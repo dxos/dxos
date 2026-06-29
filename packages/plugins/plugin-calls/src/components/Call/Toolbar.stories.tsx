@@ -8,7 +8,7 @@ import React from 'react';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing';
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { type ToolbarProps, Toolbar } from './Toolbar';
 
 const self = makeUser('self', 'Alice');
 const state = makeCallState(self, [self, makeUser('bob', 'Bob')]);

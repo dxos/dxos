@@ -4,7 +4,7 @@
 
 import { xmlLanguage } from '@codemirror/lang-xml';
 import { type Extension, type Range } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type DecorationSet, type ViewUpdate, Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 
 /**
  * Lezer XML node names that represent the angle-bracket delimited portions of an element.

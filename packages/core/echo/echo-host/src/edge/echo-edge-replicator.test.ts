@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';

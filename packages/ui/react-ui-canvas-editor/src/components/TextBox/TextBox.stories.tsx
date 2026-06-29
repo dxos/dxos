@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { TextBox, type TextBoxProps } from './TextBox';
+import { type TextBoxProps, TextBox } from './TextBox';
 
 const DefaultStory = (props: TextBoxProps) => {
   return (

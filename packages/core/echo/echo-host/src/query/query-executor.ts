@@ -10,18 +10,18 @@ import * as Runtime from 'effect/Runtime';
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
 import {
+  type EntityPropPath,
+  type QueryAST,
   DatabaseDirectory,
   EncodedReference,
-  type EntityPropPath,
   EntityStructure,
-  type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
-import { EffectEx, type RuntimeProvider } from '@dxos/effect';
-import { EscapedPropPath, type IndexEngine, type EntityMeta, type ReverseRef } from '@dxos/index-core';
+import { type RuntimeProvider, EffectEx } from '@dxos/effect';
+import { type EntityMeta, type IndexEngine, type ReverseRef, EscapedPropPath } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
+import { type URI, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';

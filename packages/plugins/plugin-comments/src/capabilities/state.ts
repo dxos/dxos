@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 
-import { CommentCapabilities, type CommentState, type ViewStore } from '#types';
+import { type CommentState, type ViewStore, CommentCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Builder } from '#testing';
 
-import { EventStack, type EventStackProps } from './EventStack';
+import { type EventStackProps, EventStack } from './EventStack';
 
 const EventStackStory = (props: Omit<EventStackProps, 'id' | 'events'>) => {
   const { events } = useMemo(() => new Builder().createEvents(100).build(), []);

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Obj, type Type } from '@dxos/echo';
+import { type Type, Obj } from '@dxos/echo';
 
 import { Resolver, resolve } from './Resolver';
 

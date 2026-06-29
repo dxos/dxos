@@ -7,8 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
-  type RefObject,
   type PropsWithChildren,
+  type RefObject,
   forwardRef,
   useCallback,
   useImperativeHandle,
@@ -21,9 +21,9 @@ import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
-  EditorMenuProvider,
   type EditorMenuProviderProps,
   type UseTextEditorProps,
+  EditorMenuProvider,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
@@ -196,4 +196,4 @@ export const Outline = {
   Content: OutlineContent,
 };
 
-export type { OutlineController, OutlineRootProps, OutlineContentProps };
+export type { OutlineContentProps, OutlineController, OutlineRootProps };

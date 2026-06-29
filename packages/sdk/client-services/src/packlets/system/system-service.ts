@@ -6,13 +6,13 @@ import { type Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import {
-  GetDiagnosticsRequest,
   type Platform,
   type QueryStatusRequest,
   type QueryStatusResponse,
   type SystemService,
   type SystemStatus,
   type UpdateStatusRequest,
+  GetDiagnosticsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 

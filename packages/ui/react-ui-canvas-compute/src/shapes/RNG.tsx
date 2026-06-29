@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Icon, type IconProps } from '@dxos/react-ui';
+import { type IconProps, Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
 
 export const RandomShape = Schema.extend(
   ComputeShape,

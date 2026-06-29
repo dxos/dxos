@@ -11,7 +11,7 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 
 import { useComputeNodeState } from '../hooks';
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
+import { type CreateShapeProps, ComputeShape, createShape } from './defs';
 
 export const GptShape = Schema.extend(
   ComputeShape,

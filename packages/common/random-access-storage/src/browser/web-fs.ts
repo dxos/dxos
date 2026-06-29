@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TimeSeriesCounter, trace } from '@dxos/tracing';
 
-import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
+import { type DiskInfo, type File, type Storage, Directory, StorageType, getFullPath } from '../common';
 
 /**
  * Web file systems.

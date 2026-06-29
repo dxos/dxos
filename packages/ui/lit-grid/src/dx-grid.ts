@@ -12,17 +12,14 @@ import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
 import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs';
 import {
-  DxAxisResize,
   type DxAxisResizeInternal,
-  DxEditRequest,
   type DxGridAnnotatedPanEvent,
   type DxGridAxis,
   type DxGridAxisMeta,
   type DxGridAxisMetaProps,
   type DxGridAxisSizes,
-  type DxGridCellValue,
   type DxGridCells,
-  DxGridCellsSelect,
+  type DxGridCellValue,
   type DxGridFixedPlane,
   type DxGridFocusIndicatorVariant,
   type DxGridFrozenAxes,
@@ -40,6 +37,9 @@ import {
   type DxGridPosition,
   type DxGridRange,
   type DxGridSelectionProps,
+  DxAxisResize,
+  DxEditRequest,
+  DxGridCellsSelect,
   separator,
 } from './types';
 import {
@@ -1686,14 +1686,14 @@ export class DxGrid extends LitElement {
 }
 
 export {
-  rowToA1Notation,
-  colToA1Notation,
+  accessoryHandlesPointerdownAttrs,
+  cellQuery,
   closestAction,
   closestCell,
+  colToA1Notation,
   parseCellIndex,
+  rowToA1Notation,
   toPlaneCellIndex,
-  cellQuery,
-  accessoryHandlesPointerdownAttrs,
 } from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';

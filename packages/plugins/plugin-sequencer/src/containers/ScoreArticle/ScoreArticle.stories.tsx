@@ -10,9 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Note, Sequence, Score, Track } from '#types';
+import { Note, Score, Sequence, Track } from '#types';
 
-import { applyLeadSheetToScore, type MutableScore } from '../../util';
+import { type MutableScore, applyLeadSheetToScore } from '../../util';
 import { parseLeadSheet } from '../../util/lead-sheet';
 import { ScoreArticle } from './ScoreArticle';
 import CHILDREN from './testing/children.txt?raw';

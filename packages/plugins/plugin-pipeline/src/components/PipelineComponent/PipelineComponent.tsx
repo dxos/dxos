@@ -8,9 +8,9 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import { type ToolbarRootProps, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, slottable } from '@dxos/react-ui';
-import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
+import { type BoardModel, Board, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
@@ -137,4 +137,4 @@ export const PipelineComponent = {
 
 export { usePipeline };
 
-export type { ItemProps, PipelineContextValue, PipelineRootProps, PipelineContentProps, PipelineColumnsProps };
+export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineContextValue, PipelineRootProps };

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type Registry, Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -15,7 +15,7 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
-import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
+import { type TreeModel, Path, Tree } from '@dxos/react-ui-list';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';

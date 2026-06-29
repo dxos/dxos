@@ -10,10 +10,10 @@ import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { DXN, PublicKey, URI } from '@dxos/keys';
+import { DXN, URI, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
-import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
+import { type DiagnosticMetadata, type TraceProcessor, TRACE_PROCESSOR } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
 import { type Client } from '../client';

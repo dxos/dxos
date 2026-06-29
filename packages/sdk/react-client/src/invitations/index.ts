@@ -4,11 +4,11 @@
 
 // NOTE: Export * fails here.
 export {
+  type Invitations,
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
-  InvitationEncoder,
   Invitation,
-  type Invitations,
+  InvitationEncoder,
   InvitationsProxy,
 } from '@dxos/client/invitations';
 

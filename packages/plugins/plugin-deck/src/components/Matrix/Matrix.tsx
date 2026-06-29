@@ -4,7 +4,7 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
-import React, { forwardRef, type PropsWithChildren, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { ScrollArea } from '@dxos/react-ui';
@@ -202,4 +202,4 @@ export const Matrix = {
   Viewport: MatrixViewport,
 };
 
-export type { MatrixController, MatrixRootProps, MatrixContentProps, MatrixViewportProps };
+export type { MatrixContentProps, MatrixController, MatrixRootProps, MatrixViewportProps };

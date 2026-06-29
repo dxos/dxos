@@ -3,10 +3,10 @@
 //
 
 import {
+  OPFS_SQLITE_DB_FILENAME,
   decodeProfileArchive,
   getSqliteProfileEntries,
   isValidSqliteDatabase,
-  OPFS_SQLITE_DB_FILENAME,
 } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 

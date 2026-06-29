@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { SkillDefinition, CreateObject, ReactSurface } from '#capabilities';
+import { CreateObject, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Voxel } from '#types';

@@ -7,7 +7,7 @@ import React from 'react';
 import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import { Listbox } from '@dxos/react-ui-list';
 
-import { PluginItem, type PluginItemProps } from './PluginItem';
+import { type PluginItemProps, PluginItem } from './PluginItem';
 
 export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'hasUpdate' | 'failure'> & {
   plugins?: readonly Plugin.Plugin[];

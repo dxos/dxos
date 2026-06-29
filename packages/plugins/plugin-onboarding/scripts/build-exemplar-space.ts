@@ -22,13 +22,13 @@
 
 import { Store } from '@tldraw/store';
 import {
+  type TLRecord,
+  TLDOCUMENT_ID,
   DocumentRecordType,
   PageRecordType,
-  TLDOCUMENT_ID,
   createTLSchema,
   geoShapeMigrations,
   geoShapeProps,
-  type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
 import * as Option from 'effect/Option';
@@ -41,7 +41,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { DXN, EID, Annotation, Collection, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';

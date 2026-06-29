@@ -7,10 +7,10 @@ import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, 
 import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
-  Focus,
-  Mosaic,
   type MosaicScrollController,
   type MosaicTileProps,
+  Focus,
+  Mosaic,
   useMosaicContainer,
 } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';

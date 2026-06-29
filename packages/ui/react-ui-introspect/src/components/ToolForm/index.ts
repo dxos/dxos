@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { ToolForm, type ToolFormProps } from './ToolForm';
+export { type ToolFormProps, ToolForm } from './ToolForm';

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN } from '@dxos/echo';
+import { DXN, Database } from '@dxos/echo';
 import { GameRef } from '@dxos/plugin-game/types';
 
 import { TicTacToe } from '#types';

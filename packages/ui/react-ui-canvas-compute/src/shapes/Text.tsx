@@ -10,8 +10,8 @@ import { type ShapeComponentProps, type ShapeDef, TextBox } from '@dxos/react-ui
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { type BoxActionHandler, Box } from './common';
+import { type CreateShapeProps, ComputeShape, createAnchorId, createShape } from './defs';
 
 export const TextShape = Schema.extend(
   ComputeShape,

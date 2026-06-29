@@ -10,8 +10,8 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import {
   type LogConfig,
   type LogEntry,
-  LogLevel,
   type LogProcessor,
+  LogLevel,
   getContextFromEntry,
   getRelativeFilename,
 } from '@dxos/log';

@@ -4,9 +4,9 @@
 
 import { addDays, format, startOfDay } from 'date-fns';
 import React, {
+  type PropsWithChildren,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
-  type PropsWithChildren,
   forwardRef,
   useCallback,
   useEffect,
@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
-import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
+import { type ListProps, type ListRowRenderer, List } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -28,13 +28,13 @@ import { translationKey } from '#translations';
 import {
   type CalendarContextValue,
   type CalendarController,
-  CalendarContextProvider,
   type CalendarScrollEvent,
   type Range,
+  CalendarContextProvider,
   useCalendarContext,
 } from './context';
 import { getDate, getRowIndex, gridEpoch, isSameDay } from './util';
-import { CalendarWeek, type CalendarEvent, type CalendarWeekProps } from './Week';
+import { type CalendarEvent, type CalendarWeekProps, CalendarWeek } from './Week';
 import { Weekdays } from './Weekdays';
 
 const maxRows = 50 * 100;

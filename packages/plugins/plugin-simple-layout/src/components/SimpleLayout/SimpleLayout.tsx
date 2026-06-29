@@ -4,7 +4,7 @@
 
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
-import { Splitter, type SplitterMode } from '@dxos/react-ui';
+import { type SplitterMode, Splitter } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '#hooks';

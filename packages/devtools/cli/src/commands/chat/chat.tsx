@@ -10,7 +10,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
 
-import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, AiService, ModelName } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppSpace } from '@dxos/app-toolkit';

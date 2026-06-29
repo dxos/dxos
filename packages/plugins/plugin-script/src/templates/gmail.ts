@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { EchoObject, Filter, EntityId, S, create, defineFunction } from 'dxos:functions';
+import { S, EchoObject, EntityId, Filter, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
   FetchHttpClient,

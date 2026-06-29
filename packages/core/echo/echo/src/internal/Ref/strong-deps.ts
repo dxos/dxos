@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EID, type SpaceId, type URI } from '@dxos/keys';
+import { type SpaceId, type URI, EID } from '@dxos/keys';
 
 import { EntityKind } from '../common/types/entity';
 import { RelationSourceDXNId, RelationTargetDXNId } from '../common/types/model-symbols';

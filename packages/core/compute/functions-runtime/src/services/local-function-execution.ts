@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Filter, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { FunctionInvocationService, type FunctionServices } from '@dxos/functions';
+import { type FunctionServices, FunctionInvocationService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<

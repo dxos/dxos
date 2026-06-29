@@ -19,7 +19,7 @@ import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
 import { BlueskyPlugin } from '../BlueskyPlugin';

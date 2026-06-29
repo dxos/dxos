@@ -10,7 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { type IncomingMessage, type ServerResponse, createServer as createHttpServer } from 'node:http';
 import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { createIntrospector } from '@dxos/introspect';

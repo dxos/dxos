@@ -21,13 +21,13 @@ import {
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
-  Repo,
   type StorageKey,
   type SubductionPeerBinding,
   type SubductionPeerId,
   type SubductionPolicy,
-  interpretAsDocumentId,
+  Repo,
   initSubduction,
+  interpretAsDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
 import * as SqlClient from '@effect/sql/SqlClient';

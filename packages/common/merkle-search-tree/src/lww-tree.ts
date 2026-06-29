@@ -3,7 +3,7 @@
 //
 
 import type { ActorID } from './common';
-import { type DigestHex, Forest, type Key, type NodeData } from './forest';
+import { type DigestHex, type Key, type NodeData, Forest } from './forest';
 
 export type LLWTreeProps = {
   actor: ActorID;

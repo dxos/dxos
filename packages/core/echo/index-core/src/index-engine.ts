@@ -13,15 +13,15 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
-  FtsIndex,
+  type EntityMeta,
   type FtsQuery,
   type FtsQueryResult,
   type Index,
   type IndexerObject,
-  type EntityMeta,
-  EntityMetaIndex,
-  ReverseRefIndex,
   type ReverseRefQuery,
+  EntityMetaIndex,
+  FtsIndex,
+  ReverseRefIndex,
 } from './indexes';
 
 /**

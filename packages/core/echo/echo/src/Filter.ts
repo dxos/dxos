@@ -12,7 +12,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { type URI, EID, EntityId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as internal from './internal';

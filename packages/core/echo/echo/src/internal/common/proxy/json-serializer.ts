@@ -17,7 +17,7 @@ import {
   SelfURIId,
   TypeId,
 } from '../types';
-import { ATTR_META, type EntityMeta } from '../types/meta';
+import { type EntityMeta, ATTR_META } from '../types/meta';
 import { MetaId } from '../types/model-symbols';
 
 /**

@@ -11,9 +11,9 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import {
-  Table as TableComponent,
   type TableController,
   type TableFeatures,
+  Table as TableComponent,
   TablePresentation,
   useProjectionModel,
   useTableModel,

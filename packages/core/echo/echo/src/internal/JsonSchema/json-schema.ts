@@ -30,10 +30,10 @@ import {
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
-  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
-  ECHO_ANNOTATIONS_NS_KEY,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
+  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
+  ECHO_ANNOTATIONS_NS_KEY,
   getNormalizedEchoAnnotations,
 } from './json-schema-type';
 

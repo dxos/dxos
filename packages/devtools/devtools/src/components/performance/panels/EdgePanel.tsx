@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { IconButton } from '@dxos/react-ui';
 
 import { type CustomPanelProps, Panel } from '../Panel';
-import { Table, type TableProps, Unit } from './Table';
+import { type TableProps, Table, Unit } from './Table';
 
 export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdgeStatusResponse }>) => {
   const client = useClient();

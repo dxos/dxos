@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Filter, Registry } from '@dxos/echo';
 
 import { QuerySkills } from './definitions';

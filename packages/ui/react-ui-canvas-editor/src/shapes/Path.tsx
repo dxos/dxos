@@ -8,9 +8,9 @@ import { type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import {
+  type ShapeComponentProps,
   DEFS_ID,
   MARKER_PREFIX,
-  type ShapeComponentProps,
   eventsAuto,
   eventsNone,
   shapeAttrs,

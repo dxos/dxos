@@ -4,17 +4,17 @@
 
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentProps, forwardRef, ReactNode, useCallback, useState } from 'react';
+import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
-  DateField,
   type DateFieldProps,
+  type TimeFieldProps,
+  DateField,
   DateInput,
   DateSegment,
   TimeField,
-  type TimeFieldProps,
 } from 'react-aria-components';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from '@dxos/react-input';
+import { type InputScopedProps, INPUT_NAME, useInputContext } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -458,6 +458,6 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 );
 SegmentedDateTime.displayName = 'Input.SegmentedDateTime';
 
-export { SegmentedDate, SegmentedTime, SegmentedDateTime };
+export { SegmentedDate, SegmentedDateTime, SegmentedTime };
 
-export type { SegmentedDateProps, SegmentedTimeProps, SegmentedDateTimeProps };
+export type { SegmentedDateProps, SegmentedDateTimeProps, SegmentedTimeProps };

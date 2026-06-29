@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { type DecorationSet, Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 import { getHashHue, getStyles, mx } from '@dxos/ui-theme';

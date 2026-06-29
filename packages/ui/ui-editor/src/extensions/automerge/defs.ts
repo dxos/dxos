@@ -5,7 +5,7 @@
 //
 
 import { type Heads, type Prop } from '@automerge/automerge';
-import { Annotation, type EditorState, StateEffect, type StateField, type Transaction } from '@codemirror/state';
+import { type EditorState, type StateField, type Transaction, Annotation, StateEffect } from '@codemirror/state';
 
 export type State = {
   path: Prop[];

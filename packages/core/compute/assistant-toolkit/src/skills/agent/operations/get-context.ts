@@ -10,7 +10,7 @@ import { Database, Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { HarnessContextError } from '../../../errors';
-import { Plan, Agent, Chat } from '../../../types';
+import { Agent, Chat, Plan } from '../../../types';
 import { GetContext } from './definitions';
 
 const formatPlan = (chat: Chat.Chat) =>

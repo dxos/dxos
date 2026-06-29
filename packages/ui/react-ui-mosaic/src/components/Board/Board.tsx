@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -22,15 +22,15 @@ import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';
 import {
   type GetId,
-  Mosaic,
   type MosaicEventHandler,
   type MosaicPlaceholderProps,
   type MosaicStackProps,
+  Mosaic,
   mosaicStyles,
   useMosaic,
 } from '../Mosaic';
-import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
-import { BoardItem, type BoardItemProps } from './Item';
+import { type BoardColumnProps, BoardColumn, DefaultBoardColumn, useBoardColumn } from './Column';
+import { type BoardItemProps, BoardItem } from './Item';
 
 //
 // Model
@@ -188,4 +188,4 @@ export const Board = {
 
 export { useBoard, useBoardColumn };
 
-export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };
+export type { BoardColumnProps, BoardContentProps, BoardItemProps, BoardRootProps };

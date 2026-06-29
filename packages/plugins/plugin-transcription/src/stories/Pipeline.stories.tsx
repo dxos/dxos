@@ -35,9 +35,9 @@ import { PipelineStatus } from '@dxos/react-ui-transcription';
 import { Loading } from '@dxos/react-ui/testing';
 import {
   type CommitFn,
-  PipelineRuntime,
   type Stage,
   type TelemetryEvent,
+  PipelineRuntime,
   TranscriptEvent,
   makeCorrectionStage,
   makeDatabaseLookup,

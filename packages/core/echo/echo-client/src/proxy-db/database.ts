@@ -6,10 +6,11 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
+import { type CleanupFn, type ReadOnlyEvent, Event, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  type Registry,
   Database,
   Entity,
   Feed,
@@ -20,17 +21,16 @@ import {
   QueryAST,
   QueryResult,
   Ref,
-  type Registry,
   Type,
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
+  type EntityMeta,
+  type TypeAnnotation,
   EntityKind,
   MetaId,
-  type EntityMeta,
   TypeSchema as PersistentSchema,
-  type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   assertObjectModel,
@@ -41,7 +41,7 @@ import {
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
-import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { type PublicKey, type SpaceId, type URI, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -52,8 +52,8 @@ import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { EntityManager } from '../core-db';
 import {
-  EchoReactiveHandler,
   type ProxyTarget,
+  EchoReactiveHandler,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,

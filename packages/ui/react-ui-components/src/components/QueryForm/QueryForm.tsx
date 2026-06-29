@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Filter, Obj, Query, type QueryAST, type Tag } from '@dxos/echo';
+import { type QueryAST, type Tag, Filter, Obj, Query } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';

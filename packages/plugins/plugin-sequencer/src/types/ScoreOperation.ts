@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref, DXN } from '@dxos/echo';
+import { DXN, Database, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import * as Score from './Score';

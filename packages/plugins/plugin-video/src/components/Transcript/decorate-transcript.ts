@@ -4,12 +4,12 @@
 
 import { type Extension, type Range, RangeSetBuilder } from '@codemirror/state';
 import {
-  Decoration,
   type DecorationSet,
+  type ViewUpdate,
+  Decoration,
   EditorView,
   GutterMarker,
   ViewPlugin,
-  type ViewUpdate,
   WidgetType,
   gutter,
 } from '@codemirror/view';

@@ -6,15 +6,15 @@ import { type Extension, Prec } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { type Database, Filter, Obj, type Type } from '@dxos/echo';
+import { type Database, type Type, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  Editor,
   type EditorController,
   type EditorMenuProviderProps,
   type EditorViewProps,
   type UseEditorMenuProps,
+  Editor,
 } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, insertAtCursor, keymap } from '@dxos/ui-editor';
 import { getHashHue } from '@dxos/ui-theme';
@@ -22,10 +22,10 @@ import { getHashHue } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import {
-  EMAIL_REGEX,
-  NAME_ADDR_REGEX,
   type RefEditorMode,
   type RefInfo,
+  EMAIL_REGEX,
+  NAME_ADDR_REGEX,
   formatMailbox,
   refEditor,
   refEditorRedecorate,

@@ -13,10 +13,10 @@ import { useClient } from '@dxos/react-client';
 
 import {
   ABOUT_DIALOG,
-  AboutDialog,
   NATIVE_REDIRECT_DIALOG,
-  NativeRedirectDialog,
   WELCOME_SCREEN,
+  AboutDialog,
+  NativeRedirectDialog,
   WelcomeScreen,
 } from '../components';
 import { ExemplarSettings } from '../containers';

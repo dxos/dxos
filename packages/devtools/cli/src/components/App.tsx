@@ -3,12 +3,12 @@
 //
 
 import { type Registry } from '@effect-atom/atom-react';
-import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
+import { type KeyEvent, DebugOverlayCorner, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import {
   type Accessor,
-  ErrorBoundary,
   type ParentProps,
+  ErrorBoundary,
   createContext,
   createEffect,
   createSignal,

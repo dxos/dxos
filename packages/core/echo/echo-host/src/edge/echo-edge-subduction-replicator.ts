@@ -13,15 +13,15 @@ import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  EdgeService,
+  type PeerId,
+  type SubductionProtocolMessage,
+  type SubductionProtocolMessageEnveloped,
   MESSAGE_TYPE_COLLECTION_QUERY,
   MESSAGE_TYPE_COLLECTION_STATE,
   MESSAGE_TYPE_ERROR,
   MESSAGE_TYPE_SUBDUCTION_CONNECTION,
   MESSAGE_TYPE_SUBDUCTION_FRAME,
-  type PeerId,
-  type SubductionProtocolMessage,
-  type SubductionProtocolMessageEnveloped,
+  EdgeService,
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {

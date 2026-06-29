@@ -7,13 +7,13 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { useClient } from '@dxos/react-client';
 import {
+  type TFunction,
   Button,
   Icon,
   Message,
   Panel,
   ScrollArea,
   Status,
-  type TFunction,
   Tag,
   Toolbar,
   toLocalizedString,

@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 
 import { translationKey } from '#translations';
 
-import { IconButton, type IconButtonProps } from './IconButton';
-import { ToggleIconButton, type ToggleIconButtonProps } from './ToggleIconButton';
+import { type IconButtonProps, IconButton } from './IconButton';
+import { type ToggleIconButtonProps, ToggleIconButton } from './ToggleIconButton';
 
 // Static presets fix the icon and default the label; callers can still override `label`.
 type StaticPresetProps = Omit<IconButtonProps, 'icon' | 'label'> & { label?: string };

@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
+import { type Plugin as Plugin$, Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { isNonNullable, Position } from '@dxos/util';
+import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 

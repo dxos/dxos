@@ -4,7 +4,7 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
+import { type DecorationSet, Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
 import { type Database, Entity } from '@dxos/echo';

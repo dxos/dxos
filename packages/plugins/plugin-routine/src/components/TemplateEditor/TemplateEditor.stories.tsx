@@ -14,7 +14,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
+import { type TemplateEditorProps, TemplateEditor } from './TemplateEditor';
 
 const FENCE = '```';
 

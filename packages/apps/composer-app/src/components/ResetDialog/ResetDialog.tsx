@@ -10,8 +10,8 @@ import { type Observability } from '@dxos/observability';
 import { type SupportOperation } from '@dxos/plugin-support';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import {
-  AlertDialog,
   type AlertDialogRootProps,
+  AlertDialog,
   Button,
   DropdownMenu,
   IconButton,

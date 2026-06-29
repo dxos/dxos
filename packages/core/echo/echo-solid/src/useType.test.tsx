@@ -6,7 +6,7 @@ import { render, waitFor } from '@solidjs/testing-library';
 import { type JSX, createMemo } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Type, URI } from '@dxos/echo';
+import { DXN, URI, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 

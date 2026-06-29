@@ -3,13 +3,13 @@
 //
 
 import {
+  type PointerInfo,
   Color3,
   Mesh,
   PointerEventTypes,
   StandardMaterial,
   Vector3,
   VertexData,
-  type PointerInfo,
 } from '@babylonjs/core';
 
 import { getFaceNormal } from '../../engine';

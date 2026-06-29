@@ -8,9 +8,9 @@ import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
+  type Rect,
   Grid,
   Canvas as NaturalCanvas,
-  type Rect,
   testId,
   useCanvasContext,
   useDrag,

@@ -11,17 +11,17 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
   CreateObject,
   HelpState,
   OperationHandler,
   ReactRoot,
   ReactSurface,
+  SkillDefinition,
   SupportSettings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Support, SupportOperation, type Tour } from '#types';
+import { type Tour, Support, SupportOperation } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';

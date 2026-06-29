@@ -7,11 +7,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import {
+  type PeerInfo,
+  type SignalManager,
   MemorySignalManager,
   MemorySignalManagerContext,
   Messenger,
-  type PeerInfo,
-  type SignalManager,
 } from '@dxos/messaging';
 import { ComplexSet } from '@dxos/util';
 

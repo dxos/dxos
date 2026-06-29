@@ -10,6 +10,7 @@ import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 import { type Stats, removeEmpty } from '../../hooks';
 import { Panel } from './Panel';
 import {
+  type SurfaceProfilerStats,
   DatabasePanel,
   EdgePanel,
   LoggingPanel,
@@ -21,7 +22,6 @@ import {
   ReplicatorMessagesPanel,
   ReplicatorPanel,
   SurfaceProfilerPanel,
-  type SurfaceProfilerStats,
   SyncStatusPanel,
   TimeSeries,
 } from './panels';

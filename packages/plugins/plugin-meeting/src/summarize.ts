@@ -8,15 +8,15 @@ import * as Layer from 'effect/Layer';
 
 import {
   type AiModelNotAvailableError,
-  AiService,
   type AiToolNotFoundError,
   type PromptPreprocessingError,
+  AiService,
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';

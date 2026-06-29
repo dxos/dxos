@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
+import { type EditorController, type UseTextEditorProps, Editor } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
   type SubmitOptions,

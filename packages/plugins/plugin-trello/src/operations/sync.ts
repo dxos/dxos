@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SyncBinding } from '@dxos/plugin-connector';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import { UNCATEGORIZED_VALUE, Kanban } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';

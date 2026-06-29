@@ -6,7 +6,7 @@ import * as Predicate from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Obj, Query, type QueryResult } from '@dxos/echo';
+import { type Obj, type QueryResult, Query } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -18,7 +18,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
-import { WorkingSetQueryExecutor, type WorkingSetDataProvider, type WorkingSetItem } from './working-set-executor';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.

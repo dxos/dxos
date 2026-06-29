@@ -9,7 +9,7 @@ import React, { useEffect, useMemo } from 'react';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppPlugin, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';

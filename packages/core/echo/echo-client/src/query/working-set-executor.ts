@@ -6,15 +6,15 @@ import { type Obj } from '@dxos/echo';
 import { filterMatchDoc, filterMatchObjectJSON } from '@dxos/echo-host/filter';
 import { type QueryPlan } from '@dxos/echo-host/query';
 import {
-  EncodedReference,
-  EntityStructure,
   type EntityPropPath,
   type QueryAST,
+  EncodedReference,
+  EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { EscapedPropPath } from '@dxos/index-core';
-import { EID, type EntityId, type SpaceId } from '@dxos/keys';
+import { type EntityId, type SpaceId, EID } from '@dxos/keys';
 import { getDeep, isNonNullable, visitValues } from '@dxos/util';
 
 import type { ObjectCore } from '../core-db';

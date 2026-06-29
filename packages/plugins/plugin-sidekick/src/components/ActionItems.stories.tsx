@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ActionItems, type ActionItem } from './ActionItems';
+import { type ActionItem, ActionItems } from './ActionItems';
 
 const initialItems: ActionItem[] = [
   { id: '1', text: 'Review the design doc', completed: false },

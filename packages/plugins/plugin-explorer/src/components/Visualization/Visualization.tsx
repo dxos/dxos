@@ -11,10 +11,10 @@ import {
   type GraphLayout,
   type GraphLayoutNode,
   type GraphProjector,
-  GraphSwarmProjector,
   type ModelPoint,
-  SVG,
   type SVGContext,
+  SVG,
+  GraphSwarmProjector,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { type SlottableProps } from '@dxos/ui-types';

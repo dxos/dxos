@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, type Type } from '@dxos/echo';
+import { type Type, Obj } from '@dxos/echo';
 
 import { type ApiAuthorization, type BaseServiceRegistry, ServiceType, categoryIcons } from '#types';
 

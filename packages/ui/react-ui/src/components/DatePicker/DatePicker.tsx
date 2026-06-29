@@ -17,7 +17,7 @@ import { useThemeContext } from '../../hooks';
 import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
-import { Calendar, type DateRange } from '../Calendar';
+import { type DateRange, Calendar } from '../Calendar';
 import { Icon } from '../Icon';
 import { Popover } from '../Popover';
 

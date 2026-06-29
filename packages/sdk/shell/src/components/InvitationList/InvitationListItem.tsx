@@ -7,17 +7,17 @@ import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
 import {
   type CancellableInvitationObservable,
-  Invitation,
   type InvitationStatus,
+  Invitation,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 import {
-  Avatar,
   type AvatarContentProps,
+  type ThemedClassName,
+  Avatar,
   Button,
   Clipboard,
   IconButton,
-  type ThemedClassName,
   Tooltip,
   useThemeContext,
   useTranslation,

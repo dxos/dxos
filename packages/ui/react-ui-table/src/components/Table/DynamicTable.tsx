@@ -12,10 +12,10 @@ import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { useTableModel } from '../../hooks';
-import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
+import { type TableFeatures, type TableRowAction, TablePresentation } from '../../model';
 import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
-import { Table, type TableController } from './Table';
+import { type TableController, Table } from './Table';
 
 export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
   type?: T;

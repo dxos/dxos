@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export { MarkdownArticle, type MarkdownArticleProps } from './MarkdownArticle';
+export { type MarkdownArticleProps, MarkdownArticle } from './MarkdownArticle';
 export { MarkdownArticle as default } from './MarkdownArticle';

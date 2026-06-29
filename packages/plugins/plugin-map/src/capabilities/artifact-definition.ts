@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { type PromiseIntentDispatcher, Capabilities, Capability } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
 import { Filter, Obj, Type, View } from '@dxos/echo';

@@ -6,9 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type PeerInfo, type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
-import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
+import { type TestConnection, TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
-import { AutomergeReplicator, type AutomergeReplicatorCallbacks } from './automerge-replicator';
+import { type AutomergeReplicatorCallbacks, AutomergeReplicator } from './automerge-replicator';
 
 describe('AutomergeReplicator', () => {
   test('Two peers discover each other', async () => {

@@ -11,7 +11,7 @@ import type { RawInterpreterValue, SimpleCellAddress } from '@dxos/vendor-hyperf
 import type { InterpreterState } from '@dxos/vendor-hyperformula';
 import type { InterpreterValue } from '@dxos/vendor-hyperformula';
 import type { ProcedureAst } from '@dxos/vendor-hyperformula';
-import { CellError, EmptyValue, ErrorType, FunctionPlugin, type HyperFormula } from '@dxos/vendor-hyperformula';
+import { type HyperFormula, CellError, EmptyValue, ErrorType, FunctionPlugin } from '@dxos/vendor-hyperformula';
 
 import type { SpaceComputeRuntime } from '../compute-graph-registry';
 

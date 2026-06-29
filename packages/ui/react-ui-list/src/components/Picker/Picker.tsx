@@ -15,8 +15,8 @@ import React, {
   type ComponentPropsWithRef,
   type ElementType,
   type KeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
   type PropsWithChildren,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -26,7 +26,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type Density, type Elevation, Input, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type Density, type Elevation, type ThemedClassName, Input, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
@@ -374,6 +374,6 @@ export const Picker = {
   Item: PickerItem,
 };
 
-export type { PickerRootProps, PickerInputProps, PickerItemProps };
+export type { PickerInputProps, PickerItemProps, PickerRootProps };
 
 export { usePickerInputContext, usePickerItemContext } from './context';

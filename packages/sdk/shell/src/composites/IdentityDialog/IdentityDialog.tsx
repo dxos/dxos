@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
+import { type DialogContentProps, Clipboard, Dialog, useId } from '@dxos/react-ui';
 
-import { IdentityPanel, type IdentityPanelProps } from '../../panels';
+import { type IdentityPanelProps, IdentityPanel } from '../../panels';
 
 export interface IdentityDialogProps
   extends Omit<DialogContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {

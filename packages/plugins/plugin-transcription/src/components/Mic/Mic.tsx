@@ -9,7 +9,7 @@ import { MicButton, useTranslation } from '@dxos/react-ui';
 import { type AudioInputDevice, MicSettings } from '@dxos/react-ui-transcription';
 
 import { meta } from '#meta';
-import { TranscriptionCapabilities, type Settings } from '#types';
+import { type Settings, TranscriptionCapabilities } from '#types';
 
 export type MicProps = {
   /** Attendable id of the target editor; keys the recording session. */

@@ -14,7 +14,7 @@ import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 import { FileInput } from '#components';
 import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
-import { FileAction, File, type Settings } from '#types';
+import { type Settings, File, FileAction } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

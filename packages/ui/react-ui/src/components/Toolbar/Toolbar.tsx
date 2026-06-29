@@ -17,19 +17,19 @@ import { useThemeContext } from '../../hooks';
 import { type ToolbarStyleProps } from '../../theme';
 import { composable, composableProps, slottable } from '../../util';
 import {
-  Button,
-  ButtonGroup,
   type ButtonGroupProps,
   type ButtonProps,
-  IconButton,
   type IconButtonProps,
-  Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
+  Button,
+  ButtonGroup,
+  IconButton,
+  Toggle,
 } from '../Button';
-import { Link, type LinkProps } from '../Link';
+import { type LinkProps, Link } from '../Link';
 import { DropdownMenu } from '../Menu';
-import { Separator, type SeparatorProps } from '../Separator';
+import { type SeparatorProps, Separator } from '../Separator';
 
 //
 // Root
@@ -366,19 +366,19 @@ export const Toolbar = {
 };
 
 export type {
-  ToolbarRootProps,
-  ToolbarTextProps,
-  ToolbarButtonProps,
-  ToolbarIconButtonProps,
-  ToolbarLinkProps,
-  ToolbarToggleProps,
-  ToolbarToggleGroupProps,
-  ToolbarToggleGroupItemProps,
-  ToolbarToggleGroupIconItemProps,
-  ToolbarSeparatorProps,
-  ToolbarDragHandleProps,
   ToolbarActionIconButtonAction,
   ToolbarActionIconButtonProps,
+  ToolbarButtonProps,
+  ToolbarDragHandleProps,
+  ToolbarIconButtonProps,
+  ToolbarLinkProps,
   ToolbarMenuItem,
   ToolbarMenuProps,
+  ToolbarRootProps,
+  ToolbarSeparatorProps,
+  ToolbarTextProps,
+  ToolbarToggleGroupIconItemProps,
+  ToolbarToggleGroupItemProps,
+  ToolbarToggleGroupProps,
+  ToolbarToggleProps,
 };

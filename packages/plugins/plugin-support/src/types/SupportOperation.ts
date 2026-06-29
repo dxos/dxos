@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, Format, Ref, Type, DXN } from '@dxos/echo';
+import { DXN, Annotation, Collection, Database, Format, Ref, Type } from '@dxos/echo';
 
 import * as Support from './Support';
 

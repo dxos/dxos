@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { type ModelName, AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation, Instructions, ServiceResolver, type Skill } from '@dxos/compute';
+import { type Skill, Instructions, Operation, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';

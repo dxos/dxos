@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DropdownMenu, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, DropdownMenu, IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { type MosaicEventHandler, type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import { type Notebook } from '#types';
 
 import { type TypescriptEditorProps } from '../TypescriptEditor';
-import { NotebookCell, type NotebookCellProps } from './NotebookCell';
+import { type NotebookCellProps, NotebookCell } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';
 
 const minSectionHeight = 'min-h-[16rem]';

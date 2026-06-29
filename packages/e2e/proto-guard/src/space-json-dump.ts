@@ -8,9 +8,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { Filter, type Obj, Query, Scope, Type } from '@dxos/echo';
+import { type Obj, Filter, Query, Scope, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-client';
-import { EID, type SpaceId } from '@dxos/keys';
+import { type SpaceId, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {

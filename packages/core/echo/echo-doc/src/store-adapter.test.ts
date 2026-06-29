@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { DXN, Obj, Type } from '@dxos/echo';
 
 import * as Doc from './Doc';
-import { AbstractStoreAdapter, type Batch } from './store-adapter';
+import { type Batch, AbstractStoreAdapter } from './store-adapter';
 
 const Canvas = Type.makeObject(DXN.make('com.example.type.canvas', '0.1.0'))(
   Schema.Struct({

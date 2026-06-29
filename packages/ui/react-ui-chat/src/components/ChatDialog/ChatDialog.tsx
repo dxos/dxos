@@ -5,8 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Dialog, Icon, IconButton, type ThemedClassName, useControlledState } from '@dxos/react-ui';
-import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import { type ThemedClassName, Dialog, Icon, IconButton, useControlledState } from '@dxos/react-ui';
+import { type Size, ResizeHandle, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 const preventDefault = (event: Event) => event.preventDefault();

@@ -7,7 +7,7 @@ import { Graph, GraphModel } from '@dxos/graph';
 import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
-import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
+import { type ComputeEdge, type ComputeNode, ComputeGraph, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
 
 export class ComputeGraphModel extends GraphModel.AbstractGraphModel<

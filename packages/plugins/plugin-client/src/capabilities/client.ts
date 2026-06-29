@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
-import { ClientCapabilities, type ClientPluginOptions } from '#types';
+import { type ClientPluginOptions, ClientCapabilities } from '#types';
 
 type ClientCapabilityOptions = Omit<
   ClientPluginOptions,

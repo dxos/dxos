@@ -10,14 +10,14 @@ import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
-import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
+import { type NodeType, NODE_INPUT, NODE_OUTPUT, inputNode, outputNode, registry } from '../nodes';
 import {
-  AnyInput,
-  AnyOutput,
   type ComputeGraph,
-  ComputeGraphModel,
   type ComputeNode,
   type Executable,
+  AnyInput,
+  AnyOutput,
+  ComputeGraphModel,
   synchronizedComputeFunction,
 } from '../types';
 import { Workflow } from './workflow';

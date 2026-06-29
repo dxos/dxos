@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { type Registry, Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';

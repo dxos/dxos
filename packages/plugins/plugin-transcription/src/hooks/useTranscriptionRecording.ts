@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAudioTrack } from '@dxos/react-ui-transcription';
-import { Message, type Transcript } from '@dxos/types';
+import { type Transcript, Message } from '@dxos/types';
 
-import { TranscriptOperation, TranscriptionCapabilities } from '#types';
+import { TranscriptionCapabilities, TranscriptOperation } from '#types';
 
 import { useTranscriber } from './useTranscriber';
 
