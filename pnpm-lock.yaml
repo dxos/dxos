@@ -18624,6 +18624,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/crawler':
+        specifier: workspace:*
+        version: link:../../core/compute/crawler
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -18639,6 +18642,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-discord':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-discord
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugins/plugin-graph
@@ -18666,6 +18672,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list

@@ -6,11 +6,26 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import {
+  AgentRegistry,
+  type ChannelInfo,
+  Source,
+  type Stage,
+  makeAgentProfileStage,
+  makeExtractFactsStage,
+  run,
+} from '@dxos/crawler';
+import { coreLayer } from '@dxos/crawler/testing';
+import { EffectEx } from '@dxos/effect';
+import { discordSourceLayer } from '@dxos/plugin-discord';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
+import { Form } from '@dxos/react-ui-form';
+import { Empty, Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SemanticPipeline, SemanticStore, type Type, buildSparql, generateQuery } from '@dxos/semantic-index';
 
@@ -138,6 +153,136 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
   );
 };
 
+// --- Crawler explorer -----------------------------------------------------------------------------
+
+const CrawlOptions = Schema.Struct({
+  token: Schema.String.annotations({ title: 'Discord bot token' }),
+  maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
+  descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
+});
+type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
+
+const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
+
+type CrawlAction = 'channels' | 'crawl';
+
+/**
+ * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
+ * can read, pick one, crawl it through the pipeline (edge LLM extraction), and view the facts.
+ */
+const CrawlerStory = () => {
+  const [options, setOptions] = useState<CrawlOptions>({ token: '', maxDays: 7, descendThreads: true });
+  const [channels, setChannels] = useState<ChannelInfo[]>([]);
+  const [selected, setSelected] = useState<string | undefined>(undefined);
+  const [facts, setFacts] = useState<Type.Fact[]>([]);
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState<CrawlAction | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const guard = async (action: CrawlAction, task: () => Promise<void>) => {
+    setBusy(action);
+    setError(null);
+    try {
+      await task();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // Enumerate the channels the bot can access (the source layer is rebuilt per call with the token).
+  const handleListChannels = () =>
+    void guard('channels', async () => {
+      const result = await EffectEx.runPromise(
+        Source.pipe(Effect.flatMap((source) => source.listChannels())).pipe(
+          Effect.provide(discordSourceLayer(options.token)),
+        ),
+      );
+      setChannels(result);
+      setSelected(result[0]?.id);
+      setStatus(`${result.length} channel(s) visible`);
+    });
+
+  // Crawl the selected channel through the pipeline, then read the resulting facts from the store.
+  const handleCrawl = () => {
+    if (!selected) {
+      return;
+    }
+    void guard('crawl', async () => {
+      // Fresh state + in-memory store per crawl; edge LLM does the extraction (no local key needed).
+      const layer = Layer.mergeAll(discordSourceLayer(options.token), coreLayer, AiServiceTestingPreset('edge-remote'));
+      const result = await EffectEx.runPromise(
+        Effect.gen(function* () {
+          const summary = yield* run(
+            { channels: [selected], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
+            CRAWL_STAGES,
+          );
+          const registry = yield* AgentRegistry;
+          const agents = yield* registry.list();
+          const store = yield* SemanticStore;
+          const extracted = yield* store.query({});
+          return { summary, agentCount: agents.length, facts: extracted };
+        }).pipe(Effect.provide(layer)),
+      );
+      setFacts(result.facts);
+      setStatus(
+        `Crawled ${result.summary.steps} step(s) · ${result.agentCount} agents · ${result.facts.length} facts` +
+          (result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : ''),
+      );
+    });
+  };
+
+  return (
+    <div className='dx-container grid grid-cols-2 gap-2'>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Button disabled={!options.token || !!busy} onClick={handleListChannels}>
+              {busy === 'channels' ? 'Listing…' : 'List channels'}
+            </Button>
+            <Button variant='primary' disabled={!options.token || !selected || !!busy} onClick={handleCrawl}>
+              {busy === 'crawl' ? 'Crawling…' : 'Crawl'}
+            </Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content classNames='dx-container grid grid-rows-[auto_1fr] gap-2'>
+          <Form.Root
+            schema={CrawlOptions}
+            values={options}
+            onValuesChanged={(next) => setOptions((prev) => ({ ...prev, ...next }))}
+          >
+            <Form.Viewport>
+              <Form.Content>
+                <Form.FieldSet />
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+          {channels.length > 0 ? (
+            <Listbox.Root value={selected} onValueChange={setSelected}>
+              <Listbox.Content aria-label='Channels'>
+                {channels.map((channel) => (
+                  <Listbox.Item key={channel.id} id={channel.id} classNames='p-2'>
+                    {channel.name ?? channel.id}
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
+          ) : (
+            <Empty icon='ph--hash--regular' label='Enter a token and list channels to begin.' />
+          )}
+        </Panel.Content>
+        {(error || status) && (
+          <Panel.Statusbar classNames={error ? 'text-error truncate' : 'text-subdued truncate'}>
+            {error ?? status}
+          </Panel.Statusbar>
+        )}
+      </Panel.Root>
+      <SemanticFactsViewer facts={facts} />
+    </div>
+  );
+};
+
 const meta = {
   title: 'stories/stories-brain/SemanticFactsParser',
   render: DefaultStory,
@@ -152,4 +297,8 @@ export const Default: Story = {
   args: {
     initialText: SAMPLE_FACTS_TEXT,
   },
+};
+
+export const Crawler: Story = {
+  render: () => <CrawlerStory />,
 };
