@@ -211,6 +211,9 @@
       "path": "packages/core/compute/semantic-index/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/semantic-index/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/transcription-pipeline/tsconfig.json"
     },
     {

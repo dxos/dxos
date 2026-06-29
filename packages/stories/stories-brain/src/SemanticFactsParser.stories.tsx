@@ -12,7 +12,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SemanticPipeline, SemanticStore, type Type, generateSparql } from '@dxos/semantic-index';
+import { SemanticPipeline, SemanticStore, type Type, buildSparql, generateQuery } from '@dxos/semantic-index';
 
 import { SemanticFactsViewer } from './SemanticFactsViewer';
 import { SAMPLE_FACTS_TEXT, parseDiscordFixture } from './testing';
@@ -89,11 +89,10 @@ const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
   const handleQuery = () =>
     run('query', async () => {
       const question = editorRef.current?.getText() ?? '';
-      const query = await getRuntime().runPromise(generateSparql(question));
-      setSparql(query);
-      // eslint-disable-next-line no-console
-      console.log('[semantic-index] generated SPARQL\n' + query);
-      const results = await getRuntime().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.select(query))));
+      const query = await getRuntime().runPromise(generateQuery(question));
+      // Show the SPARQL equivalent; execution runs structurally over the in-memory store (no Comunica).
+      setSparql(buildSparql(query));
+      const results = await getRuntime().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(query))));
       setFacts(results);
     });
 

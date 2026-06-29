@@ -39,8 +39,8 @@ export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerPr
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <ScrollArea.Root padding centered>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 py-2'>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport classNames='flex flex-col gap-4'>
             {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts.' />}
             {groups.map((group) => (
               <SubjectGroup key={group.subject} group={group} />
@@ -54,7 +54,7 @@ export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerPr
 
 const SubjectGroup = ({ group }: { group: Group }) => (
   <div className='flex flex-col border border-separator rounded-sm'>
-    <div className='flex px-3 py-2 items-center justify-between border-b border-separator'>
+    <div className='flex p-3 items-center justify-between'>
       <h3>{humanize(group.subject)}</h3>
       {group.conflicted && (
         <Tag hue='warning'>

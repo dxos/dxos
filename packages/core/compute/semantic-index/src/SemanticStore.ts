@@ -14,6 +14,7 @@ import { insertQuads, makeSqliteSource } from './internal/source/sqlite-source';
 import { makeEngine, selectTriples } from './internal/sparql/engine';
 import { factToTriples, triplesToFacts } from './internal/sparql/mapping';
 import { type SemanticQuery, buildSparql } from './internal/sparql/query-builder';
+import { queryMemory } from './internal/sparql/query-memory';
 import { migrate } from './internal/sqlite/schema';
 import { type Fact } from './types';
 
@@ -39,15 +40,12 @@ const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
     catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),
   });
 
-// The structured `query` and raw `select` are identical across sources (the engine is source-agnostic).
-// The Comunica engine is constructed lazily so persist-only flows never pay for (or require) it.
-const makeQueryApi = (source: Parameters<typeof selectTriples>[1]): Pick<SemanticStoreApi, 'query' | 'select'> => {
+// Raw SPARQL execution via Comunica. The engine is constructed lazily so persist-only flows never
+// pay for it — and so the memory layer can avoid it entirely (Comunica does not run in the browser).
+const makeSelect = (source: Parameters<typeof selectTriples>[1]): SemanticStoreApi['select'] => {
   let engine: ReturnType<typeof makeEngine> | undefined;
   const getEngine = () => (engine ??= makeEngine());
-  return {
-    query: (q) => selectTriples(getEngine(), source, buildSparql(q)).pipe(Effect.flatMap(reassemble)),
-    select: (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble)),
-  };
+  return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
 
 export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<
@@ -80,13 +78,18 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to write cursor', cause })),
         );
 
-      return { putFacts, cursor, setCursor, ...makeQueryApi(source) };
+      // SQLite: structured query builds SPARQL and runs it through Comunica (server-side only).
+      const select = makeSelect(source);
+      const query: SemanticStoreApi['query'] = (q) => select(buildSparql(q));
+
+      return { putFacts, cursor, setCursor, query, select };
     }),
   );
 
   /**
-   * Browser/test layer backed by an in-memory N3 store (no `SqlClient`, no SQLite). Facts live for the
-   * lifetime of the layer; the same engine + query/select path is reused.
+   * Browser/test layer backed by an in-memory N3 store (no `SqlClient`, no SQLite). Structured queries
+   * run directly over the store (no SPARQL engine), so the browser path avoids Comunica entirely;
+   * `select` (raw SPARQL) still uses Comunica and so is server-side only.
    */
   static layerMemory: Layer.Layer<SemanticStore> = Layer.sync(SemanticStore, () => {
     const source = makeMemorySource();
@@ -98,6 +101,12 @@ export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticSto
     const cursor: SemanticStoreApi['cursor'] = (src) => Effect.sync(() => cursors.get(src));
     const setCursor: SemanticStoreApi['setCursor'] = (src, hash) => Effect.sync(() => void cursors.set(src, hash));
 
-    return { putFacts, cursor, setCursor, ...makeQueryApi(source) };
+    const query: SemanticStoreApi['query'] = (q) =>
+      Effect.try({
+        try: () => queryMemory(source, q),
+        catch: (cause) => new SemanticIndexError({ message: 'Failed to query facts', cause }),
+      });
+
+    return { putFacts, cursor, setCursor, query, select: makeSelect(source) };
   });
 }
