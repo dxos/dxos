@@ -258,17 +258,24 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
 
 // --- Composed test layer + synthetic fixtures -----------------------------------------------------
 
-/** All services the crawler needs, wired against a fixture + the deterministic extractor. */
-export const TestLayer = (
-  fixture: Fixture,
-): Layer.Layer<Source | StateStore | AgentRegistry | SemanticStore | AiService.AiService> =>
+/**
+ * Everything the crawler needs EXCEPT a {@link Source}: in-memory state + agent registry +
+ * semantic store + the deterministic extractor. Compose with any `Source` layer (fixture or a live
+ * `DiscordSource`) to run the crawler offline (no AI token).
+ */
+export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | SemanticStore | AiService.AiService> =
   Layer.mergeAll(
-    fixtureSourceLayer(fixture),
     StateStore.layerMemory,
     AgentRegistry.layerMemory,
     SemanticStore.layerMemory,
     deterministicAiService(),
   );
+
+/** All services the crawler needs, wired against a fixture + the deterministic extractor. */
+export const TestLayer = (
+  fixture: Fixture,
+): Layer.Layer<Source | StateStore | AgentRegistry | SemanticStore | AiService.AiService> =>
+  Layer.merge(fixtureSourceLayer(fixture), servicesLayer);
 
 /** A channel with one message that spawns a thread — exercises depth-first descent + per-thread resume. */
 export const THREADED_FIXTURE: Fixture = {

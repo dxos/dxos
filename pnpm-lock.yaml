@@ -10247,6 +10247,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/crawler':
+        specifier: workspace:*
+        version: link:../../core/compute/crawler
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
